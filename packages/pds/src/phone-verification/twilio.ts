@@ -1,6 +1,7 @@
 import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import twilio from 'twilio'
-import { twilioLogger as log } from './logger'
+import { twilioLogger as log } from '../logger'
+import { PhoneVerifier } from './util'
 
 type Opts = {
   accountSid: string
@@ -10,7 +11,7 @@ type Opts = {
 
 type VerifyClient = ReturnType<twilio.Twilio['verify']['v2']['services']>
 
-export class TwilioClient {
+export class TwilioClient implements PhoneVerifier {
   verifyClient: VerifyClient
 
   constructor(opts: Opts) {
@@ -18,23 +19,6 @@ export class TwilioClient {
       opts.accountSid,
       opts.authToken,
     ).verify.v2.services(opts.serviceSid)
-  }
-
-  normalizePhoneNumber(phoneNumber: string) {
-    let normalized = phoneNumber.trim().replaceAll(/\(|\)|-| /g, '')
-    if (!normalized.startsWith('+')) {
-      if (normalized.length === 10) {
-        normalized = '+1' + normalized
-      } else {
-        normalized = '+' + normalized
-      }
-    }
-    // https://www.twilio.com/docs/glossary/what-e164#regex-matching-for-e164
-    const valid = /^\+[1-9]\d{1,14}$/.test(normalized)
-    if (!valid) {
-      throw new InvalidRequestError('Invalid phone number')
-    }
-    return normalized
   }
 
   async sendCode(phoneNumber: string) {
@@ -69,7 +53,10 @@ export class TwilioClient {
       return res.status === 'approved'
     } catch (err) {
       log.error({ err, phoneNumber, code }, 'error verifying twilio code')
-      throw new UpstreamFailureError('Could not verify code. Please try again')
+      throw new UpstreamFailureError(
+        'Could not verify code. Please try again',
+        'InvalidPhoneVerification',
+      )
     }
   }
 }

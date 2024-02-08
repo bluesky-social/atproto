@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { HOUR, MINUTE } from '@atproto/common'
 import { countAll } from '../../../../db/util'
+import { normalizePhoneNumber } from '../../../../phone-verification/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.requestPhoneVerification({
@@ -17,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     handler: async ({ input }) => {
-      if (!ctx.twilio || !ctx.cfg.phoneVerification.required) {
+      if (!ctx.phoneVerifier || !ctx.cfg.phoneVerification.required) {
         throw new InvalidRequestError('phone verification not enabled')
       }
       if (
@@ -29,9 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const accountsPerPhoneNumber =
         ctx.cfg.phoneVerification.accountsPerPhoneNumber
-      const phoneNumber = ctx.twilio.normalizePhoneNumber(
-        input.body.phoneNumber,
-      )
+      const phoneNumber = normalizePhoneNumber(input.body.phoneNumber)
 
       const res = await ctx.db.db
         .selectFrom('phone_verification')
@@ -44,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      await ctx.twilio.sendCode(phoneNumber)
+      await ctx.phoneVerifier.sendCode(phoneNumber)
     },
   })
 }

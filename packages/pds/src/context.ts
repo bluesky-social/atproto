@@ -22,12 +22,14 @@ import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
 import { PdsAgents } from './pds-agents'
-import { TwilioClient } from './twilio'
 import assert from 'assert'
 import { SignupLimiter } from './signup-queue/limiter'
 import { SignupActivator } from './signup-queue/activator'
 import { createCourierClient, authWithApiKey as courierAuth } from './courier'
 import { DAY } from '@atproto/common'
+import { PhoneVerifier } from './phone-verification/util'
+import { TwilioClient } from './phone-verification/twilio'
+import { PlivoClient } from './phone-verification/plivo'
 
 export type AppContextOptions = {
   db: Database
@@ -50,7 +52,7 @@ export type AppContextOptions = {
   pdsAgents: PdsAgents
   repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
-  twilio?: TwilioClient
+  phoneVerifier?: PhoneVerifier
   signupLimiter: SignupLimiter
   signupActivator: SignupActivator
   cfg: ServerConfig
@@ -77,7 +79,7 @@ export class AppContext {
   public pdsAgents: PdsAgents
   public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
-  public twilio?: TwilioClient
+  public phoneVerifier?: PhoneVerifier
   public signupLimiter: SignupLimiter
   public signupActivator: SignupActivator
   public cfg: ServerConfig
@@ -103,7 +105,7 @@ export class AppContext {
     this.pdsAgents = opts.pdsAgents
     this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
-    this.twilio = opts.twilio
+    this.phoneVerifier = opts.phoneVerifier
     this.signupLimiter = opts.signupLimiter
     this.signupActivator = opts.signupActivator
     this.cfg = opts.cfg
@@ -223,14 +225,23 @@ export class AppContext {
       crawlers,
     })
 
-    let twilio: TwilioClient | undefined = undefined
+    let phoneVerifier: PhoneVerifier | undefined = undefined
     if (cfg.phoneVerification.required) {
-      assert(secrets.twilioAuthToken)
-      twilio = new TwilioClient({
-        accountSid: cfg.phoneVerification.twilioAccountSid,
-        serviceSid: cfg.phoneVerification.twilioServiceSid,
-        authToken: secrets.twilioAuthToken,
-      })
+      if (cfg.phoneVerification.provider.provider === 'twilio') {
+        assert(secrets.twilioAuthToken, 'expected twilio auth token')
+        phoneVerifier = new TwilioClient({
+          accountSid: cfg.phoneVerification.provider.accountSid,
+          serviceSid: cfg.phoneVerification.provider.serviceSid,
+          authToken: secrets.twilioAuthToken,
+        })
+      } else if (cfg.phoneVerification.provider.provider === 'plivo') {
+        assert(secrets.plivoAuthToken, 'expected plivo auth token')
+        phoneVerifier = new PlivoClient(db, {
+          authId: cfg.phoneVerification.provider.authId,
+          appId: cfg.phoneVerification.provider.appId,
+          authToken: secrets.plivoAuthToken,
+        })
+      }
     }
 
     const signupLimiter = new SignupLimiter(db)
@@ -285,7 +296,7 @@ export class AppContext {
       repoSigningKey,
       plcRotationKey,
       pdsAgents,
-      twilio,
+      phoneVerifier,
       signupLimiter,
       signupActivator,
       cfg,

@@ -51,11 +51,15 @@ export const readEnv = (): ServerEnvironment => {
 
     // phone verification
     phoneVerificationRequired: envBool('PDS_PHONE_VERIFICATION_REQUIRED'),
+    phoneVerificationProvider: envStr('PDS_PHONE_VERIFICATION_PROVIDER'),
     accountsPerPhoneNumber: envInt('PDS_ACCOUNTS_PER_PHONE_NUMBER'),
     bypassPhoneNumber: envStr('PDS_BYPASS_PHONE_NUMBER'),
     twilioAccountSid: envStr('PDS_TWILIO_ACCOUNT_SID'),
     twilioAuthToken: envStr('PDS_TWILIO_AUTH_TOKEN'),
     twilioServiceSid: envStr('PDS_TWILIO_SERVICE_SID'),
+    plivoAuthId: envStr('PDS_PLIVO_AUTH_ID'),
+    plivoAuthToken: envStr('PDS_PLIVO_AUTH_TOKEN'),
+    plivoAppId: envStr('PDS_PLIVO_APP_ID'),
 
     // email
     emailSmtpUrl: envStr('PDS_EMAIL_SMTP_URL'),
@@ -173,11 +177,15 @@ export type ServerEnvironment = {
 
   // phone verification
   phoneVerificationRequired?: boolean
+  phoneVerificationProvider?: string
   accountsPerPhoneNumber?: number
   bypassPhoneNumber?: string
   twilioAccountSid?: string
   twilioAuthToken?: string
   twilioServiceSid?: string
+  plivoAuthId?: string
+  plivoAuthToken?: string
+  plivoAppId?: string
 
   // email
   emailSmtpUrl?: string

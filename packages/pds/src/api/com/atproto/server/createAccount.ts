@@ -21,6 +21,7 @@ import { didDocForSession } from './util'
 import { getPdsEndpoint } from '../../../../pds-agents'
 import { isThisPds } from '../../../proxy'
 import { dbLogger as log } from '../../../../logger'
+import { normalizePhoneNumber } from '../../../../phone-verification/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -483,7 +484,7 @@ const ensurePhoneVerification = async (
   phone?: string,
   code?: string,
 ): Promise<string | undefined> => {
-  if (!ctx.cfg.phoneVerification.required || !ctx.twilio) {
+  if (!ctx.cfg.phoneVerification.required || !ctx.phoneVerifier) {
     return
   }
 
@@ -503,8 +504,8 @@ const ensurePhoneVerification = async (
       'InvalidPhoneVerification',
     )
   }
-  const normalizedPhone = ctx.twilio.normalizePhoneNumber(phone)
-  const verified = await ctx.twilio.verifyCode(normalizedPhone, code)
+  const normalizedPhone = normalizePhoneNumber(phone)
+  const verified = await ctx.phoneVerifier.verifyCode(normalizedPhone, code)
   if (!verified) {
     throw new InvalidRequestError(
       'Could not verify phone number. Please try again.',
