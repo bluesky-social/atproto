@@ -176,6 +176,8 @@ const createEntryway = async (
     bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
     jwtSecret: randomStr(8, 'base32'),
     repoSigningKeyK256PrivateKeyHex: await getPrivateHex(signingKey),
+    modServiceUrl: 'https://mod.invalid',
+    modServiceDid: 'did:example:invalid',
     ...config,
   }
   const cfg = pdsEntryway.envToCfg(env)
@@ -183,6 +185,8 @@ const createEntryway = async (
   const server = await pdsEntryway.PDS.create(cfg, secrets)
   await server.ctx.db.migrateToLatestOrThrow()
   await server.start()
+  // @TODO temp hack because entryway teardown calls signupActivator.run() by mistake
+  server.ctx.signupActivator.run = server.ctx.signupActivator.destroy
   return server
 }
 
