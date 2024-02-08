@@ -28,6 +28,7 @@ export class PlivoClient {
 
   async sendCode(phoneNumber: string) {
     try {
+      // @NOTE: the trailing slash on the url is necessary
       const res = await this.makeReq(
         `https://api.plivo.com/v1/Account/${this.authId}/Verify/Session/`,
         {
@@ -76,6 +77,7 @@ export class PlivoClient {
     const sessionId = res.sessionId
 
     try {
+      // @NOTE: the trailing slash on the url is necessary
       await this.makeReq(
         `https://api.plivo.com/v1/Account/${this.authId}/Verify/Session/${sessionId}/`,
         {
