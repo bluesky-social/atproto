@@ -6,9 +6,11 @@ import { randomIntFromSeed } from '@atproto/crypto'
 import { PhoneVerifier } from './util'
 
 const PLIVO_RATIO_FLAG = 'phone-verification:plivoRatio'
+const SECOND_TRY_FLAG = 'phone-verification:attemptSecondTry'
 
 export class MultiVerifier implements PhoneVerifier {
   plivoRatio = 0
+  attemptSecondTry = false
   lastRefreshed = 0
 
   constructor(
@@ -27,9 +29,16 @@ export class MultiVerifier implements PhoneVerifier {
     const res = await this.db.db
       .selectFrom('runtime_flag')
       .where('name', '=', PLIVO_RATIO_FLAG)
+      .orWhere('name', '=', SECOND_TRY_FLAG)
       .selectAll()
-      .executeTakeFirst()
-    this.plivoRatio = parseMaybeInt(res?.value)
+      .execute()
+
+    this.plivoRatio = parseMaybeInt(
+      res.find((val) => val.name === PLIVO_RATIO_FLAG)?.value,
+    )
+    this.attemptSecondTry =
+      res.find((val) => val.name === SECOND_TRY_FLAG)?.value === 'true'
+
     this.lastRefreshed = Date.now()
   }
 
@@ -56,8 +65,12 @@ export class MultiVerifier implements PhoneVerifier {
         : () => this.twilio.verifyCode(phoneNumber, code)
     try {
       return await firstTry()
-    } catch {
-      return await secondTry()
+    } catch (err) {
+      if (this.attemptSecondTry) {
+        return await secondTry()
+      } else {
+        throw err
+      }
     }
   }
 }
