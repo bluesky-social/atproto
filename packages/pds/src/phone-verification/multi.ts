@@ -4,6 +4,7 @@ import { TwilioClient } from './twilio'
 import { SECOND } from '@atproto/common'
 import { randomIntFromSeed } from '@atproto/crypto'
 import { PhoneVerifier } from './util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 const PLIVO_RATIO_FLAG = 'phone-verification:plivoRatio'
 const SECOND_TRY_FLAG = 'phone-verification:attemptSecondTry'
@@ -61,10 +62,18 @@ export class MultiVerifier implements PhoneVerifier {
         : () => this.twilio.verifyCode(phoneNumber, code)
     const secondTry =
       id < this.plivoRatio
-        ? () => this.plivo.verifyCode(phoneNumber, code)
-        : () => this.twilio.verifyCode(phoneNumber, code)
+        ? () => this.twilio.verifyCode(phoneNumber, code)
+        : () => this.plivo.verifyCode(phoneNumber, code)
     try {
-      return await firstTry()
+      const res = await firstTry()
+      if (res === false) {
+        throw new InvalidRequestError(
+          'Could not verify phone number. Please try again.',
+          'InvalidPhoneVerification',
+        )
+      } else {
+        return res
+      }
     } catch (err) {
       if (this.attemptSecondTry) {
         return await secondTry()
