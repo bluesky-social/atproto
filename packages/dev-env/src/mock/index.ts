@@ -78,7 +78,7 @@ export async function generateMockSetup(env: TestNetwork) {
   for (const user of users) {
     let verificationCode: string | undefined = undefined
     let verificationPhone: string | undefined = undefined
-    if (env.pds.ctx.twilio) {
+    if (env.pds.ctx.phoneVerifier) {
       verificationPhone = `+1111111111${_i}`
       await clients.loggedout.api.com.atproto.temp.requestPhoneVerification({
         phoneNumber: verificationPhone,

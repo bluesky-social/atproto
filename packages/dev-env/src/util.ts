@@ -78,10 +78,10 @@ export const uniqueLockId = () => {
   return lockId
 }
 
-export const mockTwilio = (pds: TestPds) => {
-  if (!pds.ctx.twilio) return
+export const mockPhoneVerifier = (pds: TestPds) => {
+  if (!pds.ctx.phoneVerifier) return
 
-  pds.ctx.twilio.sendCode = async (number: string) => {
+  pds.ctx.phoneVerifier.sendCode = async (number: string) => {
     if (!pds.mockedPhoneCodes[number]) {
       const code = crypto.randomStr(4, 'base10').slice(0, 6)
       pds.mockedPhoneCodes[number] = code
@@ -90,7 +90,7 @@ export const mockTwilio = (pds: TestPds) => {
     console.log(`☎️ Phone verification code sent to ${number}: ${code}`)
   }
 
-  pds.ctx.twilio.verifyCode = async (number: string, code: string) => {
+  pds.ctx.phoneVerifier.verifyCode = async (number: string, code: string) => {
     if (pds.mockedPhoneCodes[number] === code) {
       delete pds.mockedPhoneCodes[number]
       return true
