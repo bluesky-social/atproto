@@ -17,6 +17,7 @@ describe('phone verification', () => {
       dbPostgresSchema: 'phone_verification',
       pds: {
         phoneVerificationRequired: true,
+        phoneVerificationProvider: 'twilio',
         twilioAccountSid: 'ACXXXXXXX',
         twilioAuthToken: 'AUTH',
         twilioServiceSid: 'VAXXXXXXXX',
@@ -24,10 +25,10 @@ describe('phone verification', () => {
       },
     })
     ctx = network.pds.ctx
-    assert(ctx.twilio)
+    assert(ctx.phoneVerifier)
     verificationCodes = {}
     sentCodes = []
-    ctx.twilio.sendCode = async (number: string) => {
+    ctx.phoneVerifier.sendCode = async (number: string) => {
       if (!verificationCodes[number]) {
         const code = crypto.randomStr(4, 'base10').slice(0, 6)
         verificationCodes[number] = code
@@ -35,7 +36,7 @@ describe('phone verification', () => {
       const code = verificationCodes[number]
       sentCodes.push({ code, number })
     }
-    ctx.twilio.verifyCode = async (number: string, code: string) => {
+    ctx.phoneVerifier.verifyCode = async (number: string, code: string) => {
       if (verificationCodes[number] === code) {
         delete verificationCodes[number]
         return true
