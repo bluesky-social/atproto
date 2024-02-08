@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import express from 'express'
 import { MINUTE, check } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
@@ -55,6 +56,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const verificationPhone = await ensurePhoneVerification(
         ctx,
+        req,
         input.body.verificationPhone,
         input.body.verificationCode?.trim(),
       )
@@ -152,6 +154,19 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         await cleanupUncreatedAccount(ctx, did)
         throw err
+      }
+
+      try {
+        await ctx.abuseChecker?.logRegistration({
+          req,
+          did,
+          phoneNumber: verificationPhone,
+        })
+      } catch (err) {
+        req.log.error(
+          { err, did, verificationPhone },
+          'failed to log registration',
+        )
       }
 
       const didDoc = await didDocForSession(ctx, result)
@@ -481,11 +496,24 @@ const ensureUnusedHandleAndEmail = async (
 
 const ensurePhoneVerification = async (
   ctx: AppContext,
+  req: express.Request,
   phone?: string,
   code?: string,
 ): Promise<string | undefined> => {
   if (!ctx.cfg.phoneVerification.required || !ctx.phoneVerifier) {
     return
+  } else if (phone && ctx.cfg.phoneVerification.bypassPhoneNumber === phone) {
+    return undefined
+  }
+
+  if (ctx.abuseChecker) {
+    const verdict = await ctx.abuseChecker.checkReq(req)
+    if (verdict.deny) {
+      throw new InvalidRequestError('Account registration denied.')
+    }
+    if (!verdict.requirePhone) {
+      return undefined
+    }
   }
 
   if (!phone) {
@@ -493,17 +521,13 @@ const ensurePhoneVerification = async (
       `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
       'InvalidPhoneVerification',
     )
-  }
-  if (ctx.cfg.phoneVerification.bypassPhoneNumber === phone) {
-    return undefined
-  }
-
-  if (!code) {
+  } else if (!code) {
     throw new InvalidRequestError(
       `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
       'InvalidPhoneVerification',
     )
   }
+
   const normalizedPhone = normalizePhoneNumber(phone)
   const verified = await ctx.phoneVerifier.verifyCode(normalizedPhone, code)
   if (!verified) {
