@@ -1,5 +1,5 @@
 import { makeAlgos } from '@atproto/bsky'
-import AtpAgent, { AtUri, FeedNS } from '@atproto/api'
+import AtpAgent, { AtUri, AppBskyFeedNS } from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
@@ -9,7 +9,7 @@ describe('feedgen proxy view', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const origGetFeedGenerator = FeedNS.prototype.getFeedGenerator
+  const origGetFeedGenerator = AppBskyFeedNS.prototype.getFeedGenerator
   const feedUri = AtUri.make(
     'did:example:feed-publisher',
     'app.bsky.feed.generator',
@@ -36,7 +36,7 @@ describe('feedgen proxy view', () => {
     )
     await network.processAll()
     // mock getFeedGenerator() for use by pds's getFeed since we don't have a proper feedGenDid or feed publisher
-    FeedNS.prototype.getFeedGenerator = async function (params, opts) {
+    AppBskyFeedNS.prototype.getFeedGenerator = async function (params, opts) {
       if (params?.feed === feedUri.toString()) {
         return {
           success: true,
@@ -60,7 +60,7 @@ describe('feedgen proxy view', () => {
   })
 
   afterAll(async () => {
-    FeedNS.prototype.getFeedGenerator = origGetFeedGenerator
+    AppBskyFeedNS.prototype.getFeedGenerator = origGetFeedGenerator
     await network.close()
   })
 
