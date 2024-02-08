@@ -49,7 +49,7 @@ export class PlivoClient {
           createdAt: new Date().toISOString(),
         })
         .onConflict((oc) =>
-          oc.doUpdateSet({
+          oc.column('phoneNumber').doUpdateSet({
             sessionId: excluded(this.db.db, 'sessionId'),
             createdAt: excluded(this.db.db, 'createdAt'),
           }),
