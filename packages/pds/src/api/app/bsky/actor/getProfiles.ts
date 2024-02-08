@@ -1,29 +1,34 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
+import { pipethrough } from '../../../../pipethrough'
 import {
   LocalViewer,
   handleReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
 
+const METHOD_NSID = 'app.bsky.actor.getProfiles'
+
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.access,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfiles(
+
+      const res = await pipethrough(
+        ctx.cfg.bskyAppView.url,
+        METHOD_NSID,
         params,
         await ctx.appviewAuthHeaders(requester),
       )
-      const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
-      if (hasSelf) {
-        return await handleReadAfterWrite(ctx, requester, res, getProfilesMunge)
-      }
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
+      return handleReadAfterWrite(
+        ctx,
+        METHOD_NSID,
+        requester,
+        res,
+        getProfilesMunge,
+      )
     },
   })
 }
@@ -36,6 +41,7 @@ const getProfilesMunge = async (
 ): Promise<OutputSchema> => {
   const localProf = local.profile
   if (!localProf) return original
+
   const profiles = original.profiles.map((prof) => {
     if (prof.did !== requester) return prof
     return localViewer.updateProfileDetailed(prof, localProf.record)

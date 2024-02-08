@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { noUndefinedVals } from '@atproto/common'
+import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -20,18 +20,12 @@ export default function (server: Server, ctx: AppContext) {
       // forward accept-language header to upstream services
       serviceAuthHeaders.headers['accept-language'] =
         req.headers['accept-language']
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
+      return pipethrough(
+        ctx.cfg.bskyAppView.url,
+        'app.bsky.feed.getFeed',
         params,
         serviceAuthHeaders,
       )
-
-      return {
-        encoding: 'application/json',
-        body: res.data,
-        headers: noUndefinedVals({
-          'content-language': res.headers['content-language'],
-        }),
-      }
     },
   })
 }

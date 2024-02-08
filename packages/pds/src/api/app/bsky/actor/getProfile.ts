@@ -4,9 +4,12 @@ import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import {
   LocalViewer,
-  handleReadAfterWrite,
   LocalRecords,
+  handleReadAfterWrite,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.actor.getProfile'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -14,17 +17,22 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, auth, params }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfile(
+      const res = await pipethrough(
+        ctx.cfg.bskyAppView.url,
+        METHOD_NSID,
         params,
         requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
       )
-      if (res.data.did === requester) {
-        return await handleReadAfterWrite(ctx, requester, res, getProfileMunge)
+      if (!requester) {
+        return res
       }
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
+      return handleReadAfterWrite(
+        ctx,
+        METHOD_NSID,
+        requester,
+        res,
+        getProfileMunge,
+      )
     },
   })
 }
@@ -33,7 +41,9 @@ const getProfileMunge = async (
   localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
+  requester: string,
 ): Promise<OutputSchema> => {
   if (!local.profile) return original
+  if (original.did !== requester) return original
   return localViewer.updateProfileDetailed(original, local.profile.record)
 }
