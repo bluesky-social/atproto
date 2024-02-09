@@ -157,11 +157,13 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        await ctx.abuseChecker?.logRegistration({
-          req,
-          did,
-          phoneNumber: verificationPhone,
-        })
+        if (ctx.registrationChecker) {
+          await ctx.registrationChecker(ctx.db.db).logRegistration({
+            req,
+            did,
+            phoneNumber: verificationPhone,
+          })
+        }
       } catch (err) {
         req.log.error(
           { err, did, verificationPhone },
@@ -506,8 +508,8 @@ const ensurePhoneVerification = async (
     return undefined
   }
 
-  if (ctx.abuseChecker) {
-    const verdict = await ctx.abuseChecker.checkReq(req)
+  if (ctx.registrationChecker) {
+    const verdict = await ctx.registrationChecker(ctx.db.db).checkReq(req)
     if (verdict.deny) {
       throw new InvalidRequestError('Account registration denied.')
     }

@@ -31,7 +31,7 @@ import { PhoneVerifier } from './phone-verification/util'
 import { TwilioClient } from './phone-verification/twilio'
 import { PlivoClient } from './phone-verification/plivo'
 import { MultiVerifier } from './phone-verification/multi'
-import { AbuseChecker } from './abuse-checker'
+import { RegistrationCheckerCreator } from './registration-checker'
 
 export type AppContextOptions = {
   db: Database
@@ -57,7 +57,7 @@ export type AppContextOptions = {
   phoneVerifier?: PhoneVerifier
   signupLimiter: SignupLimiter
   signupActivator: SignupActivator
-  abuseChecker?: AbuseChecker
+  registrationChecker?: RegistrationCheckerCreator
   cfg: ServerConfig
 }
 
@@ -85,7 +85,7 @@ export class AppContext {
   public phoneVerifier?: PhoneVerifier
   public signupLimiter: SignupLimiter
   public signupActivator: SignupActivator
-  public abuseChecker?: AbuseChecker
+  public registrationChecker?: RegistrationCheckerCreator
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
@@ -112,7 +112,7 @@ export class AppContext {
     this.phoneVerifier = opts.phoneVerifier
     this.signupLimiter = opts.signupLimiter
     this.signupActivator = opts.signupActivator
-    this.abuseChecker = opts.abuseChecker
+    this.registrationChecker = opts.registrationChecker
     this.cfg = opts.cfg
   }
 

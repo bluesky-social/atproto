@@ -9,8 +9,8 @@ export default function (server: Server, ctx: AppContext) {
     const termsOfService = ctx.cfg.service.termsOfServiceUrl
     let phoneVerificationRequired = ctx.cfg.phoneVerification.required
 
-    if (ctx.abuseChecker) {
-      const verdict = await ctx.abuseChecker.checkReq(req)
+    if (ctx.registrationChecker) {
+      const verdict = await ctx.registrationChecker(ctx.db.db).checkReq(req)
       if (!verdict.requirePhone) {
         phoneVerificationRequired = false
       }
