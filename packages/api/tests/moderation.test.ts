@@ -1,5 +1,4 @@
-import { moderateProfile, moderatePost } from '../src'
-import { mock } from './util'
+import { moderateProfile, moderatePost, mock } from '../src'
 import './util/moderation-behavior'
 
 describe('Moderation', () => {

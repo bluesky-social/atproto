@@ -4,7 +4,7 @@ import type {
   ModerationBehaviorScenario,
   ModerationBehaviorResult,
 } from '../../definitions/moderation-behaviors'
-import { mock as m } from './index'
+import { mock as m } from '../../src/mocker'
 
 expect.extend({
   toBeModerationResult(
