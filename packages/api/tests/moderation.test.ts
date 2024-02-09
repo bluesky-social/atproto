@@ -23,7 +23,7 @@ describe('Moderation', () => {
         labelGroups: {
           porn: 'hide',
         },
-        labelers: [],
+        mods: [],
       },
     )
     expect(res1.account).toBeModerationResult(
@@ -63,7 +63,7 @@ describe('Moderation', () => {
         labelGroups: {
           porn: 'ignore',
         },
-        labelers: [],
+        mods: [],
       },
     )
     expect(res2.account).toBeModerationResult(
@@ -111,7 +111,7 @@ describe('Moderation', () => {
         labelGroups: {
           porn: 'hide',
         },
-        labelers: [],
+        mods: [],
       },
     )
     expect(res1.content).toBeModerationResult(
@@ -157,7 +157,7 @@ describe('Moderation', () => {
         labelGroups: {
           porn: 'ignore',
         },
-        labelers: [],
+        mods: [],
       },
     )
     expect(res2.content).toBeModerationResult(
@@ -178,8 +178,8 @@ describe('Moderation', () => {
     )
   })
 
-  it('Applies labeler labels according to the per-labeler then global preferences', () => {
-    // porn (ignore for labeler, hide for global)
+  it('Ignores labels disabled moderators or disabled label groups for a moderator', () => {
+    // porn (moderator disabled)
     const res1 = moderateProfile(
       mock.profileViewBasic({
         handle: 'bob.test',
@@ -199,14 +199,10 @@ describe('Moderation', () => {
         labelGroups: {
           porn: 'hide',
         },
-        labelers: [
+        mods: [
           {
-            labeler: {
-              did: 'did:web:labeler.test',
-            },
-            labelGroups: {
-              porn: 'ignore',
-            },
+            did: 'did:web:labeler.test',
+            enabled: false,
           },
         ],
       },
@@ -218,7 +214,7 @@ describe('Moderation', () => {
       true,
     )
 
-    // porn (hide for labeler, ignore for global)
+    // porn (label group disabled)
     const res2 = moderateProfile(
       mock.profileViewBasic({
         handle: 'bob.test',
@@ -238,66 +234,24 @@ describe('Moderation', () => {
         labelGroups: {
           porn: 'ignore',
         },
-        labelers: [
+        mods: [
           {
-            labeler: {
-              did: 'did:web:labeler.test',
-            },
-            labelGroups: {
-              porn: 'hide',
-            },
+            did: 'did:web:labeler.test',
+            enabled: true,
+            disabledLabelGroups: ['porn'],
           },
         ],
       },
     )
     expect(res2.avatar).toBeModerationResult(
-      { blur: true },
+      {},
       'post avatar',
       JSON.stringify(res2, null, 2),
       true,
     )
-
-    // porn (unspecified for labeler, hide for global)
-    const res3 = moderateProfile(
-      mock.profileViewBasic({
-        handle: 'bob.test',
-        displayName: 'Bob',
-        labels: [
-          {
-            src: 'did:web:labeler.test',
-            uri: 'at://did:web:bob.test/app.bsky.actor.profile/self',
-            val: 'porn',
-            cts: new Date().toISOString(),
-          },
-        ],
-      }),
-      {
-        userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labelGroups: {
-          porn: 'hide',
-        },
-        labelers: [
-          {
-            labeler: {
-              did: 'did:web:labeler.test',
-            },
-            labelGroups: {},
-          },
-        ],
-      },
-    )
-    expect(res3.avatar).toBeModerationResult(
-      { blur: true },
-      'post avatar',
-      JSON.stringify(res3, null, 2),
-      true,
-    )
   })
 
-  /*
-  TODO enable when 3P labeler support is addded
-  it('Ignores labels from unknown labelers', () => {
+  it('Ignores labels from unknown mods', () => {
     const res1 = moderateProfile(
       mock.profileViewBasic({
         handle: 'bob.test',
@@ -314,10 +268,10 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'hide',
         },
-        labelers: [],
+        mods: [],
       },
     )
     expect(res1.avatar).toBeModerationResult(
@@ -326,5 +280,5 @@ describe('Moderation', () => {
       JSON.stringify(res1, null, 2),
       true,
     )
-  })*/
+  })
 })

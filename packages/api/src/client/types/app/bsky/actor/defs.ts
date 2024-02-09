@@ -274,7 +274,7 @@ export function validateModsPref(v: unknown): ValidationResult {
 export interface ModPrefItem {
   did: string
   enabled: boolean
-  labelGroupSettings: LabelGroupSetting[]
+  disabledLabelGroups?: string[]
   [k: string]: unknown
 }
 
@@ -288,22 +288,4 @@ export function isModPrefItem(v: unknown): v is ModPrefItem {
 
 export function validateModPrefItem(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#modPrefItem', v)
-}
-
-export interface LabelGroupSetting {
-  labelGroup: string
-  setting: 'ignore' | 'warn' | 'hide' | (string & {})
-  [k: string]: unknown
-}
-
-export function isLabelGroupSetting(v: unknown): v is LabelGroupSetting {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#labelGroupSetting'
-  )
-}
-
-export function validateLabelGroupSetting(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#labelGroupSetting', v)
 }

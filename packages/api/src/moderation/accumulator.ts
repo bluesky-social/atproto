@@ -5,6 +5,7 @@ import {
   ModerationCause,
   ModerationOpts,
   ModerationDecision,
+  LabelDefinition,
 } from './types'
 import { LABELS } from './const/labels'
 
@@ -62,7 +63,7 @@ export class ModerationCauseAccumulator {
 
   addLabel(label: Label, opts: ModerationOpts) {
     // look up the label definition
-    const labelDef = LABELS[label.val]
+    const labelDef = LABELS[label.val] as LabelDefinition
     if (!labelDef) {
       // ignore labels we don't understand
       return
@@ -72,12 +73,14 @@ export class ModerationCauseAccumulator {
     const isSelf = label.src === this.did
     const labeler = isSelf
       ? undefined
-      : opts.labelers.find((s) => s.labeler.did === label.src)
+      : opts.mods.find((s) => s.did === label.src)
 
-    /* TODO when 3P labelers are supported
-    if (!isSelf && !labeler) {
+    if (!isSelf && (!labeler || !labeler.enabled)) {
       return // skip labelers not configured by the user
-    }*/
+    }
+    if (labeler && labeler.disabledLabelGroups?.includes(labelDef.groupId)) {
+      return // skip disabled label groups on the labeler
+    }
 
     // establish the label preference for interpretation
     let labelPref: LabelPreference = 'ignore'
@@ -85,8 +88,6 @@ export class ModerationCauseAccumulator {
       labelPref = labelDef.preferences[0]
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
       labelPref = 'hide'
-    } else if (labeler?.labelGroups[labelDef.groupId]) {
-      labelPref = labeler.labelGroups[labelDef.groupId]
     } else if (opts.labelGroups[labelDef.groupId]) {
       labelPref = opts.labelGroups[labelDef.groupId]
     }
@@ -120,7 +121,7 @@ export class ModerationCauseAccumulator {
       source:
         isSelf || !labeler
           ? { type: 'user' }
-          : { type: 'labeler', labeler: labeler.labeler },
+          : { type: 'labeler', did: labeler.did },
       label,
       labelDef,
       setting: labelPref,

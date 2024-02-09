@@ -227,7 +227,7 @@
     },
     "modPrefItem": {
       "type": "object",
-      "required": ["did", "enabled", "labelGroupSettings"],
+      "required": ["did", "enabled"],
       "properties": {
         "did": {
           "type": "string",
@@ -236,23 +236,11 @@
         "enabled": {
           "type": "boolean"
         },
-        "labelGroupSettings": {
+        "disabledLabelGroups": {
           "type": "array",
           "items": {
-            "type": "ref",
-            "ref": "#labelGroupSetting"
+            "type": "string"
           }
-        }
-      }
-    },
-    "labelGroupSetting": {
-      "type": "object",
-      "required": ["labelGroup", "setting"],
-      "properties": {
-        "labelGroup": { "type": "string" },
-        "setting": {
-          "type": "string",
-          "knownValues": ["ignore", "warn", "hide"]
         }
       }
     }

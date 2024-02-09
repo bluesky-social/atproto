@@ -18,6 +18,9 @@ export * from './moderation'
 export * from './moderation/types'
 export * from './mocker'
 export { LABELS } from './moderation/const/labels'
-export { LABEL_GROUPS } from './moderation/const/label-groups'
+export {
+  LABEL_GROUPS,
+  DEFAULT_LABEL_GROUP_SETTINGS,
+} from './moderation/const/label-groups'
 export { BskyAgent } from './bsky-agent'
 export { AtpAgent as default } from './agent'

@@ -50,6 +50,7 @@
   {
     "id": "intellectual-property",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "plagiarism",
@@ -62,6 +63,7 @@
   {
     "id": "porn",
     "configurable": true,
+    "defaultSetting": "hide",
     "labels": [
       {
         "id": "porn",
@@ -74,6 +76,7 @@
   {
     "id": "suggestive",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "sexual",
@@ -86,6 +89,7 @@
   {
     "id": "nudity",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "nudity",
@@ -98,6 +102,7 @@
   {
     "id": "violence",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "nsfl",
@@ -128,6 +133,7 @@
   {
     "id": "drugs-alcohol",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "substance-abuse",
@@ -140,6 +146,7 @@
   {
     "id": "self-harm",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "self-harm",
@@ -158,6 +165,7 @@
   {
     "id": "intolerance",
     "configurable": true,
+    "defaultSetting": "hide",
     "labels": [
       {
         "id": "intolerant-race",
@@ -194,6 +202,7 @@
   {
     "id": "bad-behavior",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "harassment",
@@ -218,6 +227,7 @@
   {
     "id": "rude",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "rude",
@@ -230,6 +240,7 @@
   {
     "id": "upsetting",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "disgusting",
@@ -248,6 +259,7 @@
   {
     "id": "troubling",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "troubling",
@@ -272,6 +284,7 @@
   {
     "id": "hate-group-mention",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "icon-intolerant",
@@ -284,6 +297,7 @@
   {
     "id": "discourse",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "discourse",
@@ -302,6 +316,7 @@
   {
     "id": "curation",
     "configurable": true,
+    "defaultSetting": "ignore",
     "labels": [
       {
         "id": "curation",
@@ -314,6 +329,7 @@
   {
     "id": "spam",
     "configurable": true,
+    "defaultSetting": "hide",
     "labels": [
       {
         "id": "spam",
@@ -344,6 +360,7 @@
   {
     "id": "misrepresentation",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "impersonation",
@@ -362,6 +379,7 @@
   {
     "id": "security",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "account-security",
@@ -380,6 +398,7 @@
   {
     "id": "misinfo",
     "configurable": true,
+    "defaultSetting": "warn",
     "labels": [
       {
         "id": "misinfo",

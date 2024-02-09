@@ -112,7 +112,6 @@ export interface BskyPreferences {
   }
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
-  modsPref: AppBskyActorDefs.ModsPref
   moderationOpts: ModerationOpts
   birthDate: Date | undefined
 }

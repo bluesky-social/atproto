@@ -48,18 +48,6 @@ export interface LabelGroupDefinition {
 export type LabelDefinitionMap = Record<KnownLabelValue, LabelDefinition>
 export type LabelGroupDefinitionMap = Record<LabelGroupId, LabelGroupDefinition>
 
-// labelers
-// =
-
-interface Labeler {
-  did: string
-}
-
-export interface LabelerSettings {
-  labeler: Labeler
-  labelGroups: Record<string, LabelPreference>
-}
-
 // subjects
 // =
 
@@ -88,7 +76,7 @@ export type ModerationSubject =
 export type ModerationCauseSource =
   | { type: 'user' }
   | { type: 'list'; list: AppBskyGraphDefs.ListViewBasic }
-  | { type: 'labeler'; labeler: Labeler }
+  | { type: 'labeler'; did: string }
 
 export type ModerationCause =
   | { type: 'blocking'; source: ModerationCauseSource; priority: 3 }
@@ -108,7 +96,7 @@ export interface ModerationOpts {
   userDid: string
   adultContentEnabled: boolean
   labelGroups: Record<string, LabelPreference>
-  labelers: LabelerSettings[]
+  mods: AppBskyActorDefs.ModsPref['mods']
 }
 
 export class ModerationDecision {

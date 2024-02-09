@@ -2,7 +2,7 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   BskyAgent,
   BSKY_MODSERVICE_DID,
-  DEFAULT_LABELGROUP_PREFERENCES,
+  DEFAULT_LABEL_GROUP_SETTINGS,
 } from '..'
 
 describe('agent', () => {
@@ -75,19 +75,20 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: {
+          ...DEFAULT_LABEL_GROUP_SETTINGS,
+          porn: 'ignore',
+          nudity: 'ignore',
+          suggestive: 'ignore',
+          violence: 'ignore',
+          intolerance: 'ignore',
+          spam: 'ignore',
+          misinfo: 'ignore',
+        },
+        mods: [
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: {
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'ignore',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            },
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
           },
         ],
       },
@@ -100,24 +101,6 @@ describe('agent', () => {
           hideRepliesByUnfollowed: false,
           hideReposts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries({
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'ignore',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
@@ -127,425 +110,7 @@ describe('agent', () => {
     expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
   })
 
-  it('migrates legacy content-label prefs (default service added)', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    const userRes = await agent.createAccount({
-      handle: 'user8.test',
-      email: 'user8@test.com',
-      password: 'password',
-    })
-    const userDid = userRes.data.did
-
-    await agent.app.bsky.actor.putPreferences({
-      preferences: [
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nsfw',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nudity',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'suggestive',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'gore',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'hate',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'spam',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'impersonation',
-          visibility: 'ignore',
-        },
-      ],
-    })
-    await agent.addModService(BSKY_MODSERVICE_DID)
-    await expect(agent.getPreferences()).resolves.toStrictEqual({
-      feeds: {
-        pinned: undefined,
-        saved: undefined,
-      },
-      moderationOpts: {
-        userDid,
-        adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
-          {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: {
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'ignore',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            },
-          },
-        ],
-      },
-      birthDate: undefined,
-      feedViewPrefs: {
-        home: {
-          hideQuotePosts: false,
-          hideReplies: false,
-          hideRepliesByLikeCount: 0,
-          hideRepliesByUnfollowed: false,
-          hideReposts: false,
-        },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries({
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'ignore',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
-      },
-      threadViewPrefs: {
-        prioritizeFollowedUsers: true,
-        sort: 'oldest',
-      },
-    })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
-
-    await agent.setModServiceLabelGroupPref(
-      BSKY_MODSERVICE_DID,
-      'intolerance',
-      'hide',
-    )
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
-    await expect(agent.getPreferences()).resolves.toStrictEqual({
-      feeds: {
-        pinned: undefined,
-        saved: undefined,
-      },
-      moderationOpts: {
-        userDid,
-        adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
-          {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: {
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'hide',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            },
-          },
-        ],
-      },
-      birthDate: undefined,
-      feedViewPrefs: {
-        home: {
-          hideQuotePosts: false,
-          hideReplies: false,
-          hideRepliesByLikeCount: 0,
-          hideRepliesByUnfollowed: false,
-          hideReposts: false,
-        },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries({
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'hide',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
-      },
-      threadViewPrefs: {
-        prioritizeFollowedUsers: true,
-        sort: 'oldest',
-      },
-    })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
-  })
-
-  it('migrates legacy content-label prefs (other service added)', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    const userRes = await agent.createAccount({
-      handle: 'user2.test',
-      email: 'user2@test.com',
-      password: 'password',
-    })
-    const userDid = userRes.data.did
-
-    await agent.app.bsky.actor.putPreferences({
-      preferences: [
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nsfw',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nudity',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'suggestive',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'gore',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'hate',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'spam',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'impersonation',
-          visibility: 'ignore',
-        },
-      ],
-    })
-    await agent.addModService('did:plc:other')
-    expect(agent.labelersHeader).toStrictEqual([
-      BSKY_MODSERVICE_DID,
-      'did:plc:other',
-    ])
-    await expect(agent.getPreferences()).resolves.toStrictEqual({
-      feeds: {
-        pinned: undefined,
-        saved: undefined,
-      },
-      moderationOpts: {
-        userDid,
-        adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
-          {
-            labeler: { did: 'did:plc:other' },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
-          },
-          {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: {
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'ignore',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            },
-          },
-        ],
-      },
-      birthDate: undefined,
-      feedViewPrefs: {
-        home: {
-          hideQuotePosts: false,
-          hideReplies: false,
-          hideRepliesByLikeCount: 0,
-          hideRepliesByUnfollowed: false,
-          hideReposts: false,
-        },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries({
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'ignore',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-          {
-            did: 'did:plc:other',
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
-      },
-      threadViewPrefs: {
-        prioritizeFollowedUsers: true,
-        sort: 'oldest',
-      },
-    })
-    expect(agent.labelersHeader).toStrictEqual([
-      BSKY_MODSERVICE_DID,
-      'did:plc:other',
-    ])
-  })
-
-  it('migrates legacy content-label prefs (modify default service settings)', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    const userRes = await agent.createAccount({
-      handle: 'user3.test',
-      email: 'user3@test.com',
-      password: 'password',
-    })
-    const userDid = userRes.data.did
-
-    await agent.app.bsky.actor.putPreferences({
-      preferences: [
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nsfw',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nudity',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'suggestive',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'gore',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'hate',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'spam',
-          visibility: 'ignore',
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'impersonation',
-          visibility: 'ignore',
-        },
-      ],
-    })
-    await agent.setModServiceLabelGroupPref(
-      BSKY_MODSERVICE_DID,
-      'intolerance',
-      'hide',
-    )
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
-    await expect(agent.getPreferences()).resolves.toStrictEqual({
-      feeds: {
-        pinned: undefined,
-        saved: undefined,
-      },
-      moderationOpts: {
-        userDid,
-        adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
-          {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: {
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'hide',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            },
-          },
-        ],
-      },
-      birthDate: undefined,
-      feedViewPrefs: {
-        home: {
-          hideQuotePosts: false,
-          hideReplies: false,
-          hideRepliesByLikeCount: 0,
-          hideRepliesByUnfollowed: false,
-          hideReposts: false,
-        },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries({
-              porn: 'ignore',
-              nudity: 'ignore',
-              suggestive: 'ignore',
-              violence: 'ignore',
-              intolerance: 'hide',
-              spam: 'ignore',
-              misinfo: 'ignore',
-            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
-      },
-      threadViewPrefs: {
-        prioritizeFollowedUsers: true,
-        sort: 'oldest',
-      },
-    })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
-  })
-
-  it('adds a moderation service when first setting a label pref', async () => {
+  it('adds a moderation service when first setting a label group enabled/disabled', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 
     const userRes = await agent.createAccount({
@@ -555,7 +120,7 @@ describe('agent', () => {
     })
     const userDid = userRes.data.did
 
-    await agent.setModServiceLabelGroupPref('did:plc:other', 'spam', 'ignore')
+    await agent.setModServiceLabelGroupEnabled('did:plc:other', 'spam', false)
     expect(agent.labelersHeader).toStrictEqual([
       BSKY_MODSERVICE_DID,
       'did:plc:other',
@@ -565,18 +130,16 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: DEFAULT_LABEL_GROUP_SETTINGS,
+        mods: [
           {
-            labeler: { did: 'did:plc:other' },
-            labelGroups: {
-              ...DEFAULT_LABELGROUP_PREFERENCES,
-              ...{ spam: 'ignore' },
-            },
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
           },
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: 'did:plc:other',
+            enabled: true,
+            disabledLabelGroups: ['spam'],
           },
         ],
       },
@@ -589,26 +152,6 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-          {
-            did: 'did:plc:other',
-            enabled: true,
-            labelGroupSettings: Object.entries({
-              ...DEFAULT_LABELGROUP_PREFERENCES,
-              ...{ spam: 'ignore' },
-            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
@@ -641,15 +184,15 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: DEFAULT_LABEL_GROUP_SETTINGS,
+        mods: [
           {
-            labeler: { did: 'did:plc:other' },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
           },
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: 'did:plc:other',
+            enabled: true,
           },
         ],
       },
@@ -662,25 +205,6 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-          {
-            did: 'did:plc:other',
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
@@ -699,11 +223,15 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: DEFAULT_LABEL_GROUP_SETTINGS,
+        mods: [
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+          },
+          {
+            did: 'did:plc:other',
+            enabled: false,
           },
         ],
       },
@@ -716,25 +244,6 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-          {
-            did: 'did:plc:other',
-            enabled: false,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
@@ -753,15 +262,15 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: DEFAULT_LABEL_GROUP_SETTINGS,
+        mods: [
           {
-            labeler: { did: 'did:plc:other' },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
           },
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: 'did:plc:other',
+            enabled: true,
           },
         ],
       },
@@ -774,25 +283,6 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-          {
-            did: 'did:plc:other',
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
@@ -822,11 +312,11 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: DEFAULT_LABEL_GROUP_SETTINGS,
+        mods: [
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
           },
         ],
       },
@@ -839,18 +329,6 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
@@ -880,15 +358,15 @@ describe('agent', () => {
       moderationOpts: {
         userDid,
         adultContentEnabled: false,
-        labelGroups: {},
-        labelers: [
+        labelGroups: DEFAULT_LABEL_GROUP_SETTINGS,
+        mods: [
           {
-            labeler: { did: 'did:plc:other' },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
           },
           {
-            labeler: { did: BSKY_MODSERVICE_DID },
-            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            did: 'did:plc:other',
+            enabled: true,
           },
         ],
       },
@@ -901,25 +379,6 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
-      },
-      modsPref: {
-        $type: 'app.bsky.actor.defs#modsPref',
-        mods: [
-          {
-            did: BSKY_MODSERVICE_DID,
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-          {
-            did: 'did:plc:other',
-            enabled: true,
-            labelGroupSettings: Object.entries(
-              DEFAULT_LABELGROUP_PREFERENCES,
-            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
-          },
-        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
