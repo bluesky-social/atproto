@@ -217,7 +217,7 @@ export class ModerationViews {
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
         try {
-          return await this.appviewAgent.api.com.atproto.repo.getRecord(
+          const record = await this.appviewAgent.api.com.atproto.repo.getRecord(
             {
               repo: uri.hostname,
               collection: uri.collection,
@@ -226,6 +226,7 @@ export class ModerationViews {
             },
             auth,
           )
+          return record
         } catch {
           return null
         }
@@ -473,6 +474,7 @@ export class ModerationViews {
       appealed: status.appealed ?? undefined,
       subjectRepoHandle: status.handle ?? undefined,
       subjectBlobCids: status.blobCids || [],
+      langs: status.langs || [],
       subject: subjectFromStatusRow(status).lex(),
     }
   }

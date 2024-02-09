@@ -1,10 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`moderation-statuses query statuses returns statuses filtered by subject language 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 4,
+    "langs": Array [
+      "en-US",
+      "i-klingon",
+    ],
+    "lastReportedAt": "1970-01-01T00:00:00.000Z",
+    "reviewState": "com.atproto.admin.defs#reviewOpen",
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectRepoHandle": "bob.test",
+    "takendown": false,
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;
+
 exports[`moderation-statuses query statuses returns statuses for subjects that received moderation events 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 4,
+    "langs": Array [
+      "en-US",
+      "i-klingon",
+    ],
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -20,6 +48,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 3,
+    "langs": Array [],
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -34,6 +63,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 2,
+    "langs": Array [],
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -49,6 +79,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "id": 1,
+    "langs": Array [],
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {

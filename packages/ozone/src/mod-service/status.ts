@@ -10,7 +10,6 @@ import {
 } from '../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
-import { sql } from 'kysely'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import { jsonb } from '../db/types'
 
@@ -98,6 +97,7 @@ const getSubjectStatusForModerationEvent = ({
 export const adjustModerationSubjectStatus = async (
   db: Database,
   moderationEvent: ModerationEventRow,
+  getSubjectLang: () => Promise<string[] | null>,
   blobCids?: string[],
 ) => {
   const {
@@ -139,6 +139,16 @@ export const adjustModerationSubjectStatus = async (
     .where('recordPath', '=', identifier.recordPath)
     .selectAll()
     .executeTakeFirst()
+
+  // Only retrieve the record langs on the first event on this subject to avoid unnecessary calls
+  // on every event that may cause a change in the status since the lang is not expected to change
+  if (!currentStatus) {
+    const recordLangs = await getSubjectLang()
+    if (recordLangs?.length) {
+      // TODO: bit hacky to get around TS
+      subjectStatus.langs = jsonb(recordLangs) as unknown as string[]
+    }
+  }
 
   if (
     currentStatus?.reviewState === REVIEWESCALATED &&

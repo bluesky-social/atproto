@@ -1620,6 +1620,12 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
+            langs: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
             cursor: {
               type: 'string',
             },

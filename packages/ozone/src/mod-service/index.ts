@@ -42,6 +42,7 @@ import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
+import { getRecordLang } from './lang'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -294,7 +295,12 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids)
+    await adjustModerationSubjectStatus(
+      this.db,
+      modEvent,
+      () => getRecordLang({ subject, moderationViews: this.views }),
+      subject.blobCids,
+    )
 
     return modEvent
   }
@@ -652,6 +658,7 @@ export class ModerationService {
     lastReviewedBy,
     sortField,
     subject,
+    langs,
   }: {
     cursor?: string
     limit?: number
@@ -668,8 +675,10 @@ export class ModerationService {
     sortDirection: 'asc' | 'desc'
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
+    langs: string[]
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+    const { ref } = this.db.db.dynamic
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
@@ -731,7 +740,14 @@ export class ModerationService {
       )
     }
 
-    const { ref } = this.db.db.dynamic
+    if (langs.length) {
+      builder = builder.where(
+        sql<string>`${ref(
+          'moderation_subject_status.langs',
+        )} @> ${JSON.stringify(langs)}`,
+      )
+    }
+
     const keyset = new StatusKeyset(
       ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),

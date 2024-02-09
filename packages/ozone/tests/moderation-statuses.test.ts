@@ -39,8 +39,8 @@ describe('moderation-statuses', () => {
     }
     const bobsPost = {
       $type: 'com.atproto.repo.strongRef',
-      uri: sc.posts[sc.dids.bob][1].ref.uriStr,
-      cid: sc.posts[sc.dids.bob][1].ref.cidStr,
+      uri: sc.posts[sc.dids.bob][0].ref.uriStr,
+      cid: sc.posts[sc.dids.bob][0].ref.cidStr,
     }
     const alicesPost = {
       $type: 'com.atproto.repo.strongRef',
@@ -93,6 +93,14 @@ describe('moderation-statuses', () => {
       const response = await queryModerationStatuses({})
 
       expect(forSnapshot(response.data.subjectStatuses)).toMatchSnapshot()
+    })
+
+    it('returns statuses filtered by subject language', async () => {
+      const klingonQueue = await queryModerationStatuses({
+        langs: ['i-klingon'],
+      })
+
+      expect(forSnapshot(klingonQueue.data.subjectStatuses)).toMatchSnapshot()
     })
 
     it('returns paginated statuses', async () => {
