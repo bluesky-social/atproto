@@ -31,7 +31,7 @@ export type LabelDefinitionLocalizedStringsMap = Record<
 >
 
 export interface LabelDefinition {
-  id: string
+  id: KnownLabelValue
   groupId: string
   configurable: boolean
   preferences: LabelPreference[]
@@ -40,7 +40,7 @@ export interface LabelDefinition {
 }
 
 export interface LabelGroupDefinition {
-  id: string
+  id: LabelGroupId
   configurable: boolean
   labels: LabelDefinition[]
 }
