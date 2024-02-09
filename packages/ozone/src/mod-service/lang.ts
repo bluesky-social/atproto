@@ -8,8 +8,12 @@ export const getRecordLang = async ({
   subject: ModSubject
   moderationViews: ModerationViews
 }): Promise<string[] | null> => {
-  // If subject is a repo, fetch the author feed and get all langs from posts
-  if (subject.isRepo()) {
+  const isRecord = subject.isRecord()
+  // If subject is a repo or a profile record, fetch the author feed and get all langs from first page of posts
+  if (
+    subject.isRepo() ||
+    (isRecord && subject.uri.endsWith('/app.bsky.actor.profile/self'))
+  ) {
     const feed = await moderationViews.fetchAuthorFeed(subject.did)
     const langs = new Set<string>()
     feed.forEach((item) => {
@@ -21,7 +25,7 @@ export const getRecordLang = async ({
     return langs.size > 0 ? Array.from(langs) : null
   }
 
-  if (subject.isRecord()) {
+  if (isRecord) {
     const recordByUri = await moderationViews.fetchRecords([subject])
     const record = recordByUri.get(subject.uri)
     return (record?.value.langs as string[]) || null
