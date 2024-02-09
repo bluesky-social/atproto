@@ -1,5 +1,4 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import lande from 'lande'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
