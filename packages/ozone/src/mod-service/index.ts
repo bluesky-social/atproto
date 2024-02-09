@@ -298,7 +298,14 @@ export class ModerationService {
     await adjustModerationSubjectStatus(
       this.db,
       modEvent,
-      () => getRecordLang({ subject, moderationViews: this.views }),
+      async () => {
+        try {
+          // For whatever reason, if language detection fails, don't let that cause the entire subject status update to fail
+          return await getRecordLang({ subject, moderationViews: this.views })
+        } catch (err) {
+          return null
+        }
+      },
       subject.blobCids,
     )
 

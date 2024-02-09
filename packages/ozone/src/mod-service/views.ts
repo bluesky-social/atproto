@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AppBskyFeedDefs } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Database } from '../db'
@@ -477,6 +477,18 @@ export class ModerationViews {
       langs: status.langs || [],
       subject: subjectFromStatusRow(status).lex(),
     }
+  }
+
+  async fetchAuthorFeed(
+    actor: string,
+  ): Promise<AppBskyFeedDefs.FeedViewPost[]> {
+    const auth = await this.appviewAuth()
+    if (!auth) return []
+    const {
+      data: { feed },
+    } = await this.appviewAgent.api.app.bsky.feed.getAuthorFeed({ actor }, auth)
+
+    return feed
   }
 }
 
