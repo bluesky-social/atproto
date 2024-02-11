@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import express from 'express'
-import { MINUTE, check } from '@atproto/common'
+import { MINUTE, SECOND, check } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { XRPCError } from '@atproto/xrpc'
@@ -26,10 +26,16 @@ import { normalizePhoneNumber } from '../../../../phone-verification/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
-    rateLimit: {
-      durationMs: 5 * MINUTE,
-      points: 100,
-    },
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 100,
+      },
+      {
+        durationMs: 5 * SECOND,
+        points: 2,
+      },
+    ],
     handler: async ({ input, req }) => {
       const hasAvailability = await ctx.signupLimiter.hasAvailability()
       // temporary hack: don't queue android users (user-agent `okhttp/*`) since the latest version of app isn't rolled out on that platform yet
