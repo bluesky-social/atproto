@@ -2,8 +2,6 @@
   "name": "plc-service",
   "private": true,
   "dependencies": {
-    "@atproto/aws": "workspace:^",
-    "@atproto/crypto": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@opentelemetry/instrumentation": "^0.45.0",
     "dd-trace": "^4.18.0",
