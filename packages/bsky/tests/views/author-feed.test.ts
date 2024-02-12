@@ -138,7 +138,7 @@ describe('pds author feed views', () => {
     )
   })
 
-  it('blocked by actor takedown.', async () => {
+  it('non-admins blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
@@ -163,11 +163,18 @@ describe('pds author feed views', () => {
       },
     )
 
-    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+    const attemptAsUser = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
     )
-    await expect(attempt).rejects.toThrow('Profile not found')
+    await expect(attemptAsUser).rejects.toThrow('Profile not found')
+
+    const attemptAsAdmin = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: network.bsky.adminAuthHeaders() },
+    )
+    expect(attemptAsAdmin.data.feed.length).toBeGreaterThan(0)
+    expect(attemptAsAdmin.data.feed.length).toEqual(preBlock.feed.length)
 
     // Cleanup
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -215,13 +222,26 @@ describe('pds author feed views', () => {
       },
     )
 
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
-    )
+    const [{ data: postBlockAsUser }, { data: postBlockAsAdmin }] =
+      await Promise.all([
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: await network.serviceHeaders(carol) },
+        ),
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: network.bsky.adminAuthHeaders() },
+        ),
+      ])
 
-    expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
-    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
+    expect(postBlockAsUser.feed.length).toEqual(preBlock.feed.length - 1)
+    expect(postBlockAsUser.feed.map((item) => item.post.uri)).not.toContain(
+      post.uri,
+    )
+    expect(postBlockAsAdmin.feed.length).toEqual(preBlock.feed.length)
+    expect(postBlockAsAdmin.feed.map((item) => item.post.uri)).toContain(
+      post.uri,
+    )
 
     // Cleanup
     await agent.api.com.atproto.admin.updateSubjectStatus(
