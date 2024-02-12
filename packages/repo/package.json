@@ -21,8 +21,6 @@
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect ../../node_modules/.bin/jest",
-    "bench": "jest --config jest.bench.config.js",
-    "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/repo"
