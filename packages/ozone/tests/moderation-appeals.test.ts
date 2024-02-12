@@ -3,16 +3,13 @@ import AtpAgent, {
   ComAtprotoAdminDefs,
   ComAtprotoAdminEmitModerationEvent,
   ComAtprotoAdminQueryModerationStatuses,
+  ComAtprotoModerationDefs,
 } from '@atproto/api'
+
 import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  REVIEWCLOSED,
-  REVIEWOPEN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { REASONAPPEAL } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { REVIEWESCALATED } from '../src/lexicon/types/com/atproto/admin/defs'
 
 describe('moderation-appeals', () => {
@@ -92,33 +89,36 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.alice,
       })
 
-      await assertBobsPostStatus(REVIEWOPEN, undefined)
+      await assertBobsPostStatus(ComAtprotoAdminDefs.REVIEWOPEN, undefined)
 
       // Create a report as normal user with appeal type
       expect(
         sc.createReport({
           reportedBy: sc.dids.carol,
-          reasonType: REASONAPPEAL,
+          reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
           reason: 'appealing',
           subject: getBobsPostSubject(),
         }),
       ).rejects.toThrow('You cannot appeal this report')
 
       // Verify that the appeal status did not change
-      await assertBobsPostStatus(REVIEWOPEN, undefined)
+      await assertBobsPostStatus(ComAtprotoAdminDefs.REVIEWOPEN, undefined)
 
       // Emit report event as moderator
       await emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
-          reportType: REASONAPPEAL,
+          reportType: ComAtprotoModerationDefs.REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
         createdBy: sc.dids.alice,
       })
 
       // Verify that appeal status changed when appeal report was emitted by moderator
-      const status = await assertBobsPostStatus(REVIEWOPEN, true)
+      const status = await assertBobsPostStatus(
+        ComAtprotoAdminDefs.REVIEWOPEN,
+        true,
+      )
       expect(status?.appealedAt).not.toBeNull()
 
       // Create a report as normal user for carol's post
@@ -132,18 +132,22 @@ describe('moderation-appeals', () => {
       // Verify that the appeal status on carol's post is undefined
       await assertSubjectStatus(
         getCarolPostSubject().uri,
-        REVIEWOPEN,
+        ComAtprotoAdminDefs.REVIEWOPEN,
         undefined,
       )
 
       await sc.createReport({
         reportedBy: sc.dids.carol,
-        reasonType: REASONAPPEAL,
+        reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
         reason: 'appealing',
         subject: getCarolPostSubject(),
       })
       // Verify that the appeal status on carol's post is true
-      await assertSubjectStatus(getCarolPostSubject().uri, REVIEWOPEN, true)
+      await assertSubjectStatus(
+        getCarolPostSubject().uri,
+        ComAtprotoAdminDefs.REVIEWOPEN,
+        true,
+      )
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
@@ -155,19 +159,25 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.carol,
       })
 
-      const previousStatus = await assertBobsPostStatus(REVIEWOPEN, false)
+      const previousStatus = await assertBobsPostStatus(
+        ComAtprotoAdminDefs.REVIEWOPEN,
+        false,
+      )
 
       await emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
-          reportType: REASONAPPEAL,
+          reportType: ComAtprotoModerationDefs.REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
         createdBy: sc.dids.bob,
       })
 
       // Verify that even after the appeal event by bob for his post, the appeal status is true again with new timestamp
-      const newStatus = await assertBobsPostStatus(REVIEWOPEN, true)
+      const newStatus = await assertBobsPostStatus(
+        ComAtprotoAdminDefs.REVIEWOPEN,
+        true,
+      )
       expect(
         new Date(`${previousStatus?.lastAppealedAt}`).getTime(),
       ).toBeLessThan(new Date(`${newStatus?.lastAppealedAt}`).getTime())
@@ -204,13 +214,17 @@ describe('moderation-appeals', () => {
       await emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
-          reportType: REASONAPPEAL,
+          reportType: ComAtprotoModerationDefs.REASONAPPEAL,
         },
         subject: getAlicesPostSubject(),
         createdBy: sc.dids.alice,
       })
 
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        ComAtprotoAdminDefs.REVIEWOPEN,
+        true,
+      )
 
       // Bob reports it again
       await emitModerationEvent({
@@ -223,7 +237,11 @@ describe('moderation-appeals', () => {
       })
 
       // Assert that the status is still REVIEWOPEN, as report events are meant to do
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        ComAtprotoAdminDefs.REVIEWOPEN,
+        true,
+      )
 
       // Emit an escalation event
       await emitModerationEvent({
@@ -250,7 +268,11 @@ describe('moderation-appeals', () => {
       })
 
       // Assert that status moved on to reviewClosed while appealed status is still true
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, true)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        ComAtprotoAdminDefs.REVIEWCLOSED,
+        true,
+      )
 
       // Emit a resolveAppeal event
       await emitModerationEvent({
@@ -263,7 +285,11 @@ describe('moderation-appeals', () => {
       })
 
       // Assert that status stayed the same while appealed status is still true
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, false)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        ComAtprotoAdminDefs.REVIEWCLOSED,
+        false,
+      )
     })
   })
 })

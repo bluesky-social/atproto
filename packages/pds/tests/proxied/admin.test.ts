@@ -1,12 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
-import {
-  REASONOTHER,
-  REASONSPAM,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { forSnapshot } from '../_util'
-import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork
@@ -67,7 +62,7 @@ describe('proxies admin requests', () => {
     const { data: reportA } =
       await agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: REASONSPAM,
+          reasonType: 'com.atproto.moderation.defs#reasonSpam',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.bob,
@@ -81,7 +76,7 @@ describe('proxies admin requests', () => {
     const { data: reportB } =
       await agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: REASONOTHER,
+          reasonType: 'com.atproto.moderation.defs#reasonOther',
           reason: 'impersonation',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -289,7 +284,9 @@ describe('proxies admin requests', () => {
       { uri: post.ref.uriStr, depth: 0 },
       { headers: sc.getHeaders(sc.dids.carol) },
     )
-    await expect(tryGetPost).rejects.toThrow(NotFoundError)
+    await expect(tryGetPost).rejects.toMatchObject({
+      error: 'NotFound',
+    })
     // reverse action
     await agent.api.com.atproto.admin.emitModerationEvent(
       {

@@ -1,12 +1,13 @@
 import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
-import AtpAgent from '@atproto/api'
-import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/emitModerationEvent'
-import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
-import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
-import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
-import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
+import AtpAgent, {
+  ComAtprotoAdminEmitModerationEvent,
+  ComAtprotoModerationCreateReport,
+  AppBskyFeedPost,
+  AppBskyRichtextFacet,
+  AppBskyFeedLike,
+  AppBskyGraphFollow,
+} from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { TestNetworkNoAppView } from '../network-no-appview'
@@ -185,7 +186,11 @@ export class SeedClient {
     return this.profiles[by]
   }
 
-  async follow(from: string, to: string, overrides?: Partial<FollowRecord>) {
+  async follow(
+    from: string,
+    to: string,
+    overrides?: Partial<AppBskyGraphFollow.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.graph.follow.create(
       { repo: from },
       {
@@ -212,7 +217,11 @@ export class SeedClient {
     delete this.follows[from][to]
   }
 
-  async block(from: string, to: string, overrides?: Partial<FollowRecord>) {
+  async block(
+    from: string,
+    to: string,
+    overrides?: Partial<AppBskyGraphFollow.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.graph.block.create(
       { repo: from },
       {
@@ -242,10 +251,10 @@ export class SeedClient {
   async post(
     by: string,
     text: string,
-    facets?: Facet[],
+    facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
     quote?: RecordRef,
-    overrides?: Partial<PostRecord>,
+    overrides?: Partial<AppBskyFeedPost.Record>,
   ) {
     const imageEmbed = images && {
       $type: 'app.bsky.embed.images',
@@ -309,7 +318,11 @@ export class SeedClient {
     return { image: res.data.blob, alt: filePath }
   }
 
-  async like(by: string, subject: RecordRef, overrides?: Partial<LikeRecord>) {
+  async like(
+    by: string,
+    subject: RecordRef,
+    overrides?: Partial<AppBskyFeedLike.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.feed.like.create(
       { repo: by },
       {
@@ -329,7 +342,7 @@ export class SeedClient {
     root: RecordRef,
     parent: RecordRef,
     text: string,
-    facets?: Facet[],
+    facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
   ) {
     const embed = images
@@ -422,11 +435,11 @@ export class SeedClient {
   }
 
   async emitModerationEvent(opts: {
-    event: TakeActionInput['event']
-    subject: TakeActionInput['subject']
+    event: ComAtprotoAdminEmitModerationEvent.InputSchema['event']
+    subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
     reason?: string
     createdBy?: string
-    meta?: TakeActionInput['meta']
+    meta?: ComAtprotoAdminEmitModerationEvent.InputSchema['meta']
   }) {
     const {
       event,
@@ -446,7 +459,7 @@ export class SeedClient {
 
   async reverseModerationAction(opts: {
     id: number
-    subject: TakeActionInput['subject']
+    subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
     reason?: string
     createdBy?: string
   }) {
@@ -469,8 +482,8 @@ export class SeedClient {
   }
 
   async createReport(opts: {
-    reasonType: CreateReportInput['reasonType']
-    subject: CreateReportInput['subject']
+    reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
+    subject: ComAtprotoModerationCreateReport.InputSchema['subject']
     reason?: string
     reportedBy: string
   }) {

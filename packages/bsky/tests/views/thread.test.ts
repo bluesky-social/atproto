@@ -1,8 +1,6 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromThread } from '../_util'
-import assert from 'assert'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -144,7 +142,10 @@ describe('pds thread views', () => {
       { headers: await network.serviceHeaders(bob) },
     )
 
-    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    expect(thread.thread).toMatchObject({
+      $type: 'app.bsky.feed.defs#threadViewPost',
+    })
+
     const post = thread.thread.post
 
     const postSelfLabels = post.labels

@@ -1,9 +1,5 @@
 import { AtUri } from '@atproto/syntax'
-import AtpAgent from '@atproto/api'
-import {
-  REASONSPAM,
-  REASONOTHER,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
+import AtpAgent, { COM_ATPROTO_MODERATION } from '@atproto/api'
 import { TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
@@ -95,7 +91,10 @@ export async function generateMockSetup(env: TestNetwork) {
   // Report one user
   const reporter = picka(users)
   await reporter.agent.api.com.atproto.moderation.createReport({
-    reasonType: picka([REASONSPAM, REASONOTHER]),
+    reasonType: picka([
+      COM_ATPROTO_MODERATION.DefsReasonSpam,
+      COM_ATPROTO_MODERATION.DefsReasonOther,
+    ]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
@@ -145,7 +144,10 @@ export async function generateMockSetup(env: TestNetwork) {
     if (rand(6) === 0) {
       const reporter = picka(users)
       await reporter.agent.api.com.atproto.moderation.createReport({
-        reasonType: picka([REASONSPAM, REASONOTHER]),
+        reasonType: picka([
+          COM_ATPROTO_MODERATION.DefsReasonSpam,
+          COM_ATPROTO_MODERATION.DefsReasonOther,
+        ]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
           $type: 'com.atproto.repo.strongRef',
