@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.identity.signPlcMigrationOp",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Signs a PLC operation to update some value(s) in the requesting DID's document.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "handle": {
+              "type": "string",
+              "format": "handle",
+              "description": "The new handle."
+            },
+            "signingKey": {
+              "description": "The new signing key, formatted as a `did:key`. Normally provided by the service that the account is migrating to.",
+              "type": "string"
+            },
+            "rotationKeys": {
+              "description": "An array of rotation keys, formatted as `did:key`s, ordered by highest to least authority. Normally provided by the service that the account is migrating to.",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "pdsEndpoint": {
+              "description": "The endpoint for the PDS that an account is migrating to. Note that this will be reflected in the DID doc as provided and therefore should include the protocol scheme (`https://`).",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "output": {
+        "required": ["plcOp"],
+        "schema": {
+          "properties": {
+            "plcOp": {
+              "type": "unknown",
+              "description": "A signed DID PLC operation."
+            }
+          }
+        }
+      }
+    }
+  }
+}

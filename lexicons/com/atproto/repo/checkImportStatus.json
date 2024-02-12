@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.checkImportStatus",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Returns the status of an on ongoing import operation. Can be called multiple times over the course of an account migration.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["finalized", "uploadedRepo", "importedRepo", "importedPrivateState", "expectedBlobs", "importedBlobs"],
+          "properties": {
+            "finalized": { "type": "boolean" },
+            "uploadedRepo": { "type": "boolean" },
+            "importedRepo": { "type": "boolean" },
+            "importRepoError": { "type": "string" },
+            "importedPrivateState": { "type": "boolean" },
+            "expectedBlobs": { "type": "number" },
+            "importedBlobs": { "type": "number" }
+          }
+        }
+      }
+    }
+  }
+}

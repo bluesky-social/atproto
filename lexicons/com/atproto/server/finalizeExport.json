@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.finalizeExport",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Used during account migration to notify the 'Old PDS' that migration has been completed and that the account can be deactivated or deleted.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "shouldDelete": {
+              "type": "boolean",
+              "description": "A recommendation to server on if they should delete the account or simply deactivate.",
+              "default": "false"
+            }
+          }
+        }
+      }
+    }
+  }
+}

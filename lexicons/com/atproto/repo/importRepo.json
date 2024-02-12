@@ -1,0 +1,13 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.importRepo",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Import a repo in the form of a CAR file. Returns a 202 after successfully reading incoming CAR then asynchronously indexes the repo and contained records",
+      "input": {
+        "encoding": "application/vnd.ipld.car"
+      }
+    }
+  }
+}

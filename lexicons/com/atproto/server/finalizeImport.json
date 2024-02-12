@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.finalizeImport",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Used to finalize account import. Verifies that repo has been correctly imported, that the DID is correctly formatted, submits any identity operations, and activates the account",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "didPayload": {
+              "type": "union",
+              "refs": [
+                "#didPlcPayload",
+                "#didWebPayload"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "didPlcPayload": {
+      "type": "object",
+      "required": ["did", "op"],
+      "properties": {
+        "did": {"type": "string", "format": "did"},
+        "op": {"type": "unknown"}
+      }
+    },
+    "didWebPayload": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {"type": "string", "format": "did"}
+      }
+    }
+  }
+}
