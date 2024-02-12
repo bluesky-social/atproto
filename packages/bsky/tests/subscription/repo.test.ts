@@ -1,13 +1,13 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { CommitData } from '@atproto/repo'
-import { PreparedWrite } from '@atproto/pds/src/repo'
-import * as sequencer from '@atproto/pds/src/sequencer'
 import { cborDecode, cborEncode } from '@atproto/common'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { PreparedWrite, sequencer } from '@atproto/pds'
+import { CommitData } from '@atproto/repo'
+
+import { AppContext, Database } from '../../src'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
-import { AppContext, Database } from '../../src'
 
 describe('sync', () => {
   let network: TestNetwork

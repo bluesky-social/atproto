@@ -1,12 +1,11 @@
-import http from 'http'
+import { Secp256k1Keypair } from '@atproto/crypto'
+import { SkeletonHandler, createLexiconServer } from '@atproto/pds'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import * as plc from '@did-plc/lib'
 import events from 'events'
 import express from 'express'
 import getPort from 'get-port'
-import * as plc from '@did-plc/lib'
-import { Secp256k1Keypair } from '@atproto/crypto'
-import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { createServer } from '@atproto/pds/src/lexicon'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import http from 'http'
 
 export class TestFeedGen {
   destroyed = false
@@ -24,7 +23,7 @@ export class TestFeedGen {
     const port = await getPort()
     const did = await createFgDid(plcUrl, port)
     const app = express()
-    const lexServer = createServer()
+    const lexServer = createLexiconServer()
 
     lexServer.app.bsky.feed.getFeedSkeleton(async (args) => {
       const handler = feeds[args.params.feed]
