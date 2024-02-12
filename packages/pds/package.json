@@ -28,7 +28,6 @@
     "test:sqlite-only": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/pds",
-    "bench": "../dev-infra/with-test-redis-and-db.sh jest --config jest.bench.config.js",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
