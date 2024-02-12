@@ -1,4 +1,5 @@
 import {
+  TestOzone,
   TestNetwork,
   ImageRef,
   RecordRef,
@@ -24,7 +25,6 @@ import {
   REVIEWESCALATED,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { EventReverser } from '../src'
-import { TestOzone } from '@atproto/dev-env/src/ozone'
 import {
   UNSPECCED_TAKEDOWN_BLOBS_LABEL,
   UNSPECCED_TAKEDOWN_LABEL,

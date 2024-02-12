@@ -1,4 +1,4 @@
-import { TestNetwork, usersSeed } from '@atproto/dev-env'
+import { TestOzone, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { AtUri, BlobRef } from '@atproto/api'
 import { Readable } from 'stream'
 import { AutoModerator } from '../../src/auto-moderator'
@@ -7,7 +7,6 @@ import { cidForRecord } from '@atproto/repo'
 import { TID } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ImgLabeler } from '../../src/auto-moderator/hive'
-import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
