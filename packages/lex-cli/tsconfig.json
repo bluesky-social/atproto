@@ -1,12 +1,7 @@
 {
-  "extends": "../../tsconfig/common.json",
-  "compilerOptions": {
-    "outDir": "./dist", // Your outDir,
-    "emitDeclarationOnly": true
-  },
-  "include": ["./src", "__tests__/**/**.ts"],
+  "include": [],
   "references": [
-    { "path": "../nsid/tsconfig.build.json" },
-    { "path": "../lexicon/tsconfig.build.json" }
+    { "path": "./tsconfig.build.json" },
+    { "path": "./tsconfig.tests.json" }
   ]
 }

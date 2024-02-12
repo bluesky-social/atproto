@@ -13,17 +13,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/repo"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect ../../node_modules/.bin/jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/repo"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
