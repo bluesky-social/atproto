@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig/common.json",
   "compilerOptions": {
     "outDir": "./dist", // Your outDir,
     "emitDeclarationOnly": true
