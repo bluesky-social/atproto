@@ -710,6 +710,46 @@ describe('crud operations', () => {
       expect(recordBlobs.length).toBe(1)
       expect(recordBlobs.at(0)?.cid).toBe(uploadedRes.data.blob.ref.toString())
     })
+
+    it('enforces record type constraint even when unvalidated', async () => {
+      const attempt = aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          $type: 'com.example.other',
+          blah: 'thing',
+        },
+      })
+      await expect(attempt).rejects.toThrow(
+        'Invalid $type: expected com.example.record, got com.example.other',
+      )
+    })
+
+    it('enforces blob ref format even when unvalidated', async () => {
+      const file = await fs.readFile(
+        '../dev-env/src/seed/img/key-portrait-small.jpg',
+      )
+      const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
+        file,
+        {
+          encoding: 'image/jpeg',
+        },
+      )
+
+      const attempt = aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing',
+          image: {
+            cid: uploadedRes.data.blob.ref.toString(),
+            mimeType: uploadedRes.data.blob.mimeType,
+          },
+        },
+        validate: false,
+      })
+      await expect(attempt).rejects.toThrow(`Legacy blob ref at 'image'`)
+    })
   })
 
   describe('compare-and-swap', () => {

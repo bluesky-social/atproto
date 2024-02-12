@@ -4,7 +4,7 @@ import {
   ensureValidRecordKey,
   ensureValidDatetime,
 } from '@atproto/syntax'
-import { TID, dataToCborBlock } from '@atproto/common'
+import { TID, check, dataToCborBlock } from '@atproto/common'
 import {
   BlobRef,
   LexValue,
@@ -12,6 +12,7 @@ import {
   RepoRecord,
   ValidationError,
   lexToIpld,
+  untypedJsonBlobRef,
 } from '@atproto/lexicon'
 import {
   cborToLex,
@@ -240,6 +241,12 @@ export const blobsForWrite = (
   const refs = findBlobRefs(record)
   const recordType =
     typeof record['$type'] === 'string' ? record['$type'] : undefined
+
+  for (const ref of refs) {
+    if (check.is(ref.ref.original, untypedJsonBlobRef)) {
+      throw new InvalidRecordError(`Legacy blob ref at '${ref.path.join('/')}'`)
+    }
+  }
 
   return refs.map(({ ref, path }) => ({
     cid: ref.ref,
