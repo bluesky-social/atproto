@@ -10,7 +10,7 @@ import {
   PingResponse,
   ScanMuteOperationsRequest,
   ScanMuteOperationsResponse,
-} from './bsync_pb.ts'
+} from './bsync_pb'
 import { MethodKind } from '@bufbuild/protobuf'
 
 /**

@@ -10,7 +10,7 @@ import {
   PushNotificationsResponse,
   RegisterDeviceTokenRequest,
   RegisterDeviceTokenResponse,
-} from './courier_pb.ts'
+} from './courier_pb'
 import { MethodKind } from '@bufbuild/protobuf'
 
 /**
