@@ -19,7 +19,6 @@
     "jest.config.base.js",
     "jest.bench.config.js",
     "jest.config.js",
-    "babel.config.js",
     "build.js",
     "update-pkg.js"
   ],
