@@ -244,6 +244,55 @@ describe('timeline views', () => {
     )
     expect(timeline).toEqual({ feed: [] })
   })
+
+  describe('reply blocking', () => {
+    beforeAll(async () => {
+      await sc.createAccount('alicealt', {
+        email: 'alicealt@test.com',
+        handle: 'alicealt.test',
+        password: 'alicealt-pass',
+      })
+      await sc.createAccount('bobalt', {
+        email: 'bobalt@test.com',
+        handle: 'bobalt.test',
+        password: 'bobalt-pass',
+      })
+      await sc.createAccount('carolalt', {
+        email: 'carolalt@test.com',
+        handle: 'carolalt.test',
+        password: 'carolalt-pass',
+      })
+      await sc.createAccount('danalt', {
+        email: 'danalt@test.com',
+        handle: 'danalt.test',
+        password: 'danalt-pass',
+      })
+      await sc.follow(sc.dids.alicealt, sc.dids.bobalt)
+      await sc.block(sc.dids.alicealt, sc.dids.carolalt)
+      const op = await sc.post(sc.dids.danalt, 'hi newskies')
+      const reply1 = await sc.reply(sc.dids.carolalt, op.ref, op.ref, 'i new')
+      const reply2 = await sc.reply(
+        sc.dids.danalt,
+        op.ref,
+        reply1.ref,
+        'welcom',
+      )
+      await sc.reply(
+        sc.dids.bobalt,
+        op.ref,
+        reply2.ref,
+        'did you mean "welcome"?',
+      )
+      await sc.network.processAll()
+    })
+    it('does not show reply to reply to blocked post.', async () => {
+      const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
+        {},
+        { headers: await network.serviceHeaders(sc.dids.alicealt) },
+      )
+      console.log(JSON.stringify(timeline.feed[0], null, 2))
+    })
+  })
 })
 
 const createLabel = async (
