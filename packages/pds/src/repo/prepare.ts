@@ -37,90 +37,6 @@ import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 
-type FoundBlobRef = {
-  ref: BlobRef
-  path: string[]
-}
-
-export const findBlobRefs = (
-  val: LexValue,
-  path: string[] = [],
-  layer = 0,
-): FoundBlobRef[] => {
-  if (layer > 10) {
-    return []
-  }
-  // walk arrays
-  if (Array.isArray(val)) {
-    return val.flatMap((item) => findBlobRefs(item, path, layer + 1))
-  }
-  // objects
-  if (val && typeof val === 'object') {
-    // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
-    if (val instanceof BlobRef) {
-      return [
-        {
-          ref: val,
-          path,
-        },
-      ]
-    }
-    // retain cids & bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
-      return []
-    }
-    return Object.entries(val).flatMap(([key, item]) =>
-      findBlobRefs(item, [...path, key], layer + 1),
-    )
-  }
-  // pass through
-  return []
-}
-
-const CONSTRAINTS = {
-  [lex.ids.AppBskyActorProfile]: {
-    avatar:
-      lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.avatar,
-    banner:
-      lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.banner,
-  },
-  [lex.ids.AppBskyFeedGenerator]: {
-    avatar:
-      lex.schemaDict.AppBskyFeedGenerator.defs.main.record.properties.avatar,
-  },
-  [lex.ids.AppBskyGraphList]: {
-    avatar: lex.schemaDict.AppBskyGraphList.defs.main.record.properties.avatar,
-  },
-  [lex.ids.AppBskyFeedPost]: {
-    'embed/images/image':
-      lex.schemaDict.AppBskyEmbedImages.defs.image.properties.image,
-    'embed/external/thumb':
-      lex.schemaDict.AppBskyEmbedExternal.defs.external.properties.thumb,
-    'embed/media/images/image':
-      lex.schemaDict.AppBskyEmbedImages.defs.image.properties.image,
-    'embed/media/external/thumb':
-      lex.schemaDict.AppBskyEmbedExternal.defs.external.properties.thumb,
-  },
-}
-
-export const blobsForWrite = (
-  record: RepoRecord,
-  validate: boolean,
-): PreparedBlobRef[] => {
-  const refs = findBlobRefs(record)
-  const recordType =
-    typeof record['$type'] === 'string' ? record['$type'] : undefined
-
-  return refs.map(({ ref, path }) => ({
-    cid: ref.ref,
-    mimeType: ref.mimeType,
-    constraints:
-      validate && recordType
-        ? CONSTRAINTS[recordType]?.[path.join('/')] ?? {}
-        : {},
-  }))
-}
-
 export const assertValidRecord = (record: Record<string, unknown>) => {
   if (typeof record.$type !== 'string') {
     throw new InvalidRecordError('No $type provided')
@@ -310,4 +226,88 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')
   }
+}
+
+type FoundBlobRef = {
+  ref: BlobRef
+  path: string[]
+}
+
+export const blobsForWrite = (
+  record: RepoRecord,
+  validate: boolean,
+): PreparedBlobRef[] => {
+  const refs = findBlobRefs(record)
+  const recordType =
+    typeof record['$type'] === 'string' ? record['$type'] : undefined
+
+  return refs.map(({ ref, path }) => ({
+    cid: ref.ref,
+    mimeType: ref.mimeType,
+    constraints:
+      validate && recordType
+        ? CONSTRAINTS[recordType]?.[path.join('/')] ?? {}
+        : {},
+  }))
+}
+
+export const findBlobRefs = (
+  val: LexValue,
+  path: string[] = [],
+  layer = 0,
+): FoundBlobRef[] => {
+  if (layer > 10) {
+    return []
+  }
+  // walk arrays
+  if (Array.isArray(val)) {
+    return val.flatMap((item) => findBlobRefs(item, path, layer + 1))
+  }
+  // objects
+  if (val && typeof val === 'object') {
+    // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
+    if (val instanceof BlobRef) {
+      return [
+        {
+          ref: val,
+          path,
+        },
+      ]
+    }
+    // retain cids & bytes
+    if (CID.asCID(val) || val instanceof Uint8Array) {
+      return []
+    }
+    return Object.entries(val).flatMap(([key, item]) =>
+      findBlobRefs(item, [...path, key], layer + 1),
+    )
+  }
+  // pass through
+  return []
+}
+
+const CONSTRAINTS = {
+  [lex.ids.AppBskyActorProfile]: {
+    avatar:
+      lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.avatar,
+    banner:
+      lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.banner,
+  },
+  [lex.ids.AppBskyFeedGenerator]: {
+    avatar:
+      lex.schemaDict.AppBskyFeedGenerator.defs.main.record.properties.avatar,
+  },
+  [lex.ids.AppBskyGraphList]: {
+    avatar: lex.schemaDict.AppBskyGraphList.defs.main.record.properties.avatar,
+  },
+  [lex.ids.AppBskyFeedPost]: {
+    'embed/images/image':
+      lex.schemaDict.AppBskyEmbedImages.defs.image.properties.image,
+    'embed/external/thumb':
+      lex.schemaDict.AppBskyEmbedExternal.defs.external.properties.thumb,
+    'embed/media/images/image':
+      lex.schemaDict.AppBskyEmbedImages.defs.image.properties.image,
+    'embed/media/external/thumb':
+      lex.schemaDict.AppBskyEmbedExternal.defs.external.properties.thumb,
+  },
 }
