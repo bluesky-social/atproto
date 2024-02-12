@@ -23,8 +23,8 @@
             "importedRepo": { "type": "boolean" },
             "importRepoError": { "type": "string" },
             "importedPrivateState": { "type": "boolean" },
-            "expectedBlobs": { "type": "number" },
-            "importedBlobs": { "type": "number" }
+            "expectedBlobs": { "type": "integer" },
+            "importedBlobs": { "type": "integer" }
           }
         }
       }

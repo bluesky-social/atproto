@@ -13,7 +13,7 @@
             "shouldDelete": {
               "type": "boolean",
               "description": "A recommendation to server on if they should delete the account or simply deactivate.",
-              "default": "false"
+              "default": false
             }
           }
         }

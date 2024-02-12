@@ -32,8 +32,10 @@
         }
       },
       "output": {
-        "required": ["plcOp"],
+        "encoding": "application/json",
         "schema": {
+          "type": "object",
+          "required": ["plcOp"],
           "properties": {
             "plcOp": {
               "type": "unknown",
