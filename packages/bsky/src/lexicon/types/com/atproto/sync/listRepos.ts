@@ -48,6 +48,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 export interface Repo {
   did: string
+  /** Current repo commit CID */
   head: string
   rev: string
   [k: string]: unknown

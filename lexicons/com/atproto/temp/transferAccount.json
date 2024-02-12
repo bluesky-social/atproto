@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Transfer an account.",
+      "description": "Transfer an account. NOTE: temporary method, necessarily how account migration will be implemented.",
       "input": {
         "encoding": "application/json",
         "schema": {

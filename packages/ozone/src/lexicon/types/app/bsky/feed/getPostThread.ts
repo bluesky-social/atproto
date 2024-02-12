@@ -10,8 +10,11 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
+  /** Reference (AT-URI) to post record. */
   uri: string
+  /** How many levels of reply depth should be included in response. */
   depth: number
+  /** How many levels of parent (and grandparent, etc) post to include. */
   parentHeight: number
 }
 

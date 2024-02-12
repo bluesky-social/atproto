@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify server that the user has seen notifications.",
+      "description": "Notify server that the requesting account has seen notifications. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

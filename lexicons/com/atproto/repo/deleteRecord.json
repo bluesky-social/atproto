@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a record, or ensure it doesn't exist.",
+      "description": "Delete a repository record, or ensure it doesn't exist. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -14,7 +14,7 @@
             "repo": {
               "type": "string",
               "format": "at-identifier",
-              "description": "The handle or DID of the repo."
+              "description": "The handle or DID of the repo (aka, current account)."
             },
             "collection": {
               "type": "string",
@@ -23,7 +23,7 @@
             },
             "rkey": {
               "type": "string",
-              "description": "The key of the record."
+              "description": "The Record Key."
             },
             "swapRecord": {
               "type": "string",

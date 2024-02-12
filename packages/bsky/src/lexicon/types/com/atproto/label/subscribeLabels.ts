@@ -10,7 +10,7 @@ import { IncomingMessage } from 'http'
 import * as ComAtprotoLabelDefs from './defs'
 
 export interface QueryParams {
-  /** The last known event to backfill from. */
+  /** The last known event seq number to backfill from. */
   cursor?: number
 }
 

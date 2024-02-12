@@ -11,7 +11,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** Hostname of the service that is requesting to be crawled. */
+  /** Hostname of the current service (eg, PDS) that is requesting to be crawled. */
   hostname: string
   [k: string]: unknown
 }
