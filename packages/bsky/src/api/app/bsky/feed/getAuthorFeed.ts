@@ -33,7 +33,11 @@ export default function (server: Server, ctx: AppContext) {
 
       const [result, repoRev] = await Promise.all([
         getAuthorFeed(
-          { ...params, viewer },
+          {
+            ...params,
+            includeSoftDeleted: auth.credentials.type === 'role',
+            viewer,
+          },
           { db, actorService, feedService, graphService },
         ),
         actorService.getRepoRev(viewer),
@@ -53,12 +57,12 @@ export const skeleton = async (
   params: Params,
   ctx: Context,
 ): Promise<SkeletonState> => {
-  const { cursor, limit, actor, filter, viewer } = params
+  const { cursor, limit, actor, filter, viewer, includeSoftDeleted } = params
   const { db, actorService, feedService, graphService } = ctx
   const { ref } = db.db.dynamic
 
   // maybe resolve did first
-  const actorRes = await actorService.getActor(actor)
+  const actorRes = await actorService.getActor(actor, includeSoftDeleted)
   if (!actorRes) {
     throw new InvalidRequestError('Profile not found')
   }
@@ -138,6 +142,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const hydrated = await feedService.feedHydration({
     ...refs,
     viewer: params.viewer,
+    includeSoftDeleted: params.includeSoftDeleted,
   })
   return { ...state, ...hydrated }
 }
@@ -168,7 +173,10 @@ type Context = {
   graphService: GraphService
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & {
+  viewer: string | null
+  includeSoftDeleted: boolean
+}
 
 type SkeletonState = {
   params: Params

@@ -139,6 +139,7 @@ export class FeedService {
   async getPostInfos(
     postUris: string[],
     viewer: string | null,
+    includeSoftDeleted?: boolean,
   ): Promise<PostInfoMap> {
     if (postUris.length < 1) return {}
     const db = this.db.db
@@ -149,8 +150,12 @@ export class FeedService {
       .innerJoin('actor', 'actor.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
       .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
-      .where(notSoftDeletedClause(ref('record')))
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('actor'))),
+      ) // Ensures post reply parent/roots get omitted from views when taken down
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('record'))),
+      )
       .select([
         'post.uri as uri',
         'post.cid as cid',
@@ -249,12 +254,13 @@ export class FeedService {
       dids: Set<string>
       uris: Set<string>
       viewer: string | null
+      includeSoftDeleted?: boolean
     },
     depth = 0,
   ): Promise<FeedHydrationState> {
     const { viewer, dids, uris } = refs
     const [posts, threadgates, labels, bam] = await Promise.all([
-      this.getPostInfos(Array.from(uris), viewer),
+      this.getPostInfos(Array.from(uris), viewer, refs.includeSoftDeleted),
       this.threadgatesByPostUri(Array.from(uris)),
       this.services.label.getLabelsForSubjects([...uris, ...dids]),
       this.services.graph.getBlockAndMuteState(
@@ -266,7 +272,7 @@ export class FeedService {
     const [profileState, blocks, lists] = await Promise.all([
       this.services.actor.views.profileHydration(
         Array.from(dids),
-        { viewer },
+        { viewer, includeSoftDeleted: refs.includeSoftDeleted },
         { bam, labels },
       ),
       this.blocksForPosts(posts, bam),
