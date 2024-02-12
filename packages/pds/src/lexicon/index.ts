@@ -33,15 +33,19 @@ import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/u
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+import * as ComAtprotoIdentitySignPlcMigrationOp from './types/com/atproto/identity/signPlcMigrationOp'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
+import * as ComAtprotoRepoCheckImportStatus from './types/com/atproto/repo/checkImportStatus'
+import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
@@ -54,7 +58,10 @@ import * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
+import * as ComAtprotoRepoFinalizeExport from './types/com/atproto/repo/finalizeExport'
+import * as ComAtprotoRepoFinalizeImport from './types/com/atproto/repo/finalizeImport'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+import * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -478,6 +485,17 @@ export class ComAtprotoIdentityNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  signPlcMigrationOp<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoIdentitySignPlcMigrationOp.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentitySignPlcMigrationOp.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.identity.signPlcMigrationOp' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   updateHandle<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -557,6 +575,28 @@ export class ComAtprotoRepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  checkImportStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoCheckImportStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoCheckImportStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.checkImportStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listMissingBlobs<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoListMissingBlobs.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoListMissingBlobs.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.listMissingBlobs' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createRecord<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -601,6 +641,17 @@ export class ComAtprotoRepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoImportRepo.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoImportRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listRecords<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -631,6 +682,28 @@ export class ComAtprotoRepoNS {
     >,
   ) {
     const nsid = 'com.atproto.repo.uploadBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  finalizeExport<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoFinalizeExport.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoFinalizeExport.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.finalizeExport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  finalizeImport<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoFinalizeImport.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoFinalizeImport.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.finalizeImport' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -749,6 +822,17 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.getAccountInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getDidCredentials<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerGetDidCredentials.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerGetDidCredentials.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.getDidCredentials' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

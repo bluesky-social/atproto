@@ -1940,6 +1940,61 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentitySignPlcMigrationOp: {
+    lexicon: 1,
+    id: 'com.atproto.identity.signPlcMigrationOp',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Signs a PLC operation to update some value(s) in the requesting DID's document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'The new handle.',
+              },
+              signingKey: {
+                description:
+                  'The new signing key, formatted as a `did:key`. Normally provided by the service that the account is migrating to.',
+                type: 'string',
+              },
+              rotationKeys: {
+                description:
+                  'An array of rotation keys, formatted as `did:key`s, ordered by highest to least authority. Normally provided by the service that the account is migrating to.',
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              pdsEndpoint: {
+                description:
+                  'The endpoint for the PDS that an account is migrating to. Note that this will be reflected in the DID doc as provided and therefore should include the protocol scheme (`https://`).',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['plcOp'],
+            properties: {
+              plcOp: {
+                type: 'unknown',
+                description: 'A signed DID PLC operation.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoIdentityUpdateHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.updateHandle',
@@ -2400,6 +2455,98 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoCheckImportStatus: {
+    lexicon: 1,
+    id: 'com.atproto.repo.checkImportStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the status of an on ongoing import operation. Can be called multiple times over the course of an account migration.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'finalized',
+              'uploadedRepo',
+              'importedRepo',
+              'importedPrivateState',
+              'expectedBlobs',
+              'importedBlobs',
+            ],
+            properties: {
+              finalized: {
+                type: 'boolean',
+              },
+              uploadedRepo: {
+                type: 'boolean',
+              },
+              importedRepo: {
+                type: 'boolean',
+              },
+              importRepoError: {
+                type: 'string',
+              },
+              importedPrivateState: {
+                type: 'boolean',
+              },
+              expectedBlobs: {
+                type: 'integer',
+              },
+              importedBlobs: {
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoListMissingBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.listMissingBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns a list of missing blobs for the requesting account. Intended to be used in the account migration flow.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cids'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              cids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'cid',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoCreateRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.createRecord',
@@ -2644,6 +2791,20 @@ export const schemaDict = {
               },
             },
           },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Import a repo in the form of a CAR file. Returns a 202 after successfully reading incoming CAR then asynchronously indexes the repo and contained records',
+        input: {
+          encoding: 'application/vnd.ipld.car',
         },
       },
     },
@@ -3393,6 +3554,80 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoFinalizeExport: {
+    lexicon: 1,
+    id: 'com.atproto.repo.finalizeExport',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Used during account migration to notify the 'Old PDS' that migration has been completed and that the account can be deactivated or deleted.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              shouldDelete: {
+                type: 'boolean',
+                description:
+                  'A recommendation to server on if they should delete the account or simply deactivate.',
+                default: false,
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoFinalizeImport: {
+    lexicon: 1,
+    id: 'com.atproto.repo.finalizeImport',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Used to finalize account import. Verifies that repo has been correctly imported, that the DID is correctly formatted, submits any identity operations, and activates the account',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              didPayload: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.repo.finalizeImport#didPlcPayload',
+                  'lex:com.atproto.repo.finalizeImport#didWebPayload',
+                ],
+              },
+            },
+          },
+        },
+      },
+      didPlcPayload: {
+        type: 'object',
+        required: ['did', 'op'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          op: {
+            type: 'unknown',
+          },
+        },
+      },
+      didWebPayload: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerGetAccountInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.server.getAccountInviteCodes',
@@ -3437,6 +3672,38 @@ export const schemaDict = {
             name: 'DuplicateCreate',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoServerGetDidCredentials: {
+    lexicon: 1,
+    id: 'com.atproto.server.getDidCredentials',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Describe the credentials that should be included in the DID doc of an account that is migrating to this service.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['signingKey'],
+            properties: {
+              signingKey: {
+                type: 'string',
+              },
+              rotationKeys: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              pdsEndpoint: {
+                type: 'string',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -8517,6 +8784,8 @@ export const ids = {
     'com.atproto.admin.updateCommunicationTemplate',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
+  ComAtprotoIdentitySignPlcMigrationOp:
+    'com.atproto.identity.signPlcMigrationOp',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
@@ -8524,10 +8793,13 @@ export const ids = {
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
+  ComAtprotoRepoCheckImportStatus: 'com.atproto.repo.checkImportStatus',
+  ComAtprotoRepoListMissingBlobs: 'com.atproto.repo.listMissingBlobs',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
+  ComAtprotoRepoImportRepo: 'com.atproto.repo.importRepo',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
@@ -8542,8 +8814,11 @@ export const ids = {
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
+  ComAtprotoRepoFinalizeExport: 'com.atproto.repo.finalizeExport',
+  ComAtprotoRepoFinalizeImport: 'com.atproto.repo.finalizeImport',
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
+  ComAtprotoServerGetDidCredentials: 'com.atproto.server.getDidCredentials',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
