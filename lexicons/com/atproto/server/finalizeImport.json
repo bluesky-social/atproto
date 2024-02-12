@@ -12,10 +12,7 @@
           "properties": {
             "didPayload": {
               "type": "union",
-              "refs": [
-                "#didPlcPayload",
-                "#didWebPayload"
-              ]
+              "refs": ["#didPlcPayload", "#didWebPayload"]
             }
           }
         }
@@ -25,15 +22,15 @@
       "type": "object",
       "required": ["did", "op"],
       "properties": {
-        "did": {"type": "string", "format": "did"},
-        "op": {"type": "unknown"}
+        "did": { "type": "string", "format": "did" },
+        "op": { "type": "unknown" }
       }
     },
     "didWebPayload": {
       "type": "object",
       "required": ["did"],
       "properties": {
-        "did": {"type": "string", "format": "did"}
+        "did": { "type": "string", "format": "did" }
       }
     }
   }

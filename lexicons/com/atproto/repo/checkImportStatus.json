@@ -9,7 +9,14 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["finalized", "uploadedRepo", "importedRepo", "importedPrivateState", "expectedBlobs", "importedBlobs"],
+          "required": [
+            "finalized",
+            "uploadedRepo",
+            "importedRepo",
+            "importedPrivateState",
+            "expectedBlobs",
+            "importedBlobs"
+          ],
           "properties": {
             "finalized": { "type": "boolean" },
             "uploadedRepo": { "type": "boolean" },
