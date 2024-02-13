@@ -1,7 +1,7 @@
 import { setImmediate } from 'node:timers/promises'
 import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
-import { CarBlockIterator } from '@ipld/car'
+import { CarBlockIterator } from '@ipld/car/iterator'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import {
   streamToBuffer,
