@@ -57,7 +57,6 @@ const importRepo = async (
   diff.commit.rev = rev
   await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
   const recordQueue = new PQueue({ concurrency: 50 })
-  let blobRefs: BlobRef[] = []
   for (const write of diff.writes) {
     recordQueue.add(async () => {
       const uri = AtUri.make(did, write.collection, write.rkey)
@@ -82,7 +81,6 @@ const importRepo = async (
           now,
         )
         const recordBlobs = findBlobRefs(parsedRecord)
-        blobRefs = blobRefs.concat(recordBlobs)
         const blobValues = recordBlobs.map((cid) => ({
           recordUri: uri.toString(),
           blobCid: cid.ref.toString(),
@@ -100,7 +98,6 @@ const importRepo = async (
     })
   }
   await recordQueue.onIdle()
-  return blobRefs
 }
 
 export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {

@@ -73,4 +73,13 @@ export class BlobReader {
       ? { applied: true, ref: res.takedownRef }
       : { applied: false }
   }
+
+  async getRecordsForBlob(cid: CID): Promise<string[]> {
+    const res = await this.db.db
+      .selectFrom('record_blob')
+      .where('blobCid', '=', cid.toString())
+      .selectAll()
+      .execute()
+    return res.map((row) => row.recordUri)
+  }
 }
