@@ -34,11 +34,9 @@ The possible client interpretations for a label.
 - <code>warn</code> Provide some form of warning on the content (see "On Warn" behavior).
 - <code>hide</code> Remove the content from feeds and apply the warning when directly viewed.
 
-Each label specifies which preferences it can support. If a label is not configurable, it must have only own supported preference.
-
 ### Configurable?
 
-Non-configurable labels cannot have their preference changed by the user.
+Non-configurable labels cannot have their preference changed by the user. If a label is not configurable, it must have only own supported preference.
 
 ### Flags
 
@@ -62,7 +60,6 @@ The kind of UI behavior used when a warning must be applied.
     <tr>
       <th>ID</th>
       <th>Group</th>
-      <th>Preferences</th>
       <th>Configurable</th>
       <th>Flags</th>
       <th>On Warn</th>
@@ -79,8 +76,9 @@ function labelsRef() {
         <tr>
           <td>${label.id}</td>
           <td>${group.id}</td>
-          <td>${label.preferences.join(', ')}</td>
-          <td>${group.configurable ? '✅' : '❌'}</td>
+          <td>${
+            group.configurable ? '✅' : `❌ (${label.fixedPreference})`
+          }</td>
           <td>${label.flags.join(', ')}</td>
           <td>${label.onwarn}</td>
         </tr>

@@ -34,7 +34,7 @@ export interface LabelDefinition {
   id: KnownLabelValue
   groupId: string
   configurable: boolean
-  preferences: LabelPreference[]
+  fixedPreference?: LabelPreference
   flags: LabelDefinitionFlag[]
   onwarn: LabelDefinitionOnWarnBehavior
 }

@@ -16,11 +16,9 @@ The possible client interpretations for a label.
 - <code>warn</code> Provide some form of warning on the content (see "On Warn" behavior).
 - <code>hide</code> Remove the content from feeds and apply the warning when directly viewed.
 
-Each label specifies which preferences it can support. If a label is not configurable, it must have only own supported preference.
-
 ### Configurable?
 
-Non-configurable labels cannot have their preference changed by the user.
+Non-configurable labels cannot have their preference changed by the user. If a label is not configurable, it must have only own supported preference.
 
 ### Flags
 
@@ -44,7 +42,6 @@ The kind of UI behavior used when a warning must be applied.
     <tr>
       <th>ID</th>
       <th>Group</th>
-      <th>Preferences</th>
       <th>Configurable</th>
       <th>Flags</th>
       <th>On Warn</th>
@@ -52,55 +49,48 @@ The kind of UI behavior used when a warning must be applied.
     <tr>
   <td>!hide</td>
   <td>system</td>
-  <td>hide</td>
-  <td>❌</td>
+  <td>❌ (hide)</td>
   <td>no-override</td>
   <td>blur</td>
 </tr>
 <tr>
   <td>!no-promote</td>
   <td>system</td>
-  <td>hide</td>
-  <td>❌</td>
+  <td>❌ (hide)</td>
   <td></td>
   <td>null</td>
 </tr>
 <tr>
   <td>!warn</td>
   <td>system</td>
-  <td>warn</td>
-  <td>❌</td>
+  <td>❌ (warn)</td>
   <td></td>
   <td>blur</td>
 </tr>
 <tr>
   <td>!no-unauthenticated</td>
   <td>system</td>
-  <td>hide</td>
-  <td>❌</td>
+  <td>❌ (hide)</td>
   <td>no-override, unauthed</td>
   <td>blur</td>
 </tr>
 <tr>
   <td>dmca-violation</td>
   <td>legal</td>
-  <td>hide</td>
-  <td>❌</td>
+  <td>❌ (hide)</td>
   <td>no-override</td>
   <td>blur</td>
 </tr>
 <tr>
   <td>doxxing</td>
   <td>legal</td>
-  <td>hide</td>
-  <td>❌</td>
+  <td>❌ (hide)</td>
   <td>no-override</td>
   <td>blur</td>
 </tr>
 <tr>
   <td>plagiarism</td>
   <td>intellectual-property</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -108,7 +98,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>porn</td>
   <td>porn</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur-media</td>
@@ -116,7 +105,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>sexual</td>
   <td>suggestive</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur-media</td>
@@ -124,7 +112,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>nudity</td>
   <td>nudity</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur-media</td>
@@ -132,7 +119,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>nsfl</td>
   <td>violence</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur-media</td>
@@ -140,7 +126,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>corpse</td>
   <td>violence</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur-media</td>
@@ -148,7 +133,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>gore</td>
   <td>violence</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur-media</td>
@@ -156,7 +140,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>torture</td>
   <td>violence</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
   <td>blur</td>
@@ -164,7 +147,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>substance-abuse</td>
   <td>drugs-alcohol</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -172,7 +154,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>self-harm</td>
   <td>self-harm</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -180,7 +161,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>eating-disorder</td>
   <td>self-harm</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -188,7 +168,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>intolerant-race</td>
   <td>intolerance</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -196,7 +175,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>intolerant-gender</td>
   <td>intolerance</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -204,7 +182,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>intolerant-sexual-orientation</td>
   <td>intolerance</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -212,7 +189,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>intolerant-religion</td>
   <td>intolerance</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -220,7 +196,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>intolerant</td>
   <td>intolerance</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -228,7 +203,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>harassment</td>
   <td>bad-behavior</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -236,7 +210,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>bullying</td>
   <td>bad-behavior</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -244,7 +217,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>threat</td>
   <td>bad-behavior</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -252,7 +224,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>rude</td>
   <td>rude</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -260,7 +231,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>disgusting</td>
   <td>upsetting</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -268,7 +238,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>upsetting</td>
   <td>upsetting</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -276,7 +245,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>troubling</td>
   <td>troubling</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -284,7 +252,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>dispiriting</td>
   <td>troubling</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -292,7 +259,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>bad-news</td>
   <td>troubling</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -300,7 +266,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>icon-intolerant</td>
   <td>hate-group-mention</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur-media</td>
@@ -308,7 +273,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>discourse</td>
   <td>discourse</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -316,7 +280,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>drama</td>
   <td>discourse</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -324,7 +287,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>curation</td>
   <td>curation</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -332,7 +294,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>spam</td>
   <td>spam</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -340,7 +301,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>interaction-noise</td>
   <td>spam</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -348,7 +308,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>engagement-farming</td>
   <td>spam</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -356,7 +315,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>shilling</td>
   <td>spam</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -364,7 +322,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>impersonation</td>
   <td>misrepresentation</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -372,7 +329,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>scam</td>
   <td>misrepresentation</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -380,7 +336,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>account-security</td>
   <td>security</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -388,7 +343,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>net-abuse</td>
   <td>security</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
@@ -396,7 +350,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>misinfo</td>
   <td>misinfo</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -404,7 +357,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>misleading</td>
   <td>misinfo</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -412,7 +364,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>unverified</td>
   <td>misinfo</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -420,7 +371,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>manipulated</td>
   <td>misinfo</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -428,7 +378,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>fringe</td>
   <td>misinfo</td>
-  <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>alert</td>
@@ -436,32 +385,28 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>satire</td>
   <td>context</td>
-  <td>warn</td>
-  <td>❌</td>
+  <td>❌ (warn)</td>
   <td></td>
   <td>alert</td>
 </tr>
 <tr>
   <td>parody</td>
   <td>context</td>
-  <td>warn</td>
-  <td>❌</td>
+  <td>❌ (warn)</td>
   <td></td>
   <td>alert</td>
 </tr>
 <tr>
   <td>bot</td>
   <td>context</td>
-  <td>ignore, warn, hide</td>
-  <td>❌</td>
+  <td>❌ (undefined)</td>
   <td></td>
   <td>alert</td>
 </tr>
 <tr>
   <td>ai-generated</td>
   <td>context</td>
-  <td>ignore, warn, hide</td>
-  <td>❌</td>
+  <td>❌ (undefined)</td>
   <td></td>
   <td>alert</td>
 </tr>

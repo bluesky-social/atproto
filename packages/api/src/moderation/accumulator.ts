@@ -85,7 +85,7 @@ export class ModerationCauseAccumulator {
     // establish the label preference for interpretation
     let labelPref: LabelPreference = 'ignore'
     if (!labelDef.configurable) {
-      labelPref = labelDef.preferences[0]
+      labelPref = labelDef.fixedPreference || 'hide'
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
       labelPref = 'hide'
     } else if (opts.labelGroups[labelDef.groupId]) {

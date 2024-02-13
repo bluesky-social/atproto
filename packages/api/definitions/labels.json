@@ -5,25 +5,25 @@
     "labels": [
       {
         "id": "!hide",
-        "preferences": ["hide"],
+        "fixedPreference": "hide",
         "flags": ["no-override"],
         "onwarn": "blur"
       },
       {
         "id": "!no-promote",
-        "preferences": ["hide"],
+        "fixedPreference": "hide",
         "flags": [],
         "onwarn": null
       },
       {
         "id": "!warn",
-        "preferences": ["warn"],
+        "fixedPreference": "warn",
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "!no-unauthenticated",
-        "preferences": ["hide"],
+        "fixedPreference": "hide",
         "flags": ["no-override", "unauthed"],
         "onwarn": "blur"
       }
@@ -35,13 +35,13 @@
     "labels": [
       {
         "id": "dmca-violation",
-        "preferences": ["hide"],
+        "fixedPreference": "hide",
         "flags": ["no-override"],
         "onwarn": "blur"
       },
       {
         "id": "doxxing",
-        "preferences": ["hide"],
+        "fixedPreference": "hide",
         "flags": ["no-override"],
         "onwarn": "blur"
       }
@@ -54,7 +54,6 @@
     "labels": [
       {
         "id": "plagiarism",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       }
@@ -67,7 +66,6 @@
     "labels": [
       {
         "id": "porn",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
       }
@@ -80,7 +78,6 @@
     "labels": [
       {
         "id": "sexual",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
       }
@@ -93,7 +90,6 @@
     "labels": [
       {
         "id": "nudity",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
       }
@@ -106,25 +102,21 @@
     "labels": [
       {
         "id": "nsfl",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
       },
       {
         "id": "corpse",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
       },
       {
         "id": "gore",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
       },
       {
         "id": "torture",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur"
       }
@@ -137,7 +129,6 @@
     "labels": [
       {
         "id": "substance-abuse",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -150,13 +141,11 @@
     "labels": [
       {
         "id": "self-harm",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "eating-disorder",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -169,31 +158,26 @@
     "labels": [
       {
         "id": "intolerant-race",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "intolerant-gender",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "intolerant-sexual-orientation",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "intolerant-religion",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "intolerant",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -206,19 +190,16 @@
     "labels": [
       {
         "id": "harassment",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "bullying",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "threat",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -231,7 +212,6 @@
     "labels": [
       {
         "id": "rude",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -244,13 +224,11 @@
     "labels": [
       {
         "id": "disgusting",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "upsetting",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -263,19 +241,16 @@
     "labels": [
       {
         "id": "troubling",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "dispiriting",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "bad-news",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -288,7 +263,6 @@
     "labels": [
       {
         "id": "icon-intolerant",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur-media"
       }
@@ -301,13 +275,11 @@
     "labels": [
       {
         "id": "discourse",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "drama",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -320,7 +292,6 @@
     "labels": [
       {
         "id": "curation",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -333,25 +304,21 @@
     "labels": [
       {
         "id": "spam",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "interaction-noise",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "engagement-farming",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "shilling",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -364,13 +331,11 @@
     "labels": [
       {
         "id": "impersonation",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "scam",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       }
@@ -383,13 +348,11 @@
     "labels": [
       {
         "id": "account-security",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       },
       {
         "id": "net-abuse",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
       }
@@ -402,31 +365,26 @@
     "labels": [
       {
         "id": "misinfo",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "misleading",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "unverified",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "manipulated",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "fringe",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       }
@@ -438,25 +396,23 @@
     "labels": [
       {
         "id": "satire",
-        "preferences": ["warn"],
+        "fixedPreference": "warn",
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "parody",
-        "preferences": ["warn"],
+        "fixedPreference": "warn",
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "bot",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       },
       {
         "id": "ai-generated",
-        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       }
