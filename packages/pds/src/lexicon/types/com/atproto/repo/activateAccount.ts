@@ -10,16 +10,8 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
-export interface InputSchema {
-  /** A recommendation to server on if they should delete the account or simply deactivate. */
-  shouldDelete: boolean
-  [k: string]: unknown
-}
-
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type InputSchema = undefined
+export type HandlerInput = undefined
 
 export interface HandlerError {
   status: number

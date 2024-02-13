@@ -32,7 +32,8 @@ import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/u
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
-import * as ComAtprotoIdentitySignPlcMigrationOp from './types/com/atproto/identity/signPlcMigrationOp'
+import * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
+import * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -40,7 +41,6 @@ import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subsc
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
-import * as ComAtprotoRepoCheckImportStatus from './types/com/atproto/repo/checkImportStatus'
 import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -51,18 +51,19 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoRepoActivateAccount from './types/com/atproto/repo/activateAccount'
+import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+import * as ComAtprotoRepoDeactivateAccount from './types/com/atproto/repo/deactivateAccount'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-import * as ComAtprotoRepoFinalizeExport from './types/com/atproto/repo/finalizeExport'
-import * as ComAtprotoRepoFinalizeImport from './types/com/atproto/repo/finalizeImport'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
@@ -185,7 +186,8 @@ export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/u
 export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
-export * as ComAtprotoIdentitySignPlcMigrationOp from './types/com/atproto/identity/signPlcMigrationOp'
+export * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
+export * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -193,7 +195,6 @@ export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subsc
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
-export * as ComAtprotoRepoCheckImportStatus from './types/com/atproto/repo/checkImportStatus'
 export * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -204,18 +205,19 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoRepoActivateAccount from './types/com/atproto/repo/activateAccount'
+export * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+export * as ComAtprotoRepoDeactivateAccount from './types/com/atproto/repo/deactivateAccount'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-export * as ComAtprotoRepoFinalizeExport from './types/com/atproto/repo/finalizeExport'
-export * as ComAtprotoRepoFinalizeImport from './types/com/atproto/repo/finalizeImport'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 export * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
@@ -700,14 +702,25 @@ export class ComAtprotoIdentityNS {
       })
   }
 
-  signPlcMigrationOp(
-    data?: ComAtprotoIdentitySignPlcMigrationOp.InputSchema,
-    opts?: ComAtprotoIdentitySignPlcMigrationOp.CallOptions,
-  ): Promise<ComAtprotoIdentitySignPlcMigrationOp.Response> {
+  sendPlcOp(
+    data?: ComAtprotoIdentitySendPlcOp.InputSchema,
+    opts?: ComAtprotoIdentitySendPlcOp.CallOptions,
+  ): Promise<ComAtprotoIdentitySendPlcOp.Response> {
     return this._service.xrpc
-      .call('com.atproto.identity.signPlcMigrationOp', opts?.qp, data, opts)
+      .call('com.atproto.identity.sendPlcOp', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoIdentitySignPlcMigrationOp.toKnownErr(e)
+        throw ComAtprotoIdentitySendPlcOp.toKnownErr(e)
+      })
+  }
+
+  signPlcOp(
+    data?: ComAtprotoIdentitySignPlcOp.InputSchema,
+    opts?: ComAtprotoIdentitySignPlcOp.CallOptions,
+  ): Promise<ComAtprotoIdentitySignPlcOp.Response> {
+    return this._service.xrpc
+      .call('com.atproto.identity.signPlcOp', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentitySignPlcOp.toKnownErr(e)
       })
   }
 
@@ -776,17 +789,6 @@ export class ComAtprotoRepoNS {
       .call('com.atproto.repo.applyWrites', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoApplyWrites.toKnownErr(e)
-      })
-  }
-
-  checkImportStatus(
-    params?: ComAtprotoRepoCheckImportStatus.QueryParams,
-    opts?: ComAtprotoRepoCheckImportStatus.CallOptions,
-  ): Promise<ComAtprotoRepoCheckImportStatus.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.checkImportStatus', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoCheckImportStatus.toKnownErr(e)
       })
   }
 
@@ -889,25 +891,25 @@ export class ComAtprotoRepoNS {
       })
   }
 
-  finalizeExport(
-    data?: ComAtprotoRepoFinalizeExport.InputSchema,
-    opts?: ComAtprotoRepoFinalizeExport.CallOptions,
-  ): Promise<ComAtprotoRepoFinalizeExport.Response> {
+  activateAccount(
+    data?: ComAtprotoRepoActivateAccount.InputSchema,
+    opts?: ComAtprotoRepoActivateAccount.CallOptions,
+  ): Promise<ComAtprotoRepoActivateAccount.Response> {
     return this._service.xrpc
-      .call('com.atproto.repo.finalizeExport', opts?.qp, data, opts)
+      .call('com.atproto.repo.activateAccount', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoRepoFinalizeExport.toKnownErr(e)
+        throw ComAtprotoRepoActivateAccount.toKnownErr(e)
       })
   }
 
-  finalizeImport(
-    data?: ComAtprotoRepoFinalizeImport.InputSchema,
-    opts?: ComAtprotoRepoFinalizeImport.CallOptions,
-  ): Promise<ComAtprotoRepoFinalizeImport.Response> {
+  deactivateAccount(
+    data?: ComAtprotoRepoDeactivateAccount.InputSchema,
+    opts?: ComAtprotoRepoDeactivateAccount.CallOptions,
+  ): Promise<ComAtprotoRepoDeactivateAccount.Response> {
     return this._service.xrpc
-      .call('com.atproto.repo.finalizeImport', opts?.qp, data, opts)
+      .call('com.atproto.repo.deactivateAccount', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoRepoFinalizeImport.toKnownErr(e)
+        throw ComAtprotoRepoDeactivateAccount.toKnownErr(e)
       })
   }
 }
@@ -917,6 +919,17 @@ export class ComAtprotoServerNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  checkAccountStatus(
+    params?: ComAtprotoServerCheckAccountStatus.QueryParams,
+    opts?: ComAtprotoServerCheckAccountStatus.CallOptions,
+  ): Promise<ComAtprotoServerCheckAccountStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.checkAccountStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerCheckAccountStatus.toKnownErr(e)
+      })
   }
 
   confirmEmail(

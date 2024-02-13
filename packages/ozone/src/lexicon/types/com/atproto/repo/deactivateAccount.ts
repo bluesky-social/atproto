@@ -10,25 +10,15 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  finalized: boolean
-  uploadedRepo: boolean
-  importedRepo: boolean
-  importRepoError?: string
-  importedPrivateState: boolean
-  expectedBlobs: number
-  importedBlobs: number
+export interface InputSchema {
+  /** A recommendation to server as to how long they should hold onto the deactivated account before deleting. */
+  deleteAfter?: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
-
-export interface HandlerSuccess {
+export interface HandlerInput {
   encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
+  body: InputSchema
 }
 
 export interface HandlerError {
@@ -36,7 +26,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
+export type HandlerOutput = HandlerError | void
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

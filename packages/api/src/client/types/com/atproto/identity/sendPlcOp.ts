@@ -9,27 +9,20 @@ import { CID } from 'multiformats/cid'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  finalized: boolean
-  uploadedRepo: boolean
-  importedRepo: boolean
-  importRepoError?: string
-  importedPrivateState: boolean
-  expectedBlobs: number
-  importedBlobs: number
+export interface InputSchema {
+  op: {}
   [k: string]: unknown
 }
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
   success: boolean
   headers: Headers
-  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

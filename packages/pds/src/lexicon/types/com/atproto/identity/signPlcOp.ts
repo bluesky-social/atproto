@@ -11,14 +11,10 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The new handle. */
-  handle?: string
-  /** The new signing key, formatted as a `did:key`. Normally provided by the service that the account is migrating to. */
-  signingKey?: string
-  /** An array of rotation keys, formatted as `did:key`s, ordered by highest to least authority. Normally provided by the service that the account is migrating to. */
   rotationKeys?: string[]
-  /** The endpoint for the PDS that an account is migrating to. Note that this will be reflected in the DID doc as provided and therefore should include the protocol scheme (`https://`). */
-  pdsEndpoint?: string
+  alsoKnownAs?: string[]
+  verificationMethods?: {}
+  services?: {}
   [k: string]: unknown
 }
 
