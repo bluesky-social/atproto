@@ -15,12 +15,6 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
@@ -92,6 +86,7 @@
     "esbuild": "^0.14.48",
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",
+    "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "ws": "^8.12.0"
   }

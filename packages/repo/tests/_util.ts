@@ -24,6 +24,7 @@ type IdMapping = Record<string, CID>
 export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
   const block = await dataToCborBlock({ test: randomStr(50) })
   if (storage) {
+    // @ts-expect-error FIXME remove this comment (and fix the TS error)
     await storage.putBlock(block.cid, block.bytes)
   }
   return block.cid
@@ -189,6 +190,7 @@ export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
 
 export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
   const diff = await mst.getUnstoredBlocks()
+  // @ts-expect-error FIXME remove this comment (and fix the TS error)
   await storage.putMany(diff.blocks)
   return diff.root
 }
@@ -215,6 +217,8 @@ export const addBadCommit = async (
     sig: await keypair.sign(randomBytes(256)),
   }
   const commitCid = await newBlocks.add(commit)
+
+  // @ts-expect-error FIXME remove this comment (and fix the TS error)
   await repo.storage.applyCommit({
     cid: commitCid,
     rev,

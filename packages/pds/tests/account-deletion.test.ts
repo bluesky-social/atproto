@@ -36,6 +36,7 @@ describe('account deletion', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     mailer = ctx.mailer
     agent = new AtpAgent({ service: network.pds.url })

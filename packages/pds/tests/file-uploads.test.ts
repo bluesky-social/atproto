@@ -23,6 +23,7 @@ describe('file uploads', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'file_uploads',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getClient()
     sc = network.getSeedClient()

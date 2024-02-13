@@ -35,6 +35,7 @@ describe('crud operations', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'crud',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getClient()
     aliceAgent = network.pds.getClient()

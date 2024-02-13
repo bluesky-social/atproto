@@ -26,11 +26,13 @@ describe('Post moderation behaviors', () => {
         suiteRunner.moderationOpts(scenario),
       )
       expect(res.account).toBeModerationResult(
+        // @ts-expect-error FIXME remove this comment (and fix the TS error)
         scenario.behaviors.account,
         'account',
         JSON.stringify(res, null, 2),
       )
       expect(res.profile).toBeModerationResult(
+        // @ts-expect-error FIXME remove this comment (and fix the TS error)
         scenario.behaviors.profile,
         'profile content',
         JSON.stringify(res, null, 2),

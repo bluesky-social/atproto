@@ -48,6 +48,7 @@ describe('db', () => {
         return await dbTxn.db
           .insertInto('repo_push_event')
           .values({
+            // @ts-expect-error FIXME remove this comment (and fix the TS error)
             eventType: 'takedown',
             subjectDid: 'x',
           })
@@ -78,6 +79,7 @@ describe('db', () => {
         await dbTxn.db
           .insertInto('repo_push_event')
           .values({
+            // @ts-expect-error FIXME remove this comment (and fix the TS error)
             eventType: 'takedown',
             subjectDid: 'y',
           })
@@ -124,6 +126,7 @@ describe('db', () => {
         leakedTx = dbTxn
         await dbTxn.db
           .insertInto('repo_push_event')
+          // @ts-expect-error FIXME remove this comment (and fix the TS error)
           .values({ eventType: 'takedown', subjectDid: 'a' })
           .execute()
         throw new Error('test tx failed')
@@ -132,6 +135,7 @@ describe('db', () => {
 
       const attempt = leakedTx?.db
         .insertInto('repo_push_event')
+        // @ts-expect-error FIXME remove this comment (and fix the TS error)
         .values({ eventType: 'takedown', subjectDid: 'b' })
         .execute()
       await expect(attempt).rejects.toThrow('tx already failed')
@@ -156,6 +160,7 @@ describe('db', () => {
             const query = dbTxn.db
               .insertInto('repo_push_event')
               .values({
+                // @ts-expect-error FIXME remove this comment (and fix the TS error)
                 eventType: 'takedown',
                 subjectDid: name,
               })

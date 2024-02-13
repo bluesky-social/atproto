@@ -23,6 +23,7 @@ describe('pipeline backpressure', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: TEST_NAME,
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ingester = await getIngester(network, {
       name: TEST_NAME,
       ingesterPartitionCount: 2,
@@ -55,6 +56,7 @@ describe('pipeline backpressure', () => {
     expect(lengths[0] + lengths[1]).toBeLessThanOrEqual(10 + 5) // not exact due to batching, may catch on following check backpressure
     // drain all items using indexers, releasing backpressure
     await indexers.start()
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     await processAll(network, ingester)
     const lengthsFinal = await ingester.ctx.redis.streamLengths([
       'repo:0',

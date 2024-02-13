@@ -28,6 +28,7 @@
     "zod": "3.21.4"
   },
   "devDependencies": {
+    "jest": "^28.1.2",
     "typescript": "^5.3.3",
     "uint8arrays": "3.0.0"
   }

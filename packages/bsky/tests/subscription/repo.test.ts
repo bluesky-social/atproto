@@ -19,6 +19,7 @@ describe('sync', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_subscription_repo',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.bsky.ctx
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()

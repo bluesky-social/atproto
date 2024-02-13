@@ -28,6 +28,7 @@ describe('labeler', () => {
       dbPostgresSchema: 'bsky_labeler',
     })
     ozone = network.ozone
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.bsky.indexer.ctx
     const pdsCtx = network.pds.ctx
     autoMod = ctx.autoMod

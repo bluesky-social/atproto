@@ -1,6 +1,5 @@
 import { moderateProfile, moderatePost } from '../src'
 import { mock } from './util'
-import './util/moderation-behavior'
 
 describe('Moderation', () => {
   it('Applies self-labels on profiles according to the global preferences', () => {

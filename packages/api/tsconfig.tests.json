@@ -2,6 +2,7 @@
   "extends": "../../tsconfig/test.json",
   "compilerOptions": {
     "rootDir": "./",
+    "types": ["jest", "./jest.d.ts"],
     "noEmit": true
   },
   "include": ["./tests"]

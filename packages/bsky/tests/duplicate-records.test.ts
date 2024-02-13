@@ -18,6 +18,7 @@ describe('duplicate record', () => {
       dbPostgresSchema: 'bsky_duplicates',
     })
     db = network.bsky.indexer.ctx.db
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     services = network.bsky.indexer.ctx.services
     did = 'did:example:alice'
   })
