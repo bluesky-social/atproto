@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const signingKey = await ctx.actorStore.keypair(requester)
       const verificationMethods = {
-        atproto: signingKey,
+        atproto: signingKey.did(),
       }
       const account = await ctx.accountManager.getAccount(requester)
       const alsoKnownAs = account?.handle ? [account.handle] : undefined

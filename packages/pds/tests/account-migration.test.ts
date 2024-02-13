@@ -142,6 +142,6 @@ describe('account migration', () => {
       getDidCredentials.data,
     )
 
-    await newAgent.com.atproto.identity.sendPlcOp({ op: plcOp })
+    await newAgent.com.atproto.identity.sendPlcOp({ op: plcOp.data.plcOp })
   })
 })
