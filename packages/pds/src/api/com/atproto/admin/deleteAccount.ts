@@ -60,6 +60,7 @@ export default function (server: Server, ctx: AppContext) {
             { did, pdsDid, err },
             'account deletion failed on pds behind entryway',
           )
+          throw err
         }
       }
 
