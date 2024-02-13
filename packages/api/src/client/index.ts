@@ -66,6 +66,7 @@ import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
+import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -220,6 +221,7 @@ export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 export * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
+export * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -1050,6 +1052,17 @@ export class ComAtprotoServerNS {
       .call('com.atproto.server.getDidCredentials', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetDidCredentials.toKnownErr(e)
+      })
+  }
+
+  getServiceAuth(
+    params?: ComAtprotoServerGetServiceAuth.QueryParams,
+    opts?: ComAtprotoServerGetServiceAuth.CallOptions,
+  ): Promise<ComAtprotoServerGetServiceAuth.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getServiceAuth', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetServiceAuth.toKnownErr(e)
       })
   }
 

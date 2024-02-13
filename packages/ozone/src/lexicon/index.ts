@@ -63,6 +63,7 @@ import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
+import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -845,6 +846,17 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.getDidCredentials' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getServiceAuth<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerGetServiceAuth.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerGetServiceAuth.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.getServiceAuth' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

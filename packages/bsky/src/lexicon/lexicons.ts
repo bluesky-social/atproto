@@ -3694,6 +3694,40 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerGetServiceAuth: {
+    lexicon: 1,
+    id: 'com.atproto.server.getServiceAuth',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a signed token on behalf of the requesting DID for the requested service.',
+        parameters: {
+          type: 'params',
+          properties: {
+            aud: {
+              type: 'string',
+              format: 'did',
+              description:
+                'The DID of the service that the token will be used to authenticate with',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerGetSession: {
     lexicon: 1,
     id: 'com.atproto.server.getSession',
@@ -8806,6 +8840,7 @@ export const ids = {
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
   ComAtprotoServerGetDidCredentials: 'com.atproto.server.getDidCredentials',
+  ComAtprotoServerGetServiceAuth: 'com.atproto.server.getServiceAuth',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
