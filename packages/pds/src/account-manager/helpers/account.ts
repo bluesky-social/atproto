@@ -1,6 +1,7 @@
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { AccountDb, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { DAY } from '@atproto/common'
 
 export class UserAlreadyExistsError extends Error {}
 
@@ -23,6 +24,8 @@ const selectAccountQB = (db: AccountDb, includeSoftDeleted: boolean) => {
       'actor.handle',
       'actor.createdAt',
       'actor.takedownRef',
+      'actor.deactivatedAt',
+      'actor.deleteAfter',
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
@@ -62,9 +65,10 @@ export const registerActor = async (
   opts: {
     did: string
     handle: string
+    deactivated?: boolean
   },
 ) => {
-  const { did, handle } = opts
+  const { did, handle, deactivated } = opts
   const [registered] = await db.executeWithRetry(
     db.db
       .insertInto('actor')
@@ -72,6 +76,10 @@ export const registerActor = async (
         did,
         handle,
         createdAt: new Date().toISOString(),
+        deactivatedAt: deactivated ? new Date().toISOString() : null,
+        deleteAfter: deactivated
+          ? new Date(Date.now() + 3 * DAY).toISOString()
+          : null,
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did'),
@@ -206,5 +214,33 @@ export const updateAccountTakedownStatus = async (
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),
+  )
+}
+
+export const deactivateAccount = async (
+  db: AccountDb,
+  did: string,
+  deleteAfter: string | null,
+) => {
+  await db.executeWithRetry(
+    db.db
+      .updateTable('actor')
+      .set({
+        deactivatedAt: new Date().toISOString(),
+        deleteAfter,
+      })
+      .where('did', '=', did),
+  )
+}
+
+export const activateAccount = async (db: AccountDb, did: string) => {
+  await db.executeWithRetry(
+    db.db
+      .updateTable('actor')
+      .set({
+        deactivatedAt: null,
+        deleteAfter: null,
+      })
+      .where('did', '=', did),
   )
 }

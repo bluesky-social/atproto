@@ -2994,9 +2994,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoActivateAccount: {
+  ComAtprotoServerActivateAccount: {
     lexicon: 1,
-    id: 'com.atproto.repo.activateAccount',
+    id: 'com.atproto.server.activateAccount',
     defs: {
       main: {
         type: 'procedure',
@@ -3425,9 +3425,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoDeactivateAccount: {
+  ComAtprotoServerDeactivateAccount: {
     lexicon: 1,
-    id: 'com.atproto.repo.deactivateAccount',
+    id: 'com.atproto.server.deactivateAccount',
     defs: {
       main: {
         type: 'procedure',
@@ -8831,7 +8831,7 @@ export const ids = {
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
-  ComAtprotoRepoActivateAccount: 'com.atproto.repo.activateAccount',
+  ComAtprotoServerActivateAccount: 'com.atproto.server.activateAccount',
   ComAtprotoServerCheckAccountStatus: 'com.atproto.server.checkAccountStatus',
   ComAtprotoServerConfirmEmail: 'com.atproto.server.confirmEmail',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
@@ -8839,7 +8839,7 @@ export const ids = {
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateInviteCodes: 'com.atproto.server.createInviteCodes',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
-  ComAtprotoRepoDeactivateAccount: 'com.atproto.repo.deactivateAccount',
+  ComAtprotoServerDeactivateAccount: 'com.atproto.server.deactivateAccount',
   ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',

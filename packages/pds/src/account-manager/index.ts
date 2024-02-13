@@ -73,8 +73,18 @@ export class AccountManager {
     repoCid: CID
     repoRev: string
     inviteCode?: string
+    deactivated?: boolean
   }) {
-    const { did, handle, email, password, repoCid, repoRev, inviteCode } = opts
+    const {
+      did,
+      handle,
+      email,
+      password,
+      repoCid,
+      repoRev,
+      inviteCode,
+      deactivated,
+    } = opts
     const passwordScrypt = password
       ? await scrypt.genSaltAndHash(password)
       : undefined
@@ -92,7 +102,7 @@ export class AccountManager {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
       }
       await Promise.all([
-        account.registerActor(dbTxn, { did, handle }),
+        account.registerActor(dbTxn, { did, handle, deactivated }),
         email && passwordScrypt
           ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
           : Promise.resolve(),
@@ -133,6 +143,14 @@ export class AccountManager {
 
   async updateRepoRoot(did: string, cid: CID, rev: string) {
     return repo.updateRoot(this.db, did, cid, rev)
+  }
+
+  async deactivateAccount(did: string, deleteAfter: string | null) {
+    return account.deactivateAccount(this.db, did, deleteAfter)
+  }
+
+  async activateAccount(did: string) {
+    return account.activateAccount(this.db, did)
   }
 
   // Auth

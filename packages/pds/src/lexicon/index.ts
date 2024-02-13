@@ -49,7 +49,7 @@ import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
-import * as ComAtprotoRepoActivateAccount from './types/com/atproto/repo/activateAccount'
+import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
 import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -57,7 +57,7 @@ import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/c
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
-import * as ComAtprotoRepoDeactivateAccount from './types/com/atproto/repo/deactivateAccount'
+import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
@@ -686,28 +686,6 @@ export class ComAtprotoRepoNS {
     const nsid = 'com.atproto.repo.uploadBlob' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
-
-  activateAccount<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoRepoActivateAccount.Handler<ExtractAuth<AV>>,
-      ComAtprotoRepoActivateAccount.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.repo.activateAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  deactivateAccount<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoRepoDeactivateAccount.Handler<ExtractAuth<AV>>,
-      ComAtprotoRepoDeactivateAccount.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.repo.deactivateAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
 }
 
 export class ComAtprotoServerNS {
@@ -715,6 +693,17 @@ export class ComAtprotoServerNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  activateAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerActivateAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerActivateAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.activateAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   checkAccountStatus<AV extends AuthVerifier>(
@@ -791,6 +780,17 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.createSession' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deactivateAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerDeactivateAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerDeactivateAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.deactivateAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
