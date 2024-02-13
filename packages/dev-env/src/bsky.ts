@@ -11,6 +11,8 @@ import { uniqueLockId } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
+export * from '@atproto/bsky'
+
 export class TestBsky {
   constructor(
     public url: string,

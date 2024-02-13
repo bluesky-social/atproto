@@ -4,8 +4,8 @@ import {
   getIngester,
   ingestAll,
   basicSeed,
+  BskyIngester,
 } from '@atproto/dev-env'
-import { BskyIngester } from '../../src'
 
 const TEST_NAME = 'pipeline_reingest'
 

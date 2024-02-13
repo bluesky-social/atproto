@@ -7,8 +7,8 @@ import {
   ingestAll,
   processAll,
   usersSeed,
+  BskyIngester,
 } from '@atproto/dev-env'
-import { BskyIngester } from '../../src'
 import { countAll } from '../../src/db/util'
 
 const TEST_NAME = 'pipeline_repartition'
