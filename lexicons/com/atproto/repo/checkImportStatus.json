@@ -10,7 +10,7 @@
         "schema": {
           "type": "object",
           "required": [
-            "finalized",
+            "activated",
             "uploadedRepo",
             "importedRepo",
             "importedPrivateState",
