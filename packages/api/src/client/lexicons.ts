@@ -3643,6 +3643,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
                 description: 'The DID to reserve a key for.',
               },
             },
