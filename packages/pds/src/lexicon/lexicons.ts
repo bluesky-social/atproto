@@ -1804,6 +1804,39 @@ export const schemaDict = {
           },
         },
       },
+      labelValue: {
+        type: 'string',
+        knownValues: [
+          '!hide',
+          '!no-promote',
+          '!warn',
+          '!no-unauthenticated',
+          'dmca-violation',
+          'doxxing',
+          'porn',
+          'sexual',
+          'nudity',
+          'nsfl',
+          'corpse',
+          'gore',
+          'torture',
+          'self-harm',
+          'intolerant-race',
+          'intolerant-gender',
+          'intolerant-sexual-orientation',
+          'intolerant-religion',
+          'intolerant',
+          'icon-intolerant',
+          'threat',
+          'spoiler',
+          'spam',
+          'account-security',
+          'net-abuse',
+          'impersonation',
+          'scam',
+          'misleading',
+        ],
+      },
     },
   },
   ComAtprotoLabelQueryLabels: {
@@ -4333,6 +4366,10 @@ export const schemaDict = {
           postsCount: {
             type: 'integer',
           },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -4347,6 +4384,20 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+        },
+      },
+      profileAssociated: {
+        type: 'object',
+        properties: {
+          lists: {
+            type: 'integer',
+          },
+          feedgens: {
+            type: 'integer',
+          },
+          modservice: {
+            type: 'boolean',
           },
         },
       },
@@ -4492,6 +4543,52 @@ export const schemaDict = {
           prioritizeFollowedUsers: {
             type: 'boolean',
             description: 'Show followed users at the top of all replies.',
+          },
+        },
+      },
+      modsPref: {
+        type: 'object',
+        required: ['mods'],
+        properties: {
+          mods: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#modPrefItem',
+            },
+          },
+        },
+      },
+      modPrefItem: {
+        type: 'object',
+        required: ['did', 'enabled', 'labelGroupSettings'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          enabled: {
+            type: 'boolean',
+          },
+          labelGroupSettings: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#labelGroupSetting',
+            },
+          },
+        },
+      },
+      labelGroupSetting: {
+        type: 'object',
+        required: ['labelGroup', 'visibility'],
+        properties: {
+          labelGroup: {
+            type: 'string',
+          },
+          visibility: {
+            type: 'string',
+            knownValues: ['show', 'warn', 'hide'],
           },
         },
       },
@@ -4978,6 +5075,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
+              'lex:app.bsky.moderation.defs#modServiceView',
             ],
           },
         },
@@ -7338,6 +7436,262 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyModerationDefs: {
+    lexicon: 1,
+    id: 'app.bsky.moderation.defs',
+    defs: {
+      modServiceView: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      modServiceViewDetailed: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'policies', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          policies: {
+            type: 'ref',
+            ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      modServiceViewerState: {
+        type: 'object',
+        properties: {
+          like: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      modServicePolicies: {
+        type: 'object',
+        required: ['reportReasons', 'labelValues'],
+        properties: {
+          description: {
+            type: 'string',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          reportReasons: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.moderation.defs#reasonType',
+            },
+          },
+          labelValues: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValue',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyModerationGetService: {
+    lexicon: 1,
+    id: 'app.bsky.moderation.getService',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a moderation service.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.moderation.defs#modServiceViewDetailed',
+          },
+        },
+      },
+    },
+  },
+  AppBskyModerationGetServices: {
+    lexicon: 1,
+    id: 'app.bsky.moderation.getServices',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a list of moderation services.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['views'],
+            properties: {
+              views: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.moderation.defs#modServiceView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyModerationService: {
+    lexicon: 1,
+    id: 'app.bsky.moderation.service',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of the existence of moderation service.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['policies', 'createdAt'],
+          properties: {
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            policies: {
+              type: 'ref',
+              ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationGetUnreadCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getUnreadCount',
@@ -8048,6 +8402,10 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyModerationDefs: 'app.bsky.moderation.defs',
+  AppBskyModerationGetService: 'app.bsky.moderation.getService',
+  AppBskyModerationGetServices: 'app.bsky.moderation.getServices',
+  AppBskyModerationService: 'app.bsky.moderation.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

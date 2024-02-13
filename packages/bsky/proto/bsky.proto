@@ -114,6 +114,14 @@ message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetModServiceRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetModServiceRecordsResponse {
+  repeated Record records = 1;
+}
+
 
 //
 // Follows
@@ -930,6 +938,7 @@ service Service {
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetModServiceRecords(GetModServiceRecordsRequest) returns (GetModServiceRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);

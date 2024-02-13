@@ -71,3 +71,34 @@ export function isSelfLabel(v: unknown): v is SelfLabel {
 export function validateSelfLabel(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.label.defs#selfLabel', v)
 }
+
+export type LabelValue =
+  | '!hide'
+  | '!no-promote'
+  | '!warn'
+  | '!no-unauthenticated'
+  | 'dmca-violation'
+  | 'doxxing'
+  | 'porn'
+  | 'sexual'
+  | 'nudity'
+  | 'nsfl'
+  | 'corpse'
+  | 'gore'
+  | 'torture'
+  | 'self-harm'
+  | 'intolerant-race'
+  | 'intolerant-gender'
+  | 'intolerant-sexual-orientation'
+  | 'intolerant-religion'
+  | 'intolerant'
+  | 'icon-intolerant'
+  | 'threat'
+  | 'spoiler'
+  | 'spam'
+  | 'account-security'
+  | 'net-abuse'
+  | 'impersonation'
+  | 'scam'
+  | 'misleading'
+  | (string & {})

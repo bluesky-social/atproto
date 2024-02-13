@@ -919,6 +919,80 @@ export class GetThreadGateRecordsResponse extends Message<GetThreadGateRecordsRe
 }
 
 /**
+ * @generated from message bsky.GetModServiceRecordsRequest
+ */
+export class GetModServiceRecordsRequest extends Message<GetModServiceRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = [];
+
+  constructor(data?: PartialMessage<GetModServiceRecordsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetModServiceRecordsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetModServiceRecordsRequest {
+    return new GetModServiceRecordsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetModServiceRecordsRequest {
+    return new GetModServiceRecordsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetModServiceRecordsRequest {
+    return new GetModServiceRecordsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetModServiceRecordsRequest | PlainMessage<GetModServiceRecordsRequest> | undefined, b: GetModServiceRecordsRequest | PlainMessage<GetModServiceRecordsRequest> | undefined): boolean {
+    return proto3.util.equals(GetModServiceRecordsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetModServiceRecordsResponse
+ */
+export class GetModServiceRecordsResponse extends Message<GetModServiceRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = [];
+
+  constructor(data?: PartialMessage<GetModServiceRecordsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetModServiceRecordsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "records", kind: "message", T: Record, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetModServiceRecordsResponse {
+    return new GetModServiceRecordsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetModServiceRecordsResponse {
+    return new GetModServiceRecordsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetModServiceRecordsResponse {
+    return new GetModServiceRecordsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetModServiceRecordsResponse | PlainMessage<GetModServiceRecordsResponse> | undefined, b: GetModServiceRecordsResponse | PlainMessage<GetModServiceRecordsResponse> | undefined): boolean {
+    return proto3.util.equals(GetModServiceRecordsResponse, a, b);
+  }
+}
+
+/**
  * - Return follow uris where user A follows users B, C, D, …
  *     - E.g. for viewer state on `getProfiles`
  *

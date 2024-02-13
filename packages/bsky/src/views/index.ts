@@ -49,6 +49,10 @@ import { Label } from '../hydration/label'
 import { Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
+import {
+  ModServiceView,
+  ModServiceViewDetailed,
+} from '../lexicon/types/app/bsky/moderation/defs'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -262,6 +266,59 @@ export class Views {
     return record.labels.values.map(({ val }) => {
       return { src, uri, cid, val, cts, neg: false }
     })
+  }
+
+  modService(did: string, state: HydrationState): ModServiceView | undefined {
+    const modService = state.modServices?.get(did)
+    if (!modService) return
+    const creator = this.profile(did, state)
+    if (!creator) return
+    const viewer = state.modServiceViewers?.get(did)
+    const aggs = state.modServiceAggs?.get(did)
+
+    const uri = AtUri.make(did, ids.AppBskyModerationService, 'self').toString()
+    const labels = [
+      ...(state.labels?.get(uri) ?? []),
+      ...this.selfLabels({
+        uri,
+        cid: modService.cid.toString(),
+        record: modService.record,
+      }),
+    ]
+
+    return {
+      uri,
+      cid: modService.cid.toString(),
+      creator,
+      description: modService.record.description,
+      descriptionFacets: modService.record.descriptionFacets,
+      likeCount: aggs?.likes,
+      viewer: viewer
+        ? {
+            like: viewer.like,
+          }
+        : undefined,
+      indexedAt: compositeTime(
+        normalizeDatetimeAlways(modService.record.createdAt),
+        modService.indexedAt?.toISOString(),
+      ),
+      labels,
+    }
+  }
+
+  modServiceDetailed(
+    did: string,
+    state: HydrationState,
+  ): ModServiceViewDetailed | undefined {
+    const baseView = this.modService(did, state)
+    if (!baseView) return
+    const record = state.modServices?.get(did)
+    if (!record) return
+
+    return {
+      ...baseView,
+      policies: record.record.policies,
+    }
   }
 
   // Feed
@@ -723,6 +780,11 @@ export class Views {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
+      return this.recordEmbedWrapper(view, withTypeTag)
+    } else if (parsedUri.collection === ids.AppBskyModerationService) {
+      const view = this.modService(parsedUri.hostname, state)
+      if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.moderation.defs#modServiceView'
       return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)

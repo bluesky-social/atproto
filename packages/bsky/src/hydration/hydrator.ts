@@ -22,7 +22,13 @@ import {
   Lists,
   RelationshipPair,
 } from './graph'
-import { LabelHydrator, Labels } from './label'
+import {
+  LabelHydrator,
+  ModServiceAggs,
+  ModServiceViewerStates,
+  ModServices,
+  Labels,
+} from './label'
 import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
 import {
   FeedGenAggs,
@@ -59,6 +65,9 @@ export type HydrationState = {
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
   feedgenAggs?: FeedGenAggs
+  modServices?: ModServices
+  modServiceViewers?: ModServiceViewerStates
+  modServiceAggs?: ModServiceAggs
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -197,6 +206,9 @@ export class Hydrator {
   //   - feedgen
   //     - profile
   //       - list basic
+  //   - mod service
+  //     - profile
+  //       - list basic
   async hydratePosts(
     uris: string[],
     viewer: string | null,
@@ -236,6 +248,10 @@ export class Hydrator {
       ...(urisLayer1ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
     ]
+    const nestedModServiceDids = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyModerationService) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyModerationService) ?? []),
+    ].map((uri) => new AtUri(uri).hostname)
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
@@ -247,6 +263,7 @@ export class Hydrator {
       profileState,
       listState,
       feedGenState,
+      modServiceState,
     ] = await Promise.all([
       this.feed.getPostAggregates(uris),
       viewer ? this.feed.getPostViewerStates(uris, viewer) : undefined,
@@ -259,17 +276,24 @@ export class Hydrator {
       ),
       this.hydrateLists([...nestedListUris, ...gateListUris], viewer),
       this.hydrateFeedGens(nestedFeedGenUris, viewer),
+      this.hydrateModServices(nestedModServiceDids, viewer),
     ])
     // combine all hydration state
-    return mergeManyStates(profileState, listState, feedGenState, {
-      posts,
-      postAggs,
-      postViewers,
-      postBlocks,
-      labels,
-      threadgates,
-      viewer,
-    })
+    return mergeManyStates(
+      profileState,
+      listState,
+      feedGenState,
+      modServiceState,
+      {
+        posts,
+        postAggs,
+        postViewers,
+        postBlocks,
+        labels,
+        threadgates,
+        viewer,
+      },
+    )
   }
 
   private async hydratePostBlocks(posts: Posts): Promise<PostBlocks> {
@@ -501,6 +525,29 @@ export class Hydrator {
     return { follows, followBlocks }
   }
 
+  // app.bsky.moderation.def#modServiceViewDetailed
+  // - mod service
+  //   - profile
+  //     - list basic
+  async hydrateModServices(
+    dids: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
+    const [modServices, modServiceAggs, modServiceViewers, profileState] =
+      await Promise.all([
+        this.label.getModServices(dids),
+        this.label.getModServiceAggregates(dids),
+        viewer ? this.label.getModServiceViewerStates(dids, viewer) : undefined,
+        this.hydrateProfiles(dids.map(didFromUri), viewer),
+      ])
+    return mergeStates(profileState, {
+      modServices,
+      modServiceAggs,
+      modServiceViewers,
+      viewer,
+    })
+  }
+
   // ad-hoc record hydration
   // in com.atproto.repo.getRecord
   async getRecord(
@@ -547,6 +594,11 @@ export class Hydrator {
     } else if (collection === ids.AppBskyFeedGenerator) {
       return (
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyModerationService) {
+      return (
+        (await this.label.getModServices([uri], includeTakedowns)).get(uri) ??
         undefined
       )
     } else if (collection === ids.AppBskyActorProfile) {
@@ -666,6 +718,12 @@ export const mergeStates = (
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
+    modServices: mergeMaps(stateA.modServices, stateB.modServices),
+    modServiceAggs: mergeMaps(stateA.modServiceAggs, stateB.modServiceAggs),
+    modServiceViewers: mergeMaps(
+      stateA.modServiceViewers,
+      stateB.modServiceViewers,
+    ),
   }
 }
 
