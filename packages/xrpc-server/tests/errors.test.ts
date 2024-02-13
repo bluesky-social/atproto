@@ -75,7 +75,7 @@ const LEXICONS: LexiconDoc[] = [
   },
 ]
 
-const MISMATCHED_LEXICONS = [
+const MISMATCHED_LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.query',
