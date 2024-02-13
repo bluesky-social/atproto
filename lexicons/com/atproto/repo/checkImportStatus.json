@@ -18,7 +18,8 @@
             "importedBlobs"
           ],
           "properties": {
-            "finalized": { "type": "boolean" },
+            "activated": { "type": "boolean" },
+            "didMigrated": { "type": "boolean" },
             "uploadedRepo": { "type": "boolean" },
             "importedRepo": { "type": "boolean" },
             "importRepoError": { "type": "string" },
