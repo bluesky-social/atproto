@@ -57,6 +57,7 @@
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
-    "@types/qs": "^6.9.7"
+    "@types/qs": "^6.9.7",
+    "ts-node": "^10.8.2"
   }
 }

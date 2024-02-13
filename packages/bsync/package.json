@@ -42,6 +42,7 @@
     "@bufbuild/buf": "^1.28.1",
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
-    "@types/pg": "^8.6.6"
+    "@types/pg": "^8.6.6",
+    "ts-node": "^10.8.2"
   }
 }

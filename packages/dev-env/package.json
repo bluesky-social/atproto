@@ -39,8 +39,5 @@
     "get-port": "^6.1.2",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
-  },
-  "devDependencies": {
-    "ts-node": "^10.8.1"
   }
 }

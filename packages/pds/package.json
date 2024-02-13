@@ -92,6 +92,7 @@
     "esbuild": "^0.14.48",
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",
+    "ts-node": "^10.8.2",
     "ws": "^8.12.0"
   }
 }

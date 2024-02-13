@@ -46,7 +46,6 @@
     "pino-pretty": "^9.1.0",
     "prettier": "^2.7.1",
     "prettier-config-standard": "^5.0.0",
-    "ts-node": "^10.8.2",
     "typescript": "^5.3.3"
   },
   "workspaces": {
