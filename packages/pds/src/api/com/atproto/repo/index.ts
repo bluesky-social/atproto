@@ -8,6 +8,7 @@ import getRecord from './getRecord'
 import listRecords from './listRecords'
 import putRecord from './putRecord'
 import uploadBlob from './uploadBlob'
+import importRepo from './importRepo'
 
 export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
@@ -18,4 +19,5 @@ export default function (server: Server, ctx: AppContext) {
   listRecords(server, ctx)
   putRecord(server, ctx)
   uploadBlob(server, ctx)
+  importRepo(server, ctx)
 }

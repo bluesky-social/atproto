@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db'
-import { notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobReader {
@@ -81,5 +81,27 @@ export class BlobReader {
       .selectAll()
       .execute()
     return res.map((row) => row.recordUri)
+  }
+
+  async blobCount(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('blob')
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
+  }
+
+  async recordBlobCount(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom(
+        this.db.db
+          .selectFrom('record_blob')
+          .select('blobCid')
+          .distinct()
+          .as('unique_cids'),
+      )
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
   }
 }

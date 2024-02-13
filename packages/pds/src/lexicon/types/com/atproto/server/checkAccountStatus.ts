@@ -14,11 +14,11 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   activated: boolean
-  didMigrated?: boolean
-  uploadedRepo: boolean
-  importedRepo: boolean
-  importRepoError?: string
-  importedPrivateState: boolean
+  validDid: boolean
+  repoCommit?: string
+  repoRev?: string
+  indexedRecords: number
+  privateStateValues: number
   expectedBlobs: number
   importedBlobs: number
   [k: string]: unknown
