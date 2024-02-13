@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
       },
       {
         durationMs: 5 * SECOND,
-        points: 2,
+        points: 5,
       },
     ],
     handler: async ({ input, req }) => {
