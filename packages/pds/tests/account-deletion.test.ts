@@ -204,6 +204,34 @@ describe('account deletion', () => {
       password: eve.password,
     })
   })
+
+  it('does not delete account by a non-admin', async () => {
+    const tryDeletAcct = agent.api.com.atproto.admin.deleteAccount(
+      { did: sc.dids.bob },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders('moderator'),
+      },
+    )
+    await expect(tryDeletAcct).rejects.toThrow('Insufficient privileges')
+  })
+
+  it('deletes account by an admin', async () => {
+    const bob = sc.accounts[sc.dids.bob]
+    await agent.api.com.atproto.admin.deleteAccount(
+      { did: bob.did },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders('admin'),
+      },
+    )
+    await network.processAll() // Finish background hard-deletions
+    const attempt = agent.api.com.atproto.server.createSession({
+      identifier: bob.handle,
+      password: bob.password,
+    })
+    await expect(attempt).rejects.toThrow('Invalid identifier or password')
+  })
 })
 
 type DbContents = {

@@ -13,6 +13,7 @@ import enableAccountInvites from './enableAccountInvites'
 import disableAccountInvites from './disableAccountInvites'
 import disableInviteCodes from './disableInviteCodes'
 import getInviteCodes from './getInviteCodes'
+import deleteAccount from './deleteAccount'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountEmail from './updateAccountEmail'
 import sendEmail from './sendEmail'
@@ -37,6 +38,7 @@ export default function (server: Server, ctx: AppContext) {
   disableAccountInvites(server, ctx)
   disableInviteCodes(server, ctx)
   getInviteCodes(server, ctx)
+  deleteAccount(server, ctx)
   updateAccountHandle(server, ctx)
   updateAccountEmail(server, ctx)
   sendEmail(server, ctx)
