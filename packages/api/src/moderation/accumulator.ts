@@ -6,6 +6,7 @@ import {
   ModerationOpts,
   ModerationDecision,
   LabelDefinition,
+  LabelTarget,
 } from './types'
 import { LABELS } from './const/labels'
 
@@ -13,7 +14,7 @@ export class ModerationCauseAccumulator {
   did = ''
   causes: ModerationCause[] = []
 
-  constructor() {}
+  constructor(public ctx: LabelTarget) {}
 
   setDid(did: string) {
     this.did = did
@@ -66,6 +67,11 @@ export class ModerationCauseAccumulator {
     const labelDef = LABELS[label.val] as LabelDefinition
     if (!labelDef) {
       // ignore labels we don't understand
+      return
+    }
+
+    if (!labelDef.targets.includes(this.ctx)) {
+      // ignore labels that don't apply to this context
       return
     }
 

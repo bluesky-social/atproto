@@ -36,7 +36,7 @@ export type KnownLabelValue =
   | 'icon-intolerant'
   | 'discourse'
   | 'drama'
-  | 'curation'
+  | 'dislike'
   | 'spam'
   | 'interaction-noise'
   | 'engagement-farming'
@@ -58,6 +58,7 @@ export type KnownLabelValue =
 export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   '!hide': {
     id: '!hide',
+    targets: ['account', 'profile', 'content'],
     fixedPreference: 'hide',
     flags: ['no-override'],
     onwarn: 'blur',
@@ -66,6 +67,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   '!no-promote': {
     id: '!no-promote',
+    targets: ['account', 'content'],
     fixedPreference: 'hide',
     flags: [],
     onwarn: null,
@@ -74,6 +76,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   '!warn': {
     id: '!warn',
+    targets: ['account', 'profile', 'content'],
     fixedPreference: 'warn',
     flags: [],
     onwarn: 'blur',
@@ -82,6 +85,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   '!no-unauthenticated': {
     id: '!no-unauthenticated',
+    targets: ['account', 'profile', 'content'],
     fixedPreference: 'hide',
     flags: ['no-override', 'unauthed'],
     onwarn: 'blur',
@@ -90,6 +94,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'dmca-violation': {
     id: 'dmca-violation',
+    targets: ['profile', 'content'],
     fixedPreference: 'hide',
     flags: ['no-override'],
     onwarn: 'blur',
@@ -98,6 +103,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   doxxing: {
     id: 'doxxing',
+    targets: ['account', 'profile', 'content'],
     fixedPreference: 'hide',
     flags: ['no-override'],
     onwarn: 'blur',
@@ -106,6 +112,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   plagiarism: {
     id: 'plagiarism',
+    targets: ['content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'intellectual-property',
@@ -113,6 +120,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   porn: {
     id: 'porn',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'porn',
@@ -120,6 +128,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   sexual: {
     id: 'sexual',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'suggestive',
@@ -127,6 +136,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   nudity: {
     id: 'nudity',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'nudity',
@@ -134,6 +144,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   nsfl: {
     id: 'nsfl',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'violence',
@@ -141,6 +152,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   corpse: {
     id: 'corpse',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'violence',
@@ -148,6 +160,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   gore: {
     id: 'gore',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'violence',
@@ -155,6 +168,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   torture: {
     id: 'torture',
+    targets: ['profile', 'content'],
     flags: ['adult'],
     onwarn: 'blur',
     groupId: 'violence',
@@ -162,6 +176,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'substance-abuse': {
     id: 'substance-abuse',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'drugs-alcohol',
@@ -169,6 +184,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'self-harm': {
     id: 'self-harm',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'self-harm',
@@ -176,6 +192,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'eating-disorder': {
     id: 'eating-disorder',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'self-harm',
@@ -183,6 +200,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'intolerant-race': {
     id: 'intolerant-race',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
@@ -190,6 +208,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'intolerant-gender': {
     id: 'intolerant-gender',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
@@ -197,6 +216,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'intolerant-sexual-orientation': {
     id: 'intolerant-sexual-orientation',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
@@ -204,6 +224,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'intolerant-religion': {
     id: 'intolerant-religion',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
@@ -211,6 +232,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   intolerant: {
     id: 'intolerant',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
@@ -218,6 +240,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   harassment: {
     id: 'harassment',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'bad-behavior',
@@ -225,6 +248,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   bullying: {
     id: 'bullying',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'bad-behavior',
@@ -232,6 +256,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   threat: {
     id: 'threat',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'bad-behavior',
@@ -239,6 +264,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   rude: {
     id: 'rude',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'rude',
@@ -246,6 +272,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   disgusting: {
     id: 'disgusting',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'upsetting',
@@ -253,6 +280,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   upsetting: {
     id: 'upsetting',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'upsetting',
@@ -260,6 +288,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   troubling: {
     id: 'troubling',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'troubling',
@@ -267,6 +296,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   dispiriting: {
     id: 'dispiriting',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'troubling',
@@ -274,6 +304,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'bad-news': {
     id: 'bad-news',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'troubling',
@@ -281,6 +312,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'icon-intolerant': {
     id: 'icon-intolerant',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'blur-media',
     groupId: 'hate-group-mention',
@@ -288,6 +320,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   discourse: {
     id: 'discourse',
+    targets: ['content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'discourse',
@@ -295,13 +328,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   drama: {
     id: 'drama',
+    targets: ['content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'discourse',
     configurable: true,
   },
-  curation: {
-    id: 'curation',
+  dislike: {
+    id: 'dislike',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
@@ -309,6 +344,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   spam: {
     id: 'spam',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
@@ -316,6 +352,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'interaction-noise': {
     id: 'interaction-noise',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
@@ -323,6 +360,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'engagement-farming': {
     id: 'engagement-farming',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
@@ -330,6 +368,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   shilling: {
     id: 'shilling',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
@@ -337,6 +376,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   impersonation: {
     id: 'impersonation',
+    targets: ['account'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misrepresentation',
@@ -344,6 +384,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   scam: {
     id: 'scam',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misrepresentation',
@@ -351,6 +392,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'account-security': {
     id: 'account-security',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'security',
@@ -358,6 +400,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'net-abuse': {
     id: 'net-abuse',
+    targets: ['account', 'content'],
     flags: [],
     onwarn: 'blur',
     groupId: 'security',
@@ -365,6 +408,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   misinfo: {
     id: 'misinfo',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misinfo',
@@ -372,6 +416,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   misleading: {
     id: 'misleading',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misinfo',
@@ -379,6 +424,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   unverified: {
     id: 'unverified',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misinfo',
@@ -386,6 +432,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   manipulated: {
     id: 'manipulated',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misinfo',
@@ -393,6 +440,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   fringe: {
     id: 'fringe',
+    targets: ['profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'misinfo',
@@ -400,6 +448,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   satire: {
     id: 'satire',
+    targets: ['account', 'content'],
     fixedPreference: 'warn',
     flags: [],
     onwarn: 'alert',
@@ -408,6 +457,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   parody: {
     id: 'parody',
+    targets: ['account', 'content'],
     fixedPreference: 'warn',
     flags: [],
     onwarn: 'alert',
@@ -416,6 +466,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   bot: {
     id: 'bot',
+    targets: ['account'],
     flags: [],
     onwarn: 'alert',
     groupId: 'context',
@@ -423,6 +474,7 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
   },
   'ai-generated': {
     id: 'ai-generated',
+    targets: ['account', 'profile', 'content'],
     flags: [],
     onwarn: 'alert',
     groupId: 'context',

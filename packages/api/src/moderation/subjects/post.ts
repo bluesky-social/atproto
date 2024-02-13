@@ -9,7 +9,7 @@ export function decidePost(
   subject: ModerationSubjectPost,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationCauseAccumulator('content')
 
   acc.setDid(subject.author.did)
 

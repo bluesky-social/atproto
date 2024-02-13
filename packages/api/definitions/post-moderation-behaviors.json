@@ -538,11 +538,7 @@
       "subject": "post",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "content": { "cause": "label:porn", "filter": true },
-        "avatar": { "blur": true },
-        "embed": { "cause": "label:porn", "blur": true }
-      }
+      "behaviors": {}
     },
     "Blur-media label ('porn') on quoted post (hide)": {
       "cfg": "porn-hide",
@@ -561,9 +557,7 @@
       "author": "alice",
       "quoteAuthor": "alice",
       "labels": { "quotedAccount": ["porn"] },
-      "behaviors": {
-        "content": { "cause": "label:porn", "filter": true }
-      }
+      "behaviors": {}
     },
 
     "Blur-media label ('porn') on post (warn)": {
@@ -589,10 +583,7 @@
       "subject": "post",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "avatar": { "blur": true },
-        "embed": { "cause": "label:porn", "blur": true }
-      }
+      "behaviors": {}
     },
     "Blur-media label ('porn') on quoted post (warn)": {
       "cfg": "porn-warn",
@@ -812,20 +803,12 @@
         "avatar": { "cause": "label:porn", "blur": true, "noOverride": true }
       }
     },
-    "Adult-only label on author account when adult content is disabled": {
+    "Adult-only label on author account when adult content is disabled (no effect -- porn doesnt apply to accounts)": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "content": {
-          "cause": "label:porn",
-          "filter": true,
-          "noOverride": true
-        },
-        "avatar": { "cause": "label:porn", "blur": true, "noOverride": true },
-        "embed": { "cause": "label:porn", "blur": true, "noOverride": true }
-      }
+      "behaviors": {}
     },
     "Adult-only label on quoted post when adult content is disabled": {
       "cfg": "adult-disabled",
@@ -838,15 +821,13 @@
         "embed": { "cause": "label:porn", "blur": true, "noOverride": true }
       }
     },
-    "Adult-only label on quoted author account when adult content is disabled": {
+    "Adult-only label on quoted author account when adult content is disabled (no effect -- porn doesnt apply to accounts)": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
       "quoteAuthor": "alice",
       "labels": { "quotedAccount": ["porn"] },
-      "behaviors": {
-        "content": { "cause": "label:porn", "filter": true }
-      }
+      "behaviors": {}
     },
 
     "Self-post: Imperative label ('!hide') on post": {

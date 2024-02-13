@@ -16,7 +16,7 @@ const suite: ModerationBehaviors = JSON.parse(
 
 const suiteRunner = new ModerationBehaviorSuiteRunner(suite)
 
-describe('Post moderation behaviors', () => {
+describe('Profile moderation behaviors', () => {
   const scenarios = Array.from(Object.entries(suite.scenarios))
   it.each(scenarios)(
     '%s',

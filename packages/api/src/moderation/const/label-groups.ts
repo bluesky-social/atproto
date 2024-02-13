@@ -148,7 +148,7 @@ export const LABEL_GROUPS: Record<LabelGroupId, LabelGroupDefinition> = {
   curation: {
     id: 'curation',
     configurable: true,
-    labels: [LABELS['curation']],
+    labels: [LABELS['dislike']],
   },
   spam: {
     id: 'spam',

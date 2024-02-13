@@ -61,6 +61,7 @@ The kind of UI behavior used when a warning must be applied.
       <th>ID</th>
       <th>Group</th>
       <th>Configurable</th>
+      <th>Targets</th>
       <th>Flags</th>
       <th>On Warn</th>
     </tr>
@@ -79,6 +80,7 @@ function labelsRef() {
           <td>${
             group.configurable ? '✅' : `❌ (${label.fixedPreference})`
           }</td>
+          <td>${label.targets.join(', ')}</td>
           <td>${label.flags.join(', ')}</td>
           <td>${label.onwarn}</td>
         </tr>

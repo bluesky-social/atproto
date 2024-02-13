@@ -10,7 +10,7 @@ export function decideAccount(
   subject: ModerationSubjectProfile,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationCauseAccumulator('account')
 
   acc.setDid(subject.did)
   if (subject.viewer?.muted) {

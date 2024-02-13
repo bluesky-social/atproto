@@ -10,7 +10,7 @@ export function decideProfile(
   subject: ModerationSubjectProfile,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationCauseAccumulator('profile')
 
   acc.setDid(subject.did)
 

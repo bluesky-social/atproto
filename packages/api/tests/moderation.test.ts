@@ -281,4 +281,150 @@ describe('Moderation', () => {
       true,
     )
   })
+
+  it('Ignores labels applied to the wrong targets', () => {
+    const res1 = moderateProfile(
+      mock.profileViewBasic({
+        handle: 'bob.test',
+        displayName: 'Bob',
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.actor.profile/self',
+            val: 'rude',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      {
+        userDid: 'did:web:alice.test',
+        adultContentEnabled: true,
+        labelGroups: {
+          rude: 'hide',
+        },
+        mods: [
+          {
+            did: 'did:web:labeler.test',
+            enabled: true,
+          },
+        ],
+      },
+    )
+    expect(res1.account).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res1, null, 2),
+      true,
+    )
+    expect(res1.profile).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res1, null, 2),
+      true,
+    )
+    expect(res1.avatar).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res1, null, 2),
+      true,
+    )
+
+    const res2 = moderateProfile(
+      mock.profileViewBasic({
+        handle: 'bob.test',
+        displayName: 'Bob',
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/',
+            val: 'disgusting',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      {
+        userDid: 'did:web:alice.test',
+        adultContentEnabled: true,
+        labelGroups: {
+          disgusting: 'hide',
+        },
+        mods: [
+          {
+            did: 'did:web:labeler.test',
+            enabled: true,
+          },
+        ],
+      },
+    )
+    expect(res2.account).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res2, null, 2),
+      true,
+    )
+    expect(res2.profile).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res2, null, 2),
+      true,
+    )
+    expect(res2.avatar).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res2, null, 2),
+      true,
+    )
+
+    const res3 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'bot',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      {
+        userDid: 'did:web:alice.test',
+        adultContentEnabled: true,
+        labelGroups: {
+          bot: 'hide',
+        },
+        mods: [
+          {
+            did: 'did:web:labeler.test',
+            enabled: true,
+          },
+        ],
+      },
+    )
+    expect(res3.content).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res3, null, 2),
+      true,
+    )
+    expect(res3.embed).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res3, null, 2),
+      true,
+    )
+    expect(res3.avatar).toBeModerationResult(
+      {},
+      '',
+      JSON.stringify(res3, null, 2),
+      true,
+    )
+  })
 })

@@ -281,10 +281,7 @@
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "account": { "cause": "label:porn", "filter": true, "blur": true },
-        "avatar": { "blur": true }
-      }
+      "behaviors": {}
     },
     "Blur-media label ('porn') on profile (hide)": {
       "cfg": "porn-hide",
@@ -301,10 +298,7 @@
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "account": { "cause": "label:porn", "blur": true },
-        "avatar": { "blur": true }
-      }
+      "behaviors": {}
     },
     "Blur-media label ('porn') on profile (warn)": {
       "cfg": "porn-warn",
@@ -388,20 +382,12 @@
       "behaviors": {}
     },
 
-    "Adult-only label on account when adult content is disabled": {
+    "Adult-only label on account when adult content is disabled (no effect -- porn doesnt apply to accounts)": {
       "cfg": "adult-disabled",
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "account": {
-          "cause": "label:porn",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
-      }
+      "behaviors": {}
     },
     "Adult-only label on profile when adult content is disabled": {
       "cfg": "adult-disabled",
@@ -538,16 +524,6 @@
           "filter": true,
           "blur": true
         },
-        "avatar": { "blur": true }
-      }
-    },
-    "Prioritization: '!warn' and 'porn' labels on account (hide)": {
-      "cfg": "porn-hide",
-      "subject": "profile",
-      "author": "alice",
-      "labels": { "account": ["!warn", "porn"] },
-      "behaviors": {
-        "account": { "cause": "label:porn", "filter": true, "blur": true },
         "avatar": { "blur": true }
       }
     },

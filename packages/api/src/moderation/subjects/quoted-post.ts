@@ -7,7 +7,7 @@ export function decideQuotedPost(
   subject: AppBskyEmbedRecord.View,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationCauseAccumulator('content')
 
   if (AppBskyEmbedRecord.isViewRecord(subject.record)) {
     acc.setDid(subject.record.author.did)
@@ -45,7 +45,7 @@ export function decideQuotedPostWithMedia(
   subject: AppBskyEmbedRecordWithMedia.View,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationCauseAccumulator('content')
 
   if (AppBskyEmbedRecord.isViewRecord(subject.record.record)) {
     acc.setDid(subject.record.record.author.did)

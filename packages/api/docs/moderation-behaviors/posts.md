@@ -704,16 +704,16 @@ Key:
 <tr>
 <td><strong>Blur-media label ('porn') on author account (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
 </td>
 <td>
-✋
+
 </td>
 <td>
-✋
+
 </td>
 </tr>
 
@@ -736,7 +736,7 @@ Key:
 <tr>
 <td><strong>Blur-media label ('porn') on quoted author account (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
@@ -790,10 +790,10 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
-✋
+
 </td>
 </tr>
 
@@ -1184,18 +1184,18 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Adult-only label on author account when adult content is disabled</strong></td>
+<td><strong>Adult-only label on author account when adult content is disabled (no effect -- porn doesnt apply to accounts)</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
 </td>
 <td>
-🚫
+
 </td>
 </tr>
 
@@ -1216,9 +1216,9 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Adult-only label on quoted author account when adult content is disabled</strong></td>
+<td><strong>Adult-only label on quoted author account when adult content is disabled (no effect -- porn doesnt apply to accounts)</strong></td>
 <td>
-❌
+
 </td>
 <td>
 

@@ -19,6 +19,7 @@ export type LabelDefinitionOnWarnBehavior =
   | 'blur-media'
   | 'alert'
   | null
+export type LabelTarget = 'account' | 'profile' | 'content'
 
 export interface LabelDefinitionLocalizedStrings {
   name: string
@@ -34,6 +35,7 @@ export interface LabelDefinition {
   id: KnownLabelValue
   groupId: string
   configurable: boolean
+  targets: LabelTarget[]
   fixedPreference?: LabelPreference
   flags: LabelDefinitionFlag[]
   onwarn: LabelDefinitionOnWarnBehavior
