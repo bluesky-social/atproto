@@ -10,7 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The DID of the service that the token will be used to authenticate with */
-  aud?: string
+  aud: string
 }
 
 export type InputSchema = undefined

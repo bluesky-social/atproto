@@ -3019,9 +3019,9 @@ export const schemaDict = {
             type: 'object',
             required: [
               'activated',
-              'uploadedRepo',
-              'importedRepo',
-              'importedPrivateState',
+              'validDid',
+              'indexedRecords',
+              'privateStateValues',
               'expectedBlobs',
               'importedBlobs',
             ],
@@ -3029,20 +3029,21 @@ export const schemaDict = {
               activated: {
                 type: 'boolean',
               },
-              didMigrated: {
+              validDid: {
                 type: 'boolean',
               },
-              uploadedRepo: {
-                type: 'boolean',
+              repoCommit: {
+                type: 'string',
+                format: 'cid',
               },
-              importedRepo: {
-                type: 'boolean',
-              },
-              importRepoError: {
+              repoRev: {
                 type: 'string',
               },
-              importedPrivateState: {
-                type: 'boolean',
+              indexedRecords: {
+                type: 'integer',
+              },
+              privateStateValues: {
+                type: 'integer',
               },
               expectedBlobs: {
                 type: 'integer',
@@ -3674,19 +3675,24 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['signingKey'],
             properties: {
-              signingKey: {
-                type: 'string',
-              },
               rotationKeys: {
                 type: 'array',
                 items: {
                   type: 'string',
                 },
               },
-              pdsEndpoint: {
-                type: 'string',
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
               },
             },
           },
@@ -3704,6 +3710,7 @@ export const schemaDict = {
           'Get a signed token on behalf of the requesting DID for the requested service.',
         parameters: {
           type: 'params',
+          required: ['aud'],
           properties: {
             aud: {
               type: 'string',

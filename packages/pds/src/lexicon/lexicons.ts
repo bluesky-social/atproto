@@ -3675,19 +3675,24 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['signingKey'],
             properties: {
-              signingKey: {
-                type: 'string',
-              },
               rotationKeys: {
                 type: 'array',
                 items: {
                   type: 'string',
                 },
               },
-              pdsEndpoint: {
-                type: 'string',
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
               },
             },
           },

@@ -31,6 +31,8 @@ import listAppPasswords from './listAppPasswords'
 import revokeAppPassword from './revokeAppPassword'
 
 import getServiceAuth from './getServiceAuth'
+import checkAccountStatus from './checkAccountStatus'
+import getDidCredentials from './getDidCredentials'
 
 export default function (server: Server, ctx: AppContext) {
   describeServer(server, ctx)
@@ -55,4 +57,6 @@ export default function (server: Server, ctx: AppContext) {
   listAppPasswords(server, ctx)
   revokeAppPassword(server, ctx)
   getServiceAuth(server, ctx)
+  checkAccountStatus(server, ctx)
+  getDidCredentials(server, ctx)
 }

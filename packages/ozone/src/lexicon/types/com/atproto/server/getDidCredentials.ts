@@ -13,9 +13,10 @@ export interface QueryParams {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  signingKey: string
   rotationKeys?: string[]
-  pdsEndpoint?: string
+  alsoKnownAs?: string[]
+  verificationMethods?: {}
+  services?: {}
   [k: string]: unknown
 }
 

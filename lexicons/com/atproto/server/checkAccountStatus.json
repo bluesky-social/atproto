@@ -20,9 +20,9 @@
           "properties": {
             "activated": { "type": "boolean" },
             "validDid": { "type": "boolean" },
-            "repoCommit": {"type": "string", "format": "cid"},
-            "repoRev": {"type": "string"},
-            "indexedRecords": {"type": "integer"},
+            "repoCommit": { "type": "string", "format": "cid" },
+            "repoRev": { "type": "string" },
+            "indexedRecords": { "type": "integer" },
             "privateStateValues": { "type": "integer" },
             "expectedBlobs": { "type": "integer" },
             "importedBlobs": { "type": "integer" }
