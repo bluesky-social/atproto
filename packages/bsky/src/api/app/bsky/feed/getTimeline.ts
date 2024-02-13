@@ -3,7 +3,11 @@ import AppContext from '../../../../context'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
@@ -18,11 +22,13 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req, res }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
       const [result, repoRev] = await Promise.all([
-        getTimeline({ ...params, viewer }, ctx),
+        getTimeline({ ...params, hydrateCtx }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -42,7 +48,7 @@ export const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const res = await ctx.dataplane.getTimeline({
-    actorDid: params.viewer,
+    actorDid: params.hydrateCtx.viewer,
     limit: params.limit,
     cursor: params.cursor,
   })
@@ -58,7 +64,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer)
+  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -97,7 +103,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string }
+type Params = QueryParams & { hydrateCtx: HydrateCtx & { viewer: string } }
 
 type Skeleton = {
   uris: string[]

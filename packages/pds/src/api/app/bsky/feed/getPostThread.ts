@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
           params,
-          await ctx.appviewAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester, req),
         )
 
         return await handleReadAfterWrite(
@@ -207,7 +207,7 @@ const readAfterWriteNotFound = async (
     try {
       const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, null),
       )
       thread.parent = parentsRes.data.thread
     } catch (err) {

@@ -9,16 +9,18 @@ import {
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getBlocks({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getBlocks({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const result = await getBlocks({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -30,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
   const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
-    actorDid: params.viewer,
+    actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -49,9 +51,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { viewer } = params
-  const { blockedDids } = skeleton
-  return ctx.hydrator.hydrateProfiles(blockedDids, viewer)
+  return ctx.hydrator.hydrateProfiles(skeleton.blockedDids, params.hydrateCtx)
 }
 
 const presentation = (
@@ -71,7 +71,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

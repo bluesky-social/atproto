@@ -829,7 +829,8 @@ export class Views {
     }
     const rootUriStr: string = post?.record.reply?.root.uri ?? uri
     const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
-    if (!gate || !state.viewer) {
+    const viewer = state.ctx?.viewer
+    if (!gate || !viewer) {
       return undefined
     }
     const rootPost = state.posts?.get(rootUriStr)?.record
@@ -838,7 +839,7 @@ export class Views {
       canReply,
       allowFollowing,
       allowListUris = [],
-    } = parseThreadGate(state.viewer, ownerDid, rootPost ?? null, gate)
+    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
     if (canReply) {
       return false
     }

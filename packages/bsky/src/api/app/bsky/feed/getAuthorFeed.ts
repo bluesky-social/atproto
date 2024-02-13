@@ -6,6 +6,7 @@ import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
+  HydrateCtx,
   HydrationState,
   Hydrator,
   mergeStates,
@@ -24,11 +25,13 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
       const [result, repoRev] = await Promise.all([
-        getAuthorFeed({ ...params, viewer }, ctx),
+        getAuthorFeed({ ...params, hydrateCtx }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -78,11 +81,11 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   const [feedPostState, profileViewerState = {}] = await Promise.all([
-    ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer),
-    params.viewer
+    ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.hydrateCtx),
+    params.hydrateCtx.viewer
       ? ctx.hydrator.actor.getProfileViewerStates(
           [skeleton.actor.did],
-          params.viewer,
+          params.hydrateCtx.viewer,
         )
       : undefined,
   ])
@@ -137,7 +140,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   actor: Actor

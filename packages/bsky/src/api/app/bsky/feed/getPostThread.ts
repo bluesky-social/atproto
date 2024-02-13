@@ -11,7 +11,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 
@@ -24,11 +24,13 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
       const [result, repoRev] = await Promise.allSettled([
-        getPostThread({ ...params, viewer }, ctx),
+        getPostThread({ ...params, hydrateCtx }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -64,7 +66,7 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateThreadPosts(skeleton.uris, params.viewer)
+  return ctx.hydrator.hydrateThreadPosts(skeleton.uris, params.hydrateCtx)
 }
 
 const presentation = (
@@ -88,7 +90,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   anchor: string

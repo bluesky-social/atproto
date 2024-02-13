@@ -10,7 +10,7 @@ import {
   RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { Notification } from '../../../../data-plane/gen/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
@@ -24,9 +24,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.notification.listNotifications({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await listNotifications({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const result = await listNotifications({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -42,14 +44,15 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
+  const viewer = params.hydrateCtx.viewer
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
-      actorDid: params.viewer,
+      actorDid: viewer,
       cursor: params.cursor,
       limit: params.limit,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: params.viewer,
+      actorDid: viewer,
     }),
   ])
   return {
@@ -63,7 +66,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { skeleton, params, ctx } = input
-  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.viewer)
+  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
 }
 
 const noBlockOrMutes = (
@@ -97,7 +100,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

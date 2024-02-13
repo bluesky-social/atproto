@@ -9,7 +9,7 @@ import {
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
@@ -21,9 +21,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.graph.getListMutes({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getListMutes({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const result = await getListMutes({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -38,7 +40,7 @@ const skeleton = async (
   const { ctx, params } = input
   const { listUris, cursor } =
     await ctx.hydrator.dataplane.getMutelistSubscriptions({
-      actorDid: params.viewer,
+      actorDid: params.hydrateCtx.viewer,
       cursor: params.cursor,
       limit: params.limit,
     })
@@ -49,7 +51,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.viewer)
+  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.hydrateCtx)
 }
 
 const presentation = (
@@ -67,7 +69,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

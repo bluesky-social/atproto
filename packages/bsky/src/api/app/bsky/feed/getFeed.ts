@@ -24,6 +24,7 @@ import {
   createPipeline,
 } from '../../../../pipeline'
 import { mapDefined } from '@atproto/common'
+import { HydrateCtx } from '../../../../hydration/hydrator'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -36,9 +37,11 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptionalAnyAud,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
       const { timerSkele, timerHydr, ...result } = await getFeed(
-        { ...params, viewer, authorization: req.headers['authorization'] },
+        { ...params, hydrateCtx, authorization: req.headers['authorization'] },
         ctx,
       )
 
@@ -61,7 +64,7 @@ const skeleton = async (
   const localAlgo = ctx.algos[params.feed]
   const { feedItems, cursor, ...passthrough } =
     localAlgo !== undefined
-      ? await localAlgo(ctx, params, params.viewer)
+      ? await localAlgo(ctx, params, params.hydrateCtx.viewer)
       : await skeletonFromFeedGen(ctx, params)
   return {
     cursor,
@@ -80,7 +83,7 @@ const hydration = async (
   const feedItemUris = skeleton.feedItems.map((item) => item.itemUri)
   const hydration = await ctx.hydrator.hydrateFeedPosts(
     feedItemUris,
-    params.viewer,
+    params.hydrateCtx,
   )
   skeleton.timerHydr = timerHydr.stop()
   return hydration
@@ -123,7 +126,7 @@ const presentation = (
 
 type Context = AppContext
 
-type Params = GetFeedParams & { viewer: string | null; authorization?: string }
+type Params = GetFeedParams & { hydrateCtx: HydrateCtx; authorization?: string }
 
 type Skeleton = {
   feedItems: AlgoResponseItem[]

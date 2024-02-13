@@ -9,7 +9,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
@@ -24,9 +24,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
-      const results = await searchPosts({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const results = await searchPosts({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: results,
@@ -52,7 +54,7 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydratePosts(skeleton.posts, params.viewer)
+  return ctx.hydrator.hydratePosts(skeleton.posts, params.hydrateCtx)
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
@@ -84,7 +86,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   posts: string[]

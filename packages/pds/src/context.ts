@@ -1,3 +1,4 @@
+import express from 'express'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -239,21 +240,30 @@ export class AppContext {
     })
   }
 
-  async appviewAuthHeaders(did: string) {
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+  async appviewAuthHeaders(did: string, req: express.Request | null) {
+    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, req)
   }
 
   async moderationAuthHeaders(did: string) {
-    return this.serviceAuthHeaders(did, this.cfg.modService.did)
+    return this.serviceAuthHeaders(did, this.cfg.modService.did, null)
   }
 
-  async serviceAuthHeaders(did: string, aud: string) {
+  async serviceAuthHeaders(
+    did: string,
+    aud: string,
+    req: express.Request | null,
+  ) {
     const keypair = await this.actorStore.keypair(did)
-    return createServiceAuthHeaders({
+    const authHeaders = await createServiceAuthHeaders({
       iss: did,
       aud,
       keypair,
     })
+    const labelerHeader = req?.header('atproto-labelers')
+    if (labelerHeader) {
+      authHeaders.headers['atproto-labelers'] = labelerHeader
+    }
+    return authHeaders
   }
 }
 
