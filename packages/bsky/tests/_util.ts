@@ -8,6 +8,20 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import { AppBskyFeedGetPostThread } from '@atproto/api'
+
+type ThreadViewPost = Extract<
+  AppBskyFeedGetPostThread.OutputSchema['thread'],
+  { post: { uri: string } }
+>
+
+export function assertIsThreadViewPost(
+  value: unknown,
+): asserts value is ThreadViewPost {
+  expect(value).toMatchObject({
+    $type: 'app.bsky.feed.defs#threadViewPost',
+  })
+}
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing

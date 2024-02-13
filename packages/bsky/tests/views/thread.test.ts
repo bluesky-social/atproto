@@ -1,6 +1,10 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromThread } from '../_util'
+import {
+  assertIsThreadViewPost,
+  forSnapshot,
+  stripViewerFromThread,
+} from '../_util'
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -142,9 +146,7 @@ describe('pds thread views', () => {
       { headers: await network.serviceHeaders(bob) },
     )
 
-    expect(thread.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+    assertIsThreadViewPost(thread.thread)
 
     const post = thread.thread.post
 

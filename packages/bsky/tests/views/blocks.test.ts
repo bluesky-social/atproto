@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
-import { forSnapshot } from '../_util'
+import { assertIsThreadViewPost, forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {
   let network: TestNetwork
@@ -110,9 +110,8 @@ describe('pds views with blocking', () => {
       { headers: await network.serviceHeaders(alice) },
     )
 
-    expect(thread.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+    assertIsThreadViewPost(thread.thread)
+
     expect(thread.thread.post.uri).toEqual(carolReplyToDan.ref.uriStr)
     expect(thread.thread.parent).toBeUndefined()
   })
@@ -391,9 +390,8 @@ describe('pds views with blocking', () => {
         { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(replyThenBlock.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+    assertIsThreadViewPost(replyThenBlock.thread)
+
     expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
       aliceReplyToDan.ref.uriStr,
     ])
@@ -408,9 +406,8 @@ describe('pds views with blocking', () => {
       { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
       { headers: await network.serviceHeaders(alice) },
     )
-    expect(unblock.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+    assertIsThreadViewPost(unblock.thread)
+
     expect(unblock.thread.replies?.map(getThreadPostUri)).toEqual([
       carolReplyToDan.ref.uriStr,
       aliceReplyToDan.ref.uriStr,
@@ -434,9 +431,9 @@ describe('pds views with blocking', () => {
         { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(blockThenReply.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+
+    assertIsThreadViewPost(blockThenReply.thread)
+
     expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
       aliceReplyToDan.ref.uriStr,
     ])
@@ -456,9 +453,9 @@ describe('pds views with blocking', () => {
         { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(embedThenBlock.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+
+    assertIsThreadViewPost(embedThenBlock.thread)
+
     expect(embedThenBlock.thread.post.embed?.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
@@ -473,9 +470,9 @@ describe('pds views with blocking', () => {
       { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
       { headers: await network.serviceHeaders(alice) },
     )
-    expect(unblock.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+
+    assertIsThreadViewPost(unblock.thread)
+
     expect(unblock.thread.post?.embed?.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewRecord',
     })
@@ -499,9 +496,8 @@ describe('pds views with blocking', () => {
         { depth: 0, uri: carolEmbedsDan.ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(blockThenEmbed.thread).toMatchObject({
-      $type: 'app.bsky.feed.defs#threadViewPost',
-    })
+    assertIsThreadViewPost(blockThenEmbed.thread)
+
     expect(blockThenEmbed.thread.post.embed?.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
