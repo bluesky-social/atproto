@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getDidCredentials({
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       const services = {
         atproto_pds: {
           type: 'AtprotoPersonalDataServer',
-          endpoint: 'https://puffball.us-east.host.bsky.network',
+          endpoint: ctx.cfg.service.publicUrl,
         },
       }
 

@@ -7,17 +7,37 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.sendPlcOp({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, input, req }) => {
-      const did = auth.credentials.did
+    handler: async ({ auth, input }) => {
+      const requester = auth.credentials.did
       const op = input.body.op
 
-      if (!check.is(op, plc.def.opOrTombstone)) {
-        throw new InvalidRequestError('Invalid request')
+      if (!check.is(op, plc.def.operation)) {
+        throw new InvalidRequestError('Invalid operation')
       }
 
-      // @TODO verify op is correct
+      if (!op.rotationKeys.includes(ctx.plcRotationKey.did())) {
+        throw new InvalidRequestError(
+          'Rotation keys do not include servers rotation key',
+        )
+      }
+      if (op.services['atproto_pds']?.type !== 'AtprotoPersonalDataServer') {
+        throw new InvalidRequestError('Incorrect type on atproto_pds service')
+      }
+      if (op.services['atproto_pds']?.endpoint !== ctx.cfg.service.publicUrl) {
+        throw new InvalidRequestError(
+          'Incorrect endpoint on atproto_pds service',
+        )
+      }
+      const signingKey = await ctx.actorStore.keypair(requester)
+      if (op.verificationMethods['atproto'] !== signingKey.did()) {
+        throw new InvalidRequestError('Incorrect signing key')
+      }
+      const account = await ctx.accountManager.getAccount(requester)
+      if (account?.handle && op.alsoKnownAs.at(0) !== account.handle) {
+        throw new InvalidRequestError('Incorrect handle in alsoKnownAs')
+      }
 
-      await ctx.plcClient.sendOperation(did, op)
+      await ctx.plcClient.sendOperation(requester, op)
     },
   })
 }
