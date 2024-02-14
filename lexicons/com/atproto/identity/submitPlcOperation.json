@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.identity.sendPlcOp",
+  "id": "com.atproto.identity.submitPlcOperation",
   "defs": {
     "main": {
       "type": "procedure",
@@ -9,9 +9,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "type": "unknown" }
+            "operation": { "type": "unknown" }
           }
         }
       }
