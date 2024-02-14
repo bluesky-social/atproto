@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // Currently, there is not ideal way of developing a lib that is compatible
+    // with both node and the browser.
+    //
+    // https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1685
+    // https://github.com/microsoft/TypeScript/issues/31535
+    // https://github.com/microsoft/TypeScript/issues/41727
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  }
+}
