@@ -11,19 +11,23 @@
           "type": "object",
           "required": [
             "activated",
-            "uploadedRepo",
-            "importedRepo",
-            "importedPrivateState",
+            "validDid",
+            "repoCommit",
+            "repoRev",
+            "repoBlocks",
+            "indexedRecords",
+            "privateStateValues",
             "expectedBlobs",
             "importedBlobs"
           ],
           "properties": {
             "activated": { "type": "boolean" },
-            "didMigrated": { "type": "boolean" },
-            "uploadedRepo": { "type": "boolean" },
-            "importedRepo": { "type": "boolean" },
-            "importRepoError": { "type": "string" },
-            "importedPrivateState": { "type": "boolean" },
+            "validDid": { "type": "boolean" },
+            "repoCommit": { "type": "string", "format": "cid" },
+            "repoRev": { "type": "string" },
+            "repoBlocks": {"type": "integer"},
+            "indexedRecords": { "type": "integer" },
+            "privateStateValues": { "type": "integer" },
             "expectedBlobs": { "type": "integer" },
             "importedBlobs": { "type": "integer" }
           }

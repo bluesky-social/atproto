@@ -7,6 +7,7 @@
       "description": "Get a signed token on behalf of the requesting DID for the requested service.",
       "parameters": {
         "type": "params",
+        "required": ["aud"],
         "properties": {
           "aud": {
             "type": "string",
