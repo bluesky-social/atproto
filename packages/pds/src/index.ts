@@ -43,8 +43,8 @@ export class PDS {
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private dbStatsInterval?: NodeJS.Timer
-  private sequencerStatsInterval?: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
+  private sequencerStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx

@@ -80,7 +80,7 @@ export class WebSocketKeepAlive {
 
   startHeartbeat(ws: WebSocket) {
     let isAlive = true
-    let heartbeatInterval: NodeJS.Timer | null = null
+    let heartbeatInterval: NodeJS.Timeout | null = null
 
     const checkAlive = () => {
       if (!isAlive) {

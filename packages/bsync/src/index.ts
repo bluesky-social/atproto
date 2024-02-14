@@ -19,7 +19,7 @@ export class BsyncService {
   public server: http.Server
   private ac: AbortController
   private terminator: HttpTerminator
-  private dbStatsInterval: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: {
     ctx: AppContext
@@ -55,6 +55,9 @@ export class BsyncService {
   }
 
   async start(): Promise<http.Server> {
+    if (this.dbStatsInterval) {
+      throw new Error(`${this.constructor.name} already started`)
+    }
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
@@ -77,6 +80,7 @@ export class BsyncService {
     await this.terminator.terminate()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    this.dbStatsInterval = undefined
   }
 
   async setupAppEvents() {

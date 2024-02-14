@@ -15,8 +15,8 @@ export type { IngesterConfigValues } from './config'
 export class BskyIngester {
   public ctx: IngesterContext
   public sub: IngesterSubscription
-  private dbStatsInterval: NodeJS.Timer
-  private subStatsInterval: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
+  private subStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: IngesterContext; sub: IngesterSubscription }) {
     this.ctx = opts.ctx
@@ -64,6 +64,9 @@ export class BskyIngester {
   }
 
   async start() {
+    if (this.dbStatsInterval || this.subStatsInterval) {
+      throw new Error(`${this.constructor.name} already started`)
+    }
     const { db } = this.ctx
     const pool = db.pool
     this.dbStatsInterval = setInterval(() => {
@@ -99,9 +102,11 @@ export class BskyIngester {
     await this.ctx.labelSubscription?.destroy()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
+    this.subStatsInterval = undefined
     await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    this.dbStatsInterval = undefined
   }
 }
 

@@ -27,8 +27,8 @@ export class BskyIndexer {
   public sub: IndexerSubscription
   public app: express.Application
   private closeServer?: CloseFn
-  private dbStatsInterval: NodeJS.Timer
-  private subStatsInterval: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
+  private subStatsInterval?: NodeJS.Timeout
 
   constructor(opts: {
     ctx: IndexerContext
@@ -117,6 +117,9 @@ export class BskyIndexer {
   }
 
   async start() {
+    if (this.dbStatsInterval || this.subStatsInterval) {
+      throw new Error(`${this.constructor.name} already started`)
+    }
     const { db, backgroundQueue } = this.ctx
     const pool = db.pool
     this.dbStatsInterval = setInterval(() => {
@@ -155,11 +158,13 @@ export class BskyIndexer {
     if (this.closeServer) await this.closeServer()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
+    this.subStatsInterval = undefined
     await this.ctx.didCache.destroy()
     if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipRedis) await this.ctx.redisCache.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    this.dbStatsInterval = undefined
   }
 }
 

@@ -7,7 +7,7 @@ import { SECOND } from '@atproto/common'
 export class LabelSubscription {
   destroyed = false
   promise: Promise<void> = Promise.resolve()
-  timer: NodeJS.Timer | undefined
+  timer?: NodeJS.Timeout
   lastLabel: number | undefined
   labelAgent: AtpAgent
 
@@ -70,6 +70,7 @@ export class LabelSubscription {
     this.destroyed = true
     if (this.timer) {
       clearTimeout(this.timer)
+      this.timer = undefined
     }
     await this.promise
   }

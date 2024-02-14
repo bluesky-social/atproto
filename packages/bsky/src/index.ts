@@ -51,7 +51,7 @@ export class BskyAppView {
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private dbStatsInterval: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -220,6 +220,10 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    if (this.dbStatsInterval) {
+      throw new Error(`${this.constructor.name} already started`)
+    }
+
     const { db, backgroundQueue } = this.ctx
     const primary = db.getPrimary()
     const replicas = db.getReplicas()
@@ -269,6 +273,7 @@ export class BskyAppView {
     if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    this.dbStatsInterval = undefined
   }
 }
 

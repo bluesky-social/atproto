@@ -13,8 +13,8 @@ export type { DaemonConfigValues } from './config'
 export class BskyDaemon {
   public ctx: DaemonContext
   public notifications: NotificationsDaemon
-  private dbStatsInterval: NodeJS.Timer
-  private notifStatsInterval: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
+  private notifStatsInterval?: NodeJS.Timeout
 
   constructor(opts: {
     ctx: DaemonContext
@@ -40,6 +40,9 @@ export class BskyDaemon {
   }
 
   async start() {
+    if (this.dbStatsInterval || this.notifStatsInterval) {
+      throw new Error(`${this.constructor.name} already started`)
+    }
     const { db, cfg } = this.ctx
     const pool = db.pool
     this.notifications.run({
@@ -71,7 +74,9 @@ export class BskyDaemon {
     await this.notifications.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    this.dbStatsInterval = undefined
     clearInterval(this.notifStatsInterval)
+    this.notifStatsInterval = undefined
   }
 }
 

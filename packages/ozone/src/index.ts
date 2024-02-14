@@ -23,7 +23,7 @@ export class OzoneService {
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private dbStatsInterval: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -63,6 +63,9 @@ export class OzoneService {
   }
 
   async start(): Promise<http.Server> {
+    if (this.dbStatsInterval) {
+      throw new Error(`${this.constructor.name} already started`)
+    }
     const { db, backgroundQueue } = this.ctx
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
@@ -96,6 +99,7 @@ export class OzoneService {
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    this.dbStatsInterval = undefined
   }
 }
 
