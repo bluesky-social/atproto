@@ -155,7 +155,7 @@ export default PrimaryDatabase
 // -------
 
 class LeakyTxPlugin implements KyselyPlugin {
-  private txOver: boolean
+  private txOver = false
 
   endTx() {
     this.txOver = true
