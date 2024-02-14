@@ -1,6 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+
     "declaration": true,
     "noImplicitAny": false,
     "removeComments": true,
@@ -12,8 +20,6 @@
     "sourceMap": true,
     "module": "commonjs",
     "jsx": "preserve",
-    "strict": true,
-    "strictPropertyInitialization": false,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
