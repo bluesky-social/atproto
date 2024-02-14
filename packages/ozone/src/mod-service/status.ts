@@ -82,6 +82,8 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
       }
+    case 'com.atproto.admin.defs#modEventFlag':
+      return { flags: [] }
     case 'com.atproto.admin.defs#modEventResolveAppeal':
       return {
         appealed: false,
@@ -97,7 +99,6 @@ const getSubjectStatusForModerationEvent = ({
 export const adjustModerationSubjectStatus = async (
   db: Database,
   moderationEvent: ModerationEventRow,
-  getSubjectLang: () => Promise<string[] | null>,
   blobCids?: string[],
 ) => {
   const {
@@ -139,16 +140,6 @@ export const adjustModerationSubjectStatus = async (
     .where('recordPath', '=', identifier.recordPath)
     .selectAll()
     .executeTakeFirst()
-
-  // Only retrieve the record langs on the first event on this subject to avoid unnecessary calls
-  // on every event that may cause a change in the status since the lang is not expected to change
-  if (!currentStatus) {
-    const recordLangs = await getSubjectLang()
-    if (recordLangs?.length) {
-      // TODO: bit hacky to get around TS
-      subjectStatus.langs = jsonb(recordLangs) as unknown as string[]
-    }
-  }
 
   if (
     currentStatus?.reviewState === REVIEWESCALATED &&
@@ -201,6 +192,25 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.comment = comment
   }
 
+  if (action === 'com.atproto.admin.defs#modEventFlag') {
+    const addedFlags = meta?.addedFlags?.toString().split(' ') || []
+    const removedFlags = meta?.removedFlags?.toString().split(' ') || []
+    if (addedFlags.length) {
+      const flags = currentStatus?.flags || []
+      newStatus.flags = jsonb([
+        ...new Set([...flags, ...addedFlags]),
+      ]) as unknown as string[]
+      subjectStatus.flags = newStatus.flags
+    }
+    if (removedFlags.length) {
+      const flags = currentStatus?.flags || []
+      newStatus.flags = jsonb(
+        flags.filter((flag) => !removedFlags.includes(flag)),
+      ) as unknown as string[]
+      subjectStatus.flags = newStatus.flags
+    }
+  }
+
   if (blobCids?.length) {
     const newBlobCids = jsonb(
       blobCids,
@@ -216,7 +226,6 @@ export const adjustModerationSubjectStatus = async (
       ...newStatus,
       createdAt: now,
       updatedAt: now,
-      // TODO: Need to get the types right here.
     } as ModerationSubjectStatusRow)
     .onConflict((oc) =>
       oc.constraint('moderation_status_unique_idx').doUpdateSet({
@@ -225,8 +234,9 @@ export const adjustModerationSubjectStatus = async (
       }),
     )
 
-  const status = await insertQuery.executeTakeFirst()
-  return status
+  // console.log('insertQuery', insertQuery.returningAll().compile())
+  const status = await insertQuery.returningAll().executeTakeFirst()
+  return status || null
 }
 
 type ModerationSubjectStatusFilter =

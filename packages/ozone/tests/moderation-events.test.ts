@@ -148,7 +148,7 @@ describe('moderation-events', () => {
 
       expect(
         [...new Set(allEvents.data.events.map((e) => e.event.$type))].length,
-      ).toEqual(3)
+      ).toEqual(4)
     })
 
     it('returns events for all content by user', async () => {
@@ -203,10 +203,11 @@ describe('moderation-events', () => {
       const defaultEvents = await getPaginatedEvents()
       const reversedEvents = await getPaginatedEvents('asc')
 
-      expect(allEvents.data.events.length).toEqual(5)
+      expect(allEvents.data.events.length).toEqual(7)
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
-      expect(reversedEvents[0].id).toEqual(defaultEvents[4].id)
+      // First event in the reversed list is the last item in the default list
+      expect(reversedEvents[0].id).toEqual(defaultEvents[6].id)
     })
 
     it('returns report events matching reportType filters', async () => {
@@ -331,7 +332,10 @@ describe('moderation-events', () => {
       })
       const { data: result } =
         await pdsAgent.api.com.atproto.admin.queryModerationEvents(
-          { subject: post.ref.uriStr },
+          {
+            subject: post.ref.uriStr,
+            types: ['com.atproto.admin.defs#modEventTakedown'],
+          },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )
       expect(result.events[0]).toMatchObject({

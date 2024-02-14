@@ -720,6 +720,27 @@ export function validateModEventEmail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventEmail', v)
 }
 
+/** Add/Remove a flag on a subject */
+export interface ModEventFlag {
+  /** Flags to be added to the subject. If already exists, won't be duplicated. */
+  add: string[]
+  /** Flags to be removed to the subject. Ignores a flag If doesn't exists, won't be duplicated. */
+  remove: string[]
+  [k: string]: unknown
+}
+
+export function isModEventFlag(v: unknown): v is ModEventFlag {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventFlag'
+  )
+}
+
+export function validateModEventFlag(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventFlag', v)
+}
+
 export interface CommunicationTemplateView {
   id: string
   /** Name of the template. */

@@ -12,6 +12,7 @@ import {
   isModEventReport,
   isModEventTakedown,
   isModEventEmail,
+  isModEventFlag,
   RepoRef,
   RepoBlobRef,
 } from '../lexicon/types/com/atproto/admin/defs'
@@ -239,7 +240,10 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
-  }): Promise<ModerationEventRow> {
+  }): Promise<{
+    event: ModerationEventRow
+    subjectStatus: ModerationSubjectStatusRow | null
+  }> {
     this.db.assertTransaction()
     const { event, subject, createdBy, createdAt = new Date() } = info
 
@@ -253,6 +257,11 @@ export class ModerationService {
         : undefined
 
     const meta: Record<string, string | boolean> = {}
+
+    if (isModEventFlag(event)) {
+      if (event.add.length) meta.addedFlags = event.add.join(' ')
+      if (event.remove.length) meta.removedFlags = event.remove.join(' ')
+    }
 
     if (isModEventReport(event)) {
       meta.reportType = event.reportType
@@ -295,21 +304,13 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(
+    const subjectStatus = await adjustModerationSubjectStatus(
       this.db,
       modEvent,
-      async () => {
-        try {
-          // For whatever reason, if language detection fails, don't let that cause the entire subject status update to fail
-          return await getRecordLang({ subject, moderationViews: this.views })
-        } catch (err) {
-          return null
-        }
-      },
       subject.blobCids,
     )
 
-    return modEvent
+    return { event: modEvent, subjectStatus }
   }
 
   async getLastReversibleEventForSubject(subject: ReversalSubject) {
@@ -389,7 +390,7 @@ export class ModerationService {
     const isRevertingTakedown =
       action === 'com.atproto.admin.defs#modEventTakedown'
     this.db.assertTransaction()
-    const result = await this.logEvent({
+    const { event } = await this.logEvent({
       event: {
         $type: isRevertingTakedown
           ? 'com.atproto.admin.defs#modEventReverseTakedown'
@@ -409,7 +410,7 @@ export class ModerationService {
       }
     }
 
-    return result
+    return event
   }
 
   async takedownRepo(
@@ -626,7 +627,10 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationEventRow> {
+  }): Promise<{
+    event: ModerationEventRow
+    subjectStatus: ModerationSubjectStatusRow | null
+  }> {
     const {
       reasonType,
       reason,
@@ -635,7 +639,7 @@ export class ModerationService {
       subject,
     } = info
 
-    const event = await this.logEvent({
+    const result = await this.logEvent({
       event: {
         $type: 'com.atproto.admin.defs#modEventReport',
         reportType: reasonType,
@@ -646,7 +650,7 @@ export class ModerationService {
       createdAt,
     })
 
-    return event
+    return result
   }
 
   async getSubjectStatuses({
@@ -750,8 +754,8 @@ export class ModerationService {
     if (langs.length) {
       builder = builder.where(
         sql<string>`${ref(
-          'moderation_subject_status.langs',
-        )} @> ${JSON.stringify(langs)}`,
+          'moderation_subject_status.flags',
+        )} @> ${JSON.stringify(langs.map((lang) => `lang:${lang}`))}`,
       )
     }
 
@@ -768,6 +772,7 @@ export class ModerationService {
       nullsLast: true,
     })
 
+    // console.log(paginatedBuilder.compile())
     const results = await paginatedBuilder.execute()
 
     const infos = await this.views.getAccoutInfosByDid(

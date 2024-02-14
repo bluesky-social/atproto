@@ -897,6 +897,29 @@ export const schemaDict = {
           },
         },
       },
+      modEventFlag: {
+        type: 'object',
+        description: 'Add/Remove a flag on a subject',
+        required: ['add', 'remove'],
+        properties: {
+          add: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              "Flags to be added to the subject. If already exists, won't be duplicated.",
+          },
+          remove: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              "Flags to be removed to the subject. Ignores a flag If doesn't exists, won't be duplicated.",
+          },
+        },
+      },
       communicationTemplateView: {
         type: 'object',
         required: [
@@ -1075,6 +1098,7 @@ export const schemaDict = {
                   'lex:com.atproto.admin.defs#modEventReverseTakedown',
                   'lex:com.atproto.admin.defs#modEventUnmute',
                   'lex:com.atproto.admin.defs#modEventEmail',
+                  'lex:com.atproto.admin.defs#modEventFlag',
                 ],
               },
               subject: {
