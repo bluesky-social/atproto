@@ -15,7 +15,7 @@ export type LabelCacheOpts = {
 }
 
 export class LabelService {
-  public cache: ReadThroughCache<Label[]> | null
+  public cache?: ReadThroughCache<Label[]>
 
   constructor(public db: Database, cacheOpts: LabelCacheOpts | null) {
     if (cacheOpts) {
