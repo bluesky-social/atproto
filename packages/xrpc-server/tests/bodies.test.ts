@@ -274,9 +274,9 @@ describe('Bodies', () => {
     const resBody = await res.json()
     const status = res.status
     expect(status).toBe(400)
-    expect(resBody.error).toBe('InvalidRequest')
-    expect(resBody.message).toBe(
-      'Request encoding (Content-Type) required but not provided',
-    )
+    expect(resBody).toMatchObject({
+      error: 'InvalidRequest',
+      message: 'Request encoding (Content-Type) required but not provided',
+    })
   })
 })
