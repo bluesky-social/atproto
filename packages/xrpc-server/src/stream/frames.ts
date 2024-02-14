@@ -11,7 +11,7 @@ import {
 } from './types'
 
 export abstract class Frame {
-  header: FrameHeader
+  abstract header: FrameHeader
   body: unknown
   get op(): FrameType {
     return this.header.op
