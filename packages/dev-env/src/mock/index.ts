@@ -10,13 +10,12 @@ import blurHashB64 from './img/blur-hash-avatar-b64'
 // we use this to ensure the mock dataset is always the same
 // which is very useful when testing
 // (not everything is currently deterministic but it could be)
-function* dateGen() {
+function* dateGen(): Generator<string, never> {
   let start = 1657846031914
   while (true) {
     yield new Date(start).toISOString()
     start += 1e3
   }
-  return ''
 }
 
 export async function generateMockSetup(env: TestNetwork) {
