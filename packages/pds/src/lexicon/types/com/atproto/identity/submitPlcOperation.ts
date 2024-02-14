@@ -11,16 +11,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  rotationKeys?: string[]
-  alsoKnownAs?: string[]
-  verificationMethods?: {}
-  services?: {}
-  [k: string]: unknown
-}
-
-export interface OutputSchema {
-  /** A signed DID PLC operation. */
-  op: {}
+  operation: {}
   [k: string]: unknown
 }
 
@@ -29,18 +20,12 @@ export interface HandlerInput {
   body: InputSchema
 }
 
-export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
-}
-
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
+export type HandlerOutput = HandlerError | void
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

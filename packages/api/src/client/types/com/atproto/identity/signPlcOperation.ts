@@ -19,7 +19,7 @@ export interface InputSchema {
 
 export interface OutputSchema {
   /** A signed DID PLC operation. */
-  op: {}
+  operation: {}
   [k: string]: unknown
 }
 

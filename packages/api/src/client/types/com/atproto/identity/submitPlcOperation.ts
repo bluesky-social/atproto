@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  op: {}
+  operation: {}
   [k: string]: unknown
 }
 

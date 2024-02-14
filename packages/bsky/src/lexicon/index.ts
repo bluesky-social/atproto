@@ -34,19 +34,19 @@ import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
-import * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
-import * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
+import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
+import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
-import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
+import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
@@ -500,25 +500,25 @@ export class ComAtprotoIdentityNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  sendPlcOp<AV extends AuthVerifier>(
+  signPlcOperation<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoIdentitySendPlcOp.Handler<ExtractAuth<AV>>,
-      ComAtprotoIdentitySendPlcOp.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoIdentitySignPlcOperation.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentitySignPlcOperation.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.identity.sendPlcOp' // @ts-ignore
+    const nsid = 'com.atproto.identity.signPlcOperation' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  signPlcOp<AV extends AuthVerifier>(
+  submitPlcOperation<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoIdentitySignPlcOp.Handler<ExtractAuth<AV>>,
-      ComAtprotoIdentitySignPlcOp.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoIdentitySubmitPlcOperation.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentitySubmitPlcOperation.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.identity.signPlcOp' // @ts-ignore
+    const nsid = 'com.atproto.identity.submitPlcOperation' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -601,17 +601,6 @@ export class ComAtprotoRepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  listMissingBlobs<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoRepoListMissingBlobs.Handler<ExtractAuth<AV>>,
-      ComAtprotoRepoListMissingBlobs.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.repo.listMissingBlobs' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   createRecord<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -664,6 +653,17 @@ export class ComAtprotoRepoNS {
     >,
   ) {
     const nsid = 'com.atproto.repo.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listMissingBlobs<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoListMissingBlobs.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoListMissingBlobs.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.listMissingBlobs' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

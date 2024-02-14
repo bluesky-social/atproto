@@ -33,8 +33,8 @@ import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
-import * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
-import * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
+import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
+import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -42,12 +42,12 @@ import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subsc
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
-import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
+import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
@@ -188,8 +188,8 @@ export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
-export * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
-export * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
+export * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
+export * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -197,12 +197,12 @@ export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subsc
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
-export * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
+export * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
@@ -720,25 +720,25 @@ export class ComAtprotoIdentityNS {
       })
   }
 
-  sendPlcOp(
-    data?: ComAtprotoIdentitySendPlcOp.InputSchema,
-    opts?: ComAtprotoIdentitySendPlcOp.CallOptions,
-  ): Promise<ComAtprotoIdentitySendPlcOp.Response> {
+  signPlcOperation(
+    data?: ComAtprotoIdentitySignPlcOperation.InputSchema,
+    opts?: ComAtprotoIdentitySignPlcOperation.CallOptions,
+  ): Promise<ComAtprotoIdentitySignPlcOperation.Response> {
     return this._service.xrpc
-      .call('com.atproto.identity.sendPlcOp', opts?.qp, data, opts)
+      .call('com.atproto.identity.signPlcOperation', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoIdentitySendPlcOp.toKnownErr(e)
+        throw ComAtprotoIdentitySignPlcOperation.toKnownErr(e)
       })
   }
 
-  signPlcOp(
-    data?: ComAtprotoIdentitySignPlcOp.InputSchema,
-    opts?: ComAtprotoIdentitySignPlcOp.CallOptions,
-  ): Promise<ComAtprotoIdentitySignPlcOp.Response> {
+  submitPlcOperation(
+    data?: ComAtprotoIdentitySubmitPlcOperation.InputSchema,
+    opts?: ComAtprotoIdentitySubmitPlcOperation.CallOptions,
+  ): Promise<ComAtprotoIdentitySubmitPlcOperation.Response> {
     return this._service.xrpc
-      .call('com.atproto.identity.signPlcOp', opts?.qp, data, opts)
+      .call('com.atproto.identity.submitPlcOperation', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoIdentitySignPlcOp.toKnownErr(e)
+        throw ComAtprotoIdentitySubmitPlcOperation.toKnownErr(e)
       })
   }
 
@@ -810,17 +810,6 @@ export class ComAtprotoRepoNS {
       })
   }
 
-  listMissingBlobs(
-    params?: ComAtprotoRepoListMissingBlobs.QueryParams,
-    opts?: ComAtprotoRepoListMissingBlobs.CallOptions,
-  ): Promise<ComAtprotoRepoListMissingBlobs.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.listMissingBlobs', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoListMissingBlobs.toKnownErr(e)
-      })
-  }
-
   createRecord(
     data?: ComAtprotoRepoCreateRecord.InputSchema,
     opts?: ComAtprotoRepoCreateRecord.CallOptions,
@@ -873,6 +862,17 @@ export class ComAtprotoRepoNS {
       .call('com.atproto.repo.importRepo', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoImportRepo.toKnownErr(e)
+      })
+  }
+
+  listMissingBlobs(
+    params?: ComAtprotoRepoListMissingBlobs.QueryParams,
+    opts?: ComAtprotoRepoListMissingBlobs.CallOptions,
+  ): Promise<ComAtprotoRepoListMissingBlobs.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.listMissingBlobs', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoListMissingBlobs.toKnownErr(e)
       })
   }
 

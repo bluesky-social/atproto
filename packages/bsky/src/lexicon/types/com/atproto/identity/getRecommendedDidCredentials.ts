@@ -13,6 +13,7 @@ export interface QueryParams {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  /** Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs. */
   rotationKeys?: string[]
   alsoKnownAs?: string[]
   verificationMethods?: {}

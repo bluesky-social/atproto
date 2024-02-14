@@ -17,7 +17,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  cids: string[]
+  blobs: BlobRef[]
   [k: string]: unknown
 }
 

@@ -1920,6 +1920,8 @@ export const schemaDict = {
             type: 'object',
             properties: {
               rotationKeys: {
+                description:
+                  'Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs.',
                 type: 'array',
                 items: {
                   type: 'string',
@@ -1977,32 +1979,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoIdentitySendPlcOp: {
+  ComAtprotoIdentitySignPlcOperation: {
     lexicon: 1,
-    id: 'com.atproto.identity.sendPlcOp',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Validates a PLC operation to ensure that it doesn't violate a service's constraints or get the identity into a bad state, then submits it to the PLC registry",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['op'],
-            properties: {
-              op: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoIdentitySignPlcOp: {
-    lexicon: 1,
-    id: 'com.atproto.identity.signPlcOp',
+    id: 'com.atproto.identity.signPlcOperation',
     defs: {
       main: {
         type: 'procedure',
@@ -2038,11 +2017,34 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['op'],
+            required: ['operation'],
             properties: {
-              op: {
+              operation: {
                 type: 'unknown',
                 description: 'A signed DID PLC operation.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentitySubmitPlcOperation: {
+    lexicon: 1,
+    id: 'com.atproto.identity.submitPlcOperation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Validates a PLC operation to ensure that it doesn't violate a service's constraints or get the identity into a bad state, then submits it to the PLC registry",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'unknown',
               },
             },
           },
@@ -2510,50 +2512,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoListMissingBlobs: {
-    lexicon: 1,
-    id: 'com.atproto.repo.listMissingBlobs',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Returns a list of missing blobs for the requesting account. Intended to be used in the account migration flow.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 1000,
-              default: 500,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['cids'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              cids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoRepoCreateRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.createRecord',
@@ -2809,9 +2767,52 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Import a repo in the form of a CAR file. Returns a 202 after successfully reading incoming CAR then asynchronously indexes the repo and contained records',
+          'Import a repo in the form of a CAR file. Requires Content-Length HTTP header to be set.',
         input: {
           encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoRepoListMissingBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.listMissingBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns a list of missing blobs for the requesting account. Intended to be used in the account migration flow.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blobs'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              blobs: {
+                type: 'array',
+                items: {
+                  type: 'blob',
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -3049,7 +3050,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Returns the status of an account, especially as pertaining to import or recovery. Can be called many times over the course of an account migration.',
+          'Returns the status of an account, especially as pertaining to import or recovery. Can be called many times over the course of an account migration. Requires auth and can only be called pertaining to oneself.',
         output: {
           encoding: 'application/json',
           schema: {
@@ -3475,7 +3476,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Deactivates a currently active account. Used to finalize account migration with the old host after the account has been activated on the new host.',
+          'Deactivates a currently active account. Stops serving of repo, and future writes to repo until reactivated. Used to finalize account migration with the old host after the account has been activated on the new host.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -8820,8 +8821,9 @@ export const ids = {
   ComAtprotoIdentityGetRecommendedDidCredentials:
     'com.atproto.identity.getRecommendedDidCredentials',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
-  ComAtprotoIdentitySendPlcOp: 'com.atproto.identity.sendPlcOp',
-  ComAtprotoIdentitySignPlcOp: 'com.atproto.identity.signPlcOp',
+  ComAtprotoIdentitySignPlcOperation: 'com.atproto.identity.signPlcOperation',
+  ComAtprotoIdentitySubmitPlcOperation:
+    'com.atproto.identity.submitPlcOperation',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
@@ -8829,12 +8831,12 @@ export const ids = {
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
-  ComAtprotoRepoListMissingBlobs: 'com.atproto.repo.listMissingBlobs',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoImportRepo: 'com.atproto.repo.importRepo',
+  ComAtprotoRepoListMissingBlobs: 'com.atproto.repo.listMissingBlobs',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
