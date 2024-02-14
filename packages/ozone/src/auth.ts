@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
 import * as uint8arrays from 'uint8arrays'
 import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
 import { IdResolver } from '@atproto/identity'
@@ -6,6 +6,11 @@ import { OzoneSecrets } from './config'
 
 const BASIC = 'Basic '
 const BEARER = 'Bearer '
+
+export type RequestContext = {
+  req: Request
+  res: Response
+}
 
 export const authVerifier = (
   idResolver: IdResolver,
@@ -22,7 +27,7 @@ export const authVerifier = (
     return atprotoData.signingKey
   }
 
-  return async (reqCtx: { req: express.Request; res: express.Response }) => {
+  return async (reqCtx: RequestContext) => {
     const jwtStr = getJwtStrFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
@@ -37,7 +42,7 @@ export const authOptionalVerifier = (
   opts: { aud: string | null },
 ) => {
   const verifyAccess = authVerifier(idResolver, opts)
-  return async (reqCtx: { req: express.Request; res: express.Response }) => {
+  return async (reqCtx: RequestContext) => {
     if (!reqCtx.req.headers.authorization) {
       return { credentials: { did: null } }
     }
@@ -52,7 +57,7 @@ export const authOptionalAccessOrRoleVerifier = (
 ) => {
   const verifyAccess = authVerifier(idResolver, { aud: serverDid })
   const verifyRole = roleVerifier(secrets)
-  return async (ctx: { req: express.Request; res: express.Response }) => {
+  return async (ctx: RequestContext) => {
     const defaultUnAuthorizedCredentials = {
       credentials: { did: null, type: 'unauthed' as const },
     }
@@ -83,8 +88,7 @@ export const authOptionalAccessOrRoleVerifier = (
 }
 
 export const roleVerifier =
-  (secrets: OzoneSecrets) =>
-  async (reqCtx: { req: express.Request; res: express.Response }) => {
+  (secrets: OzoneSecrets) => async (reqCtx: RequestContext) => {
     const credentials = getRoleCredentials(secrets, reqCtx.req)
     if (!credentials.valid) {
       throw new AuthRequiredError()
