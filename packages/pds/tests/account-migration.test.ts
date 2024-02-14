@@ -1,10 +1,10 @@
 import AtpAgent from '@atproto/api'
+import { HOUR } from '@atproto/common'
 import {
   SeedClient,
   TestNetworkNoAppView,
   TestPds,
   mockNetworkUtilities,
-  usersSeed,
 } from '@atproto/dev-env'
 
 describe('account migration', () => {
@@ -143,5 +143,10 @@ describe('account migration', () => {
     )
 
     await newAgent.com.atproto.identity.sendPlcOp({ op: plcOp.data.plcOp })
+
+    await newAgent.com.atproto.server.activateAccount()
+    await oldAgent.com.atproto.server.deactivateAccount({
+      deleteAfter: new Date(Date.now() + HOUR).toISOString(),
+    })
   })
 })
