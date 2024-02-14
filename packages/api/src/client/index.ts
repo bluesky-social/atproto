@@ -31,6 +31,7 @@ import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
 import * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
@@ -65,7 +66,6 @@ import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
-import * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
 import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
@@ -186,6 +186,7 @@ export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
 export * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
@@ -220,7 +221,6 @@ export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
-export * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
 export * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
@@ -693,6 +693,22 @@ export class ComAtprotoIdentityNS {
     this._service = service
   }
 
+  getRecommendedDidCredentials(
+    params?: ComAtprotoIdentityGetRecommendedDidCredentials.QueryParams,
+    opts?: ComAtprotoIdentityGetRecommendedDidCredentials.CallOptions,
+  ): Promise<ComAtprotoIdentityGetRecommendedDidCredentials.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.identity.getRecommendedDidCredentials',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoIdentityGetRecommendedDidCredentials.toKnownErr(e)
+      })
+  }
+
   resolveHandle(
     params?: ComAtprotoIdentityResolveHandle.QueryParams,
     opts?: ComAtprotoIdentityResolveHandle.CallOptions,
@@ -1041,17 +1057,6 @@ export class ComAtprotoServerNS {
       .call('com.atproto.server.getAccountInviteCodes', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetAccountInviteCodes.toKnownErr(e)
-      })
-  }
-
-  getDidCredentials(
-    params?: ComAtprotoServerGetDidCredentials.QueryParams,
-    opts?: ComAtprotoServerGetDidCredentials.CallOptions,
-  ): Promise<ComAtprotoServerGetDidCredentials.Response> {
-    return this._service.xrpc
-      .call('com.atproto.server.getDidCredentials', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoServerGetDidCredentials.toKnownErr(e)
       })
   }
 

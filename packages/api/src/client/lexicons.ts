@@ -1906,6 +1906,43 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityGetRecommendedDidCredentials: {
+    lexicon: 1,
+    id: 'com.atproto.identity.getRecommendedDidCredentials',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Describe the credentials that should be included in the DID doc of an account that is migrating to this service.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              rotationKeys: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
@@ -2001,9 +2038,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['plcOp'],
+            required: ['op'],
             properties: {
-              plcOp: {
+              op: {
                 type: 'unknown',
                 description: 'A signed DID PLC operation.',
               },
@@ -3020,6 +3057,9 @@ export const schemaDict = {
             required: [
               'activated',
               'validDid',
+              'repoCommit',
+              'repoRev',
+              'repoBlocks',
               'indexedRecords',
               'privateStateValues',
               'expectedBlobs',
@@ -3038,6 +3078,9 @@ export const schemaDict = {
               },
               repoRev: {
                 type: 'string',
+              },
+              repoBlocks: {
+                type: 'integer',
               },
               indexedRecords: {
                 type: 'integer',
@@ -3660,43 +3703,6 @@ export const schemaDict = {
             name: 'DuplicateCreate',
           },
         ],
-      },
-    },
-  },
-  ComAtprotoServerGetDidCredentials: {
-    lexicon: 1,
-    id: 'com.atproto.server.getDidCredentials',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Describe the credentials that should be included in the DID doc of an account that is migrating to this service.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              rotationKeys: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              alsoKnownAs: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              verificationMethods: {
-                type: 'unknown',
-              },
-              services: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -8811,6 +8817,8 @@ export const ids = {
   ComAtprotoAdminUpdateCommunicationTemplate:
     'com.atproto.admin.updateCommunicationTemplate',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoIdentityGetRecommendedDidCredentials:
+    'com.atproto.identity.getRecommendedDidCredentials',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentitySendPlcOp: 'com.atproto.identity.sendPlcOp',
   ComAtprotoIdentitySignPlcOp: 'com.atproto.identity.signPlcOp',
@@ -8846,7 +8854,6 @@ export const ids = {
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
-  ComAtprotoServerGetDidCredentials: 'com.atproto.server.getDidCredentials',
   ComAtprotoServerGetServiceAuth: 'com.atproto.server.getServiceAuth',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',

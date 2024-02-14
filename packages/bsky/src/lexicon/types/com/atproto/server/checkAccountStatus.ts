@@ -15,8 +15,9 @@ export type InputSchema = undefined
 export interface OutputSchema {
   activated: boolean
   validDid: boolean
-  repoCommit?: string
-  repoRev?: string
+  repoCommit: string
+  repoRev: string
+  repoBlocks: number
   indexedRecords: number
   privateStateValues: number
   expectedBlobs: number

@@ -32,6 +32,7 @@ import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentitySendPlcOp from './types/com/atproto/identity/sendPlcOp'
 import * as ComAtprotoIdentitySignPlcOp from './types/com/atproto/identity/signPlcOp'
@@ -62,7 +63,6 @@ import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
-import * as ComAtprotoServerGetDidCredentials from './types/com/atproto/server/getDidCredentials'
 import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
@@ -476,6 +476,19 @@ export class ComAtprotoIdentityNS {
     this._server = server
   }
 
+  getRecommendedDidCredentials<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoIdentityGetRecommendedDidCredentials.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentityGetRecommendedDidCredentials.HandlerReqCtx<
+        ExtractAuth<AV>
+      >
+    >,
+  ) {
+    const nsid = 'com.atproto.identity.getRecommendedDidCredentials' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   resolveHandle<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -835,17 +848,6 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.getAccountInviteCodes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getDidCredentials<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoServerGetDidCredentials.Handler<ExtractAuth<AV>>,
-      ComAtprotoServerGetDidCredentials.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.server.getDidCredentials' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

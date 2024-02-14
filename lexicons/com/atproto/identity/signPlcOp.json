@@ -27,9 +27,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["plcOp"],
+          "required": ["op"],
           "properties": {
-            "plcOp": {
+            "op": {
               "type": "unknown",
               "description": "A signed DID PLC operation."
             }

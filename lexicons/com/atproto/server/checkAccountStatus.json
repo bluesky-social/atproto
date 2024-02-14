@@ -12,6 +12,9 @@
           "required": [
             "activated",
             "validDid",
+            "repoCommit",
+            "repoRev",
+            "repoBlocks",
             "indexedRecords",
             "privateStateValues",
             "expectedBlobs",
@@ -22,6 +25,7 @@
             "validDid": { "type": "boolean" },
             "repoCommit": { "type": "string", "format": "cid" },
             "repoRev": { "type": "string" },
+            "repoBlocks": { "type": "integer" },
             "indexedRecords": { "type": "integer" },
             "privateStateValues": { "type": "integer" },
             "expectedBlobs": { "type": "integer" },
