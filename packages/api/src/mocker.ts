@@ -142,9 +142,17 @@ export const mock = {
     }
   },
 
-  label({ val, uri }: { val: string; uri: string }): ComAtprotoLabelDefs.Label {
+  label({
+    val,
+    uri,
+    src,
+  }: {
+    val: string
+    uri: string
+    src?: string
+  }): ComAtprotoLabelDefs.Label {
     return {
-      src: 'did:plc:fake-labeler',
+      src: src || 'did:plc:fake-labeler',
       uri,
       val,
       cts: new Date().toISOString(),

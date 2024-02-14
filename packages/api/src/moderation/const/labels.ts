@@ -60,8 +60,27 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: '!hide',
     targets: ['account', 'profile', 'content'],
     fixedPreference: 'hide',
-    flags: ['no-override'],
-    onwarn: 'blur',
+    flags: ['no-override', 'no-self'],
+    behaviors: {
+      account: {
+        profileList: 'blur',
+        profileView: 'blur',
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'system',
     configurable: false,
   },
@@ -69,8 +88,8 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: '!no-promote',
     targets: ['account', 'content'],
     fixedPreference: 'hide',
-    flags: [],
-    onwarn: null,
+    flags: ['no-self'],
+    behaviors: {},
     groupId: 'system',
     configurable: false,
   },
@@ -78,8 +97,26 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: '!warn',
     targets: ['account', 'profile', 'content'],
     fixedPreference: 'warn',
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'blur',
+        profileView: 'blur',
+        avatar: 'blur',
+        banner: 'blur',
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'system',
     configurable: false,
   },
@@ -88,33 +125,73 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     targets: ['account', 'profile', 'content'],
     fixedPreference: 'hide',
     flags: ['no-override', 'unauthed'],
-    onwarn: 'blur',
+    behaviors: {
+      account: {
+        profileList: 'blur',
+        profileView: 'blur',
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'system',
     configurable: false,
   },
   'dmca-violation': {
     id: 'dmca-violation',
-    targets: ['profile', 'content'],
+    targets: ['content'],
     fixedPreference: 'hide',
-    flags: ['no-override'],
-    onwarn: 'blur',
+    flags: ['no-override', 'no-self'],
+    behaviors: {
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'legal',
     configurable: false,
   },
   doxxing: {
     id: 'doxxing',
-    targets: ['account', 'profile', 'content'],
+    targets: ['account', 'content'],
     fixedPreference: 'hide',
-    flags: ['no-override'],
-    onwarn: 'blur',
+    flags: ['no-override', 'no-self'],
+    behaviors: {
+      account: {
+        profileList: 'blur',
+        profileView: 'blur',
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'legal',
     configurable: false,
   },
   plagiarism: {
     id: 'plagiarism',
     targets: ['content'],
-    flags: [],
-    onwarn: 'alert',
+    flags: ['no-self'],
+    behaviors: {
+      content: {
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+    },
     groupId: 'intellectual-property',
     configurable: true,
   },
@@ -122,7 +199,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'porn',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'porn',
     configurable: true,
   },
@@ -130,7 +215,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'sexual',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'suggestive',
     configurable: true,
   },
@@ -138,7 +231,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'nudity',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'nudity',
     configurable: true,
   },
@@ -146,7 +247,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'nsfl',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'violence',
     configurable: true,
   },
@@ -154,7 +263,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'corpse',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'violence',
     configurable: true,
   },
@@ -162,7 +279,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'gore',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'violence',
     configurable: true,
   },
@@ -170,7 +295,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'torture',
     targets: ['profile', 'content'],
     flags: ['adult'],
-    onwarn: 'blur',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'violence',
     configurable: true,
   },
@@ -178,7 +311,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'substance-abuse',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'drugs-alcohol',
     configurable: true,
   },
@@ -186,7 +327,16 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'self-harm',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'self-harm',
     configurable: true,
   },
@@ -194,79 +344,212 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'eating-disorder',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'self-harm',
     configurable: true,
   },
   'intolerant-race': {
     id: 'intolerant-race',
     targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'intolerance',
     configurable: true,
   },
   'intolerant-gender': {
     id: 'intolerant-gender',
     targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'intolerance',
     configurable: true,
   },
   'intolerant-sexual-orientation': {
     id: 'intolerant-sexual-orientation',
     targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'intolerance',
     configurable: true,
   },
   'intolerant-religion': {
     id: 'intolerant-religion',
     targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'intolerance',
     configurable: true,
   },
   intolerant: {
     id: 'intolerant',
     targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+        displayName: 'blur',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'intolerance',
     configurable: true,
   },
   harassment: {
     id: 'harassment',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'bad-behavior',
     configurable: true,
   },
   bullying: {
     id: 'bullying',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'bad-behavior',
     configurable: true,
   },
   threat: {
     id: 'threat',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'bad-behavior',
     configurable: true,
   },
   rude: {
     id: 'rude',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'rude',
     configurable: true,
   },
@@ -274,7 +557,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'disgusting',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'upsetting',
     configurable: true,
   },
@@ -282,31 +573,54 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'upsetting',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'upsetting',
     configurable: true,
   },
   troubling: {
     id: 'troubling',
-    targets: ['profile', 'content'],
+    targets: ['content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'troubling',
     configurable: true,
   },
   dispiriting: {
     id: 'dispiriting',
-    targets: ['profile', 'content'],
+    targets: ['content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'troubling',
     configurable: true,
   },
   'bad-news': {
     id: 'bad-news',
-    targets: ['profile', 'content'],
+    targets: ['content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      content: {
+        contentList: 'blur',
+        contentView: 'blur',
+      },
+    },
     groupId: 'troubling',
     configurable: true,
   },
@@ -314,7 +628,15 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'icon-intolerant',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'blur-media',
+    behaviors: {
+      profile: {
+        avatar: 'blur',
+        banner: 'blur',
+      },
+      content: {
+        contentMedia: 'blur',
+      },
+    },
     groupId: 'hate-group-mention',
     configurable: true,
   },
@@ -322,7 +644,12 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'discourse',
     targets: ['content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'discourse',
     configurable: true,
   },
@@ -330,95 +657,216 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'drama',
     targets: ['content'],
     flags: [],
-    onwarn: 'blur',
+    behaviors: {
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'discourse',
     configurable: true,
   },
   dislike: {
     id: 'dislike',
-    targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    targets: ['account', 'content'],
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'curation',
     configurable: true,
   },
   spam: {
     id: 'spam',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'spam',
     configurable: true,
   },
   'interaction-noise': {
     id: 'interaction-noise',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'spam',
     configurable: true,
   },
   'engagement-farming': {
     id: 'engagement-farming',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'spam',
     configurable: true,
   },
   shilling: {
     id: 'shilling',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'spam',
     configurable: true,
   },
   impersonation: {
     id: 'impersonation',
     targets: ['account'],
-    flags: [],
-    onwarn: 'alert',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        contentList: 'alert',
+        contentView: 'alert',
+      },
+    },
     groupId: 'misrepresentation',
     configurable: true,
   },
   scam: {
     id: 'scam',
-    targets: ['account', 'profile', 'content'],
-    flags: [],
-    onwarn: 'alert',
+    targets: ['account', 'content'],
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        avatar: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'misrepresentation',
     configurable: true,
   },
   'account-security': {
     id: 'account-security',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        avatar: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'security',
     configurable: true,
   },
   'net-abuse': {
     id: 'net-abuse',
     targets: ['account', 'content'],
-    flags: [],
-    onwarn: 'blur',
+    flags: ['no-self'],
+    behaviors: {
+      account: {
+        profileList: 'alert',
+        profileView: 'alert',
+        avatar: 'alert',
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'alert',
+      },
+    },
     groupId: 'security',
     configurable: true,
   },
   misinfo: {
     id: 'misinfo',
     targets: ['profile', 'content'],
-    flags: [],
-    onwarn: 'alert',
+    flags: ['no-self'],
+    behaviors: {
+      profile: {
+        profileList: 'inform',
+        profileView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'misinfo',
     configurable: true,
   },
   misleading: {
     id: 'misleading',
     targets: ['profile', 'content'],
-    flags: [],
-    onwarn: 'alert',
+    flags: ['no-self'],
+    behaviors: {
+      profile: {
+        profileList: 'inform',
+        profileView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'misinfo',
     configurable: true,
   },
@@ -426,23 +874,50 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'unverified',
     targets: ['profile', 'content'],
     flags: [],
-    onwarn: 'alert',
+    behaviors: {
+      profile: {
+        profileList: 'inform',
+        profileView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'misinfo',
     configurable: true,
   },
   manipulated: {
     id: 'manipulated',
     targets: ['profile', 'content'],
-    flags: [],
-    onwarn: 'alert',
+    flags: ['no-self'],
+    behaviors: {
+      profile: {
+        profileList: 'inform',
+        profileView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'misinfo',
     configurable: true,
   },
   fringe: {
     id: 'fringe',
     targets: ['profile', 'content'],
-    flags: [],
-    onwarn: 'alert',
+    flags: ['no-self'],
+    behaviors: {
+      profile: {
+        profileList: 'inform',
+        profileView: 'inform',
+      },
+      content: {
+        contentList: 'blur',
+        contentView: 'inform',
+      },
+    },
     groupId: 'misinfo',
     configurable: true,
   },
@@ -451,7 +926,18 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     targets: ['account', 'content'],
     fixedPreference: 'warn',
     flags: [],
-    onwarn: 'alert',
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+    },
     groupId: 'context',
     configurable: false,
   },
@@ -460,7 +946,18 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     targets: ['account', 'content'],
     fixedPreference: 'warn',
     flags: [],
-    onwarn: 'alert',
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+    },
     groupId: 'context',
     configurable: false,
   },
@@ -468,7 +965,18 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'bot',
     targets: ['account'],
     flags: [],
-    onwarn: 'alert',
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+      content: {
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+    },
     groupId: 'context',
     configurable: false,
   },
@@ -476,7 +984,22 @@ export const LABELS: Record<KnownLabelValue, LabelDefinition> = {
     id: 'ai-generated',
     targets: ['account', 'profile', 'content'],
     flags: [],
-    onwarn: 'alert',
+    behaviors: {
+      account: {
+        profileList: 'inform',
+        profileView: 'inform',
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+      profile: {
+        profileList: 'inform',
+        profileView: 'inform',
+      },
+      content: {
+        contentList: 'inform',
+        contentView: 'inform',
+      },
+    },
     groupId: 'context',
     configurable: false,
   },

@@ -7,18 +7,46 @@ import {
 import { LabelGroupId } from './const/label-groups'
 import { KnownLabelValue } from './const/labels'
 
+// behaviors
+// =
+
+export interface ModerationBehavior {
+  profileList?: 'blur' | 'alert' | 'inform'
+  profileView?: 'blur' | 'alert' | 'inform'
+  avatar?: 'blur' | 'alert'
+  banner?: 'blur'
+  displayName?: 'blur'
+  contentList?: 'blur' | 'alert' | 'inform'
+  contentView?: 'blur' | 'alert' | 'inform'
+  contentMedia?: 'blur'
+}
+export const BLOCK_BEHAVIOR: ModerationBehavior = {
+  profileList: 'blur',
+  profileView: 'blur',
+  avatar: 'blur',
+  banner: 'blur',
+  contentList: 'blur',
+  contentView: 'blur',
+}
+export const MUTE_BEHAVIOR: ModerationBehavior = {
+  profileList: 'inform',
+  profileView: 'inform',
+  contentList: 'blur',
+  contentView: 'inform',
+}
+export const NOOP_BEHAVIOR: ModerationBehavior = {}
+
 // labels
 // =
 
 export type Label = ComAtprotoLabelDefs.Label
 
 export type LabelPreference = 'ignore' | 'warn' | 'hide'
-export type LabelDefinitionFlag = 'no-override' | 'adult' | 'unauthed'
-export type LabelDefinitionOnWarnBehavior =
-  | 'blur'
-  | 'blur-media'
-  | 'alert'
-  | null
+export type LabelDefinitionFlag =
+  | 'no-override'
+  | 'adult'
+  | 'unauthed'
+  | 'no-self'
 export type LabelTarget = 'account' | 'profile' | 'content'
 
 export interface LabelDefinitionLocalizedStrings {
@@ -38,7 +66,11 @@ export interface LabelDefinition {
   targets: LabelTarget[]
   fixedPreference?: LabelPreference
   flags: LabelDefinitionFlag[]
-  onwarn: LabelDefinitionOnWarnBehavior
+  behaviors: {
+    account?: ModerationBehavior
+    profile?: ModerationBehavior
+    content?: ModerationBehavior
+  }
 }
 
 export interface LabelGroupDefinition {
@@ -90,6 +122,8 @@ export type ModerationCause =
       label: Label
       labelDef: LabelDefinition
       setting: LabelPreference
+      behavior: ModerationBehavior
+      noOverride: boolean
       priority: 1 | 2 | 5 | 7 | 8
     }
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
@@ -101,27 +135,34 @@ export interface ModerationOpts {
   mods: AppBskyActorDefs.ModsPref['mods']
 }
 
-export class ModerationDecision {
+export class ModerationUI {
+  filter: boolean = false
+  noOverride: boolean = false
+  blurs: ModerationCause[] = []
+  alerts: ModerationCause[] = []
+  informs: ModerationCause[] = []
+  get blur(): boolean {
+    return this.blurs.length !== 0
+  }
+  get alert(): boolean {
+    return this.alerts.length !== 0
+  }
+  get inform(): boolean {
+    return this.informs.length !== 0
+  }
+}
+
+export class ModerationDecisionOld {
   static noop() {
-    return new ModerationDecision()
+    return new ModerationDecisionOld()
   }
 
   constructor(
     public cause: ModerationCause | undefined = undefined,
-    public alert: boolean = false,
-    public blur: boolean = false,
-    public blurMedia: boolean = false,
+    public behavior: ModerationBehavior = NOOP_BEHAVIOR,
     public filter: boolean = false,
     public noOverride: boolean = false,
     public additionalCauses: ModerationCause[] = [],
     public did: string = '',
   ) {}
-}
-
-export interface ModerationUI {
-  filter?: boolean
-  blur?: boolean
-  alert?: boolean
-  cause?: ModerationCause
-  noOverride?: boolean
 }

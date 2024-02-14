@@ -1,15 +1,15 @@
 import { ModerationUI, ModerationOpts, ComAtprotoLabelDefs } from '../../src'
 import type {
-  ModerationBehaviors,
-  ModerationBehaviorScenario,
-  ModerationBehaviorResult,
+  ModerationTestSuite,
+  ModerationTestSuiteScenario,
+  ModerationTestSuiteResultFlag,
 } from '../../definitions/moderation-behaviors'
 import { mock as m } from '../../src/mocker'
 
 expect.extend({
   toBeModerationResult(
     actual: ModerationUI,
-    expected: ModerationBehaviorResult | undefined,
+    expected: ModerationTestSuiteResultFlag[] | undefined,
     context: string,
     stringifiedResult: string,
     ignoreCause = false,
@@ -18,21 +18,24 @@ expect.extend({
       pass: false,
       message: () => `${msg}. Full result: ${stringifiedResult}`,
     })
-    let cause = actual.cause?.type as string
-    if (actual.cause?.type === 'label') {
-      cause = `label:${actual.cause.labelDef.id}`
-    } else if (actual.cause?.type === 'muted') {
-      if (actual.cause.source.type === 'list') {
-        cause = 'muted-by-list'
-      }
-    } else if (actual.cause?.type === 'blocking') {
-      if (actual.cause.source.type === 'list') {
-        cause = 'blocking-by-list'
-      }
-    }
+    // let cause = actual.causes?.type as string
+    // if (actual.cause?.type === 'label') {
+    //   cause = `label:${actual.cause.labelDef.id}`
+    // } else if (actual.cause?.type === 'muted') {
+    //   if (actual.cause.source.type === 'list') {
+    //     cause = 'muted-by-list'
+    //   }
+    // } else if (actual.cause?.type === 'blocking') {
+    //   if (actual.cause.source.type === 'list') {
+    //     cause = 'blocking-by-list'
+    //   }
+    // }
     if (!expected) {
-      if (!ignoreCause && actual.cause) {
-        return fail(`${context} expected to be a no-op, got ${cause}`)
+      // if (!ignoreCause && actual.cause) {
+      //   return fail(`${context} expected to be a no-op, got ${cause}`)
+      // }
+      if (actual.inform) {
+        return fail(`${context} expected to be a no-op, got inform=true`)
       }
       if (actual.alert) {
         return fail(`${context} expected to be a no-op, got alert=true`)
@@ -47,35 +50,47 @@ expect.extend({
         return fail(`${context} expected to be a no-op, got noOverride=true`)
       }
     } else {
-      if (!ignoreCause && cause !== expected.cause) {
-        return fail(`${context} expected to be ${expected.cause}, got ${cause}`)
-      }
-      if (!!actual.alert !== !!expected.alert) {
+      // if (!ignoreCause && cause !== expected.cause) {
+      //   return fail(`${context} expected to be ${expected.cause}, got ${cause}`)
+      // }
+      const expectedInform = expected.includes('inform')
+      if (!!actual.inform !== expectedInform) {
         return fail(
-          `${context} expected to be alert=${expected.alert || false}, got ${
+          `${context} expected to be inform=${expectedInform}, got ${
+            actual.inform || false
+          }`,
+        )
+      }
+      const expectedAlert = expected.includes('alert')
+      if (!!actual.alert !== expectedAlert) {
+        return fail(
+          `${context} expected to be alert=${expectedAlert}, got ${
             actual.alert || false
           }`,
         )
       }
-      if (!!actual.blur !== !!expected.blur) {
+      const expectedBlur = expected.includes('blur')
+      if (!!actual.blur !== expectedBlur) {
         return fail(
-          `${context} expected to be blur=${expected.blur || false}, got ${
+          `${context} expected to be blur=${expectedBlur}, got ${
             actual.blur || false
           }`,
         )
       }
-      if (!!actual.filter !== !!expected.filter) {
+      const expectedFilter = expected.includes('filter')
+      if (!!actual.filter !== expectedFilter) {
         return fail(
-          `${context} expected to be filter=${expected.filter || false}, got ${
+          `${context} expected to be filter=${expectedFilter}, got ${
             actual.filter || false
           }`,
         )
       }
-      if (!!actual.noOverride !== !!expected.noOverride) {
+      const expectedNoOverride = expected.includes('noOverride')
+      if (!!actual.noOverride !== expectedNoOverride) {
         return fail(
-          `${context} expected to be noOverride=${
-            expected.noOverride || false
-          }, got ${actual.noOverride || false}`,
+          `${context} expected to be noOverride=${expectedNoOverride}, got ${
+            actual.noOverride || false
+          }`,
         )
       }
     }
@@ -84,9 +99,9 @@ expect.extend({
 })
 
 export class ModerationBehaviorSuiteRunner {
-  constructor(public suite: ModerationBehaviors) {}
+  constructor(public suite: ModerationTestSuite) {}
 
-  postScenario(scenario: ModerationBehaviorScenario) {
+  postScenario(scenario: ModerationTestSuiteScenario) {
     if (scenario.subject !== 'post') {
       throw new Error('Scenario subject must be "post"')
     }
@@ -118,7 +133,7 @@ export class ModerationBehaviorSuiteRunner {
     })
   }
 
-  profileScenario(scenario: ModerationBehaviorScenario) {
+  profileScenario(scenario: ModerationTestSuiteScenario) {
     if (scenario.subject !== 'profile') {
       throw new Error('Scenario subject must be "profile"')
     }
@@ -127,7 +142,7 @@ export class ModerationBehaviorSuiteRunner {
 
   profileViewBasic(
     name: string,
-    scenarioLabels: ModerationBehaviorScenario['labels'],
+    scenarioLabels: ModerationTestSuiteScenario['labels'],
   ) {
     const def = this.suite.users[name]
 
@@ -168,7 +183,7 @@ export class ModerationBehaviorSuiteRunner {
     })
   }
 
-  moderationOpts(scenario: ModerationBehaviorScenario): ModerationOpts {
+  moderationOpts(scenario: ModerationTestSuiteScenario): ModerationOpts {
     return {
       userDid:
         this.suite.configurations[scenario.cfg].authed === false

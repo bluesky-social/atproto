@@ -1,24 +1,25 @@
 import { AppBskyEmbedRecord, AppBskyEmbedRecordWithMedia } from '../../client'
-import { ModerationCauseAccumulator } from '../accumulator'
-import { ModerationOpts, ModerationDecision } from '../types'
+import { ModerationDecision } from '../decision'
+import { ModerationOpts } from '../types'
 import { decideAccount } from './account'
 
 export function decideQuotedPost(
   subject: AppBskyEmbedRecord.View,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator('content')
+  const acc = new ModerationDecision()
 
   if (AppBskyEmbedRecord.isViewRecord(subject.record)) {
     acc.setDid(subject.record.author.did)
-
+    acc.setIsMe(subject.record.author.did === opts.userDid)
     if (subject.record.labels?.length) {
       for (const label of subject.record.labels) {
-        acc.addLabel(label, opts)
+        acc.addLabel('content', label, opts)
       }
     }
   } else if (AppBskyEmbedRecord.isViewBlocked(subject.record)) {
     acc.setDid(subject.record.author.did)
+    acc.setIsMe(subject.record.author.did === opts.userDid)
     if (subject.record.author.viewer?.blocking) {
       acc.addBlocking(subject.record.author.viewer?.blocking)
     } else if (subject.record.author.viewer?.blockedBy) {
@@ -28,31 +29,36 @@ export function decideQuotedPost(
     }
   }
 
-  return acc.finalizeDecision(opts)
+  return acc
 }
 
 export function decideQuotedPostAccount(
   subject: AppBskyEmbedRecord.View,
+  parentAuthorDid: string,
   opts: ModerationOpts,
 ): ModerationDecision {
-  if (AppBskyEmbedRecord.isViewRecord(subject.record)) {
+  if (
+    AppBskyEmbedRecord.isViewRecord(subject.record) &&
+    subject.record.author.did !== parentAuthorDid
+  ) {
     return decideAccount(subject.record.author, opts)
   }
-  return ModerationDecision.noop()
+  return new ModerationDecision()
 }
 
 export function decideQuotedPostWithMedia(
   subject: AppBskyEmbedRecordWithMedia.View,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator('content')
+  const acc = new ModerationDecision()
 
   if (AppBskyEmbedRecord.isViewRecord(subject.record.record)) {
     acc.setDid(subject.record.record.author.did)
+    acc.setIsMe(subject.record.record.author.did === opts.userDid)
 
     if (subject.record.record.labels?.length) {
       for (const label of subject.record.record.labels) {
-        acc.addLabel(label, opts)
+        acc.addLabel('content', label, opts)
       }
     }
   } else if (AppBskyEmbedRecord.isViewBlocked(subject.record.record)) {
@@ -66,15 +72,19 @@ export function decideQuotedPostWithMedia(
     }
   }
 
-  return acc.finalizeDecision(opts)
+  return acc
 }
 
 export function decideQuotedPostWithMediaAccount(
   subject: AppBskyEmbedRecordWithMedia.View,
+  parentAuthorDid: string,
   opts: ModerationOpts,
 ): ModerationDecision {
-  if (AppBskyEmbedRecord.isViewRecord(subject.record.record)) {
+  if (
+    AppBskyEmbedRecord.isViewRecord(subject.record.record) &&
+    subject.record.record.author.did !== parentAuthorDid
+  ) {
     return decideAccount(subject.record.record.author, opts)
   }
-  return ModerationDecision.noop()
+  return new ModerationDecision()
 }

@@ -7,29 +7,85 @@
         "id": "!hide",
         "targets": ["account", "profile", "content"],
         "fixedPreference": "hide",
-        "flags": ["no-override"],
-        "onwarn": "blur"
+        "flags": ["no-override", "no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "blur",
+            "profileView": "blur",
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur",
+            "contentList": "blur",
+            "contentView": "blur"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       },
       {
         "id": "!no-promote",
         "targets": ["account", "content"],
         "fixedPreference": "hide",
-        "flags": [],
-        "onwarn": null
+        "flags": ["no-self"],
+        "behaviors": {}
       },
       {
         "id": "!warn",
         "targets": ["account", "profile", "content"],
         "fixedPreference": "warn",
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "blur",
+            "profileView": "blur",
+            "avatar": "blur",
+            "banner": "blur",
+            "contentList": "blur",
+            "contentView": "blur"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       },
       {
         "id": "!no-unauthenticated",
         "targets": ["account", "profile", "content"],
         "fixedPreference": "hide",
         "flags": ["no-override", "unauthed"],
-        "onwarn": "blur"
+        "behaviors": {
+          "account": {
+            "profileList": "blur",
+            "profileView": "blur",
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur",
+            "contentList": "blur",
+            "contentView": "blur"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       }
     ]
   },
@@ -39,17 +95,33 @@
     "labels": [
       {
         "id": "dmca-violation",
-        "targets": ["profile", "content"],
+        "targets": ["content"],
         "fixedPreference": "hide",
-        "flags": ["no-override"],
-        "onwarn": "blur"
+        "flags": ["no-override", "no-self"],
+        "behaviors": {
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       },
       {
         "id": "doxxing",
-        "targets": ["account", "profile", "content"],
+        "targets": ["account", "content"],
         "fixedPreference": "hide",
-        "flags": ["no-override"],
-        "onwarn": "blur"
+        "flags": ["no-override", "no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "blur",
+            "profileView": "blur",
+            "contentList": "blur",
+            "contentView": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       }
     ]
   },
@@ -61,8 +133,13 @@
       {
         "id": "plagiarism",
         "targets": ["content"],
-        "flags": [],
-        "onwarn": "alert"
+        "flags": ["no-self"],
+        "behaviors": {
+          "content": {
+            "contentList": "inform",
+            "contentView": "inform"
+          }
+        }
       }
     ]
   },
@@ -75,7 +152,15 @@
         "id": "porn",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -88,7 +173,15 @@
         "id": "sexual",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -101,7 +194,15 @@
         "id": "nudity",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -114,25 +215,57 @@
         "id": "nsfl",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       },
       {
         "id": "corpse",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       },
       {
         "id": "gore",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       },
       {
         "id": "torture",
         "targets": ["profile", "content"],
         "flags": ["adult"],
-        "onwarn": "blur"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -145,7 +278,15 @@
         "id": "substance-abuse",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -158,13 +299,31 @@
         "id": "self-harm",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       },
       {
         "id": "eating-disorder",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       }
     ]
   },
@@ -176,32 +335,112 @@
       {
         "id": "intolerant-race",
         "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "intolerant-gender",
         "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "intolerant-sexual-orientation",
         "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "intolerant-religion",
         "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "intolerant",
         "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur",
+            "displayName": "blur"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       }
     ]
   },
@@ -213,20 +452,53 @@
       {
         "id": "harassment",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "bullying",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "threat",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       }
     ]
   },
@@ -238,8 +510,19 @@
       {
         "id": "rude",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       }
     ]
   },
@@ -252,13 +535,29 @@
         "id": "disgusting",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       },
       {
         "id": "upsetting",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -269,21 +568,36 @@
     "labels": [
       {
         "id": "troubling",
-        "targets": ["profile", "content"],
+        "targets": ["content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       },
       {
         "id": "dispiriting",
-        "targets": ["profile", "content"],
+        "targets": ["content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       },
       {
         "id": "bad-news",
-        "targets": ["profile", "content"],
+        "targets": ["content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "content": {
+            "contentList": "blur",
+            "contentView": "blur"
+          }
+        }
       }
     ]
   },
@@ -296,7 +610,15 @@
         "id": "icon-intolerant",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "blur-media"
+        "behaviors": {
+          "profile": {
+            "avatar": "blur",
+            "banner": "blur"
+          },
+          "content": {
+            "contentMedia": "blur"
+          }
+        }
       }
     ]
   },
@@ -309,13 +631,23 @@
         "id": "discourse",
         "targets": ["content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "drama",
         "targets": ["content"],
         "flags": [],
-        "onwarn": "blur"
+        "behaviors": {
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       }
     ]
   },
@@ -326,9 +658,20 @@
     "labels": [
       {
         "id": "dislike",
-        "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "targets": ["account", "content"],
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "blur",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       }
     ]
   },
@@ -340,26 +683,70 @@
       {
         "id": "spam",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "blur",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "interaction-noise",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "blur",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "engagement-farming",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "blur",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "shilling",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "blur",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       }
     ]
   },
@@ -371,14 +758,33 @@
       {
         "id": "impersonation",
         "targets": ["account"],
-        "flags": [],
-        "onwarn": "alert"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "contentList": "alert",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "scam",
-        "targets": ["account", "profile", "content"],
-        "flags": [],
-        "onwarn": "alert"
+        "targets": ["account", "content"],
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "avatar": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       }
     ]
   },
@@ -390,14 +796,38 @@
       {
         "id": "account-security",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "avatar": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       },
       {
         "id": "net-abuse",
         "targets": ["account", "content"],
-        "flags": [],
-        "onwarn": "blur"
+        "flags": ["no-self"],
+        "behaviors": {
+          "account": {
+            "profileList": "alert",
+            "profileView": "alert",
+            "avatar": "alert",
+            "contentList": "blur",
+            "contentView": "alert"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "alert"
+          }
+        }
       }
     ]
   },
@@ -409,32 +839,77 @@
       {
         "id": "misinfo",
         "targets": ["profile", "content"],
-        "flags": [],
-        "onwarn": "alert"
+        "flags": ["no-self"],
+        "behaviors": {
+          "profile": {
+            "profileList": "inform",
+            "profileView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "misleading",
         "targets": ["profile", "content"],
-        "flags": [],
-        "onwarn": "alert"
+        "flags": ["no-self"],
+        "behaviors": {
+          "profile": {
+            "profileList": "inform",
+            "profileView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "unverified",
         "targets": ["profile", "content"],
         "flags": [],
-        "onwarn": "alert"
+        "behaviors": {
+          "profile": {
+            "profileList": "inform",
+            "profileView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "manipulated",
         "targets": ["profile", "content"],
-        "flags": [],
-        "onwarn": "alert"
+        "flags": ["no-self"],
+        "behaviors": {
+          "profile": {
+            "profileList": "inform",
+            "profileView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "fringe",
         "targets": ["profile", "content"],
-        "flags": [],
-        "onwarn": "alert"
+        "flags": ["no-self"],
+        "behaviors": {
+          "profile": {
+            "profileList": "inform",
+            "profileView": "inform"
+          },
+          "content": {
+            "contentList": "blur",
+            "contentView": "inform"
+          }
+        }
       }
     ]
   },
@@ -447,26 +922,74 @@
         "targets": ["account", "content"],
         "fixedPreference": "warn",
         "flags": [],
-        "onwarn": "alert"
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "inform",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "inform",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "parody",
         "targets": ["account", "content"],
         "fixedPreference": "warn",
         "flags": [],
-        "onwarn": "alert"
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "inform",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "inform",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "bot",
         "targets": ["account"],
         "flags": [],
-        "onwarn": "alert"
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "inform",
+            "contentView": "inform"
+          },
+          "content": {
+            "contentList": "inform",
+            "contentView": "inform"
+          }
+        }
       },
       {
         "id": "ai-generated",
         "targets": ["account", "profile", "content"],
         "flags": [],
-        "onwarn": "alert"
+        "behaviors": {
+          "account": {
+            "profileList": "inform",
+            "profileView": "inform",
+            "contentList": "inform",
+            "contentView": "inform"
+          },
+          "profile": {
+            "profileList": "inform",
+            "profileView": "inform"
+          },
+          "content": {
+            "contentList": "inform",
+            "contentView": "inform"
+          }
+        }
       }
     ]
   }

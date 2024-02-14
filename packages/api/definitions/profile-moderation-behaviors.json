@@ -106,13 +106,13 @@
       "author": "alice",
       "labels": { "account": ["!hide"] },
       "behaviors": {
-        "account": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
     "Imperative label ('!hide') on profile": {
@@ -121,8 +121,11 @@
       "author": "alice",
       "labels": { "profile": ["!hide"] },
       "behaviors": {
-        "profile": { "cause": "label:!hide", "blur": true, "noOverride": true },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter"]
       }
     },
 
@@ -132,7 +135,8 @@
       "author": "alice",
       "labels": { "account": ["!no-promote"] },
       "behaviors": {
-        "account": { "cause": "label:!no-promote", "filter": true }
+        "profileList": ["filter"],
+        "contentList": ["filter"]
       }
     },
     "Imperative label ('!no-promote') on profile": {
@@ -149,8 +153,12 @@
       "author": "alice",
       "labels": { "account": ["!warn"] },
       "behaviors": {
-        "account": { "cause": "label:!warn", "blur": true },
-        "avatar": { "blur": true }
+        "profileList": ["blur"],
+        "profileView": ["blur"],
+        "avatar": ["blur"],
+        "banner": ["blur"],
+        "contentList": ["blur"],
+        "contentView": ["blur"]
       }
     },
     "Imperative label ('!warn') on profile": {
@@ -159,8 +167,9 @@
       "author": "alice",
       "labels": { "profile": ["!warn"] },
       "behaviors": {
-        "profile": { "cause": "label:!warn", "blur": true },
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "banner": ["blur"],
+        "displayName": ["blur"]
       }
     },
 
@@ -170,13 +179,13 @@
       "author": "alice",
       "labels": { "account": ["!no-unauthenticated"] },
       "behaviors": {
-        "account": {
-          "cause": "label:!no-unauthenticated",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
     "Imperative label ('!no-unauthenticated') on profile when logged out": {
@@ -185,18 +194,13 @@
       "author": "alice",
       "labels": { "profile": ["!no-unauthenticated"] },
       "behaviors": {
-        "account": {
-          "cause": "label:!no-unauthenticated",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "profile": {
-          "cause": "label:!no-unauthenticated",
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
 
@@ -221,12 +225,10 @@
       "author": "alice",
       "labels": { "account": ["intolerant"] },
       "behaviors": {
-        "account": {
-          "cause": "label:intolerant",
-          "filter": true,
-          "blur": true
-        },
-        "avatar": { "blur": true }
+        "profileList": ["filter", "alert"],
+        "profileView": ["alert"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
     "Blur label ('intolerant') on profile (hide)": {
@@ -235,8 +237,11 @@
       "author": "alice",
       "labels": { "profile": ["intolerant"] },
       "behaviors": {
-        "profile": { "cause": "label:intolerant", "blur": true },
-        "avatar": { "blur": true }
+        "profileList": ["filter"],
+        "avatar": ["blur"],
+        "banner": ["blur"],
+        "displayName": ["blur"],
+        "contentList": ["filter"]
       }
     },
 
@@ -246,8 +251,10 @@
       "author": "alice",
       "labels": { "account": ["intolerant"] },
       "behaviors": {
-        "account": { "cause": "label:intolerant", "blur": true },
-        "avatar": { "blur": true }
+        "profileList": ["alert"],
+        "profileView": ["alert"],
+        "contentList": ["blur"],
+        "contentView": ["alert"]
       }
     },
     "Blur label ('intolerant') on profile (warn)": {
@@ -256,8 +263,9 @@
       "author": "alice",
       "labels": { "profile": ["intolerant"] },
       "behaviors": {
-        "profile": { "cause": "label:intolerant", "blur": true },
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "banner": ["blur"],
+        "displayName": ["blur"]
       }
     },
 
@@ -289,7 +297,10 @@
       "author": "alice",
       "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "profileList": ["filter"],
+        "avatar": ["blur"],
+        "banner": ["blur"],
+        "contentList": ["filter"]
       }
     },
 
@@ -306,7 +317,8 @@
       "author": "alice",
       "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "banner": ["blur"]
       }
     },
 
@@ -331,8 +343,11 @@
       "author": "alice",
       "labels": { "account": ["scam"] },
       "behaviors": {
-        "account": { "cause": "label:scam", "filter": true, "alert": true },
-        "avatar": { "alert": true }
+        "profileList": ["filter", "alert"],
+        "profileView": ["alert"],
+        "avatar": ["alert"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
     "Notice label ('scam') on profile (hide)": {
@@ -340,10 +355,7 @@
       "subject": "profile",
       "author": "alice",
       "labels": { "profile": ["scam"] },
-      "behaviors": {
-        "profile": { "cause": "label:scam", "alert": true },
-        "avatar": { "alert": true }
-      }
+      "behaviors": {}
     },
 
     "Notice label ('scam') on account (warn)": {
@@ -352,8 +364,11 @@
       "author": "alice",
       "labels": { "account": ["scam"] },
       "behaviors": {
-        "account": { "cause": "label:scam", "alert": true },
-        "avatar": { "alert": true }
+        "profileList": ["alert"],
+        "profileView": ["alert"],
+        "avatar": ["alert"],
+        "contentList": ["blur"],
+        "contentView": ["alert"]
       }
     },
     "Notice label ('scam') on profile (warn)": {
@@ -361,10 +376,7 @@
       "subject": "profile",
       "author": "alice",
       "labels": { "profile": ["scam"] },
-      "behaviors": {
-        "profile": { "cause": "label:scam", "alert": true },
-        "avatar": { "alert": true }
-      }
+      "behaviors": {}
     },
 
     "Notice label ('scam') on account (ignore)": {
@@ -395,7 +407,10 @@
       "author": "alice",
       "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "contentList": ["filter"]
       }
     },
 
@@ -404,20 +419,14 @@
       "subject": "profile",
       "author": "self",
       "labels": { "account": ["!hide"] },
-      "behaviors": {
-        "account": { "cause": "label:!hide", "alert": true },
-        "avatar": { "alert": true }
-      }
+      "behaviors": {}
     },
     "Self-profile: !hide on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "self",
       "labels": { "profile": ["!hide"] },
-      "behaviors": {
-        "profile": { "cause": "label:!hide", "alert": true },
-        "avatar": { "alert": true }
-      }
+      "behaviors": {}
     },
 
     "Mute/block: Blocking user": {
@@ -426,8 +435,12 @@
       "author": "bob",
       "labels": {},
       "behaviors": {
-        "account": { "cause": "blocking", "filter": true },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
 
@@ -437,8 +450,12 @@
       "author": "georgia",
       "labels": {},
       "behaviors": {
-        "account": { "cause": "blocking-by-list", "filter": true },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
 
@@ -448,8 +465,12 @@
       "author": "carla",
       "labels": {},
       "behaviors": {
-        "account": { "cause": "blocked-by", "filter": true },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
 
@@ -459,7 +480,10 @@
       "author": "dan",
       "labels": {},
       "behaviors": {
-        "account": { "cause": "muted", "filter": true }
+        "profileList": ["filter", "inform"],
+        "profileView": ["inform"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["inform"]
       }
     },
 
@@ -469,104 +493,112 @@
       "author": "elise",
       "labels": {},
       "behaviors": {
-        "account": { "cause": "muted-by-list", "filter": true }
+        "profileList": ["filter", "inform"],
+        "profileView": ["inform"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["inform"]
       }
     },
 
-    "Prioritization: blocking & blocked-by user": {
+    "Merging: blocking & blocked-by user": {
       "cfg": "none",
       "subject": "profile",
       "author": "fern",
       "labels": {},
       "behaviors": {
-        "account": { "cause": "blocking", "filter": true, "blur": false },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Prioritization: '!hide' label on account of blocked user": {
+    "Merging: '!hide' label on account of blocked user": {
       "cfg": "none",
       "subject": "profile",
       "author": "bob",
       "labels": { "account": ["!hide"] },
       "behaviors": {
-        "account": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Prioritization: '!hide' and 'intolerant' labels on account (hide)": {
+    "Merging: '!hide' and 'intolerant' labels on account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["!hide", "intolerant"] },
       "behaviors": {
-        "account": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "alert", "noOverride"],
+        "profileView": ["blur", "alert", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "alert", "noOverride"]
       }
     },
-    "Prioritization: '!warn' and 'intolerant' labels on account (hide)": {
+    "Merging: '!warn' and 'intolerant' labels on account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["!warn", "intolerant"] },
       "behaviors": {
-        "account": {
-          "cause": "label:intolerant",
-          "filter": true,
-          "blur": true
-        },
-        "avatar": { "blur": true }
+        "profileList": ["filter", "alert", "blur"],
+        "profileView": ["blur", "alert"],
+        "avatar": ["blur"],
+        "banner": ["blur"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["blur", "alert"]
       }
     },
-    "Prioritization: intolerant label on account (hide) and scam label on profile (warn)": {
+    "Merging: intolerant label on account (hide) and scam label on account (warn)": {
       "cfg": "intolerant-hide-scam-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": { "account": ["intolerant"], "profile": ["scam"] },
+      "labels": { "account": ["intolerant", "scam"] },
       "behaviors": {
-        "account": {
-          "cause": "label:intolerant",
-          "filter": true,
-          "blur": true
-        },
-        "profile": { "cause": "label:scam", "alert": true },
-        "avatar": { "blur": true, "alert": true }
+        "profileList": ["filter", "alert"],
+        "profileView": ["alert"],
+        "avatar": ["alert"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
-    "Prioritization: !hide on account, !warn on profile": {
+    "Merging: !hide on account, !warn on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["!hide"], "profile": ["!warn"] },
       "behaviors": {
-        "account": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "profile": { "cause": "label:!warn", "blur": true },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur", "noOverride"],
+        "profileView": ["blur", "noOverride"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Prioritization: !warn on account, !hide on profile": {
+    "Merging: !warn on account, !hide on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
       "labels": { "account": ["!warn"], "profile": ["!hide"] },
       "behaviors": {
-        "account": { "cause": "label:!warn", "blur": true },
-        "profile": { "cause": "label:!hide", "blur": true, "noOverride": true },
-        "avatar": { "blur": true, "noOverride": true }
+        "profileList": ["filter", "blur"],
+        "profileView": ["blur"],
+        "avatar": ["blur", "noOverride"],
+        "banner": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["blur"]
       }
     }
   }

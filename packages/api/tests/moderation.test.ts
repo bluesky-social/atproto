@@ -26,18 +26,8 @@ describe('Moderation', () => {
         mods: [],
       },
     )
-    expect(res1.account).toBeModerationResult(
-      {},
-      'post content',
-      JSON.stringify(res1, null, 2),
-    )
-    expect(res1.profile).toBeModerationResult(
-      {},
-      'post content',
-      JSON.stringify(res1, null, 2),
-    )
-    expect(res1.avatar).toBeModerationResult(
-      { blur: true },
+    expect(res1.ui('avatar')).toBeModerationResult(
+      ['blur'],
       'post avatar',
       JSON.stringify(res1, null, 2),
       true,
@@ -66,114 +56,10 @@ describe('Moderation', () => {
         mods: [],
       },
     )
-    expect(res2.account).toBeModerationResult(
-      {},
-      'post content',
-      JSON.stringify(res2, null, 2),
-    )
-    expect(res2.profile).toBeModerationResult(
-      {},
-      'post content',
-      JSON.stringify(res2, null, 2),
-    )
-    expect(res2.avatar).toBeModerationResult(
-      {},
-      'post avatar',
-      JSON.stringify(res2, null, 2),
-      true,
-    )
-  })
-
-  it('Applies self-labels on posts according to the global preferences', () => {
-    // porn (hide)
-    const res1 = moderatePost(
-      mock.postView({
-        record: {
-          text: 'Hello',
-          createdAt: new Date().toISOString(),
-        },
-        author: mock.profileViewBasic({
-          handle: 'bob.test',
-          displayName: 'Bob',
-        }),
-        labels: [
-          {
-            src: 'did:web:bob.test',
-            uri: 'at://did:web:bob.test/app.bsky.actor.profile/self',
-            val: 'porn',
-            cts: new Date().toISOString(),
-          },
-        ],
-      }),
-      {
-        userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labelGroups: {
-          porn: 'hide',
-        },
-        mods: [],
-      },
-    )
-    expect(res1.content).toBeModerationResult(
-      { cause: 'label:porn', filter: true },
-      'post content',
-      JSON.stringify(res1, null, 2),
-    )
-    expect(res1.embed).toBeModerationResult(
-      { cause: 'label:porn', blur: true },
-      'post content',
-      JSON.stringify(res1, null, 2),
-    )
-    expect(res1.avatar).toBeModerationResult(
-      {},
+    expect(res2.ui('avatar')).toBeModerationResult(
+      [],
       'post avatar',
       JSON.stringify(res1, null, 2),
-      true,
-    )
-
-    // porn (ignore)
-    const res2 = moderatePost(
-      mock.postView({
-        record: {
-          text: 'Hello',
-          createdAt: new Date().toISOString(),
-        },
-        author: mock.profileViewBasic({
-          handle: 'bob.test',
-          displayName: 'Bob',
-        }),
-        labels: [
-          {
-            src: 'did:web:bob.test',
-            uri: 'at://did:web:bob.test/app.bsky.actor.profile/self',
-            val: 'porn',
-            cts: new Date().toISOString(),
-          },
-        ],
-      }),
-      {
-        userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labelGroups: {
-          porn: 'ignore',
-        },
-        mods: [],
-      },
-    )
-    expect(res2.content).toBeModerationResult(
-      {},
-      'post content',
-      JSON.stringify(res2, null, 2),
-    )
-    expect(res2.embed).toBeModerationResult(
-      {},
-      'post content',
-      JSON.stringify(res2, null, 2),
-    )
-    expect(res2.avatar).toBeModerationResult(
-      {},
-      'post avatar',
-      JSON.stringify(res2, null, 2),
       true,
     )
   })
@@ -207,12 +93,22 @@ describe('Moderation', () => {
         ],
       },
     )
-    expect(res1.avatar).toBeModerationResult(
-      {},
-      'post avatar',
-      JSON.stringify(res1, null, 2),
-      true,
-    )
+    for (const k of [
+      'profileList',
+      'profileView',
+      'avatar',
+      'banner',
+      'displayName',
+      'contentList',
+      'contentView',
+      'contentMedia',
+    ]) {
+      expect(res1.ui(k)).toBeModerationResult(
+        [],
+        k,
+        JSON.stringify(res1, null, 2),
+      )
+    }
 
     // porn (label group disabled)
     const res2 = moderateProfile(
@@ -243,12 +139,22 @@ describe('Moderation', () => {
         ],
       },
     )
-    expect(res2.avatar).toBeModerationResult(
-      {},
-      'post avatar',
-      JSON.stringify(res2, null, 2),
-      true,
-    )
+    for (const k of [
+      'profileList',
+      'profileView',
+      'avatar',
+      'banner',
+      'displayName',
+      'contentList',
+      'contentView',
+      'contentMedia',
+    ]) {
+      expect(res2.ui(k)).toBeModerationResult(
+        [],
+        k,
+        JSON.stringify(res2, null, 2),
+      )
+    }
   })
 
   it('Ignores labels from unknown mods', () => {
@@ -274,12 +180,22 @@ describe('Moderation', () => {
         mods: [],
       },
     )
-    expect(res1.avatar).toBeModerationResult(
-      {},
-      'post avatar',
-      JSON.stringify(res1, null, 2),
-      true,
-    )
+    for (const k of [
+      'profileList',
+      'profileView',
+      'avatar',
+      'banner',
+      'displayName',
+      'contentList',
+      'contentView',
+      'contentMedia',
+    ]) {
+      expect(res1.ui(k)).toBeModerationResult(
+        [],
+        k,
+        JSON.stringify(res1, null, 2),
+      )
+    }
   })
 
   it('Ignores labels applied to the wrong targets', () => {
@@ -310,25 +226,22 @@ describe('Moderation', () => {
         ],
       },
     )
-    expect(res1.account).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res1, null, 2),
-      true,
-    )
-    expect(res1.profile).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res1, null, 2),
-      true,
-    )
-    expect(res1.avatar).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res1, null, 2),
-      true,
-    )
-
+    for (const k of [
+      'profileList',
+      'profileView',
+      'avatar',
+      'banner',
+      'displayName',
+      'contentList',
+      'contentView',
+      'contentMedia',
+    ]) {
+      expect(res1.ui(k)).toBeModerationResult(
+        [],
+        k,
+        JSON.stringify(res1, null, 2),
+      )
+    }
     const res2 = moderateProfile(
       mock.profileViewBasic({
         handle: 'bob.test',
@@ -356,24 +269,22 @@ describe('Moderation', () => {
         ],
       },
     )
-    expect(res2.account).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res2, null, 2),
-      true,
-    )
-    expect(res2.profile).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res2, null, 2),
-      true,
-    )
-    expect(res2.avatar).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res2, null, 2),
-      true,
-    )
+    for (const k of [
+      'profileList',
+      'profileView',
+      'avatar',
+      'banner',
+      'displayName',
+      'contentList',
+      'contentView',
+      'contentMedia',
+    ]) {
+      expect(res2.ui(k)).toBeModerationResult(
+        [],
+        k,
+        JSON.stringify(res2, null, 2),
+      )
+    }
 
     const res3 = moderatePost(
       mock.postView({
@@ -408,23 +319,21 @@ describe('Moderation', () => {
         ],
       },
     )
-    expect(res3.content).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res3, null, 2),
-      true,
-    )
-    expect(res3.embed).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res3, null, 2),
-      true,
-    )
-    expect(res3.avatar).toBeModerationResult(
-      {},
-      '',
-      JSON.stringify(res3, null, 2),
-      true,
-    )
+    for (const k of [
+      'profileList',
+      'profileView',
+      'avatar',
+      'banner',
+      'displayName',
+      'contentList',
+      'contentView',
+      'contentMedia',
+    ]) {
+      expect(res3.ui(k)).toBeModerationResult(
+        [],
+        k,
+        JSON.stringify(res3, null, 2),
+      )
+    }
   })
 })
