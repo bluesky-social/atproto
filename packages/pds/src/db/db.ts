@@ -116,7 +116,7 @@ export class Database<Schema> {
 type CommitHook = () => void
 
 class LeakyTxPlugin implements KyselyPlugin {
-  private txOver: boolean
+  private txOver = false
 
   endTx() {
     this.txOver = true
