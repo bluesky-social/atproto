@@ -1,0 +1,40 @@
+{
+  "name": "@atproto/fetch-node",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "SSRF protection for fetch() in Node.js",
+  "keywords": [
+    "atproto",
+    "fetch",
+    "node"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/fetch-node"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@atproto/fetch": "workspace:*",
+    "@atproto/transformer": "workspace:*",
+    "http-errors": "^2.0.0",
+    "ipaddr.js": "^2.1.0",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "@types/http-errors": "^2.0.4",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}

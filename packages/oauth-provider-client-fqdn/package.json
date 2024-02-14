@@ -1,0 +1,39 @@
+{
+  "name": "@atproto/oauth-provider-client-fqdn",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Client Store implementation for @atproto/oauth-provider. This implementation interprets client_id as Fully Qualified Domain Name (FQDN) in order to retrieve Client Metadata.",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "provider",
+    "client",
+    "store",
+    "fqdn",
+    "client_id"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth-provider-client-fqdn"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@atproto/oauth-provider-client-uri": "workspace:*",
+    "@atproto/oauth-provider": "workspace:*",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "tsc"
+  }
+}

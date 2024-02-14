@@ -1,0 +1,26 @@
+{
+  "name": "@atproto/rollup-plugin-bundle-manifest",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "mime": "^3.0.0"
+  },
+  "peerDependencies": {
+    "rollup": "^4.0.0"
+  },
+  "devDependencies": {
+    "rollup": "^4.10.0",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}
