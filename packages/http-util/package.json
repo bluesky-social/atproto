@@ -1,0 +1,44 @@
+{
+  "name": "@atproto/http-util",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Lightweight utilities to create request handlers to use with the standard library's `node:http` module and that can be used as middleware with `express`/`connect` like frameworks.",
+  "keywords": [
+    "atproto",
+    "middleware",
+    "connect",
+    "express",
+    "http"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/http"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@hapi/accept": "^6.0.3",
+    "@hapi/bourne": "^3.0.0",
+    "cookie": "^0.6.0",
+    "http-errors": "^2.0.0",
+    "tslib": "^2.6.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cookie": "^0.6.0",
+    "@types/http-errors": "^2.0.4",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "ScriptHost"],
+    "types": ["node"],
+    "module": "Node16",
+    "target": "ES2022",
+    "moduleResolution": "Node16"
+  }
+}
