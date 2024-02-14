@@ -1,0 +1,48 @@
+[
+  {
+  	"note": "trivial record",
+	"json": {
+		"rcrd": {
+        	"$type": "com.example.blah",
+        	"a": 123,
+        	"b": "blah"
+		}
+	}
+  },
+  {
+  	"note": "float, but integer-like",
+	"json": {
+		"rcrd": {
+        	"$type": "com.example.blah",
+        	"a": 123.0,
+        	"b": "blah"
+		}
+	}
+  },
+  {
+  	"note": "empty list and object",
+	"json": {
+		"rcrd": {
+        	"$type": "com.example.blah",
+        	"a": [],
+        	"b": {}
+		}
+	}
+  },
+  {
+  	"note": "list of nullable",
+	"json": {
+		"arr": [1,2,null]
+	}
+  },
+  {
+  	"note": "list of lists",
+	"json": {
+		"arr": [
+			[1,2,3],
+			[4,5,6]
+		],
+		"arr2": [null, null, null]
+	}
+  }
+]
