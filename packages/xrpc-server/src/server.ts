@@ -42,7 +42,6 @@ import {
   isShared,
   RateLimitExceededError,
   HandlerPipeThrough,
-  handlerPipeThrough,
 } from './types'
 import {
   decodeQueryParams,
