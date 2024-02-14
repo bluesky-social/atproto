@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["op"],
           "properties": {
-            "op": {"type": "unknown"}
+            "op": { "type": "unknown" }
           }
         }
       }
