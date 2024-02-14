@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Import a repo in the form of a CAR file. Returns a 202 after successfully reading incoming CAR then asynchronously indexes the repo and contained records",
+      "description": "Import a repo in the form of a CAR file. Requires Content-Length HTTP header to be set.",
       "input": {
         "encoding": "application/vnd.ipld.car"
       }

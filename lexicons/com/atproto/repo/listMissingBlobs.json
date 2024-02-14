@@ -21,12 +21,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["cids"],
+          "required": ["blobs"],
           "properties": {
             "cursor": { "type": "string" },
-            "cids": {
+            "blobs": {
               "type": "array",
-              "items": { "type": "string", "format": "cid" }
+              "items": { "type": "blob" }
             }
           }
         }

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.identity.signPlcOp",
+  "id": "com.atproto.identity.signPlcOperation",
   "defs": {
     "main": {
       "type": "procedure",
@@ -27,9 +27,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": {
+            "operation": {
               "type": "unknown",
               "description": "A signed DID PLC operation."
             }
