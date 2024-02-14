@@ -1,4 +1,3 @@
-import { Migrator } from 'kysely'
 import PrimaryDatabase from './primary'
 import Database from './db'
 import { PgOptions } from './types'
@@ -19,7 +18,6 @@ type ReplicaGroup = {
 }
 
 export class DatabaseCoordinator {
-  migrator: Migrator
   destroyed = false
 
   private primary: PrimaryDatabase
