@@ -33,6 +33,7 @@ export class BlobTransactor extends BlobReader {
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<BlobRef> {
+    this.db.assertTransaction()
     const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
@@ -43,6 +44,15 @@ export class BlobTransactor extends BlobReader {
 
     const cid = sha256RawToCid(sha256)
     const mimeType = sniffedMime || userSuggestedMime
+
+    const found = await this.db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', cid.toString())
+      .executeTakeFirst()
+    if (found?.takedownRef) {
+      throw new InvalidRequestError('Blob has been takendown, cannot re-upload')
+    }
 
     await this.db.db
       .insertInto('blob')
