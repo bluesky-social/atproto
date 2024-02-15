@@ -151,18 +151,3 @@ export class ModerationUI {
     return this.informs.length !== 0
   }
 }
-
-export class ModerationDecisionOld {
-  static noop() {
-    return new ModerationDecisionOld()
-  }
-
-  constructor(
-    public cause: ModerationCause | undefined = undefined,
-    public behavior: ModerationBehavior = NOOP_BEHAVIOR,
-    public filter: boolean = false,
-    public noOverride: boolean = false,
-    public additionalCauses: ModerationCause[] = [],
-    public did: string = '',
-  ) {}
-}

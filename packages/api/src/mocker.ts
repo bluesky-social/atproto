@@ -87,11 +87,13 @@ export const mock = {
   profileViewBasic({
     handle,
     displayName,
+    description,
     viewer,
     labels,
   }: {
     handle: string
     displayName?: string
+    description?: string
     viewer?: AppBskyActorDefs.ViewerState
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyActorDefs.ProfileViewBasic {
@@ -99,6 +101,7 @@ export const mock = {
       did: `did:web:${handle}`,
       handle,
       displayName,
+      description, // technically not in ProfileViewBasic but useful in some cases
       viewer,
       labels,
     }

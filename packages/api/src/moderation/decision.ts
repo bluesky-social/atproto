@@ -289,11 +289,12 @@ function measureModerationBehaviorSeverity(
   if (!beh) {
     return ModerationBehaviorSeverity.Low
   }
-  if (beh.profilepage === 'blur' || beh.content === 'blur') {
-    return ModerationBehaviorSeverity.High
-  }
-  if (beh.content === 'blur-media') {
-    return ModerationBehaviorSeverity.Medium
-  }
+  // TODO needed?
+  // if (beh.profilepage === 'blur' || beh.content === 'blur') {
+  //   return ModerationBehaviorSeverity.High
+  // }
+  // if (beh.content === 'blur-media') {
+  //   return ModerationBehaviorSeverity.Medium
+  // }
   return ModerationBehaviorSeverity.Low
 }
