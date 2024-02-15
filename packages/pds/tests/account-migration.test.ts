@@ -75,7 +75,7 @@ describe('account migration', () => {
     await network.close()
   })
 
-  it('works', async () => {
+  it('migrates an account', async () => {
     const describeRes = await newAgent.api.com.atproto.server.describeServer()
     const newServerDid = describeRes.data.did
 
