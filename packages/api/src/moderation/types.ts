@@ -139,20 +139,3 @@ export interface ModerationOpts {
   labelGroups: Record<string, LabelPreference>
   mods: AppBskyActorDefs.ModsPref['mods']
 }
-
-export class ModerationUI {
-  filter: boolean = false
-  noOverride: boolean = false
-  blurs: ModerationCause[] = []
-  alerts: ModerationCause[] = []
-  informs: ModerationCause[] = []
-  get blur(): boolean {
-    return this.blurs.length !== 0
-  }
-  get alert(): boolean {
-    return this.alerts.length !== 0
-  }
-  get inform(): boolean {
-    return this.informs.length !== 0
-  }
-}

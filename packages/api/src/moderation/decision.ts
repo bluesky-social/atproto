@@ -11,8 +11,8 @@ import {
   LabelDefinition,
   LabelTarget,
   ModerationBehavior,
-  ModerationUI,
 } from './types'
+import { ModerationUI } from './ui'
 import { LABELS } from './const/labels'
 
 enum ModerationBehaviorSeverity {
@@ -68,7 +68,7 @@ export class ModerationDecision {
     return this.causes.filter((cause) => cause.type === 'label')
   }
 
-  ui(context: keyof ModerationBehavior) {
+  ui(context: keyof ModerationBehavior): ModerationUI {
     const ui = new ModerationUI()
     if (this.isMe) {
       return ui
@@ -80,7 +80,7 @@ export class ModerationDecision {
         cause.type === 'block-other'
       ) {
         if (context === 'profileList' || context === 'contentList') {
-          ui.filter = true
+          ui.filters.push(cause)
         }
         if (BLOCK_BEHAVIOR[context] === 'blur') {
           ui.noOverride = true
@@ -92,7 +92,7 @@ export class ModerationDecision {
         }
       } else if (cause.type === 'muted') {
         if (context === 'profileList' || context === 'contentList') {
-          ui.filter = true
+          ui.filters.push(cause)
         }
         if (MUTE_BEHAVIOR[context] === 'blur') {
           ui.blurs.push(cause)
@@ -103,7 +103,7 @@ export class ModerationDecision {
         }
       } else if (cause.type === 'hidden') {
         if (context === 'profileList' || context === 'contentList') {
-          ui.filter = true
+          ui.filters.push(cause)
         }
         if (HIDE_BEHAVIOR[context] === 'blur') {
           ui.blurs.push(cause)
@@ -115,7 +115,7 @@ export class ModerationDecision {
       } else if (cause.type === 'label') {
         if (context === 'profileList' || context === 'contentList') {
           if (cause.setting === 'hide') {
-            ui.filter = true
+            ui.filters.push(cause)
           }
         }
         if (cause.behavior[context] === 'blur') {

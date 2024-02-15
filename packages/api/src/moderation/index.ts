@@ -20,6 +20,7 @@ import { decideUserList } from './subjects/user-list'
 // import { isQuotedPost, isQuotedPostWithMedia } from './util'
 import { ModerationDecision } from './decision'
 
+export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'
 
 // profiles
