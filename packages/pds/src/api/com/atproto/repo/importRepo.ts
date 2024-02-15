@@ -20,6 +20,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
+      if (!ctx.cfg.service.acceptingImports) {
+        throw new InvalidRequestError('Service is not accepting repo imports')
+      }
       await ctx.actorStore.transact(did, (store) =>
         importRepo(store, input.body),
       )

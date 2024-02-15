@@ -14,7 +14,10 @@ export default function (server: Server, ctx: AppContext) {
         includeDeactivated: true,
       })
       const alsoKnownAs = account?.handle ? [account.handle] : undefined
-      const rotationKeys = [ctx.plcRotationKey.did()]
+
+      const plcRotationKey =
+        ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
+      const rotationKeys = [plcRotationKey]
       if (ctx.cfg.identity.recoveryDidKey) {
         rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
       }
