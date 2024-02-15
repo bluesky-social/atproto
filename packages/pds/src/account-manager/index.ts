@@ -39,16 +39,16 @@ export class AccountManager {
 
   async getAccount(
     handleOrDid: string,
-    includeSoftDeleted = false,
+    flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccount(this.db, handleOrDid, includeSoftDeleted)
+    return account.getAccount(this.db, handleOrDid, flags)
   }
 
   async getAccountByEmail(
     email: string,
-    includeSoftDeleted = false,
+    flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccountByEmail(this.db, email, includeSoftDeleted)
+    return account.getAccountByEmail(this.db, email, flags)
   }
 
   // Repo exists and is not taken-down
@@ -59,9 +59,9 @@ export class AccountManager {
 
   async getDidForActor(
     handleOrDid: string,
-    includeSoftDeleted = false,
+    flags?: account.AvailabilityFlags,
   ): Promise<string | null> {
-    const got = await this.getAccount(handleOrDid, includeSoftDeleted)
+    const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
   }
 

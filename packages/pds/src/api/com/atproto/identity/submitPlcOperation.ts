@@ -32,7 +32,9 @@ export default function (server: Server, ctx: AppContext) {
       if (op.verificationMethods['atproto'] !== signingKey.did()) {
         throw new InvalidRequestError('Incorrect signing key')
       }
-      const account = await ctx.accountManager.getAccount(requester)
+      const account = await ctx.accountManager.getAccount(requester, {
+        includeDeactivated: true,
+      })
       if (account?.handle && op.alsoKnownAs.at(0) !== account.handle) {
         throw new InvalidRequestError('Incorrect handle in alsoKnownAs')
       }

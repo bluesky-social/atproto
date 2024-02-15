@@ -21,7 +21,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
-      const account = await ctx.accountManager.getAccount(did)
+      const account = await ctx.accountManager.getAccount(did, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
       if (!account) {
         throw new InvalidRequestError('account not found')
       }

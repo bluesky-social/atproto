@@ -11,13 +11,20 @@ export type ActorAccount = ActorEntry & {
   invitesDisabled: 0 | 1 | null
 }
 
-const selectAccountQB = (db: AccountDb, includeSoftDeleted: boolean) => {
+export type AvailabilityFlags = {
+  includeTakenDown?: boolean
+  includeDeactivated?: boolean
+}
+
+const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
+  const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('actor'))),
+    .if(!includeTakenDown, (qb) => qb.where(notSoftDeletedClause(ref('actor'))))
+    .if(!includeDeactivated, (qb) =>
+      qb.where('actor.deactivatedAt', 'is', null),
     )
     .select([
       'actor.did',
@@ -35,9 +42,9 @@ const selectAccountQB = (db: AccountDb, includeSoftDeleted: boolean) => {
 export const getAccount = async (
   db: AccountDb,
   handleOrDid: string,
-  includeSoftDeleted = false,
+  flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
-  const found = await selectAccountQB(db, includeSoftDeleted)
+  const found = await selectAccountQB(db, flags)
     .where((qb) => {
       if (handleOrDid.startsWith('did:')) {
         return qb.where('actor.did', '=', handleOrDid)
@@ -52,9 +59,9 @@ export const getAccount = async (
 export const getAccountByEmail = async (
   db: AccountDb,
   email: string,
-  includeSoftDeleted = false,
+  flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
-  const found = await selectAccountQB(db, includeSoftDeleted)
+  const found = await selectAccountQB(db, flags)
     .where('email', '=', email.toLowerCase())
     .executeTakeFirst()
   return found || null

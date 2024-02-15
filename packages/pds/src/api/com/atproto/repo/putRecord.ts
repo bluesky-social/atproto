@@ -38,7 +38,9 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
-      const did = await ctx.accountManager.getDidForActor(repo)
+      const did = await ctx.accountManager.getDidForActor(repo, {
+        includeDeactivated: true,
+      })
 
       if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)

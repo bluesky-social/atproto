@@ -18,7 +18,10 @@ export default function (server: Server, ctx: AppContext) {
         subject = 'Message from Bluesky moderator',
         comment,
       } = input.body
-      const account = await ctx.accountManager.getAccount(recipientDid)
+      const account = await ctx.accountManager.getAccount(recipientDid, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
       if (!account) {
         throw new InvalidRequestError('Recipient not found')
       }

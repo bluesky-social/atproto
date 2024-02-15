@@ -10,7 +10,9 @@ export default function (server: Server, ctx: AppContext) {
       const verificationMethods = {
         atproto: signingKey.did(),
       }
-      const account = await ctx.accountManager.getAccount(requester)
+      const account = await ctx.accountManager.getAccount(requester, {
+        includeDeactivated: true,
+      })
       const alsoKnownAs = account?.handle ? [account.handle] : undefined
       const rotationKeys = [ctx.plcRotationKey.did()]
       if (ctx.cfg.identity.recoveryDidKey) {
