@@ -27,6 +27,7 @@ export class ServerMailer {
       confirmEmail: this.compile('confirm-email'),
       updateEmail: this.compile('update-email'),
       accountActivated: this.compile('account-activated'),
+      plcOperation: this.compile('account-activated'),
     }
   }
 
@@ -62,6 +63,13 @@ export class ServerMailer {
   async sendUpdateEmail(params: { token: string }, mailOpts: Mail.Options) {
     return this.sendTemplate('updateEmail', params, {
       subject: 'Email Update Requested',
+      ...mailOpts,
+    })
+  }
+
+  async sendPlcOperation(params: { token: string }, mailOpts: Mail.Options) {
+    return this.sendTemplate('plcOperation', params, {
+      subject: 'PLC Update Operation Requested',
       ...mailOpts,
     })
   }
