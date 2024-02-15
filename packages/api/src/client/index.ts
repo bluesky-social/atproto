@@ -7,7 +7,9 @@ import {
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminActivateAccount from './types/com/atproto/admin/activateAccount'
 import * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
+import * as ComAtprotoAdminDeactivateAccount from './types/com/atproto/admin/deactivateAccount'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
@@ -163,7 +165,9 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
+export * as ComAtprotoAdminActivateAccount from './types/com/atproto/admin/activateAccount'
 export * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
+export * as ComAtprotoAdminDeactivateAccount from './types/com/atproto/admin/deactivateAccount'
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 export * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
@@ -409,6 +413,17 @@ export class ComAtprotoAdminNS {
     this._service = service
   }
 
+  activateAccount(
+    data?: ComAtprotoAdminActivateAccount.InputSchema,
+    opts?: ComAtprotoAdminActivateAccount.CallOptions,
+  ): Promise<ComAtprotoAdminActivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.activateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminActivateAccount.toKnownErr(e)
+      })
+  }
+
   createCommunicationTemplate(
     data?: ComAtprotoAdminCreateCommunicationTemplate.InputSchema,
     opts?: ComAtprotoAdminCreateCommunicationTemplate.CallOptions,
@@ -422,6 +437,17 @@ export class ComAtprotoAdminNS {
       )
       .catch((e) => {
         throw ComAtprotoAdminCreateCommunicationTemplate.toKnownErr(e)
+      })
+  }
+
+  deactivateAccount(
+    data?: ComAtprotoAdminDeactivateAccount.InputSchema,
+    opts?: ComAtprotoAdminDeactivateAccount.CallOptions,
+  ): Promise<ComAtprotoAdminDeactivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.deactivateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminDeactivateAccount.toKnownErr(e)
       })
   }
 

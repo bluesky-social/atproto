@@ -9,7 +9,9 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminActivateAccount from './types/com/atproto/admin/activateAccount'
 import * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
+import * as ComAtprotoAdminDeactivateAccount from './types/com/atproto/admin/deactivateAccount'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -216,6 +218,17 @@ export class ComAtprotoAdminNS {
     this._server = server
   }
 
+  activateAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminActivateAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminActivateAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.activateAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createCommunicationTemplate<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -224,6 +237,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.createCommunicationTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deactivateAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDeactivateAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminDeactivateAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.deactivateAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

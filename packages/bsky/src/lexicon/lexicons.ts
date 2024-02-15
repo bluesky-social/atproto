@@ -4,6 +4,29 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
 export const schemaDict = {
+  ComAtprotoAdminActivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.admin.activateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Admin counterpart to com.atproto.server.activateAccount',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminCreateCommunicationTemplate: {
     lexicon: 1,
     id: 'com.atproto.admin.createCommunicationTemplate',
@@ -44,6 +67,36 @@ export const schemaDict = {
           schema: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDeactivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.admin.deactivateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Admin counterpart to com.atproto.server.deactivateAccount',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              deleteAfter: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'A recommendation to server as to how long they should hold onto the deactivated account before deleting.',
+              },
+            },
           },
         },
       },
@@ -8803,8 +8856,10 @@ export const schemaDict = {
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
+  ComAtprotoAdminActivateAccount: 'com.atproto.admin.activateAccount',
   ComAtprotoAdminCreateCommunicationTemplate:
     'com.atproto.admin.createCommunicationTemplate',
+  ComAtprotoAdminDeactivateAccount: 'com.atproto.admin.deactivateAccount',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
   ComAtprotoAdminDeleteCommunicationTemplate:

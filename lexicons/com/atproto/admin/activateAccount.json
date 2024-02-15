@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.activateAccount",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Admin counterpart to com.atproto.server.activateAccount",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      }
+    }
+  }
+}
