@@ -67,7 +67,9 @@ export default function (server: Server, ctx: AppContext) {
           deactivated,
         })
 
-        await ctx.sequencer.sequenceCommit(did, commit, [])
+        if (!deactivated) {
+          await ctx.sequencer.sequenceCommit(did, commit, [])
+        }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         didDoc = await didDocForSession(ctx, did, true)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)

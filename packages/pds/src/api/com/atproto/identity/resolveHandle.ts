@@ -18,10 +18,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     let did: string | undefined
-    const user = await ctx.accountManager.getAccount(handle, {
-      includeDeactivated: true,
-      includeTakenDown: true,
-    })
+    const user = await ctx.accountManager.getAccount(handle)
 
     if (user) {
       did = user.did
