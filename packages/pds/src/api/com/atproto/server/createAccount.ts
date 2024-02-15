@@ -22,10 +22,18 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.userDidAuthOptional,
     handler: async ({ input, auth, req }) => {
       const requester = auth.credentials?.iss ?? null
-      const { did, handle, email, password, inviteCode, signingKey, plcOp } =
-        ctx.entrywayAgent
-          ? await validateInputsForEntrywayPds(ctx, input.body)
-          : await validateInputsForLocalPds(ctx, input.body, requester)
+      const {
+        did,
+        handle,
+        email,
+        password,
+        inviteCode,
+        signingKey,
+        plcOp,
+        deactivated,
+      } = ctx.entrywayAgent
+        ? await validateInputsForEntrywayPds(ctx, input.body)
+        : await validateInputsForLocalPds(ctx, input.body, requester)
 
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
@@ -56,6 +64,7 @@ export default function (server: Server, ctx: AppContext) {
           repoCid: commit.cid,
           repoRev: commit.rev,
           inviteCode,
+          deactivated,
         })
 
         await ctx.sequencer.sequenceCommit(did, commit, [])
@@ -137,6 +146,7 @@ const validateInputsForEntrywayPds = async (
     inviteCode: undefined,
     signingKey,
     plcOp,
+    deactivated: false,
   }
 }
 
@@ -194,6 +204,7 @@ const validateInputsForLocalPds = async (
 
   let did: string
   let plcOp: plc.Operation | null
+  let deactivated = false
   if (input.did) {
     if (input.did !== requester) {
       throw new AuthRequiredError(
@@ -202,13 +213,23 @@ const validateInputsForLocalPds = async (
     }
     did = input.did
     plcOp = null
+    deactivated = true
   } else {
     const formatted = await formatDidAndPlcOp(ctx, handle, input, signingKey)
     did = formatted.did
     plcOp = formatted.plcOp
   }
 
-  return { did, handle, email, password, inviteCode, signingKey, plcOp }
+  return {
+    did,
+    handle,
+    email,
+    password,
+    inviteCode,
+    signingKey,
+    plcOp,
+    deactivated,
+  }
 }
 
 const formatDidAndPlcOp = async (

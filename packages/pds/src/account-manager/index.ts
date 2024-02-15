@@ -57,6 +57,12 @@ export class AccountManager {
     return !!got
   }
 
+  async isAccountActivated(did: string): Promise<boolean> {
+    const account = await this.getAccount(did, { includeDeactivated: true })
+    if (!account) return false
+    return !account.deactivatedAt
+  }
+
   async getDidForActor(
     handleOrDid: string,
     flags?: account.AvailabilityFlags,

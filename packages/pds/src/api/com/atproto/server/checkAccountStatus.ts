@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { isValidDidDocForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.checkAccountStatus({
@@ -21,11 +22,16 @@ export default function (server: Server, ctx: AppContext) {
           store.repo.blob.recordBlobCount(),
         ])
       })
+      const [activated, validDid] = await Promise.all([
+        ctx.accountManager.isAccountActivated(requester),
+        isValidDidDocForService(ctx, requester),
+      ])
+
       return {
         encoding: 'application/json',
         body: {
-          activated: false,
-          validDid: false,
+          activated,
+          validDid,
           repoCommit: repoRoot.cid.toString(),
           repoRev: repoRoot.rev,
           repoBlocks,

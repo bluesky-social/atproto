@@ -134,7 +134,9 @@ export class AuthVerifier {
       AuthScope.Access,
       AuthScope.AppPass,
     ])
-    const found = await this.accountManager.getAccount(result.credentials.did)
+    const found = await this.accountManager.getAccount(result.credentials.did, {
+      includeDeactivated: true,
+    })
     if (!found) {
       // will be turned into ExpiredToken for the client if proxied by entryway
       throw new ForbiddenError('Account not found', 'AccountNotFound')
