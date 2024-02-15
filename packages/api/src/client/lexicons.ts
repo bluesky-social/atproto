@@ -916,7 +916,11 @@ export const schemaDict = {
               type: 'string',
             },
             description:
-              "Flags to be removed to the subject. Ignores a flag If doesn't exists, won't be duplicated.",
+              "Flags to be removed to the subject. Ignores a flag If it doesn't exist, won't be duplicated.",
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about added/removed flags.',
           },
         },
       },
@@ -1644,7 +1648,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            langs: {
+            flags: {
               type: 'array',
               items: {
                 type: 'string',

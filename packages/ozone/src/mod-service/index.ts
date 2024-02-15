@@ -669,7 +669,7 @@ export class ModerationService {
     lastReviewedBy,
     sortField,
     subject,
-    langs,
+    flags,
   }: {
     cursor?: string
     limit?: number
@@ -686,7 +686,7 @@ export class ModerationService {
     sortDirection: 'asc' | 'desc'
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
-    langs: string[]
+    flags: string[]
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     const { ref } = this.db.db.dynamic
@@ -751,11 +751,11 @@ export class ModerationService {
       )
     }
 
-    if (langs.length) {
+    if (flags.length) {
       builder = builder.where(
         sql<string>`${ref(
           'moderation_subject_status.flags',
-        )} @> ${JSON.stringify(langs.map((lang) => `lang:${lang}`))}`,
+        )} @> ${JSON.stringify(flags)}`,
       )
     }
 

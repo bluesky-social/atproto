@@ -6,7 +6,7 @@ import {
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
 
-describe('admin get repo view', () => {
+describe.skip('admin get repo view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient

@@ -724,8 +724,10 @@ export function validateModEventEmail(v: unknown): ValidationResult {
 export interface ModEventFlag {
   /** Flags to be added to the subject. If already exists, won't be duplicated. */
   add: string[]
-  /** Flags to be removed to the subject. Ignores a flag If doesn't exists, won't be duplicated. */
+  /** Flags to be removed to the subject. Ignores a flag If it doesn't exist, won't be duplicated. */
   remove: string[]
+  /** Additional comment about added/removed flags. */
+  comment?: string
   [k: string]: unknown
 }
 
