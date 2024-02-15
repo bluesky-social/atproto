@@ -369,4 +369,95 @@ describe('Moderation', () => {
     )
     expect(res1.ui('contentView')).toBeModerationResult(['blur'], 'contentView')
   })
+
+  it('Prioritizes filters and blurs correctly on merge', () => {
+    const res1 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'intolerant',
+            cts: new Date().toISOString(),
+          },
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: '!hide',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      {
+        userDid: 'did:web:alice.test',
+        adultContentEnabled: true,
+        labelGroups: {
+          intolerance: 'hide',
+        },
+        mods: [
+          {
+            did: 'did:web:labeler.test',
+            enabled: true,
+          },
+        ],
+      },
+    )
+    expect(res1.ui('contentList').filters[0].label.val).toBe('!hide')
+    expect(res1.ui('contentList').filters[1].label.val).toBe('intolerant')
+    expect(res1.ui('contentList').blurs[0].label.val).toBe('!hide')
+    expect(res1.ui('contentList').blurs[1].label.val).toBe('intolerant')
+
+    const res2 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'disgusting',
+            cts: new Date().toISOString(),
+          },
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'porn',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      {
+        userDid: 'did:web:alice.test',
+        adultContentEnabled: false,
+        labelGroups: {
+          upsetting: 'hide',
+        },
+        mods: [
+          {
+            did: 'did:web:labeler.test',
+            enabled: true,
+          },
+        ],
+      },
+    )
+
+    expect(res2.ui('contentList').filters[0].label.val).toBe('porn')
+    expect(res2.ui('contentList').filters[1].label.val).toBe('disgusting')
+    expect(res2.ui('contentMedia').blurs[0].label.val).toBe('porn')
+    expect(res2.ui('contentMedia').blurs[1].label.val).toBe('disgusting')
+  })
 })

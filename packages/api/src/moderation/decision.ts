@@ -130,6 +130,10 @@ export class ModerationDecision {
         }
       }
     }
+
+    ui.filters.sort(sortByPriority)
+    ui.blurs.sort(sortByPriority)
+
     return ui
   }
 
@@ -247,15 +251,18 @@ export class ModerationDecision {
     const severity = measureModerationBehaviorSeverity(
       labelDef.behaviors[target],
     )
-    if (labelDef.flags.includes('no-override')) {
+    if (
+      labelDef.flags.includes('no-override') ||
+      (labelDef.flags.includes('adult') && !opts.adultContentEnabled)
+    ) {
       priority = 1
     } else if (labelPref === 'hide') {
       priority = 2
     } else if (severity === ModerationBehaviorSeverity.High) {
-      // blurring profile page or content
+      // blurring profile view or content view
       priority = 5
     } else if (severity === ModerationBehaviorSeverity.Medium) {
-      // blurring media
+      // blurring content list or content media
       priority = 7
     } else {
       // blurring avatar, adding alerts
@@ -311,12 +318,15 @@ function measureModerationBehaviorSeverity(
   if (!beh) {
     return ModerationBehaviorSeverity.Low
   }
-  // TODO needed?
-  // if (beh.profilepage === 'blur' || beh.content === 'blur') {
-  //   return ModerationBehaviorSeverity.High
-  // }
-  // if (beh.content === 'blur-media') {
-  //   return ModerationBehaviorSeverity.Medium
-  // }
+  if (beh.profileView === 'blur' || beh.contentView === 'blur') {
+    return ModerationBehaviorSeverity.High
+  }
+  if (beh.contentList === 'blur' || beh.contentMedia === 'blur') {
+    return ModerationBehaviorSeverity.Medium
+  }
   return ModerationBehaviorSeverity.Low
+}
+
+function sortByPriority(a: ModerationCause, b: ModerationCause) {
+  return a.priority - b.priority
 }

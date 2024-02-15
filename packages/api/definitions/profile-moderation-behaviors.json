@@ -436,7 +436,7 @@
       "labels": {},
       "behaviors": {
         "profileList": ["filter", "blur", "noOverride"],
-        "profileView": ["blur", "noOverride"],
+        "profileView": ["alert"],
         "avatar": ["blur", "noOverride"],
         "banner": ["blur", "noOverride"],
         "contentList": ["filter", "blur", "noOverride"],
@@ -451,7 +451,7 @@
       "labels": {},
       "behaviors": {
         "profileList": ["filter", "blur", "noOverride"],
-        "profileView": ["blur", "noOverride"],
+        "profileView": ["alert"],
         "avatar": ["blur", "noOverride"],
         "banner": ["blur", "noOverride"],
         "contentList": ["filter", "blur", "noOverride"],
@@ -466,7 +466,7 @@
       "labels": {},
       "behaviors": {
         "profileList": ["filter", "blur", "noOverride"],
-        "profileView": ["blur", "noOverride"],
+        "profileView": ["alert"],
         "avatar": ["blur", "noOverride"],
         "banner": ["blur", "noOverride"],
         "contentList": ["filter", "blur", "noOverride"],
@@ -481,7 +481,7 @@
       "labels": {},
       "behaviors": {
         "profileList": ["filter", "inform"],
-        "profileView": ["inform"],
+        "profileView": ["alert"],
         "contentList": ["filter", "blur"],
         "contentView": ["inform"]
       }
@@ -494,7 +494,7 @@
       "labels": {},
       "behaviors": {
         "profileList": ["filter", "inform"],
-        "profileView": ["inform"],
+        "profileView": ["alert"],
         "contentList": ["filter", "blur"],
         "contentView": ["inform"]
       }
@@ -507,7 +507,7 @@
       "labels": {},
       "behaviors": {
         "profileList": ["filter", "blur", "noOverride"],
-        "profileView": ["blur", "noOverride"],
+        "profileView": ["alert"],
         "avatar": ["blur", "noOverride"],
         "banner": ["blur", "noOverride"],
         "contentList": ["filter", "blur", "noOverride"],
@@ -521,7 +521,7 @@
       "labels": { "account": ["!hide"] },
       "behaviors": {
         "profileList": ["filter", "blur", "noOverride"],
-        "profileView": ["blur", "noOverride"],
+        "profileView": ["blur", "alert", "noOverride"],
         "avatar": ["blur", "noOverride"],
         "banner": ["blur", "noOverride"],
         "displayName": ["blur", "noOverride"],
