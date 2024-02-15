@@ -13,7 +13,9 @@ export default function (server: Server, ctx: AppContext) {
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,
       })
-      const alsoKnownAs = account?.handle ? [account.handle] : undefined
+      const alsoKnownAs = account?.handle
+        ? [`at://${account.handle}`]
+        : undefined
 
       const plcRotationKey =
         ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
