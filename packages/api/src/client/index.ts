@@ -354,39 +354,39 @@ export class AtpServiceClient {
 
 export class ComNS {
   _service: AtpServiceClient
-  atproto: ComAtprotoNS
+  atproto: AtprotoNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.atproto = new ComAtprotoNS(service)
+    this.atproto = new AtprotoNS(service)
   }
 }
 
-export class ComAtprotoNS {
+export class AtprotoNS {
   _service: AtpServiceClient
-  admin: ComAtprotoAdminNS
-  identity: ComAtprotoIdentityNS
-  label: ComAtprotoLabelNS
-  moderation: ComAtprotoModerationNS
-  repo: ComAtprotoRepoNS
-  server: ComAtprotoServerNS
-  sync: ComAtprotoSyncNS
-  temp: ComAtprotoTempNS
+  admin: AdminNS
+  identity: IdentityNS
+  label: LabelNS
+  moderation: ModerationNS
+  repo: RepoNS
+  server: ServerNS
+  sync: SyncNS
+  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.admin = new ComAtprotoAdminNS(service)
-    this.identity = new ComAtprotoIdentityNS(service)
-    this.label = new ComAtprotoLabelNS(service)
-    this.moderation = new ComAtprotoModerationNS(service)
-    this.repo = new ComAtprotoRepoNS(service)
-    this.server = new ComAtprotoServerNS(service)
-    this.sync = new ComAtprotoSyncNS(service)
-    this.temp = new ComAtprotoTempNS(service)
+    this.admin = new AdminNS(service)
+    this.identity = new IdentityNS(service)
+    this.label = new LabelNS(service)
+    this.moderation = new ModerationNS(service)
+    this.repo = new RepoNS(service)
+    this.server = new ServerNS(service)
+    this.sync = new SyncNS(service)
+    this.temp = new TempNS(service)
   }
 }
 
-export class ComAtprotoAdminNS {
+export class AdminNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -672,7 +672,7 @@ export class ComAtprotoAdminNS {
   }
 }
 
-export class ComAtprotoIdentityNS {
+export class IdentityNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -702,7 +702,7 @@ export class ComAtprotoIdentityNS {
   }
 }
 
-export class ComAtprotoLabelNS {
+export class LabelNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -721,7 +721,7 @@ export class ComAtprotoLabelNS {
   }
 }
 
-export class ComAtprotoModerationNS {
+export class ModerationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -740,7 +740,7 @@ export class ComAtprotoModerationNS {
   }
 }
 
-export class ComAtprotoRepoNS {
+export class RepoNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -836,7 +836,7 @@ export class ComAtprotoRepoNS {
   }
 }
 
-export class ComAtprotoServerNS {
+export class ServerNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1075,7 +1075,7 @@ export class ComAtprotoServerNS {
   }
 }
 
-export class ComAtprotoSyncNS {
+export class SyncNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1204,7 +1204,7 @@ export class ComAtprotoSyncNS {
   }
 }
 
-export class ComAtprotoTempNS {
+export class TempNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1280,37 +1280,37 @@ export class ComAtprotoTempNS {
 
 export class AppNS {
   _service: AtpServiceClient
-  bsky: AppBskyNS
+  bsky: BskyNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.bsky = new AppBskyNS(service)
+    this.bsky = new BskyNS(service)
   }
 }
 
-export class AppBskyNS {
+export class BskyNS {
   _service: AtpServiceClient
-  actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
-  feed: AppBskyFeedNS
-  graph: AppBskyGraphNS
-  notification: AppBskyNotificationNS
-  richtext: AppBskyRichtextNS
-  unspecced: AppBskyUnspeccedNS
+  actor: ActorNS
+  embed: EmbedNS
+  feed: FeedNS
+  graph: GraphNS
+  notification: NotificationNS
+  richtext: RichtextNS
+  unspecced: UnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.actor = new AppBskyActorNS(service)
-    this.embed = new AppBskyEmbedNS(service)
-    this.feed = new AppBskyFeedNS(service)
-    this.graph = new AppBskyGraphNS(service)
-    this.notification = new AppBskyNotificationNS(service)
-    this.richtext = new AppBskyRichtextNS(service)
-    this.unspecced = new AppBskyUnspeccedNS(service)
+    this.actor = new ActorNS(service)
+    this.embed = new EmbedNS(service)
+    this.feed = new FeedNS(service)
+    this.graph = new GraphNS(service)
+    this.notification = new NotificationNS(service)
+    this.richtext = new RichtextNS(service)
+    this.unspecced = new UnspeccedNS(service)
   }
 }
 
-export class AppBskyActorNS {
+export class ActorNS {
   _service: AtpServiceClient
   profile: ProfileRecord
 
@@ -1458,7 +1458,7 @@ export class ProfileRecord {
   }
 }
 
-export class AppBskyEmbedNS {
+export class EmbedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1466,7 +1466,7 @@ export class AppBskyEmbedNS {
   }
 }
 
-export class AppBskyFeedNS {
+export class FeedNS {
   _service: AtpServiceClient
   generator: GeneratorRecord
   like: LikeRecord
@@ -1969,7 +1969,7 @@ export class ThreadgateRecord {
   }
 }
 
-export class AppBskyGraphNS {
+export class GraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
@@ -2455,7 +2455,7 @@ export class ListitemRecord {
   }
 }
 
-export class AppBskyNotificationNS {
+export class NotificationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2507,7 +2507,7 @@ export class AppBskyNotificationNS {
   }
 }
 
-export class AppBskyRichtextNS {
+export class RichtextNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2515,7 +2515,7 @@ export class AppBskyRichtextNS {
   }
 }
 
-export class AppBskyUnspeccedNS {
+export class UnspeccedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
