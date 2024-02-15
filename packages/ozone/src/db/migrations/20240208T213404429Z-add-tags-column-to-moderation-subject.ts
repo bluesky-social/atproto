@@ -3,13 +3,13 @@ import { Kysely } from 'kysely'
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('moderation_subject_status')
-    .addColumn('flags', 'jsonb')
+    .addColumn('tags', 'jsonb')
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('moderation_subject_status')
-    .dropColumn('flags')
+    .dropColumn('tags')
     .execute()
 }

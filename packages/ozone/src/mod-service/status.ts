@@ -82,8 +82,8 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
       }
-    case 'com.atproto.admin.defs#modEventFlag':
-      return { flags: [] }
+    case 'com.atproto.admin.defs#modEventTag':
+      return { tags: [] }
     case 'com.atproto.admin.defs#modEventResolveAppeal':
       return {
         appealed: false,
@@ -192,22 +192,22 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.comment = comment
   }
 
-  if (action === 'com.atproto.admin.defs#modEventFlag') {
-    const addedFlags = meta?.addedFlags?.toString().split(' ') || []
-    const removedFlags = meta?.removedFlags?.toString().split(' ') || []
-    if (addedFlags.length) {
-      const flags = currentStatus?.flags || []
-      newStatus.flags = jsonb([
-        ...new Set([...flags, ...addedFlags]),
+  if (action === 'com.atproto.admin.defs#modEventTag') {
+    const addedTags = meta?.addedTags?.toString().split(' ') || []
+    const removedTags = meta?.removedTags?.toString().split(' ') || []
+    if (addedTags.length) {
+      const tags = currentStatus?.tags || []
+      newStatus.tags = jsonb([
+        ...new Set([...tags, ...addedTags]),
       ]) as unknown as string[]
-      subjectStatus.flags = newStatus.flags
+      subjectStatus.tags = newStatus.tags
     }
-    if (removedFlags.length) {
-      const flags = currentStatus?.flags || []
-      newStatus.flags = jsonb(
-        flags.filter((flag) => !removedFlags.includes(flag)),
+    if (removedTags.length) {
+      const tags = currentStatus?.tags || []
+      newStatus.tags = jsonb(
+        tags.filter((tag) => !removedTags.includes(tag)),
       ) as unknown as string[]
-      subjectStatus.flags = newStatus.flags
+      subjectStatus.tags = newStatus.tags
     }
   }
 

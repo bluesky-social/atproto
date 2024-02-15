@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
           })
 
         const moderationLangService = new ModerationLangService(moderationTxn)
-        await moderationLangService.flagSubjectWithLang({
+        await moderationLangService.tagSubjectWithLang({
           subject,
           subjectStatus,
           createdBy: ctx.cfg.service.did,

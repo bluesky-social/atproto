@@ -34,7 +34,7 @@ export interface QueryParams {
   /** Get subjects in unresolved appealed status */
   appealed?: boolean
   limit?: number
-  flags?: string[]
+  tags?: string[]
   cursor?: string
 }
 

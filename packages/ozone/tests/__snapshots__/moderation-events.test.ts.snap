@@ -26,20 +26,20 @@ Object {
       "moderation": Object {
         "subjectStatus": Object {
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "flags": Array [
-            "lang:unknown",
-          ],
           "id": 1,
           "lastReportedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
-          "reviewState": "com.atproto.admin.defs#reviewEscalated",
+          "reviewState": "com.atproto.admin.defs#reviewOpen",
           "subject": Object {
             "$type": "com.atproto.admin.defs#repoRef",
             "did": "user(0)",
           },
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
+          "tags": Array [
+            "lang:unknown",
+          ],
           "takendown": false,
           "updatedAt": "1970-01-01T00:00:00.000Z",
         },
@@ -113,7 +113,7 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventFlag",
+      "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
         "lang:en-US",
         "lang:i-klingon",
@@ -172,7 +172,7 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventFlag",
+      "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
         "lang:unknown",
       ],

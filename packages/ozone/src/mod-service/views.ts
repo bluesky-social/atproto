@@ -163,10 +163,10 @@ export class ModerationViews {
       eventView.event.sticky = true
     }
 
-    if (event.action === 'com.atproto.admin.defs#modEventFlag') {
-      eventView.event.add = event.meta?.addedFlags?.toString().split(' ') || []
+    if (event.action === 'com.atproto.admin.defs#modEventTag') {
+      eventView.event.add = event.meta?.addedTags?.toString().split(' ') || []
       eventView.event.remove =
-        event.meta?.removedFlags?.toString().split(' ') || []
+        event.meta?.removedTags?.toString().split(' ') || []
     }
 
     return eventView
@@ -480,7 +480,7 @@ export class ModerationViews {
       appealed: status.appealed ?? undefined,
       subjectRepoHandle: status.handle ?? undefined,
       subjectBlobCids: status.blobCids || [],
-      flags: status.flags || [],
+      tags: status.tags || [],
       subject: subjectFromStatusRow(status).lex(),
     }
   }

@@ -4,10 +4,6 @@ exports[`moderation-statuses query statuses returns statuses filtered by subject
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "flags": Array [
-      "lang:en-US",
-      "lang:i-klingon",
-    ],
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
@@ -18,15 +14,15 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
+    "tags": Array [
+      "lang:en-US",
+      "lang:i-klingon",
+    ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "flags": Array [
-      "lang:en-US",
-      "lang:i-klingon",
-    ],
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
@@ -36,6 +32,10 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
+    "tags": Array [
+      "lang:en-US",
+      "lang:i-klingon",
+    ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
@@ -46,10 +46,6 @@ exports[`moderation-statuses query statuses returns statuses for subjects that r
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "flags": Array [
-      "lang:en-US",
-      "lang:i-klingon",
-    ],
     "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
@@ -60,15 +56,15 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
+    "tags": Array [
+      "lang:en-US",
+      "lang:i-klingon",
+    ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "flags": Array [
-      "lang:en-US",
-      "lang:i-klingon",
-    ],
     "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
@@ -78,14 +74,15 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
+    "tags": Array [
+      "lang:en-US",
+      "lang:i-klingon",
+    ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "flags": Array [
-      "lang:unknown",
-    ],
     "id": 3,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
@@ -96,14 +93,14 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "alice.test",
+    "tags": Array [
+      "lang:unknown",
+    ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "flags": Array [
-      "lang:unknown",
-    ],
     "id": 1,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
@@ -113,6 +110,9 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "alice.test",
+    "tags": Array [
+      "lang:unknown",
+    ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
   },

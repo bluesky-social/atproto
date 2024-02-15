@@ -12,7 +12,7 @@ import {
   isModEventReport,
   isModEventTakedown,
   isModEventEmail,
-  isModEventFlag,
+  isModEventTag,
   RepoRef,
   RepoBlobRef,
 } from '../lexicon/types/com/atproto/admin/defs'
@@ -257,9 +257,9 @@ export class ModerationService {
 
     const meta: Record<string, string | boolean> = {}
 
-    if (isModEventFlag(event)) {
-      if (event.add.length) meta.addedFlags = event.add.join(' ')
-      if (event.remove.length) meta.removedFlags = event.remove.join(' ')
+    if (isModEventTag(event)) {
+      if (event.add.length) meta.addedTags = event.add.join(' ')
+      if (event.remove.length) meta.removedTags = event.remove.join(' ')
     }
 
     if (isModEventReport(event)) {
@@ -668,7 +668,7 @@ export class ModerationService {
     lastReviewedBy,
     sortField,
     subject,
-    flags,
+    tags,
   }: {
     cursor?: string
     limit?: number
@@ -685,7 +685,7 @@ export class ModerationService {
     sortDirection: 'asc' | 'desc'
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
-    flags: string[]
+    tags: string[]
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     const { ref } = this.db.db.dynamic
@@ -750,11 +750,11 @@ export class ModerationService {
       )
     }
 
-    if (flags.length) {
+    if (tags.length) {
       builder = builder.where(
         sql<string>`${ref(
-          'moderation_subject_status.flags',
-        )} @> ${JSON.stringify(flags)}`,
+          'moderation_subject_status.tags',
+        )} @> ${JSON.stringify(tags)}`,
       )
     }
 

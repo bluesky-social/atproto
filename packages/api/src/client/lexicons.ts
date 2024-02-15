@@ -897,9 +897,9 @@ export const schemaDict = {
           },
         },
       },
-      modEventFlag: {
+      modEventTag: {
         type: 'object',
-        description: 'Add/Remove a flag on a subject',
+        description: 'Add/Remove a tag on a subject',
         required: ['add', 'remove'],
         properties: {
           add: {
@@ -908,7 +908,7 @@ export const schemaDict = {
               type: 'string',
             },
             description:
-              "Flags to be added to the subject. If already exists, won't be duplicated.",
+              "Tags to be added to the subject. If already exists, won't be duplicated.",
           },
           remove: {
             type: 'array',
@@ -916,11 +916,11 @@ export const schemaDict = {
               type: 'string',
             },
             description:
-              "Flags to be removed to the subject. Ignores a flag If it doesn't exist, won't be duplicated.",
+              "Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated.",
           },
           comment: {
             type: 'string',
-            description: 'Additional comment about added/removed flags.',
+            description: 'Additional comment about added/removed tags.',
           },
         },
       },
@@ -1102,7 +1102,7 @@ export const schemaDict = {
                   'lex:com.atproto.admin.defs#modEventReverseTakedown',
                   'lex:com.atproto.admin.defs#modEventUnmute',
                   'lex:com.atproto.admin.defs#modEventEmail',
-                  'lex:com.atproto.admin.defs#modEventFlag',
+                  'lex:com.atproto.admin.defs#modEventTag',
                 ],
               },
               subject: {
@@ -1648,7 +1648,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            flags: {
+            tags: {
               type: 'array',
               items: {
                 type: 'string',

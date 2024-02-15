@@ -63,7 +63,7 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventFlag",
+      "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
         "lang:en-US",
         "lang:i-klingon",
@@ -126,10 +126,6 @@ Object {
       "moderation": Object {
         "subjectStatus": Object {
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "flags": Array [
-            "lang:en-US",
-            "lang:i-klingon",
-          ],
           "id": 1,
           "lastReportedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
@@ -141,6 +137,10 @@ Object {
           },
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "bob.test",
+          "tags": Array [
+            "lang:en-US",
+            "lang:i-klingon",
+          ],
           "takendown": false,
           "updatedAt": "1970-01-01T00:00:00.000Z",
         },
@@ -205,7 +205,7 @@ Array [
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(0)",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventFlag",
+      "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
         "lang:unknown",
       ],
@@ -248,9 +248,6 @@ Object {
   "moderation": Object {
     "subjectStatus": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "flags": Array [
-        "lang:unknown",
-      ],
       "id": 4,
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "did:example:admin",
@@ -262,6 +259,9 @@ Object {
       },
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "bob.test",
+      "tags": Array [
+        "lang:unknown",
+      ],
       "takendown": false,
       "updatedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -301,10 +301,6 @@ Object {
     "moderation": Object {
       "subjectStatus": Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "flags": Array [
-          "lang:en-US",
-          "lang:i-klingon",
-        ],
         "id": 1,
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
@@ -316,6 +312,10 @@ Object {
         },
         "subjectBlobCids": Array [],
         "subjectRepoHandle": "bob.test",
+        "tags": Array [
+          "lang:en-US",
+          "lang:i-klingon",
+        ],
         "takendown": false,
         "updatedAt": "1970-01-01T00:00:00.000Z",
       },

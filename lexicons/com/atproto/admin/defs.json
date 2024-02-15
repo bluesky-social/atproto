@@ -587,24 +587,24 @@
         }
       }
     },
-    "modEventFlag": {
+    "modEventTag": {
       "type": "object",
-      "description": "Add/Remove a flag on a subject",
+      "description": "Add/Remove a tag on a subject",
       "required": ["add", "remove"],
       "properties": {
         "add": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Flags to be added to the subject. If already exists, won't be duplicated."
+          "description": "Tags to be added to the subject. If already exists, won't be duplicated."
         },
         "remove": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Flags to be removed to the subject. Ignores a flag If it doesn't exist, won't be duplicated."
+          "description": "Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated."
         },
         "comment": {
           "type": "string",
-          "description": "Additional comment about added/removed flags."
+          "description": "Additional comment about added/removed tags."
         }
       }
     },

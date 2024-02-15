@@ -5,7 +5,7 @@ import { ModerationSubjectStatusRow } from './types'
 export class ModerationLangService {
   constructor(private moderationService: ModerationService) {}
 
-  async flagSubjectWithLang({
+  async tagSubjectWithLang({
     subject,
     subjectStatus,
     createdBy,
@@ -16,7 +16,7 @@ export class ModerationLangService {
   }) {
     if (
       subjectStatus &&
-      !subjectStatus.flags?.find((flag) => flag.includes('lang:'))
+      !subjectStatus.tags?.find((tag) => tag.includes('lang:'))
     ) {
       try {
         const recordLangs = await this.getRecordLang({
@@ -24,7 +24,7 @@ export class ModerationLangService {
         })
         await this.moderationService.logEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventFlag',
+            $type: 'com.atproto.admin.defs#modEventTag',
             add: recordLangs
               ? recordLangs.map((lang) => `lang:${lang}`)
               : ['lang:unknown'],
