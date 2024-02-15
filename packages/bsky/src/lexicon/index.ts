@@ -32,6 +32,7 @@ import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -471,6 +472,19 @@ export class IdentityNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  requestPlcOperationSignature<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoIdentityRequestPlcOperationSignature.Handler<ExtractAuth<AV>>,
+      ComAtprotoIdentityRequestPlcOperationSignature.HandlerReqCtx<
+        ExtractAuth<AV>
+      >
+    >,
+  ) {
+    const nsid = 'com.atproto.identity.requestPlcOperationSignature' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   resolveHandle<AV extends AuthVerifier>(

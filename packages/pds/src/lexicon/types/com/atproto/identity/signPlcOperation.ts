@@ -11,6 +11,8 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** A token received through com.atproto.identity.requestPlcOperationSignature */
+  token?: string
   rotationKeys?: string[]
   alsoKnownAs?: string[]
   verificationMethods?: {}

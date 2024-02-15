@@ -31,6 +31,7 @@ import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -183,6 +184,7 @@ export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+export * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -685,6 +687,22 @@ export class IdentityNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  requestPlcOperationSignature(
+    data?: ComAtprotoIdentityRequestPlcOperationSignature.InputSchema,
+    opts?: ComAtprotoIdentityRequestPlcOperationSignature.CallOptions,
+  ): Promise<ComAtprotoIdentityRequestPlcOperationSignature.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.identity.requestPlcOperationSignature',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoIdentityRequestPlcOperationSignature.toKnownErr(e)
+      })
   }
 
   resolveHandle(
