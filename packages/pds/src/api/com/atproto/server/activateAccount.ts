@@ -2,13 +2,21 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
     auth: ctx.authVerifier.accessNotAppPassword,
-    handler: async ({ auth }) => {
-      const requester = auth.credentials.did
+    handler: async ({ auth, req }) => {
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.activateAccount(
+          undefined,
+          authPassthru(req, true),
+        )
+        return
+      }
 
+      const requester = auth.credentials.did
       if (requester.startsWith('did:plc')) {
         const resolved = await ctx.plcClient.getDocumentData(requester)
         await assertValidDocContents(ctx, requester, {

@@ -7,15 +7,6 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
     auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ auth, req }) => {
-      const did = auth.credentials.did
-      const account = await ctx.accountManager.getAccount(did, {
-        includeDeactivated: true,
-        includeTakenDown: true,
-      })
-      if (!account) {
-        throw new InvalidRequestError('account not found')
-      }
-
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
           undefined,
@@ -24,7 +15,14 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      if (!account.email) {
+      const did = auth.credentials.did
+      const account = await ctx.accountManager.getAccount(did, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
+      if (!account) {
+        throw new InvalidRequestError('account not found')
+      } else if (!account.email) {
         throw new InvalidRequestError('account does not have an email address')
       }
       const token = await ctx.accountManager.createEmailToken(
