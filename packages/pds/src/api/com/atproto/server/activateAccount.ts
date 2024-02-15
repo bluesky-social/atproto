@@ -5,7 +5,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
       let pdsEndpoint: string | undefined

@@ -327,6 +327,15 @@ export class AccountManager {
     return emailToken.assertValidToken(this.db, did, purpose, token)
   }
 
+  async assertValidEmailTokenAndCleanup(
+    did: string,
+    purpose: EmailTokenPurpose,
+    token: string,
+  ) {
+    await emailToken.assertValidToken(this.db, did, purpose, token)
+    await emailToken.deleteEmailToken(this.db, did, purpose)
+  }
+
   async confirmEmail(opts: { did: string; token: string }) {
     const { did, token } = opts
     await emailToken.assertValidToken(this.db, did, 'confirm_email', token)

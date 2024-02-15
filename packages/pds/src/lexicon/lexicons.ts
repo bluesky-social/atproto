@@ -1945,6 +1945,17 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityRequestPlcOperationSignature: {
+    lexicon: 1,
+    id: 'com.atproto.identity.requestPlcOperationSignature',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request an email with a code to in order to request a signed PLC operation. Requires Auth.',
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
@@ -1992,6 +2003,11 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
+              token: {
+                description:
+                  'A token received through com.atproto.identity.requestPlcOperationSignature',
+                type: 'string',
+              },
               rotationKeys: {
                 type: 'array',
                 items: {
@@ -8820,6 +8836,8 @@ export const ids = {
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityGetRecommendedDidCredentials:
     'com.atproto.identity.getRecommendedDidCredentials',
+  ComAtprotoIdentityRequestPlcOperationSignature:
+    'com.atproto.identity.requestPlcOperationSignature',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentitySignPlcOperation: 'com.atproto.identity.signPlcOperation',
   ComAtprotoIdentitySubmitPlcOperation:
