@@ -19,6 +19,7 @@ export interface OutputSchema {
   /** List of domain suffixes that can be used in account handles. */
   availableUserDomains: string[]
   links?: Links
+  did: string
   [k: string]: unknown
 }
 
