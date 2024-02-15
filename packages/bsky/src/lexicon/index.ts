@@ -46,6 +46,7 @@ import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
@@ -656,6 +657,17 @@ export class ServerNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  activateAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerActivateAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerActivateAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.activateAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   confirmEmail<AV extends AuthVerifier>(

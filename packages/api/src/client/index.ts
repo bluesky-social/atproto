@@ -48,6 +48,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
@@ -199,6 +200,7 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
 export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
@@ -858,6 +860,17 @@ export class ServerNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  activateAccount(
+    data?: ComAtprotoServerActivateAccount.InputSchema,
+    opts?: ComAtprotoServerActivateAccount.CallOptions,
+  ): Promise<ComAtprotoServerActivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.activateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerActivateAccount.toKnownErr(e)
+      })
   }
 
   confirmEmail(

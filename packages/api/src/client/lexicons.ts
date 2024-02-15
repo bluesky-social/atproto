@@ -2881,6 +2881,17 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerActivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.activateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Activates a currently deactivated account. Used to finalize account migration after the account's repo is imported and identity is setup.",
+      },
+    },
+  },
   ComAtprotoServerConfirmEmail: {
     lexicon: 1,
     id: 'com.atproto.server.confirmEmail',
@@ -8528,6 +8539,7 @@ export const ids = {
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
+  ComAtprotoServerActivateAccount: 'com.atproto.server.activateAccount',
   ComAtprotoServerConfirmEmail: 'com.atproto.server.confirmEmail',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateAppPassword: 'com.atproto.server.createAppPassword',

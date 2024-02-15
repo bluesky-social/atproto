@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         return proxied
       }
 
-      throw new InvalidRequestError('Could not provide service auth')
+      throw new InvalidRequestError('Could not locate user PDS')
     },
   })
 }
