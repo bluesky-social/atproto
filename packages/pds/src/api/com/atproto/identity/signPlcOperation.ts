@@ -3,11 +3,21 @@ import AppContext from '../../../../context'
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
     auth: ctx.authVerifier.accessNotAppPassword,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.identity.signPlcOperation(
+            input.body,
+            authPassthru(req, true),
+          ),
+        )
+      }
+
       const did = auth.credentials.did
       const { token } = input.body
       if (!token) {
