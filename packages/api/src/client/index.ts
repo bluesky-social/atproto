@@ -32,6 +32,7 @@ import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/u
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -53,11 +54,13 @@ import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/c
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -180,6 +183,7 @@ export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/u
 export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+export * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -201,11 +205,13 @@ export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/c
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+export * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+export * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -354,39 +360,39 @@ export class AtpServiceClient {
 
 export class ComNS {
   _service: AtpServiceClient
-  atproto: ComAtprotoNS
+  atproto: AtprotoNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.atproto = new ComAtprotoNS(service)
+    this.atproto = new AtprotoNS(service)
   }
 }
 
-export class ComAtprotoNS {
+export class AtprotoNS {
   _service: AtpServiceClient
-  admin: ComAtprotoAdminNS
-  identity: ComAtprotoIdentityNS
-  label: ComAtprotoLabelNS
-  moderation: ComAtprotoModerationNS
-  repo: ComAtprotoRepoNS
-  server: ComAtprotoServerNS
-  sync: ComAtprotoSyncNS
-  temp: ComAtprotoTempNS
+  admin: AdminNS
+  identity: IdentityNS
+  label: LabelNS
+  moderation: ModerationNS
+  repo: RepoNS
+  server: ServerNS
+  sync: SyncNS
+  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.admin = new ComAtprotoAdminNS(service)
-    this.identity = new ComAtprotoIdentityNS(service)
-    this.label = new ComAtprotoLabelNS(service)
-    this.moderation = new ComAtprotoModerationNS(service)
-    this.repo = new ComAtprotoRepoNS(service)
-    this.server = new ComAtprotoServerNS(service)
-    this.sync = new ComAtprotoSyncNS(service)
-    this.temp = new ComAtprotoTempNS(service)
+    this.admin = new AdminNS(service)
+    this.identity = new IdentityNS(service)
+    this.label = new LabelNS(service)
+    this.moderation = new ModerationNS(service)
+    this.repo = new RepoNS(service)
+    this.server = new ServerNS(service)
+    this.sync = new SyncNS(service)
+    this.temp = new TempNS(service)
   }
 }
 
-export class ComAtprotoAdminNS {
+export class AdminNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -672,7 +678,7 @@ export class ComAtprotoAdminNS {
   }
 }
 
-export class ComAtprotoIdentityNS {
+export class IdentityNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -690,6 +696,17 @@ export class ComAtprotoIdentityNS {
       })
   }
 
+  signPlcOperation(
+    data?: ComAtprotoIdentitySignPlcOperation.InputSchema,
+    opts?: ComAtprotoIdentitySignPlcOperation.CallOptions,
+  ): Promise<ComAtprotoIdentitySignPlcOperation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.identity.signPlcOperation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentitySignPlcOperation.toKnownErr(e)
+      })
+  }
+
   updateHandle(
     data?: ComAtprotoIdentityUpdateHandle.InputSchema,
     opts?: ComAtprotoIdentityUpdateHandle.CallOptions,
@@ -702,7 +719,7 @@ export class ComAtprotoIdentityNS {
   }
 }
 
-export class ComAtprotoLabelNS {
+export class LabelNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -721,7 +738,7 @@ export class ComAtprotoLabelNS {
   }
 }
 
-export class ComAtprotoModerationNS {
+export class ModerationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -740,7 +757,7 @@ export class ComAtprotoModerationNS {
   }
 }
 
-export class ComAtprotoRepoNS {
+export class RepoNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -836,7 +853,7 @@ export class ComAtprotoRepoNS {
   }
 }
 
-export class ComAtprotoServerNS {
+export class ServerNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -909,6 +926,17 @@ export class ComAtprotoServerNS {
       })
   }
 
+  deactivateAccount(
+    data?: ComAtprotoServerDeactivateAccount.InputSchema,
+    opts?: ComAtprotoServerDeactivateAccount.CallOptions,
+  ): Promise<ComAtprotoServerDeactivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.deactivateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerDeactivateAccount.toKnownErr(e)
+      })
+  }
+
   deleteAccount(
     data?: ComAtprotoServerDeleteAccount.InputSchema,
     opts?: ComAtprotoServerDeleteAccount.CallOptions,
@@ -950,6 +978,17 @@ export class ComAtprotoServerNS {
       .call('com.atproto.server.getAccountInviteCodes', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetAccountInviteCodes.toKnownErr(e)
+      })
+  }
+
+  getServiceAuth(
+    params?: ComAtprotoServerGetServiceAuth.QueryParams,
+    opts?: ComAtprotoServerGetServiceAuth.CallOptions,
+  ): Promise<ComAtprotoServerGetServiceAuth.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getServiceAuth', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetServiceAuth.toKnownErr(e)
       })
   }
 
@@ -1075,7 +1114,7 @@ export class ComAtprotoServerNS {
   }
 }
 
-export class ComAtprotoSyncNS {
+export class SyncNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1204,7 +1243,7 @@ export class ComAtprotoSyncNS {
   }
 }
 
-export class ComAtprotoTempNS {
+export class TempNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1280,37 +1319,37 @@ export class ComAtprotoTempNS {
 
 export class AppNS {
   _service: AtpServiceClient
-  bsky: AppBskyNS
+  bsky: BskyNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.bsky = new AppBskyNS(service)
+    this.bsky = new BskyNS(service)
   }
 }
 
-export class AppBskyNS {
+export class BskyNS {
   _service: AtpServiceClient
-  actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
-  feed: AppBskyFeedNS
-  graph: AppBskyGraphNS
-  notification: AppBskyNotificationNS
-  richtext: AppBskyRichtextNS
-  unspecced: AppBskyUnspeccedNS
+  actor: ActorNS
+  embed: EmbedNS
+  feed: FeedNS
+  graph: GraphNS
+  notification: NotificationNS
+  richtext: RichtextNS
+  unspecced: UnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.actor = new AppBskyActorNS(service)
-    this.embed = new AppBskyEmbedNS(service)
-    this.feed = new AppBskyFeedNS(service)
-    this.graph = new AppBskyGraphNS(service)
-    this.notification = new AppBskyNotificationNS(service)
-    this.richtext = new AppBskyRichtextNS(service)
-    this.unspecced = new AppBskyUnspeccedNS(service)
+    this.actor = new ActorNS(service)
+    this.embed = new EmbedNS(service)
+    this.feed = new FeedNS(service)
+    this.graph = new GraphNS(service)
+    this.notification = new NotificationNS(service)
+    this.richtext = new RichtextNS(service)
+    this.unspecced = new UnspeccedNS(service)
   }
 }
 
-export class AppBskyActorNS {
+export class ActorNS {
   _service: AtpServiceClient
   profile: ProfileRecord
 
@@ -1458,7 +1497,7 @@ export class ProfileRecord {
   }
 }
 
-export class AppBskyEmbedNS {
+export class EmbedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1466,7 +1505,7 @@ export class AppBskyEmbedNS {
   }
 }
 
-export class AppBskyFeedNS {
+export class FeedNS {
   _service: AtpServiceClient
   generator: GeneratorRecord
   like: LikeRecord
@@ -1969,7 +2008,7 @@ export class ThreadgateRecord {
   }
 }
 
-export class AppBskyGraphNS {
+export class GraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
@@ -2455,7 +2494,7 @@ export class ListitemRecord {
   }
 }
 
-export class AppBskyNotificationNS {
+export class NotificationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2507,7 +2546,7 @@ export class AppBskyNotificationNS {
   }
 }
 
-export class AppBskyRichtextNS {
+export class RichtextNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2515,7 +2554,7 @@ export class AppBskyRichtextNS {
   }
 }
 
-export class AppBskyUnspeccedNS {
+export class UnspeccedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
