@@ -22,7 +22,7 @@ export interface ModerationBehavior {
 }
 export const BLOCK_BEHAVIOR: ModerationBehavior = {
   profileList: 'blur',
-  profileView: 'blur',
+  profileView: 'alert',
   avatar: 'blur',
   banner: 'blur',
   contentList: 'blur',
