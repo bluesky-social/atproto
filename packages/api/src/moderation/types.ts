@@ -30,7 +30,7 @@ export const BLOCK_BEHAVIOR: ModerationBehavior = {
 }
 export const MUTE_BEHAVIOR: ModerationBehavior = {
   profileList: 'inform',
-  profileView: 'inform',
+  profileView: 'alert',
   contentList: 'blur',
   contentView: 'inform',
 }
