@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         'plc_operation',
       )
-      await ctx.mailer.sendPlcUpdate({ token }, { to: account.email })
+      await ctx.mailer.sendPlcOperation({ token }, { to: account.email })
     },
   })
 }

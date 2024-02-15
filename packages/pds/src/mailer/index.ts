@@ -53,9 +53,9 @@ export class ServerMailer {
     })
   }
 
-  async sendPlcUpdate(params: { token: string }, mailOpts: Mail.Options) {
-    return this.sendTemplate('plcUpdate', params, {
-      subject: 'PLC Update Requested',
+  async sendPlcOperation(params: { token: string }, mailOpts: Mail.Options) {
+    return this.sendTemplate('plcOperation', params, {
+      subject: 'PLC Update Operation Requested',
       ...mailOpts,
     })
   }

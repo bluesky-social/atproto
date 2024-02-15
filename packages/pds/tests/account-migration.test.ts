@@ -6,6 +6,7 @@ import {
   TestPds,
   mockNetworkUtilities,
 } from '@atproto/dev-env'
+import assert from 'assert'
 
 describe('account migration', () => {
   let network: TestNetworkNoAppView
@@ -138,9 +139,20 @@ describe('account migration', () => {
     const getDidCredentials =
       await newAgent.com.atproto.identity.getRecommendedDidCredentials()
 
-    const plcOp = await oldAgent.com.atproto.identity.signPlcOperation(
-      getDidCredentials.data,
-    )
+    await oldAgent.com.atproto.identity.requestPlcOperationSignature()
+    const res = await network.pds.ctx.accountManager.db.db
+      .selectFrom('email_token')
+      .selectAll()
+      .where('did', '=', alice)
+      .where('purpose', '=', 'plc_operation')
+      .executeTakeFirst()
+    const token = res?.token
+    assert(token)
+
+    const plcOp = await oldAgent.com.atproto.identity.signPlcOperation({
+      token,
+      ...getDidCredentials.data,
+    })
 
     await newAgent.com.atproto.identity.submitPlcOperation({
       operation: plcOp.data.operation,
