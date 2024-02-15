@@ -213,6 +213,9 @@ const validateInputsForLocalPds = async (
         `Missing auth to create account with did: ${input.did}`,
       )
     }
+    if (!ctx.cfg.service.acceptingImports) {
+      throw new InvalidRequestError('Service is not accepting repo imports')
+    }
     did = input.did
     plcOp = null
     deactivated = true
