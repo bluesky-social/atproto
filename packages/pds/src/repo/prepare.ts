@@ -263,7 +263,7 @@ export const findBlobRefs = (
   path: string[] = [],
   layer = 0,
 ): FoundBlobRef[] => {
-  if (layer > 10) {
+  if (layer > 32) {
     return []
   }
   // walk arrays
