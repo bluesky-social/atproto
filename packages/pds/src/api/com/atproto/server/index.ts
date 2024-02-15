@@ -32,7 +32,6 @@ import revokeAppPassword from './revokeAppPassword'
 
 import getServiceAuth from './getServiceAuth'
 import checkAccountStatus from './checkAccountStatus'
-import getDidCredentials from './getDidCredentials'
 import activateAccount from './activateAccount'
 import deactivateAccount from './deactivateAccount'
 
@@ -60,7 +59,6 @@ export default function (server: Server, ctx: AppContext) {
   revokeAppPassword(server, ctx)
   getServiceAuth(server, ctx)
   checkAccountStatus(server, ctx)
-  getDidCredentials(server, ctx)
   activateAccount(server, ctx)
   deactivateAccount(server, ctx)
 }

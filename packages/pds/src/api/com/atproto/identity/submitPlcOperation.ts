@@ -5,11 +5,11 @@ import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.sendPlcOp({
+  server.com.atproto.identity.submitPlcOperation({
     auth: ctx.authVerifier.access,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
-      const op = input.body.op
+      const op = input.body.operation
 
       if (!check.is(op, plc.def.operation)) {
         throw new InvalidRequestError('Invalid operation')

@@ -6,15 +6,21 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
-      const [repoRoot, indexedRecords, importedBlobs, expectedBlobs] =
-        await ctx.actorStore.read(requester, async (store) => {
-          return await Promise.all([
-            store.repo.storage.getRootDetailed(),
-            store.record.recordCount(),
-            store.repo.blob.blobCount(),
-            store.repo.blob.recordBlobCount(),
-          ])
-        })
+      const [
+        repoRoot,
+        repoBlocks,
+        indexedRecords,
+        importedBlobs,
+        expectedBlobs,
+      ] = await ctx.actorStore.read(requester, async (store) => {
+        return await Promise.all([
+          store.repo.storage.getRootDetailed(),
+          store.repo.storage.countBlocks(),
+          store.record.recordCount(),
+          store.repo.blob.blobCount(),
+          store.repo.blob.recordBlobCount(),
+        ])
+      })
       return {
         encoding: 'application/json',
         body: {
@@ -22,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           validDid: false,
           repoCommit: repoRoot.cid.toString(),
           repoRev: repoRoot.rev,
+          repoBlocks,
           indexedRecords,
           privateStateValues: 0,
           expectedBlobs,

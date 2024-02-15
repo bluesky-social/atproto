@@ -136,13 +136,15 @@ describe('account migration', () => {
     await newAgent.api.app.bsky.actor.putPreferences(prefs.data)
 
     const getDidCredentials =
-      await newAgent.com.atproto.server.getDidCredentials()
+      await newAgent.com.atproto.identity.getRecommendedDidCredentials()
 
-    const plcOp = await oldAgent.com.atproto.identity.signPlcOp(
+    const plcOp = await oldAgent.com.atproto.identity.signPlcOperation(
       getDidCredentials.data,
     )
 
-    await newAgent.com.atproto.identity.sendPlcOp({ op: plcOp.data.plcOp })
+    await newAgent.com.atproto.identity.submitPlcOperation({
+      operation: plcOp.data.operation,
+    })
 
     await newAgent.com.atproto.server.activateAccount()
     await oldAgent.com.atproto.server.deactivateAccount({

@@ -5,7 +5,7 @@ import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.signPlcOp({
+  server.com.atproto.identity.signPlcOperation({
     auth: ctx.authVerifier.access,
     handler: async ({ auth, input }) => {
       const did = auth.credentials.did
@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       if (check.is(lastOp, plc.def.tombstone)) {
         throw new InvalidRequestError('Did is tombstoned')
       }
-      const op = await plc.createUpdateOp(
+      const operation = await plc.createUpdateOp(
         lastOp,
         ctx.plcRotationKey,
         (lastOp) => ({
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          plcOp: op,
+          operation,
         },
       }
     },
