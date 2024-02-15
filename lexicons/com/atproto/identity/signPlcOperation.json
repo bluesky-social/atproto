@@ -10,6 +10,10 @@
         "schema": {
           "type": "object",
           "properties": {
+            "token": {
+              "description": "A token received through com.atproto.identity.requestPlcOperationSignature",
+              "type": "string"
+            },
             "rotationKeys": {
               "type": "array",
               "items": { "type": "string" }
