@@ -2824,10 +2824,25 @@ export const schemaDict = {
               blobs: {
                 type: 'array',
                 items: {
-                  type: 'blob',
+                  type: 'ref',
+                  ref: 'lex:com.atproto.repo.listMissingBlobs#recordBlob',
                 },
               },
             },
+          },
+        },
+      },
+      recordBlob: {
+        type: 'object',
+        required: ['cid', 'recordUri'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          recordUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },

@@ -8,6 +8,7 @@ import getRecord from './getRecord'
 import listRecords from './listRecords'
 import putRecord from './putRecord'
 import uploadBlob from './uploadBlob'
+import listMissingBlobs from './listMissingBlobs'
 import importRepo from './importRepo'
 
 export default function (server: Server, ctx: AppContext) {
@@ -19,5 +20,6 @@ export default function (server: Server, ctx: AppContext) {
   listRecords(server, ctx)
   putRecord(server, ctx)
   uploadBlob(server, ctx)
+  listMissingBlobs(server, ctx)
   importRepo(server, ctx)
 }

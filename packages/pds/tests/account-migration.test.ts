@@ -6,6 +6,7 @@ import {
   TestPds,
   mockNetworkUtilities,
 } from '@atproto/dev-env'
+import { readCar } from '@atproto/repo'
 import assert from 'assert'
 
 describe('account migration', () => {
@@ -100,16 +101,37 @@ describe('account migration', () => {
       password: 'alice-pass',
     })
 
+    const statusRes1 = await newAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes1.data).toMatchObject({
+      activated: false,
+      validDid: false,
+      repoBlocks: 2, // commit & empty data root
+      indexedRecords: 0,
+      privateStateValues: 0,
+      expectedBlobs: 0,
+      importedBlobs: 0,
+    })
+
     const repoRes = await oldAgent.com.atproto.sync.getRepo({ did: alice })
+    const carBlocks = await readCar(repoRes.data)
 
     await newAgent.com.atproto.repo.importRepo(repoRes.data, {
       encoding: 'application/vnd.ipld.car',
     })
 
-    const statusRes = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes.data.indexedRecords).toBe(103)
-    expect(statusRes.data.expectedBlobs).toBe(3)
-    expect(statusRes.data.importedBlobs).toBe(0)
+    const statusRes2 = await newAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes2.data).toMatchObject({
+      activated: false,
+      validDid: false,
+      indexedRecords: 103,
+      privateStateValues: 0,
+      expectedBlobs: 3,
+      importedBlobs: 0,
+    })
+    expect(statusRes2.data.repoBlocks).toBe(carBlocks.blocks.size)
+
+    const missingBlobs = await newAgent.com.atproto.repo.listMissingBlobs()
+    expect(missingBlobs.data.blobs.length).toBe(3)
 
     let blobCursor: string | undefined = undefined
     do {
@@ -129,9 +151,9 @@ describe('account migration', () => {
       blobCursor = listedBlobs.data.cursor
     } while (blobCursor)
 
-    const statusRes2 = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes2.data.expectedBlobs).toBe(3)
-    expect(statusRes2.data.importedBlobs).toBe(3)
+    const statusRes3 = await newAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes3.data.expectedBlobs).toBe(3)
+    expect(statusRes3.data.importedBlobs).toBe(3)
 
     const prefs = await oldAgent.api.app.bsky.actor.getPreferences()
     await newAgent.api.app.bsky.actor.putPreferences(prefs.data)
@@ -159,6 +181,17 @@ describe('account migration', () => {
     })
 
     await newAgent.com.atproto.server.activateAccount()
+
+    const statusRes4 = await newAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes4.data).toMatchObject({
+      activated: true,
+      validDid: true,
+      indexedRecords: 103,
+      privateStateValues: 0,
+      expectedBlobs: 3,
+      importedBlobs: 3,
+    })
+
     await oldAgent.com.atproto.server.deactivateAccount({
       deleteAfter: new Date(Date.now() + HOUR).toISOString(),
     })

@@ -17,7 +17,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  blobs: BlobRef[]
+  blobs: RecordBlob[]
   [k: string]: unknown
 }
 
@@ -45,3 +45,21 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface RecordBlob {
+  cid: string
+  recordUri: string
+  [k: string]: unknown
+}
+
+export function isRecordBlob(v: unknown): v is RecordBlob {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.listMissingBlobs#recordBlob'
+  )
+}
+
+export function validateRecordBlob(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.listMissingBlobs#recordBlob', v)
+}

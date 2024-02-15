@@ -104,4 +104,31 @@ export class BlobReader {
       .executeTakeFirst()
     return res?.count ?? 0
   }
+
+  async listMissingBlobs(opts: {
+    cursor?: string
+    limit: number
+  }): Promise<{ cid: string; recordUri: string }[]> {
+    const { cursor, limit } = opts
+    let builder = this.db.db
+      .selectFrom('record_blob')
+      .whereNotExists((qb) =>
+        qb
+          .selectFrom('blob')
+          .selectAll()
+          .whereRef('blob.cid', '=', 'record_blob.blobCid'),
+      )
+      .selectAll()
+      .orderBy('blobCid', 'asc')
+      .groupBy('blobCid')
+      .limit(limit)
+    if (cursor) {
+      builder = builder.where('blobCid', '>', cursor)
+    }
+    const res = await builder.execute()
+    return res.map((row) => ({
+      cid: row.blobCid,
+      recordUri: row.recordUri,
+    }))
+  }
 }
