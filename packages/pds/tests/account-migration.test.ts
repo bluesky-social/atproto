@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { HOUR } from '@atproto/common'
 import {
   SeedClient,
@@ -195,5 +195,21 @@ describe('account migration', () => {
     await oldAgent.com.atproto.server.deactivateAccount({
       deleteAfter: new Date(Date.now() + HOUR).toISOString(),
     })
+
+    const postRes = await newAgent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'new pds!',
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const postUri = new AtUri(postRes.uri)
+    const fetchedPost = await newAgent.api.app.bsky.feed.post.get({
+      repo: postUri.hostname,
+      rkey: postUri.rkey,
+    })
+    expect(fetchedPost.value.text).toEqual('new pds!')
+    const statusRes5 = await newAgent.com.atproto.server.checkAccountStatus()
+    expect(statusRes5.data.indexedRecords).toBe(104)
   })
 })
