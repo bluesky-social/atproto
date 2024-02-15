@@ -2,6 +2,7 @@ import { AppBskyGraphDefs } from '../client/index'
 import {
   BLOCK_BEHAVIOR,
   MUTE_BEHAVIOR,
+  HIDE_BEHAVIOR,
   NOOP_BEHAVIOR,
   Label,
   LabelPreference,
@@ -100,6 +101,17 @@ export class ModerationDecision {
         } else if (MUTE_BEHAVIOR[context] === 'inform') {
           ui.informs.push(cause)
         }
+      } else if (cause.type === 'hidden') {
+        if (context === 'profileList' || context === 'contentList') {
+          ui.filter = true
+        }
+        if (HIDE_BEHAVIOR[context] === 'blur') {
+          ui.blurs.push(cause)
+        } else if (HIDE_BEHAVIOR[context] === 'alert') {
+          ui.alerts.push(cause)
+        } else if (HIDE_BEHAVIOR[context] === 'inform') {
+          ui.informs.push(cause)
+        }
       } else if (cause.type === 'label') {
         if (context === 'profileList' || context === 'contentList') {
           if (cause.setting === 'hide') {
@@ -127,6 +139,16 @@ export class ModerationDecision {
 
   setIsMe(isMe: boolean) {
     this.isMe = isMe
+  }
+
+  addHidden(hidden: boolean) {
+    if (hidden) {
+      this.causes.push({
+        type: 'hidden',
+        source: { type: 'user' },
+        priority: 6,
+      })
+    }
   }
 
   addBlocking(blocking: string | undefined) {

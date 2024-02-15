@@ -336,4 +336,37 @@ describe('Moderation', () => {
       )
     }
   })
+
+  it('Can manually apply hiding', () => {
+    const res1 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [],
+      }),
+      {
+        userDid: 'did:web:alice.test',
+        adultContentEnabled: true,
+        labelGroups: {},
+        mods: [
+          {
+            did: 'did:web:labeler.test',
+            enabled: true,
+          },
+        ],
+      },
+    )
+    res1.addHidden(true)
+    expect(res1.ui('contentList')).toBeModerationResult(
+      ['filter', 'blur'],
+      'contentList',
+    )
+    expect(res1.ui('contentView')).toBeModerationResult(['blur'], 'contentView')
+  })
 })
