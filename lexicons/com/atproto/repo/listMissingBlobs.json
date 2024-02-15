@@ -26,10 +26,18 @@
             "cursor": { "type": "string" },
             "blobs": {
               "type": "array",
-              "items": { "type": "blob" }
+              "items": { "type": "ref", "ref": "#recordBlob" }
             }
           }
         }
+      }
+    },
+    "recordBlob": {
+      "type": "object",
+      "required": ["cid", "recordUri"],
+      "properties": {
+        "cid": { "type": "string", "format": "cid" },
+        "recordUri": { "type": "string", "format": "at-uri" }
       }
     }
   }
