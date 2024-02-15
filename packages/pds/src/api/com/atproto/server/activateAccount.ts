@@ -2,20 +2,11 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
     auth: ctx.authVerifier.accessNotAppPassword,
-    handler: async ({ auth, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.activateAccount(
-          undefined,
-          authPassthru(req, true),
-        )
-        return
-      }
-
+    handler: async ({ auth }) => {
       const requester = auth.credentials.did
       if (requester.startsWith('did:plc')) {
         const resolved = await ctx.plcClient.getDocumentData(requester)
@@ -50,10 +41,10 @@ const assertValidDocContents = async (
   },
 ) => {
   const { signingKey, pdsEndpoint, rotationKeys } = contents
-  if (
-    rotationKeys !== undefined &&
-    !rotationKeys.includes(ctx.plcRotationKey.did())
-  ) {
+
+  const plcRotationKey =
+    ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
+  if (rotationKeys !== undefined && !rotationKeys.includes(plcRotationKey)) {
     throw new InvalidRequestError(
       'Server rotation key not included in PLC DID data',
     )
