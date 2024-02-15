@@ -35,7 +35,10 @@ export default function (server: Server, ctx: AppContext) {
       const account = await ctx.accountManager.getAccount(requester, {
         includeDeactivated: true,
       })
-      if (account?.handle && op.alsoKnownAs.at(0) !== account.handle) {
+      if (
+        account?.handle &&
+        op.alsoKnownAs.at(0) !== `at://${account.handle}`
+      ) {
         throw new InvalidRequestError('Incorrect handle in alsoKnownAs')
       }
 
