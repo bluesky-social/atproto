@@ -43,7 +43,6 @@ import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
-import { getRecordLang } from './lang'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
