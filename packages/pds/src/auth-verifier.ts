@@ -435,9 +435,9 @@ const verifyJwt = async (params: {
   verifyOptions?: jose.JWTVerifyOptions
 }): Promise<jose.JWTPayload> => {
   const { token, keys, verifyOptions } = params
-  const header = jose.decodeProtectedHeader(token)
   let result: jose.JWTVerifyResult
   try {
+    const header = jose.decodeProtectedHeader(token)
     if (header.alg === SECP256K1_JWT && keys.verifyKey) {
       const key = keys.verifyKey
       result = await jose.jwtVerify(token, key, verifyOptions)
