@@ -108,6 +108,8 @@ export const adjustModerationSubjectStatus = async (
     subjectCid,
     createdBy,
     meta,
+    addedTags,
+    removedTags,
     comment,
     createdAt,
   } = moderationEvent
@@ -193,22 +195,15 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (action === 'com.atproto.admin.defs#modEventTag') {
-    const addedTags = meta?.addedTags?.toString().split(' ') || []
-    const removedTags = meta?.removedTags?.toString().split(' ') || []
-    if (addedTags.length) {
-      const tags = currentStatus?.tags || []
-      newStatus.tags = jsonb([
-        ...new Set([...tags, ...addedTags]),
-      ]) as unknown as string[]
-      subjectStatus.tags = newStatus.tags
+    let tags = currentStatus?.tags || []
+    if (addedTags?.length) {
+      tags = tags.concat(addedTags)
     }
-    if (removedTags.length) {
-      const tags = currentStatus?.tags || []
-      newStatus.tags = jsonb(
-        tags.filter((tag) => !removedTags.includes(tag)),
-      ) as unknown as string[]
-      subjectStatus.tags = newStatus.tags
+    if (removedTags?.length) {
+      tags = tags.filter((tag) => !removedTags.includes(tag))
     }
+    newStatus.tags = jsonb([...new Set(tags)]) as unknown as string[]
+    subjectStatus.tags = newStatus.tags
   }
 
   if (blobCids?.length) {
@@ -234,7 +229,6 @@ export const adjustModerationSubjectStatus = async (
       }),
     )
 
-  // console.log('insertQuery', insertQuery.returningAll().compile())
   const status = await insertQuery.returningAll().executeTakeFirst()
   return status || null
 }

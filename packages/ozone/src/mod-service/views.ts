@@ -164,9 +164,8 @@ export class ModerationViews {
     }
 
     if (event.action === 'com.atproto.admin.defs#modEventTag') {
-      eventView.event.add = event.meta?.addedTags?.toString().split(' ') || []
-      eventView.event.remove =
-        event.meta?.removedTags?.toString().split(' ') || []
+      eventView.event.add = event.addedTags || []
+      eventView.event.remove = event.removedTags || []
     }
 
     return eventView

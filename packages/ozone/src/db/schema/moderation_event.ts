@@ -29,6 +29,8 @@ export interface ModerationEvent {
   durationInHours: number | null
   expiresAt: string | null
   meta: Record<string, string | boolean> | null
+  addedTags: string[] | null
+  removedTags: string[] | null
   legacyRefId: number | null
 }
 

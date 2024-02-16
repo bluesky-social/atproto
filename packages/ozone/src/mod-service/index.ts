@@ -257,10 +257,8 @@ export class ModerationService {
 
     const meta: Record<string, string | boolean> = {}
 
-    if (isModEventTag(event)) {
-      if (event.add.length) meta.addedTags = event.add.join(' ')
-      if (event.remove.length) meta.removedTags = event.remove.join(' ')
-    }
+    const addedTags = isModEventTag(event) ? jsonb(event.add) : null
+    const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
 
     if (isModEventReport(event)) {
       meta.reportType = event.reportType
@@ -285,6 +283,8 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        addedTags,
+        removedTags,
         durationInHours: event.durationInHours
           ? Number(event.durationInHours)
           : null,
