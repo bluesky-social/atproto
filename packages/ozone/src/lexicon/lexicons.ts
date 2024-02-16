@@ -4833,6 +4833,9 @@ export const schemaDict = {
               format: 'at-uri',
             },
           },
+          timelineIndex: {
+            type: 'integer',
+          },
         },
       },
       personalDetailsPref: {
