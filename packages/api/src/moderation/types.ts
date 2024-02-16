@@ -1,6 +1,7 @@
 import {
   AppBskyActorDefs,
   AppBskyFeedDefs,
+  AppBskyNotificationListNotifications,
   AppBskyGraphDefs,
   ComAtprotoLabelDefs,
 } from '../client/index'
@@ -96,6 +97,9 @@ export type ModerationSubjectProfile =
 
 export type ModerationSubjectPost = AppBskyFeedDefs.PostView
 
+export type ModerationSubjectNotification =
+  AppBskyNotificationListNotifications.Notification
+
 export type ModerationSubjectFeedGenerator = AppBskyFeedDefs.GeneratorView
 
 export type ModerationSubjectUserList =
@@ -105,6 +109,7 @@ export type ModerationSubjectUserList =
 export type ModerationSubject =
   | ModerationSubjectProfile
   | ModerationSubjectPost
+  | ModerationSubjectNotification
   | ModerationSubjectFeedGenerator
   | ModerationSubjectUserList
 

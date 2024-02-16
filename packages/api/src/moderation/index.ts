@@ -2,29 +2,21 @@ import { AppBskyActorDefs } from '../client/index'
 import {
   ModerationSubjectProfile,
   ModerationSubjectPost,
+  ModerationSubjectNotification,
   ModerationSubjectFeedGenerator,
   ModerationSubjectUserList,
   ModerationOpts,
 } from './types'
 import { decideAccount } from './subjects/account'
 import { decideProfile } from './subjects/profile'
+import { decideNotification } from './subjects/notification'
 import { decidePost } from './subjects/post'
-// import {
-//   decideQuotedPost,
-//   decideQuotedPostAccount,
-//   decideQuotedPostWithMedia,
-//   decideQuotedPostWithMediaAccount,
-// } from './subjects/quoted-post'
 import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideUserList } from './subjects/user-list'
-// import { isQuotedPost, isQuotedPostWithMedia } from './util'
 import { ModerationDecision } from './decision'
 
 export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'
-
-// profiles
-// =
 
 export function moderateProfile(
   subject: ModerationSubjectProfile,
@@ -36,28 +28,10 @@ export function moderateProfile(
   )
 }
 
-// posts
-// =
-
 export function moderatePost(
   subject: ModerationSubjectPost,
   opts: ModerationOpts,
 ): ModerationDecision {
-  // TODO should this be done elsewhere?
-  // decide the moderation for any quoted posts
-  // let quote: ModerationDecision | undefined
-  // if (isQuotedPost(subject.embed)) {
-  //   quote = ModerationDecision.merge(
-  //     decideQuotedPost(subject.embed, opts),
-  //     decideQuotedPostAccount(subject.embed, subject.author.did, opts),
-  //   )
-  // } else if (isQuotedPostWithMedia(subject.embed)) {
-  //   quote = ModerationDecision.merge(
-  //     decideQuotedPostWithMedia(subject.embed, opts),
-  //     decideQuotedPostWithMediaAccount(subject.embed, subject.author.did, opts),
-  //   )
-  // }
-
   return ModerationDecision.merge(
     decidePost(subject, opts),
     decideAccount(subject.author, opts),
@@ -65,8 +39,16 @@ export function moderatePost(
   )
 }
 
-// feed generators
-// =
+export function moderateNotification(
+  subject: ModerationSubjectNotification,
+  opts: ModerationOpts,
+): ModerationDecision {
+  return ModerationDecision.merge(
+    decideNotification(subject, opts),
+    decideAccount(subject.author, opts),
+    decideProfile(subject.author, opts),
+  )
+}
 
 export function moderateFeedGenerator(
   subject: ModerationSubjectFeedGenerator,
@@ -78,9 +60,6 @@ export function moderateFeedGenerator(
     decideProfile(subject.creator, opts),
   )
 }
-
-// user lists
-// =
 
 export function moderateUserList(
   subject: ModerationSubjectUserList,
