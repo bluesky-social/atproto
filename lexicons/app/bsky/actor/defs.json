@@ -145,7 +145,7 @@
             "format": "at-uri"
           }
         },
-        "followingIndex": {
+        "timelineIndex": {
           "type": "integer"
         }
       }

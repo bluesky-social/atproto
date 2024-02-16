@@ -4832,7 +4832,7 @@ export const schemaDict = {
               format: 'at-uri',
             },
           },
-          followingIndex: {
+          timelineIndex: {
             type: 'integer',
           },
         },
