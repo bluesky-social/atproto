@@ -28,7 +28,7 @@ export class ModerationLangService {
             $type: 'com.atproto.admin.defs#modEventTag',
             add: recordLangs
               ? recordLangs.map((lang) => `lang:${lang}`)
-              : ['lang:unknown'],
+              : ['lang:und'],
             remove: [],
           },
           subject,

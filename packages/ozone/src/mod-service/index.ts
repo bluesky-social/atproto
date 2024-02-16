@@ -752,9 +752,7 @@ export class ModerationService {
 
     if (tags.length) {
       builder = builder.where(
-        sql<string>`${ref(
-          'moderation_subject_status.tags',
-        )} @> ${JSON.stringify(tags)}`,
+        sql`${ref('moderation_subject_status.tags')} @> ${jsonb(tags)}`,
       )
     }
 

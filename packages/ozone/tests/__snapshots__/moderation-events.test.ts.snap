@@ -38,7 +38,7 @@ Object {
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
           "tags": Array [
-            "lang:unknown",
+            "lang:und",
           ],
           "takendown": false,
           "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -174,7 +174,7 @@ Array [
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
-        "lang:unknown",
+        "lang:und",
       ],
       "remove": Array [],
     },
