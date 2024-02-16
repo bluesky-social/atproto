@@ -144,6 +144,9 @@
             "type": "string",
             "format": "at-uri"
           }
+        },
+        "followingIndex": {
+          "type": "integer"
         }
       }
     },

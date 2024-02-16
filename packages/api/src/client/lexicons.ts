@@ -4832,6 +4832,9 @@ export const schemaDict = {
               format: 'at-uri',
             },
           },
+          followingIndex: {
+            type: 'integer',
+          },
         },
       },
       personalDetailsPref: {

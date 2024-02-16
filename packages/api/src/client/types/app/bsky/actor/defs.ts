@@ -155,6 +155,7 @@ export function validateContentLabelPref(v: unknown): ValidationResult {
 export interface SavedFeedsPref {
   pinned: string[]
   saved: string[]
+  followingIndex?: number
   [k: string]: unknown
 }
 
