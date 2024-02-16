@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.9.7
+
+### Patch Changes
+
+- [#2188](https://github.com/bluesky-social/atproto/pull/2188) [`8c94979f7`](https://github.com/bluesky-social/atproto/commit/8c94979f73fc5057449e24e66ef2e09b0e17e55b) Thanks [@dholms](https://github.com/dholms)! - Added timelineIndex to savedFeedsPref
+
 ## 0.9.6
 
 ### Patch Changes
