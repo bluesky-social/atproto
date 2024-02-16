@@ -769,7 +769,6 @@ export class ModerationService {
       nullsLast: true,
     })
 
-    // console.log(paginatedBuilder.compile())
     const results = await paginatedBuilder.execute()
 
     const infos = await this.views.getAccoutInfosByDid(
