@@ -2,4 +2,4 @@
 '@atproto/api': patch
 ---
 
-Added followingIndex to savedFeedsPref
+Added timelineIndex to savedFeedsPref
