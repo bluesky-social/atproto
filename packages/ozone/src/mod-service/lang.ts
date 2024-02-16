@@ -1,6 +1,7 @@
 import { ModerationService } from '.'
 import { ModSubject } from './subject'
 import { ModerationSubjectStatusRow } from './types'
+import { langLogger as log } from '../logger'
 
 export class ModerationLangService {
   constructor(private moderationService: ModerationService) {}
@@ -34,7 +35,7 @@ export class ModerationLangService {
           createdBy,
         })
       } catch (err) {
-        console.error('Error getting record langs', err)
+        log.error({ subject, err }, 'Error getting record langs')
       }
     }
   }
@@ -45,6 +46,8 @@ export class ModerationLangService {
     subject: ModSubject
   }): Promise<string[] | null> {
     const isRecord = subject.isRecord()
+    const langs = new Set<string>()
+
     if (
       subject.isRepo() ||
       (isRecord && subject.uri.endsWith('/app.bsky.actor.profile/self'))
@@ -52,14 +55,13 @@ export class ModerationLangService {
       const feed = await this.moderationService.views.fetchAuthorFeed(
         subject.did,
       )
-      const langs = new Set<string>()
       feed.forEach((item) => {
         const itemLangs = item.post.record['langs'] as string[] | null
         if (itemLangs?.length) {
-          itemLangs.forEach((lang) => langs.add(lang))
+          // Pick the first fragment of the lang code so that instead of `en-US` and `en-GB` we get `en`
+          itemLangs.forEach((lang) => langs.add(lang.split('-')[0]))
         }
       })
-      return langs.size > 0 ? Array.from(langs) : null
     }
 
     if (isRecord) {
@@ -67,9 +69,14 @@ export class ModerationLangService {
         subject,
       ])
       const record = recordByUri.get(subject.uri)
-      return (record?.value.langs as string[]) || null
+      const recordLang = record?.value.langs as string[] | null
+      if (recordLang?.length) {
+        recordLang
+          .map((lang) => lang.split('-')[0])
+          .forEach((lang) => langs.add(lang))
+      }
     }
 
-    return null
+    return langs.size > 0 ? Array.from(langs) : null
   }
 }

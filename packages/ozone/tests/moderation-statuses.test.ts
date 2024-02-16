@@ -97,7 +97,7 @@ describe('moderation-statuses', () => {
 
     it('returns statuses filtered by subject language', async () => {
       const klingonQueue = await queryModerationStatuses({
-        tags: ['lang:i-klingon'],
+        tags: ['lang:i'],
       })
 
       expect(forSnapshot(klingonQueue.data.subjectStatuses)).toMatchSnapshot()

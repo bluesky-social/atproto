@@ -115,8 +115,8 @@ Array [
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
-        "lang:en-US",
-        "lang:i-klingon",
+        "lang:en",
+        "lang:i",
       ],
       "remove": Array [],
     },
