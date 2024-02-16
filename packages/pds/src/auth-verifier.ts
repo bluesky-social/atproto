@@ -30,6 +30,7 @@ export enum AuthScope {
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
   Deactivated = 'com.atproto.deactivated',
+  CreateAccount = 'com.atproto.createAccount',
 }
 
 export enum RoleStatus {
@@ -286,14 +287,7 @@ export class AuthVerifier {
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const payload = await verifyJwt({
-      token,
-      keys: {
-        verifyKey: this._verifyKey,
-        signingSecret: this._signingSecret,
-      },
-      verifyOptions,
-    })
+    const payload = await this.verifyJwt({ token, verifyOptions })
     const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
@@ -314,6 +308,16 @@ export class AuthVerifier {
       token,
       payload,
     }
+  }
+
+  verifyJwt(params: { token: string; verifyOptions?: jose.JWTVerifyOptions }) {
+    return verifyJwt({
+      ...params,
+      keys: {
+        verifyKey: this._verifyKey,
+        signingSecret: this._signingSecret,
+      },
+    })
   }
 
   async validateAccessToken(

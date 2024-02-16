@@ -23,6 +23,7 @@ import { getPdsEndpoint } from '../../../../pds-agents'
 import { isThisPds } from '../../../proxy'
 import { dbLogger as log } from '../../../../logger'
 import { normalizePhoneNumber } from '../../../../phone-verification/util'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -60,9 +61,10 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
-      const verificationPhone = await ensurePhoneVerification(
+      const verification = await ensurePhoneVerification(
         ctx,
         req,
+        input.body.handle,
         input.body.verificationPhone,
         input.body.verificationCode?.trim(),
       )
@@ -106,12 +108,12 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        if (ctx.cfg.phoneVerification.required && verificationPhone) {
+        if (ctx.cfg.phoneVerification.required && verification?.phoneNumber) {
           await dbTxn.db
             .insertInto('phone_verification')
             .values({
               did,
-              phoneNumber: verificationPhone,
+              phoneNumber: verification.phoneNumber,
             })
             .execute()
         }
@@ -167,14 +169,12 @@ export default function (server: Server, ctx: AppContext) {
           await ctx.registrationChecker(ctx.db.db).logRegistration({
             req,
             did,
-            phoneNumber: verificationPhone,
+            nonce: verification?.nonce,
+            phoneNumber: verification?.phoneNumber,
           })
         }
       } catch (err) {
-        req.log.error(
-          { err, did, verificationPhone },
-          'failed to log registration',
-        )
+        req.log.error({ err, did, verification }, 'failed to log registration')
       }
 
       const didDoc = await didDocForSession(ctx, result)
@@ -505,17 +505,32 @@ const ensureUnusedHandleAndEmail = async (
 const ensurePhoneVerification = async (
   ctx: AppContext,
   req: express.Request,
-  phone?: string,
-  code?: string,
-): Promise<string | undefined> => {
+  handle: string,
+  phone: string | undefined,
+  code: string | undefined,
+): Promise<{ phoneNumber?: string; nonce?: string } | undefined> => {
   if (!ctx.cfg.phoneVerification.required || !ctx.phoneVerifier) {
     return
-  } else if (phone && ctx.cfg.phoneVerification.bypassPhoneNumber === phone) {
-    return undefined
+  }
+  if (phone && ctx.cfg.phoneVerification.bypassPhoneNumber === phone) {
+    return
   }
 
+  if (!code) {
+    throw new InvalidRequestError(
+      `Verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      'InvalidPhoneVerification',
+    )
+  }
+
+  const selfVerificationCode = isSelfVerificationCode(code)
+    ? await parseValidationCode(ctx, code)
+    : null
+
   if (ctx.registrationChecker) {
-    const verdict = await ctx.registrationChecker(ctx.db.db).checkReq(req)
+    const verdict = await ctx
+      .registrationChecker(ctx.db.db)
+      .checkReq(req, selfVerificationCode?.nonce)
     if (verdict.deny) {
       throw new InvalidRequestError('Account registration denied.')
     }
@@ -524,12 +539,18 @@ const ensurePhoneVerification = async (
     }
   }
 
+  if (selfVerificationCode) {
+    if (
+      selfVerificationCode.verdict === 'bad' ||
+      selfVerificationCode.handle !== handle
+    ) {
+      // nonce is checked by registrationChecker
+      throw new InvalidRequestError('Invalid verification code.')
+    }
+    return { nonce: selfVerificationCode.nonce }
+  }
+
   if (!phone) {
-    throw new InvalidRequestError(
-      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
-      'InvalidPhoneVerification',
-    )
-  } else if (!code) {
     throw new InvalidRequestError(
       `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
       'InvalidPhoneVerification',
@@ -544,7 +565,8 @@ const ensurePhoneVerification = async (
       'InvalidPhoneVerification',
     )
   }
-  return normalizedPhone
+
+  return { phoneNumber: normalizedPhone }
 }
 
 const randomIndexByWeight = (weights) => {
@@ -574,4 +596,31 @@ const cleanupUncreatedAccount = async (
     log.error({ err, did, tries }, 'failed to clean up partially created user')
     return cleanupUncreatedAccount(ctx, did, tries + 1)
   }
+}
+
+const parseValidationCode = async (ctx: AppContext, code: string) => {
+  const payload = await ctx.authVerifier.verifyJwt({
+    token: code,
+    verifyOptions: { audience: ctx.cfg.service.did },
+  })
+  if (
+    payload.scope !== AuthScope.CreateAccount ||
+    typeof payload.jti !== 'string' ||
+    typeof payload.verdict !== 'string' ||
+    typeof payload.handle !== 'string'
+  ) {
+    throw new InvalidRequestError('Invalid verification code.')
+  }
+  return {
+    nonce: payload.jti,
+    handle: payload.handle,
+    verdict: payload.verdict,
+  }
+}
+
+// if it contains two dots then it looks like a jwt and we treat it as a
+// self-verification code. otherwise we treat it as a phone verification code.
+const isSelfVerificationCode = (code: string) => {
+  const dots = code.match(/\./g) ?? []
+  return dots.length === 2
 }
