@@ -303,6 +303,12 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          tags: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
         },
       },
       reportViewDetail: {

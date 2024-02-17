@@ -156,6 +156,7 @@ export interface SubjectStatusView {
   /** True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. */
   appealed?: boolean
   suspendUntil?: string
+  tags?: string[]
   [k: string]: unknown
 }
 

@@ -185,6 +185,10 @@
         "suspendUntil": {
           "type": "string",
           "format": "datetime"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },
