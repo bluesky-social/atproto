@@ -4,7 +4,7 @@
 // leave at top of file before importing Routes
 import 'express-async-errors'
 
-import express from 'express'
+import express, { Express } from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
@@ -49,8 +49,9 @@ export class PDS {
     cfg: ServerConfig,
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
+    app?: Express,
   ): Promise<PDS> {
-    const app = express()
+    app ??= express()
     app.set('trust proxy', true)
     app.use(cors())
     app.use(loggerMiddleware)
