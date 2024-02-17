@@ -243,7 +243,7 @@ describe('moderation-events', () => {
       expect(eventsWithComment.data.events.length).toEqual(12)
     })
 
-    it('returns events matching filter params for columns', async () => {
+    it('returns events matching filter params for labels', async () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
         emitModerationEvent({
           event: {
@@ -301,6 +301,54 @@ describe('moderation-events', () => {
       expect(negatedLabelEvent.data.id).toEqual(
         withoutOneLabel.data.events[0].id,
       )
+    })
+    it('returns events matching filter params for tags', async () => {
+      const tagEvent = async ({
+        add,
+        remove,
+      }: {
+        add: string[]
+        remove: string[]
+      }) =>
+        emitModerationEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventTag',
+            comment: 'X',
+            add,
+            remove,
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          createdBy: sc.dids.bob,
+        })
+      const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
+      const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
+      const [addFinder, addAndRemoveFinder, removeFinder] = await Promise.all([
+        queryModerationEvents({
+          addedTags: ['L1'],
+        }),
+        queryModerationEvents({
+          addedTags: ['L3'],
+          removedTags: ['L2'],
+        }),
+        queryModerationEvents({
+          removedTags: ['L2'],
+        }),
+      ])
+
+      expect(addFinder.data.events.length).toEqual(1)
+      expect(addEvent.data.id).toEqual(addFinder.data.events[0].id)
+
+      expect(addAndRemoveEvent.data.id).toEqual(
+        addAndRemoveFinder.data.events[0].id,
+      )
+      expect(addAndRemoveEvent.data.id).toEqual(
+        addAndRemoveFinder.data.events[0].id,
+      )
+      expect(addAndRemoveEvent.data.event.add).toEqual(['L3'])
+      expect(addAndRemoveEvent.data.event.remove).toEqual(['L2'])
     })
   })
 

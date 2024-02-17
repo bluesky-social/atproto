@@ -1531,6 +1531,22 @@ export const schemaDict = {
               description:
                 'If specified, only events where all of these labels were removed are returned',
             },
+            addedTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these tags were added are returned',
+            },
+            removedTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these tags were removed are returned',
+            },
             reportTypes: {
               type: 'array',
               items: {

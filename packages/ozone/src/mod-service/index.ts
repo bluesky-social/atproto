@@ -104,6 +104,8 @@ export class ModerationService {
     createdBefore?: string
     addedLabels: string[]
     removedLabels: string[]
+    addedTags: string[]
+    removedTags: string[]
     reportTypes?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
@@ -120,8 +122,11 @@ export class ModerationService {
       createdBefore,
       addedLabels,
       removedLabels,
+      addedTags,
+      removedTags,
       reportTypes,
     } = opts
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
       builder = builder.where((qb) => {
@@ -179,11 +184,18 @@ export class ModerationService {
         builder = builder.where('negateLabelVals', 'ilike', `%${label}%`)
       })
     }
+    if (addedTags.length) {
+      builder = builder.where(sql`${ref('addedTags')} @> ${jsonb(addedTags)}`)
+    }
+    if (removedTags.length) {
+      builder = builder.where(
+        sql`${ref('removedTags')} @> ${jsonb(removedTags)}`,
+      )
+    }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
 
-    const { ref } = this.db.db.dynamic
     const keyset = new TimeIdKeyset(
       ref(`moderation_event.createdAt`),
       ref('moderation_event.id'),

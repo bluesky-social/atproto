@@ -20,6 +20,8 @@ export default function (server: Server, ctx: AppContext) {
         createdBefore,
         addedLabels = [],
         removedLabels = [],
+        addedTags = [],
+        removedTags = [],
         reportTypes,
       } = params
       const db = ctx.db
@@ -37,7 +39,9 @@ export default function (server: Server, ctx: AppContext) {
         createdAfter,
         createdBefore,
         addedLabels,
+        addedTags,
         removedLabels,
+        removedTags,
         reportTypes,
       })
       return {
