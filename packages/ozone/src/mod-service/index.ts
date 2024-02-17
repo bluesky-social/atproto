@@ -681,6 +681,7 @@ export class ModerationService {
     sortField,
     subject,
     tags,
+    excludeTags,
   }: {
     cursor?: string
     limit?: number
@@ -698,6 +699,7 @@ export class ModerationService {
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
     tags: string[]
+    excludeTags: string[]
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     const { ref } = this.db.db.dynamic
@@ -765,6 +767,18 @@ export class ModerationService {
     if (tags.length) {
       builder = builder.where(
         sql`${ref('moderation_subject_status.tags')} @> ${jsonb(tags)}`,
+      )
+    }
+
+    if (excludeTags.length) {
+      builder = builder.where((qb) =>
+        qb
+          .where(
+            sql`NOT(${ref('moderation_subject_status.tags')} @> ${jsonb(
+              excludeTags,
+            )})`,
+          )
+          .orWhere('tags', 'is', null),
       )
     }
 

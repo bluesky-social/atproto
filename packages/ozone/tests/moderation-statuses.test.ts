@@ -101,6 +101,15 @@ describe('moderation-statuses', () => {
       })
 
       expect(forSnapshot(klingonQueue.data.subjectStatuses)).toMatchSnapshot()
+
+      const nonKlingonQueue = await queryModerationStatuses({
+        excludeTags: ['lang:i'],
+      })
+
+      // Verify that the klingon tagged subject is not returned when excluding klingon
+      expect(
+        nonKlingonQueue.data.subjectStatuses.map((s) => s.id),
+      ).not.toContain(klingonQueue.data.subjectStatuses[0].id)
     })
 
     it('returns paginated statuses', async () => {

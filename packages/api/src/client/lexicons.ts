@@ -1676,6 +1676,12 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            excludeTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
             cursor: {
               type: 'string',
             },

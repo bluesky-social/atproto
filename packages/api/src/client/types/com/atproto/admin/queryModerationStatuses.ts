@@ -35,6 +35,7 @@ export interface QueryParams {
   appealed?: boolean
   limit?: number
   tags?: string[]
+  excludeTags?: string[]
   cursor?: string
 }
 
