@@ -516,16 +516,10 @@ const ensurePhoneVerification = async (
     return
   }
 
-  if (!code) {
-    throw new InvalidRequestError(
-      `Verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
-      'InvalidPhoneVerification',
-    )
-  }
-
-  const selfVerificationCode = isSelfVerificationCode(code)
-    ? await parseValidationCode(ctx, code)
-    : null
+  const selfVerificationCode =
+    code && isSelfVerificationCode(code)
+      ? await parseValidationCode(ctx, code)
+      : null
 
   if (ctx.registrationChecker) {
     const verdict = await ctx
@@ -537,6 +531,13 @@ const ensurePhoneVerification = async (
     if (!verdict.requirePhone) {
       return undefined
     }
+  }
+
+  if (!code) {
+    throw new InvalidRequestError(
+      `Verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      'InvalidPhoneVerification',
+    )
   }
 
   if (selfVerificationCode) {
