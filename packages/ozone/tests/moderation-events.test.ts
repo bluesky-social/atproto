@@ -148,7 +148,7 @@ describe('moderation-events', () => {
 
       expect(
         [...new Set(allEvents.data.events.map((e) => e.event.$type))].length,
-      ).toEqual(3)
+      ).toEqual(4)
     })
 
     it('returns events for all content by user', async () => {
@@ -203,10 +203,11 @@ describe('moderation-events', () => {
       const defaultEvents = await getPaginatedEvents()
       const reversedEvents = await getPaginatedEvents('asc')
 
-      expect(allEvents.data.events.length).toEqual(5)
+      expect(allEvents.data.events.length).toEqual(7)
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
-      expect(reversedEvents[0].id).toEqual(defaultEvents[4].id)
+      // First event in the reversed list is the last item in the default list
+      expect(reversedEvents[0].id).toEqual(defaultEvents[6].id)
     })
 
     it('returns report events matching reportType filters', async () => {
@@ -242,7 +243,7 @@ describe('moderation-events', () => {
       expect(eventsWithComment.data.events.length).toEqual(12)
     })
 
-    it('returns events matching filter params for columns', async () => {
+    it('returns events matching filter params for labels', async () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
         emitModerationEvent({
           event: {
@@ -301,6 +302,54 @@ describe('moderation-events', () => {
         withoutOneLabel.data.events[0].id,
       )
     })
+    it('returns events matching filter params for tags', async () => {
+      const tagEvent = async ({
+        add,
+        remove,
+      }: {
+        add: string[]
+        remove: string[]
+      }) =>
+        emitModerationEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventTag',
+            comment: 'X',
+            add,
+            remove,
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          createdBy: sc.dids.bob,
+        })
+      const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
+      const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
+      const [addFinder, addAndRemoveFinder, removeFinder] = await Promise.all([
+        queryModerationEvents({
+          addedTags: ['L1'],
+        }),
+        queryModerationEvents({
+          addedTags: ['L3'],
+          removedTags: ['L2'],
+        }),
+        queryModerationEvents({
+          removedTags: ['L2'],
+        }),
+      ])
+
+      expect(addFinder.data.events.length).toEqual(1)
+      expect(addEvent.data.id).toEqual(addFinder.data.events[0].id)
+
+      expect(addAndRemoveEvent.data.id).toEqual(
+        addAndRemoveFinder.data.events[0].id,
+      )
+      expect(addAndRemoveEvent.data.id).toEqual(
+        addAndRemoveFinder.data.events[0].id,
+      )
+      expect(addAndRemoveEvent.data.event.add).toEqual(['L3'])
+      expect(addAndRemoveEvent.data.event.remove).toEqual(['L2'])
+    })
   })
 
   describe('get event', () => {
@@ -331,7 +380,10 @@ describe('moderation-events', () => {
       })
       const { data: result } =
         await pdsAgent.api.com.atproto.admin.queryModerationEvents(
-          { subject: post.ref.uriStr },
+          {
+            subject: post.ref.uriStr,
+            types: ['com.atproto.admin.defs#modEventTakedown'],
+          },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )
       expect(result.events[0]).toMatchObject({

@@ -39,8 +39,8 @@ describe('moderation-statuses', () => {
     }
     const bobsPost = {
       $type: 'com.atproto.repo.strongRef',
-      uri: sc.posts[sc.dids.bob][1].ref.uriStr,
-      cid: sc.posts[sc.dids.bob][1].ref.cidStr,
+      uri: sc.posts[sc.dids.bob][0].ref.uriStr,
+      cid: sc.posts[sc.dids.bob][0].ref.cidStr,
     }
     const alicesPost = {
       $type: 'com.atproto.repo.strongRef',
@@ -95,6 +95,23 @@ describe('moderation-statuses', () => {
       expect(forSnapshot(response.data.subjectStatuses)).toMatchSnapshot()
     })
 
+    it('returns statuses filtered by subject language', async () => {
+      const klingonQueue = await queryModerationStatuses({
+        tags: ['lang:i'],
+      })
+
+      expect(forSnapshot(klingonQueue.data.subjectStatuses)).toMatchSnapshot()
+
+      const nonKlingonQueue = await queryModerationStatuses({
+        excludeTags: ['lang:i'],
+      })
+
+      // Verify that the klingon tagged subject is not returned when excluding klingon
+      expect(
+        nonKlingonQueue.data.subjectStatuses.map((s) => s.id),
+      ).not.toContain(klingonQueue.data.subjectStatuses[0].id)
+    })
+
     it('returns paginated statuses', async () => {
       // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
@@ -119,7 +136,7 @@ describe('moderation-statuses', () => {
       }
 
       const list = await getPaginatedStatuses({})
-      expect(list[0].id).toEqual(4)
+      expect(list[0].id).toEqual(7)
       expect(list[list.length - 1].id).toEqual(1)
 
       await emitModerationEvent({

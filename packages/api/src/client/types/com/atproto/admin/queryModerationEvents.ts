@@ -30,6 +30,10 @@ export interface QueryParams {
   addedLabels?: string[]
   /** If specified, only events where all of these labels were removed are returned */
   removedLabels?: string[]
+  /** If specified, only events where all of these tags were added are returned */
+  addedTags?: string[]
+  /** If specified, only events where all of these tags were removed are returned */
+  removedTags?: string[]
   reportTypes?: string[]
   cursor?: string
 }
