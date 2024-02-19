@@ -4,6 +4,7 @@ import { getReasonType } from './util'
 import { subjectFromInput } from '../../mod-service/subject'
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import { ForbiddenError } from '@atproto/xrpc-server'
+import { ModerationLangService } from '../../mod-service/lang'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -23,12 +24,22 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.modService(dbTxn)
-        return moderationTxn.report({
-          reasonType: getReasonType(reasonType),
-          reason,
+        const { event: reportEvent, subjectStatus } =
+          await moderationTxn.report({
+            reasonType: getReasonType(reasonType),
+            reason,
+            subject,
+            reportedBy: requester || ctx.cfg.service.did,
+          })
+
+        const moderationLangService = new ModerationLangService(moderationTxn)
+        await moderationLangService.tagSubjectWithLang({
           subject,
-          reportedBy: requester || ctx.cfg.service.did,
+          subjectStatus,
+          createdBy: ctx.cfg.service.did,
         })
+
+        return reportEvent
       })
 
       const body = ctx.modService(db).views.formatReport(report)

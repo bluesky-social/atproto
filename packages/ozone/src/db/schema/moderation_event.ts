@@ -15,6 +15,7 @@ export interface ModerationEvent {
     | 'com.atproto.admin.defs#modEventReverseTakedown'
     | 'com.atproto.admin.defs#modEventEmail'
     | 'com.atproto.admin.defs#modEventResolveAppeal'
+    | 'com.atproto.admin.defs#modEventTag'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
@@ -28,6 +29,8 @@ export interface ModerationEvent {
   durationInHours: number | null
   expiresAt: string | null
   meta: Record<string, string | boolean> | null
+  addedTags: string[] | null
+  removedTags: string[] | null
   legacyRefId: number | null
 }
 

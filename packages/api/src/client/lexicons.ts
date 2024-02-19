@@ -303,6 +303,12 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          tags: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
         },
       },
       reportViewDetail: {
@@ -897,6 +903,33 @@ export const schemaDict = {
           },
         },
       },
+      modEventTag: {
+        type: 'object',
+        description: 'Add/Remove a tag on a subject',
+        required: ['add', 'remove'],
+        properties: {
+          add: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              "Tags to be added to the subject. If already exists, won't be duplicated.",
+          },
+          remove: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              "Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated.",
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
       communicationTemplateView: {
         type: 'object',
         required: [
@@ -1075,6 +1108,7 @@ export const schemaDict = {
                   'lex:com.atproto.admin.defs#modEventReverseTakedown',
                   'lex:com.atproto.admin.defs#modEventUnmute',
                   'lex:com.atproto.admin.defs#modEventEmail',
+                  'lex:com.atproto.admin.defs#modEventTag',
                 ],
               },
               subject: {
@@ -1503,6 +1537,22 @@ export const schemaDict = {
               description:
                 'If specified, only events where all of these labels were removed are returned',
             },
+            addedTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these tags were added are returned',
+            },
+            removedTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these tags were removed are returned',
+            },
             reportTypes: {
               type: 'array',
               items: {
@@ -1619,6 +1669,18 @@ export const schemaDict = {
               minimum: 1,
               maximum: 100,
               default: 50,
+            },
+            tags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            excludeTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
             },
             cursor: {
               type: 'string',

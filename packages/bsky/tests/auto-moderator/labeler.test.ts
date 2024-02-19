@@ -105,6 +105,8 @@ describe('labeler', () => {
       types: [],
       addedLabels: [],
       removedLabels: [],
+      addedTags: [],
+      removedTags: [],
     })
     expect(events.length).toBe(1)
     expect(events[0]).toMatchObject({
