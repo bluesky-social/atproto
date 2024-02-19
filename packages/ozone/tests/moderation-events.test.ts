@@ -325,7 +325,7 @@ describe('moderation-events', () => {
         })
       const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
       const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
-      const [addFinder, addAndRemoveFinder, removeFinder] = await Promise.all([
+      const [addFinder, addAndRemoveFinder, _removeFinder] = await Promise.all([
         queryModerationEvents({
           addedTags: ['L1'],
         }),

@@ -5,7 +5,11 @@
 require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
-const { CloudfrontInvalidator, BunnyInvalidator } = require('@atproto/aws')
+const {
+  CloudfrontInvalidator,
+  BunnyInvalidator,
+  MultiImageInvalidator,
+} = require('@atproto/aws')
 const {
   IndexerConfig,
   BskyIndexer,
