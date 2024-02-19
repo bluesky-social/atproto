@@ -27,7 +27,7 @@ export class ServerMailer {
       confirmEmail: this.compile('confirm-email'),
       updateEmail: this.compile('update-email'),
       accountActivated: this.compile('account-activated'),
-      plcOperation: this.compile('account-activated'),
+      plcOperation: this.compile('plc-operation'),
     }
   }
 
