@@ -1,6 +1,6 @@
 import assert from 'assert'
-import { Readable } from 'stream'
-import { createBrotliDecompress, createDeflate, createGunzip } from 'zlib'
+import { Readable, Transform } from 'stream'
+import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
@@ -10,7 +10,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { MaxSizeChecker } from '@atproto/common'
+import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
   Params,
@@ -244,12 +244,16 @@ function decodeBodyStream(
     throw new XRPCError(413, 'request entity too large')
   }
 
+  let decoder: Transform | undefined
   if (contentEncoding === 'gzip') {
-    stream = stream.compose(createGunzip())
+    decoder = createGunzip()
   } else if (contentEncoding === 'deflate') {
-    stream = stream.compose(createDeflate())
-  } else if (contentEncoding === 'br') {
-    stream = stream.compose(createBrotliDecompress())
+    decoder = createDeflate()
+  }
+
+  if (decoder) {
+    forwardStreamErrors(stream, decoder)
+    stream = stream.pipe(decoder)
   }
 
   if (maxSize !== undefined) {
@@ -257,7 +261,8 @@ function decodeBodyStream(
       maxSize,
       () => new XRPCError(413, 'request entity too large'),
     )
-    stream = stream.compose(maxSizeChecker)
+    forwardStreamErrors(stream, maxSizeChecker)
+    stream = stream.pipe(maxSizeChecker)
   }
 
   return stream
