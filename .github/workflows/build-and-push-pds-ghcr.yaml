@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - pds-sanity-check
+      - account-migration
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
