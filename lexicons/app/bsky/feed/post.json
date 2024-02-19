@@ -51,8 +51,7 @@
             "type": "array",
             "description": "Additional hashtags, in addition to any included in post text and facets.",
             "maxLength": 8,
-            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
-            "description": "Additional non-inline tags describing this post."
+            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
           },
           "createdAt": {
             "type": "string",

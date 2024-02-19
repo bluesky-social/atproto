@@ -208,7 +208,9 @@ export class FeedViews {
     const post = posts[uri]
     const gate = threadgates[uri]
     const author = actors[post?.creator]
-    if (!post || !author) return undefined
+    if (!post || !author) {
+      return undefined
+    }
     const postLabels = labels[uri] ?? []
     const postSelfLabels = getSelfLabels({
       uri: post.uri,

@@ -144,6 +144,9 @@
             "type": "string",
             "format": "at-uri"
           }
+        },
+        "timelineIndex": {
+          "type": "integer"
         }
       }
     },

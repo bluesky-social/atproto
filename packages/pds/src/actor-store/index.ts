@@ -1,4 +1,5 @@
 import path from 'path'
+import assert from 'assert'
 import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
@@ -148,6 +149,7 @@ export class ActorStore {
   async reserveKeypair(did?: string): Promise<string> {
     let keyLoc: string | undefined
     if (did) {
+      assertSafePathPart(did)
       keyLoc = path.join(this.reservedKeyDir, did)
       const maybeKey = await loadKey(keyLoc)
       if (maybeKey) {
@@ -258,4 +260,15 @@ export type ActorStoreTransactor = {
   repo: RepoTransactor
   record: RecordTransactor
   pref: PreferenceTransactor
+}
+
+function assertSafePathPart(part: string) {
+  const normalized = path.normalize(part)
+  assert(
+    part === normalized &&
+      !part.startsWith('.') &&
+      !part.includes('/') &&
+      !part.includes('\\'),
+    `unsafe path part: ${part}`,
+  )
 }

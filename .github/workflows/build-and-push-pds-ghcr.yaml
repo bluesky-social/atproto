@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - pds-node-v20
+      - pds-sanity-check
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

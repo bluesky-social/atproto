@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AppBskyFeedDefs } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Database } from '../db'
@@ -163,6 +163,11 @@ export class ModerationViews {
       eventView.event.sticky = true
     }
 
+    if (event.action === 'com.atproto.admin.defs#modEventTag') {
+      eventView.event.add = event.addedTags || []
+      eventView.event.remove = event.removedTags || []
+    }
+
     return eventView
   }
 
@@ -217,7 +222,7 @@ export class ModerationViews {
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
         try {
-          return await this.appviewAgent.api.com.atproto.repo.getRecord(
+          const record = await this.appviewAgent.api.com.atproto.repo.getRecord(
             {
               repo: uri.hostname,
               collection: uri.collection,
@@ -226,6 +231,7 @@ export class ModerationViews {
             },
             auth,
           )
+          return record
         } catch {
           return null
         }
@@ -473,8 +479,21 @@ export class ModerationViews {
       appealed: status.appealed ?? undefined,
       subjectRepoHandle: status.handle ?? undefined,
       subjectBlobCids: status.blobCids || [],
+      tags: status.tags || [],
       subject: subjectFromStatusRow(status).lex(),
     }
+  }
+
+  async fetchAuthorFeed(
+    actor: string,
+  ): Promise<AppBskyFeedDefs.FeedViewPost[]> {
+    const auth = await this.appviewAuth()
+    if (!auth) return []
+    const {
+      data: { feed },
+    } = await this.appviewAgent.api.app.bsky.feed.getAuthorFeed({ actor }, auth)
+
+    return feed
   }
 }
 

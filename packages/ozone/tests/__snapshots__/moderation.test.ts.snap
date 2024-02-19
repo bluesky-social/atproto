@@ -4,7 +4,7 @@ exports[`moderation reporting creates reports of a record. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 6,
+    "id": 7,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
     "subject": Object {
@@ -15,7 +15,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 7,
+    "id": 9,
     "reason": "defamation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
@@ -42,7 +42,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 4,
+    "id": 5,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",

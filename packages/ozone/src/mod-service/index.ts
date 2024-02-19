@@ -12,6 +12,7 @@ import {
   isModEventReport,
   isModEventTakedown,
   isModEventEmail,
+  isModEventTag,
   RepoRef,
   RepoBlobRef,
 } from '../lexicon/types/com/atproto/admin/defs'
@@ -103,6 +104,8 @@ export class ModerationService {
     createdBefore?: string
     addedLabels: string[]
     removedLabels: string[]
+    addedTags: string[]
+    removedTags: string[]
     reportTypes?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
@@ -119,8 +122,11 @@ export class ModerationService {
       createdBefore,
       addedLabels,
       removedLabels,
+      addedTags,
+      removedTags,
       reportTypes,
     } = opts
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
       builder = builder.where((qb) => {
@@ -178,11 +184,18 @@ export class ModerationService {
         builder = builder.where('negateLabelVals', 'ilike', `%${label}%`)
       })
     }
+    if (addedTags.length) {
+      builder = builder.where(sql`${ref('addedTags')} @> ${jsonb(addedTags)}`)
+    }
+    if (removedTags.length) {
+      builder = builder.where(
+        sql`${ref('removedTags')} @> ${jsonb(removedTags)}`,
+      )
+    }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
 
-    const { ref } = this.db.db.dynamic
     const keyset = new TimeIdKeyset(
       ref(`moderation_event.createdAt`),
       ref('moderation_event.id'),
@@ -238,7 +251,10 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
-  }): Promise<ModerationEventRow> {
+  }): Promise<{
+    event: ModerationEventRow
+    subjectStatus: ModerationSubjectStatusRow | null
+  }> {
     this.db.assertTransaction()
     const { event, subject, createdBy, createdAt = new Date() } = info
 
@@ -252,6 +268,9 @@ export class ModerationService {
         : undefined
 
     const meta: Record<string, string | boolean> = {}
+
+    const addedTags = isModEventTag(event) ? jsonb(event.add) : null
+    const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
 
     if (isModEventReport(event)) {
       meta.reportType = event.reportType
@@ -276,6 +295,8 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        addedTags,
+        removedTags,
         durationInHours: event.durationInHours
           ? Number(event.durationInHours)
           : null,
@@ -294,9 +315,13 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids)
+    const subjectStatus = await adjustModerationSubjectStatus(
+      this.db,
+      modEvent,
+      subject.blobCids,
+    )
 
-    return modEvent
+    return { event: modEvent, subjectStatus }
   }
 
   async getLastReversibleEventForSubject(subject: ReversalSubject) {
@@ -376,7 +401,7 @@ export class ModerationService {
     const isRevertingTakedown =
       action === 'com.atproto.admin.defs#modEventTakedown'
     this.db.assertTransaction()
-    const result = await this.logEvent({
+    const { event } = await this.logEvent({
       event: {
         $type: isRevertingTakedown
           ? 'com.atproto.admin.defs#modEventReverseTakedown'
@@ -396,7 +421,7 @@ export class ModerationService {
       }
     }
 
-    return result
+    return event
   }
 
   async takedownRepo(
@@ -613,7 +638,10 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationEventRow> {
+  }): Promise<{
+    event: ModerationEventRow
+    subjectStatus: ModerationSubjectStatusRow | null
+  }> {
     const {
       reasonType,
       reason,
@@ -622,7 +650,7 @@ export class ModerationService {
       subject,
     } = info
 
-    const event = await this.logEvent({
+    const result = await this.logEvent({
       event: {
         $type: 'com.atproto.admin.defs#modEventReport',
         reportType: reasonType,
@@ -633,7 +661,7 @@ export class ModerationService {
       createdAt,
     })
 
-    return event
+    return result
   }
 
   async getSubjectStatuses({
@@ -652,6 +680,8 @@ export class ModerationService {
     lastReviewedBy,
     sortField,
     subject,
+    tags,
+    excludeTags,
   }: {
     cursor?: string
     limit?: number
@@ -668,8 +698,11 @@ export class ModerationService {
     sortDirection: 'asc' | 'desc'
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
+    tags: string[]
+    excludeTags: string[]
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+    const { ref } = this.db.db.dynamic
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
@@ -731,7 +764,24 @@ export class ModerationService {
       )
     }
 
-    const { ref } = this.db.db.dynamic
+    if (tags.length) {
+      builder = builder.where(
+        sql`${ref('moderation_subject_status.tags')} @> ${jsonb(tags)}`,
+      )
+    }
+
+    if (excludeTags.length) {
+      builder = builder.where((qb) =>
+        qb
+          .where(
+            sql`NOT(${ref('moderation_subject_status.tags')} @> ${jsonb(
+              excludeTags,
+            )})`,
+          )
+          .orWhere('tags', 'is', null),
+      )
+    }
+
     const keyset = new StatusKeyset(
       ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),

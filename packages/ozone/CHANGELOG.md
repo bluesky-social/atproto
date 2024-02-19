@@ -1,5 +1,21 @@
 # @atproto/ozone
 
+## 0.0.10
+
+### Patch Changes
+
+- [#2192](https://github.com/bluesky-social/atproto/pull/2192) [`f79cc6339`](https://github.com/bluesky-social/atproto/commit/f79cc63390ae9dbd47a4ff5d694eec25b78b788e) Thanks [@foysalit](https://github.com/foysalit)! - Tag event on moderation subjects and allow filtering events and subjects by tags
+
+- Updated dependencies [[`f79cc6339`](https://github.com/bluesky-social/atproto/commit/f79cc63390ae9dbd47a4ff5d694eec25b78b788e)]:
+  - @atproto/api@0.9.8
+
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [[`8c94979f7`](https://github.com/bluesky-social/atproto/commit/8c94979f73fc5057449e24e66ef2e09b0e17e55b)]:
+  - @atproto/api@0.9.7
+
 ## 0.0.8
 
 ### Patch Changes
