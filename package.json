@@ -22,8 +22,8 @@
     "dev": "npm-run-all -p dev:*",
     "dev:tsc": "tsc --build tsconfig.json --watch",
     "dev:all": "pnpm -r --stream dev",
-    "test": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
-    "test:withFlags": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test --",
+    "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
+    "test:withFlags": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test --",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "version-packages": "changeset version && git add ."
