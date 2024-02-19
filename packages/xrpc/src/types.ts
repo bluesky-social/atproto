@@ -37,6 +37,7 @@ export enum ResponseType {
   Forbidden = 403,
   XRPCNotSupported = 404,
   PayloadTooLarge = 413,
+  UnsupportedMediaType = 415,
   RateLimitExceeded = 429,
   InternalServerError = 500,
   MethodNotImplemented = 501,

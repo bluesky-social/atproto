@@ -1,6 +1,6 @@
 import assert from 'assert'
-import { Readable } from 'stream'
-import { createBrotliDecompress, createDeflate, createGunzip } from 'zlib'
+import { Readable, Transform } from 'stream'
+import { createBrotliDecompress, createInflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
@@ -10,7 +10,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { MaxSizeChecker } from '@atproto/common'
+import { compose, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
   Params,
@@ -232,24 +232,42 @@ function decodeBodyStream(
   req: express.Request,
   maxSize: number | undefined,
 ): Readable {
-  let stream: Readable = req
-  const contentEncoding = req.headers['content-encoding']
+  const transforms: Transform[] = []
+
+  const contentEncoding = req.headers['content-encoding']?.trim()
   const contentLength = req.headers['content-length']
+
+  const contentLengthParsed = contentLength
+    ? parseInt(contentLength, 10)
+    : undefined
+
+  if (Number.isNaN(contentLengthParsed)) {
+    throw new XRPCError(400, 'invalid content-length')
+  }
 
   if (
     maxSize !== undefined &&
-    contentLength &&
-    parseInt(contentLength, 10) > maxSize
+    contentLengthParsed !== undefined &&
+    contentLengthParsed > maxSize
   ) {
     throw new XRPCError(413, 'request entity too large')
   }
 
-  if (contentEncoding === 'gzip') {
-    stream = stream.compose(createGunzip())
-  } else if (contentEncoding === 'deflate') {
-    stream = stream.compose(createDeflate())
-  } else if (contentEncoding === 'br') {
-    stream = stream.compose(createBrotliDecompress())
+  if (contentEncoding) {
+    for (const enc of contentEncoding.split(',').reverse()) {
+      const currentEncoding = enc.trim()
+      if (currentEncoding === 'identity') continue
+
+      if (currentEncoding === 'gzip') {
+        transforms.push(createGunzip())
+      } else if (currentEncoding === 'deflate') {
+        transforms.push(createInflate())
+      } else if (currentEncoding === 'br') {
+        transforms.push(createBrotliDecompress())
+      } else {
+        throw new XRPCError(415, 'unsupported content-encoding')
+      }
+    }
   }
 
   if (maxSize !== undefined) {
@@ -257,10 +275,10 @@ function decodeBodyStream(
       maxSize,
       () => new XRPCError(413, 'request entity too large'),
     )
-    stream = stream.compose(maxSizeChecker)
+    transforms.push(maxSizeChecker)
   }
 
-  return stream
+  return compose(req, ...transforms)
 }
 
 export function serverTimingHeader(timings: ServerTiming[]) {
