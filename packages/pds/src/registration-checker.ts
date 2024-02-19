@@ -9,11 +9,12 @@ export type RegistrationVerdict = {
 export type RegistrationInfo = {
   req: express.Request
   did: string
+  nonce?: string
   phoneNumber?: string
 }
 
 export interface RegistrationChecker {
-  checkReq(req: express.Request): Promise<RegistrationVerdict>
+  checkReq(req: express.Request, nonce?: string): Promise<RegistrationVerdict>
   logRegistration(info: RegistrationInfo): Promise<void>
 }
 
