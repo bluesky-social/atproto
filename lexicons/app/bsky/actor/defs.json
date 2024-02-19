@@ -268,6 +268,17 @@
           "description": "A list of URIs of threads the account owner has muted."
         }
       }
+    },
+    "hiddenPostsPref": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": { "type": "string", "format": "at-uri" },
+          "description": "A list of URIs of posts the account owner has hidden."
+        }
+      }
     }
   }
 }
