@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of suggested feeds for the viewer.",
+      "description": "Get a list of suggested feeds (feed generators) for the requesting account.",
       "parameters": {
         "type": "params",
         "properties": {

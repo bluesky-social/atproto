@@ -82,6 +82,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileViewDetailed', v)
 }
 
+/** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
 export interface ViewerState {
   muted?: boolean
   mutedByList?: AppBskyGraphDefs.ListViewBasic
@@ -154,6 +155,7 @@ export function validateContentLabelPref(v: unknown): ValidationResult {
 export interface SavedFeedsPref {
   pinned: string[]
   saved: string[]
+  timelineIndex?: number
   [k: string]: unknown
 }
 

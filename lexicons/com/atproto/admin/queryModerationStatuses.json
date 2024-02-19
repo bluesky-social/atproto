@@ -74,6 +74,14 @@
             "maximum": 100,
             "default": 50
           },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "excludeTags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
           "cursor": { "type": "string" }
         }
       },

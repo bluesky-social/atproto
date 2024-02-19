@@ -10,6 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
+  /** Reference (AT-URI) of the list record to hydrate. */
   list: string
   limit: number
   cursor?: string

@@ -11,13 +11,13 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The did to reserve a new did:key for */
+  /** The DID to reserve a key for. */
   did?: string
   [k: string]: unknown
 }
 
 export interface OutputSchema {
-  /** Public signing key in the form of a did:key. */
+  /** The public key for the reserved signing key, in did:key serialization. */
   signingKey: string
   [k: string]: unknown
 }

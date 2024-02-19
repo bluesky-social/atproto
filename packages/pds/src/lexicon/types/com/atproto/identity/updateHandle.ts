@@ -11,6 +11,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** The new handle. */
   handle: string
   [k: string]: unknown
 }

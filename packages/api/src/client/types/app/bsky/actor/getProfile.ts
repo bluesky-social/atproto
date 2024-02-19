@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
+  /** Handle or DID of account to fetch profile of. */
   actor: string
 }
 

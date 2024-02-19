@@ -24,6 +24,7 @@ export interface InputSchema {
     | ComAtprotoAdminDefs.ModEventReverseTakedown
     | ComAtprotoAdminDefs.ModEventUnmute
     | ComAtprotoAdminDefs.ModEventEmail
+    | ComAtprotoAdminDefs.ModEventTag
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
