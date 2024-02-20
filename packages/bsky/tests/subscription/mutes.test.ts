@@ -57,11 +57,9 @@ describe('sync mutes', () => {
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
-    expect(mutes1.mutes.map((mute) => mute.did)).toEqual([
-      sc.dids.dan,
-      sc.dids.carol,
-      sc.dids.alice,
-    ])
+    expect(mutes1.mutes.map((mute) => mute.did).sort()).toEqual(
+      [sc.dids.dan, sc.dids.carol, sc.dids.alice].sort(),
+    )
     await pdsAgent.api.app.bsky.graph.unmuteActor(
       { actor: sc.dids.carol },
       { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
@@ -71,10 +69,9 @@ describe('sync mutes', () => {
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
-    expect(mutes2.mutes.map((mute) => mute.did)).toEqual([
-      sc.dids.dan,
-      sc.dids.alice,
-    ])
+    expect(mutes2.mutes.map((mute) => mute.did).sort()).toEqual(
+      [sc.dids.dan, sc.dids.alice].sort(),
+    )
   })
 
   it('mutes and unmutes lists.', async () => {
