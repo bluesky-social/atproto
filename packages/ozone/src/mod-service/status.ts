@@ -179,6 +179,9 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.appealed = true
     newStatus.lastAppealedAt = createdAt
     subjectStatus.lastAppealedAt = createdAt
+    // Set reviewState to escalated when appeal events are emitted
+    subjectStatus.reviewState = REVIEWESCALATED
+    newStatus.reviewState = REVIEWESCALATED
   }
 
   if (
