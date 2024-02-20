@@ -361,7 +361,7 @@ export class Hydrator {
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [posts, reposts, repostProfileState] = await Promise.all([
       this.feed.getPosts(postUris, includeTakedowns),
-      this.feed.getReposts(repostUris),
+      this.feed.getReposts(repostUris, includeTakedowns),
       this.hydrateProfiles(
         repostUris.map(didFromUri),
         viewer,
