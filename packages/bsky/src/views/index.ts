@@ -568,10 +568,10 @@ export class Views {
         return undefined
       }
       const post = this.post(uri, state)
-      if (!postInfo || !post) return this.notFoundPost(parentUri)
+      if (!postInfo || !post) return this.notFoundPost(uri)
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
-        return this.blockedPost(parentUri, post.author.did, state)
+        return this.blockedPost(uri, post.author.did, state)
       }
       return {
         $type: 'app.bsky.feed.defs#threadViewPost',
