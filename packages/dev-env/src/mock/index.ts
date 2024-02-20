@@ -330,7 +330,7 @@ export async function generateMockSetup(env: TestNetwork) {
     { repo: alice.did, rkey: 'self' },
     {
       displayName: 'alices labels',
-      description: 'labeling stuff',
+      description: 'Stopping spam and scams across the Atmosphere.',
       avatar: avatarRes.data.blob,
       policies: {
         reportReasons: [
