@@ -12,27 +12,33 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 
-      const blob = await ctx.actorStore.transact(
+      const blob = await ctx.actorStore.writeNoTransaction(
         requester,
-        async (actorTxn) => {
-          const blob = await actorTxn.repo.blob.addUntetheredBlob(
+        async (store) => {
+          const metadata = await store.repo.blob.uploadBlobAndGetMetadata(
             input.encoding,
             input.body,
           )
 
-          // make the blob permanent if an associated record is already indexed
-          const recordsForBlob = await actorTxn.repo.blob.getRecordsForBlob(
-            blob.ref,
-          )
-          if (recordsForBlob.length > 0) {
-            await actorTxn.repo.blob.verifyBlobAndMakePermanent({
-              cid: blob.ref,
-              mimeType: blob.mimeType,
-              constraints: {},
-            })
-          }
+          return store.transact(async (actorTxn) => {
+            const blobRef = await actorTxn.repo.blob.trackUntetheredBlob(
+              metadata,
+            )
 
-          return blob
+            // make the blob permanent if an associated record is already indexed
+            const recordsForBlob = await actorTxn.repo.blob.getRecordsForBlob(
+              blobRef.ref,
+            )
+            if (recordsForBlob.length > 0) {
+              await actorTxn.repo.blob.verifyBlobAndMakePermanent({
+                cid: blobRef.ref,
+                mimeType: blobRef.mimeType,
+                constraints: {},
+              })
+            }
+
+            return blobRef
+          })
         },
       )
 
