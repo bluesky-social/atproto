@@ -93,10 +93,7 @@ import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCra
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
-import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
-import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -249,10 +246,7 @@ export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCra
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
-export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
-export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -1369,28 +1363,6 @@ export class ComAtprotoTempNS {
       })
   }
 
-  importRepo(
-    data?: ComAtprotoTempImportRepo.InputSchema,
-    opts?: ComAtprotoTempImportRepo.CallOptions,
-  ): Promise<ComAtprotoTempImportRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempImportRepo.toKnownErr(e)
-      })
-  }
-
-  pushBlob(
-    data?: ComAtprotoTempPushBlob.InputSchema,
-    opts?: ComAtprotoTempPushBlob.CallOptions,
-  ): Promise<ComAtprotoTempPushBlob.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempPushBlob.toKnownErr(e)
-      })
-  }
-
   requestPhoneVerification(
     data?: ComAtprotoTempRequestPhoneVerification.InputSchema,
     opts?: ComAtprotoTempRequestPhoneVerification.CallOptions,
@@ -1399,17 +1371,6 @@ export class ComAtprotoTempNS {
       .call('com.atproto.temp.requestPhoneVerification', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoTempRequestPhoneVerification.toKnownErr(e)
-      })
-  }
-
-  transferAccount(
-    data?: ComAtprotoTempTransferAccount.InputSchema,
-    opts?: ComAtprotoTempTransferAccount.CallOptions,
-  ): Promise<ComAtprotoTempTransferAccount.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempTransferAccount.toKnownErr(e)
       })
   }
 }
