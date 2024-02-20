@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
         async (agent) => {
           const result = await agent.api.com.atproto.server.getServiceAuth(
             params,
-            authPassthru(req, true),
+            authPassthru(req),
           )
           return resultPassthru(result)
         },

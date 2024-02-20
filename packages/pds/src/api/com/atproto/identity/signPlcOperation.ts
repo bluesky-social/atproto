@@ -26,13 +26,13 @@ export default function (server: Server, ctx: AppContext) {
       const operation = await plc.createUpdateOp(
         lastOp,
         ctx.plcRotationKey,
-        (lastOp) => ({
-          ...lastOp,
-          rotationKeys: input.body.rotationKeys ?? lastOp.rotationKeys,
-          alsoKnownAs: input.body.alsoKnownAs ?? lastOp.alsoKnownAs,
+        (prev) => ({
+          ...prev,
+          rotationKeys: input.body.rotationKeys ?? prev.rotationKeys,
+          alsoKnownAs: input.body.alsoKnownAs ?? prev.alsoKnownAs,
           verificationMethods:
-            input.body.verificationMethods ?? lastOp.verificationMethods,
-          services: input.body.services ?? lastOp.services,
+            input.body.verificationMethods ?? prev.verificationMethods,
+          services: input.body.services ?? prev.services,
         }),
       )
       return {
