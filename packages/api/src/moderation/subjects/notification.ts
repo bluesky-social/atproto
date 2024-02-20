@@ -9,15 +9,9 @@ export function decideNotification(
 
   acc.setDid(subject.author.did)
   acc.setIsMe(subject.author.did === opts.userDid)
-  if (
-    subject.type === 'reply' ||
-    subject.type === 'quote' ||
-    subject.type === 'mention'
-  ) {
-    if (subject.labels?.length) {
-      for (const label of subject.labels) {
-        acc.addLabel('content', label, opts)
-      }
+  if (subject.labels?.length) {
+    for (const label of subject.labels) {
+      acc.addLabel('content', label, opts)
     }
   }
 

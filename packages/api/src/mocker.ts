@@ -5,7 +5,10 @@ import {
   AppBskyFeedPost,
   AppBskyEmbedRecord,
   AppBskyGraphDefs,
+  AppBskyNotificationListNotifications,
 } from './client'
+
+const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 
 export const mock = {
   post({
@@ -47,8 +50,8 @@ export const mock = {
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyFeedDefs.PostView {
     return {
-      uri: `at://${author.did}/app.bsky.post/fake`,
-      cid: 'fake',
+      uri: `at://${author.did}/app.bsky.feed.post/fake`,
+      cid: FAKE_CID,
       author,
       record,
       embed,
@@ -74,8 +77,8 @@ export const mock = {
       $type: 'app.bsky.embed.record#view',
       record: {
         $type: 'app.bsky.embed.record#viewRecord',
-        uri: `at://${author.did}/app.bsky.post/fake`,
-        cid: 'fake',
+        uri: `at://${author.did}/app.bsky.feed.post/fake`,
+        cid: FAKE_CID,
         author,
         value: record,
         labels,
@@ -138,10 +141,57 @@ export const mock = {
   listViewBasic({ name }: { name: string }): AppBskyGraphDefs.ListViewBasic {
     return {
       uri: 'at://did:plc:fake/app.bsky.graph.list/fake',
-      cid: 'fake',
+      cid: FAKE_CID,
       name,
       purpose: 'app.bsky.graph.defs#modlist',
       indexedAt: new Date().toISOString(),
+    }
+  },
+
+  replyNotification({
+    author,
+    record,
+    labels,
+  }: {
+    record: AppBskyFeedPost.Record
+    author: AppBskyActorDefs.ProfileViewBasic
+    labels?: ComAtprotoLabelDefs.Label[]
+  }): AppBskyNotificationListNotifications.Notification {
+    return {
+      uri: `at://${author.did}/app.bsky.feed.post/fake`,
+      cid: FAKE_CID,
+      author,
+      reason: 'reply',
+      reasonSubject: `at://${author.did}/app.bsky.feed.post/fake-parent`,
+      record,
+      isRead: false,
+      indexedAt: new Date().toISOString(),
+      labels,
+    }
+  },
+
+  followNotification({
+    author,
+    subjectDid,
+    labels,
+  }: {
+    author: AppBskyActorDefs.ProfileViewBasic
+    subjectDid: string
+    labels?: ComAtprotoLabelDefs.Label[]
+  }): AppBskyNotificationListNotifications.Notification {
+    return {
+      uri: `at://${author.did}/app.bsky.graph.follow/fake`,
+      cid: FAKE_CID,
+      author,
+      reason: 'follow',
+      record: {
+        $type: 'app.bsky.graph.follow',
+        createdAt: new Date().toISOString(),
+        subject: subjectDid,
+      },
+      isRead: false,
+      indexedAt: new Date().toISOString(),
+      labels,
     }
   },
 
