@@ -60,47 +60,54 @@ const importRepo = async (
   diff.commit.rev = rev
   await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
   const recordQueue = new PQueue({ concurrency: 50 })
+  const controller = new AbortController()
   for (const write of diff.writes) {
-    recordQueue.add(async () => {
-      const uri = AtUri.make(did, write.collection, write.rkey)
-      if (write.action === WriteOpAction.Delete) {
-        await actorStore.record.deleteRecord(uri)
-      } else {
-        let parsedRecord: RepoRecord
-        try {
-          const parsed = await getAndParseRecord(blocks, write.cid)
-          parsedRecord = parsed.record
-        } catch {
-          throw new InvalidRequestError(
-            `Could not parse record at '${write.collection}/${write.rkey}'`,
-          )
-        }
-        const indexRecord = actorStore.record.indexRecord(
-          uri,
-          write.cid,
-          parsedRecord,
-          write.action,
-          rev,
-          now,
-        )
-        const recordBlobs = findBlobRefs(parsedRecord)
-        const blobValues = recordBlobs.map((cid) => ({
-          recordUri: uri.toString(),
-          blobCid: cid.ref.toString(),
-        }))
-        const indexRecordBlobs =
-          blobValues.length > 0
-            ? actorStore.db.db
-                .insertInto('record_blob')
-                .values(blobValues)
-                .onConflict((oc) => oc.doNothing())
-                .execute()
-            : Promise.resolve()
-        await Promise.all([indexRecord, indexRecordBlobs])
-      }
-    })
+    recordQueue
+      .add(
+        async () => {
+          const uri = AtUri.make(did, write.collection, write.rkey)
+          if (write.action === WriteOpAction.Delete) {
+            await actorStore.record.deleteRecord(uri)
+          } else {
+            let parsedRecord: RepoRecord
+            try {
+              const parsed = await getAndParseRecord(blocks, write.cid)
+              parsedRecord = parsed.record
+            } catch {
+              throw new InvalidRequestError(
+                `Could not parse record at '${write.collection}/${write.rkey}'`,
+              )
+            }
+            const indexRecord = actorStore.record.indexRecord(
+              uri,
+              write.cid,
+              parsedRecord,
+              write.action,
+              rev,
+              now,
+            )
+            const recordBlobs = findBlobRefs(parsedRecord)
+            const blobValues = recordBlobs.map((cid) => ({
+              recordUri: uri.toString(),
+              blobCid: cid.ref.toString(),
+            }))
+            const indexRecordBlobs =
+              blobValues.length > 0
+                ? actorStore.db.db
+                    .insertInto('record_blob')
+                    .values(blobValues)
+                    .onConflict((oc) => oc.doNothing())
+                    .execute()
+                : Promise.resolve()
+            await Promise.all([indexRecord, indexRecordBlobs])
+          }
+        },
+        { signal: controller.signal },
+      )
+      .catch((err) => controller.abort(err))
   }
   await recordQueue.onIdle()
+  controller.signal.throwIfAborted()
 }
 
 export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {
