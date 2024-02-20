@@ -27,9 +27,12 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, res }) => {
-      const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
-      const result = await getAuthorFeed({ ...params, viewer }, ctx)
+      const result = await getAuthorFeed(
+        { ...params, viewer, includeTakedowns: canViewTakedowns },
+        ctx,
+      )
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
@@ -58,7 +61,10 @@ export const skeleton = async (inputs: {
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actors = await ctx.hydrator.actor.getActors([did])
+  const actors = await ctx.hydrator.actor.getActors(
+    [did],
+    params.includeTakedowns,
+  )
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
@@ -91,7 +97,11 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   const [feedPostState, profileViewerState = {}] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, params.viewer),
+    ctx.hydrator.hydrateFeedItems(
+      skeleton.items,
+      params.viewer,
+      params.includeTakedowns,
+    ),
     params.viewer
       ? ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.viewer)
       : undefined,
@@ -147,7 +157,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { viewer: string | null; includeTakedowns: boolean }
 
 type Skeleton = {
   actor: Actor
