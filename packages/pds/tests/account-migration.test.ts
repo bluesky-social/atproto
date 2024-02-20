@@ -1,5 +1,4 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { HOUR } from '@atproto/common'
 import {
   SeedClient,
   TestNetworkNoAppView,
@@ -192,8 +191,13 @@ describe('account migration', () => {
       importedBlobs: 3,
     })
 
-    await oldAgent.com.atproto.server.deactivateAccount({
-      deleteAfter: new Date(Date.now() + HOUR).toISOString(),
+    await oldAgent.com.atproto.server.deactivateAccount({})
+
+    const statusResOldPds =
+      await oldAgent.com.atproto.server.checkAccountStatus()
+    expect(statusResOldPds.data).toMatchObject({
+      activated: false,
+      validDid: false,
     })
 
     const postRes = await newAgent.api.app.bsky.feed.post.create(

@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (!op.rotationKeys.includes(ctx.plcRotationKey.did())) {
         throw new InvalidRequestError(
-          'Rotation keys do not include servers rotation key',
+          "Rotation keys do not include server's rotation key",
         )
       }
       if (op.services['atproto_pds']?.type !== 'AtprotoPersonalDataServer') {

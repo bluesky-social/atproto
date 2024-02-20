@@ -247,11 +247,7 @@ export class AuthVerifier {
     reqCtx: ReqCtx,
   ): Promise<UserDidOutput | NullOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      try {
-        return await this.userDidAuth(reqCtx)
-      } catch {
-        return { credentials: null }
-      }
+      return await this.userDidAuth(reqCtx)
     } else {
       return { credentials: null }
     }

@@ -89,11 +89,11 @@ describe('plc operations', () => {
     await expect(attempt).rejects.toThrow(expectedErr)
   }
 
-  it('prevents submitting an operation that removes the servers rotation key', async () => {
+  it("prevents submitting an operation that removes the server's rotation key", async () => {
     await expectFailedOp(
       alice,
       { rotationKeys: [sampleKey] },
-      'Rotation keys do not include servers rotation key',
+      "Rotation keys do not include server's rotation key",
     )
   })
 

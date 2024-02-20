@@ -76,17 +76,17 @@ export const registerActor = async (
   },
 ) => {
   const { did, handle, deactivated } = opts
+  const now = Date.now()
+  const createdAt = new Date(now).toISOString()
   const [registered] = await db.executeWithRetry(
     db.db
       .insertInto('actor')
       .values({
         did,
         handle,
-        createdAt: new Date().toISOString(),
-        deactivatedAt: deactivated ? new Date().toISOString() : null,
-        deleteAfter: deactivated
-          ? new Date(Date.now() + 3 * DAY).toISOString()
-          : null,
+        createdAt,
+        deactivatedAt: deactivated ? createdAt : null,
+        deleteAfter: deactivated ? new Date(now + 3 * DAY).toISOString() : null,
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did'),

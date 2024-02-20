@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db'
-import { countAll, notSoftDeletedClause } from '../../db/util'
+import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobReader {
@@ -92,15 +92,10 @@ export class BlobReader {
   }
 
   async recordBlobCount(): Promise<number> {
+    const { ref } = this.db.db.dynamic
     const res = await this.db.db
-      .selectFrom(
-        this.db.db
-          .selectFrom('record_blob')
-          .select('blobCid')
-          .distinct()
-          .as('unique_cids'),
-      )
-      .select(countAll.as('count'))
+      .selectFrom('record_blob')
+      .select(countDistinct(ref('blobCid')).as('count'))
       .executeTakeFirst()
     return res?.count ?? 0
   }

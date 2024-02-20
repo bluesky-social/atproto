@@ -18,7 +18,6 @@ export default function (server: Server, ctx: AppContext) {
       }
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
-        includeTakenDown: true,
       })
       if (!account) {
         throw new InvalidRequestError('account not found')

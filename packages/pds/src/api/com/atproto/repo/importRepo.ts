@@ -104,7 +104,7 @@ const importRepo = async (
 }
 
 export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {
-  if (layer > 10) {
+  if (layer > 32) {
     return []
   }
   // walk arrays
