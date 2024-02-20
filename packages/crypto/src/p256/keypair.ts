@@ -1,7 +1,10 @@
 import { p256 } from '@noble/curves/p256'
 import { sha256 } from '@noble/hashes/sha256'
 import { SupportedEncodings } from 'uint8arrays/to-string'
-import { fromString, toString } from 'uint8arrays'
+import {
+  fromString as ui8FromString,
+  toString as ui8ToString,
+} from 'uint8arrays'
 
 import * as did from '../did'
 import { P256_JWT_ALG } from '../const'
@@ -33,7 +36,7 @@ export class P256Keypair implements Keypair {
   ): Promise<P256Keypair> {
     const { exportable = false } = opts || {}
     const privKeyBytes =
-      typeof privKey === 'string' ? fromString(privKey, 'hex') : privKey
+      typeof privKey === 'string' ? ui8FromString(privKey, 'hex') : privKey
     return new P256Keypair(privKeyBytes, exportable)
   }
 
@@ -42,7 +45,7 @@ export class P256Keypair implements Keypair {
   }
 
   publicKeyStr(encoding: SupportedEncodings = 'base64pad'): string {
-    return toString(this.publicKey, encoding)
+    return ui8ToString(this.publicKey, encoding)
   }
 
   did(): string {
