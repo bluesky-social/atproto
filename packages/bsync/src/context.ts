@@ -7,21 +7,25 @@ import { EventEmitter } from 'stream'
 export type AppContextOptions = {
   db: Database
   cfg: ServerConfig
+  shutdown: AbortSignal
 }
 
 export class AppContext {
   db: Database
   cfg: ServerConfig
+  shutdown: AbortSignal
   events: TypedEventEmitter<AppEvents>
 
   constructor(opts: AppContextOptions) {
     this.db = opts.db
     this.cfg = opts.cfg
+    this.shutdown = opts.shutdown
     this.events = new EventEmitter() as TypedEventEmitter<AppEvents>
   }
 
   static async fromConfig(
     cfg: ServerConfig,
+    shutdown: AbortSignal,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
     const db = new Database({
@@ -31,7 +35,7 @@ export class AppContext {
       poolMaxUses: cfg.db.poolMaxUses,
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
-    return new AppContext({ db, cfg, ...overrides })
+    return new AppContext({ db, cfg, shutdown, ...overrides })
   }
 }
 

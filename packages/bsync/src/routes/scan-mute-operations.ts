@@ -14,7 +14,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const cursor = validCursor(req.cursor)
     const nextMuteOpPromise = once(events, createMuteOpChannel, {
       signal: combineSignals(
-        handlerCtx.signal,
+        ctx.shutdown,
         AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
       ),
     })
@@ -34,7 +34,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextMuteOpPromise
       } catch (err) {
-        handlerCtx.signal.throwIfAborted()
+        ctx.shutdown.throwIfAborted()
         return new ScanMuteOperationsResponse({
           operations: [],
           cursor: req.cursor,

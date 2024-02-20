@@ -36,8 +36,8 @@ export class BsyncService {
     cfg: ServerConfig,
     overrides?: Partial<AppContextOptions>,
   ): Promise<BsyncService> {
-    const ctx = await AppContext.fromConfig(cfg, overrides)
     const ac = new AbortController()
+    const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
     const handler = connectNodeAdapter({
       routes: routes(ctx),
       shutdownSignal: ac.signal,
