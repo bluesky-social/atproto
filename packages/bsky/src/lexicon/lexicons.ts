@@ -3400,28 +3400,39 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Get a document describing the service's accounts configuration.",
+          "Describes the server's account creation requirements and capabilities. Implemented by PDS.",
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['availableUserDomains'],
+            required: ['did', 'availableUserDomains'],
             properties: {
               inviteCodeRequired: {
                 type: 'boolean',
+                description:
+                  'If true, an invite code must be supplied to create an account on this instance.',
               },
               phoneVerificationRequired: {
                 type: 'boolean',
+                description:
+                  'If true, a phone verification token must be supplied to create an account on this instance.',
               },
               availableUserDomains: {
                 type: 'array',
+                description:
+                  'List of domain suffixes that can be used in account handles.',
                 items: {
                   type: 'string',
                 },
               },
               links: {
                 type: 'ref',
+                description: 'URLs of service policy documents.',
                 ref: 'lex:com.atproto.server.describeServer#links',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
               },
             },
           },
