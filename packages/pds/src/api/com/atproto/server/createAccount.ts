@@ -69,6 +69,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (!deactivated) {
           await ctx.sequencer.sequenceCommit(did, commit, [])
+          await ctx.sequencer.sequenceIdentityEvt(did)
         }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         didDoc = await didDocForSession(ctx, did, true)

@@ -156,6 +156,8 @@ function getMessageDetails(msg: Message):
     return { seq: msg.seq, repo: msg.repo, message: msg }
   } else if (message.isHandle(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isIdentity(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isMigrate(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isTombstone(msg)) {

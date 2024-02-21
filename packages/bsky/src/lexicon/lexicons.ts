@@ -4579,6 +4579,7 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#identity',
               'lex:com.atproto.sync.subscribeRepos#handle',
               'lex:com.atproto.sync.subscribeRepos#migrate',
               'lex:com.atproto.sync.subscribeRepos#tombstone',
@@ -4685,10 +4686,29 @@ export const schemaDict = {
           },
         },
       },
+      identity: {
+        type: 'object',
+        description:
+          "Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache.",
+        required: ['seq', 'did', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       handle: {
         type: 'object',
         description:
-          "Represents an update of the account's handle, or transition to/from invalid state.",
+          "Represents an update of the account's handle, or transition to/from invalid state. NOTE: Will be deprecated in favor of #identity.",
         required: ['seq', 'did', 'handle', 'time'],
         properties: {
           seq: {
@@ -4711,7 +4731,7 @@ export const schemaDict = {
       migrate: {
         type: 'object',
         description:
-          'Represents an account moving from one PDS instance to another. NOTE: not implemented; full account migration may introduce a new message instead.',
+          'Represents an account moving from one PDS instance to another. NOTE: not implemented; account migration uses #identity instead',
         required: ['seq', 'did', 'migrateTo', 'time'],
         nullable: ['migrateTo'],
         properties: {
@@ -4733,7 +4753,8 @@ export const schemaDict = {
       },
       tombstone: {
         type: 'object',
-        description: 'Indicates that an account has been deleted.',
+        description:
+          'Indicates that an account has been deleted. NOTE: may be deprecated in favor of #identity or a future #account event',
         required: ['seq', 'did', 'time'],
         properties: {
           seq: {
@@ -7087,7 +7108,8 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
-              description: 'Additional non-inline tags describing this post.',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
               maxLength: 8,
               items: {
                 type: 'string',

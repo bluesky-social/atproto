@@ -1,7 +1,9 @@
+import { CidSet } from '@atproto/repo'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { assertValidDidDocumentForService } from './util'
-import { CidSet } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
@@ -10,6 +12,13 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       await assertValidDidDocumentForService(ctx, requester)
+
+      const account = await ctx.accountManager.getAccount(requester, {
+        includeDeactivated: true,
+      })
+      if (!account) {
+        throw new InvalidRequestError('user not found', 'AccountNotFound')
+      }
 
       await ctx.accountManager.activateAccount(requester)
 
@@ -26,6 +35,12 @@ export default function (server: Server, ctx: AppContext) {
         }
       })
 
+      // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
+      await ctx.sequencer.sequenceIdentityEvt(requester)
+      await ctx.sequencer.sequenceHandleUpdate(
+        requester,
+        account.handle ?? INVALID_HANDLE,
+      )
       await ctx.sequencer.sequenceCommit(requester, commitData, [])
     },
   })
