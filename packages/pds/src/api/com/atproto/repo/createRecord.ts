@@ -41,11 +41,6 @@ export default function (server: Server, ctx: AppContext) {
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
-      if (validate === false) {
-        throw new InvalidRequestError(
-          'Unvalidated writes are not yet supported.',
-        )
-      }
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate

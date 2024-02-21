@@ -62,11 +62,6 @@ export default function (server: Server, ctx: AppContext) {
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
-      if (validate === false) {
-        throw new InvalidRequestError(
-          'Unvalidated writes are not yet supported.',
-        )
-      }
       if (tx.writes.length > 200) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
