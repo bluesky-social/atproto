@@ -145,6 +145,8 @@ export class IndexerSubscription {
         await this.handleCommit(msg)
       } else if (message.isHandle(msg)) {
         await this.handleUpdateHandle(msg)
+      } else if (message.isIdentity(msg)) {
+        await this.handleIdentityEvt(msg)
       } else if (message.isTombstone(msg)) {
         await this.handleTombstone(msg)
       } else if (message.isMigrate(msg)) {
@@ -241,6 +243,10 @@ export class IndexerSubscription {
   }
 
   private async handleUpdateHandle(msg: message.Handle) {
+    await this.indexingSvc.indexHandle(msg.did, msg.time, true)
+  }
+
+  private async handleIdentityEvt(msg: message.Identity) {
     await this.indexingSvc.indexHandle(msg.did, msg.time, true)
   }
 

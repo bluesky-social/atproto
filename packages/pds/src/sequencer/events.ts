@@ -89,7 +89,7 @@ export const formatSeqIdentityEvt = async (
   }
   return {
     did,
-    eventType: 'handle',
+    eventType: 'identity',
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }

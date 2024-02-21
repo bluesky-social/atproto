@@ -50,6 +50,7 @@ export function validateCommit(v: unknown): ValidationResult {
 export interface Identity {
   seq: number
   did: string
+  time: string
   [k: string]: unknown
 }
 
