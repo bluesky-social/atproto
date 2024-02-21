@@ -255,12 +255,14 @@ export function validateInterestsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#interestsPref', v)
 }
 
+export type MutedWordTarget = 'content' | 'tag' | (string & {})
+
 /** A word that the account owner has muted. */
 export interface MutedWord {
   /** The muted word itself. */
   value: string
-  /** The intended target of the muted word. */
-  target: 'content' | 'tag' | 'any' | (string & {})
+  /** The intended targets of the muted word. */
+  targets: MutedWordTarget[]
   [k: string]: unknown
 }
 

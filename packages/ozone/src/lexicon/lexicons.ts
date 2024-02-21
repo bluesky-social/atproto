@@ -4974,10 +4974,16 @@ export const schemaDict = {
           },
         },
       },
+      mutedWordTarget: {
+        type: 'string',
+        knownValues: ['content', 'tag'],
+        maxLength: 640,
+        maxGraphemes: 64,
+      },
       mutedWord: {
         type: 'object',
         description: 'A word that the account owner has muted.',
-        required: ['value', 'target'],
+        required: ['value', 'targets'],
         properties: {
           value: {
             type: 'string',
@@ -4985,12 +4991,13 @@ export const schemaDict = {
             maxLength: 10000,
             maxGraphemes: 1000,
           },
-          target: {
-            type: 'string',
-            description: 'The intended target of the muted word.',
-            knownValues: ['content', 'tag', 'any'],
-            maxLength: 640,
-            maxGraphemes: 64,
+          targets: {
+            type: 'array',
+            description: 'The intended targets of the muted word.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#mutedWordTarget',
+            },
           },
         },
       },
