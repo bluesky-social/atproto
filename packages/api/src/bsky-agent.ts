@@ -668,7 +668,9 @@ async function updateMutedWords(
 
     if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
       if (action === 'upsert' || action === 'update') {
-        outer: for (const newItem of mutedWords) {
+        for (const newItem of mutedWords) {
+          let foundMatch = false
+
           for (const existingItem of mutedWordsPref.items) {
             if (existingItem.value === newItem.value) {
               existingItem.targets =
@@ -677,23 +679,20 @@ async function updateMutedWords(
                       new Set([...existingItem.targets, ...newItem.targets]),
                     )
                   : newItem.targets
-              continue outer
+              foundMatch = true
+              break
             }
           }
 
-          // never hit `continue`, add new item
-          if (action === 'upsert') {
+          if (action === 'upsert' && !foundMatch) {
             mutedWordsPref.items.push(sanitizeMutedWord(newItem))
           }
         }
       } else if (action === 'remove') {
-        let i = mutedWordsPref.items.length
-
-        while (i--) {
-          const item = mutedWordsPref.items[i]
-
-          for (const word of mutedWords) {
-            if (item.value === sanitizeMutedWord(word).value) {
+        for (const word of mutedWords) {
+          for (let i = 0; i < mutedWordsPref.items.length; i++) {
+            const existing = mutedWordsPref.items[i]
+            if (existing.value === sanitizeMutedWord(word).value) {
               mutedWordsPref.items.splice(i, 1)
               break
             }
