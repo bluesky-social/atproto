@@ -109,8 +109,6 @@ export class TestNetwork extends TestNetworkNoAppView {
         await sub.repoQueue.main.onIdle()
         return
       }
-      console.log('LAST SEQ: ', lastSeq)
-      console.log('CURSOR', partitionState.cursor)
       await wait(5)
     }
     throw new Error(`Sequence was not processed within ${timeout}ms`)
