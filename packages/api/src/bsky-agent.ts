@@ -327,6 +327,7 @@ export class BskyAgent extends AtpAgent {
       interests: {
         tags: [],
       },
+      mutedWords: [],
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -380,6 +381,13 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.interests = { ...prefs.interests, ...v }
+      } else if (
+        AppBskyActorDefs.isMutedWordsPref(pref) &&
+        AppBskyActorDefs.validateMutedWordsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.mutedWords = v.items
       }
     }
     return prefs
@@ -546,6 +554,105 @@ export class BskyAgent extends AtpAgent {
       return prefs
         .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
         .concat([{ ...pref, $type: 'app.bsky.actor.defs#interestsPref' }])
+    })
+  }
+
+  async upsertMutedWords(words: AppBskyActorDefs.MutedWord[]) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let mutedWordsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isMutedWordsPref(pref) &&
+          AppBskyActorDefs.validateMutedWordsPref(pref).success,
+      )
+
+      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+        outer: for (const newItem of words) {
+          for (const existingItem of mutedWordsPref.items) {
+            if (existingItem.value === newItem.value) {
+              existingItem.targets = Array.from(new Set([...existingItem.targets, ...newItem.targets]))
+              continue outer
+            }
+          }
+
+          mutedWordsPref.items.push(newItem)
+        }
+      } else {
+        mutedWordsPref = {
+          items: words,
+        }
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+        .concat([
+          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+        ])
+    })
+  }
+
+  async updateMutedWord(word: AppBskyActorDefs.MutedWord) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let mutedWordsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isMutedWordsPref(pref) &&
+          AppBskyActorDefs.validateMutedWordsPref(pref).success,
+      )
+
+      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+        let i = mutedWordsPref.items.length
+
+        while (i--) {
+          const item = mutedWordsPref.items[i]
+
+          if (item.value === word.value) {
+            if (word.targets.length) {
+              item.targets = word.targets
+            } else {
+              mutedWordsPref.items.splice(i, 1)
+            }
+            break
+          }
+        }
+      } else {
+        return prefs
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+        .concat([
+          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+        ])
+    })
+  }
+
+  async removeMutedWord(word: AppBskyActorDefs.MutedWord) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let mutedWordsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isMutedWordsPref(pref) &&
+          AppBskyActorDefs.validateMutedWordsPref(pref).success,
+      )
+
+      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+        let i = mutedWordsPref.items.length
+
+        while (i--) {
+          const item = mutedWordsPref.items[i]
+
+          if (item.value === word.value) {
+            mutedWordsPref.items.splice(i, 1)
+            break
+          }
+        }
+      } else {
+        return prefs
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+        .concat([
+          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+        ])
     })
   }
 }
