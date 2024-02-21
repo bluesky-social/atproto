@@ -17,7 +17,7 @@
       "message": {
         "schema": {
           "type": "union",
-          "refs": ["#commit", "#handle", "#migrate", "#tombstone", "#info"]
+          "refs": ["#commit", "#identity", "#handle", "#migrate", "#tombstone", "#info"]
         }
       },
       "errors": [
@@ -138,7 +138,7 @@
     },
     "tombstone": {
       "type": "object",
-      "description": "Indicates that an account has been deleted.",
+      "description": "Indicates that an account has been deleted. NOTE: may be deprecated in favor of #identity or a future #account event",
       "required": ["seq", "did", "time"],
       "properties": {
         "seq": { "type": "integer" },
