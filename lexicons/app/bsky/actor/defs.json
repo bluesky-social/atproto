@@ -230,7 +230,7 @@
         "target": {
           "type": "string",
           "description": "The intended target of the muted word.",
-          "knownValues": ["content", "tag"],
+          "knownValues": ["content", "tag", "any"],
           "maxLength": 640,
           "maxGraphemes": 64
         }
