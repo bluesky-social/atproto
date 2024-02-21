@@ -328,6 +328,7 @@ export class BskyAgent extends AtpAgent {
         tags: [],
       },
       mutedWords: [],
+      hiddenPosts: [],
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -388,6 +389,13 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.mutedWords = v.items
+      } else if (
+        AppBskyActorDefs.isHiddenPostsPref(pref) &&
+        AppBskyActorDefs.validateHiddenPostsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.hiddenPosts = v.items
       }
     }
     return prefs
@@ -568,6 +576,14 @@ export class BskyAgent extends AtpAgent {
   async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await updateMutedWords(this, [mutedWord], 'remove')
   }
+
+  async hidePost(postUri: string) {
+    await updateHiddenPost(this, postUri, 'hide')
+  }
+
+  async unhidePost(postUri: string) {
+    await updateHiddenPost(this, postUri, 'unhide')
+  }
 }
 
 /**
@@ -689,9 +705,6 @@ async function updateMutedWords(
         mutedWordsPref = {
           items: mutedWords,
         }
-      } else {
-        // anything else exit early
-        return prefs
       }
     }
 
@@ -700,5 +713,35 @@ async function updateMutedWords(
       .concat([
         { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
       ])
+  })
+}
+
+async function updateHiddenPost(
+  agent: BskyAgent,
+  postUri: string,
+  action: 'hide' | 'unhide',
+) {
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let pref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isHiddenPostsPref(pref) &&
+        AppBskyActorDefs.validateHiddenPostsPref(pref).success,
+    )
+    if (pref && AppBskyActorDefs.isHiddenPostsPref(pref)) {
+      pref.items =
+        action === 'hide'
+          ? Array.from(new Set([...pref.items, postUri]))
+          : pref.items.filter((uri) => uri !== postUri)
+    } else {
+      if (action === 'hide') {
+        pref = {
+          $type: 'app.bsky.actor.defs#hiddenPostsPref',
+          items: [postUri],
+        }
+      }
+    }
+    return prefs
+      .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+      .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
   })
 }

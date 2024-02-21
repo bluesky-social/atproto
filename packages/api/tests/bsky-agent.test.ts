@@ -240,6 +240,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setAdultContentEnabled(true)
@@ -265,6 +266,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setAdultContentEnabled(false)
@@ -290,6 +292,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setContentLabelPref('impersonation', 'warn')
@@ -317,6 +320,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setContentLabelPref('spam', 'show') // will convert to 'ignore'
@@ -346,6 +350,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -377,6 +382,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -408,6 +414,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removePinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -439,6 +446,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -470,6 +478,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -501,6 +510,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake2')
@@ -538,6 +548,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -569,6 +580,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -600,6 +612,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -631,6 +644,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -662,6 +676,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('other', { hideReplies: true })
@@ -700,6 +715,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -738,6 +754,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setThreadViewPrefs({ sort: 'oldest' })
@@ -776,6 +793,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -814,6 +832,7 @@ describe('agent', () => {
           tags: ['foo', 'bar'],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
     })
 
@@ -941,6 +960,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setAdultContentEnabled(false)
@@ -971,6 +991,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setContentLabelPref('nsfw', 'hide')
@@ -1001,6 +1022,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -1031,6 +1053,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1061,6 +1084,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('home', {
@@ -1102,6 +1126,7 @@ describe('agent', () => {
           tags: [],
         },
         mutedWords: [],
+        hiddenPosts: [],
       })
 
       const res = await agent.app.bsky.actor.getPreferences()
@@ -1208,6 +1233,36 @@ describe('agent', () => {
         ).toBeFalsy()
         expect(mutedWords.find((m) => m.value === 'tag_then_both')).toBeFalsy()
         expect(mutedWords.find((m) => m.value === 'tag_then_none')).toBeFalsy()
+      })
+    })
+
+    describe('hidden posts', () => {
+      let agent: BskyAgent
+      const postUri = 'at://did:plc:fake/app.bsky.feed.post/fake'
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user8.test',
+          email: 'user8@test.com',
+          password: 'password',
+        })
+      })
+
+      it('hidePost', async () => {
+        await agent.hidePost(postUri)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'hiddenPosts',
+          [postUri],
+        )
+      })
+
+      it('unhidePost', async () => {
+        await agent.unhidePost(postUri)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'hiddenPosts',
+          [],
+        )
       })
     })
 

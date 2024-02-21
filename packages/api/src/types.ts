@@ -121,4 +121,5 @@ export interface BskyPreferences {
   birthDate: Date | undefined
   interests: BskyInterestsPreference
   mutedWords: AppBskyActorDefs.MutedWord[]
+  hiddenPosts: string[]
 }
