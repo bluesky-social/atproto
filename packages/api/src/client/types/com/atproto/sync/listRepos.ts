@@ -38,6 +38,7 @@ export function toKnownErr(e: any) {
 
 export interface Repo {
   did: string
+  /** Current repo commit CID */
   head: string
   rev: string
   [k: string]: unknown

@@ -185,6 +185,10 @@
         "suspendUntil": {
           "type": "string",
           "format": "datetime"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },
@@ -584,6 +588,27 @@
         "comment": {
           "type": "string",
           "description": "Additional comment about the outgoing comm."
+        }
+      }
+    },
+    "modEventTag": {
+      "type": "object",
+      "description": "Add/Remove a tag on a subject",
+      "required": ["add", "remove"],
+      "properties": {
+        "add": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags to be added to the subject. If already exists, won't be duplicated."
+        },
+        "remove": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Additional comment about added/removed tags."
         }
       }
     },

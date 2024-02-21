@@ -11,15 +11,15 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The handle or DID of the repo. */
+  /** The handle or DID of the repo (aka, current account). */
   repo: string
   /** The NSID of the record collection. */
   collection: string
-  /** The key of the record. */
+  /** The Record Key. */
   rkey?: string
-  /** Flag for validating the record. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data. */
   validate: boolean
-  /** The record to create. */
+  /** The record itself. Must contain a $type field. */
   record: {}
   /** Compare and swap with the previous commit by CID. */
   swapCommit?: string

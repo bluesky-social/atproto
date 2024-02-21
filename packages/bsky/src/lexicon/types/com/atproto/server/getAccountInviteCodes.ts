@@ -11,6 +11,7 @@ import * as ComAtprotoServerDefs from './defs'
 
 export interface QueryParams {
   includeUsed: boolean
+  /** Controls whether any new 'earned' but not 'created' invites should be created. */
   createAvailable: boolean
 }
 

@@ -10,7 +10,9 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
+  /** Reference (AT-URI) of post record */
   uri: string
+  /** If supplied, filters to reposts of specific version (by CID) of the post record. */
   cid?: string
   limit: number
   cursor?: string

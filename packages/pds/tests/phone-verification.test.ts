@@ -1,8 +1,11 @@
 import assert from 'assert'
+import { createSecretKey } from 'crypto'
 import AtpAgent from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { SignJWT } from 'jose'
 import { AppContext } from '../src'
+import { AuthScope } from '../src/auth-verifier'
 
 describe('phone verification', () => {
   let network: TestNetworkNoAppView
@@ -60,8 +63,12 @@ describe('phone verification', () => {
     return sent.code
   }
 
-  const createAccountWithCode = async (phoneNumber?: string, code?: string) => {
-    const name = crypto.randomStr(5, 'base32')
+  const createAccountWithCode = async (
+    phoneNumber?: string,
+    code?: string,
+    name?: string,
+  ) => {
+    name ??= crypto.randomStr(5, 'base32')
     const res = await agent.api.com.atproto.server.createAccount({
       email: `${name}@test.com`,
       handle: `${name}.test`,
@@ -118,7 +125,7 @@ describe('phone verification', () => {
   it('does not allow signup with out a code', async () => {
     const attempt = createAccountWithCode()
     await expect(attempt).rejects.toThrow(
-      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      `Verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
     )
   })
 
@@ -131,7 +138,7 @@ describe('phone verification', () => {
     )
     const attempt2 = createAccountWithCode(bobNumber, undefined)
     await expect(attempt2).rejects.toThrow(
-      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      `Verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
     )
   })
 
@@ -171,5 +178,117 @@ describe('phone verification', () => {
     await expect(attempt1).rejects.toThrow('Invalid phone number')
     const attempt2 = requestCode('a44444444')
     await expect(attempt2).rejects.toThrow('Invalid phone number')
+  })
+
+  describe('self-verification', () => {
+    const key = createSecretKey(Buffer.from('jwt-secret'))
+
+    it('succeeds when code is correct', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self1.test',
+        verdict: 'good',
+      })
+        .setJti(crypto.randomStr(10, 'base16'))
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(key)
+      await expect(
+        createAccountWithCode(undefined, token, 'self1'),
+      ).resolves.toBeDefined()
+    })
+
+    it('fails when code has bad scope', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.Access,
+        handle: 'self2.test',
+        verdict: 'good',
+      })
+        .setJti(crypto.randomStr(10, 'base16'))
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(key)
+      await expect(
+        createAccountWithCode(undefined, token, 'self2'),
+      ).rejects.toThrow('Invalid verification code.')
+    })
+
+    it('fails when code has bad verdict', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self3.test',
+        verdict: 'bad',
+      })
+        .setJti(crypto.randomStr(10, 'base16'))
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(key)
+      await expect(
+        createAccountWithCode(undefined, token, 'self3'),
+      ).rejects.toThrow('Invalid verification code.')
+    })
+
+    it('fails when code has bad handle match', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'selfX.test',
+        verdict: 'good',
+      })
+        .setJti(crypto.randomStr(10, 'base16'))
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(key)
+      await expect(
+        createAccountWithCode(undefined, token, 'self4'),
+      ).rejects.toThrow('Invalid verification code.')
+    })
+
+    it('fails when code is expired', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self5.test',
+        verdict: 'good',
+      })
+        .setJti(crypto.randomStr(10, 'base16'))
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime(0)
+        .sign(key)
+      await expect(
+        createAccountWithCode(undefined, token, 'self5'),
+      ).rejects.toThrow('Token has expired')
+    })
+
+    it('fails when code had bad audience', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self6.test',
+        verdict: 'good',
+      })
+        .setJti(crypto.randomStr(10, 'base16'))
+        .setAudience('did:example:oops')
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(key)
+      await expect(
+        createAccountWithCode(undefined, token, 'self6'),
+      ).rejects.toThrow('Token could not be verified')
+    })
+
+    it('fails when code is malformed', async () => {
+      await expect(
+        createAccountWithCode(undefined, 'not.a.jwt', 'self7'),
+      ).rejects.toThrow('Token could not be verified')
+    })
   })
 })

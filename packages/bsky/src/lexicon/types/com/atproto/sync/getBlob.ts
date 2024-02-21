@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  /** The DID of the repo. */
+  /** The DID of the account. */
   did: string
   /** The CID of the blob to fetch */
   cid: string

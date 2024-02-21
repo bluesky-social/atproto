@@ -10,7 +10,9 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
+  /** AT-URI of the subject (eg, a post record). */
   uri: string
+  /** CID of the subject record (aka, specific version of record), to filter likes. */
   cid?: string
   limit: number
   cursor?: string
