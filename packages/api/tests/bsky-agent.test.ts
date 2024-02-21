@@ -1191,6 +1191,7 @@ describe('agent', () => {
 
       it('upsertMutedWords', async () => {
         await agent.upsertMutedWords(mutedWords)
+        await agent.upsertMutedWords(mutedWords) // double
         await expect(agent.getPreferences()).resolves.toHaveProperty(
           'mutedWords',
           mutedWords,
