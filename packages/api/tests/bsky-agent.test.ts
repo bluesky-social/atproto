@@ -1166,20 +1166,35 @@ describe('agent', () => {
 
       it('upsertMutedWords', async () => {
         await agent.upsertMutedWords(mutedWords)
-        await expect(agent.getPreferences()).resolves.toHaveProperty('mutedWords', mutedWords)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'mutedWords',
+          mutedWords,
+        )
       })
 
       it('updateMutedWord', async () => {
-        await agent.updateMutedWord({ value: 'tag_then_content', targets: ['content'] })
-        await agent.updateMutedWord({ value: 'tag_then_both', targets: ['content', 'tag'] })
+        await agent.updateMutedWord({
+          value: 'tag_then_content',
+          targets: ['content'],
+        })
+        await agent.updateMutedWord({
+          value: 'tag_then_both',
+          targets: ['content', 'tag'],
+        })
         await agent.updateMutedWord({ value: 'tag_then_none', targets: [] })
         await agent.updateMutedWord({ value: 'no_exist', targets: ['tag'] })
         const { mutedWords } = await agent.getPreferences()
 
-        expect(mutedWords.find(m => m.value === 'tag_then_content')).toHaveProperty('targets', ['content'])
-        expect(mutedWords.find(m => m.value === 'tag_then_both')).toHaveProperty('targets', ['content', 'tag'])
-        expect(mutedWords.find(m => m.value === 'tag_then_none')).toHaveProperty('targets', [])
-        expect(mutedWords.find(m => m.value === 'no_exist')).toBeFalsy()
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_content'),
+        ).toHaveProperty('targets', ['content'])
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_both'),
+        ).toHaveProperty('targets', ['content', 'tag'])
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_none'),
+        ).toHaveProperty('targets', [])
+        expect(mutedWords.find((m) => m.value === 'no_exist')).toBeFalsy()
       })
 
       it('removeMutedWord', async () => {
@@ -1188,9 +1203,11 @@ describe('agent', () => {
         await agent.removeMutedWord({ value: 'tag_then_none', targets: [] })
         const { mutedWords } = await agent.getPreferences()
 
-        expect(mutedWords.find(m => m.value === 'tag_then_content')).toBeFalsy()
-        expect(mutedWords.find(m => m.value === 'tag_then_both')).toBeFalsy()
-        expect(mutedWords.find(m => m.value === 'tag_then_none')).toBeFalsy()
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_content'),
+        ).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === 'tag_then_both')).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === 'tag_then_none')).toBeFalsy()
       })
     })
 

@@ -650,9 +650,12 @@ async function updateMutedWords(
         outer: for (const newItem of mutedWords) {
           for (const existingItem of mutedWordsPref.items) {
             if (existingItem.value === newItem.value) {
-              existingItem.targets = action === 'upsert' ?
-                Array.from(new Set([...existingItem.targets, ...newItem.targets])) :
-                newItem.targets
+              existingItem.targets =
+                action === 'upsert'
+                  ? Array.from(
+                      new Set([...existingItem.targets, ...newItem.targets]),
+                    )
+                  : newItem.targets
               continue outer
             }
           }
