@@ -557,103 +557,16 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async upsertMutedWords(words: AppBskyActorDefs.MutedWord[]) {
-    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      let mutedWordsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isMutedWordsPref(pref) &&
-          AppBskyActorDefs.validateMutedWordsPref(pref).success,
-      )
-
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        outer: for (const newItem of words) {
-          for (const existingItem of mutedWordsPref.items) {
-            if (existingItem.value === newItem.value) {
-              existingItem.targets = Array.from(new Set([...existingItem.targets, ...newItem.targets]))
-              continue outer
-            }
-          }
-
-          mutedWordsPref.items.push(newItem)
-        }
-      } else {
-        mutedWordsPref = {
-          items: words,
-        }
-      }
-
-      return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
-    })
+  async upsertMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
+    await updateMutedWords(this, mutedWords, 'upsert')
   }
 
-  async updateMutedWord(word: AppBskyActorDefs.MutedWord) {
-    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      let mutedWordsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isMutedWordsPref(pref) &&
-          AppBskyActorDefs.validateMutedWordsPref(pref).success,
-      )
-
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        let i = mutedWordsPref.items.length
-
-        while (i--) {
-          const item = mutedWordsPref.items[i]
-
-          if (item.value === word.value) {
-            if (word.targets.length) {
-              item.targets = word.targets
-            } else {
-              mutedWordsPref.items.splice(i, 1)
-            }
-            break
-          }
-        }
-      } else {
-        return prefs
-      }
-
-      return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
-    })
+  async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    await updateMutedWords(this, [mutedWord], 'update')
   }
 
-  async removeMutedWord(word: AppBskyActorDefs.MutedWord) {
-    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      let mutedWordsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isMutedWordsPref(pref) &&
-          AppBskyActorDefs.validateMutedWordsPref(pref).success,
-      )
-
-      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        let i = mutedWordsPref.items.length
-
-        while (i--) {
-          const item = mutedWordsPref.items[i]
-
-          if (item.value === word.value) {
-            mutedWordsPref.items.splice(i, 1)
-            break
-          }
-        }
-      } else {
-        return prefs
-      }
-
-      return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
-    })
+  async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    await updateMutedWords(this, [mutedWord], 'remove')
   }
 }
 
@@ -715,4 +628,74 @@ async function updateFeedPreferences(
       .concat([feedsPref])
   })
   return res
+}
+
+/**
+ * A helper specifically for updating muted words preferences
+ */
+async function updateMutedWords(
+  agent: BskyAgent,
+  mutedWords: AppBskyActorDefs.MutedWord[],
+  action: 'upsert' | 'update' | 'remove',
+) {
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let mutedWordsPref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isMutedWordsPref(pref) &&
+        AppBskyActorDefs.validateMutedWordsPref(pref).success,
+    )
+
+    if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (action === 'upsert' || action === 'update') {
+        outer: for (const newItem of mutedWords) {
+          for (const existingItem of mutedWordsPref.items) {
+            if (existingItem.value === newItem.value) {
+              existingItem.targets = action === 'upsert' ?
+                Array.from(new Set([...existingItem.targets, ...newItem.targets])) :
+                newItem.targets
+              continue outer
+            }
+          }
+
+          // never hit `continue`, add new item
+          if (action === 'upsert') {
+            mutedWordsPref.items.push(newItem)
+          }
+        }
+      } else if (action === 'remove') {
+        let i = mutedWordsPref.items.length
+
+        while (i--) {
+          const item = mutedWordsPref.items[i]
+
+          for (const word of mutedWords) {
+            if (item.value === word.value) {
+              if (word.targets.length) {
+                item.targets = word.targets
+              } else {
+                mutedWordsPref.items.splice(i, 1)
+              }
+              break
+            }
+          }
+        }
+      }
+    } else {
+      // if the pref doesn't exist, create it
+      if (action === 'upsert') {
+        mutedWordsPref = {
+          items: mutedWords,
+        }
+      } else {
+        // anything else exit early
+        return prefs
+      }
+    }
+
+    return prefs
+      .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+      .concat([
+        { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+      ])
+  })
 }

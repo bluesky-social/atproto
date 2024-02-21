@@ -1178,7 +1178,7 @@ describe('agent', () => {
 
         expect(mutedWords.find(m => m.value === 'tag_then_content')).toHaveProperty('targets', ['content'])
         expect(mutedWords.find(m => m.value === 'tag_then_both')).toHaveProperty('targets', ['content', 'tag'])
-        expect(mutedWords.find(m => m.value === 'tag_then_none')).toBeFalsy()
+        expect(mutedWords.find(m => m.value === 'tag_then_none')).toHaveProperty('targets', [])
         expect(mutedWords.find(m => m.value === 'no_exist')).toBeFalsy()
       })
 
