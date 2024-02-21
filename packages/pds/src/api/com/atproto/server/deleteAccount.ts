@@ -1,4 +1,5 @@
 import { MINUTE } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -44,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       await ctx.actorStore.destroy(did)
       await ctx.accountManager.deleteAccount(did)
+      await ctx.sequencer.sequenceHandleUpdate(did, INVALID_HANDLE)
       await ctx.sequencer.sequenceTombstone(did)
       await ctx.sequencer.deleteAllForUser(did)
     },
