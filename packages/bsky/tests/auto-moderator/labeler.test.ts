@@ -39,10 +39,11 @@ describe('labeler', () => {
     alice = sc.dids.alice
     const storeBlob = (bytes: Uint8Array) => {
       return pdsCtx.actorStore.transact(alice, async (store) => {
-        const blobRef = await store.repo.blob.addUntetheredBlob(
+        const metadata = await store.repo.blob.uploadBlobAndGetMetadata(
           'image/jpeg',
           Readable.from([bytes], { objectMode: false }),
         )
+        const blobRef = await store.repo.blob.trackUntetheredBlob(metadata)
         const preparedBlobRef = {
           cid: blobRef.ref,
           mimeType: 'image/jpeg',

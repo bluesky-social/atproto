@@ -96,7 +96,7 @@ describe('admin auth', () => {
         encoding: 'application/json',
       },
     )
-    await expect(attempt).rejects.toThrow('Untrusted issuer for admin actions')
+    await expect(attempt).rejects.toThrow('Untrusted issuer')
   })
 
   it('does not allow requests with a bad signature', async () => {

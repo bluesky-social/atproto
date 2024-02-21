@@ -42,7 +42,9 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const account = await ctx.accountManager.getAccount(handle)
+      const account = await ctx.accountManager.getAccount(handle, {
+        includeDeactivated: true,
+      })
 
       if (account) {
         if (account.did !== requester) {

@@ -22,6 +22,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
+    acceptingImports: env.acceptingImports ?? true,
   }
 
   const dbLoc = (name: string) => {
@@ -245,6 +246,7 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
+  acceptingImports: boolean
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 }

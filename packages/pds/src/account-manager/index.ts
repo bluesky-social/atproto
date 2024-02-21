@@ -39,16 +39,16 @@ export class AccountManager {
 
   async getAccount(
     handleOrDid: string,
-    includeSoftDeleted = false,
+    flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccount(this.db, handleOrDid, includeSoftDeleted)
+    return account.getAccount(this.db, handleOrDid, flags)
   }
 
   async getAccountByEmail(
     email: string,
-    includeSoftDeleted = false,
+    flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
-    return account.getAccountByEmail(this.db, email, includeSoftDeleted)
+    return account.getAccountByEmail(this.db, email, flags)
   }
 
   // Repo exists and is not taken-down
@@ -57,11 +57,17 @@ export class AccountManager {
     return !!got
   }
 
+  async isAccountActivated(did: string): Promise<boolean> {
+    const account = await this.getAccount(did, { includeDeactivated: true })
+    if (!account) return false
+    return !account.deactivatedAt
+  }
+
   async getDidForActor(
     handleOrDid: string,
-    includeSoftDeleted = false,
+    flags?: account.AvailabilityFlags,
   ): Promise<string | null> {
-    const got = await this.getAccount(handleOrDid, includeSoftDeleted)
+    const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
   }
 
@@ -73,8 +79,18 @@ export class AccountManager {
     repoCid: CID
     repoRev: string
     inviteCode?: string
+    deactivated?: boolean
   }) {
-    const { did, handle, email, password, repoCid, repoRev, inviteCode } = opts
+    const {
+      did,
+      handle,
+      email,
+      password,
+      repoCid,
+      repoRev,
+      inviteCode,
+      deactivated,
+    } = opts
     const passwordScrypt = password
       ? await scrypt.genSaltAndHash(password)
       : undefined
@@ -92,7 +108,7 @@ export class AccountManager {
         await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
       }
       await Promise.all([
-        account.registerActor(dbTxn, { did, handle }),
+        account.registerActor(dbTxn, { did, handle, deactivated }),
         email && passwordScrypt
           ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
           : Promise.resolve(),
@@ -133,6 +149,14 @@ export class AccountManager {
 
   async updateRepoRoot(did: string, cid: CID, rev: string) {
     return repo.updateRoot(this.db, did, cid, rev)
+  }
+
+  async deactivateAccount(did: string, deleteAfter: string | null) {
+    return account.deactivateAccount(this.db, did, deleteAfter)
+  }
+
+  async activateAccount(did: string) {
+    return account.activateAccount(this.db, did)
   }
 
   // Auth
@@ -307,6 +331,15 @@ export class AccountManager {
     token: string,
   ) {
     return emailToken.assertValidToken(this.db, did, purpose, token)
+  }
+
+  async assertValidEmailTokenAndCleanup(
+    did: string,
+    purpose: EmailTokenPurpose,
+    token: string,
+  ) {
+    await emailToken.assertValidToken(this.db, did, purpose, token)
+    await emailToken.deleteEmailToken(this.db, did, purpose)
   }
 
   async confirmEmail(opts: { did: string; token: string }) {

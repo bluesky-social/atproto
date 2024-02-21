@@ -9,6 +9,7 @@ export const readEnv = (): ServerEnvironment => {
     version: envStr('PDS_VERSION'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -110,6 +111,7 @@ export type ServerEnvironment = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  acceptingImports?: boolean
 
   // database
   dataDirectory?: string

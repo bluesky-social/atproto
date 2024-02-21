@@ -14,7 +14,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
     }
     let did: string | undefined
     try {
-      const user = await ctx.accountManager.getAccount(handle, true)
+      const user = await ctx.accountManager.getAccount(handle)
       did = user?.did
     } catch (err) {
       return res.status(500).send('Internal Server Error')

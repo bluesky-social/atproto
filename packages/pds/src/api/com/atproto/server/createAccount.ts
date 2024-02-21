@@ -1,6 +1,6 @@
 import { DidDocument, MINUTE, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
 import disposable from 'disposable-email'
@@ -19,11 +19,21 @@ export default function (server: Server, ctx: AppContext) {
       durationMs: 5 * MINUTE,
       points: 100,
     },
-    handler: async ({ input, req }) => {
-      const { did, handle, email, password, inviteCode, signingKey, plcOp } =
-        ctx.entrywayAgent
-          ? await validateInputsForEntrywayPds(ctx, input.body)
-          : await validateInputsForLocalPds(ctx, input.body)
+    auth: ctx.authVerifier.userDidAuthOptional,
+    handler: async ({ input, auth, req }) => {
+      const requester = auth.credentials?.iss ?? null
+      const {
+        did,
+        handle,
+        email,
+        password,
+        inviteCode,
+        signingKey,
+        plcOp,
+        deactivated,
+      } = ctx.entrywayAgent
+        ? await validateInputsForEntrywayPds(ctx, input.body)
+        : await validateInputsForLocalPds(ctx, input.body, requester)
 
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
@@ -54,9 +64,12 @@ export default function (server: Server, ctx: AppContext) {
           repoCid: commit.cid,
           repoRev: commit.rev,
           inviteCode,
+          deactivated,
         })
 
-        await ctx.sequencer.sequenceCommit(did, commit, [])
+        if (!deactivated) {
+          await ctx.sequencer.sequenceCommit(did, commit, [])
+        }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         didDoc = await didDocForSession(ctx, did, true)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
@@ -135,12 +148,14 @@ const validateInputsForEntrywayPds = async (
     inviteCode: undefined,
     signingKey,
     plcOp,
+    deactivated: false,
   }
 }
 
 const validateInputsForLocalPds = async (
   ctx: AppContext,
   input: CreateAccountInput,
+  requester: string | null,
 ) => {
   const { email, password, inviteCode } = input
   if (input.plcOp) {
@@ -188,14 +203,38 @@ const validateInputsForLocalPds = async (
   // determine the did & any plc ops we need to send
   // if the provided did document is poorly setup, we throw
   const signingKey = await Secp256k1Keypair.create({ exportable: true })
-  const { did, plcOp } = input.did
-    ? await validateExistingDid(ctx, handle, input.did, signingKey)
-    : await createDidAndPlcOp(ctx, handle, input, signingKey)
 
-  return { did, handle, email, password, inviteCode, signingKey, plcOp }
+  let did: string
+  let plcOp: plc.Operation | null
+  let deactivated = false
+  if (input.did) {
+    if (input.did !== requester) {
+      throw new AuthRequiredError(
+        `Missing auth to create account with did: ${input.did}`,
+      )
+    }
+    did = input.did
+    plcOp = null
+    deactivated = true
+  } else {
+    const formatted = await formatDidAndPlcOp(ctx, handle, input, signingKey)
+    did = formatted.did
+    plcOp = formatted.plcOp
+  }
+
+  return {
+    did,
+    handle,
+    email,
+    password,
+    inviteCode,
+    signingKey,
+    plcOp,
+    deactivated,
+  }
 }
 
-const createDidAndPlcOp = async (
+const formatDidAndPlcOp = async (
   ctx: AppContext,
   handle: string,
   input: CreateAccountInput,
@@ -224,47 +263,6 @@ const createDidAndPlcOp = async (
     plcOp: plcCreate.op,
   }
 }
-
-const validateExistingDid = async (
-  ctx: AppContext,
-  handle: string,
-  did: string,
-  signingKey: Keypair,
-): Promise<{
-  did: string
-  plcOp: plc.Operation | null
-}> => {
-  // if the user is bringing their own did:
-  // resolve the user's did doc data, including rotationKeys if did:plc
-  // determine if we have the capability to make changes to their DID
-  let atpData: AtprotoData
-  try {
-    atpData = await ctx.idResolver.did.resolveAtprotoData(did)
-  } catch (err) {
-    throw new InvalidRequestError(
-      `could not resolve valid DID document :${did}`,
-      'UnresolvableDid',
-    )
-  }
-  validateAtprotoData(atpData, {
-    handle,
-    pds: ctx.cfg.service.publicUrl,
-    signingKey: signingKey.did(),
-  })
-
-  if (did.startsWith('did:plc')) {
-    const data = await ctx.plcClient.getDocumentData(did)
-    if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
-      throw new InvalidRequestError(
-        'PLC DID does not include service rotation key',
-        'IncompatibleDidDoc',
-      )
-    }
-  }
-
-  return { did: did, plcOp: null }
-}
-
 const validateAtprotoData = (
   data: AtprotoData,
   expected: {

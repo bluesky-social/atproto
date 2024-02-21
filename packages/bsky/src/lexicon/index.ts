@@ -90,10 +90,7 @@ import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCra
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
-import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
-import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -1167,28 +1164,6 @@ export class ComAtprotoTempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  importRepo<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  pushBlob<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempPushBlob.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempPushBlob.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.pushBlob' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   requestPhoneVerification<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1197,17 +1172,6 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  transferAccount<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
