@@ -6,6 +6,7 @@ import { CommitData } from '@atproto/repo'
 import {
   CommitEvt,
   HandleEvt,
+  IdentityEvt,
   SeqEvt,
   TombstoneEvt,
   formatSeqCommit,
@@ -145,6 +146,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           seq: row.seq,
           time: row.sequencedAt,
           evt: evt as HandleEvt,
+        })
+      } else if (row.eventType === 'identity') {
+        seqEvts.push({
+          type: 'identity',
+          seq: row.seq,
+          time: row.sequencedAt,
+          evt: evt as IdentityEvt,
         })
       } else if (row.eventType === 'tombstone') {
         seqEvts.push({
