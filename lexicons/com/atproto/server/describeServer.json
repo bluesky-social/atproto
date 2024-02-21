@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["availableUserDomains"],
+          "required": ["did", "availableUserDomains"],
           "properties": {
             "inviteCodeRequired": {
               "type": "boolean",
@@ -28,6 +28,10 @@
               "type": "ref",
               "description": "URLs of service policy documents.",
               "ref": "#links"
+            },
+            "did": {
+              "type": "string",
+              "format": "did"
             }
           }
         }
