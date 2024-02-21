@@ -17,7 +17,14 @@
       "message": {
         "schema": {
           "type": "union",
-          "refs": ["#commit", "#identity", "#handle", "#migrate", "#tombstone", "#info"]
+          "refs": [
+            "#commit",
+            "#identity",
+            "#handle",
+            "#migrate",
+            "#tombstone",
+            "#info"
+          ]
         }
       },
       "errors": [

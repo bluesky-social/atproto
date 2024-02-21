@@ -24,8 +24,8 @@ describe('sequencer', () => {
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    // 6 events in userSeed
-    totalEvts = 6
+    // 10 events in userSeed
+    totalEvts = 10
   })
 
   afterAll(async () => {
@@ -63,10 +63,11 @@ describe('sequencer', () => {
 
   const evtToDbRow = (e: SeqEvt) => {
     const did = e.type === 'commit' ? e.evt.repo : e.evt.did
+    const eventType = e.type === 'commit' ? 'append' : e.type
     return {
       seq: e.seq,
       did,
-      eventType: 'append',
+      eventType,
       event: Buffer.from(cborEncode(e.evt)),
       invalidated: 0,
       sequencedAt: e.time,

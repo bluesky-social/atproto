@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       })
 
+      await ctx.sequencer.sequenceIdentityEvt(requester)
       await ctx.sequencer.sequenceCommit(requester, commitData, [])
     },
   })

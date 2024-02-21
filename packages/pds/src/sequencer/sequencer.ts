@@ -10,6 +10,7 @@ import {
   TombstoneEvt,
   formatSeqCommit,
   formatSeqHandleUpdate,
+  formatSeqIdentityEvt,
   formatSeqTombstone,
 } from './events'
 import {
@@ -206,6 +207,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async sequenceHandleUpdate(did: string, handle: string) {
     const evt = await formatSeqHandleUpdate(did, handle)
+    await this.sequenceEvt(evt)
+  }
+
+  async sequenceIdentityEvt(did: string) {
+    const evt = await formatSeqIdentityEvt(did)
     await this.sequenceEvt(evt)
   }
 

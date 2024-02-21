@@ -44,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       await ctx.actorStore.destroy(did)
       await ctx.accountManager.deleteAccount(did)
+      await ctx.sequencer.sequenceIdentityEvt(did)
       await ctx.sequencer.sequenceTombstone(did)
       await ctx.sequencer.deleteAllForUser(did)
     },
