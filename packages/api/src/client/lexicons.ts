@@ -4974,6 +4974,55 @@ export const schemaDict = {
           },
         },
       },
+      mutedWord: {
+        type: 'object',
+        description: 'A word that the account owner has muted.',
+        required: ['value', 'target'],
+        properties: {
+          value: {
+            type: 'string',
+            description: 'The muted word itself.',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+          },
+          target: {
+            type: 'string',
+            description: 'The intended target of the muted word.',
+            knownValues: ['content', 'tag', 'any'],
+            maxLength: 640,
+            maxGraphemes: 64,
+          },
+        },
+      },
+      mutedWordsPref: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#mutedWord',
+            },
+            description: 'A list of words the account owner has muted.',
+          },
+        },
+      },
+      hiddenPostsPref: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            description:
+              'A list of URIs of posts the account owner has hidden.',
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -6884,7 +6933,8 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
-              description: 'Additional non-inline tags describing this post.',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
               maxLength: 8,
               items: {
                 type: 'string',
