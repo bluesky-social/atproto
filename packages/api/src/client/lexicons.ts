@@ -1968,6 +1968,17 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityRequestPlcOperationSignature: {
+    lexicon: 1,
+    id: 'com.atproto.identity.requestPlcOperationSignature',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request an email with a code to in order to request a signed PLC operation. Requires Auth.',
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
@@ -1995,6 +2006,61 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentitySignPlcOperation: {
+    lexicon: 1,
+    id: 'com.atproto.identity.signPlcOperation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Signs a PLC operation to update some value(s) in the requesting DID's document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              token: {
+                description:
+                  'A token received through com.atproto.identity.requestPlcOperationSignature',
+                type: 'string',
+              },
+              rotationKeys: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'unknown',
+                description: 'A signed DID PLC operation.',
               },
             },
           },
@@ -2925,6 +2991,17 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerActivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.activateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Activates a currently deactivated account. Used to finalize account migration after the account's repo is imported and identity is setup.",
+      },
+    },
+  },
   ComAtprotoServerConfirmEmail: {
     lexicon: 1,
     id: 'com.atproto.server.confirmEmail',
@@ -3293,6 +3370,31 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerDeactivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.deactivateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Deactivates a currently active account. Stops serving of repo, and future writes to repo until reactivated. Used to finalize account migration with the old host after the account has been activated on the new host.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              deleteAfter: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'A recommendation to server as to how long they should hold onto the deactivated account before deleting.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerDefs: {
     lexicon: 1,
     id: 'com.atproto.server.defs',
@@ -3413,7 +3515,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['availableUserDomains'],
+            required: ['did', 'availableUserDomains'],
             properties: {
               inviteCodeRequired: {
                 type: 'boolean',
@@ -3437,6 +3539,10 @@ export const schemaDict = {
                 type: 'ref',
                 description: 'URLs of service policy documents.',
                 ref: 'lex:com.atproto.server.describeServer#links',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
               },
             },
           },
@@ -3499,6 +3605,41 @@ export const schemaDict = {
             name: 'DuplicateCreate',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoServerGetServiceAuth: {
+    lexicon: 1,
+    id: 'com.atproto.server.getServiceAuth',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a signed token on behalf of the requesting DID for the requested service.',
+        parameters: {
+          type: 'params',
+          required: ['aud'],
+          properties: {
+            aud: {
+              type: 'string',
+              format: 'did',
+              description:
+                'The DID of the service that the token will be used to authenticate with',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -8680,7 +8821,10 @@ export const ids = {
   ComAtprotoAdminUpdateCommunicationTemplate:
     'com.atproto.admin.updateCommunicationTemplate',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoIdentityRequestPlcOperationSignature:
+    'com.atproto.identity.requestPlcOperationSignature',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
+  ComAtprotoIdentitySignPlcOperation: 'com.atproto.identity.signPlcOperation',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
@@ -8696,18 +8840,21 @@ export const ids = {
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
+  ComAtprotoServerActivateAccount: 'com.atproto.server.activateAccount',
   ComAtprotoServerConfirmEmail: 'com.atproto.server.confirmEmail',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateAppPassword: 'com.atproto.server.createAppPassword',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateInviteCodes: 'com.atproto.server.createInviteCodes',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
+  ComAtprotoServerDeactivateAccount: 'com.atproto.server.deactivateAccount',
   ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
+  ComAtprotoServerGetServiceAuth: 'com.atproto.server.getServiceAuth',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',

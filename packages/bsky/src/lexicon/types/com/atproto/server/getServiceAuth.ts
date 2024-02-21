@@ -8,19 +8,15 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
+export interface QueryParams {
+  /** The DID of the service that the token will be used to authenticate with */
+  aud: string
+}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  /** If true, an invite code must be supplied to create an account on this instance. */
-  inviteCodeRequired?: boolean
-  /** If true, a phone verification token must be supplied to create an account on this instance. */
-  phoneVerificationRequired?: boolean
-  /** List of domain suffixes that can be used in account handles. */
-  availableUserDomains: string[]
-  links?: Links
-  did: string
+  token: string
   [k: string]: unknown
 }
 
@@ -48,21 +44,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Links {
-  privacyPolicy?: string
-  termsOfService?: string
-  [k: string]: unknown
-}
-
-export function isLinks(v: unknown): v is Links {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.describeServer#links'
-  )
-}
-
-export function validateLinks(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.describeServer#links', v)
-}

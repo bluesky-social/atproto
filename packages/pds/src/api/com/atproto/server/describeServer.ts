@@ -19,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     return {
       encoding: 'application/json',
       body: {
+        did: ctx.cfg.service.did,
         availableUserDomains,
         inviteCodeRequired,
         phoneVerificationRequired,

@@ -31,7 +31,9 @@ import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -47,17 +49,20 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -179,7 +184,9 @@ export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/up
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+export * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+export * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -195,17 +202,20 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
 export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+export * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+export * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -679,6 +689,22 @@ export class ComAtprotoIdentityNS {
     this._service = service
   }
 
+  requestPlcOperationSignature(
+    data?: ComAtprotoIdentityRequestPlcOperationSignature.InputSchema,
+    opts?: ComAtprotoIdentityRequestPlcOperationSignature.CallOptions,
+  ): Promise<ComAtprotoIdentityRequestPlcOperationSignature.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.identity.requestPlcOperationSignature',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoIdentityRequestPlcOperationSignature.toKnownErr(e)
+      })
+  }
+
   resolveHandle(
     params?: ComAtprotoIdentityResolveHandle.QueryParams,
     opts?: ComAtprotoIdentityResolveHandle.CallOptions,
@@ -687,6 +713,17 @@ export class ComAtprotoIdentityNS {
       .call('com.atproto.identity.resolveHandle', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoIdentityResolveHandle.toKnownErr(e)
+      })
+  }
+
+  signPlcOperation(
+    data?: ComAtprotoIdentitySignPlcOperation.InputSchema,
+    opts?: ComAtprotoIdentitySignPlcOperation.CallOptions,
+  ): Promise<ComAtprotoIdentitySignPlcOperation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.identity.signPlcOperation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentitySignPlcOperation.toKnownErr(e)
       })
   }
 
@@ -843,6 +880,17 @@ export class ComAtprotoServerNS {
     this._service = service
   }
 
+  activateAccount(
+    data?: ComAtprotoServerActivateAccount.InputSchema,
+    opts?: ComAtprotoServerActivateAccount.CallOptions,
+  ): Promise<ComAtprotoServerActivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.activateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerActivateAccount.toKnownErr(e)
+      })
+  }
+
   confirmEmail(
     data?: ComAtprotoServerConfirmEmail.InputSchema,
     opts?: ComAtprotoServerConfirmEmail.CallOptions,
@@ -909,6 +957,17 @@ export class ComAtprotoServerNS {
       })
   }
 
+  deactivateAccount(
+    data?: ComAtprotoServerDeactivateAccount.InputSchema,
+    opts?: ComAtprotoServerDeactivateAccount.CallOptions,
+  ): Promise<ComAtprotoServerDeactivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.deactivateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerDeactivateAccount.toKnownErr(e)
+      })
+  }
+
   deleteAccount(
     data?: ComAtprotoServerDeleteAccount.InputSchema,
     opts?: ComAtprotoServerDeleteAccount.CallOptions,
@@ -950,6 +1009,17 @@ export class ComAtprotoServerNS {
       .call('com.atproto.server.getAccountInviteCodes', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetAccountInviteCodes.toKnownErr(e)
+      })
+  }
+
+  getServiceAuth(
+    params?: ComAtprotoServerGetServiceAuth.QueryParams,
+    opts?: ComAtprotoServerGetServiceAuth.CallOptions,
+  ): Promise<ComAtprotoServerGetServiceAuth.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getServiceAuth', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetServiceAuth.toKnownErr(e)
       })
   }
 
