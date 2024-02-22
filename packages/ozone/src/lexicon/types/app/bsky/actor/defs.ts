@@ -114,6 +114,8 @@ export type Preferences = (
   | FeedViewPref
   | ThreadViewPref
   | InterestsPref
+  | MutedWordsPref
+  | HiddenPostsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
