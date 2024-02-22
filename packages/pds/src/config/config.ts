@@ -23,6 +23,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
     acceptingImports: env.acceptingImports ?? true,
+    blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
   }
 
   const dbLoc = (name: string) => {
@@ -275,9 +276,10 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
-  acceptingImports: boolean
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  acceptingImports: boolean
+  blobUploadLimit: number
 }
 
 export type DatabaseConfig = {
