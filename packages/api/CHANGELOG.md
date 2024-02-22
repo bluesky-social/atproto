@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.10.0
+
+### Minor Changes
+
+- [#2170](https://github.com/bluesky-social/atproto/pull/2170) [`4c511b3d9`](https://github.com/bluesky-social/atproto/commit/4c511b3d9de41ffeae3fc11db941e7df04f4468a) Thanks [@dholms](https://github.com/dholms)! - Add lexicons and methods for account migration
+
+### Patch Changes
+
+- [#2195](https://github.com/bluesky-social/atproto/pull/2195) [`b60719480`](https://github.com/bluesky-social/atproto/commit/b60719480f5f00bffd074a40e8ddc03aa93d137d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add muted words/tags and hidden posts prefs and methods"
+
 ## 0.9.8
 
 ### Patch Changes
