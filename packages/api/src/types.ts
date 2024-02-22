@@ -1,4 +1,4 @@
-import { AppBskyActorNS, AppBskyActorDefs } from './client'
+import { AppBskyActorDefs } from './client'
 import { LabelPreference } from './moderation/types'
 
 /**
