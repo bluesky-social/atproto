@@ -49,7 +49,7 @@ const isValidRecord = (json: unknown) => {
     return false
   }
   try {
-    lexicons.assertValidRecord(lexRecord?.['$type'], lexRecord)
+    lexicons.assertValidRecord(lexRecord['$type'], lexRecord)
     return true
   } catch {
     return false
