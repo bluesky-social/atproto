@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
 import { Headers, XRPCError } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
@@ -26,6 +27,8 @@ import { pipethrough } from '../../../../pipethrough'
 const METHOD_NSID = 'app.bsky.feed.getPostThread'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, params, auth }) => {
@@ -34,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (!requester) {
         return pipethrough(
-          ctx.cfg.bskyAppView.url,
+          bskyAppView.url,
           METHOD_NSID,
           params,
           authPassthru(req),
@@ -43,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
 
       try {
         const res = await pipethrough(
-          ctx.cfg.bskyAppView.url,
+          bskyAppView.url,
           METHOD_NSID,
           params,
           await ctx.appviewAuthHeaders(requester),
@@ -200,6 +203,7 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
+      assert(ctx.appViewAgent)
       const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
         await ctx.appviewAuthHeaders(requester),

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import {
   AuthRequiredError,
@@ -97,7 +98,7 @@ export type AuthVerifierOpts = {
   dids: {
     pds: string
     entryway?: string
-    admin: string
+    admin?: string
   }
 }
 
@@ -254,6 +255,7 @@ export class AuthVerifier {
   }
 
   adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+    assert(this.dids.admin)
     const payload = await this.verifyServiceJwt(reqCtx, {
       aud: this.dids.entryway ?? this.dids.pds,
       iss: [this.dids.admin],

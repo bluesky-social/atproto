@@ -12,13 +12,15 @@ import { pipethrough } from '../../../../pipethrough'
 const METHOD_NSID = 'app.bsky.actor.getProfile'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, auth, params }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
       const res = await pipethrough(
-        ctx.cfg.bskyAppView.url,
+        bskyAppView.url,
         METHOD_NSID,
         params,
         requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),

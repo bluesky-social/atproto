@@ -168,19 +168,29 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
   }
 
-  assert(env.bskyAppViewUrl)
-  assert(env.bskyAppViewDid)
-  const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
-    url: env.bskyAppViewUrl,
-    did: env.bskyAppViewDid,
-    cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+  let bskyAppViewCfg: ServerConfig['bskyAppView'] = null
+  if (env.bskyAppViewUrl) {
+    assert(
+      env.bskyAppViewDid,
+      'if bsky appview service url is configured, must configure its did as well.',
+    )
+    bskyAppViewCfg = {
+      url: env.bskyAppViewUrl,
+      did: env.bskyAppViewDid,
+      cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+    }
   }
 
-  assert(env.modServiceUrl)
-  assert(env.modServiceDid)
-  const modServiceCfg: ServerConfig['modService'] = {
-    url: env.modServiceUrl,
-    did: env.modServiceDid,
+  let modServiceCfg: ServerConfig['modService'] = null
+  if (env.modServiceUrl) {
+    assert(
+      env.modServiceDid,
+      'if mod service url is configured, must configure its did as well.',
+    )
+    modServiceCfg = {
+      url: env.modServiceUrl,
+      did: env.modServiceDid,
+    }
   }
 
   const redisCfg: ServerConfig['redis'] = env.redisScratchAddress
@@ -233,8 +243,8 @@ export type ServerConfig = {
   email: EmailConfig | null
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
-  bskyAppView: BksyAppViewConfig
-  modService: ModServiceConfig
+  bskyAppView: BksyAppViewConfig | null
+  modService: ModServiceConfig | null
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]

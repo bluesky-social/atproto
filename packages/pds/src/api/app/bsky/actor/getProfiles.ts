@@ -11,13 +11,15 @@ import {
 const METHOD_NSID = 'app.bsky.actor.getProfiles'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.access,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
 
       const res = await pipethrough(
-        ctx.cfg.bskyAppView.url,
+        bskyAppView.url,
         METHOD_NSID,
         params,
         await ctx.appviewAuthHeaders(requester),

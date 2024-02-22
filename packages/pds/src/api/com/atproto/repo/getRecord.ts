@@ -28,6 +28,10 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
+    if (!ctx.cfg.bskyAppView) {
+      throw new InvalidRequestError(`Could not locate record`)
+    }
+
     return await pipethrough(
       ctx.cfg.bskyAppView.url,
       'com.atproto.repo.getRecord',
