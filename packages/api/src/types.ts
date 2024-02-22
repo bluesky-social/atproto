@@ -1,3 +1,4 @@
+import { AppBskyActorNS, AppBskyActorDefs } from './client'
 import { LabelPreference } from './moderation/types'
 
 /**
@@ -119,4 +120,6 @@ export interface BskyPreferences {
   contentLabels: Record<string, BskyLabelPreference>
   birthDate: Date | undefined
   interests: BskyInterestsPreference
+  mutedWords: AppBskyActorDefs.MutedWord[]
+  hiddenPosts: string[]
 }
