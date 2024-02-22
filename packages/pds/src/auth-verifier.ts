@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import {
   AuthRequiredError,
