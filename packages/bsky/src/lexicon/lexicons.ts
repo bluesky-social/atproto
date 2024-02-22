@@ -5102,6 +5102,8 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
+            'lex:app.bsky.actor.defs#mutedWordsPref',
+            'lex:app.bsky.actor.defs#hiddenPostsPref',
           ],
         },
       },

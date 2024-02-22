@@ -105,7 +105,9 @@
           "#personalDetailsPref",
           "#feedViewPref",
           "#threadViewPref",
-          "#interestsPref"
+          "#interestsPref",
+          "#mutedWordsPref",
+          "#hiddenPostsPref"
         ]
       }
     },
