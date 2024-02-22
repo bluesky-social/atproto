@@ -29,6 +29,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
 import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
@@ -182,6 +183,7 @@ export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
 export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
@@ -651,6 +653,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.updateAccountHandle', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminUpdateAccountHandle.toKnownErr(e)
+      })
+  }
+
+  updateAccountPassword(
+    data?: ComAtprotoAdminUpdateAccountPassword.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountPassword.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountPassword.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateAccountPassword', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateAccountPassword.toKnownErr(e)
       })
   }
 

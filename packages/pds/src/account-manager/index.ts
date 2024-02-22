@@ -370,6 +370,11 @@ export class AccountManager {
       'reset_password',
       opts.token,
     )
+    await this.updateAccountPassword({ did, password: opts.password })
+  }
+
+  async updateAccountPassword(opts: { did: string; password: string }) {
+    const { did } = opts
     const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
     await this.db.transaction(async (dbTxn) =>
       Promise.all([

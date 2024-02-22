@@ -1863,6 +1863,33 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateAccountPassword: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update the password for a user account as an administrator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'password'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              password: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminUpdateCommunicationTemplate: {
     lexicon: 1,
     id: 'com.atproto.admin.updateCommunicationTemplate',
@@ -8860,6 +8887,8 @@ export const ids = {
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
+  ComAtprotoAdminUpdateAccountPassword:
+    'com.atproto.admin.updateAccountPassword',
   ComAtprotoAdminUpdateCommunicationTemplate:
     'com.atproto.admin.updateCommunicationTemplate',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
