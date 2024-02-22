@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.10.1
+
+### Patch Changes
+
+- [#2215](https://github.com/bluesky-social/atproto/pull/2215) [`514aab92d`](https://github.com/bluesky-social/atproto/commit/514aab92d26acd43859285f46318e386846522b1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add missing `getPreferences` union return types
+
 ## 0.10.0
 
 ### Minor Changes
