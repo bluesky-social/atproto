@@ -76,6 +76,10 @@ export const readEnv = (): ServerEnvironment => {
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),
     modServiceDid: envStr('PDS_MOD_SERVICE_DID'),
 
+    // report service
+    reportServiceUrl: envStr('PDS_REPORT_SERVICE_URL'),
+    reportServiceDid: envStr('PDS_REPORT_SERVICE_DID'),
+
     // rate limits
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
     rateLimitBypassKey: envStr('PDS_RATE_LIMIT_BYPASS_KEY'),
@@ -175,6 +179,10 @@ export type ServerEnvironment = {
   // mod service
   modServiceUrl?: string
   modServiceDid?: string
+
+  // report service
+  reportServiceUrl?: string
+  reportServiceDid?: string
 
   // rate limits
   rateLimitsEnabled?: boolean
