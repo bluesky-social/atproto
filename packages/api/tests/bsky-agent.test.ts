@@ -1199,10 +1199,17 @@ describe('agent', () => {
       })
 
       it('upsertMutedWords with #', async () => {
+        await agent.upsertMutedWords([
+          { value: 'hashtag', targets: ['content'] },
+        ])
         await agent.upsertMutedWords([{ value: '#hashtag', targets: ['tag'] }])
         const { mutedWords } = await agent.getPreferences()
         expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
-        expect(mutedWords.find((m) => m.value === 'hashtag')).toBeTruthy()
+        expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
+          value: 'hashtag',
+          targets: ['content', 'tag'],
+        })
+        expect(mutedWords.filter((m) => m.value === 'hashtag').length).toBe(1)
       })
 
       it('updateMutedWord', async () => {
