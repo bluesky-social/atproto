@@ -1,6 +1,8 @@
 import { AtUri } from '@atproto/syntax'
+import { jsonToLex } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> {
@@ -30,11 +32,27 @@ export const parseRecord = <T>(
   const cid = entry.cid
   const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
+  if (!isValidRecord(record)) {
+    return
+  }
   return {
     record,
     cid,
     sortedAt,
     takedownRef: safeTakedownRef(entry),
+  }
+}
+
+const isValidRecord = (json: unknown) => {
+  const lexRecord = jsonToLex(json)
+  if (typeof lexRecord?.['$type'] !== 'string') {
+    return false
+  }
+  try {
+    lexicons.assertValidRecord(lexRecord?.['$type'], lexRecord)
+    return true
+  } catch {
+    return false
   }
 }
 
