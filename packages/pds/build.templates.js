@@ -10,6 +10,7 @@ require('esbuild').build({
   sourcemap: true,
   outdir: 'dist/mailer/templates',
   platform: 'node',
+  format: 'cjs',
   plugins: [
     hbsPlugin({
       filter: /\.(hbs)$/,
