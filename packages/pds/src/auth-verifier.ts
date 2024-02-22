@@ -1,8 +1,10 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+import { OAuthError, OAuthVerifier } from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
+  XRPCError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
@@ -92,6 +94,8 @@ type ValidatedRefreshBearer = ValidatedBearer & {
 }
 
 export type AuthVerifierOpts = {
+  oauthVerifier: OAuthVerifier
+  publicUrl: string
   jwtKey: KeyObject
   adminPass: string
   dids: {
@@ -102,6 +106,8 @@ export type AuthVerifierOpts = {
 }
 
 export class AuthVerifier {
+  private _oauthVerifier: OAuthVerifier
+  private _publicUrl: string
   private _jwtKey: KeyObject
   private _adminPass: string
   public dids: AuthVerifierOpts['dids']
@@ -111,6 +117,8 @@ export class AuthVerifier {
     public idResolver: IdResolver,
     opts: AuthVerifierOpts,
   ) {
+    this._oauthVerifier = opts.oauthVerifier
+    this._publicUrl = opts.publicUrl
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
     this.dids = opts.dids
@@ -118,7 +126,8 @@ export class AuthVerifier {
 
   // verifiers (arrow fns to preserve scope)
 
-  access = (ctx: ReqCtx): Promise<AccessOutput> => {
+  access = async (ctx: ReqCtx): Promise<AccessOutput> => {
+    await this.setAuthHeaders(ctx)
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
@@ -126,6 +135,7 @@ export class AuthVerifier {
   }
 
   accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessOutput> => {
+    await this.setAuthHeaders(ctx)
     const result = await this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
@@ -146,11 +156,13 @@ export class AuthVerifier {
     return result
   }
 
-  accessNotAppPassword = (ctx: ReqCtx): Promise<AccessOutput> => {
+  accessNotAppPassword = async (ctx: ReqCtx): Promise<AccessOutput> => {
+    await this.setAuthHeaders(ctx)
     return this.validateAccessToken(ctx.req, [AuthScope.Access])
   }
 
-  accessDeactived = (ctx: ReqCtx): Promise<AccessOutput> => {
+  accessDeactived = async (ctx: ReqCtx): Promise<AccessOutput> => {
+    await this.setAuthHeaders(ctx)
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
@@ -159,6 +171,7 @@ export class AuthVerifier {
   }
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
+    await this.setAuthHeaders(ctx)
     const { did, scope, token, tokenId, audience } =
       await this.validateRefreshToken(ctx.req)
 
@@ -175,6 +188,7 @@ export class AuthVerifier {
   }
 
   refreshExpired = async (ctx: ReqCtx): Promise<RefreshOutput> => {
+    await this.setAuthHeaders(ctx)
     const { did, scope, token, tokenId, audience } =
       await this.validateRefreshToken(ctx.req, { clockTolerance: Infinity })
 
@@ -190,7 +204,8 @@ export class AuthVerifier {
     }
   }
 
-  adminToken = (ctx: ReqCtx): AdminTokenOutput => {
+  adminToken = async (ctx: ReqCtx): Promise<AdminTokenOutput> => {
+    await this.setAuthHeaders(ctx)
     const parsed = parseBasicAuth(ctx.req.headers.authorization || '')
     if (!parsed) {
       throw new AuthRequiredError()
@@ -205,6 +220,7 @@ export class AuthVerifier {
   optionalAccessOrAdminToken = async (
     ctx: ReqCtx,
   ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
+    await this.setAuthHeaders(ctx)
     if (isAccessToken(ctx.req)) {
       return await this.access(ctx)
     } else if (isBasicToken(ctx.req)) {
@@ -215,6 +231,7 @@ export class AuthVerifier {
   }
 
   userDidAuth = async (reqCtx: ReqCtx): Promise<UserDidOutput> => {
+    await this.setAuthHeaders(reqCtx)
     const payload = await this.verifyServiceJwt(reqCtx, {
       aud: this.dids.entryway ?? this.dids.pds,
       iss: null,
@@ -231,6 +248,7 @@ export class AuthVerifier {
   userDidAuthOptional = async (
     reqCtx: ReqCtx,
   ): Promise<UserDidOutput | NullOutput> => {
+    await this.setAuthHeaders(reqCtx)
     if (isBearerToken(reqCtx.req)) {
       return await this.userDidAuth(reqCtx)
     } else {
@@ -239,6 +257,7 @@ export class AuthVerifier {
   }
 
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
+    await this.setAuthHeaders(reqCtx)
     if (!this.dids.modService) {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
     }
@@ -267,6 +286,7 @@ export class AuthVerifier {
   moderator = async (
     reqCtx: ReqCtx,
   ): Promise<AdminTokenOutput | ModServiceOutput> => {
+    await this.setAuthHeaders(reqCtx)
     if (isBearerToken(reqCtx.req)) {
       return this.modService(reqCtx)
     } else {
@@ -303,7 +323,15 @@ export class AuthVerifier {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
 
-    const { payload } = await this.jwtVerify(token, verifyOptions)
+    const { payload, protectedHeader } = await this.jwtVerify(
+      token,
+      verifyOptions,
+    )
+
+    if (protectedHeader.typ) {
+      // Only OAuth Provider sets this claim
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
 
     const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
@@ -315,7 +343,7 @@ export class AuthVerifier {
     ) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if (payload.cnf) {
+    if ((payload.cnf as any)?.jkt) {
       // DPoP bound tokens must not be usable as regular Bearer tokens
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
@@ -339,6 +367,8 @@ export class AuthVerifier {
     switch (type) {
       case BEARER:
         return this.validateBearerAccessToken(req, scopes)
+      case DPOP:
+        return this.validateDpopAccessToken(req, scopes)
       case null:
         throw new AuthRequiredError(undefined, 'AuthMissing')
       default:
@@ -346,6 +376,51 @@ export class AuthVerifier {
           'Unexpected authorization type',
           'InvalidToken',
         )
+    }
+  }
+
+  async validateDpopAccessToken(
+    req: express.Request,
+    scopes: AuthScope[],
+  ): Promise<AccessOutput> {
+    if (!scopes.includes(AuthScope.Access)) {
+      throw new InvalidRequestError(
+        'DPoP access token cannot be used for this request',
+        'InvalidToken',
+      )
+    }
+
+    try {
+      const url = new URL(req.originalUrl || req.url, this._publicUrl)
+      const result = await this._oauthVerifier.authenticateHttpRequest(
+        req.method,
+        url,
+        req.headers,
+        { audience: [this.dids.pds] },
+      )
+
+      const { sub } = result.claims
+      if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+        throw new InvalidRequestError('Malformed token', 'InvalidToken')
+      }
+
+      return {
+        credentials: {
+          type: 'access',
+          did: result.claims.sub,
+          scope: AuthScope.Access,
+          audience: this.dids.pds,
+        },
+        artifacts: result.token,
+      }
+    } catch (err) {
+      // 'use_dpop_nonce' is expected to be in a particular format. Let's
+      // also transform any other OAuthError into an XRPCError.
+      if (err instanceof OAuthError) {
+        throw new XRPCError(err.status, err.error_description, err.error)
+      }
+
+      throw err
     }
   }
 
@@ -441,6 +516,28 @@ export class AuthVerifier {
       )
     }
   }
+
+  protected async setAuthHeaders(ctx: ReqCtx) {
+    // Prevent caching (on proxies) of auth dependent responses
+    ctx.req.res?.setHeader('Cache-Control', 'private')
+
+    // Make sure that browsers do not return cached responses when the auth header changes
+    ctx.req.res?.appendHeader('Vary', 'Authorization')
+
+    /**
+     * Return next DPoP nonce in response headers for DPoP bound tokens.
+     * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-8.2}
+     */
+    const authHeader = ctx.req.headers.authorization
+    if (authHeader?.startsWith('DPoP')) {
+      const dpopNonce = this._oauthVerifier.nextDpopNonce()
+      if (dpopNonce) {
+        const name = 'DPoP-Nonce'
+        ctx.req.res?.setHeader(name, dpopNonce)
+        ctx.req.res?.appendHeader('Access-Control-Expose-Headers', name)
+      }
+    }
+  }
 }
 
 // HELPERS
@@ -448,6 +545,7 @@ export class AuthVerifier {
 
 const BASIC = 'Basic'
 const BEARER = 'Bearer'
+const DPOP = 'DPoP'
 
 export const parseAuthorizationHeader = (authorization?: string) => {
   const result = authorization?.split(' ', 2)
@@ -457,7 +555,7 @@ export const parseAuthorizationHeader = (authorization?: string) => {
 
 const isAccessToken = (req: express.Request): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
-  return type === BEARER
+  return type === BEARER || type === DPOP
 }
 
 const isBearerToken = (req: express.Request): boolean => {

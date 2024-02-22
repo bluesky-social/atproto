@@ -16,7 +16,7 @@ export type AvailabilityFlags = {
   includeDeactivated?: boolean
 }
 
-const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
+export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
   return db.db

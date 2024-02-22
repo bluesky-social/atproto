@@ -96,6 +96,7 @@ export const readEnv = (): ServerEnvironment => {
     crawlers: envList('PDS_CRAWLERS'),
 
     // secrets
+    dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
 
@@ -105,6 +106,10 @@ export const readEnv = (): ServerEnvironment => {
     plcRotationKeyK256PrivateKeyHex: envStr(
       'PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX',
     ),
+
+    // oauth
+    fetchDisableSafeties: envBool('PDS_FETCH_DISABLE_SAFETIES'),
+    fetchResponseMaxSizeKb: envInt('PDS_FETCH_RESPONSE_MAX_SIZE_KB'),
   }
 }
 
@@ -201,10 +206,15 @@ export type ServerEnvironment = {
   crawlers?: string[]
 
   // secrets
+  dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
+
+  // fetch
+  fetchDisableSafeties?: boolean
+  fetchResponseMaxSizeKb?: number
 }
