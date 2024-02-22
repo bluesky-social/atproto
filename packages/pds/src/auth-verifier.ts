@@ -255,7 +255,9 @@ export class AuthVerifier {
   }
 
   adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
-    assert(this.dids.admin)
+    if (!this.dids.admin) {
+      throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+    }
     const payload = await this.verifyServiceJwt(reqCtx, {
       aud: this.dids.entryway ?? this.dids.pds,
       iss: [this.dids.admin],

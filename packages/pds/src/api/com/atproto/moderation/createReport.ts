@@ -7,16 +7,16 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
-      if (!ctx.moderationAgent) {
+      if (!ctx.reportingAgent) {
         throw new InvalidRequestError(
-          'Your hosting service is not configured with a moderation provider. Reach out to your hosting provider.',
+          'Your hosting service is not configured with a moderation provider. If this seems in error, reach out to your hosting provider.',
         )
       }
       const { data: result } =
-        await ctx.moderationAgent.com.atproto.moderation.createReport(
+        await ctx.reportingAgent.com.atproto.moderation.createReport(
           input.body,
           {
-            ...(await ctx.moderationAuthHeaders(requester)),
+            ...(await ctx.reportingAuthHeaders(requester)),
             encoding: 'application/json',
           },
         )

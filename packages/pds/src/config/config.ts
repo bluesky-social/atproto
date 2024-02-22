@@ -193,6 +193,23 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     }
   }
 
+  let reportServiceCfg: ServerConfig['reportService'] = null
+  if (env.reportServiceUrl) {
+    assert(
+      env.reportServiceDid,
+      'if report service url is configured, must configure its did as well.',
+    )
+    reportServiceCfg = {
+      url: env.reportServiceUrl,
+      did: env.reportServiceDid,
+    }
+  }
+
+  // if there's a mod service, default report service into it
+  if (modServiceCfg && !reportServiceCfg) {
+    reportServiceCfg = modServiceCfg
+  }
+
   const redisCfg: ServerConfig['redis'] = env.redisScratchAddress
     ? {
         address: env.redisScratchAddress,
@@ -226,6 +243,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
     modService: modServiceCfg,
+    reportService: reportServiceCfg,
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
@@ -245,6 +263,7 @@ export type ServerConfig = {
   subscription: SubscriptionConfig
   bskyAppView: BksyAppViewConfig | null
   modService: ModServiceConfig | null
+  reportService: ReportServiceConfig | null
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
@@ -351,6 +370,11 @@ export type BksyAppViewConfig = {
 }
 
 export type ModServiceConfig = {
+  url: string
+  did: string
+}
+
+export type ReportServiceConfig = {
   url: string
   did: string
 }

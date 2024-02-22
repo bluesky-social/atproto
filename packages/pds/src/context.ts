@@ -45,6 +45,7 @@ export type AppContextOptions = {
   crawlers: Crawlers
   appViewAgent?: AtpAgent
   moderationAgent?: AtpAgent
+  reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -70,6 +71,7 @@ export class AppContext {
   public crawlers: Crawlers
   public appViewAgent: AtpAgent | undefined
   public moderationAgent: AtpAgent | undefined
+  public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
   public plcRotationKey: crypto.Keypair
@@ -91,6 +93,7 @@ export class AppContext {
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.moderationAgent = opts.moderationAgent
+    this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
     this.plcRotationKey = opts.plcRotationKey
@@ -168,7 +171,9 @@ export class AppContext {
     const moderationAgent = cfg.modService
       ? new AtpAgent({ service: cfg.modService.url })
       : undefined
-
+    const reportingAgent = cfg.reportService
+      ? new AtpAgent({ service: cfg.reportService.url })
+      : undefined
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
@@ -236,6 +241,7 @@ export class AppContext {
       crawlers,
       appViewAgent,
       moderationAgent,
+      reportingAgent,
       entrywayAgent,
       authVerifier,
       plcRotationKey,
@@ -252,6 +258,11 @@ export class AppContext {
   async moderationAuthHeaders(did: string) {
     assert(this.cfg.modService)
     return this.serviceAuthHeaders(did, this.cfg.modService.did)
+  }
+
+  async reportingAuthHeaders(did: string) {
+    assert(this.cfg.reportService)
+    return this.serviceAuthHeaders(did, this.cfg.reportService.did)
   }
 
   async serviceAuthHeaders(did: string, aud: string) {
