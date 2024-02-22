@@ -1278,6 +1278,7 @@ describe('agent', () => {
 
       it('hidePost', async () => {
         await agent.hidePost(postUri)
+        await agent.hidePost(postUri) // double, should dedupe
         await expect(agent.getPreferences()).resolves.toHaveProperty(
           'hiddenPosts',
           [postUri],
@@ -1285,6 +1286,12 @@ describe('agent', () => {
       })
 
       it('unhidePost', async () => {
+        await agent.unhidePost(postUri)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'hiddenPosts',
+          [],
+        )
+        // no issues calling a second time
         await agent.unhidePost(postUri)
         await expect(agent.getPreferences()).resolves.toHaveProperty(
           'hiddenPosts',
