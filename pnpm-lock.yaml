@@ -926,12 +926,42 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/fetch':
+        specifier: workspace:*
+        version: link:../fetch
+      '@atproto/fetch-node':
+        specifier: workspace:*
+        version: link:../fetch-node
+      '@atproto/http-util':
+        specifier: workspace:*
+        version: link:../http-util
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../jwk
+      '@atproto/jwk-node':
+        specifier: workspace:^
+        version: link:../jwk-node
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/oauth-provider':
+        specifier: workspace:^
+        version: link:../oauth-provider
+      '@atproto/oauth-provider-client-fqdn':
+        specifier: workspace:^
+        version: link:../oauth-provider-client-fqdn
+      '@atproto/oauth-provider-client-uri':
+        specifier: workspace:^
+        version: link:../oauth-provider-client-uri
+      '@atproto/oauth-provider-replay-memory':
+        specifier: workspace:^
+        version: link:../oauth-provider-replay-memory
+      '@atproto/oauth-provider-replay-redis':
+        specifier: workspace:^
+        version: link:../oauth-provider-replay-redis
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo

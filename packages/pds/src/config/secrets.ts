@@ -18,6 +18,10 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     throw new Error('Must configure plc rotation key')
   }
 
+  if (!env.dpopSecret) {
+    throw new Error('Must provide a DPoP secret')
+  }
+
   if (!env.jwtSecret) {
     throw new Error('Must provide a JWT secret')
   }
@@ -27,6 +31,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
   }
 
   return {
+    dpopSecret: env.dpopSecret,
     jwtSecret: env.jwtSecret,
     adminPassword: env.adminPassword,
     plcRotationKey,
@@ -34,6 +39,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 }
 
 export type ServerSecrets = {
+  dpopSecret: string
   jwtSecret: string
   adminPassword: string
   plcRotationKey: SigningKeyKms | SigningKeyMemory

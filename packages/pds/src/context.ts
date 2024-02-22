@@ -1,12 +1,27 @@
 import assert from 'node:assert'
+
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
+import { Fetch } from '@atproto/fetch'
+import { safeFetchWrap } from '@atproto/fetch-node'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import { NodeKeyset } from '@atproto/jwk-node'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { BlobStore } from '@atproto/repo'
+import {
+  AccessTokenType,
+  DpopNonce,
+  OAuthVerifier,
+  OAuthProvider,
+  ReplayStore,
+} from '@atproto/oauth-provider'
+import { OAuthReplayStoreRedis } from '@atproto/oauth-provider-replay-redis'
+import { OAuthReplayStoreMemory } from '@atproto/oauth-provider-replay-memory'
+
 import { ServerConfig, ServerSecrets } from './config'
 import {
   AuthVerifier,
@@ -15,7 +30,6 @@ import {
 } from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
-import { BlobStore } from '@atproto/repo'
 import { AccountManager } from './account-manager'
 import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
@@ -25,11 +39,14 @@ import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
+import { OauthClientStore } from './oauth/oauth-client-store'
+import { fetchLogger } from './logger'
 
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
   localViewer: LocalViewerCreator
+  safeFetch: Fetch
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqliteCache
@@ -44,6 +61,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -68,6 +86,7 @@ export class AppContext {
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
+  public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -90,6 +109,7 @@ export class AppContext {
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
+    this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -185,8 +205,81 @@ export class AppContext {
       ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
       : jwtSecretKey
 
+    const keyset = await NodeKeyset.fromImportables({
+      // @TODO: load keys from config
+      ['kid-1']:
+        '-----BEGIN PRIVATE KEY-----\n' +
+        'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg4D4H8/CFAVuKMgQD\n' +
+        'BIK9m53AEUrCxQKrgtMNSTNV9A2hRANCAARAwyllCZOflLEQM0MaYujz7ITxqczZ\n' +
+        '6Vxhj4urrdXUN3MEliQcc14ImTWHt7h7+xbxIXETLj0kTzctAxSbtwZf\n' +
+        '-----END PRIVATE KEY-----\n',
+    })
+
+    // OAuthVerifier is capable of generating its own dpop nonce secret. Using a
+    // pre-generated nonce is particularly useful to avoid invalid_nonce errors
+    // when the server restarts or when more tha one instance are running. This
+    // can also reduce the number of invalid_nonce errors when the PDS and
+    // entryway are using the same dpop nonce secret.
+    const dpopNonce = new DpopNonce(Buffer.from(secrets.dpopSecret, 'hex'))
+
+    const replayStore: ReplayStore = redisScratch
+      ? new OAuthReplayStoreRedis(redisScratch)
+      : new OAuthReplayStoreMemory()
+
+    // A Fetch function that protects against SSRF attacks, large responses &
+    // known bad domains. This function can safely be used to fetch user
+    // provided URLs.
+    const safeFetch: Fetch = safeFetchWrap({
+      ...cfg.safeFetch,
+      fetch: async (request) => {
+        fetchLogger.info({ method: request.method, uri: request.url }, 'fetch')
+        return globalThis.fetch(request)
+      },
+    })
+
+    const oauthProvider = cfg.oauth.enableProvider
+      ? new OAuthProvider({
+          issuer: cfg.oauth.issuer,
+          keyset,
+          dpopNonce,
+
+          accountStore: accountManager,
+          requestStore: accountManager,
+          sessionStore: accountManager,
+          tokenStore: accountManager,
+          replayStore,
+          clientStore: new OauthClientStore({ fetch: safeFetch }),
+
+          // If the PDS is both an authorization server & resource server (no
+          // entryway), there is no need to use JWTs as access tokens. Instead,
+          // the PDS can use tokenId as access tokens. This allows the PDS to
+          // always use up-to-date token data from the token store.
+          accessTokenType: AccessTokenType.id,
+
+          onTokenResponse: (tokenResponse, { account }) => {
+            // ATPROTO extension: add the sub claim to the token response to allow
+            // clients to resolve the PDS url (audience) using the did resolution
+            // mechanism.
+            tokenResponse['sub'] = account.sub
+          },
+        })
+      : undefined
+
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      jwtKey, // @TODO support multiple keys?
+      publicUrl: cfg.service.publicUrl,
+      oauthVerifier:
+        // Using the oauthProvider as oauthVerifier allows clients to use the
+        // same nonce when authenticating and making requests, avoiding
+        // un-necessary "invalid_nonce" errors. It also allows the use of
+        // AccessTokenType.id as access token type.
+        oauthProvider ??
+        new OAuthVerifier({
+          issuer: cfg.oauth.issuer,
+          keyset,
+          dpopNonce,
+          replayStore,
+        }),
+      jwtKey,
       adminPass: secrets.adminPassword,
       dids: {
         pds: cfg.service.did,
@@ -221,6 +314,7 @@ export class AppContext {
       actorStore,
       blobstore,
       localViewer,
+      safeFetch,
       mailer,
       moderationMailer,
       didCache,
@@ -236,6 +330,7 @@ export class AppContext {
       reportingAgent,
       entrywayAgent,
       authVerifier,
+      oauthProvider,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),

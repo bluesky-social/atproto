@@ -1,19 +1,50 @@
 import { KeyObject } from 'node:crypto'
-import { HOUR } from '@atproto/common'
+import { HOUR, wait } from '@atproto/common'
+import {
+  Account,
+  AccountInfo,
+  AccountStore,
+  Code,
+  DeviceId,
+  FoundRequestResult,
+  LoginCredentials,
+  NewTokenData,
+  RefreshToken,
+  RequestData,
+  RequestId,
+  RequestStore,
+  SessionData,
+  SessionStore,
+  TokenData,
+  TokenId,
+  TokenInfo,
+  TokenStore,
+  UpdateRequestData,
+} from '@atproto/oauth-provider'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
+
+import { AuthScope } from '../auth-verifier'
+import { softDeleted } from '../db'
+import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
-import * as scrypt from './helpers/scrypt'
 import * as account from './helpers/account'
 import { ActorAccount } from './helpers/account'
-import * as repo from './helpers/repo'
 import * as auth from './helpers/auth'
+import * as authorizationRequest from './helpers/authorization-request.js'
+import * as device from './helpers/device.js'
+import * as deviceAccount from './helpers/device-account.js'
+import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
 import * as password from './helpers/password'
-import * as emailToken from './helpers/email-token'
-import { AuthScope } from '../auth-verifier'
-import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import * as repo from './helpers/repo'
+import * as scrypt from './helpers/scrypt'
+import * as token from './helpers/token.js'
+import * as usedRefreshToken from './helpers/used-refresh-token.js'
 
-export class AccountManager {
+export class AccountManager
+  implements AccountStore, RequestStore, SessionStore, TokenStore
+{
   db: AccountDb
 
   constructor(
@@ -235,6 +266,59 @@ export class AccountManager {
     return auth.revokeRefreshToken(this.db, id)
   }
 
+  // Login
+  // ----------
+
+  async login(
+    { identifier, password }: { identifier: string; password: string },
+    allowAppPassword = false,
+  ): Promise<{
+    user: ActorAccount
+    appPasswordName: string | null
+  }> {
+    const start = Date.now()
+    try {
+      const identifierNormalized = identifier.toLowerCase()
+      const user = identifier.includes('@')
+        ? await this.getAccountByEmail(identifierNormalized, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+        : await this.getAccount(identifierNormalized, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+
+      if (!user) throw new AuthRequiredError('Invalid identifier or password')
+
+      let appPasswordName: string | null = null
+      const validAccountPass = await this.verifyAccountPassword(
+        user.did,
+        password,
+      )
+      if (!validAccountPass) {
+        if (allowAppPassword) {
+          appPasswordName = await this.verifyAppPassword(user.did, password)
+        }
+        if (appPasswordName === null) {
+          throw new AuthRequiredError('Invalid identifier or password')
+        }
+      }
+
+      if (softDeleted(user)) {
+        throw new AuthRequiredError(
+          'Account has been taken down',
+          'AccountTakedown',
+        )
+      }
+
+      return { user, appPasswordName }
+    } finally {
+      // Mitigate timing attacks
+      await wait(350 - (Date.now() - start))
+    }
+  }
+
   // Passwords
   // ----------
 
@@ -383,5 +467,172 @@ export class AccountManager {
         auth.revokeRefreshTokensByDid(dbTxn, did),
       ]),
     )
+  }
+
+  // AccountStore
+
+  async authenticateAccount(
+    { username: identifier, password, remember = false }: LoginCredentials,
+    deviceId: DeviceId | null,
+  ): Promise<Account | null> {
+    try {
+      const { user } = await this.login({ identifier, password }, false)
+
+      if (deviceId) {
+        await deviceAccount.createOrUpdate(
+          this.db,
+          deviceId,
+          user.did,
+          remember,
+        )
+      }
+
+      return deviceAccount.toAccount(user, this.serviceDid)
+    } catch (err) {
+      if (err instanceof AuthRequiredError) return null
+      throw err
+    }
+  }
+
+  async addAuthorizedClient(
+    deviceId: DeviceId,
+    sub: string,
+    clientId: string,
+  ): Promise<void> {
+    await this.db.transaction(async (dbTxn) => {
+      const authorizedClients = await deviceAccount.getAuthorizedClients(
+        dbTxn,
+        deviceId,
+        sub,
+      )
+
+      if (authorizedClients.includes(clientId)) return
+
+      await deviceAccount.update(dbTxn, deviceId, sub, {
+        authorizedClients: [...authorizedClients, clientId],
+      })
+    })
+  }
+
+  async getDeviceAccount(
+    deviceId: DeviceId,
+    sub: string,
+  ): Promise<AccountInfo | null> {
+    return deviceAccount.get(this.db, deviceId, sub, this.serviceDid)
+  }
+
+  async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
+    return deviceAccount.listRemembered(this.db, deviceId, this.serviceDid)
+  }
+
+  async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+    return deviceAccount.remove(this.db, deviceId, sub)
+  }
+
+  // RequestStore
+
+  async createRequest(id: RequestId, data: RequestData): Promise<void> {
+    await authorizationRequest.create(this.db, id, data)
+  }
+
+  async readRequest(id: RequestId): Promise<RequestData | null> {
+    // Take the opportunity to clean up expired requests.
+    // TODO: Do this less often?
+    await authorizationRequest.deleteExpired(this.db)
+
+    return authorizationRequest.get(this.db, id)
+  }
+
+  async updateRequest(id: RequestId, data: UpdateRequestData): Promise<void> {
+    await authorizationRequest.update(this.db, id, data)
+  }
+
+  async deleteRequest(id: RequestId): Promise<void> {
+    await authorizationRequest.deleteById(this.db, id)
+  }
+
+  async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
+    return authorizationRequest.findByCode(this.db, code)
+  }
+
+  // SessionStore
+
+  async createDeviceSession(
+    deviceId: DeviceId,
+    data: SessionData,
+  ): Promise<void> {
+    await device.create(this.db, deviceId, data)
+  }
+
+  async readDeviceSession(deviceId: DeviceId): Promise<null | SessionData> {
+    return device.getById(this.db, deviceId)
+  }
+
+  async updateDeviceSession(
+    deviceId: DeviceId,
+    data: Partial<SessionData>,
+  ): Promise<void> {
+    await device.update(this.db, deviceId, data)
+  }
+
+  async deleteDeviceSession(deviceId: DeviceId): Promise<void> {
+    await device.remove(this.db, deviceId)
+
+    // TODO: can use use foreign key constraint to delete this row ?
+    await deviceAccount.removeByDevice(this.db, deviceId)
+  }
+
+  // TokenStore
+
+  async createToken(
+    id: TokenId,
+    data: TokenData,
+    refreshToken?: RefreshToken,
+  ): Promise<void> {
+    await token.create(this.db, id, data, refreshToken)
+  }
+
+  async readToken(tokenId: TokenId): Promise<TokenInfo | null> {
+    return token.findBy(this.db, { tokenId }, this.serviceDid)
+  }
+
+  async deleteToken(tokenId: TokenId): Promise<void> {
+    await token.remove(this.db, tokenId)
+  }
+
+  async rotateToken(
+    tokenId: TokenId,
+    newTokenId: TokenId,
+    newRefreshToken: RefreshToken,
+    newData: NewTokenData,
+  ): Promise<void> {
+    // No transaction because we want to make sure that the token is added
+    // to the used refresh tokens even if the rotate() fails.
+
+    const { id, currentRefreshToken } = await token.getForRefresh(
+      this.db,
+      tokenId,
+    )
+
+    if (currentRefreshToken) {
+      await usedRefreshToken.insert(this.db, id, currentRefreshToken)
+    }
+
+    await token.rotate(this.db, id, newTokenId, newRefreshToken, newData)
+  }
+
+  async findTokenByRefreshToken(
+    refreshToken: RefreshToken,
+  ): Promise<TokenInfo | null> {
+    const id = await usedRefreshToken.findByToken(this.db, refreshToken)
+    return token.findBy(
+      this.db,
+      id ? { id } : { currentRefreshToken: refreshToken },
+      this.serviceDid,
+    )
+  }
+
+  async findTokenByCode(code: Code): Promise<TokenInfo | null> {
+    return token.findByCode(this.db, code, this.serviceDid)
   }
 }

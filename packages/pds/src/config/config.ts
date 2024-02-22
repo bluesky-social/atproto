@@ -233,6 +233,32 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
+  const oauthCfg: ServerConfig['oauth'] = entrywayCfg
+    ? {
+        enableProvider: false,
+        issuer: entrywayCfg.url,
+      }
+    : {
+        enableProvider: true,
+        issuer: serviceCfg.publicUrl,
+      }
+
+  const safeFetchCfg: ServerConfig['safeFetch'] = {
+    allowHttp: false,
+    forbiddenDomainNames: [
+      'example.com',
+      'example.org',
+      'example.net',
+      'bsky.social',
+      'bsky.network',
+      'googleusercontent.com',
+    ],
+    responseMaxSize: env.fetchDisableSafeties
+      ? Infinity
+      : (env.fetchResponseMaxSizeKb ?? 512) * 1024, // defaults to 512kB
+    ssrfProtection: env.fetchDisableSafeties ? false : true,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -250,6 +276,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
+    oauth: oauthCfg,
+    safeFetch: safeFetchCfg,
   }
 }
 
@@ -270,6 +298,8 @@ export type ServerConfig = {
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
+  oauth: OAuthConfig
+  safeFetch: SafeFetchConfig
 }
 
 export type ServiceConfig = {
@@ -333,6 +363,18 @@ export type EntrywayConfig = {
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+}
+
+export type OAuthConfig = {
+  issuer: string
+  enableProvider: boolean
+}
+
+export type SafeFetchConfig = {
+  allowHttp: boolean
+  ssrfProtection: boolean
+  responseMaxSize: number
+  forbiddenDomainNames: string[]
 }
 
 export type InvitesConfig =
