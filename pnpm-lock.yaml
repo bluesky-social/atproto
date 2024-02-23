@@ -701,6 +701,9 @@ importers:
       disposable-email:
         specifier: ^0.2.3
         version: 0.2.3
+      exif-be-gone:
+        specifier: ^1.4.1
+        version: 1.4.1
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -6012,6 +6015,12 @@ packages:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
     dev: true
 
+  /@types/stream-buffers@3.0.7:
+    resolution: {integrity: sha512-azOCy05sXVXrO+qklf0c/B07H/oHaIuDDAiHPVwlk3A9Ek+ksHyTeMajLZl3r76FxpPpxem//4Te61G1iW3Giw==}
+    dependencies:
+      '@types/node': 18.17.8
+    dev: false
+
   /@types/ws@8.5.4:
     resolution: {integrity: sha512-zdQDHKUgcX/zBc4GrwsE/7dVdAD8JR4EuiAXiiUhhfyIJXXb2+PrGshFyeXWQPMmmZ2XxgaqclgpIC7eTXc1mg==}
     dependencies:
@@ -7883,6 +7892,13 @@ packages:
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
     dev: true
+
+  /exif-be-gone@1.4.1:
+    resolution: {integrity: sha512-+x8c4hAsC8xW880sMqQEhgSX/KhMcfNuE2uaDjm0KqzuJCofbd6K47qifWJm0qSfw9rjU2D550QJiwpswf0B9Q==}
+    hasBin: true
+    dependencies:
+      '@types/stream-buffers': 3.0.7
+    dev: false
 
   /exit@0.1.2:
     resolution: {integrity: sha512-Zk/eNKV2zbjpKzrsQ+n1G6poVbErQxJ0LBOJXaKZ1EViLzH+hrLu9cdXI4zw9dBQJslwBEpbQ2P1oS7nDxs6jQ==}
