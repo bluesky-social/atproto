@@ -4867,7 +4867,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Fetch all labels from a labeler created after a certain date. DEPRECATED: use queryLabels or subscribeLabels instead',
+          'DEPRECATED: use queryLabels or subscribeLabels instead -- Fetch all labels from a labeler created after a certain date.',
         parameters: {
           type: 'params',
           properties: {
