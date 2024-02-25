@@ -226,6 +226,7 @@ export class FeedViews {
       replyCount: post.replyCount ?? 0,
       repostCount: post.repostCount ?? 0,
       likeCount: post.likeCount ?? 0,
+      quoteCount: post.quoteCount ?? 0,
       indexedAt: post.indexedAt,
       viewer: post.viewer
         ? {

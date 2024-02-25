@@ -39,6 +39,7 @@ export type PostInfo = {
   indexedAt: string
   likeCount: number | null
   repostCount: number | null
+  quoteCount: number | null
   replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null

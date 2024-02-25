@@ -45,6 +45,7 @@ import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
 import fetchLabels from './com/atproto/temp/fetchLabels'
+import getPostQuotes from './app/bsky/feed/getPostQuotes'
 
 export * as health from './health'
 
@@ -93,6 +94,7 @@ export default function (server: Server, ctx: AppContext) {
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
+  getPostQuotes(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

@@ -34,3 +34,5 @@ export * as _20231003T202833377Z from './20231003T202833377Z-create-moderation-s
 export * as _20231205T000257238Z from './20231205T000257238Z-remove-did-cache'
 export * as _20231220T225126090Z from './20231220T225126090Z-blob-takedowns'
 export * as _20240124T023719200Z from './20240124T023719200Z-tagged-suggestions'
+export * as _20240225T031039003Z from './20240225T031039003Z-quotes-init'
+export * as _20240225T034703340Z from './20240225T034703340Z-add-quote-to-post-aggs'

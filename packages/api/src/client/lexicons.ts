@@ -5950,6 +5950,9 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          quoteCount: {
+            type: 'integer',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -6840,6 +6843,69 @@ export const schemaDict = {
             name: 'UnknownList',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPostQuotes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPostQuotes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of quotes for a given post.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) of post record',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'If supplied, filters to quotes of specific version (by CID) of the post record.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'posts'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -8990,6 +9056,7 @@ export const ids = {
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
+  AppBskyFeedGetPostQuotes: 'app.bsky.feed.getPostQuotes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',

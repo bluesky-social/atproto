@@ -166,6 +166,7 @@ export class FeedService {
         'record.json as recordJson',
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
+        'post_agg.quoteCount as quoteCount',
         'post_agg.replyCount as replyCount',
         'post.tags as tags',
         db
