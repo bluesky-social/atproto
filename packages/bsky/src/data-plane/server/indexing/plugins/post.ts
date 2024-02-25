@@ -175,6 +175,37 @@ const insertFn = async (
       }
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
+
+      const quote = {
+        uri: uri.toString(),
+        cid: cid.toString(),
+        subject: record.uri,
+        subjectCid: record.cid,
+        createdAt: normalizeDatetimeAlways(obj.createdAt),
+        indexedAt: timestamp,
+      }
+      await db
+        .insertInto('quote')
+        .values(quote)
+        .onConflict((oc) => oc.doNothing())
+        .returningAll()
+        .executeTakeFirst()
+
+      const quoteCountQb = db
+        .insertInto('post_agg')
+        .values({
+          uri: record.uri.toString(),
+          quoteCount: db
+            .selectFrom('quote')
+            .where('quote.subjectCid', '=', record.cid.toString())
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('uri')
+            .doUpdateSet({ quoteCount: excluded(db, 'quoteCount') }),
+        )
+      await quoteCountQb.execute()
     }
   }
 
@@ -228,6 +259,8 @@ const notifsForInsert = (obj: IndexedPost) => {
       })
     }
   }
+
+  // TODO remove this, flagging for reference
   for (const embed of obj.embeds ?? []) {
     if ('embedUri' in embed) {
       const embedUri = new AtUri(embed.embedUri)

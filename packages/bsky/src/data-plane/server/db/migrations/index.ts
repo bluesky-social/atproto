@@ -33,6 +33,8 @@ export * as _20230929T192920807Z from './20230929T192920807Z-record-cursor-index
 export * as _20231003T202833377Z from './20231003T202833377Z-create-moderation-subject-status'
 export * as _20231220T225126090Z from './20231220T225126090Z-blob-takedowns'
 export * as _20240124T023719200Z from './20240124T023719200Z-tagged-suggestions'
+export * as _20240225T031039003Z from './20240225T031039003Z-quotes-init'
+export * as _20240225T034703340Z from './20240225T034703340Z-add-quote-to-post-aggs'
 export * as _20240226T225725627Z from './20240226T225725627Z-labelers'
 export * as _20240530T170337073Z from './20240530T170337073Z-account-deactivation'
 export * as _20240606T171229898Z from './20240606T171229898Z-thread-mutes'

@@ -112,6 +112,7 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
+import * as AppBskyFeedGetPostQuotes from './types/app/bsky/feed/getPostQuotes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -310,6 +311,7 @@ export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
+export * as AppBskyFeedGetPostQuotes from './types/app/bsky/feed/getPostQuotes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -1693,6 +1695,17 @@ export class AppBskyFeedNS {
       .call('app.bsky.feed.getListFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetListFeed.toKnownErr(e)
+      })
+  }
+
+  getPostQuotes(
+    params?: AppBskyFeedGetPostQuotes.QueryParams,
+    opts?: AppBskyFeedGetPostQuotes.CallOptions,
+  ): Promise<AppBskyFeedGetPostQuotes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getPostQuotes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetPostQuotes.toKnownErr(e)
       })
   }
 
