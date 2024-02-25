@@ -40,6 +40,7 @@ describe('moderation-events', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.alice,
     }
+    console.log({ alicesAccount })
     const bobsPost = {
       $type: 'com.atproto.repo.strongRef',
       uri: sc.posts[sc.dids.bob][0].ref.uriStr,
@@ -358,6 +359,7 @@ describe('moderation-events', () => {
         { id: 1 },
         { headers: network.bsky.adminAuthHeaders('moderator') },
       )
+      console.log(JSON.stringify(data, null, 2))
       expect(forSnapshot(data)).toMatchSnapshot()
     })
   })
