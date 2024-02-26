@@ -238,6 +238,9 @@ message GetCountsForUsersResponse {
   repeated int32 reposts = 2;
   repeated int32 following = 3;
   repeated int32 followers = 4;
+  repeated int32 lists = 5;
+  repeated int32 feeds = 6;
+  repeated bool mod_service = 7;
 }
 
 //

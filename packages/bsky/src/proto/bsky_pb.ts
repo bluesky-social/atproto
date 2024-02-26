@@ -1843,6 +1843,21 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   followers: number[] = [];
 
+  /**
+   * @generated from field: repeated int32 lists = 5;
+   */
+  lists: number[] = [];
+
+  /**
+   * @generated from field: repeated int32 feeds = 6;
+   */
+  feeds: number[] = [];
+
+  /**
+   * @generated from field: repeated bool mod_service = 7;
+   */
+  modService: boolean[] = [];
+
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -1855,6 +1870,9 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
     { no: 2, name: "reposts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 3, name: "following", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 4, name: "followers", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 5, name: "lists", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 6, name: "feeds", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 7, name: "mod_service", kind: "scalar", T: 8 /* ScalarType.BOOL */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCountsForUsersResponse {
