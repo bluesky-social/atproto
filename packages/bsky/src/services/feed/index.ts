@@ -233,12 +233,14 @@ export class FeedService {
   feedItemRefs(items: FeedRow[]) {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
+    const parentUris = new Set<string>()
     for (const item of items) {
       postUris.add(item.postUri)
       actorDids.add(item.postAuthorDid)
       actorDids.add(item.originatorDid)
       if (item.replyParent) {
         postUris.add(item.replyParent)
+        parentUris.add(item.replyParent)
         actorDids.add(new AtUri(item.replyParent).hostname)
       }
       if (item.replyRoot) {
@@ -246,19 +248,20 @@ export class FeedService {
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
-    return { dids: actorDids, uris: postUris }
+    return { dids: actorDids, uris: postUris, parentUris }
   }
 
   async feedHydration(
     refs: {
       dids: Set<string>
       uris: Set<string>
+      parentUris?: Set<string>
       viewer: string | null
       includeSoftDeleted?: boolean
     },
     depth = 0,
   ): Promise<FeedHydrationState> {
-    const { viewer, dids, uris } = refs
+    const { viewer, dids, uris, parentUris } = refs
     const [posts, threadgates, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer, refs.includeSoftDeleted),
       this.threadgatesByPostUri(Array.from(uris)),
@@ -267,6 +270,16 @@ export class FeedService {
         viewer ? [...dids].map((did) => [viewer, did]) : [],
       ),
     ])
+
+    // add any uris that would be required to display a "reply to" label in the feed
+    if (parentUris) {
+      for (const uri of parentUris) {
+        const post = posts[uri]
+        if (isPostRecord(post.record) && post.record.reply) {
+          dids.add(new AtUri(post.record.reply?.parent.uri).hostname)
+        }
+      }
+    }
 
     // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
     const [profileState, blocks, lists] = await Promise.all([

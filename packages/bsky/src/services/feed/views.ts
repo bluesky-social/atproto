@@ -6,6 +6,7 @@ import {
   GeneratorView,
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
+import { isRecord as isPostRecord } from '../../lexicon/types/app/bsky/feed/post'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -187,6 +188,11 @@ export class FeedViews {
           feedPost['reply'] = {
             root: replyRoot,
             parent: replyParent,
+          }
+
+          if (isPostRecord(replyParent.record) && replyParent.record.reply) {
+            const did = new AtUri(replyParent.record.reply.parent.uri).hostname
+            feedPost['parentAuthor'] = actors[did]
           }
         }
       }

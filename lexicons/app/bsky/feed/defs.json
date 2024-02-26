@@ -49,6 +49,10 @@
       "properties": {
         "post": { "type": "ref", "ref": "#postView" },
         "reply": { "type": "ref", "ref": "#replyRef" },
+        "replyParentAuthor": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
         "reason": { "type": "union", "refs": ["#reasonRepost"] }
       }
     },
