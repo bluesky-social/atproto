@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -943,9 +947,6 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../../packages/crypto
-      '@atproto/identity':
-        specifier: workspace:^
-        version: link:../../packages/identity
       dd-trace:
         specifier: 3.13.2
         version: 3.13.2
@@ -12048,7 +12049,3 @@ packages:
 
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false

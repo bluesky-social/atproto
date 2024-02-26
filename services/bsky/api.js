@@ -41,23 +41,14 @@ const path = require('node:path')
 const assert = require('node:assert')
 const cluster = require('cluster')
 const { Secp256k1Keypair } = require('@atproto/crypto')
-const { ServerConfig, BskyAppView, makeAlgos } = require('@atproto/bsky')
-const { MemoryCache: MemoryDidCache } = require('@atproto/identity')
+const { ServerConfig, BskyAppView } = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
   const config = ServerConfig.readEnv()
   assert(env.serviceSigningKey, 'must set BSKY_SERVICE_SIGNING_KEY')
   const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
-  const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
-  const didCache = new MemoryDidCache() // @TODO persistent, shared cache
-  const bsky = BskyAppView.create({
-    config,
-    signingKey,
-    didCache,
-    algos,
-  })
-
+  const bsky = BskyAppView.create({ config, signingKey })
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   const shutdown = async () => {
@@ -69,7 +60,6 @@ const main = async () => {
 
 const getEnv = () => ({
   serviceSigningKey: process.env.BSKY_SERVICE_SIGNING_KEY || undefined,
-  feedPublisherDid: process.env.BSKY_FEED_PUBLISHER_DID || undefined,
 })
 
 const maybeParseInt = (str) => {
