@@ -16,7 +16,8 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { ListItemInfo } from '../../../../data-plane/gen/bsky_pb'
+import { clearlyBadCursor } from '../../../util'
+import { ListItemInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noRules, presentation)
@@ -39,6 +40,9 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
+  if (clearlyBadCursor(params.cursor)) {
+    return { listUri: params.list, listitems: [] }
+  }
   const { listitems, cursor } = await ctx.hydrator.dataplane.getListMembers({
     listUri: params.list,
     limit: params.limit,

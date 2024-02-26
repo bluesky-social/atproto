@@ -12,6 +12,7 @@ import {
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -36,6 +37,9 @@ const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { likes: [] }
+  }
   const likesRes = await ctx.hydrator.dataplane.getLikesBySubject({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
@@ -78,7 +82,7 @@ const presentation = (inputs: {
   const { ctx, params, skeleton, hydration } = inputs
   const likeViews = mapDefined(skeleton.likes, (uri) => {
     const like = hydration.likes?.get(uri)
-    if (!like || !like.indexedAt || !like.record) {
+    if (!like || !like.record) {
       return
     }
     const creatorDid = creatorFromUri(uri)
@@ -89,7 +93,7 @@ const presentation = (inputs: {
     return {
       actor,
       createdAt: normalizeDatetimeAlways(like.record.createdAt),
-      indexedAt: like.indexedAt.toISOString(),
+      indexedAt: like.sortedAt.toISOString(),
     }
   })
   return {

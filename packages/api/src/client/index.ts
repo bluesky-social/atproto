@@ -7,8 +7,10 @@ import {
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
+import * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -20,12 +22,14 @@ import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/ge
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -80,6 +84,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -127,6 +132,7 @@ import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -145,14 +151,16 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
-import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
+export * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
+export * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -164,12 +172,14 @@ export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/ge
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 export * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 export * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -224,6 +234,7 @@ export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -271,6 +282,7 @@ export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -289,8 +301,8 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
-export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -385,6 +397,22 @@ export class ComAtprotoAdminNS {
     this._service = service
   }
 
+  createCommunicationTemplate(
+    data?: ComAtprotoAdminCreateCommunicationTemplate.InputSchema,
+    opts?: ComAtprotoAdminCreateCommunicationTemplate.CallOptions,
+  ): Promise<ComAtprotoAdminCreateCommunicationTemplate.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.createCommunicationTemplate',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminCreateCommunicationTemplate.toKnownErr(e)
+      })
+  }
+
   deleteAccount(
     data?: ComAtprotoAdminDeleteAccount.InputSchema,
     opts?: ComAtprotoAdminDeleteAccount.CallOptions,
@@ -393,6 +421,22 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.deleteAccount', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminDeleteAccount.toKnownErr(e)
+      })
+  }
+
+  deleteCommunicationTemplate(
+    data?: ComAtprotoAdminDeleteCommunicationTemplate.InputSchema,
+    opts?: ComAtprotoAdminDeleteCommunicationTemplate.CallOptions,
+  ): Promise<ComAtprotoAdminDeleteCommunicationTemplate.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.deleteCommunicationTemplate',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminDeleteCommunicationTemplate.toKnownErr(e)
       })
   }
 
@@ -517,6 +561,22 @@ export class ComAtprotoAdminNS {
       })
   }
 
+  listCommunicationTemplates(
+    params?: ComAtprotoAdminListCommunicationTemplates.QueryParams,
+    opts?: ComAtprotoAdminListCommunicationTemplates.CallOptions,
+  ): Promise<ComAtprotoAdminListCommunicationTemplates.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.listCommunicationTemplates',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminListCommunicationTemplates.toKnownErr(e)
+      })
+  }
+
   queryModerationEvents(
     params?: ComAtprotoAdminQueryModerationEvents.QueryParams,
     opts?: ComAtprotoAdminQueryModerationEvents.CallOptions,
@@ -585,6 +645,22 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.updateAccountHandle', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminUpdateAccountHandle.toKnownErr(e)
+      })
+  }
+
+  updateCommunicationTemplate(
+    data?: ComAtprotoAdminUpdateCommunicationTemplate.InputSchema,
+    opts?: ComAtprotoAdminUpdateCommunicationTemplate.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateCommunicationTemplate.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.updateCommunicationTemplate',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateCommunicationTemplate.toKnownErr(e)
       })
   }
 
@@ -1169,6 +1245,17 @@ export class ComAtprotoTempNS {
       .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoTempPushBlob.toKnownErr(e)
+      })
+  }
+
+  requestPhoneVerification(
+    data?: ComAtprotoTempRequestPhoneVerification.InputSchema,
+    opts?: ComAtprotoTempRequestPhoneVerification.CallOptions,
+  ): Promise<ComAtprotoTempRequestPhoneVerification.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.requestPhoneVerification', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempRequestPhoneVerification.toKnownErr(e)
       })
   }
 
@@ -1982,6 +2069,17 @@ export class AppBskyGraphNS {
       })
   }
 
+  getRelationships(
+    params?: AppBskyGraphGetRelationships.QueryParams,
+    opts?: AppBskyGraphGetRelationships.CallOptions,
+  ): Promise<AppBskyGraphGetRelationships.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getRelationships', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetRelationships.toKnownErr(e)
+      })
+  }
+
   getSuggestedFollowsByActor(
     params?: AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
     opts?: AppBskyGraphGetSuggestedFollowsByActor.CallOptions,
@@ -2521,17 +2619,6 @@ export class AppBskyUnspeccedNS {
     this._service = service
   }
 
-  getPopular(
-    params?: AppBskyUnspeccedGetPopular.QueryParams,
-    opts?: AppBskyUnspeccedGetPopular.CallOptions,
-  ): Promise<AppBskyUnspeccedGetPopular.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.getPopular', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedGetPopular.toKnownErr(e)
-      })
-  }
-
   getPopularFeedGenerators(
     params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
     opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
@@ -2545,6 +2632,17 @@ export class AppBskyUnspeccedNS {
       )
       .catch((e) => {
         throw AppBskyUnspeccedGetPopularFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getTaggedSuggestions(
+    params?: AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
+    opts?: AppBskyUnspeccedGetTaggedSuggestions.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTaggedSuggestions.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.getTaggedSuggestions', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedGetTaggedSuggestions.toKnownErr(e)
       })
   }
 

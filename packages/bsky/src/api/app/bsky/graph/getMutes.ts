@@ -11,6 +11,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
@@ -31,6 +32,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
+  if (clearlyBadCursor(params.cursor)) {
+    return { mutedDids: [] }
+  }
   const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
     actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,

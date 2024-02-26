@@ -12,6 +12,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorFeeds = createPipeline(
@@ -40,6 +41,9 @@ const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { feedUris: [] }
+  }
   const [did] = await ctx.hydrator.actor.getDids([params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')

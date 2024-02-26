@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
           did,
           handle: info.handle ?? INVALID_HANDLE,
           relatedRecords: info.profile ? [info.profile] : undefined,
-          indexedAt: (info.indexedAt ?? new Date(0)).toISOString(),
+          indexedAt: (info.sortedAt ?? new Date(0)).toISOString(),
         }
       })
 

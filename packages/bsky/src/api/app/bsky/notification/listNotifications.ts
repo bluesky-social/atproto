@@ -12,8 +12,9 @@ import {
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { Notification } from '../../../../data-plane/gen/bsky_pb'
+import { Notification } from '../../../../proto/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -45,6 +46,9 @@ const skeleton = async (
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
   const viewer = params.hydrateCtx.viewer
+  if (clearlyBadCursor(params.cursor)) {
+    return { notifs: [] }
+  }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
       actorDid: viewer,
@@ -55,10 +59,16 @@ const skeleton = async (
       actorDid: viewer,
     }),
   ])
+  // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
+  // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
+  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  if (!lastSeenDate && !params.cursor) {
+    lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
+  }
   return {
     notifs: res.notifications,
-    cursor: res.cursor,
-    lastSeenNotifs: lastSeenRes.timestamp?.toDate().toISOString(),
+    cursor: res.cursor || undefined,
+    lastSeenNotifs: lastSeenDate?.toISOString(),
   }
 }
 

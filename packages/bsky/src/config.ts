@@ -1,24 +1,35 @@
-import assert from 'assert'
+import assert from 'node:assert'
 
 export interface ServerConfigValues {
+  // service
   version?: string
   debugMode?: boolean
   port?: number
   publicUrl?: string
   serverDid: string
-  feedGenDid?: string
+  // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
+  bsyncUrl: string
+  bsyncApiKey?: string
+  bsyncHttpVersion?: '1.1' | '2'
+  bsyncIgnoreBadTls?: boolean
+  courierUrl: string
+  courierApiKey?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
+  searchUrl?: string
+  cdnUrl?: string
+  // identity
   didPlcUrl: string
-  labelsFromIssuerDids?: string[]
   handleResolveNameservers?: string[]
-  imgUriEndpoint?: string
-  blobCacheLocation?: string
-  adminPassword: string
-  moderatorPassword: string
-  triagePassword: string
+  // moderation and administration
   modServiceDid: string
+  adminPasswords: string[]
+  labelsFromIssuerDids?: string[]
+  // misc/dev
+  blobCacheLocation?: string
 }
 
 export class ServerConfig {
@@ -30,15 +41,18 @@ export class ServerConfig {
     const debugMode = process.env.NODE_ENV !== 'production'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
-    const feedGenDid = process.env.BSKY_FEED_GEN_DID
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
-    const imgUriEndpoint = process.env.BSKY_IMG_URI_ENDPOINT
+    const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
+    const searchUrl =
+      process.env.BSKY_SEARCH_URL ||
+      process.env.BSKY_SEARCH_ENDPOINT ||
+      undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -49,35 +63,50 @@ export class ServerConfig {
     const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
       ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
       : []
-    const adminPassword = process.env.BSKY_ADMIN_PASSWORD
-    assert(adminPassword)
-    const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD
-    assert(moderatorPassword)
-    const triagePassword = process.env.BSKY_TRIAGE_PASSWORD
-    assert(triagePassword)
+    const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
+    assert(bsyncUrl)
+    const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
+    const bsyncHttpVersion = process.env.BSKY_BSYNC_HTTP_VERSION || '2'
+    const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
+    assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
+    const courierUrl = process.env.BSKY_COURIER_URL || undefined
+    assert(courierUrl)
+    const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
+    const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
+    const courierIgnoreBadTls =
+      process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
+    assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+    const adminPasswords = envList(
+      process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
+    )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
-
     return new ServerConfig({
       version,
       debugMode,
       port,
       publicUrl,
       serverDid,
-      feedGenDid,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
+      searchUrl,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
-      imgUriEndpoint,
+      cdnUrl,
       blobCacheLocation,
-      adminPassword,
-      moderatorPassword,
-      triagePassword,
+      bsyncUrl,
+      bsyncApiKey,
+      bsyncHttpVersion,
+      bsyncIgnoreBadTls,
+      courierUrl,
+      courierApiKey,
+      courierHttpVersion,
+      courierIgnoreBadTls,
+      adminPasswords,
       modServiceDid,
       ...stripUndefineds(overrides ?? {}),
     })
@@ -116,10 +145,6 @@ export class ServerConfig {
     return this.cfg.serverDid
   }
 
-  get feedGenDid() {
-    return this.cfg.feedGenDid
-  }
-
   get dataplaneUrls() {
     return this.cfg.dataplaneUrls
   }
@@ -132,40 +157,68 @@ export class ServerConfig {
     return this.cfg.dataplaneIgnoreBadTls
   }
 
-  get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
+  get bsyncUrl() {
+    return this.cfg.bsyncUrl
   }
 
-  get handleResolveNameservers() {
-    return this.cfg.handleResolveNameservers
+  get bsyncApiKey() {
+    return this.cfg.bsyncApiKey
+  }
+
+  get bsyncHttpVersion() {
+    return this.cfg.bsyncHttpVersion
+  }
+
+  get bsyncIgnoreBadTls() {
+    return this.cfg.bsyncIgnoreBadTls
+  }
+
+  get courierUrl() {
+    return this.cfg.courierUrl
+  }
+
+  get courierApiKey() {
+    return this.cfg.courierApiKey
+  }
+
+  get courierHttpVersion() {
+    return this.cfg.courierHttpVersion
+  }
+
+  get courierIgnoreBadTls() {
+    return this.cfg.courierIgnoreBadTls
+  }
+
+  get searchUrl() {
+    return this.cfg.searchUrl
+  }
+
+  get cdnUrl() {
+    return this.cfg.cdnUrl
   }
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
   }
 
-  get imgUriEndpoint() {
-    return this.cfg.imgUriEndpoint
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
   }
 
-  get blobCacheLocation() {
-    return this.cfg.blobCacheLocation
-  }
-
-  get adminPassword() {
-    return this.cfg.adminPassword
-  }
-
-  get moderatorPassword() {
-    return this.cfg.moderatorPassword
-  }
-
-  get triagePassword() {
-    return this.cfg.triagePassword
+  get adminPasswords() {
+    return this.cfg.adminPasswords
   }
 
   get modServiceDid() {
     return this.cfg.modServiceDid
+  }
+
+  get labelsFromIssuerDids() {
+    return this.cfg.labelsFromIssuerDids ?? []
+  }
+
+  get blobCacheLocation() {
+    return this.cfg.blobCacheLocation
   }
 }
 
@@ -179,4 +232,9 @@ function stripUndefineds(
     }
   })
   return result
+}
+
+function envList(str: string | undefined): string[] {
+  if (str === undefined || str.length === 0) return []
+  return str.split(',')
 }

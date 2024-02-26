@@ -1,3 +1,5 @@
+import { Timestamp } from '@bufbuild/protobuf'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -5,7 +7,6 @@ import {
   isRepoBlobRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
@@ -17,27 +18,53 @@ export default function (server: Server, ctx: AppContext) {
           'Must be a full moderator to update subject state',
         )
       }
+      const now = new Date()
       const { subject, takedown } = input.body
       if (takedown) {
-        let actorDid: string | undefined = undefined
-        let recordUri: string | undefined = undefined
-        let blobCid: string | undefined = undefined
         if (isRepoRef(subject)) {
-          actorDid = subject.did
+          if (takedown.applied) {
+            await ctx.dataplane.takedownActor({
+              did: subject.did,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
+            })
+          } else {
+            await ctx.dataplane.untakedownActor({
+              did: subject.did,
+              seen: Timestamp.fromDate(now),
+            })
+          }
         } else if (isStrongRef(subject)) {
-          recordUri = subject.uri
+          if (takedown.applied) {
+            await ctx.dataplane.takedownRecord({
+              recordUri: subject.uri,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
+            })
+          } else {
+            await ctx.dataplane.untakedownRecord({
+              recordUri: subject.uri,
+              seen: Timestamp.fromDate(now),
+            })
+          }
         } else if (isRepoBlobRef(subject)) {
-          actorDid = subject.did
-          blobCid = subject.cid
+          if (takedown.applied) {
+            await ctx.dataplane.takedownBlob({
+              did: subject.did,
+              cid: subject.cid,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
+            })
+          } else {
+            await ctx.dataplane.untakedownBlob({
+              did: subject.did,
+              cid: subject.cid,
+              seen: Timestamp.fromDate(now),
+            })
+          }
         } else {
           throw new InvalidRequestError('Invalid subject')
         }
-        await ctx.dataplane.updateTakedown({
-          actorDid,
-          recordUri,
-          blobCid,
-          takenDown: takedown?.applied,
-        })
       }
 
       return {

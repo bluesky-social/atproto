@@ -584,6 +584,38 @@
           "description": "Additional comment about the outgoing comm."
         }
       }
+    },
+    "communicationTemplateView": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "contentMarkdown",
+        "disabled",
+        "lastUpdatedBy",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Name of the template." },
+        "subject": {
+          "type": "string",
+          "description": "Content of the template, can contain markdown and variable placeholders."
+        },
+        "contentMarkdown": {
+          "type": "string",
+          "description": "Subject of the message, used in emails."
+        },
+        "disabled": { "type": "boolean" },
+        "lastUpdatedBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the user who last updated the template."
+        },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" }
+      }
     }
   }
 }

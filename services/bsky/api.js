@@ -1,14 +1,40 @@
 'use strict' /* eslint-disable */
 
-require('dd-trace') // Only works with commonjs
-  .init({ logInjection: true })
-  .tracer.use('express', {
+const dd = require('dd-trace')
+
+dd.tracer
+  .init()
+  .use('http2', {
+    client: true, // calls into dataplane
+    server: false,
+  })
+  .use('express', {
     hooks: {
       request: (span, req) => {
         maintainXrpcResource(span, req)
       },
     },
   })
+
+// modify tracer in order to track calls to dataplane as a service with proper resource names
+const DATAPLANE_PREFIX = '/bsky.Service/'
+const origStartSpan = dd.tracer._tracer.startSpan
+dd.tracer._tracer.startSpan = function (name, options) {
+  if (
+    name !== 'http.request' ||
+    options?.tags?.component !== 'http2' ||
+    !options?.tags?.['http.url']
+  ) {
+    return origStartSpan.call(this, name, options)
+  }
+  const uri = new URL(options.tags['http.url'])
+  if (!uri.pathname.startsWith(DATAPLANE_PREFIX)) {
+    return origStartSpan.call(this, name, options)
+  }
+  options.tags['service.name'] = 'dataplane-bsky'
+  options.tags['resource.name'] = uri.pathname.slice(DATAPLANE_PREFIX.length)
+  return origStartSpan.call(this, name, options)
+}
 
 // Tracer code above must come before anything else
 const path = require('node:path')

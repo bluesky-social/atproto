@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - main
-      - bav-v2-drop-pg
-      - bav-v2-dataplane-clients
+      - appview-v2
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

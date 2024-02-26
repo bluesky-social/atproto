@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { noUndefinedVals } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -12,13 +13,25 @@ export default function (server: Server, ctx: AppContext) {
           { feed: params.feed },
           await ctx.appviewAuthHeaders(requester, req),
         )
+      const serviceAuthHeaders = await ctx.serviceAuthHeaders(
+        requester,
+        feed.view.did,
+        req,
+      )
+      // forward accept-language header to upstream services
+      serviceAuthHeaders.headers['accept-language'] =
+        req.headers['accept-language']
       const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,
-        await ctx.serviceAuthHeaders(requester, feed.view.did, req),
+        serviceAuthHeaders,
       )
+
       return {
         encoding: 'application/json',
         body: res.data,
+        headers: noUndefinedVals({
+          'content-language': res.headers['content-language'],
+        }),
       }
     },
   })

@@ -1,27 +1,30 @@
 import express from 'express'
 import * as plc from '@did-plc/lib'
-import { DidCache, IdResolver } from '@atproto/identity'
+import { IdResolver } from '@atproto/identity'
+import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ServerConfig } from './config'
-import { MountedAlgos } from './api/feed-gen/types'
 import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { dedupeStrs } from '@atproto/common'
+import { BsyncClient } from './bsync'
+import { CourierClient } from './courier'
 
 export class AppContext {
   constructor(
     private opts: {
       cfg: ServerConfig
       dataplane: DataPlaneClient
+      searchAgent: AtpAgent | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
       idResolver: IdResolver
-      didCache?: DidCache
-      algos: MountedAlgos
+      bsyncClient: BsyncClient
+      courierClient: CourierClient
       authVerifier: AuthVerifier
     },
   ) {}
@@ -32,6 +35,10 @@ export class AppContext {
 
   get dataplane(): DataPlaneClient {
     return this.opts.dataplane
+  }
+
+  get searchAgent(): AtpAgent | undefined {
+    return this.opts.searchAgent
   }
 
   get hydrator(): Hydrator {
@@ -54,11 +61,15 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidCache | undefined {
-    return this.opts.didCache
+  get bsyncClient(): BsyncClient {
+    return this.opts.bsyncClient
   }
 
-  get authVerifier() {
+  get courierClient(): CourierClient {
+    return this.opts.courierClient
+  }
+
+  get authVerifier(): AuthVerifier {
     return this.opts.authVerifier
   }
 
@@ -80,10 +91,6 @@ export class AppContext {
         .map((did) => did.trim())
         .slice(0, 10),
     )
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 }
 

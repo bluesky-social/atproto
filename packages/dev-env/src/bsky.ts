@@ -1,7 +1,6 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { DAY, HOUR } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -16,6 +15,7 @@ export class TestBsky {
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
+    public bsync: bsky.MockBsync,
     public sub: bsky.RepoSubscription,
   ) {}
 
@@ -41,7 +41,14 @@ export class TestBsky {
     })
 
     const dataplanePort = await getPort()
-    const dataplane = await bsky.DataPlaneServer.create(db, dataplanePort)
+    const dataplane = await bsky.DataPlaneServer.create(
+      db,
+      dataplanePort,
+      cfg.plcUrl,
+    )
+
+    const bsyncPort = await getPort()
+    const bsync = await bsky.MockBsync.create(db, bsyncPort)
 
     const config = new bsky.ServerConfig({
       version: 'unknown',
@@ -51,13 +58,13 @@ export class TestBsky {
       serverDid,
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
+      bsyncUrl: `http://localhost:${bsyncPort}`,
+      bsyncHttpVersion: '1.1',
+      courierUrl: 'https://fake.example',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
       ...cfg,
-      adminPassword: ADMIN_PASSWORD,
-      moderatorPassword: MOD_PASSWORD,
-      triagePassword: TRIAGE_PASSWORD,
-      feedGenDid: 'did:example:feedGen',
+      adminPasswords: [ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD],
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -72,27 +79,23 @@ export class TestBsky {
     }
     await migrationDb.close()
 
-    const didCache = new bsky.DidSqlCache(db, HOUR, DAY)
-
     // api server
     const server = bsky.BskyAppView.create({
       config,
-      didCache,
       signingKey: serviceKeypair,
-      algos: cfg.algos,
     })
 
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
       db,
-      idResolver: server.ctx.idResolver,
+      idResolver: dataplane.idResolver,
       background: new BackgroundQueue(db),
     })
 
     await server.start()
     sub.run()
 
-    return new TestBsky(url, port, db, server, dataplane, sub)
+    return new TestBsky(url, port, db, server, dataplane, bsync, sub)
   }
 
   get ctx(): bsky.AppContext {
@@ -103,27 +106,23 @@ export class TestBsky {
     return new AtpAgent({ service: this.url })
   }
 
-  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
-    const password =
-      role === 'triage'
-        ? this.ctx.cfg.triagePassword
-        : role === 'moderator'
-        ? this.ctx.cfg.moderatorPassword
-        : this.ctx.cfg.adminPassword
+  adminAuth(): string {
+    const [password] = this.ctx.cfg.adminPasswords
     return (
       'Basic ' +
       ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
     )
   }
 
-  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
+  adminAuthHeaders() {
     return {
-      authorization: this.adminAuth(role),
+      authorization: this.adminAuth(),
     }
   }
 
   async close() {
     await this.server.destroy()
+    await this.bsync.destroy()
     await this.dataplane.destroy()
     await this.sub.destroy()
     await this.db.close()

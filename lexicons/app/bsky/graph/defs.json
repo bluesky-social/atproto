@@ -67,6 +67,33 @@
         "muted": { "type": "boolean" },
         "blocked": { "type": "string", "format": "at-uri" }
       }
+    },
+    "notFoundActor": {
+      "type": "object",
+      "description": "indicates that a handle or DID could not be resolved",
+      "required": ["actor", "notFound"],
+      "properties": {
+        "actor": { "type": "string", "format": "at-identifier" },
+        "notFound": { "type": "boolean", "const": true }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "description": "lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object)",
+      "required": ["did"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "following": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "if the actor follows this DID, this is the AT-URI of the follow record"
+        },
+        "followedBy": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "if the actor is followed by this DID, contains the AT-URI of the follow record"
+        }
+      }
     }
   }
 }

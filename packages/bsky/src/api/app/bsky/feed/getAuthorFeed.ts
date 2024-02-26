@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -15,6 +15,8 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { Actor } from '../../../../hydration/actor'
+import { FeedItem } from '../../../../hydration/feed'
+import { FeedType } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -26,15 +28,16 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
-      const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
 
-      const [result, repoRev] = await Promise.all([
-        getAuthorFeed({ ...params, hydrateCtx }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getAuthorFeed(
+        { ...params, hydrateCtx, includeTakedowns: canViewTakedowns },
+        ctx,
+      )
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {
@@ -43,6 +46,13 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const FILTER_TO_FEED_TYPE = {
+  posts_with_replies: undefined, // default: all posts, replies, and reposts
+  posts_no_replies: FeedType.POSTS_NO_REPLIES,
+  posts_with_media: FeedType.POSTS_WITH_MEDIA,
+  posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
 }
 
 export const skeleton = async (inputs: {
@@ -54,22 +64,31 @@ export const skeleton = async (inputs: {
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actors = await ctx.hydrator.actor.getActors([did])
+  const actors = await ctx.hydrator.actor.getActors(
+    [did],
+    params.includeTakedowns,
+  )
   const actor = actors.get(did)
-  if (!actor || actor.takendown) {
+  if (!actor) {
     throw new InvalidRequestError('Profile not found')
+  }
+  if (clearlyBadCursor(params.cursor)) {
+    return { actor, items: [] }
   }
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
     limit: params.limit,
     cursor: params.cursor,
-    noReplies: params.filter === 'posts_no_replies',
-    mediaOnly: params.filter === 'posts_with_media',
-    authorThreadsOnly: params.filter === 'posts_and_author_threads',
+    feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
   return {
     actor,
-    uris: res.items.map((item) => item.repost || item.uri),
+    items: res.items.map((item) => ({
+      post: { uri: item.uri, cid: item.cid || undefined },
+      repost: item.repost
+        ? { uri: item.repost, cid: item.repostCid || undefined }
+        : undefined,
+    })),
     cursor: parseString(res.cursor),
   }
 }
@@ -80,14 +99,13 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  const [feedPostState, profileViewerState = {}] = await Promise.all([
-    ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.hydrateCtx),
-    params.hydrateCtx.viewer
-      ? ctx.hydrator.actor.getProfileViewerStates(
-          [skeleton.actor.did],
-          params.hydrateCtx.viewer,
-        )
-      : undefined,
+  const [feedPostState, profileViewerState] = await Promise.all([
+    ctx.hydrator.hydrateFeedItems(
+      skeleton.items,
+      params.hydrateCtx,
+      params.includeTakedowns,
+    ),
+    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
   return mergeStates(feedPostState, profileViewerState)
 }
@@ -111,8 +129,8 @@ const noBlocksOrMutedReposts = (inputs: {
       'BlockedByActor',
     )
   }
-  skeleton.uris = skeleton.uris.filter((uri) => {
-    const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
+  skeleton.items = skeleton.items.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.originatorBlocked &&
@@ -128,8 +146,8 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.uris, (uri) =>
-    ctx.views.feedViewPost(uri, hydration),
+  const feed = mapDefined(skeleton.items, (item) =>
+    ctx.views.feedViewPost(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }
@@ -140,10 +158,13 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams & {
+  hydrateCtx: HydrateCtx
+  includeTakedowns: boolean
+}
 
 type Skeleton = {
   actor: Actor
-  uris: string[]
+  items: FeedItem[]
   cursor?: string
 }

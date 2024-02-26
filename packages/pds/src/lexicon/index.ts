@@ -9,7 +9,9 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
+import * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -21,12 +23,14 @@ import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/ge
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -77,6 +81,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -109,6 +114,7 @@ import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -120,8 +126,8 @@ import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -202,6 +208,17 @@ export class ComAtprotoAdminNS {
     this._server = server
   }
 
+  createCommunicationTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminCreateCommunicationTemplate.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminCreateCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.createCommunicationTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   deleteAccount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -210,6 +227,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteCommunicationTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDeleteCommunicationTemplate.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminDeleteCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.deleteCommunicationTemplate' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -334,6 +362,17 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listCommunicationTemplates<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminListCommunicationTemplates.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminListCommunicationTemplates.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.listCommunicationTemplates' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   queryModerationEvents<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -397,6 +436,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateAccountHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateCommunicationTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateCommunicationTemplate.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminUpdateCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateCommunicationTemplate' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1006,6 +1056,17 @@ export class ComAtprotoTempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  requestPhoneVerification<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempRequestPhoneVerification.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempRequestPhoneVerification.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   transferAccount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1424,6 +1485,17 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRelationships<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetRelationships.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetRelationships.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSuggestedFollowsByActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1577,17 +1649,6 @@ export class AppBskyUnspeccedNS {
     this._server = server
   }
 
-  getPopular<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyUnspeccedGetPopular.Handler<ExtractAuth<AV>>,
-      AppBskyUnspeccedGetPopular.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getPopular' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPopularFeedGenerators<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1596,6 +1657,17 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getPopularFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTaggedSuggestions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTaggedSuggestions.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetTaggedSuggestions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTaggedSuggestions' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

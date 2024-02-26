@@ -1,4 +1,5 @@
 import { AtUri } from '@atproto/syntax'
+import { BlobRef } from '@atproto/lexicon'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
   Record as GateRecord,
@@ -7,14 +8,6 @@ import {
   isMentionRule,
 } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
-
-const now = () => {
-  return new Date().toISOString()
-}
-
-export const compositeTime = (createdAt = now(), indexedAt = now()): string => {
-  return createdAt < indexedAt ? createdAt : indexedAt
-}
 
 export const creatorFromUri = (uri: string): string => {
   return new AtUri(uri).hostname
@@ -57,4 +50,15 @@ type ParsedThreadGate = {
   allowMentions?: boolean
   allowFollowing?: boolean
   allowListUris?: string[]
+}
+
+export const cidFromBlobJson = (json: BlobRef) => {
+  if (json instanceof BlobRef) {
+    return json.ref.toString()
+  }
+  // @NOTE below handles the fact that parseRecordBytes() produces raw json rather than lexicon values
+  if (json['$type'] === 'blob') {
+    return (json['ref']?.['$link'] ?? '') as string
+  }
+  return (json['cid'] ?? '') as string
 }

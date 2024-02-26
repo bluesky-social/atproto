@@ -2,7 +2,8 @@ import { AtUri } from '@atproto/syntax'
 import { jsonToLex } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { Record } from '../data-plane/gen/bsky_pb'
+import { lexicons } from '../lexicon/lexicons'
+import { Record } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> {
   merge(map: HydrationMap<T>): HydrationMap<T> {
@@ -15,9 +16,9 @@ export class HydrationMap<T> extends Map<string, T | null> {
 
 export type RecordInfo<T> = {
   record: T
-  cid: CID
-  indexedAt?: Date
-  takenDown: boolean
+  cid: string
+  sortedAt: Date
+  takedownRef: string | undefined
 }
 
 export const parseRecord = <T>(
@@ -28,17 +29,38 @@ export const parseRecord = <T>(
     return undefined
   }
   const record = parseRecordBytes<T>(entry.record)
-  const cid = parseCid(entry.cid)
-  const indexedAt = entry.indexedAt?.toDate()
+  const cid = entry.cid
+  const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
-  return { record, cid, indexedAt, takenDown: entry.takenDown }
+  if (!isValidRecord(record)) {
+    return
+  }
+  return {
+    record,
+    cid,
+    sortedAt,
+    takedownRef: safeTakedownRef(entry),
+  }
 }
 
+const isValidRecord = (json: unknown) => {
+  const lexRecord = jsonToLex(json)
+  if (typeof lexRecord?.['$type'] !== 'string') {
+    return false
+  }
+  try {
+    lexicons.assertValidRecord(lexRecord['$type'], lexRecord)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.
 export const parseRecordBytes = <T>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
-  const parsed = parseJsonBytes(bytes)
-  return jsonToLex(parsed) as T
+  return parseJsonBytes(bytes) as T
 }
 
 export const parseJsonBytes = (
@@ -75,4 +97,29 @@ export const urisByCollection = (uris: string[]): Map<string, string[]> => {
     result.set(collection, items)
   }
   return result
+}
+
+export const split = <T>(
+  items: T[],
+  predicate: (item: T) => boolean,
+): [T[], T[]] => {
+  const yes: T[] = []
+  const no: T[] = []
+  for (const item of items) {
+    if (predicate(item)) {
+      yes.push(item)
+    } else {
+      no.push(item)
+    }
+  }
+  return [yes, no]
+}
+
+export const safeTakedownRef = (obj?: {
+  takenDown: boolean
+  takedownRef: string
+}): string | undefined => {
+  if (!obj) return
+  if (obj.takedownRef) return obj.takedownRef
+  if (obj.takenDown) return 'BSKY-TAKEDOWN-UNKNOWN'
 }

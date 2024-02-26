@@ -138,7 +138,7 @@ describe('pds author feed views', () => {
     )
   })
 
-  it('blocked by actor takedown.', async () => {
+  it('non-admins blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
@@ -146,21 +146,25 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: true,
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: alice,
     })
 
-    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+    const attemptAsUser = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
     )
-    await expect(attempt).rejects.toThrow('Profile not found')
+    await expect(attemptAsUser).rejects.toThrow('Profile not found')
+
+    const attemptAsAdmin = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: await network.bsky.adminAuthHeaders() },
+    )
+    expect(attemptAsAdmin.data.feed.length).toEqual(preBlock.feed.length)
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: alice,
     })
   })
 
@@ -174,9 +178,8 @@ describe('pds author feed views', () => {
 
     const post = preBlock.feed[0].post
 
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: post.uri,
-      takenDown: true,
     })
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
@@ -188,9 +191,8 @@ describe('pds author feed views', () => {
     expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.untakedownRecord({
       recordUri: post.uri,
-      takenDown: false,
     })
   })
 

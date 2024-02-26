@@ -1,6 +1,6 @@
 import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
 
@@ -91,31 +91,5 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       })),
       cursor: keyset.packFromResult(follows),
     }
-  },
-  async getFollowerCounts(req) {
-    if (req.dids.length === 0) {
-      return { counts: [] }
-    }
-    const res = await db.db
-      .selectFrom('profile_agg')
-      .selectAll()
-      .where('did', 'in', req.dids)
-      .execute()
-    const byDid = keyBy(res, 'did')
-    const counts = req.dids.map((did) => byDid[did]?.followersCount ?? 0)
-    return { counts }
-  },
-  async getFollowCounts(req) {
-    if (req.dids.length === 0) {
-      return { counts: [] }
-    }
-    const res = await db.db
-      .selectFrom('profile_agg')
-      .selectAll()
-      .where('did', 'in', req.dids)
-      .execute()
-    const byDid = keyBy(res, 'did')
-    const counts = req.dids.map((did) => byDid[did]?.followsCount ?? 0)
-    return { counts }
   },
 })

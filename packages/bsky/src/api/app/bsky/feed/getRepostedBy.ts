@@ -11,6 +11,7 @@ import {
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getRepostedBy = createPipeline(
@@ -40,6 +41,9 @@ const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { reposts: [] }
+  }
   const res = await ctx.hydrator.dataplane.getRepostsBySubject({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
