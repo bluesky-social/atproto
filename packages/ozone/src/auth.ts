@@ -7,7 +7,6 @@ import { OzoneSecrets } from './config'
 const BASIC = 'Basic '
 const BEARER = 'Bearer '
 
-// @NOTE this is not safe for production! it has been modified for testing purposes to sidestep jwt auth, allow providing a did directly.
 export const authVerifier = (
   idResolver: IdResolver,
   opts: { aud: string | null },
@@ -28,10 +27,7 @@ export const authVerifier = (
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-
-    const payload = jwtStr.startsWith('did:')
-      ? { iss: jwtStr }
-      : await verifyJwt(jwtStr, opts.aud, getSigningKey)
+    const payload = await verifyJwt(jwtStr, opts.aud, getSigningKey)
     return { credentials: { did: payload.iss }, artifacts: { aud: opts.aud } }
   }
 }

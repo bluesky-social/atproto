@@ -907,7 +907,7 @@ describe('moderation', () => {
       })
     })
 
-    // @TODO add back in with image invalidation
+    // @TODO add back in with image invalidation, see bluesky-social/atproto#2087
     it.skip('prevents image blob from being served, even when cached.', async () => {
       const fetchImage = await fetch(imageUri)
       expect(fetchImage.status).toEqual(404)
