@@ -371,7 +371,7 @@ export class Hydrator {
     const postAndReplyRefs: ItemRef[] = []
     posts.forEach((post, uri) => {
       if (!post) return
-      postAndReplyRefs.push({ uri, cid: post.cid.toString() })
+      postAndReplyRefs.push({ uri, cid: post.cid })
       if (post.record.reply) {
         postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
       }

@@ -2,6 +2,7 @@ import { AtUri } from '@atproto/syntax'
 import { jsonToLex } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> {
@@ -15,7 +16,7 @@ export class HydrationMap<T> extends Map<string, T | null> {
 
 export type RecordInfo<T> = {
   record: T
-  cid: CID
+  cid: string
   sortedAt: Date
   takedownRef: string | undefined
 }
@@ -28,9 +29,12 @@ export const parseRecord = <T>(
     return undefined
   }
   const record = parseRecordBytes<T>(entry.record)
-  const cid = parseCid(entry.cid)
+  const cid = entry.cid
   const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
+  if (!isValidRecord(record)) {
+    return
+  }
   return {
     record,
     cid,
@@ -39,11 +43,24 @@ export const parseRecord = <T>(
   }
 }
 
+const isValidRecord = (json: unknown) => {
+  const lexRecord = jsonToLex(json)
+  if (typeof lexRecord?.['$type'] !== 'string') {
+    return false
+  }
+  try {
+    lexicons.assertValidRecord(lexRecord['$type'], lexRecord)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.
 export const parseRecordBytes = <T>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
-  const parsed = parseJsonBytes(bytes)
-  return jsonToLex(parsed) as T
+  return parseJsonBytes(bytes) as T
 }
 
 export const parseJsonBytes = (

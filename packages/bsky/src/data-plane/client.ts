@@ -8,7 +8,7 @@ import {
   createPromiseClient,
   makeAnyClient,
 } from '@connectrpc/connect'
-import { createConnectTransport } from '@connectrpc/connect-node'
+import { createGrpcTransport } from '@connectrpc/connect-node'
 import { getDidKeyFromMultibase } from '@atproto/identity'
 import { Service } from '../proto/bsky_connect'
 
@@ -66,9 +66,10 @@ const createBaseClient = (
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ): BaseClient => {
   const { httpVersion = '2', rejectUnauthorized = true } = opts
-  const transport = createConnectTransport({
+  const transport = createGrpcTransport({
     baseUrl,
     httpVersion,
+    acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
   })
   return {
