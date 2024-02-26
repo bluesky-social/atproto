@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - main
-      - appview-v2-testing
-      - appview-v2-testing-grpc
+      - appview-v2
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
