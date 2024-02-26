@@ -270,17 +270,16 @@ export class FeedService {
         viewer ? [...dids].map((did) => [viewer, did]) : [],
       ),
     ])
-
-    // add any uris that would be required to display a "reply to" label in the feed
+    // add any dids that would be required to display a "reply to" label in the feed
     if (parentUris) {
       for (const uri of parentUris) {
         const post = posts[uri]
         if (isPostRecord(post.record) && post.record.reply) {
-          dids.add(new AtUri(post.record.reply?.parent.uri).hostname)
+          const did = new AtUri(post.record.reply?.parent.uri).hostname
+          dids.add(did)
         }
       }
     }
-
     // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
     const [profileState, blocks, lists] = await Promise.all([
       this.services.actor.views.profileHydration(

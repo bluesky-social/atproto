@@ -189,7 +189,6 @@ export class FeedViews {
             root: replyRoot,
             parent: replyParent,
           }
-
           if (isPostRecord(replyParent.record) && replyParent.record.reply) {
             const did = new AtUri(replyParent.record.reply.parent.uri).hostname
             feedPost['parentAuthor'] = actors[did]
