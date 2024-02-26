@@ -24,3 +24,11 @@ at://did:plc:asdf123/com.atproto.feed.post/a
 at://did:plc:asdf123/com.atproto.feed.post/asdf-123
 at://did:abc:123
 at://did:abc:123/io.nsid.someFunc/record-key
+
+at://did:abc:123/io.nsid.someFunc/self.
+at://did:abc:123/io.nsid.someFunc/lang:
+at://did:abc:123/io.nsid.someFunc/:
+at://did:abc:123/io.nsid.someFunc/-
+at://did:abc:123/io.nsid.someFunc/_
+at://did:abc:123/io.nsid.someFunc/~
+at://did:abc:123/io.nsid.someFunc/...

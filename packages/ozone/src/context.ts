@@ -65,6 +65,7 @@ export class AppContext {
       eventPusher,
       appviewAgent,
       appviewAuth,
+      cfg.service.did,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()

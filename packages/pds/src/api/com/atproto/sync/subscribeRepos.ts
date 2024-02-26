@@ -52,6 +52,13 @@ export default function (server: Server, ctx: AppContext) {
           time: evt.time,
           ...evt.evt,
         }
+      } else if (evt.type === 'identity') {
+        yield {
+          $type: '#identity',
+          seq: evt.seq,
+          time: evt.time,
+          ...evt.evt,
+        }
       } else if (evt.type === 'tombstone') {
         yield {
           $type: '#tombstone',

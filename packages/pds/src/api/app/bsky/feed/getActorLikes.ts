@@ -7,25 +7,36 @@ import {
   handleReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.feed.getActorLikes'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getActorLikes(
+      const res = await pipethrough(
+        bskyAppView.url,
+        METHOD_NSID,
         params,
         requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
       )
-      if (requester) {
-        return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
+
+      if (!requester) {
+        return res
       }
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
+
+      return await handleReadAfterWrite(
+        ctx,
+        METHOD_NSID,
+        requester,
+        res,
+        getAuthorMunge,
+      )
     },
   })
 }

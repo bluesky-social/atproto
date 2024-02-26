@@ -6,12 +6,15 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
+  /** Reference (AT-URI) to post record. */
   uri: string
+  /** How many levels of reply depth should be included in response. */
   depth: number
+  /** How many levels of parent (and grandparent, etc) post to include. */
   parentHeight: number
 }
 
@@ -40,7 +43,7 @@ export interface HandlerError {
   error?: 'NotFound'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

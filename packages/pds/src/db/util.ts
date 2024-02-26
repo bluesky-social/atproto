@@ -22,6 +22,7 @@ export const softDeleted = (repoOrRecord: { takedownRef: string | null }) => {
 }
 
 export const countAll = sql<number>`count(*)`
+export const countDistinct = (ref: DbRef) => sql<number>`count(distinct ${ref})`
 
 // For use with doUpdateSet()
 export const excluded = <T, S>(db: Kysely<S>, col) => {

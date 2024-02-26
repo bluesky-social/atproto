@@ -36,6 +36,8 @@ import {
   RateLimiterConsume,
   isShared,
   RateLimitExceededError,
+  HandlerPipeThrough,
+  handlerPipeThrough,
 } from './types'
 import {
   decodeQueryParams,
@@ -263,6 +265,20 @@ export class Server {
           throw XRPCError.fromError(outputUnvalidated)
         }
 
+        if (outputUnvalidated && isHandlerPipeThrough(outputUnvalidated)) {
+          // set headers
+          if (outputUnvalidated?.headers) {
+            Object.entries(outputUnvalidated.headers).forEach(([name, val]) => {
+              res.header(name, val)
+            })
+          }
+          res
+            .header('Content-Type', outputUnvalidated.encoding)
+            .status(200)
+            .send(Buffer.from(outputUnvalidated.buffer))
+          return
+        }
+
         if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
           // validate response
           const output = validateResOutput(outputUnvalidated)
@@ -447,6 +463,26 @@ export class Server {
 function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
   return handlerSuccess.safeParse(v).success
 }
+
+function isHandlerPipeThrough(v: HandlerOutput): v is HandlerPipeThrough {
+  if (v === null || typeof v !== 'object') {
+    return false
+  }
+  if (!isString(v['encoding']) || !(v['buffer'] instanceof ArrayBuffer)) {
+    return false
+  }
+  if (v['headers'] !== undefined) {
+    if (v['headers'] === null || typeof v['headers'] !== 'object') {
+      return false
+    }
+    if (!Object.values(v['headers']).every(isString)) {
+      return false
+    }
+  }
+  return true
+}
+
+const isString = (val: unknown): val is string => typeof val === 'string'
 
 const kRequestLocals = Symbol('requestLocals')
 

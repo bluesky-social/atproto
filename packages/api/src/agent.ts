@@ -231,7 +231,7 @@ export class AtpAgent {
     // handle session-refreshes as needed
     if (isErrorResponse(res, ['ExpiredToken']) && this.session?.refreshJwt) {
       // attempt refresh
-      await this._refreshSession()
+      await this.refreshSession()
 
       // resend the request with the new access token
       res = await AtpAgent.fetch(
@@ -250,7 +250,7 @@ export class AtpAgent {
    * - Wraps the actual implementation in a promise-guard to ensure only
    *   one refresh is attempted at a time.
    */
-  private async _refreshSession() {
+  async refreshSession() {
     if (this._refreshSessionPromise) {
       return this._refreshSessionPromise
     }
