@@ -68,6 +68,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 export interface FeedViewPost {
   post: PostView
   reply?: ReplyRef
+  replyParentAuthor?: AppBskyActorDefs.ProfileViewBasic
   reason?: ReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }

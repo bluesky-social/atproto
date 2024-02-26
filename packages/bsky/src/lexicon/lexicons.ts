@@ -6001,6 +6001,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#replyRef',
           },
+          replyParentAuthor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
           reason: {
             type: 'union',
             refs: ['lex:app.bsky.feed.defs#reasonRepost'],
