@@ -46,6 +46,15 @@ Array [
         },
       },
       Object {
+        "parentAuthor": Object {
+          "did": "user(0)",
+          "handle": "alice.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
         "post": Object {
           "author": Object {
             "did": "user(0)",
