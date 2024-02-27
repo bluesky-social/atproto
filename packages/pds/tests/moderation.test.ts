@@ -198,14 +198,19 @@ describe('moderation', () => {
     })
 
     it('prevents blob from being referenced again.', async () => {
-      const uploaded = await sc.uploadFile(
+      const referenceBlob = sc.post(sc.dids.carol, 'pic', [], [blobRef])
+      await expect(referenceBlob).rejects.toThrow('Could not find blob:')
+    })
+
+    it('prevents blob from being reuploaded', async () => {
+      const attempt = sc.uploadFile(
         sc.dids.carol,
         '../dev-env/src/seed/img/key-alt.jpg',
         'image/jpeg',
       )
-      expect(uploaded.image.ref.equals(blobRef.image.ref)).toBeTruthy()
-      const referenceBlob = sc.post(sc.dids.carol, 'pic', [], [blobRef])
-      await expect(referenceBlob).rejects.toThrow('Could not find blob:')
+      await expect(attempt).rejects.toThrow(
+        'Blob has been takendown, cannot re-upload',
+      )
     })
 
     it('prevents image blob from being served.', async () => {

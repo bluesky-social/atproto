@@ -1,3 +1,4 @@
+import { AppBskyActorNS, AppBskyActorDefs } from './client'
 import { LabelPreference } from './moderation/types'
 
 /**
@@ -98,6 +99,14 @@ export interface BskyThreadViewPreference {
 }
 
 /**
+ * Bluesky interests preferences
+ */
+export interface BskyInterestsPreference {
+  tags: string[]
+  [key: string]: any
+}
+
+/**
  * Bluesky preferences
  */
 export interface BskyPreferences {
@@ -110,4 +119,7 @@ export interface BskyPreferences {
   adultContentEnabled: boolean
   contentLabels: Record<string, BskyLabelPreference>
   birthDate: Date | undefined
+  interests: BskyInterestsPreference
+  mutedWords: AppBskyActorDefs.MutedWord[]
+  hiddenPosts: string[]
 }

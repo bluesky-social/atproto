@@ -16,7 +16,9 @@ export default function (server: Server, ctx: AppContext) {
           'This email address is not supported, please use a different email.',
         )
       }
-      const account = await ctx.accountManager.getAccount(did)
+      const account = await ctx.accountManager.getAccount(did, {
+        includeDeactivated: true,
+      })
       if (!account) {
         throw new InvalidRequestError('account not found')
       }
@@ -45,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        await ctx.accountManager.updateEmail({ did, email, token })
+        await ctx.accountManager.updateEmail({ did, email })
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           throw new InvalidRequestError(

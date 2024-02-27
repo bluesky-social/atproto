@@ -16,7 +16,7 @@ const unsignedCommit = z.object({
   data: common.cid,
   rev: z.string(),
   // `prev` added for backwards compatibility with v2, no requirement of keeping around history
-  prev: common.cid.nullable().optional(),
+  prev: common.cid.nullable(),
 })
 export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
@@ -25,7 +25,7 @@ const commit = z.object({
   version: z.literal(3),
   data: common.cid,
   rev: z.string(),
-  prev: common.cid.nullable().optional(),
+  prev: common.cid.nullable(),
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>

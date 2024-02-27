@@ -108,6 +108,7 @@ export class PerfectMap<K, V> extends Map<K, V> {
 export type ProcessableMessage =
   | message.Commit
   | message.Handle
+  | message.Identity
   | message.Migrate
   | message.Tombstone
 
@@ -126,6 +127,8 @@ export function loggableMessage(msg: RepoMessage) {
       hasBlobs: blobs.length > 0,
     }
   } else if (message.isHandle(msg)) {
+    return msg
+  } else if (message.isIdentity(msg)) {
     return msg
   } else if (message.isMigrate(msg)) {
     return msg

@@ -29,6 +29,9 @@ Object {
         },
         "subjectBlobCids": Array [],
         "subjectRepoHandle": "alice.test",
+        "tags": Array [
+          "lang:und",
+        ],
         "takendown": false,
         "updatedAt": "1970-01-01T00:00:00.000Z",
       },
@@ -76,7 +79,26 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 7,
+    "id": 11,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(2)",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventTag",
+      "add": Array [
+        "lang:en",
+        "lang:i",
+      ],
+      "remove": Array [],
+    },
+    "id": 6,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -93,7 +115,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 3,
+    "id": 5,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -115,7 +137,26 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 6,
+    "id": 10,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventTag",
+      "add": Array [
+        "lang:und",
+      ],
+      "remove": Array [],
+    },
+    "id": 4,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -133,7 +174,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 2,
+    "id": 3,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",

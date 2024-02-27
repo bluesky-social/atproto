@@ -1,19 +1,20 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getPosts(
+      return pipethrough(
+        bskyAppView.url,
+        'app.bsky.feed.getPosts',
         params,
         await ctx.appviewAuthHeaders(requester),
       )
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
     },
   })
 }

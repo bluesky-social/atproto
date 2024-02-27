@@ -8,6 +8,7 @@ import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ActorDb } from '../db'
 import { sql } from 'kysely'
+import { countAll } from '../../db'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()
@@ -134,6 +135,14 @@ export class SqlRepoReader extends ReadableBlockstore {
       builder = builder.where('repoRev', '>', since)
     }
     return builder.execute()
+  }
+
+  async countBlocks(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('repo_block')
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
   }
 
   async destroy(): Promise<void> {

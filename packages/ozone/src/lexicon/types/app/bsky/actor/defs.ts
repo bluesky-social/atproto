@@ -82,6 +82,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileViewDetailed', v)
 }
 
+/** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
 export interface ViewerState {
   muted?: boolean
   mutedByList?: AppBskyGraphDefs.ListViewBasic
@@ -112,6 +113,9 @@ export type Preferences = (
   | PersonalDetailsPref
   | FeedViewPref
   | ThreadViewPref
+  | InterestsPref
+  | MutedWordsPref
+  | HiddenPostsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -153,6 +157,7 @@ export function validateContentLabelPref(v: unknown): ValidationResult {
 export interface SavedFeedsPref {
   pinned: string[]
   saved: string[]
+  timelineIndex?: number
   [k: string]: unknown
 }
 
@@ -232,4 +237,81 @@ export function isThreadViewPref(v: unknown): v is ThreadViewPref {
 
 export function validateThreadViewPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#threadViewPref', v)
+}
+
+export interface InterestsPref {
+  /** A list of tags which describe the account owner's interests gathered during onboarding. */
+  tags: string[]
+  [k: string]: unknown
+}
+
+export function isInterestsPref(v: unknown): v is InterestsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#interestsPref'
+  )
+}
+
+export function validateInterestsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#interestsPref', v)
+}
+
+export type MutedWordTarget = 'content' | 'tag' | (string & {})
+
+/** A word that the account owner has muted. */
+export interface MutedWord {
+  /** The muted word itself. */
+  value: string
+  /** The intended targets of the muted word. */
+  targets: MutedWordTarget[]
+  [k: string]: unknown
+}
+
+export function isMutedWord(v: unknown): v is MutedWord {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#mutedWord'
+  )
+}
+
+export function validateMutedWord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#mutedWord', v)
+}
+
+export interface MutedWordsPref {
+  /** A list of words the account owner has muted. */
+  items: MutedWord[]
+  [k: string]: unknown
+}
+
+export function isMutedWordsPref(v: unknown): v is MutedWordsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#mutedWordsPref'
+  )
+}
+
+export function validateMutedWordsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#mutedWordsPref', v)
+}
+
+export interface HiddenPostsPref {
+  /** A list of URIs of posts the account owner has hidden. */
+  items: string[]
+  [k: string]: unknown
+}
+
+export function isHiddenPostsPref(v: unknown): v is HiddenPostsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#hiddenPostsPref'
+  )
+}
+
+export function validateHiddenPostsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#hiddenPostsPref', v)
 }

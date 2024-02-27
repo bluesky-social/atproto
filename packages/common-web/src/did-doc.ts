@@ -44,6 +44,11 @@ export const getSigningKey = (
     publicKeyMultibase: found.publicKeyMultibase,
   }
 }
+export const getSigningDidKey = (doc: DidDocument): string | undefined => {
+  const parsed = getSigningKey(doc)
+  if (!parsed) return
+  return `did:key:${parsed.publicKeyMultibase}`
+}
 
 export const getPdsEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
