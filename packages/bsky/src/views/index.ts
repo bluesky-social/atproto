@@ -102,6 +102,11 @@ export class Views {
       followersCount: profileAggs?.followers,
       followsCount: profileAggs?.follows,
       postsCount: profileAggs?.posts,
+      associated: {
+        lists: profileAggs?.lists,
+        feedgens: profileAggs?.feeds,
+        modservice: profileAggs?.modService,
+      },
     }
   }
 
