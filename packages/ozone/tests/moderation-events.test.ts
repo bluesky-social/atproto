@@ -40,7 +40,6 @@ describe('moderation-events', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.alice,
     }
-    console.log({ alicesAccount })
     const bobsPost = {
       $type: 'com.atproto.repo.strongRef',
       uri: sc.posts[sc.dids.bob][0].ref.uriStr,
@@ -204,7 +203,7 @@ describe('moderation-events', () => {
       const defaultEvents = await getPaginatedEvents()
       const reversedEvents = await getPaginatedEvents('asc')
 
-      expect(allEvents.data.events.length).toEqual(7)
+      expect(allEvents.data.events.length).toEqual(8)
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
       // First event in the reversed list is the last item in the default list
@@ -359,7 +358,6 @@ describe('moderation-events', () => {
         { id: 1 },
         { headers: network.bsky.adminAuthHeaders('moderator') },
       )
-      console.log(JSON.stringify(data, null, 2))
       expect(forSnapshot(data)).toMatchSnapshot()
     })
   })

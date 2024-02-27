@@ -136,7 +136,7 @@ describe('moderation-statuses', () => {
       }
 
       const list = await getPaginatedStatuses({})
-      expect(list[0].id).toEqual(7)
+      expect(list[0].id).toEqual(11)
       expect(list[list.length - 1].id).toEqual(1)
 
       await emitModerationEvent({

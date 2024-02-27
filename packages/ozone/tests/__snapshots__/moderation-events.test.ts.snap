@@ -18,7 +18,25 @@ Object {
     "blobCids": Array [],
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "moderation": Object {},
+    "moderation": Object {
+      "subjectStatus": Object {
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "id": 1,
+        "reviewState": "com.atproto.admin.defs#reviewOptional",
+        "subject": Object {
+          "$type": "com.atproto.repo.strongRef",
+          "cid": "cids(0)",
+          "uri": "record(0)",
+        },
+        "subjectBlobCids": Array [],
+        "subjectRepoHandle": "alice.test",
+        "tags": Array [
+          "lang:und",
+        ],
+        "takendown": false,
+        "updatedAt": "1970-01-01T00:00:00.000Z",
+      },
+    },
     "repo": Object {
       "did": "user(0)",
       "handle": "alice.test",
@@ -26,7 +44,7 @@ Object {
       "moderation": Object {
         "subjectStatus": Object {
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "id": 1,
+          "id": 5,
           "lastReportedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedAt": "1970-01-01T00:00:00.000Z",
           "lastReviewedBy": "user(1)",
@@ -101,7 +119,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 13,
+    "id": 15,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -120,7 +138,7 @@ Array [
       ],
       "remove": Array [],
     },
-    "id": 8,
+    "id": 10,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -137,7 +155,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 7,
+    "id": 9,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -159,7 +177,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 12,
+    "id": 14,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -178,7 +196,7 @@ Array [
       ],
       "remove": Array [],
     },
-    "id": 6,
+    "id": 8,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -196,7 +214,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 5,
+    "id": 7,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
