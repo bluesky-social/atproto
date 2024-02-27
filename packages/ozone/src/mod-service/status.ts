@@ -160,6 +160,12 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.reviewState = REVIEWESCALATED
   }
 
+  if (currentStatus && subjectStatus.reviewState === REVIEWOPTIONAL) {
+    // reviewOptional is ONLY allowed when there is no current status
+    // If there is a current status, it should not be allowed to move back to reviewOptional
+    subjectStatus.reviewState = currentStatus.reviewState
+  }
+
   // Set these because we don't want to override them if they're already set
   const defaultData = {
     comment: null,
