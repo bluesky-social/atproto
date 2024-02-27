@@ -19,6 +19,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const dbCfg: OzoneConfig['db'] = {
     postgresUrl: env.dbPostgresUrl,
     postgresSchema: env.dbPostgresSchema,
+    poolSize: env.dbPoolSize,
+    poolMaxUses: env.dbPoolMaxUses,
+    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   }
 
   assert(env.appviewUrl)
@@ -67,6 +70,9 @@ export type ServiceConfig = {
 export type DatabaseConfig = {
   postgresUrl: string
   postgresSchema?: string
+  poolSize?: number
+  poolMaxUses?: number
+  poolIdleTimeoutMs?: number
 }
 
 export type AppviewConfig = {

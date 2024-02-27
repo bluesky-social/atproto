@@ -15,3 +15,5 @@ export interface Label {
 export type LabelRow = Selectable<Label>
 
 export type PartialDB = { [tableName]: Label }
+
+export const LabelChannel = 'label_channel' // used with notify/listen

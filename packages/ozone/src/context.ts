@@ -40,6 +40,9 @@ export class AppContext {
     const db = new Database({
       url: cfg.db.postgresUrl,
       schema: cfg.db.postgresSchema,
+      poolSize: cfg.db.poolSize,
+      poolMaxUses: cfg.db.poolMaxUses,
+      poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })

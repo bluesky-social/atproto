@@ -51,7 +51,6 @@ describe('sequencer', () => {
 
   const createLabels = async (count: number): Promise<Label[]> => {
     const labels: Label[] = []
-    const modService = network.ozone.ctx.modService(network.ozone.ctx.db)
     for (let i = 0; i < count; i++) {
       const did = `did:example:${randomStr(10, 'base32')}`
       const label = {
@@ -61,7 +60,9 @@ describe('sequencer', () => {
         neg: false,
         cts: new Date().toISOString(),
       }
-      await modService.createLabels([label])
+      await network.ozone.ctx.db.transaction((dbTxn) =>
+        network.ozone.ctx.modService(dbTxn).createLabels([label]),
+      )
       labels.push(label)
     }
     return labels
@@ -212,10 +213,9 @@ describe('sequencer', () => {
     )
     const [results] = await Promise.all([readOutboxes, createPromise])
     const fromDb = await loadFromDb(lastSeen)
-    for (let i = 0; i < 50; i++) {
-      const evts = results[i]
-      expect(evts.length).toBe(count)
-      expect(evts.map(evtToDbRow)).toEqual(fromDb)
+    for (const result of results) {
+      expect(result.length).toBe(count)
+      expect(result.map(evtToDbRow)).toEqual(fromDb)
     }
     lastSeen = results[0].at(-1)?.seq ?? lastSeen
   })

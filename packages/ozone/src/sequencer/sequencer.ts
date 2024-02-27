@@ -3,18 +3,19 @@ import TypedEmitter from 'typed-emitter'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
-import { Label as LabelTable } from '../db/schema/label'
+import { LabelChannel, Label as LabelTable } from '../db/schema/label'
 import { Selectable } from 'kysely'
 import { formatLabel } from '../mod-service/util'
+import { PoolClient } from 'pg'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 type LabelRow = Selectable<LabelTable>
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   destroyed = false
-  pollPromise: Promise<void> = Promise.resolve()
-  pollTimer: NodeJS.Timer | undefined
-  triesWithNoResults = 0
+  pollPromise: Promise<void> | undefined
+  queued = false
+  conn: PoolClient | undefined
 
   constructor(public db: Database, public lastSeen = 0) {
     super()
@@ -26,14 +27,23 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const curr = await this.curr()
     this.lastSeen = curr ?? 0
     this.poll()
+    this.conn = await this.db.pool.connect()
+    this.conn.query(`listen ${LabelChannel}`) // if this errors, unhandled rejection should cause process to exit
+    this.conn.on('notification', (notif) => {
+      if (notif.channel === LabelChannel) {
+        this.poll()
+      }
+    })
   }
 
   async destroy() {
     this.destroyed = true
-    if (this.pollTimer) {
-      clearTimeout(this.pollTimer)
+    if (this.conn) {
+      this.conn.release()
     }
-    await this.pollPromise
+    if (this.pollPromise) {
+      await this.pollPromise
+    }
     this.emit('close')
   }
 
@@ -90,13 +100,21 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   private poll() {
     if (this.destroyed) return
-    this.requestLabelRange({
+    if (this.pollPromise) {
+      this.queued = true
+      return
+    }
+    this.queued = false
+    this.pollPromise = this.requestLabelRange({
       earliestId: this.lastSeen,
       limit: 500,
     })
       .then((evts) => {
         this.emit('events', evts)
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
+        if (evts.length > 0) {
+          this.queued = true
+        }
       })
       .catch((err) => {
         log.error(
@@ -105,7 +123,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         )
       })
       .finally(() => {
-        this.pollTimer = setTimeout(() => this.poll(), 100)
+        this.pollPromise = undefined
+        if (this.queued) {
+          this.poll()
+        }
       })
   }
 }
