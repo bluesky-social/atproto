@@ -109,6 +109,7 @@ export const readEnv = (): ServerEnvironment => {
     jwtVerifyKeyK256PublicKeyHex: envStr(
       'PDS_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
     ),
+    jweSecret128BitHex: envStr('PDS_JWE_SECRET_128BIT_HEX'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
     moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
     triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
@@ -231,6 +232,7 @@ export type ServerEnvironment = {
   jwtSecret?: string
   jwtSigningKeyK256PrivateKeyHex?: string
   jwtVerifyKeyK256PublicKeyHex?: string
+  jweSecret128BitHex?: string
   adminPassword?: string
   moderatorPassword?: string
   triagePassword?: string

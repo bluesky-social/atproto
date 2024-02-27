@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import {
   KeyObject,
   createPrivateKey,
@@ -108,6 +109,7 @@ export type AuthVerifierOpts = {
 export class AuthVerifier {
   private _signingSecret: KeyObject
   private _verifyKey?: KeyObject
+  private _decryptSecret?: KeyObject
   private _adminPass: string
   private _moderatorPass: string
   private _triagePass: string
@@ -121,6 +123,7 @@ export class AuthVerifier {
   ) {
     this._signingSecret = opts.authKeys.signingSecret
     this._verifyKey = opts.authKeys.verifyKey
+    this._decryptSecret = opts.authKeys.decryptSecret
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
@@ -320,6 +323,20 @@ export class AuthVerifier {
     })
   }
 
+  decryptJwt(params: {
+    token: string
+    decryptOptions?: jose.JWTDecryptOptions
+  }) {
+    assert(
+      this._decryptSecret,
+      'decrypt secret not configured, cannot decrypt jwt',
+    )
+    return decryptJwt({
+      ...params,
+      key: this._decryptSecret,
+    })
+  }
+
   async validateAccessToken(
     req: express.Request,
     scopes: AuthScope[],
@@ -404,19 +421,28 @@ export const getAuthKeys = async (opts: AuthKeyOptions): Promise<AuthKeys> => {
   const verifyKey = opts.jwtVerifyKey
     ? await createPublicKeyObject(opts.jwtVerifyKey.publicKeyHex)
     : signingKey
-  return { signingSecret, signingKey, verifyKey }
+  const decryptSecret = opts.jweSecret128BitHex
+    ? createSecretKey(Buffer.from(opts.jweSecret128BitHex, 'hex'))
+    : undefined
+  assert(
+    !decryptSecret || decryptSecret.symmetricKeySize === 16,
+    'decryption secret has wrong size: must be 128bit',
+  )
+  return { signingSecret, signingKey, verifyKey, decryptSecret }
 }
 
 type AuthKeyOptions = {
   jwtSecret: string
   jwtSigningKey?: SigningKeyMemory
   jwtVerifyKey?: VerifyKey
+  jweSecret128BitHex?: string
 }
 
 export type AuthKeys = {
   signingSecret: KeyObject
   signingKey?: KeyObject
   verifyKey?: KeyObject
+  decryptSecret?: KeyObject
 }
 
 const isBearerToken = (req: express.Request): boolean => {
@@ -445,6 +471,24 @@ const verifyJwt = async (params: {
       const key = keys.signingSecret
       result = await jose.jwtVerify(token, key, verifyOptions)
     }
+  } catch (err) {
+    if (err?.['code'] === 'ERR_JWT_EXPIRED') {
+      throw new InvalidRequestError('Token has expired', 'ExpiredToken')
+    }
+    throw new InvalidRequestError('Token could not be verified', 'InvalidToken')
+  }
+  return result.payload
+}
+
+const decryptJwt = async (params: {
+  token: string
+  key: KeyObject
+  decryptOptions?: jose.JWTDecryptOptions
+}): Promise<jose.JWTPayload> => {
+  const { token, key, decryptOptions } = params
+  let result: jose.JWTDecryptResult
+  try {
+    result = await jose.jwtDecrypt(token, key, decryptOptions)
   } catch (err) {
     if (err?.['code'] === 'ERR_JWT_EXPIRED') {
       throw new InvalidRequestError('Token has expired', 'ExpiredToken')

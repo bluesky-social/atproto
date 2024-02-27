@@ -517,7 +517,7 @@ const ensurePhoneVerification = async (
   }
 
   const selfVerificationCode =
-    code && isSelfVerificationCode(code)
+    code && getSelfVerificationCodeType(code) !== null
       ? await parseValidationCode(ctx, code)
       : null
 
@@ -542,7 +542,8 @@ const ensurePhoneVerification = async (
 
   if (selfVerificationCode) {
     if (
-      selfVerificationCode.verdict === 'bad' ||
+      selfVerificationCode.verdict === 'bad' || // @NOTE deprecated value
+      selfVerificationCode.verdict === 'nay' ||
       selfVerificationCode.handle !== handle
     ) {
       // nonce is checked by registrationChecker
@@ -600,10 +601,16 @@ const cleanupUncreatedAccount = async (
 }
 
 const parseValidationCode = async (ctx: AppContext, code: string) => {
-  const payload = await ctx.authVerifier.verifyJwt({
-    token: code,
-    verifyOptions: { audience: ctx.cfg.service.did },
-  })
+  const payload =
+    getSelfVerificationCodeType(code) === 'jwe'
+      ? await ctx.authVerifier.decryptJwt({
+          token: code,
+          decryptOptions: { audience: ctx.cfg.service.did },
+        })
+      : await ctx.authVerifier.verifyJwt({
+          token: code,
+          verifyOptions: { audience: ctx.cfg.service.did },
+        })
   if (
     payload.scope !== AuthScope.CreateAccount ||
     typeof payload.jti !== 'string' ||
@@ -621,7 +628,9 @@ const parseValidationCode = async (ctx: AppContext, code: string) => {
 
 // if it contains two dots then it looks like a jwt and we treat it as a
 // self-verification code. otherwise we treat it as a phone verification code.
-const isSelfVerificationCode = (code: string) => {
+const getSelfVerificationCodeType = (code: string) => {
   const dots = code.match(/\./g) ?? []
-  return dots.length === 2
+  if (dots.length === 2) return 'jwt'
+  if (dots.length === 4) return 'jwe'
+  return null
 }
