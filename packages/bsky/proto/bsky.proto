@@ -240,7 +240,7 @@ message GetCountsForUsersResponse {
   repeated int32 followers = 4;
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
-  repeated bool mod_service = 7;
+  repeated bool is_mod_service = 7;
 }
 
 //

@@ -1854,9 +1854,9 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
   feeds: number[] = [];
 
   /**
-   * @generated from field: repeated bool mod_service = 7;
+   * @generated from field: repeated bool is_mod_service = 7;
    */
-  modService: boolean[] = [];
+  isModService: boolean[] = [];
 
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super();
@@ -1872,7 +1872,7 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
     { no: 4, name: "followers", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 5, name: "lists", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 6, name: "feeds", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
-    { no: 7, name: "mod_service", kind: "scalar", T: 8 /* ScalarType.BOOL */, repeated: true },
+    { no: 7, name: "is_mod_service", kind: "scalar", T: 8 /* ScalarType.BOOL */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCountsForUsersResponse {

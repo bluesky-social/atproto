@@ -47,7 +47,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .selectFrom('mod_service')
           .whereRef('creator', '=', ref('profile_agg.did'))
           .select(sql<true>`${true}`.as('val'))
-          .as('hasModService'),
+          .as('isModService'),
       ])
       .execute()
     const byDid = keyBy(res, 'did')
@@ -57,7 +57,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       posts: req.dids.map((uri) => byDid[uri]?.postsCount ?? 0),
       lists: req.dids.map((uri) => byDid[uri]?.listsCount ?? 0),
       feeds: req.dids.map((uri) => byDid[uri]?.feedGensCount ?? 0),
-      modService: req.dids.map((uri) => byDid[uri]?.hasModService ?? false),
+      isModService: req.dids.map((uri) => byDid[uri]?.isModService ?? false),
     }
   },
 })

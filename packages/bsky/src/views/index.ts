@@ -105,7 +105,7 @@ export class Views {
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
-        modservice: profileAggs?.modService,
+        modservice: profileAggs?.isModService,
       },
     }
   }
