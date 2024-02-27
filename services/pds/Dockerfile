@@ -1,6 +1,6 @@
 # @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
 # see additional reference to this image further down.
-FROM node:18-alpine3.18 as build
+FROM node:20.11-alpine3.18 as build
 
 RUN npm install -g pnpm
 
@@ -37,7 +37,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/pds
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine3.18
+FROM node:20.11-alpine3.18
 
 RUN apk add --update dumb-init
 
@@ -52,6 +52,8 @@ VOLUME /app/data
 EXPOSE 3000
 ENV PDS_PORT=3000
 ENV NODE_ENV=production
+# potential perf issues w/ io_uring on this version of node
+ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node

@@ -22,6 +22,8 @@ export default function (server: Server, ctx: AppContext) {
         includeMuted = false,
         limit = 50,
         cursor,
+        tags = [],
+        excludeTags = [],
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -41,6 +43,8 @@ export default function (server: Server, ctx: AppContext) {
         sortField,
         limit,
         cursor,
+        tags,
+        excludeTags,
       })
       const subjectStatuses = results.statuses.map((status) =>
         modService.views.formatSubjectStatus(status),

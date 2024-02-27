@@ -6,6 +6,7 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import { LocalViewer } from './viewer'
 
 export type LocalRecords = {
+  count: number
   profile: RecordDescript<ProfileRecord> | null
   posts: RecordDescript<PostRecord>[]
 }

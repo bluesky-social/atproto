@@ -10,7 +10,10 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
-      const account = await ctx.accountManager.getAccount(input.body.account)
+      const account = await ctx.accountManager.getAccount(input.body.account, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
       if (!account) {
         throw new InvalidRequestError(
           `Account does not exist: ${input.body.account}`,

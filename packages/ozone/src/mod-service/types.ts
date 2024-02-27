@@ -30,3 +30,8 @@ export type ModEventType =
   | ComAtprotoAdminDefs.ModEventReport
   | ComAtprotoAdminDefs.ModEventMute
   | ComAtprotoAdminDefs.ModEventReverseTakedown
+  | ComAtprotoAdminDefs.ModEventTag
+
+export const UNSPECCED_TAKEDOWN_LABEL = '!unspecced-takedown'
+
+export const UNSPECCED_TAKEDOWN_BLOBS_LABEL = '!unspecced-takedown-blobs'

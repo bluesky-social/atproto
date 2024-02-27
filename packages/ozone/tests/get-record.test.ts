@@ -27,14 +27,6 @@ describe('admin get record view', () => {
   })
 
   beforeAll(async () => {
-    await sc.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventFlag' },
-      subject: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
-        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
-      },
-    })
     await sc.createReport({
       reportedBy: sc.dids.bob,
       reasonType: REASONSPAM,

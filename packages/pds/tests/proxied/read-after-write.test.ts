@@ -1,4 +1,5 @@
-import util from 'util'
+import util from 'node:util'
+import assert from 'node:assert'
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
@@ -43,6 +44,7 @@ describe('proxy read after write', () => {
   })
 
   it('handles image formatting', async () => {
+    assert(network.pds.ctx.cfg.bskyAppView)
     const blob = await sc.uploadFile(
       alice,
       '../dev-env/src/seed/img/key-landscape-small.jpg',
@@ -123,6 +125,7 @@ describe('proxy read after write', () => {
   })
 
   it('handles read after write on threads with record embeds', async () => {
+    assert(network.pds.ctx.cfg.bskyAppView)
     const img = await sc.uploadFile(
       alice,
       '../dev-env/src/seed/img/key-landscape-small.jpg',

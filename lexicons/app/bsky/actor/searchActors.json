@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find actors (profiles) matching search criteria.",
+      "description": "Find actors (profiles) matching search criteria. Does not require auth.",
       "parameters": {
         "type": "params",
         "properties": {

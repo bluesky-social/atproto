@@ -1,5 +1,55 @@
 # @atproto/bsky
 
+## 0.0.33
+
+### Patch Changes
+
+- Updated dependencies [[`514aab92d`](https://github.com/bluesky-social/atproto/commit/514aab92d26acd43859285f46318e386846522b1)]:
+  - @atproto/api@0.10.1
+
+## 0.0.32
+
+### Patch Changes
+
+- Updated dependencies [[`b60719480`](https://github.com/bluesky-social/atproto/commit/b60719480f5f00bffd074a40e8ddc03aa93d137d), [`4c511b3d9`](https://github.com/bluesky-social/atproto/commit/4c511b3d9de41ffeae3fc11db941e7df04f4468a)]:
+  - @atproto/api@0.10.0
+
+## 0.0.31
+
+### Patch Changes
+
+- Updated dependencies [[`f79cc6339`](https://github.com/bluesky-social/atproto/commit/f79cc63390ae9dbd47a4ff5d694eec25b78b788e)]:
+  - @atproto/api@0.9.8
+
+## 0.0.30
+
+### Patch Changes
+
+- Updated dependencies [[`fcf8e3faf`](https://github.com/bluesky-social/atproto/commit/fcf8e3faf311559162c3aa0d9af36f84951914bc), [`8c94979f7`](https://github.com/bluesky-social/atproto/commit/8c94979f73fc5057449e24e66ef2e09b0e17e55b)]:
+  - @atproto/repo@0.3.7
+  - @atproto/api@0.9.7
+
+## 0.0.29
+
+### Patch Changes
+
+- Updated dependencies [[`e4ec7af03`](https://github.com/bluesky-social/atproto/commit/e4ec7af03608949fc3b00a845f547a77599b5ad0)]:
+  - @atproto/api@0.9.6
+
+## 0.0.28
+
+### Patch Changes
+
+- Updated dependencies [[`8994d363`](https://github.com/bluesky-social/atproto/commit/8994d3633adad1c02569d6d44ae896e18195e8e2)]:
+  - @atproto/api@0.9.5
+
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies [[`4171c04a`](https://github.com/bluesky-social/atproto/commit/4171c04ad81c5734a4558bc41fa1c4f3a1aba18c)]:
+  - @atproto/api@0.9.4
+
 ## 0.0.26
 
 ### Patch Changes

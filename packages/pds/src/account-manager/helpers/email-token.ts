@@ -34,6 +34,12 @@ export const deleteEmailToken = async (
   )
 }
 
+export const deleteAllEmailTokens = async (db: AccountDb, did: string) => {
+  await db.executeWithRetry(
+    db.db.deleteFrom('email_token').where('did', '=', did),
+  )
+}
+
 export const assertValidToken = async (
   db: AccountDb,
   did: string,

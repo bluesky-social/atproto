@@ -21,7 +21,10 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const account = await ctx.accountManager.getAccount(handle)
+      const account = await ctx.accountManager.getAccount(handle, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
 
       if (account) {
         if (account.did !== did) {
@@ -46,6 +49,7 @@ export default function (server: Server, ctx: AppContext) {
 
       try {
         await ctx.sequencer.sequenceHandleUpdate(did, handle)
+        await ctx.sequencer.sequenceIdentityEvt(did)
       } catch (err) {
         httpLogger.error(
           { err, did, handle },

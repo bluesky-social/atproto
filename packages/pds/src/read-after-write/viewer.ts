@@ -97,51 +97,7 @@ export class LocalViewer {
   }
 
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
-    const res = await this.actorStore.db.db
-      .selectFrom('record')
-      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
-      .select([
-        'repo_block.content',
-        'uri',
-        'repo_block.cid',
-        'record.indexedAt',
-      ])
-      .where('record.repoRev', '>', rev)
-      .limit(10)
-      .orderBy('record.repoRev', 'asc')
-      .execute()
-    // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
-    if (res.length > 0) {
-      const sanityCheckRes = await this.actorStore.db.db
-        .selectFrom('record')
-        .selectAll()
-        .where('record.repoRev', '<=', rev)
-        .limit(1)
-        .executeTakeFirst()
-      if (!sanityCheckRes) {
-        return { profile: null, posts: [] }
-      }
-    }
-    return res.reduce(
-      (acc, cur) => {
-        const descript = {
-          uri: new AtUri(cur.uri),
-          cid: CID.parse(cur.cid),
-          indexedAt: cur.indexedAt,
-          record: cborToLexRecord(cur.content),
-        }
-        if (
-          descript.uri.collection === ids.AppBskyActorProfile &&
-          descript.uri.rkey === 'self'
-        ) {
-          acc.profile = descript as RecordDescript<ProfileRecord>
-        } else if (descript.uri.collection === ids.AppBskyFeedPost) {
-          acc.posts.push(descript as RecordDescript<PostRecord>)
-        }
-        return acc
-      },
-      { profile: null, posts: [] } as LocalRecords,
-    )
+    return getRecordsSinceRev(this.actorStore, rev)
   }
 
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
@@ -363,4 +319,51 @@ export class LocalViewer {
         : undefined,
     }
   }
+}
+
+export const getRecordsSinceRev = async (
+  actorStore: ActorStoreReader,
+  rev: string,
+): Promise<LocalRecords> => {
+  const res = await actorStore.db.db
+    .selectFrom('record')
+    .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
+    .select(['repo_block.content', 'uri', 'repo_block.cid', 'record.indexedAt'])
+    .where('record.repoRev', '>', rev)
+    .limit(10)
+    .orderBy('record.repoRev', 'asc')
+    .execute()
+  // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
+  if (res.length > 0) {
+    const sanityCheckRes = await actorStore.db.db
+      .selectFrom('record')
+      .selectAll()
+      .where('record.repoRev', '<=', rev)
+      .limit(1)
+      .executeTakeFirst()
+    if (!sanityCheckRes) {
+      return { count: 0, profile: null, posts: [] }
+    }
+  }
+  return res.reduce(
+    (acc, cur) => {
+      const descript = {
+        uri: new AtUri(cur.uri),
+        cid: CID.parse(cur.cid),
+        indexedAt: cur.indexedAt,
+        record: cborToLexRecord(cur.content),
+      }
+      if (
+        descript.uri.collection === ids.AppBskyActorProfile &&
+        descript.uri.rkey === 'self'
+      ) {
+        acc.profile = descript as RecordDescript<ProfileRecord>
+      } else if (descript.uri.collection === ids.AppBskyFeedPost) {
+        acc.posts.push(descript as RecordDescript<PostRecord>)
+      }
+      acc.count++
+      return acc
+    },
+    { count: 0, profile: null, posts: [] } as LocalRecords,
+  )
 }
