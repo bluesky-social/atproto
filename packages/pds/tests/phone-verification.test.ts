@@ -190,6 +190,7 @@ describe('phone verification', () => {
     const jweKey = createSecretKey(Buffer.from(jweSecret128BitHex, 'hex'))
     const jweHeader = { enc: 'A128CBC-HS256', alg: 'A128KW' }
     const getNonce = () => crypto.randomStr(10, 'base16')
+
     it('succeeds when code is correct', async () => {
       const token = await new EncryptJWT({
         scope: AuthScope.CreateAccount,
@@ -298,10 +299,30 @@ describe('phone verification', () => {
       ).rejects.toThrow('Token could not be verified')
     })
 
+    it('fails when code is encrypted with bad key', async () => {
+      const jweKeyBad = createSecretKey(
+        Buffer.from('2c0fb4d5cb5eaf50d208ed97cc38b7f4', 'hex'),
+      )
+      const token = await new EncryptJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self8.test',
+        verdict: 'yea',
+      })
+        .setJti(getNonce())
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader(jweHeader)
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .encrypt(jweKeyBad)
+      await expect(
+        createAccountWithCode(undefined, token, 'self8'),
+      ).rejects.toThrow('Token could not be verified')
+    })
+
     it('succeeds when jwt code is correct', async () => {
       const token = await new SignJWT({
         scope: AuthScope.CreateAccount,
-        handle: 'self7.test',
+        handle: 'self9.test',
         verdict: 'yea',
       })
         .setJti(getNonce())
@@ -311,14 +332,14 @@ describe('phone verification', () => {
         .setExpirationTime('1hr')
         .sign(jwtKey)
       await expect(
-        createAccountWithCode(undefined, token, 'self7'),
+        createAccountWithCode(undefined, token, 'self9'),
       ).resolves.toBeDefined()
     })
 
     it('fails when jwt code has bad verdict', async () => {
       const token = await new SignJWT({
         scope: AuthScope.CreateAccount,
-        handle: 'self8.test',
+        handle: 'self10.test',
         verdict: 'bad', // @NOTE using deprecated bad verdict value
       })
         .setJti(getNonce())
@@ -328,7 +349,7 @@ describe('phone verification', () => {
         .setExpirationTime('1hr')
         .sign(jwtKey)
       await expect(
-        createAccountWithCode(undefined, token, 'self8'),
+        createAccountWithCode(undefined, token, 'self10'),
       ).rejects.toThrow('Invalid verification code.')
     })
   })
