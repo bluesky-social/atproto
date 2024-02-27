@@ -7,6 +7,8 @@ export const seqLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('ozone:sequencer')
 export const httpLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('ozone')
+export const langLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('ozone:lang')
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,

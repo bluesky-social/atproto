@@ -12,6 +12,7 @@ import { GraphService } from '../graph'
 import { LabelService } from '../label'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../lexicon/lexicons'
+import { Platform } from '../../notifications'
 
 export * from './types'
 
@@ -21,8 +22,8 @@ export class ActorService {
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    private graph: FromDb<GraphService>,
-    private label: FromDb<LabelService>,
+    graph: FromDb<GraphService>,
+    label: FromDb<LabelService>,
   ) {
     this.views = new ActorViews(this.db, this.imgUriBuilder, graph, label)
   }
@@ -213,6 +214,20 @@ export class ActorService {
         return
       }
     }
+  }
+
+  async registerPushDeviceToken(
+    did: string,
+    token: string,
+    platform: Platform,
+    appId: string,
+  ) {
+    await this.db
+      .asPrimary()
+      .db.insertInto('notification_push_token')
+      .values({ did, token, platform, appId })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 }
 

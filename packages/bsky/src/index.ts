@@ -28,22 +28,20 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
-import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
+import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export type { ServerConfigValues } from './config'
-export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export type { ImageInvalidator } from './image/invalidator'
-export { makeAlgos } from './feed-gen'
 export * from './daemon'
 export * from './indexer'
 export * from './ingester'
@@ -66,9 +64,8 @@ export class BskyAppView {
     config: ServerConfig
     signingKey: Keypair
     imgInvalidator?: ImageInvalidator
-    algos?: MountedAlgos
   }): BskyAppView {
-    const { db, redis, config, signingKey, algos = {} } = opts
+    const { db, redis, config, signingKey } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.set('trust proxy', true)
@@ -112,7 +109,6 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
 
-    const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
       ? new AtpAgent({ service: config.searchEndpoint })
       : undefined
@@ -135,6 +131,28 @@ export class BskyAppView {
       triagePass: config.triagePassword,
     })
 
+    const bsyncClient = config.bsyncUrl
+      ? createBsyncClient({
+          baseUrl: config.bsyncUrl,
+          httpVersion: config.bsyncHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
+          interceptors: config.bsyncApiKey
+            ? [bsyncAuth(config.bsyncApiKey)]
+            : [],
+        })
+      : undefined
+
+    const courierClient = config.courierUrl
+      ? createCourierClient({
+          baseUrl: config.courierUrl,
+          httpVersion: config.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+          interceptors: config.courierApiKey
+            ? [courierAuth(config.courierApiKey)]
+            : [],
+        })
+      : undefined
+
     const ctx = new AppContext({
       db,
       cfg: config,
@@ -146,8 +164,8 @@ export class BskyAppView {
       redis,
       backgroundQueue,
       searchAgent,
-      algos,
-      notifServer,
+      bsyncClient,
+      courierClient,
       authVerifier,
     })
 

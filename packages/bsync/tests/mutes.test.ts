@@ -8,7 +8,7 @@ import {
   createClient,
   envToCfg,
 } from '../src'
-import { MuteOperation, MuteOperation_Type } from '../src/gen/bsync_pb'
+import { MuteOperation, MuteOperation_Type } from '../src/proto/bsync_pb'
 
 describe('mutes', () => {
   let bsync: BsyncService

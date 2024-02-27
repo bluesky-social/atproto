@@ -1,4 +1,5 @@
 export * from './bsky'
+export * from './bsync'
 export * from './network'
 export * from './network-no-appview'
 export * from './pds'

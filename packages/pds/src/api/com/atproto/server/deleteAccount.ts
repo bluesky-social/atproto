@@ -13,7 +13,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, req }) => {
       const { did, password, token } = input.body
 
-      const account = await ctx.accountManager.getAccount(did, true)
+      const account = await ctx.accountManager.getAccount(did, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
       if (!account) {
         throw new InvalidRequestError('account not found')
       }
@@ -41,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       await ctx.actorStore.destroy(did)
       await ctx.accountManager.deleteAccount(did)
+      await ctx.sequencer.sequenceIdentityEvt(did)
       await ctx.sequencer.sequenceTombstone(did)
       await ctx.sequencer.deleteAllForUser(did)
     },

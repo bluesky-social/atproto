@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
   ComAtprotoAdminDefs,
@@ -38,8 +39,8 @@ describe('moderation-statuses', () => {
     }
     const bobsPost = {
       $type: 'com.atproto.repo.strongRef',
-      uri: sc.posts[sc.dids.bob][1].ref.uriStr,
-      cid: sc.posts[sc.dids.bob][1].ref.cidStr,
+      uri: sc.posts[sc.dids.bob][0].ref.uriStr,
+      cid: sc.posts[sc.dids.bob][0].ref.cidStr,
     }
     const alicesPost = {
       $type: 'com.atproto.repo.strongRef',
@@ -94,6 +95,23 @@ describe('moderation-statuses', () => {
       expect(forSnapshot(response.data.subjectStatuses)).toMatchSnapshot()
     })
 
+    it('returns statuses filtered by subject language', async () => {
+      const klingonQueue = await queryModerationStatuses({
+        tags: ['lang:i'],
+      })
+
+      expect(forSnapshot(klingonQueue.data.subjectStatuses)).toMatchSnapshot()
+
+      const nonKlingonQueue = await queryModerationStatuses({
+        excludeTags: ['lang:i'],
+      })
+
+      // Verify that the klingon tagged subject is not returned when excluding klingon
+      expect(
+        nonKlingonQueue.data.subjectStatuses.map((s) => s.id),
+      ).not.toContain(klingonQueue.data.subjectStatuses[0].id)
+    })
+
     it('returns paginated statuses', async () => {
       // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
@@ -118,7 +136,7 @@ describe('moderation-statuses', () => {
       }
 
       const list = await getPaginatedStatuses({})
-      expect(list[0].id).toEqual(4)
+      expect(list[0].id).toEqual(7)
       expect(list[list.length - 1].id).toEqual(1)
 
       await emitModerationEvent({
@@ -139,6 +157,60 @@ describe('moderation-statuses', () => {
       // while the result set always contains same number of items regardless of sorting
       expect(listReviewedFirst[0].id).toEqual(list[1].id)
       expect(listReviewedFirst.length).toEqual(list.length)
+    })
+  })
+
+  describe('blobs', () => {
+    it('are tracked on takendown subject', async () => {
+      const post = sc.posts[sc.dids.carol][0]
+      assert(post.images.length > 1)
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+        createdBy: sc.dids.alice,
+      })
+      const { data: result } =
+        await pdsAgent.api.com.atproto.admin.queryModerationStatuses(
+          { subject: post.ref.uriStr },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
+        )
+      expect(result.subjectStatuses.length).toBe(1)
+      expect(result.subjectStatuses[0]).toMatchObject({
+        takendown: true,
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
+    })
+
+    it('are tracked on reverse-takendown subject based on previous status', async () => {
+      const post = sc.posts[sc.dids.carol][0]
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        createdBy: sc.dids.alice,
+      })
+      const { data: result } =
+        await pdsAgent.api.com.atproto.admin.queryModerationStatuses(
+          { subject: post.ref.uriStr },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
+        )
+      expect(result.subjectStatuses.length).toBe(1)
+      expect(result.subjectStatuses[0]).toMatchObject({
+        takendown: false,
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
     })
   })
 })

@@ -44,6 +44,11 @@ export class BsyncService {
     })
     const server = http.createServer((req, res) => {
       loggerMiddleware(req, res)
+      if (isHealth(req.url)) {
+        res.statusCode = 200
+        res.setHeader('content-type', 'application/json')
+        return res.end(JSON.stringify({ version: cfg.service.version }))
+      }
       handler(req, res)
     })
     return new BsyncService({ ctx, server, ac })
@@ -89,3 +94,9 @@ export class BsyncService {
 }
 
 export default BsyncService
+
+const isHealth = (urlStr: string | undefined) => {
+  if (!urlStr) return false
+  const url = new URL(urlStr, 'http://host')
+  return url.pathname === '/_health'
+}

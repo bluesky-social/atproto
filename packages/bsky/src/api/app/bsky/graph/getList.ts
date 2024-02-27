@@ -49,6 +49,10 @@ const skeleton = async (
     throw new InvalidRequestError(`List not found: ${list}`)
   }
 
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, list: listRes, listItems: [] }
+  }
+
   let itemsReq = graphService
     .getListItemsQb()
     .where('list_item.listUri', '=', list)

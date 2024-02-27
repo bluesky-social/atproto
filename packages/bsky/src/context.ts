@@ -9,10 +9,10 @@ import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
-import { NotificationServer } from './notifications'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
+import { BsyncClient } from './bsync'
+import { CourierClient } from './courier'
 
 export class AppContext {
   constructor(
@@ -27,8 +27,8 @@ export class AppContext {
       redis: Redis
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
-      algos: MountedAlgos
-      notifServer: NotificationServer
+      bsyncClient?: BsyncClient
+      courierClient?: CourierClient
       authVerifier: AuthVerifier
     },
   ) {}
@@ -69,12 +69,16 @@ export class AppContext {
     return this.opts.redis
   }
 
-  get notifServer(): NotificationServer {
-    return this.opts.notifServer
-  }
-
   get searchAgent(): AtpAgent | undefined {
     return this.opts.searchAgent
+  }
+
+  get bsyncClient(): BsyncClient | undefined {
+    return this.opts.bsyncClient
+  }
+
+  get courierClient(): CourierClient | undefined {
+    return this.opts.courierClient
   }
 
   get authVerifier(): AuthVerifier {
@@ -92,10 +96,6 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 }
 

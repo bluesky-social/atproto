@@ -296,4 +296,13 @@ describe('notification views', () => {
       ),
     )
   })
+
+  it('fails open on clearly bad cursor.', async () => {
+    const { data: notifs } =
+      await agent.api.app.bsky.notification.listNotifications(
+        { cursor: 'bad' },
+        { headers: await network.serviceHeaders(alice) },
+      )
+    expect(notifs).toEqual({ notifications: [] })
+  })
 })

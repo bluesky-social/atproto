@@ -52,6 +52,10 @@ const skeleton = async (
     throw new InvalidRequestError(`Actor not found: ${actor}`)
   }
 
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, follows: [], creator }
+  }
+
   let followsReq = db.db
     .selectFrom('follow')
     .where('follow.creator', '=', creator.did)

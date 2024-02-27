@@ -25,6 +25,7 @@ export interface ModerationSubjectStatus {
   takendown: boolean
   appealed: boolean | null
   comment: string | null
+  tags: string[] | null
 }
 
 export type PartialDB = {

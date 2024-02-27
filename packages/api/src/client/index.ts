@@ -7,8 +7,10 @@ import {
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
+import * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -20,14 +22,21 @@ import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/ge
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
+import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
+import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+import * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
+import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -39,21 +48,27 @@ import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createReco
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
+import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
+import * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+import * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+import * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -77,10 +92,9 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
-import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
-import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
-import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -127,6 +141,7 @@ import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -142,12 +157,14 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
-import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
+export * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
+export * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -159,14 +176,21 @@ export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/ge
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 export * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 export * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
+export * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
+export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
+export * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
+export * as ComAtprotoIdentitySignPlcOperation from './types/com/atproto/identity/signPlcOperation'
+export * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/identity/submitPlcOperation'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -178,21 +202,27 @@ export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createReco
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+export * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
+export * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
+export * as ComAtprotoServerCheckAccountStatus from './types/com/atproto/server/checkAccountStatus'
 export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
+export * as ComAtprotoServerDeactivateAccount from './types/com/atproto/server/deactivateAccount'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+export * as ComAtprotoServerGetServiceAuth from './types/com/atproto/server/getServiceAuth'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
@@ -216,10 +246,9 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
-export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
-export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
-export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
+export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -266,6 +295,7 @@ export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -281,7 +311,7 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
-export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
@@ -336,43 +366,59 @@ export class AtpServiceClient {
 
 export class ComNS {
   _service: AtpServiceClient
-  atproto: AtprotoNS
+  atproto: ComAtprotoNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.atproto = new AtprotoNS(service)
+    this.atproto = new ComAtprotoNS(service)
   }
 }
 
-export class AtprotoNS {
+export class ComAtprotoNS {
   _service: AtpServiceClient
-  admin: AdminNS
-  identity: IdentityNS
-  label: LabelNS
-  moderation: ModerationNS
-  repo: RepoNS
-  server: ServerNS
-  sync: SyncNS
-  temp: TempNS
+  admin: ComAtprotoAdminNS
+  identity: ComAtprotoIdentityNS
+  label: ComAtprotoLabelNS
+  moderation: ComAtprotoModerationNS
+  repo: ComAtprotoRepoNS
+  server: ComAtprotoServerNS
+  sync: ComAtprotoSyncNS
+  temp: ComAtprotoTempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.admin = new AdminNS(service)
-    this.identity = new IdentityNS(service)
-    this.label = new LabelNS(service)
-    this.moderation = new ModerationNS(service)
-    this.repo = new RepoNS(service)
-    this.server = new ServerNS(service)
-    this.sync = new SyncNS(service)
-    this.temp = new TempNS(service)
+    this.admin = new ComAtprotoAdminNS(service)
+    this.identity = new ComAtprotoIdentityNS(service)
+    this.label = new ComAtprotoLabelNS(service)
+    this.moderation = new ComAtprotoModerationNS(service)
+    this.repo = new ComAtprotoRepoNS(service)
+    this.server = new ComAtprotoServerNS(service)
+    this.sync = new ComAtprotoSyncNS(service)
+    this.temp = new ComAtprotoTempNS(service)
   }
 }
 
-export class AdminNS {
+export class ComAtprotoAdminNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  createCommunicationTemplate(
+    data?: ComAtprotoAdminCreateCommunicationTemplate.InputSchema,
+    opts?: ComAtprotoAdminCreateCommunicationTemplate.CallOptions,
+  ): Promise<ComAtprotoAdminCreateCommunicationTemplate.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.createCommunicationTemplate',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminCreateCommunicationTemplate.toKnownErr(e)
+      })
   }
 
   deleteAccount(
@@ -383,6 +429,22 @@ export class AdminNS {
       .call('com.atproto.admin.deleteAccount', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminDeleteAccount.toKnownErr(e)
+      })
+  }
+
+  deleteCommunicationTemplate(
+    data?: ComAtprotoAdminDeleteCommunicationTemplate.InputSchema,
+    opts?: ComAtprotoAdminDeleteCommunicationTemplate.CallOptions,
+  ): Promise<ComAtprotoAdminDeleteCommunicationTemplate.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.deleteCommunicationTemplate',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminDeleteCommunicationTemplate.toKnownErr(e)
       })
   }
 
@@ -507,6 +569,22 @@ export class AdminNS {
       })
   }
 
+  listCommunicationTemplates(
+    params?: ComAtprotoAdminListCommunicationTemplates.QueryParams,
+    opts?: ComAtprotoAdminListCommunicationTemplates.CallOptions,
+  ): Promise<ComAtprotoAdminListCommunicationTemplates.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.listCommunicationTemplates',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminListCommunicationTemplates.toKnownErr(e)
+      })
+  }
+
   queryModerationEvents(
     params?: ComAtprotoAdminQueryModerationEvents.QueryParams,
     opts?: ComAtprotoAdminQueryModerationEvents.CallOptions,
@@ -578,6 +656,33 @@ export class AdminNS {
       })
   }
 
+  updateAccountPassword(
+    data?: ComAtprotoAdminUpdateAccountPassword.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountPassword.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountPassword.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateAccountPassword', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateAccountPassword.toKnownErr(e)
+      })
+  }
+
+  updateCommunicationTemplate(
+    data?: ComAtprotoAdminUpdateCommunicationTemplate.InputSchema,
+    opts?: ComAtprotoAdminUpdateCommunicationTemplate.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateCommunicationTemplate.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.updateCommunicationTemplate',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateCommunicationTemplate.toKnownErr(e)
+      })
+  }
+
   updateSubjectStatus(
     data?: ComAtprotoAdminUpdateSubjectStatus.InputSchema,
     opts?: ComAtprotoAdminUpdateSubjectStatus.CallOptions,
@@ -590,11 +695,43 @@ export class AdminNS {
   }
 }
 
-export class IdentityNS {
+export class ComAtprotoIdentityNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  getRecommendedDidCredentials(
+    params?: ComAtprotoIdentityGetRecommendedDidCredentials.QueryParams,
+    opts?: ComAtprotoIdentityGetRecommendedDidCredentials.CallOptions,
+  ): Promise<ComAtprotoIdentityGetRecommendedDidCredentials.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.identity.getRecommendedDidCredentials',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoIdentityGetRecommendedDidCredentials.toKnownErr(e)
+      })
+  }
+
+  requestPlcOperationSignature(
+    data?: ComAtprotoIdentityRequestPlcOperationSignature.InputSchema,
+    opts?: ComAtprotoIdentityRequestPlcOperationSignature.CallOptions,
+  ): Promise<ComAtprotoIdentityRequestPlcOperationSignature.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.identity.requestPlcOperationSignature',
+        opts?.qp,
+        data,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoIdentityRequestPlcOperationSignature.toKnownErr(e)
+      })
   }
 
   resolveHandle(
@@ -605,6 +742,28 @@ export class IdentityNS {
       .call('com.atproto.identity.resolveHandle', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoIdentityResolveHandle.toKnownErr(e)
+      })
+  }
+
+  signPlcOperation(
+    data?: ComAtprotoIdentitySignPlcOperation.InputSchema,
+    opts?: ComAtprotoIdentitySignPlcOperation.CallOptions,
+  ): Promise<ComAtprotoIdentitySignPlcOperation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.identity.signPlcOperation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentitySignPlcOperation.toKnownErr(e)
+      })
+  }
+
+  submitPlcOperation(
+    data?: ComAtprotoIdentitySubmitPlcOperation.InputSchema,
+    opts?: ComAtprotoIdentitySubmitPlcOperation.CallOptions,
+  ): Promise<ComAtprotoIdentitySubmitPlcOperation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.identity.submitPlcOperation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoIdentitySubmitPlcOperation.toKnownErr(e)
       })
   }
 
@@ -620,7 +779,7 @@ export class IdentityNS {
   }
 }
 
-export class LabelNS {
+export class ComAtprotoLabelNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -639,7 +798,7 @@ export class LabelNS {
   }
 }
 
-export class ModerationNS {
+export class ComAtprotoModerationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -658,7 +817,7 @@ export class ModerationNS {
   }
 }
 
-export class RepoNS {
+export class ComAtprotoRepoNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -720,6 +879,28 @@ export class RepoNS {
       })
   }
 
+  importRepo(
+    data?: ComAtprotoRepoImportRepo.InputSchema,
+    opts?: ComAtprotoRepoImportRepo.CallOptions,
+  ): Promise<ComAtprotoRepoImportRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.importRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoImportRepo.toKnownErr(e)
+      })
+  }
+
+  listMissingBlobs(
+    params?: ComAtprotoRepoListMissingBlobs.QueryParams,
+    opts?: ComAtprotoRepoListMissingBlobs.CallOptions,
+  ): Promise<ComAtprotoRepoListMissingBlobs.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.listMissingBlobs', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoListMissingBlobs.toKnownErr(e)
+      })
+  }
+
   listRecords(
     params?: ComAtprotoRepoListRecords.QueryParams,
     opts?: ComAtprotoRepoListRecords.CallOptions,
@@ -754,11 +935,33 @@ export class RepoNS {
   }
 }
 
-export class ServerNS {
+export class ComAtprotoServerNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  activateAccount(
+    data?: ComAtprotoServerActivateAccount.InputSchema,
+    opts?: ComAtprotoServerActivateAccount.CallOptions,
+  ): Promise<ComAtprotoServerActivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.activateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerActivateAccount.toKnownErr(e)
+      })
+  }
+
+  checkAccountStatus(
+    params?: ComAtprotoServerCheckAccountStatus.QueryParams,
+    opts?: ComAtprotoServerCheckAccountStatus.CallOptions,
+  ): Promise<ComAtprotoServerCheckAccountStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.checkAccountStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerCheckAccountStatus.toKnownErr(e)
+      })
   }
 
   confirmEmail(
@@ -827,6 +1030,17 @@ export class ServerNS {
       })
   }
 
+  deactivateAccount(
+    data?: ComAtprotoServerDeactivateAccount.InputSchema,
+    opts?: ComAtprotoServerDeactivateAccount.CallOptions,
+  ): Promise<ComAtprotoServerDeactivateAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.deactivateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerDeactivateAccount.toKnownErr(e)
+      })
+  }
+
   deleteAccount(
     data?: ComAtprotoServerDeleteAccount.InputSchema,
     opts?: ComAtprotoServerDeleteAccount.CallOptions,
@@ -868,6 +1082,17 @@ export class ServerNS {
       .call('com.atproto.server.getAccountInviteCodes', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetAccountInviteCodes.toKnownErr(e)
+      })
+  }
+
+  getServiceAuth(
+    params?: ComAtprotoServerGetServiceAuth.QueryParams,
+    opts?: ComAtprotoServerGetServiceAuth.CallOptions,
+  ): Promise<ComAtprotoServerGetServiceAuth.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getServiceAuth', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetServiceAuth.toKnownErr(e)
       })
   }
 
@@ -993,7 +1218,7 @@ export class ServerNS {
   }
 }
 
-export class SyncNS {
+export class ComAtprotoSyncNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1122,11 +1347,22 @@ export class SyncNS {
   }
 }
 
-export class TempNS {
+export class ComAtprotoTempNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  checkSignupQueue(
+    params?: ComAtprotoTempCheckSignupQueue.QueryParams,
+    opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
+  ): Promise<ComAtprotoTempCheckSignupQueue.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.checkSignupQueue', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckSignupQueue.toKnownErr(e)
+      })
   }
 
   fetchLabels(
@@ -1140,73 +1376,51 @@ export class TempNS {
       })
   }
 
-  importRepo(
-    data?: ComAtprotoTempImportRepo.InputSchema,
-    opts?: ComAtprotoTempImportRepo.CallOptions,
-  ): Promise<ComAtprotoTempImportRepo.Response> {
+  requestPhoneVerification(
+    data?: ComAtprotoTempRequestPhoneVerification.InputSchema,
+    opts?: ComAtprotoTempRequestPhoneVerification.CallOptions,
+  ): Promise<ComAtprotoTempRequestPhoneVerification.Response> {
     return this._service.xrpc
-      .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
+      .call('com.atproto.temp.requestPhoneVerification', opts?.qp, data, opts)
       .catch((e) => {
-        throw ComAtprotoTempImportRepo.toKnownErr(e)
-      })
-  }
-
-  pushBlob(
-    data?: ComAtprotoTempPushBlob.InputSchema,
-    opts?: ComAtprotoTempPushBlob.CallOptions,
-  ): Promise<ComAtprotoTempPushBlob.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempPushBlob.toKnownErr(e)
-      })
-  }
-
-  transferAccount(
-    data?: ComAtprotoTempTransferAccount.InputSchema,
-    opts?: ComAtprotoTempTransferAccount.CallOptions,
-  ): Promise<ComAtprotoTempTransferAccount.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempTransferAccount.toKnownErr(e)
+        throw ComAtprotoTempRequestPhoneVerification.toKnownErr(e)
       })
   }
 }
 
 export class AppNS {
   _service: AtpServiceClient
-  bsky: BskyNS
+  bsky: AppBskyNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.bsky = new BskyNS(service)
+    this.bsky = new AppBskyNS(service)
   }
 }
 
-export class BskyNS {
+export class AppBskyNS {
   _service: AtpServiceClient
-  actor: ActorNS
-  embed: EmbedNS
-  feed: FeedNS
-  graph: GraphNS
-  notification: NotificationNS
-  richtext: RichtextNS
-  unspecced: UnspeccedNS
+  actor: AppBskyActorNS
+  embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
+  graph: AppBskyGraphNS
+  notification: AppBskyNotificationNS
+  richtext: AppBskyRichtextNS
+  unspecced: AppBskyUnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.actor = new ActorNS(service)
-    this.embed = new EmbedNS(service)
-    this.feed = new FeedNS(service)
-    this.graph = new GraphNS(service)
-    this.notification = new NotificationNS(service)
-    this.richtext = new RichtextNS(service)
-    this.unspecced = new UnspeccedNS(service)
+    this.actor = new AppBskyActorNS(service)
+    this.embed = new AppBskyEmbedNS(service)
+    this.feed = new AppBskyFeedNS(service)
+    this.graph = new AppBskyGraphNS(service)
+    this.notification = new AppBskyNotificationNS(service)
+    this.richtext = new AppBskyRichtextNS(service)
+    this.unspecced = new AppBskyUnspeccedNS(service)
   }
 }
 
-export class ActorNS {
+export class AppBskyActorNS {
   _service: AtpServiceClient
   profile: ProfileRecord
 
@@ -1354,7 +1568,7 @@ export class ProfileRecord {
   }
 }
 
-export class EmbedNS {
+export class AppBskyEmbedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1362,7 +1576,7 @@ export class EmbedNS {
   }
 }
 
-export class FeedNS {
+export class AppBskyFeedNS {
   _service: AtpServiceClient
   generator: GeneratorRecord
   like: LikeRecord
@@ -1865,7 +2079,7 @@ export class ThreadgateRecord {
   }
 }
 
-export class GraphNS {
+export class AppBskyGraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
@@ -1967,6 +2181,17 @@ export class GraphNS {
       .call('app.bsky.graph.getMutes', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetMutes.toKnownErr(e)
+      })
+  }
+
+  getRelationships(
+    params?: AppBskyGraphGetRelationships.QueryParams,
+    opts?: AppBskyGraphGetRelationships.CallOptions,
+  ): Promise<AppBskyGraphGetRelationships.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getRelationships', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetRelationships.toKnownErr(e)
       })
   }
 
@@ -2340,7 +2565,7 @@ export class ListitemRecord {
   }
 }
 
-export class NotificationNS {
+export class AppBskyNotificationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2392,7 +2617,7 @@ export class NotificationNS {
   }
 }
 
-export class RichtextNS {
+export class AppBskyRichtextNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2400,7 +2625,7 @@ export class RichtextNS {
   }
 }
 
-export class UnspeccedNS {
+export class AppBskyUnspeccedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2423,14 +2648,14 @@ export class UnspeccedNS {
       })
   }
 
-  getTimelineSkeleton(
-    params?: AppBskyUnspeccedGetTimelineSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetTimelineSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetTimelineSkeleton.Response> {
+  getTaggedSuggestions(
+    params?: AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
+    opts?: AppBskyUnspeccedGetTaggedSuggestions.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTaggedSuggestions.Response> {
     return this._service.xrpc
-      .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
+      .call('app.bsky.unspecced.getTaggedSuggestions', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
+        throw AppBskyUnspeccedGetTaggedSuggestions.toKnownErr(e)
       })
   }
 

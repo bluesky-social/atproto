@@ -45,6 +45,10 @@ const skeleton = async (
   const { limit, cursor, viewer } = params
   const { ref } = db.db.dynamic
 
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, listInfos: [] }
+  }
+
   let listsReq = graphService
     .getListsQb(viewer)
     .whereExists(

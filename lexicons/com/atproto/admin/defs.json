@@ -33,7 +33,8 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
-            "#modEventEmail"
+            "#modEventEmail",
+            "#modEventResolveAppeal"
           ]
         },
         "subject": {
@@ -70,6 +71,7 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventEmail",
             "#modEventResolveAppeal"
           ]
         },
@@ -183,6 +185,10 @@
         "suspendUntil": {
           "type": "string",
           "format": "datetime"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },
@@ -583,6 +589,59 @@
           "type": "string",
           "description": "Additional comment about the outgoing comm."
         }
+      }
+    },
+    "modEventTag": {
+      "type": "object",
+      "description": "Add/Remove a tag on a subject",
+      "required": ["add", "remove"],
+      "properties": {
+        "add": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags to be added to the subject. If already exists, won't be duplicated."
+        },
+        "remove": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Additional comment about added/removed tags."
+        }
+      }
+    },
+    "communicationTemplateView": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "contentMarkdown",
+        "disabled",
+        "lastUpdatedBy",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Name of the template." },
+        "subject": {
+          "type": "string",
+          "description": "Content of the template, can contain markdown and variable placeholders."
+        },
+        "contentMarkdown": {
+          "type": "string",
+          "description": "Subject of the message, used in emails."
+        },
+        "disabled": { "type": "boolean" },
+        "lastUpdatedBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the user who last updated the template."
+        },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" }
       }
     }
   }

@@ -37,6 +37,9 @@ Object {
           },
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
+          "tags": Array [
+            "lang:und",
+          ],
           "takendown": false,
           "updatedAt": "1970-01-01T00:00:00.000Z",
         },
@@ -98,7 +101,26 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 9,
+    "id": 13,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(2)",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventTag",
+      "add": Array [
+        "lang:en",
+        "lang:i",
+      ],
+      "remove": Array [],
+    },
+    "id": 8,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -115,7 +137,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 5,
+    "id": 7,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -137,7 +159,26 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 8,
+    "id": 12,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventTag",
+      "add": Array [
+        "lang:und",
+      ],
+      "remove": Array [],
+    },
+    "id": 6,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -155,7 +196,7 @@ Array [
       "comment": "X",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 4,
+    "id": 5,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",

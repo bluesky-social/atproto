@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -42,8 +43,9 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
   crawlers: Crawlers
-  appViewAgent: AtpAgent
-  moderationAgent: AtpAgent
+  appViewAgent?: AtpAgent
+  moderationAgent?: AtpAgent
+  reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -67,8 +69,9 @@ export class AppContext {
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent
-  public moderationAgent: AtpAgent
+  public appViewAgent: AtpAgent | undefined
+  public moderationAgent: AtpAgent | undefined
+  public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
   public plcRotationKey: crypto.Keypair
@@ -90,6 +93,7 @@ export class AppContext {
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.moderationAgent = opts.moderationAgent
+    this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
     this.plcRotationKey = opts.plcRotationKey
@@ -161,9 +165,15 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
-    const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
-    const moderationAgent = new AtpAgent({ service: cfg.modService.url })
-
+    const appViewAgent = cfg.bskyAppView
+      ? new AtpAgent({ service: cfg.bskyAppView.url })
+      : undefined
+    const moderationAgent = cfg.modService
+      ? new AtpAgent({ service: cfg.modService.url })
+      : undefined
+    const reportingAgent = cfg.reportService
+      ? new AtpAgent({ service: cfg.reportService.url })
+      : undefined
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
@@ -189,7 +199,7 @@ export class AppContext {
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.modService.did,
+        admin: cfg.modService?.did,
       },
     })
 
@@ -211,8 +221,8 @@ export class AppContext {
       accountManager,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
-      appviewDid: cfg.bskyAppView.did,
-      appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
+      appviewDid: cfg.bskyAppView?.did,
+      appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
     return new AppContext({
@@ -231,6 +241,7 @@ export class AppContext {
       crawlers,
       appViewAgent,
       moderationAgent,
+      reportingAgent,
       entrywayAgent,
       authVerifier,
       plcRotationKey,
@@ -240,11 +251,18 @@ export class AppContext {
   }
 
   async appviewAuthHeaders(did: string) {
+    assert(this.cfg.bskyAppView)
     return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
   }
 
   async moderationAuthHeaders(did: string) {
+    assert(this.cfg.modService)
     return this.serviceAuthHeaders(did, this.cfg.modService.did)
+  }
+
+  async reportingAuthHeaders(did: string) {
+    assert(this.cfg.reportService)
+    return this.serviceAuthHeaders(did, this.cfg.reportService.did)
   }
 
   async serviceAuthHeaders(did: string, aud: string) {

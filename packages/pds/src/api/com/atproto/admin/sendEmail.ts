@@ -18,7 +18,10 @@ export default function (server: Server, ctx: AppContext) {
         subject = 'Message from Bluesky moderator',
         comment,
       } = input.body
-      const account = await ctx.accountManager.getAccount(recipientDid)
+      const account = await ctx.accountManager.getAccount(recipientDid, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
       if (!account) {
         throw new InvalidRequestError('Recipient not found')
       }
@@ -40,21 +43,25 @@ export default function (server: Server, ctx: AppContext) {
         { content },
         { subject, to: account.email },
       )
-      await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: {
-            $type: 'com.atproto.admin.defs#modEventEmail',
-            subjectLine: subject,
-            comment,
+
+      if (ctx.moderationAgent) {
+        await ctx.moderationAgent.api.com.atproto.admin.emitModerationEvent(
+          {
+            event: {
+              $type: 'com.atproto.admin.defs#modEventEmail',
+              subjectLine: subject,
+              comment,
+            },
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: recipientDid,
+            },
+            createdBy: senderDid,
           },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: recipientDid,
-          },
-          createdBy: senderDid,
-        },
-        { ...authPassthru(req), encoding: 'application/json' },
-      )
+          { ...authPassthru(req), encoding: 'application/json' },
+        )
+      }
+
       return {
         encoding: 'application/json',
         body: { sent: true },

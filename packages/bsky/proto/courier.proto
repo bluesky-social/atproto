@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package courier;
+option go_package = "./;courier";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+//
+// Messages
+//
+
+// Ping
+message PingRequest {}
+message PingResponse {}
+
+// Notifications
+
+enum AppPlatform {
+  APP_PLATFORM_UNSPECIFIED = 0;
+  APP_PLATFORM_IOS = 1;
+  APP_PLATFORM_ANDROID = 2;
+  APP_PLATFORM_WEB = 3;
+}
+
+message Notification {
+  string id = 1;
+  string recipient_did = 2;
+  string title = 3;
+  string message = 4;
+  string collapse_key = 5;
+  bool always_deliver = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  google.protobuf.Struct additional = 8;
+}
+
+message PushNotificationsRequest {
+  repeated Notification notifications = 1;
+}
+
+message PushNotificationsResponse {}
+
+message RegisterDeviceTokenRequest {
+  string did = 1;
+  string token = 2;
+  string app_id = 3;
+  AppPlatform platform = 4;
+}
+
+message RegisterDeviceTokenResponse {}
+
+service Service {
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc PushNotifications(PushNotificationsRequest) returns (PushNotificationsResponse);
+  rpc RegisterDeviceToken(RegisterDeviceTokenRequest) returns (RegisterDeviceTokenResponse);
+}

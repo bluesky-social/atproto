@@ -298,4 +298,12 @@ describe('timeline views', () => {
       ),
     )
   })
+
+  it('fails open on clearly bad cursor.', async () => {
+    const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
+      { cursor: 'bad' },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(timeline).toEqual({ feed: [] })
+  })
 })

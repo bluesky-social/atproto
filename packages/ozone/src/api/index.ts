@@ -11,6 +11,10 @@ import getModerationEvent from './admin/getModerationEvent'
 import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
 import fetchLabels from './temp/fetchLabels'
+import createCommunicationTemplate from './admin/createCommunicationTemplate'
+import updateCommunicationTemplate from './admin/updateCommunicationTemplate'
+import deleteCommunicationTemplate from './admin/deleteCommunicationTemplate'
+import listCommunicationTemplates from './admin/listCommunicationTemplates'
 
 export * as health from './health'
 
@@ -28,5 +32,9 @@ export default function (server: Server, ctx: AppContext) {
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
+  listCommunicationTemplates(server, ctx)
+  createCommunicationTemplate(server, ctx)
+  updateCommunicationTemplate(server, ctx)
+  deleteCommunicationTemplate(server, ctx)
   return server
 }

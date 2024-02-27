@@ -26,6 +26,7 @@ export function validateMain(v: unknown): ValidationResult {
 
 export interface Image {
   image: BlobRef
+  /** Alt text description of the image, for accessibility. */
   alt: string
   aspectRatio?: AspectRatio
   [k: string]: unknown
@@ -76,8 +77,11 @@ export function validateView(v: unknown): ValidationResult {
 }
 
 export interface ViewImage {
+  /** Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View. */
   thumb: string
+  /** Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View. */
   fullsize: string
+  /** Alt text description of the image, for accessibility. */
   alt: string
   aspectRatio?: AspectRatio
   [k: string]: unknown

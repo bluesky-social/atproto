@@ -96,4 +96,26 @@ describe('pds user search views', () => {
       authed.actors.map(stripViewer),
     )
   })
+
+  it('returns tagged suggestions', async () => {
+    const suggestions = [
+      {
+        tag: 'test',
+        subject: 'did:example:test',
+        subjectType: 'actor',
+      },
+      {
+        tag: 'another',
+        subject: 'at://did:example:another/app.bsky.feed.generator/my-feed',
+        subjectType: 'feed',
+      },
+    ]
+    await network.bsky.ctx.db
+      .getPrimary()
+      .db.insertInto('tagged_suggestion')
+      .values(suggestions)
+      .execute()
+    const res = await agent.api.app.bsky.unspecced.getTaggedSuggestions()
+    expect(res.data.suggestions).toEqual(suggestions)
+  })
 })

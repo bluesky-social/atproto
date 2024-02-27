@@ -61,6 +61,10 @@ export const skeleton = async (
     return skeletonLimit1(params, ctx)
   }
 
+  if (FeedKeyset.clearlyBad(cursor)) {
+    return { params, feedItems: [] }
+  }
+
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 

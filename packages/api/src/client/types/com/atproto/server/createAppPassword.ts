@@ -10,6 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
+  /** A short name for the App Password, to help distinguish them. */
   name: string
   [k: string]: unknown
 }

@@ -57,6 +57,7 @@ export interface ViewRecord {
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
+  /** The record data itself. */
   value: {}
   labels?: ComAtprotoLabelDefs.Label[]
   embeds?: (
