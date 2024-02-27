@@ -3,7 +3,7 @@ import { createSecretKey } from 'crypto'
 import AtpAgent from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { SignJWT } from 'jose'
+import { SignJWT, EncryptJWT } from 'jose'
 import { AppContext } from '../src'
 import { AuthScope } from '../src/auth-verifier'
 
@@ -14,11 +14,15 @@ describe('phone verification', () => {
 
   let verificationCodes: Record<string, string>
   let sentCodes: { number: string; code: string }[]
+  const jwtSecret = 'ZQMU01bs0IY'
+  const jweSecret128BitHex = '58ef18256d3f7280f4aa1ac478851c43'
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'phone_verification',
       pds: {
+        jwtSecret,
+        jweSecret128BitHex,
         phoneVerificationRequired: true,
         phoneVerificationProvider: 'twilio',
         twilioAccountSid: 'ACXXXXXXX',
@@ -181,105 +185,109 @@ describe('phone verification', () => {
   })
 
   describe('self-verification', () => {
-    const key = createSecretKey(Buffer.from('jwt-secret'))
+    const jwtKey = createSecretKey(Buffer.from(jwtSecret))
+    const jwtHeader = { alg: 'HS256' }
+    const jweKey = createSecretKey(Buffer.from(jweSecret128BitHex, 'hex'))
+    const jweHeader = { enc: 'A128CBC-HS256', alg: 'A128KW' }
+    const getNonce = () => crypto.randomStr(10, 'base16')
 
     it('succeeds when code is correct', async () => {
-      const token = await new SignJWT({
+      const token = await new EncryptJWT({
         scope: AuthScope.CreateAccount,
         handle: 'self1.test',
-        verdict: 'good',
+        verdict: 'yea',
       })
-        .setJti(crypto.randomStr(10, 'base16'))
+        .setJti(getNonce())
         .setAudience(ctx.cfg.service.did)
-        .setProtectedHeader({ alg: 'HS256' })
+        .setProtectedHeader(jweHeader)
         .setIssuedAt()
         .setExpirationTime('1hr')
-        .sign(key)
+        .encrypt(jweKey)
       await expect(
         createAccountWithCode(undefined, token, 'self1'),
       ).resolves.toBeDefined()
     })
 
     it('fails when code has bad scope', async () => {
-      const token = await new SignJWT({
+      const token = await new EncryptJWT({
         scope: AuthScope.Access,
         handle: 'self2.test',
-        verdict: 'good',
+        verdict: 'yea',
       })
-        .setJti(crypto.randomStr(10, 'base16'))
+        .setJti(getNonce())
         .setAudience(ctx.cfg.service.did)
-        .setProtectedHeader({ alg: 'HS256' })
+        .setProtectedHeader(jweHeader)
         .setIssuedAt()
         .setExpirationTime('1hr')
-        .sign(key)
+        .encrypt(jweKey)
       await expect(
         createAccountWithCode(undefined, token, 'self2'),
       ).rejects.toThrow('Invalid verification code.')
     })
 
     it('fails when code has bad verdict', async () => {
-      const token = await new SignJWT({
+      const token = await new EncryptJWT({
         scope: AuthScope.CreateAccount,
         handle: 'self3.test',
-        verdict: 'bad',
+        verdict: 'nay',
       })
-        .setJti(crypto.randomStr(10, 'base16'))
+        .setJti(getNonce())
         .setAudience(ctx.cfg.service.did)
-        .setProtectedHeader({ alg: 'HS256' })
+        .setProtectedHeader(jweHeader)
         .setIssuedAt()
         .setExpirationTime('1hr')
-        .sign(key)
+        .encrypt(jweKey)
       await expect(
         createAccountWithCode(undefined, token, 'self3'),
       ).rejects.toThrow('Invalid verification code.')
     })
 
     it('fails when code has bad handle match', async () => {
-      const token = await new SignJWT({
+      const token = await new EncryptJWT({
         scope: AuthScope.CreateAccount,
         handle: 'selfX.test',
-        verdict: 'good',
+        verdict: 'yea',
       })
-        .setJti(crypto.randomStr(10, 'base16'))
+        .setJti(getNonce())
         .setAudience(ctx.cfg.service.did)
-        .setProtectedHeader({ alg: 'HS256' })
+        .setProtectedHeader(jweHeader)
         .setIssuedAt()
         .setExpirationTime('1hr')
-        .sign(key)
+        .encrypt(jweKey)
       await expect(
         createAccountWithCode(undefined, token, 'self4'),
       ).rejects.toThrow('Invalid verification code.')
     })
 
     it('fails when code is expired', async () => {
-      const token = await new SignJWT({
+      const token = await new EncryptJWT({
         scope: AuthScope.CreateAccount,
         handle: 'self5.test',
-        verdict: 'good',
+        verdict: 'yea',
       })
-        .setJti(crypto.randomStr(10, 'base16'))
+        .setJti(getNonce())
         .setAudience(ctx.cfg.service.did)
-        .setProtectedHeader({ alg: 'HS256' })
+        .setProtectedHeader(jweHeader)
         .setIssuedAt()
         .setExpirationTime(0)
-        .sign(key)
+        .encrypt(jweKey)
       await expect(
         createAccountWithCode(undefined, token, 'self5'),
       ).rejects.toThrow('Token has expired')
     })
 
     it('fails when code had bad audience', async () => {
-      const token = await new SignJWT({
+      const token = await new EncryptJWT({
         scope: AuthScope.CreateAccount,
         handle: 'self6.test',
-        verdict: 'good',
+        verdict: 'yea',
       })
-        .setJti(crypto.randomStr(10, 'base16'))
+        .setJti(getNonce())
         .setAudience('did:example:oops')
-        .setProtectedHeader({ alg: 'HS256' })
+        .setProtectedHeader(jweHeader)
         .setIssuedAt()
         .setExpirationTime('1hr')
-        .sign(key)
+        .encrypt(jweKey)
       await expect(
         createAccountWithCode(undefined, token, 'self6'),
       ).rejects.toThrow('Token could not be verified')
@@ -287,8 +295,62 @@ describe('phone verification', () => {
 
     it('fails when code is malformed', async () => {
       await expect(
-        createAccountWithCode(undefined, 'not.a.jwt', 'self7'),
+        createAccountWithCode(undefined, 'not.a.jwtorjwe', 'self7'),
       ).rejects.toThrow('Token could not be verified')
+    })
+
+    it('fails when code is encrypted with bad key', async () => {
+      const jweKeyBad = createSecretKey(
+        Buffer.from('2c0fb4d5cb5eaf50d208ed97cc38b7f4', 'hex'),
+      )
+      const token = await new EncryptJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self8.test',
+        verdict: 'yea',
+      })
+        .setJti(getNonce())
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader(jweHeader)
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .encrypt(jweKeyBad)
+      await expect(
+        createAccountWithCode(undefined, token, 'self8'),
+      ).rejects.toThrow('Token could not be verified')
+    })
+
+    it('succeeds when jwt code is correct', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self9.test',
+        verdict: 'yea',
+      })
+        .setJti(getNonce())
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader(jwtHeader)
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(jwtKey)
+      await expect(
+        createAccountWithCode(undefined, token, 'self9'),
+      ).resolves.toBeDefined()
+    })
+
+    it('fails when jwt code has bad verdict', async () => {
+      const token = await new SignJWT({
+        scope: AuthScope.CreateAccount,
+        handle: 'self10.test',
+        verdict: 'bad', // @NOTE using deprecated bad verdict value
+      })
+        .setJti(getNonce())
+        .setAudience(ctx.cfg.service.did)
+        .setProtectedHeader(jwtHeader)
+        .setIssuedAt()
+        .setExpirationTime('1hr')
+        .sign(jwtKey)
+      await expect(
+        createAccountWithCode(undefined, token, 'self10'),
+      ).rejects.toThrow('Invalid verification code.')
     })
   })
 })

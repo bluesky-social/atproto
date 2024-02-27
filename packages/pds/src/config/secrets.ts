@@ -61,6 +61,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     jwtSecret: env.jwtSecret,
     jwtSigningKey,
     jwtVerifyKey,
+    jweSecret128BitHex: env.jweSecret128BitHex,
     adminPassword: env.adminPassword,
     moderatorPassword: env.moderatorPassword ?? env.adminPassword,
     triagePassword:
@@ -76,6 +77,7 @@ export type ServerSecrets = {
   jwtSecret: string
   jwtSigningKey?: SigningKeyMemory
   jwtVerifyKey?: VerifyKey
+  jweSecret128BitHex?: string
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
