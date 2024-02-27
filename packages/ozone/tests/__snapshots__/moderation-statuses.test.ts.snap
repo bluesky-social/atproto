@@ -4,7 +4,7 @@ exports[`moderation-statuses query statuses returns statuses filtered by subject
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 9,
+    "id": 11,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -23,7 +23,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 7,
+    "id": 9,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -46,7 +46,7 @@ exports[`moderation-statuses query statuses returns statuses for subjects that r
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 9,
+    "id": 11,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -65,7 +65,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 7,
+    "id": 9,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -83,7 +83,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 5,
+    "id": 7,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -101,7 +101,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 3,
+    "id": 5,
     "lastReportedAt": "1970-01-01T00:00:00.000Z",
     "reviewState": "com.atproto.admin.defs#reviewOpen",
     "subject": Object {
@@ -118,7 +118,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 1,
+    "id": 3,
     "reviewState": "com.atproto.admin.defs#reviewOptional",
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -127,6 +127,23 @@ Array [
     },
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
+    "tags": Array [
+      "lang:und",
+    ],
+    "takendown": false,
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 1,
+    "reviewState": "com.atproto.admin.defs#reviewOptional",
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(3)",
+      "uri": "record(3)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectRepoHandle": "alice.test",
     "tags": Array [
       "lang:und",
     ],
