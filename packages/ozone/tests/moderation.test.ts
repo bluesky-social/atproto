@@ -779,7 +779,7 @@ describe('moderation', () => {
           },
         )
       await expect(attemptTakedownTriage).rejects.toThrow(
-        'Must be a full moderator to perform an account takedown',
+        'Must be a full moderator to take this type of action',
       )
     })
 
