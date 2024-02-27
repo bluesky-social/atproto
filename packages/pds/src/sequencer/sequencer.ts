@@ -6,10 +6,12 @@ import { CommitData } from '@atproto/repo'
 import {
   CommitEvt,
   HandleEvt,
+  IdentityEvt,
   SeqEvt,
   TombstoneEvt,
   formatSeqCommit,
   formatSeqHandleUpdate,
+  formatSeqIdentityEvt,
   formatSeqTombstone,
 } from './events'
 import {
@@ -145,6 +147,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           time: row.sequencedAt,
           evt: evt as HandleEvt,
         })
+      } else if (row.eventType === 'identity') {
+        seqEvts.push({
+          type: 'identity',
+          seq: row.seq,
+          time: row.sequencedAt,
+          evt: evt as IdentityEvt,
+        })
       } else if (row.eventType === 'tombstone') {
         seqEvts.push({
           type: 'tombstone',
@@ -206,6 +215,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async sequenceHandleUpdate(did: string, handle: string) {
     const evt = await formatSeqHandleUpdate(did, handle)
+    await this.sequenceEvt(evt)
+  }
+
+  async sequenceIdentityEvt(did: string) {
+    const evt = await formatSeqIdentityEvt(did)
     await this.sequenceEvt(evt)
   }
 

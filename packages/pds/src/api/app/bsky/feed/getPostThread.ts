@@ -1,6 +1,6 @@
+import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
-import { AppBskyFeedGetPostThread } from '@atproto/api'
-import { Headers } from '@atproto/xrpc'
+import { Headers, XRPCError } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru } from '../../../proxy'
@@ -17,12 +17,18 @@ import {
   LocalViewer,
   getLocalLag,
   getRepoRev,
-  handleReadAfterWrite,
   LocalRecords,
   RecordDescript,
+  handleReadAfterWrite,
+  formatMungedResponse,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.feed.getPostThread'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, params, auth }) => {
@@ -30,31 +36,31 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       if (!requester) {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
+        return pipethrough(
+          bskyAppView.url,
+          METHOD_NSID,
           params,
           authPassthru(req),
         )
-
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
       }
 
       try {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
+        const res = await pipethrough(
+          bskyAppView.url,
+          METHOD_NSID,
           params,
           await ctx.appviewAuthHeaders(requester, req),
         )
 
         return await handleReadAfterWrite(
           ctx,
+          METHOD_NSID,
           requester,
           res,
           getPostThreadMunge,
         )
       } catch (err) {
-        if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
+        if (err instanceof XRPCError && err.error === 'NotFound') {
           const headers = err.headers
           const keypair = await ctx.actorStore.keypair(requester)
           const local = await ctx.actorStore.read(requester, (store) => {
@@ -70,15 +76,7 @@ export default function (server: Server, ctx: AppContext) {
           if (local === null) {
             throw err
           } else {
-            return {
-              encoding: 'application/json',
-              body: local.data,
-              headers: local.lag
-                ? {
-                    'Atproto-Upstream-Lag': local.lag.toString(10),
-                  }
-                : undefined,
-            }
+            return formatMungedResponse(local.data, local.lag)
           }
         } else {
           throw err
@@ -205,6 +203,7 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
+      assert(ctx.appViewAgent)
       const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
         await ctx.appviewAuthHeaders(requester, null),

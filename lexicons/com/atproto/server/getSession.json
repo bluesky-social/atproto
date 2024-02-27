@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about the current session.",
+      "description": "Get information about the current auth session. Requires auth.",
       "output": {
         "encoding": "application/json",
         "schema": {

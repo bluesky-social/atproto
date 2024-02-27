@@ -439,6 +439,7 @@ describe('agent', () => {
       expect(originalHandlerCallCount).toEqual(1)
 
       agent.setPersistSessionHandler(newPersistSession)
+      agent.session = undefined
 
       await agent.createAccount({
         handle: 'user8.test',

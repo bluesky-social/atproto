@@ -1,10 +1,15 @@
 import { Headers } from '@atproto/xrpc'
 import { readStickyLogger as log } from '../logger'
 import AppContext from '../context'
-import { ApiRes, HandlerResponse, LocalRecords, MungeFn } from './types'
+import { HandlerResponse, LocalRecords, MungeFn } from './types'
+import { getRecordsSinceRev } from './viewer'
+import { HandlerPipeThrough } from '@atproto/xrpc-server'
+import { parseRes } from '../pipethrough'
+
+const REPO_REV_HEADER = 'atproto-repo-rev'
 
 export const getRepoRev = (headers: Headers): string | undefined => {
-  return headers['atproto-repo-rev']
+  return headers[REPO_REV_HEADER]
 }
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
@@ -20,45 +25,51 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
 
 export const handleReadAfterWrite = async <T>(
   ctx: AppContext,
+  nsid: string,
   requester: string,
-  res: ApiRes<T>,
+  res: HandlerPipeThrough,
   munge: MungeFn<T>,
-): Promise<HandlerResponse<T>> => {
-  let body: T
-  let lag: number | undefined = undefined
+): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
   try {
-    const withLocal = await readAfterWriteInternal(ctx, requester, res, munge)
-    body = withLocal.data
-    lag = withLocal.lag
+    return await readAfterWriteInternal(ctx, nsid, requester, res, munge)
   } catch (err) {
-    body = res.data
     log.warn({ err, requester }, 'error in read after write munge')
-  }
-  return {
-    encoding: 'application/json',
-    body,
-    headers:
-      lag !== undefined
-        ? {
-            'Atproto-Upstream-Lag': lag.toString(10),
-          }
-        : undefined,
+    return res
   }
 }
 
 export const readAfterWriteInternal = async <T>(
   ctx: AppContext,
+  nsid: string,
   requester: string,
-  res: ApiRes<T>,
+  res: HandlerPipeThrough,
   munge: MungeFn<T>,
-): Promise<{ data: T; lag?: number }> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return { data: res.data }
-  const keypair = await ctx.actorStore.keypair(requester)
+): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
+  const rev = getRepoRev(res.headers ?? {})
+  if (!rev) return res
   return ctx.actorStore.read(requester, async (store) => {
+    const local = await getRecordsSinceRev(store, rev)
+    if (local.count === 0) {
+      return res
+    }
+    const keypair = await ctx.actorStore.keypair(requester)
     const localViewer = ctx.localViewer(store, keypair)
-    const local = await localViewer.getRecordsSinceRev(rev)
-    const data = await munge(localViewer, res.data, local, requester)
-    return { data, lag: getLocalLag(local) }
+    const parsedRes = parseRes<T>(nsid, res)
+    const data = await munge(localViewer, parsedRes, local, requester)
+    return formatMungedResponse(data, getLocalLag(local))
   })
 }
+
+export const formatMungedResponse = <T>(
+  body: T,
+  lag?: number,
+): HandlerResponse<T> => ({
+  encoding: 'application/json',
+  body,
+  headers:
+    lag !== undefined
+      ? {
+          'Atproto-Upstream-Lag': lag.toString(10),
+        }
+      : undefined,
+})

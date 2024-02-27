@@ -302,7 +302,7 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
-    const handleEvts = getHandleEvts(evts.slice(-3))
+    const handleEvts = getHandleEvts(evts.slice(-6))
     verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
   })
@@ -318,7 +318,7 @@ describe('repo subscribe repos', () => {
     const evts = await readTillCaughtUp(gen, update)
     ws.terminate()
 
-    const handleEvts = getHandleEvts(evts.slice(-1))
+    const handleEvts = getHandleEvts(evts.slice(-2))
     verifyHandleEvent(handleEvts[0], bob, 'bob2.test')
   })
 

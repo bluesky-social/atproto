@@ -63,7 +63,7 @@ export class PDS {
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
-        blobLimit: 5 * 1024 * 1024, // 5mb
+        blobLimit: cfg.service.blobUploadLimit,
       },
     }
     if (cfg.rateLimits.enabled) {

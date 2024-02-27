@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find actor suggestions for a prefix search term.",
+      "description": "Find actor suggestions for a prefix search term. Expected use is for auto-completion during text field entry. Does not require auth.",
       "parameters": {
         "type": "params",
         "properties": {

@@ -15,6 +15,7 @@ import disableInviteCodes from './disableInviteCodes'
 import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountEmail from './updateAccountEmail'
+import updateAccountPassword from './updateAccountPassword'
 import sendEmail from './sendEmail'
 import deleteAccount from './deleteAccount'
 import queryModerationStatuses from './queryModerationStatuses'
@@ -40,6 +41,7 @@ export default function (server: Server, ctx: AppContext) {
   getInviteCodes(server, ctx)
   updateAccountHandle(server, ctx)
   updateAccountEmail(server, ctx)
+  updateAccountPassword(server, ctx)
   sendEmail(server, ctx)
   deleteAccount(server, ctx)
   listCommunicationTemplates(server, ctx)
