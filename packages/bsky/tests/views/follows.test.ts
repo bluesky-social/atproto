@@ -18,7 +18,6 @@ describe('pds follow views', () => {
     sc = network.getSeedClient()
     await followsSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     alice = sc.dids.alice
   })
 
@@ -119,22 +118,9 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: sc.dids.dan,
+    })
 
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
@@ -145,21 +131,9 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: sc.dids.dan,
+    })
   })
 
   it('fetches follows', async () => {
@@ -252,22 +226,9 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: sc.dids.dan,
+    })
 
     const aliceFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
@@ -278,30 +239,18 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: sc.dids.dan,
+    })
   })
 
   it('fetches relationships between users', async () => {
     const res = await agent.api.app.bsky.graph.getRelationships({
       actor: sc.dids.bob,
-      others: [sc.dids.alice, sc.dids.bob, sc.dids.carol, 'did:example:fake'],
+      others: [sc.dids.alice, sc.dids.bob, sc.dids.carol],
     })
     expect(res.data.actor).toEqual(sc.dids.bob)
-    expect(res.data.relationships.length).toBe(4)
+    expect(res.data.relationships.length).toBe(3)
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 })

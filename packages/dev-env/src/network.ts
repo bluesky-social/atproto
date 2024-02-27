@@ -56,16 +56,11 @@ export class TestNetwork extends TestNetworkNoAppView {
       plcUrl: plc.url,
       pdsPort,
       repoProvider: `ws://localhost:${pdsPort}`,
-      labelProvider: `http://localhost:${ozonePort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
-      dbPrimaryPostgresUrl: dbPostgresUrl,
+      dbPostgresUrl,
       redisHost,
       modServiceDid: ozoneDid,
       ...params.bsky,
-      indexer: {
-        ...params.bsky?.indexer,
-        moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
-      },
     })
 
     const pds = await TestPds.create({
@@ -98,13 +93,12 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async processFullSubscription(timeout = 5000) {
-    const sub = this.bsky.indexer.sub
+    const sub = this.bsky.sub
     const start = Date.now()
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      const partitionState = sub.partitions.get(0)
-      if (partitionState?.cursor >= lastSeq) {
+      if (sub.seenSeq !== null && sub.seenSeq >= lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
         await sub.repoQueue.main.onIdle()
         return
@@ -117,9 +111,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   async processAll(timeout?: number) {
     await this.pds.processAll()
     await this.processFullSubscription(timeout)
-    await this.bsky.processAll()
-    await this.ozone.processAll()
-    await this.bsky.ingester.ctx.labelSubscription?.fetchLabels()
+    await this.bsky.sub.background.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

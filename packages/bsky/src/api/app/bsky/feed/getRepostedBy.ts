@@ -1,14 +1,13 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
-import { Database } from '../../../../db'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { BlockAndMuteState, GraphService } from '../../../../services/graph'
-import { Actor } from '../../../../db/tables/actor'
 import { createPipeline } from '../../../../pipeline'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { parseString } from '../../../../hydration/util'
+import { creatorFromUri } from '../../../../views/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getRepostedBy = createPipeline(
@@ -20,15 +19,8 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getRepostedBy({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const graphService = ctx.services.graph(db)
       const viewer = auth.credentials.iss
-
-      const result = await getRepostedBy(
-        { ...params, viewer },
-        { db, actorService, graphService },
-      )
+      const result = await getRepostedBy({ ...params, viewer }, ctx)
 
       return {
         encoding: 'application/json',
@@ -38,85 +30,78 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { db } = ctx
-  const { limit, cursor, uri, cid } = params
-  const { ref } = db.db.dynamic
-
-  if (TimeCidKeyset.clearlyBad(cursor)) {
-    return { params, repostedBy: [] }
+const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { reposts: [] }
   }
-
-  let builder = db.db
-    .selectFrom('repost')
-    .where('repost.subject', '=', uri)
-    .innerJoin('actor as creator', 'creator.did', 'repost.creator')
-    .where(notSoftDeletedClause(ref('creator')))
-    .selectAll('creator')
-    .select(['repost.cid as cid', 'repost.sortAt as sortAt'])
-
-  if (cid) {
-    builder = builder.where('repost.subjectCid', '=', cid)
-  }
-
-  const keyset = new TimeCidKeyset(ref('repost.sortAt'), ref('repost.cid'))
-  builder = paginate(builder, {
-    limit,
-    cursor,
-    keyset,
+  const res = await ctx.hydrator.dataplane.getRepostsBySubject({
+    subject: { uri: params.uri, cid: params.cid },
+    cursor: params.cursor,
+    limit: params.limit,
   })
-
-  const repostedBy = await builder.execute()
-  return { params, repostedBy, cursor: keyset.packFromResult(repostedBy) }
+  return {
+    reposts: res.uris,
+    cursor: parseString(res.cursor),
+  }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService } = ctx
-  const { params, repostedBy } = state
-  const { viewer } = params
-  const [actors, bam] = await Promise.all([
-    actorService.views.profiles(repostedBy, viewer),
-    graphService.getBlockAndMuteState(
-      viewer ? repostedBy.map((item) => [viewer, item.did]) : [],
-    ),
-  ])
-  return { ...state, bam, actors }
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  return await ctx.hydrator.hydrateReposts(skeleton.reposts, params.viewer)
 }
 
-const noBlocks = (state: HydrationState) => {
-  const { viewer } = state.params
-  if (!viewer) return state
-  state.repostedBy = state.repostedBy.filter(
-    (item) => !state.bam.block([viewer, item.did]),
-  )
-  return state
+const noBlocks = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.reposts = skeleton.reposts.filter((uri) => {
+    const creator = creatorFromUri(uri)
+    return !ctx.views.viewerBlockExists(creator, hydration)
+  })
+  return skeleton
 }
 
-const presentation = (state: HydrationState) => {
-  const { params, repostedBy, actors, cursor } = state
-  const { uri, cid } = params
-  const repostedByView = mapDefined(repostedBy, (item) => actors[item.did])
-  return { repostedBy: repostedByView, cursor, uri, cid }
+const presentation = (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, params, skeleton, hydration } = inputs
+  const repostViews = mapDefined(skeleton.reposts, (uri) => {
+    const repost = hydration.reposts?.get(uri)
+    if (!repost?.record) {
+      return
+    }
+    const creatorDid = creatorFromUri(uri)
+    return ctx.views.profile(creatorDid, hydration)
+  })
+  return {
+    repostedBy: repostViews,
+    cursor: skeleton.cursor,
+    uri: params.uri,
+    cid: params.cid,
+  }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & { viewer: string | null }
 
-type SkeletonState = {
-  params: Params
-  repostedBy: Actor[]
+type Skeleton = {
+  reposts: string[]
   cursor?: string
-}
-
-type HydrationState = SkeletonState & {
-  bam: BlockAndMuteState
-  actors: ActorInfoMap
 }

@@ -19,7 +19,6 @@ describe('notification views', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     alice = sc.dids.alice
   })
 
@@ -72,7 +71,6 @@ describe('notification views', () => {
       'indeed',
     )
     await network.processAll()
-    await network.bsky.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
@@ -96,7 +94,6 @@ describe('notification views', () => {
     await sc.deletePost(sc.dids.alice, root.ref.uri)
     const second = await sc.reply(sc.dids.carol, root.ref, first.ref, 'second')
     await network.processAll()
-    await network.bsky.processAll()
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},
@@ -132,7 +129,7 @@ describe('notification views', () => {
     expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map(() => false))
+    expect(readStates).toEqual(notifs.map((_, i) => i !== 0)) // only first appears unread
 
     expect(forSnapshot(sort(notifs))).toMatchSnapshot()
   })
@@ -224,7 +221,7 @@ describe('notification views', () => {
     expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
+    expect(readStates).toEqual(notifs.map((n) => n.indexedAt < seenAt))
     // reset last-seen
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
@@ -240,23 +237,9 @@ describe('notification views', () => {
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.updateSubjectStatus(
-          {
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            takedown: {
-              applied: true,
-              ref: 'test',
-            },
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.takedownRecord({
+          recordUri: postRef.uriStr,
+        }),
       ),
     )
 
@@ -277,22 +260,9 @@ describe('notification views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.updateSubjectStatus(
-          {
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            takedown: {
-              applied: false,
-            },
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.untakedownRecord({
+          recordUri: postRef.uriStr,
+        }),
       ),
     )
   })
@@ -300,7 +270,7 @@ describe('notification views', () => {
   it('fails open on clearly bad cursor.', async () => {
     const { data: notifs } =
       await agent.api.app.bsky.notification.listNotifications(
-        { cursor: 'bad' },
+        { cursor: '90210::bafycid' },
         { headers: await network.serviceHeaders(alice) },
       )
     expect(notifs).toEqual({ notifications: [] })

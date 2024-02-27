@@ -5,11 +5,12 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getTaggedSuggestions({
     handler: async () => {
-      const suggestions = await ctx.db
-        .getReplica()
-        .db.selectFrom('tagged_suggestion')
-        .selectAll()
-        .execute()
+      const res = await ctx.dataplane.getSuggestedEntities({})
+      const suggestions = res.entities.map((entity) => ({
+        tag: entity.tag,
+        subjectType: entity.subjectType,
+        subject: entity.subject,
+      }))
       return {
         encoding: 'application/json',
         body: {

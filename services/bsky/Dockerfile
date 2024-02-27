@@ -1,4 +1,4 @@
-FROM node:18-alpine as build
+FROM node:20.11-alpine as build
 
 RUN npm install -g pnpm
 
@@ -8,7 +8,6 @@ COPY ./*.* ./
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./packages/bsky ./packages/bsky
 COPY ./packages/api ./packages/api
-COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
@@ -34,7 +33,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/bsky
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:20.11-alpine
 
 RUN apk add --update dumb-init
 

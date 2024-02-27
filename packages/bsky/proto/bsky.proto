@@ -1,0 +1,1164 @@
+syntax = "proto3";
+
+package bsky;
+option go_package = "./;bsky";
+
+import "google/protobuf/timestamp.proto";
+
+//
+// Read Path
+//
+
+message Record {
+  bytes record = 1;
+  string cid = 2;
+  google.protobuf.Timestamp indexed_at = 4;
+  bool taken_down = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp sorted_at = 7;
+  string takedown_ref = 8;
+}
+
+message GetBlockRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetBlockRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetFeedGeneratorRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetFeedGeneratorRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetFollowRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetFollowRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetLikeRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetLikeRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetListBlockRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetListBlockRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetListItemRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetListItemRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetListRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetListRecordsResponse {
+  repeated Record records = 1;
+}
+
+message PostRecordMeta {
+  bool violates_thread_gate = 1;
+  bool has_media = 2;
+  bool is_reply = 3;
+}
+
+message GetPostRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetPostRecordsResponse {
+  repeated Record records = 1;
+  repeated PostRecordMeta meta = 2;
+}
+
+message GetProfileRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetProfileRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetRepostRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetRepostRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetThreadGateRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetThreadGateRecordsResponse {
+  repeated Record records = 1;
+}
+
+
+//
+// Follows
+//
+
+// - Return follow uris where user A follows users B, C, D, …
+//     - E.g. for viewer state on `getProfiles`
+message GetActorFollowsActorsRequest {
+  string actor_did = 1;
+  repeated string target_dids = 2;
+}
+
+message GetActorFollowsActorsResponse {
+  repeated string uris = 1;
+}
+
+// - Return follow uris of users who follows user A
+//     - For `getFollowers` list
+message GetFollowersRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message FollowInfo {
+  string uri = 1;
+  string actor_did = 2;
+  string subject_did = 3;
+}
+
+message GetFollowersResponse {
+  repeated FollowInfo followers = 1;
+  string cursor = 2;
+}
+
+// - Return follow uris of users A follows
+//     - For `getFollows` list
+message GetFollowsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetFollowsResponse {
+  repeated FollowInfo follows = 1;
+  string cursor = 2;
+}
+
+//
+// Likes
+//
+
+// - return like uris where subject uri is subject A
+//     - `getLikes` list for a post
+message GetLikesBySubjectRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetLikesBySubjectResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+// - return like uris for user A on subject B, C, D...
+//     - viewer state on posts
+message GetLikesByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated RecordRef refs = 2;
+}
+
+message GetLikesByActorAndSubjectsResponse {
+  repeated string uris = 1;
+}
+
+// - return recent like uris for user A
+//     - `getActorLikes` list for a user
+message GetActorLikesRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message LikeInfo {
+  string uri = 1;
+  string subject = 2;
+}
+
+message GetActorLikesResponse {
+  repeated LikeInfo likes = 1;
+  string cursor = 2;
+}
+
+//
+// Interactions
+//
+message GetInteractionCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetInteractionCountsResponse {
+  repeated int32 likes = 1;
+  repeated int32 reposts = 2;
+  repeated int32 replies = 3;
+}
+
+message GetCountsForUsersRequest {
+  repeated string dids = 1;
+}
+
+message GetCountsForUsersResponse {
+  repeated int32 posts = 1;
+  repeated int32 reposts = 2;
+  repeated int32 following = 3;
+  repeated int32 followers = 4;
+}
+
+//
+// Reposts
+//
+
+// - return repost uris where subject uri is subject A
+//     - `getReposts` list for a post
+message GetRepostsBySubjectRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetRepostsBySubjectResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+// - return repost uris for user A on subject B, C, D...
+//     - viewer state on posts
+message GetRepostsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated RecordRef refs = 2;
+}
+
+message RecordRef {
+  string uri = 1;
+  string cid = 2;
+}
+
+message GetRepostsByActorAndSubjectsResponse {
+  repeated string uris = 1;
+}
+
+// - return recent repost uris for user A
+//     - `getActorReposts` list for a user
+message GetActorRepostsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorRepostsResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+//
+// Profile
+//
+
+// - return actor information for dids A, B, C…
+//     - profile hydration
+//     - should this include handles?  apply repo takedown?
+message GetActorsRequest {
+  repeated string dids = 1;
+}
+
+message ActorInfo {
+  bool exists = 1;
+  string handle = 2;
+  Record profile = 3;
+  bool taken_down = 4;
+  string takedown_ref = 5;
+  google.protobuf.Timestamp tombstoned_at = 6;
+}
+
+message GetActorsResponse {
+  repeated ActorInfo actors = 1;
+}
+
+// - return did for handle A
+//     - `resolveHandle`
+//     - answering queries where the query param is a handle
+message GetDidsByHandlesRequest {
+  repeated string handles = 1;
+}
+
+message GetDidsByHandlesResponse {
+  repeated string dids = 1;
+}
+
+//
+// Relationships
+//
+
+// - return relationships between user A and users B, C, D...
+//     - profile hydration
+//     - block application
+message GetRelationshipsRequest {
+  string actor_did = 1;
+  repeated string target_dids = 2;
+}
+
+message Relationships {
+  bool muted = 1;
+  string muted_by_list = 2;
+  string blocked_by = 3;
+  string blocking = 4;
+  string blocked_by_list = 5;
+  string blocking_by_list = 6;
+  string following = 7;
+  string followed_by = 8;
+}
+
+message GetRelationshipsResponse {
+  repeated Relationships relationships = 1;
+}
+
+// - return whether a block (bidrectionally and either direct or through a list) exists between two dids
+//     - enforcing 3rd party block violations
+message RelationshipPair {
+  string a = 1;
+  string b = 2;
+}
+
+message GetBlockExistenceRequest {
+  repeated RelationshipPair pairs = 1;
+}
+
+message GetBlockExistenceResponse {
+  repeated bool exists = 1;
+}
+
+
+//
+// Lists
+//
+
+message ListItemInfo {
+  string uri = 1;
+  string did = 2;
+}
+
+// - Return dids of users in list A
+//     - E.g. to view items in one of your mute lists
+message GetListMembersRequest {
+  string list_uri = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetListMembersResponse {
+  repeated ListItemInfo listitems = 1;
+  string cursor = 2;
+}
+
+// - Return list uris where user A in list B, C, D…
+//     - Used in thread reply gates
+message GetListMembershipRequest {
+  string actor_did = 1;
+  repeated string list_uris = 2;
+}
+
+message GetListMembershipResponse {
+  repeated string listitem_uris = 1;
+}
+
+// - Return number of items in list A
+//     - For aggregate
+message GetListCountRequest {
+  string list_uri = 1;
+}
+
+message GetListCountResponse {
+  int32 count = 1;
+}
+
+
+// - return list of uris of lists created by A
+//     - `getLists`
+message GetActorListsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorListsResponse {
+  repeated string list_uris = 1;
+  string cursor = 2;
+}
+
+//
+// Mutes
+//
+
+// - return boolean if user A has muted user B
+//     - hydrating mute state onto profiles
+message GetActorMutesActorRequest {
+  string actor_did = 1;
+  string target_did = 2;
+}
+
+message GetActorMutesActorResponse {
+  bool muted = 1;
+}
+
+// - return list of user dids of users who A mutes
+//     - `getMutes`
+message GetMutesRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetMutesResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+//
+// Mutelists
+//
+
+// - return list uri of *any* list through which user A has muted user B
+//     - hydrating mute state onto profiles
+//     - note: we only need *one* uri even if a user is muted by multiple lists
+message GetActorMutesActorViaListRequest {
+  string actor_did = 1;
+  string target_did = 2;
+}
+
+message GetActorMutesActorViaListResponse {
+  string list_uri = 1;
+}
+
+// - return boolean if actor A has subscribed to mutelist B
+//     - list view hydration
+message GetMutelistSubscriptionRequest {
+  string actor_did = 1;
+  string list_uri = 2;
+}
+
+message GetMutelistSubscriptionResponse {
+  bool subscribed = 1;
+}
+
+// - return list of list uris of mutelists that A subscribes to
+//     - `getListMutes`
+message GetMutelistSubscriptionsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetMutelistSubscriptionsResponse {
+  repeated string list_uris = 1;
+  string cursor = 2;
+}
+
+//
+// Blocks
+//
+
+// - Return block uri if there is a block between users A & B (bidirectional)
+//     - hydrating (& actioning) block state on profiles
+//     - handling 3rd party blocks
+message GetBidirectionalBlockRequest {
+  string actor_did = 1;
+  string target_did = 2;
+}
+
+message GetBidirectionalBlockResponse {
+  string block_uri = 1;
+}
+
+// - Return list of block uris and user dids of users who A blocks
+//     - `getBlocks`
+message GetBlocksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetBlocksResponse {
+  repeated string block_uris = 1;
+  string cursor = 2;
+}
+
+//
+// Blocklists
+//
+
+// - Return list uri of ***any*** list through which users A & B have a block (bidirectional)
+//     - hydrating (& actioning) block state on profiles
+//     - handling 3rd party blocks
+message GetBidirectionalBlockViaListRequest {
+  string actor_did = 1;
+  string target_did = 2;
+}
+
+message GetBidirectionalBlockViaListResponse {
+  string list_uri = 1;
+}
+
+// - return boolean if user A has subscribed to blocklist B
+//     - list view hydration
+message GetBlocklistSubscriptionRequest {
+  string actor_did = 1;
+  string list_uri = 2;
+}
+
+message GetBlocklistSubscriptionResponse {
+  string listblock_uri = 1;
+}
+
+// - return list of list uris of Blockslists that A subscribes to
+//     - `getListBlocks`
+message GetBlocklistSubscriptionsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetBlocklistSubscriptionsResponse {
+  repeated string list_uris = 1;
+  string cursor = 2;
+}
+
+//
+// Notifications
+//
+
+// - list recent notifications for a user
+//     - notifications should include a uri for the record that caused the notif & a “reason” for the notification (reply, like, quotepost, etc)
+//     - this should include both read & unread notifs
+message GetNotificationsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message Notification {
+  string recipient_did = 1;
+  string uri = 2;
+  string reason = 3;
+  string reason_subject = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message GetNotificationsResponse {
+  repeated Notification notifications = 1;
+  string cursor = 2;
+}
+
+// - update a user’s “last seen time”
+//     - `updateSeen`
+message UpdateNotificationSeenRequest {
+  string actor_did = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message UpdateNotificationSeenResponse {}
+
+// - get a user’s “last seen time”
+//     - hydrating read state onto notifications
+message GetNotificationSeenRequest {
+  string actor_did = 1;
+}
+
+message GetNotificationSeenResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+// - get a count of all unread notifications (notifications after `updateSeen`)
+//     - `getUnreadCount`
+message GetUnreadNotificationCountRequest {
+  string actor_did = 1;
+}
+
+message GetUnreadNotificationCountResponse {
+  int32 count = 1;
+}
+
+//
+// FeedGenerators
+//
+
+// - Return uris of feed generator records created by user A
+//     - `getActorFeeds`
+message GetActorFeedsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorFeedsResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+// - Returns a list of suggested feed generator uris for an actor, paginated
+//     - `getSuggestedFeeds`
+//     - This is currently just hardcoded in the Appview DB
+message GetSuggestedFeedsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetSuggestedFeedsResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+message SearchFeedGeneratorsRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message SearchFeedGeneratorsResponse {
+  repeated string uris = 1;
+}
+
+// - Returns feed generator validity and online status with uris A, B, C…
+//     - Not currently being used, but could be worhthwhile.
+message GetFeedGeneratorStatusRequest {
+  repeated string uris = 1;
+}
+
+message GetFeedGeneratorStatusResponse {
+  repeated string status = 1;
+}
+
+//
+// Feeds
+//
+
+enum FeedType {
+  FEED_TYPE_UNSPECIFIED = 0;
+  FEED_TYPE_POSTS_AND_AUTHOR_THREADS = 1;
+  FEED_TYPE_POSTS_NO_REPLIES = 2;
+  FEED_TYPE_POSTS_WITH_MEDIA = 3;
+}
+
+// - Returns recent posts authored by a given DID, paginated
+//     - `getAuthorFeed`
+//     - Optionally: filter by if a post is/isn’t a reply and if a post has a media object in it
+message GetAuthorFeedRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  FeedType feed_type = 4;
+}
+
+message AuthorFeedItem {
+  string uri = 1;
+  string cid = 2;
+  string repost = 3;
+  string repost_cid = 4;
+  bool posts_and_author_threads = 5;
+  bool posts_no_replies = 6;
+  bool posts_with_media = 7;
+  bool is_reply = 8;
+  bool is_repost = 9;
+  bool is_quote_post = 10;
+}
+
+message GetAuthorFeedResponse {
+  repeated AuthorFeedItem items = 1;
+  string cursor = 2;
+}
+
+// - Returns recent posts authored by users followed by a given DID, paginated
+//     - `getTimeline`
+message GetTimelineRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  bool exclude_replies = 4;
+  bool exclude_reposts = 5;
+  bool exclude_quotes = 6;
+}
+
+message GetTimelineResponse {
+  repeated TimelineFeedItem items = 1;
+  string cursor = 2;
+}
+
+message TimelineFeedItem {
+  string uri = 1;
+  string cid = 2;
+  string repost = 3;
+  string repost_cid = 4;
+  bool is_reply = 5;
+  bool is_repost = 6;
+  bool is_quote_post = 7;
+}
+
+// - Return recent post uris from users in list A
+//     - `getListFeed`
+//     - (This is essentially the same as `getTimeline` but instead of follows of a did, it is list items of a list)
+message GetListFeedRequest {
+  string list_uri = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  bool exclude_replies = 4;
+  bool exclude_reposts = 5;
+  bool exclude_quotes = 6;
+}
+
+message GetListFeedResponse {
+  repeated TimelineFeedItem items = 1;
+  string cursor = 2;
+}
+
+//
+// Threads
+//
+
+// Return posts uris of any replies N levels above or M levels below post A
+message GetThreadRequest {
+  string post_uri = 1;
+  int32 above = 2;
+  int32 below = 3;
+}
+
+message GetThreadResponse {
+  repeated string uris = 1;
+}
+
+//
+// Search
+//
+
+// - Return DIDs of actors matching term, paginated
+//     - `searchActors` skeleton
+message SearchActorsRequest {
+  string term = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message SearchActorsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+// - Return uris of posts matching term, paginated
+//     - `searchPosts` skeleton
+message SearchPostsRequest {
+  string term = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message SearchPostsResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+//
+// Suggestions
+//
+
+// - Return DIDs of suggested follows for a user, excluding anyone they already follow
+//     - `getSuggestions`, `getSuggestedFollowsByActor`
+message GetFollowSuggestionsRequest {
+  string actor_did = 1;
+  string relative_to_did = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message GetFollowSuggestionsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+message SuggestedEntity {
+  string tag = 1;
+  string subject = 2;
+  string subject_type = 3;
+  int64 priority = 4;
+}
+
+message GetSuggestedEntitiesRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+
+message GetSuggestedEntitiesResponse {
+  repeated SuggestedEntity entities = 1;
+  string cursor = 2;
+}
+
+//
+// Posts
+//
+
+// - Return post reply count with uris A, B, C…
+//     - All feed hydration
+message GetPostReplyCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetPostReplyCountsResponse {
+  repeated int32 counts = 1;
+}
+
+//
+// Labels
+//
+
+// - Get all labels on a subjects A, B, C (uri or did) issued by dids D, E, F…
+//     - label hydration on nearly every view
+message GetLabelsRequest {
+  repeated string subjects = 1;
+  repeated string issuers = 2;
+}
+
+message GetLabelsResponse {
+  repeated bytes labels = 1;
+}
+
+//
+// Sync
+//
+
+// - Latest repo rev of user w/ DID
+//     - Read-after-write header in`getProfile`, `getProfiles`, `getActorLikes`, `getAuthorFeed`, `getListFeed`, `getPostThread`, `getTimeline`.  Could it be view dependent?
+message GetLatestRevRequest {
+  string actor_did = 1;
+}
+
+message GetLatestRevResponse {
+  string rev = 1;
+}
+
+
+message GetIdentityByDidRequest {
+  string did = 1;
+}
+message GetIdentityByDidResponse {
+  string did = 1;
+  string handle = 2;
+  bytes keys = 3;
+  bytes services = 4;
+  google.protobuf.Timestamp updated = 5;
+}
+
+message GetIdentityByHandleRequest {
+  string handle = 1;
+}
+message GetIdentityByHandleResponse {
+  string handle = 1;
+  string did = 2;
+  bytes keys = 3;
+  bytes services = 4;
+  google.protobuf.Timestamp updated = 5;
+}
+
+
+
+//
+// Moderation
+//
+
+message GetBlobTakedownRequest {
+  string did = 1;
+  string cid = 2;
+}
+
+message GetBlobTakedownResponse {
+  bool taken_down = 1;
+  string takedown_ref = 2;
+}
+
+
+
+message GetActorTakedownRequest {
+  string did = 1;
+}
+
+message GetActorTakedownResponse {
+  bool taken_down = 1;
+  string takedown_ref = 2;
+}
+
+message GetRecordTakedownRequest {
+  string record_uri = 1;
+}
+
+message GetRecordTakedownResponse {
+  bool taken_down = 1;
+  string takedown_ref = 2;
+}
+
+
+// Ping
+message PingRequest {}
+message PingResponse {}
+
+
+
+
+service Service {
+  //
+  // Read Path
+  //
+
+  // Records
+  rpc GetBlockRecords(GetBlockRecordsRequest) returns (GetBlockRecordsResponse);
+  rpc GetFeedGeneratorRecords(GetFeedGeneratorRecordsRequest) returns (GetFeedGeneratorRecordsResponse);
+  rpc GetFollowRecords(GetFollowRecordsRequest) returns (GetFollowRecordsResponse);
+  rpc GetLikeRecords(GetLikeRecordsRequest) returns (GetLikeRecordsResponse);
+  rpc GetListBlockRecords(GetListBlockRecordsRequest) returns (GetListBlockRecordsResponse);
+  rpc GetListItemRecords(GetListItemRecordsRequest) returns (GetListItemRecordsResponse);
+  rpc GetListRecords(GetListRecordsRequest) returns (GetListRecordsResponse);
+  rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
+  rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
+  rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
+  rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+
+  // Follows
+  rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
+  rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
+  rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
+
+  // Likes
+  rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
+  rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
+  rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
+
+  // Reposts
+  rpc GetRepostsBySubject(GetRepostsBySubjectRequest) returns (GetRepostsBySubjectResponse);
+  rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
+  rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
+
+  // Interaction Counts
+  rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
+  rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
+
+  // Profile
+  rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
+  rpc GetDidsByHandles(GetDidsByHandlesRequest) returns (GetDidsByHandlesResponse);
+
+  // Relationships
+  rpc GetRelationships(GetRelationshipsRequest) returns (GetRelationshipsResponse);
+  rpc GetBlockExistence(GetBlockExistenceRequest) returns (GetBlockExistenceResponse);
+
+  // Lists
+  rpc GetActorLists(GetActorListsRequest) returns (GetActorListsResponse);
+  rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
+  rpc GetListMembership(GetListMembershipRequest) returns (GetListMembershipResponse);
+  rpc GetListCount(GetListCountRequest) returns (GetListCountResponse);
+
+  // Mutes
+  rpc GetActorMutesActor(GetActorMutesActorRequest) returns (GetActorMutesActorResponse);
+  rpc GetMutes(GetMutesRequest) returns (GetMutesResponse);
+
+  // Mutelists
+  rpc GetActorMutesActorViaList(GetActorMutesActorViaListRequest) returns (GetActorMutesActorViaListResponse);
+  rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
+  rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
+
+  // Blocks
+  rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);
+  rpc GetBlocks(GetBlocksRequest) returns (GetBlocksResponse);
+
+  // Blocklists
+  rpc GetBidirectionalBlockViaList(GetBidirectionalBlockViaListRequest) returns (GetBidirectionalBlockViaListResponse);
+  rpc GetBlocklistSubscription(GetBlocklistSubscriptionRequest) returns (GetBlocklistSubscriptionResponse);
+  rpc GetBlocklistSubscriptions(GetBlocklistSubscriptionsRequest) returns (GetBlocklistSubscriptionsResponse);
+
+  // Notifications
+  rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
+  rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
+
+  // FeedGenerators
+  rpc GetActorFeeds(GetActorFeedsRequest) returns (GetActorFeedsResponse);
+  rpc GetSuggestedFeeds(GetSuggestedFeedsRequest) returns (GetSuggestedFeedsResponse);
+  rpc GetFeedGeneratorStatus(GetFeedGeneratorStatusRequest) returns (GetFeedGeneratorStatusResponse);
+  rpc SearchFeedGenerators(SearchFeedGeneratorsRequest) returns (SearchFeedGeneratorsResponse);
+
+  // Feeds
+  rpc GetAuthorFeed(GetAuthorFeedRequest) returns (GetAuthorFeedResponse);
+  rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
+  rpc GetListFeed(GetListFeedRequest) returns (GetListFeedResponse);
+
+  // Threads
+  rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
+
+  // Search
+  rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
+  rpc SearchPosts(SearchPostsRequest) returns (SearchPostsResponse);
+
+  // Suggestions
+  rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
+  rpc GetSuggestedEntities(GetSuggestedEntitiesRequest) returns (GetSuggestedEntitiesResponse);
+
+  // Posts
+  rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
+
+  // Labels
+  rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
+
+  // Sync
+  rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
+
+  // Moderation
+  rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
+  rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
+  rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
+
+  // Identity
+  rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
+  rpc GetIdentityByHandle(GetIdentityByHandleRequest) returns (GetIdentityByHandleResponse);
+
+  // Ping
+  rpc Ping(PingRequest) returns (PingResponse);
+
+
+
+
+  //
+  // Write Path
+  //
+
+  // Moderation
+  rpc TakedownBlob(TakedownBlobRequest) returns (TakedownBlobResponse);
+  rpc TakedownRecord(TakedownRecordRequest) returns (TakedownRecordResponse);
+  rpc TakedownActor(TakedownActorRequest) returns (TakedownActorResponse);
+
+  rpc UntakedownBlob(UntakedownBlobRequest) returns (UntakedownBlobResponse);
+  rpc UntakedownRecord(UntakedownRecordRequest) returns (UntakedownRecordResponse);
+  rpc UntakedownActor(UntakedownActorRequest) returns (UntakedownActorResponse);
+
+  // Ingestion
+  rpc CreateActorMute(CreateActorMuteRequest) returns (CreateActorMuteResponse);
+  rpc DeleteActorMute(DeleteActorMuteRequest) returns (DeleteActorMuteResponse);
+  rpc ClearActorMutes(ClearActorMutesRequest) returns (ClearActorMutesResponse);
+
+  rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
+  rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
+  rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
+}
+
+
+message TakedownActorRequest {
+  string did = 1;
+  string ref = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message TakedownActorResponse {
+}
+
+message UntakedownActorRequest {
+  string did = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message UntakedownActorResponse {
+}
+
+message TakedownBlobRequest {
+  string did = 1;
+  string cid = 2;
+  string ref = 3;
+  google.protobuf.Timestamp seen = 4;
+}
+
+message TakedownBlobResponse {}
+
+message UntakedownBlobRequest {
+  string did = 1;
+  string cid = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message UntakedownBlobResponse {}
+
+message TakedownRecordRequest {
+  string record_uri = 1;
+  string ref = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message TakedownRecordResponse {
+}
+
+message UntakedownRecordRequest {
+  string record_uri = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message UntakedownRecordResponse {
+}
+
+message CreateActorMuteRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message CreateActorMuteResponse {}
+
+message DeleteActorMuteRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message DeleteActorMuteResponse {}
+
+message ClearActorMutesRequest {
+  string actor_did = 1;
+}
+
+message ClearActorMutesResponse {}
+
+message CreateActorMutelistSubscriptionRequest {
+  string actor_did = 1;
+  string subject_uri = 2;
+}
+
+message CreateActorMutelistSubscriptionResponse {}
+
+message DeleteActorMutelistSubscriptionRequest {
+  string actor_did = 1;
+  string subject_uri = 2;
+}
+
+message DeleteActorMutelistSubscriptionResponse {}
+
+message ClearActorMutelistSubscriptionsRequest {
+  string actor_did = 1;
+}
+
+message ClearActorMutelistSubscriptionsResponse {}

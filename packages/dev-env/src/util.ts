@@ -7,7 +7,7 @@ export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
   mockResolvers(pds.ctx.idResolver, pds)
   if (bsky) {
     mockResolvers(bsky.ctx.idResolver, pds)
-    mockResolvers(bsky.indexer.ctx.idResolver, pds)
+    mockResolvers(bsky.dataplane.idResolver, pds)
   }
 }
 
