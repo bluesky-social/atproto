@@ -146,22 +146,9 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: alice,
+    })
 
     const attemptAsUser = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
@@ -173,25 +160,12 @@ describe('pds author feed views', () => {
       { actor: alice },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    expect(attemptAsAdmin.data.feed.length).toBeGreaterThan(0)
     expect(attemptAsAdmin.data.feed.length).toEqual(preBlock.feed.length)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: alice,
+    })
   })
 
   it('blocked by record takedown.', async () => {
@@ -204,23 +178,9 @@ describe('pds author feed views', () => {
 
     const post = preBlock.feed[0].post
 
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uri,
-          cid: post.cid,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: post.uri,
+    })
 
     const [{ data: postBlockAsUser }, { data: postBlockAsAdmin }] =
       await Promise.all([
@@ -244,22 +204,9 @@ describe('pds author feed views', () => {
     )
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uri,
-          cid: post.cid,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownRecord({
+      recordUri: post.uri,
+    })
   })
 
   it('can filter by posts_with_media', async () => {

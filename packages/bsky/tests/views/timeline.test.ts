@@ -2,8 +2,10 @@ import assert from 'assert'
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
-import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { Database } from '../../src'
+
+const REVERSE_CHRON = 'reverse-chronological'
 
 describe('timeline views', () => {
   let network: TestNetwork
@@ -28,26 +30,18 @@ describe('timeline views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    // Label posts as "kind" to check labels on embed views
-    const labelPostA = sc.posts[bob][0].ref
-    const labelPostB = sc.posts[carol][0].ref
-    await network.bsky.ctx.services
-      .label(network.bsky.ctx.db.getPrimary())
-      .formatAndCreate(
-        network.ozone.ctx.cfg.service.did,
-        labelPostA.uriStr,
-        labelPostA.cidStr,
-        { create: ['kind'] },
-      )
-    await network.bsky.ctx.services
-      .label(network.bsky.ctx.db.getPrimary())
-      .formatAndCreate(
-        network.ozone.ctx.cfg.service.did,
-        labelPostB.uriStr,
-        labelPostB.cidStr,
-        { create: ['kind'] },
-      )
-    await network.bsky.processAll()
+    // covers label hydration on embeds
+    const { db } = network.bsky
+    await createLabel(db, {
+      val: 'test-label-3',
+      uri: sc.posts[bob][0].ref.uriStr,
+      cid: sc.posts[bob][0].ref.cidStr,
+    })
+    await createLabel(db, {
+      val: 'test-label-3',
+      uri: sc.posts[carol][0].ref.uriStr,
+      cid: sc.posts[carol][0].ref.cidStr,
+    })
   })
 
   afterAll(async () => {
@@ -67,7 +61,7 @@ describe('timeline views', () => {
     }
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       {
         headers: await network.serviceHeaders(alice),
       },
@@ -77,7 +71,7 @@ describe('timeline views', () => {
     aliceTL.data.feed.forEach(expectOriginatorFollowedBy(alice))
 
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       {
         headers: await network.serviceHeaders(bob),
       },
@@ -87,7 +81,7 @@ describe('timeline views', () => {
     bobTL.data.feed.forEach(expectOriginatorFollowedBy(bob))
 
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -97,7 +91,7 @@ describe('timeline views', () => {
     carolTL.data.feed.forEach(expectOriginatorFollowedBy(carol))
 
     const danTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       {
         headers: await network.serviceHeaders(dan),
       },
@@ -115,7 +109,7 @@ describe('timeline views', () => {
       },
     )
     const reverseChronologicalTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       {
         headers: await network.serviceHeaders(alice),
       },
@@ -128,7 +122,7 @@ describe('timeline views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
-          algorithm: FeedAlgorithm.ReverseChronological,
+          algorithm: REVERSE_CHRON,
           cursor,
           limit: 4,
         },
@@ -144,7 +138,7 @@ describe('timeline views', () => {
 
     const full = await agent.api.app.bsky.feed.getTimeline(
       {
-        algorithm: FeedAlgorithm.ReverseChronological,
+        algorithm: REVERSE_CHRON,
       },
       { headers: await network.serviceHeaders(carol) },
     )
@@ -196,27 +190,12 @@ describe('timeline views', () => {
   it('blocks posts, reposts, replies by actor takedown', async () => {
     await Promise.all(
       [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.updateSubjectStatus(
-          {
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did,
-            },
-            takedown: {
-              applied: true,
-              ref: 'test',
-            },
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.takedownActor({ did }),
       ),
     )
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       { headers: await network.serviceHeaders(alice) },
     )
 
@@ -225,21 +204,7 @@ describe('timeline views', () => {
     // Cleanup
     await Promise.all(
       [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.updateSubjectStatus(
-          {
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did,
-            },
-            takedown: {
-              applied: false,
-            },
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.untakedownActor({ did }),
       ),
     )
   })
@@ -249,28 +214,14 @@ describe('timeline views', () => {
     const postRef2 = sc.replies[bob][0].ref // Post and reply parent
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.updateSubjectStatus(
-          {
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            takedown: {
-              applied: true,
-              ref: 'test',
-            },
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.takedownRecord({
+          recordUri: postRef.uriStr,
+        }),
       ),
     )
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
+      { algorithm: REVERSE_CHRON },
       { headers: await network.serviceHeaders(alice) },
     )
 
@@ -279,31 +230,35 @@ describe('timeline views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.updateSubjectStatus(
-          {
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            takedown: {
-              applied: false,
-            },
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.untakedownRecord({
+          recordUri: postRef.uriStr,
+        }),
       ),
     )
   })
 
   it('fails open on clearly bad cursor.', async () => {
     const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
-      { cursor: 'bad' },
+      { cursor: '90210::bafycid' },
       { headers: await network.serviceHeaders(alice) },
     )
     expect(timeline).toEqual({ feed: [] })
   })
 })
+
+const createLabel = async (
+  db: Database,
+  opts: { uri: string; cid: string; val: string },
+) => {
+  await db.db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      neg: false,
+      src: 'did:example:labeler',
+    })
+    .execute()
+}

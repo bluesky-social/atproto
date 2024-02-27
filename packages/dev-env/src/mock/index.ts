@@ -1,5 +1,6 @@
 import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
+import { Database } from '@atproto/bsky'
 import {
   REASONSPAM,
   REASONOTHER,
@@ -186,28 +187,16 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  const ctx = env.bsky.ctx
-  if (ctx) {
-    const labelSrvc = ctx.services.label(ctx.db.getPrimary())
-    await labelSrvc.createLabels([
-      {
-        src: env.ozone.ctx.cfg.service.did,
-        uri: labeledPost.uri,
-        cid: labeledPost.cid,
-        val: 'nudity',
-        neg: false,
-        cts: new Date().toISOString(),
-      },
-      {
-        src: env.ozone.ctx.cfg.service.did,
-        uri: filteredPost.uri,
-        cid: filteredPost.cid,
-        val: 'dmca-violation',
-        neg: false,
-        cts: new Date().toISOString(),
-      },
-    ])
-  }
+  await createLabel(env.bsky.db, {
+    uri: labeledPost.uri,
+    cid: labeledPost.cid,
+    val: 'nudity',
+  })
+  await createLabel(env.bsky.db, {
+    uri: filteredPost.uri,
+    cid: filteredPost.cid,
+    val: 'dmca-violation',
+  })
 
   // a set of replies
   for (let i = 0; i < 100; i++) {
@@ -340,4 +329,21 @@ export async function generateMockSetup(env: TestNetwork) {
 
 function ucfirst(str: string): string {
   return str.at(0)?.toUpperCase() + str.slice(1)
+}
+
+const createLabel = async (
+  db: Database,
+  opts: { uri: string; cid: string; val: string },
+) => {
+  await db.db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      neg: false,
+      src: 'did:example:labeler',
+    })
+    .execute()
 }

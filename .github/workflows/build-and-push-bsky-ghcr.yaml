@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - appview-v2
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

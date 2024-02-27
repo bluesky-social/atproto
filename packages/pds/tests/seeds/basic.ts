@@ -1,10 +1,10 @@
-import { SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestBsky } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import usersSeed from './users'
 
 export default async (
   sc: SeedClient,
-  opts?: { inviteCode?: string; addModLabels?: boolean },
+  opts?: { inviteCode?: string; addModLabels?: TestBsky },
 ) => {
   await usersSeed(sc, opts)
 
@@ -134,24 +134,7 @@ export default async (
   await sc.repost(dan, alicesReplyToBob.ref)
 
   if (opts?.addModLabels) {
-    await sc.agent.com.atproto.admin.emitModerationEvent(
-      {
-        event: {
-          createLabelVals: ['repo-action-label'],
-          negateLabelVals: [],
-          $type: 'com.atproto.admin.defs#modEventLabel',
-        },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: dan,
-        },
-        createdBy: 'did:example:admin',
-      },
-      {
-        encoding: 'application/json',
-        headers: sc.adminAuthHeaders(),
-      },
-    )
+    await createLabel(opts.addModLabels, { did: dan, val: 'repo-action-label' })
   }
 
   return sc
@@ -168,4 +151,21 @@ export const replies = {
   alice: ['thanks bob'],
   bob: ['hear that label_me label_me_2'],
   carol: ['of course'],
+}
+
+const createLabel = async (
+  bsky: TestBsky,
+  opts: { did: string; val: string },
+) => {
+  await bsky.db.db
+    .insertInto('label')
+    .values({
+      uri: opts.did,
+      cid: '',
+      val: opts.val,
+      cts: new Date().toISOString(),
+      neg: false,
+      src: 'did:example:labeler',
+    })
+    .execute()
 }
