@@ -55,6 +55,8 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
+    // destory sequencer to release connection that would prevent the db from closing
+    await ozone.ctx.sequencer.destroy()
     await ozone.ctx.db.close()
     let error: AxiosError
     try {
