@@ -201,6 +201,13 @@ export class AppContext {
   async appviewAuth() {
     return this.serviceAuthHeaders(this.cfg.appview.did)
   }
+
+  devOverride(overrides: Partial<AppContextOptions>) {
+    this.opts = {
+      ...this.opts,
+      ...overrides,
+    }
+  }
 }
 
 export default AppContext

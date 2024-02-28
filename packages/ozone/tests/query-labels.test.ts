@@ -1,6 +1,10 @@
+import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
+import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
+import { cborEncode } from '@atproto/common'
+import { ModerationService } from '../src/mod-service'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
@@ -15,7 +19,7 @@ describe('ozone query labels', () => {
 
     agent = network.ozone.getClient()
 
-    labels = [
+    const toCreate = [
       {
         src: 'did:example:labeler',
         uri: 'did:example:blah',
@@ -61,7 +65,7 @@ describe('ozone query labels', () => {
     ]
 
     const modService = network.ozone.ctx.modService(network.ozone.ctx.db)
-    await modService.createLabels(labels)
+    labels = await modService.createLabels(toCreate)
   })
 
   afterAll(async () => {
@@ -120,5 +124,70 @@ describe('ozone query labels', () => {
     expect([...res1.data.labels, ...res2.data.labels]).toEqual(
       labels.slice(0, 5),
     )
+  })
+
+  it('returns validly signed labels', async () => {
+    const res = await agent.api.com.atproto.label.queryLabels({
+      uriPatterns: ['*'],
+    })
+    const signingKey = network.ozone.ctx.signingKey.did()
+    for (const label of res.data.labels) {
+      const { sig, ...rest } = label
+      if (!sig) {
+        throw new Error('Missing signature')
+      }
+      const sigBytes = ui8.fromString(sig, 'base64')
+      const encodedLabel = cborEncode(rest)
+      const isValid = await verifySignature(signingKey, encodedLabel, sigBytes)
+      expect(isValid).toBe(true)
+    }
+  })
+
+  it('resigns labels if the signingKey changes', async () => {
+    // mock changing the signing key for the service
+    const ctx = network.ozone.ctx
+    const origModServiceFn = ctx.modService
+
+    const modSrvc = ctx.modService(ctx.db)
+    const newSigningKey = await Secp256k1Keypair.create()
+    ctx.devOverride({
+      modService: ModerationService.creator(
+        newSigningKey,
+        modSrvc.backgroundQueue,
+        modSrvc.eventPusher,
+        modSrvc.appviewAgent,
+        modSrvc.appviewAuth,
+        modSrvc.serverDid,
+      ),
+    })
+
+    const res = await agent.api.com.atproto.label.queryLabels({
+      uriPatterns: ['*'],
+    })
+    for (const label of res.data.labels) {
+      const { sig, ...rest } = label
+      if (!sig) {
+        throw new Error('Missing signature')
+      }
+      const sigBytes = ui8.fromString(sig, 'base64')
+      const encodedLabel = cborEncode(rest)
+      const isValid = await verifySignature(
+        newSigningKey.did(),
+        encodedLabel,
+        sigBytes,
+      )
+      expect(isValid).toBe(true)
+    }
+
+    await network.ozone.processAll()
+
+    const fromDb = await ctx.db.db.selectFrom('label').selectAll().execute()
+    expect(fromDb.every((row) => row.signingKey === newSigningKey.did())).toBe(
+      true,
+    )
+
+    ctx.devOverride({
+      modService: origModServiceFn,
+    })
   })
 })

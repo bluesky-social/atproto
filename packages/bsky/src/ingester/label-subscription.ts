@@ -49,6 +49,7 @@ export class LabelSubscription {
       ...l,
       cid: l.cid ?? '',
       neg: l.neg ?? false,
+      sig: undefined,
     }))
     const { ref } = this.db.db.dynamic
     const excluded = (col: string) => ref(`excluded.${col}`)

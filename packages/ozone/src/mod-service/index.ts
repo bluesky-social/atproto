@@ -45,7 +45,7 @@ import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
 import { LabelChannel } from '../db/schema/label'
 import { Keypair } from '@atproto/crypto'
-import { signLabel } from './util'
+import { formatLabel, signLabel } from './util'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -56,7 +56,7 @@ export class ModerationService {
     public backgroundQueue: BackgroundQueue,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
-    private appviewAuth: AppviewAuth,
+    public appviewAuth: AppviewAuth,
     public serverDid: string,
   ) {}
 
@@ -856,12 +856,11 @@ export class ModerationService {
       cts: new Date().toISOString(),
     }))
     const formatted = [...toCreate, ...toNegate]
-    await this.createLabels(formatted)
-    return formatted
+    return this.createLabels(formatted)
   }
 
-  async createLabels(labels: Label[]) {
-    if (labels.length < 1) return
+  async createLabels(labels: Label[]): Promise<Label[]> {
+    if (labels.length < 1) return []
     const signedLabels = await Promise.all(
       labels.map((l) => signLabel(l, this.signingKey)),
     )
@@ -875,7 +874,7 @@ export class ModerationService {
     const { ref } = this.db.db.dynamic
     await sql`notify ${ref(LabelChannel)}`.execute(this.db.db) // emitted transactionally
     const excluded = (col: string) => ref(`excluded.${col}`)
-    await this.db.db
+    const res = await this.db.db
       .insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
@@ -885,7 +884,9 @@ export class ModerationService {
           cts: sql`${excluded('cts')}`,
         }),
       )
+      .returningAll()
       .execute()
+    return res.map((row) => formatLabel(row))
   }
 }
 

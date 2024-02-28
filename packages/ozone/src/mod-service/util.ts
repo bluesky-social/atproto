@@ -1,5 +1,5 @@
 import * as ui8 from 'uint8arrays'
-import { cborEncode } from '@atproto/common'
+import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { LabelRow } from '../db/schema/label'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
@@ -22,11 +22,20 @@ export const signLabel = async (
   label: Label,
   signingKey: Keypair,
 ): Promise<SignedLabel> => {
-  const { sig: _, ...rest } = label
-  const bytes = cborEncode(rest)
+  const { src, uri, cid, val, neg, cts } = label
+  const reformatted = noUndefinedVals({
+    src,
+    uri,
+    cid,
+    val,
+    neg,
+    cts,
+  }) as Label
+
+  const bytes = cborEncode(reformatted)
   const sigBytes = await signingKey.sign(bytes)
   return {
-    ...rest,
+    ...reformatted,
     sig: ui8.toString(sigBytes, 'base64'),
   }
 }
