@@ -39,9 +39,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async destroy() {
+    if (this.destroyed) return
     this.destroyed = true
     if (this.conn) {
       this.conn.release()
+      this.conn = undefined
     }
     if (this.pollPromise) {
       await this.pollPromise
