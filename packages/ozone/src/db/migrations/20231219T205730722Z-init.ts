@@ -68,13 +68,19 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // Label
   await db.schema
     .createTable('label')
+    .addColumn('id', 'bigserial', (col) => col.primaryKey())
     .addColumn('src', 'varchar', (col) => col.notNull())
     .addColumn('uri', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('val', 'varchar', (col) => col.notNull())
     .addColumn('neg', 'boolean', (col) => col.notNull())
     .addColumn('cts', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('label_pkey', ['src', 'uri', 'cid', 'val'])
+    .execute()
+  await db.schema
+    .createIndex('unique_label_idx')
+    .unique()
+    .on('label')
+    .columns(['src', 'uri', 'cid', 'val'])
     .execute()
   await db.schema
     .createIndex('label_uri_index')
