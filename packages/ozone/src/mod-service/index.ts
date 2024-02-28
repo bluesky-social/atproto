@@ -857,7 +857,7 @@ export class ModerationService {
       neg: !!l.neg,
     }))
     const { ref } = this.db.db.dynamic
-    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db) // emitted transactionally
+    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
     await this.db.db
       .insertInto('label')
