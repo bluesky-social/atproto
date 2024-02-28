@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       builder = builder.where('src', 'in', sources)
     }
     if (cursor) {
-      const cursorId = parseInt(cursor)
+      const cursorId = parseInt(cursor, 10)
       if (isNaN(cursorId)) {
         throw new InvalidRequestError('invalid cursor')
       }
