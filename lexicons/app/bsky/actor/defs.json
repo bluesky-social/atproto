@@ -134,6 +134,11 @@
       "type": "object",
       "required": ["label", "visibility"],
       "properties": {
+        "labelerDid": {
+          "type": "string",
+          "description": "Which labeler does this preference apply to? If undefined, applies globally.",
+          "format": "did"
+        },
         "label": { "type": "string" },
         "visibility": {
           "type": "string",
@@ -297,20 +302,11 @@
     },
     "modPrefItem": {
       "type": "object",
-      "required": ["did", "enabled"],
+      "required": ["did"],
       "properties": {
         "did": {
           "type": "string",
           "format": "did"
-        },
-        "enabled": {
-          "type": "boolean"
-        },
-        "disabledLabelGroups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     }
