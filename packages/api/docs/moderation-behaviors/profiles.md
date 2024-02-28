@@ -309,17 +309,15 @@ Key:
 <tr>
 <td><strong>Blur-media label ('porn') on account (hide)</strong></td>
 <td>
-❌
-</td>
-<td>
-✋
 
 </td>
 <td>
 
 </td>
 <td>
-✋
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -347,14 +345,12 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 <td>
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -523,19 +519,17 @@ Key:
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
-<td><strong>Adult-only label on account when adult content is disabled</strong></td>
+<td><strong>Adult-only label on account when adult content is disabled (no effect -- porn doesnt apply to accounts)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
 
 </td>
 </tr>
@@ -738,24 +732,6 @@ Key:
 
 <tr>
 <td><strong>Prioritization: '!warn' and 'intolerant' labels on account (hide)</strong></td>
-<td>
-❌
-</td>
-<td>
-✋
-
-</td>
-<td>
-
-</td>
-<td>
-✋
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!warn' and 'porn' labels on account (hide)</strong></td>
 <td>
 ❌
 </td>

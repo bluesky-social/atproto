@@ -1,9 +1,45 @@
 import {
   AppBskyActorDefs,
   AppBskyFeedDefs,
+  AppBskyNotificationListNotifications,
   AppBskyGraphDefs,
   ComAtprotoLabelDefs,
 } from '../client/index'
+import { LabelGroupId } from './const/label-groups'
+import { KnownLabelValue } from './const/labels'
+
+// behaviors
+// =
+
+export interface ModerationBehavior {
+  profileList?: 'blur' | 'alert' | 'inform'
+  profileView?: 'blur' | 'alert' | 'inform'
+  avatar?: 'blur' | 'alert'
+  banner?: 'blur'
+  displayName?: 'blur'
+  contentList?: 'blur' | 'alert' | 'inform'
+  contentView?: 'blur' | 'alert' | 'inform'
+  contentMedia?: 'blur'
+}
+export const BLOCK_BEHAVIOR: ModerationBehavior = {
+  profileList: 'blur',
+  profileView: 'alert',
+  avatar: 'blur',
+  banner: 'blur',
+  contentList: 'blur',
+  contentView: 'blur',
+}
+export const MUTE_BEHAVIOR: ModerationBehavior = {
+  profileList: 'inform',
+  profileView: 'alert',
+  contentList: 'blur',
+  contentView: 'inform',
+}
+export const HIDE_BEHAVIOR: ModerationBehavior = {
+  contentList: 'blur',
+  contentView: 'blur',
+}
+export const NOOP_BEHAVIOR: ModerationBehavior = {}
 
 // labels
 // =
@@ -11,12 +47,12 @@ import {
 export type Label = ComAtprotoLabelDefs.Label
 
 export type LabelPreference = 'ignore' | 'warn' | 'hide'
-export type LabelDefinitionFlag = 'no-override' | 'adult' | 'unauthed'
-export type LabelDefinitionOnWarnBehavior =
-  | 'blur'
-  | 'blur-media'
-  | 'alert'
-  | null
+export type LabelDefinitionFlag =
+  | 'no-override'
+  | 'adult'
+  | 'unauthed'
+  | 'no-self'
+export type LabelTarget = 'account' | 'profile' | 'content'
 
 export interface LabelDefinitionLocalizedStrings {
   name: string
@@ -29,43 +65,27 @@ export type LabelDefinitionLocalizedStringsMap = Record<
 >
 
 export interface LabelDefinition {
-  id: string
+  id: KnownLabelValue
   groupId: string
   configurable: boolean
-  preferences: LabelPreference[]
+  targets: LabelTarget[]
+  fixedPreference?: LabelPreference
   flags: LabelDefinitionFlag[]
-  onwarn: LabelDefinitionOnWarnBehavior
-  strings: {
-    settings: LabelDefinitionLocalizedStringsMap
-    account: LabelDefinitionLocalizedStringsMap
-    content: LabelDefinitionLocalizedStringsMap
+  behaviors: {
+    account?: ModerationBehavior
+    profile?: ModerationBehavior
+    content?: ModerationBehavior
   }
 }
 
 export interface LabelGroupDefinition {
-  id: string
+  id: LabelGroupId
   configurable: boolean
   labels: LabelDefinition[]
-  strings: {
-    settings: LabelDefinitionLocalizedStringsMap
-  }
 }
 
-export type LabelDefinitionMap = Record<string, LabelDefinition>
-export type LabelGroupDefinitionMap = Record<string, LabelGroupDefinition>
-
-// labelers
-// =
-
-interface Labeler {
-  did: string
-  displayName: string
-}
-
-export interface LabelerSettings {
-  labeler: Labeler
-  labels: Record<string, LabelPreference>
-}
+export type LabelDefinitionMap = Record<KnownLabelValue, LabelDefinition>
+export type LabelGroupDefinitionMap = Record<LabelGroupId, LabelGroupDefinition>
 
 // subjects
 // =
@@ -77,6 +97,9 @@ export type ModerationSubjectProfile =
 
 export type ModerationSubjectPost = AppBskyFeedDefs.PostView
 
+export type ModerationSubjectNotification =
+  AppBskyNotificationListNotifications.Notification
+
 export type ModerationSubjectFeedGenerator = AppBskyFeedDefs.GeneratorView
 
 export type ModerationSubjectUserList =
@@ -86,6 +109,7 @@ export type ModerationSubjectUserList =
 export type ModerationSubject =
   | ModerationSubjectProfile
   | ModerationSubjectPost
+  | ModerationSubjectNotification
   | ModerationSubjectFeedGenerator
   | ModerationSubjectUserList
 
@@ -95,7 +119,7 @@ export type ModerationSubject =
 export type ModerationCauseSource =
   | { type: 'user' }
   | { type: 'list'; list: AppBskyGraphDefs.ListViewBasic }
-  | { type: 'labeler'; labeler: Labeler }
+  | { type: 'labeler'; did: string }
 
 export type ModerationCause =
   | { type: 'blocking'; source: ModerationCauseSource; priority: 3 }
@@ -107,38 +131,16 @@ export type ModerationCause =
       label: Label
       labelDef: LabelDefinition
       setting: LabelPreference
+      behavior: ModerationBehavior
+      noOverride: boolean
       priority: 1 | 2 | 5 | 7 | 8
     }
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
+  | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
 
 export interface ModerationOpts {
   userDid: string
   adultContentEnabled: boolean
-  labels: Record<string, LabelPreference>
-  labelers: LabelerSettings[]
-}
-
-export class ModerationDecision {
-  static noop() {
-    return new ModerationDecision()
-  }
-
-  constructor(
-    public cause: ModerationCause | undefined = undefined,
-    public alert: boolean = false,
-    public blur: boolean = false,
-    public blurMedia: boolean = false,
-    public filter: boolean = false,
-    public noOverride: boolean = false,
-    public additionalCauses: ModerationCause[] = [],
-    public did: string = '',
-  ) {}
-}
-
-export interface ModerationUI {
-  filter?: boolean
-  blur?: boolean
-  alert?: boolean
-  cause?: ModerationCause
-  noOverride?: boolean
+  labelGroups: Record<string, LabelPreference>
+  mods: AppBskyActorDefs.ModsPref['mods']
 }

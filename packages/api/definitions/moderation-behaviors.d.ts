@@ -1,14 +1,13 @@
 import type { LabelPreference } from '../src'
 
-export interface ModerationBehaviorResult {
-  cause?: string
-  filter?: boolean
-  blur?: boolean
-  alert?: boolean
-  noOverride?: boolean
-}
+export type ModerationTestSuiteResultFlag =
+  | 'filter'
+  | 'blur'
+  | 'alert'
+  | 'inform'
+  | 'noOverride'
 
-export interface ModerationBehaviorScenario {
+export interface ModerationTestSuiteScenario {
   cfg: string
   subject: 'post' | 'profile' | 'userlist' | 'feedgen'
   author: string
@@ -21,13 +20,18 @@ export interface ModerationBehaviorScenario {
     quotedAccount?: string[]
   }
   behaviors: {
-    content?: ModerationBehaviorResult
-    avatar?: ModerationBehaviorResult
-    embed?: ModerationBehaviorResult
+    profileList?: ModerationTestSuiteResultFlag[]
+    profileView?: ModerationTestSuiteResultFlag[]
+    avatar?: ModerationTestSuiteResultFlag[]
+    banner?: ModerationTestSuiteResultFlag[]
+    displayName?: ModerationTestSuiteResultFlag[]
+    contentList?: ModerationTestSuiteResultFlag[]
+    contentView?: ModerationTestSuiteResultFlag[]
+    contentMedia?: ModerationTestSuiteResultFlag[]
   }
 }
 
-export interface ModerationBehaviors {
+export interface ModerationTestSuite {
   users: Record<
     string,
     {
@@ -46,5 +50,5 @@ export interface ModerationBehaviors {
       settings: Record<string, LabelPreference>
     }
   >
-  scenarios: Record<string, ModerationBehaviorScenario>
+  scenarios: Record<string, ModerationTestSuiteScenario>
 }

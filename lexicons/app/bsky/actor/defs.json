@@ -137,7 +137,7 @@
         "label": { "type": "string" },
         "visibility": {
           "type": "string",
-          "knownValues": ["show", "warn", "hide"]
+          "knownValues": ["ignore", "show", "warn", "hide"]
         }
       }
     },
@@ -297,7 +297,7 @@
     },
     "modPrefItem": {
       "type": "object",
-      "required": ["did", "enabled", "labelGroupSettings"],
+      "required": ["did", "enabled"],
       "properties": {
         "did": {
           "type": "string",
@@ -306,23 +306,11 @@
         "enabled": {
           "type": "boolean"
         },
-        "labelGroupSettings": {
+        "disabledLabelGroups": {
           "type": "array",
           "items": {
-            "type": "ref",
-            "ref": "#labelGroupSetting"
+            "type": "string"
           }
-        }
-      }
-    },
-    "labelGroupSetting": {
-      "type": "object",
-      "required": ["labelGroup", "visibility"],
-      "properties": {
-        "labelGroup": { "type": "string" },
-        "visibility": {
-          "type": "string",
-          "knownValues": ["show", "warn", "hide"]
         }
       }
     }

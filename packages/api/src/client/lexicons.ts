@@ -5177,7 +5177,7 @@ export const schemaDict = {
           },
           visibility: {
             type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
+            knownValues: ['ignore', 'show', 'warn', 'hide'],
           },
         },
       },
@@ -5349,7 +5349,7 @@ export const schemaDict = {
       },
       modPrefItem: {
         type: 'object',
-        required: ['did', 'enabled', 'labelGroupSettings'],
+        required: ['did', 'enabled'],
         properties: {
           did: {
             type: 'string',
@@ -5358,25 +5358,11 @@ export const schemaDict = {
           enabled: {
             type: 'boolean',
           },
-          labelGroupSettings: {
+          disabledLabelGroups: {
             type: 'array',
             items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#labelGroupSetting',
+              type: 'string',
             },
-          },
-        },
-      },
-      labelGroupSetting: {
-        type: 'object',
-        required: ['labelGroup', 'visibility'],
-        properties: {
-          labelGroup: {
-            type: 'string',
-          },
-          visibility: {
-            type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
           },
         },
       },

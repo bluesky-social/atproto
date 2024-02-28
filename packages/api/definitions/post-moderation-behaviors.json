@@ -49,13 +49,13 @@
       "adultContentEnabled": false
     },
     "intolerant-hide": {
-      "settings": { "intolerant": "hide" }
+      "settings": { "intolerance": "hide" }
     },
     "intolerant-warn": {
-      "settings": { "intolerant": "warn" }
+      "settings": { "intolerance": "warn" }
     },
     "intolerant-ignore": {
-      "settings": { "intolerant": "ignore" }
+      "settings": { "intolerance": "ignore" }
     },
     "porn-hide": {
       "adultContentEnabled": true,
@@ -70,25 +70,25 @@
       "settings": { "porn": "ignore" }
     },
     "scam-hide": {
-      "settings": { "scam": "hide" }
+      "settings": { "misrepresentation": "hide" }
     },
     "scam-warn": {
-      "settings": { "scam": "warn" }
+      "settings": { "misrepresentation": "warn" }
     },
     "scam-ignore": {
-      "settings": { "scam": "ignore" }
+      "settings": { "misrepresentation": "ignore" }
     },
     "porn-hide-intolerant-hide": {
       "adultContentEnabled": true,
-      "settings": { "porn": "hide", "intolerant": "hide" }
+      "settings": { "porn": "hide", "intolerance": "hide" }
     },
     "porn-hide-intolerant-warn": {
       "adultContentEnabled": true,
-      "settings": { "porn": "hide", "intolerant": "warn" }
+      "settings": { "porn": "hide", "intolerance": "warn" }
     },
     "porn-warn-intolerant-hide": {
       "adultContentEnabled": true,
-      "settings": { "porn": "warn", "intolerant": "hide" }
+      "settings": { "porn": "warn", "intolerance": "hide" }
     },
     "logged-out": {
       "authed": false
@@ -101,12 +101,8 @@
       "author": "alice",
       "labels": { "post": ["!hide"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        }
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
     "Imperative label ('!hide') on author profile": {
@@ -115,7 +111,9 @@
       "author": "alice",
       "labels": { "profile": ["!hide"] },
       "behaviors": {
-        "avatar": { "cause": "label:!hide", "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter"]
       }
     },
     "Imperative label ('!hide') on author account": {
@@ -124,16 +122,13 @@
       "author": "alice",
       "labels": { "account": ["!hide"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "cause": "label:!hide", "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Imperative label ('!hide') on quoted post": {
+    "// Imperative label ('!hide') on quoted post": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -144,7 +139,7 @@
         "embed": { "cause": "label:!hide", "blur": true, "noOverride": true }
       }
     },
-    "Imperative label ('!hide') on quoted author account": {
+    "// Imperative label ('!hide') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -162,7 +157,7 @@
       "author": "alice",
       "labels": { "post": ["!no-promote"] },
       "behaviors": {
-        "content": { "cause": "label:!no-promote", "filter": true }
+        "contentList": ["filter"]
       }
     },
     "Imperative label ('!no-promote') on author profile": {
@@ -178,10 +173,10 @@
       "author": "alice",
       "labels": { "account": ["!no-promote"] },
       "behaviors": {
-        "content": { "cause": "label:!no-promote", "filter": true }
+        "contentList": ["filter"]
       }
     },
-    "Imperative label ('!no-promote') on quoted post": {
+    "// Imperative label ('!no-promote') on quoted post": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -191,7 +186,7 @@
         "content": { "cause": "label:!no-promote", "filter": true }
       }
     },
-    "Imperative label ('!no-promote') on quoted author account": {
+    "// Imperative label ('!no-promote') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -208,7 +203,8 @@
       "author": "alice",
       "labels": { "post": ["!warn"] },
       "behaviors": {
-        "content": { "cause": "label:!warn", "blur": true }
+        "contentList": ["blur"],
+        "contentView": ["blur"]
       }
     },
     "Imperative label ('!warn') on author profile": {
@@ -217,7 +213,8 @@
       "author": "alice",
       "labels": { "profile": ["!warn"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "displayName": ["blur"]
       }
     },
     "Imperative label ('!warn') on author account": {
@@ -226,11 +223,12 @@
       "author": "alice",
       "labels": { "account": ["!warn"] },
       "behaviors": {
-        "content": { "cause": "label:!warn", "blur": true },
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "contentList": ["blur"],
+        "contentView": ["blur"]
       }
     },
-    "Imperative label ('!warn') on quoted post": {
+    "// Imperative label ('!warn') on quoted post": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -240,7 +238,7 @@
         "embed": { "cause": "label:!warn", "blur": true }
       }
     },
-    "Imperative label ('!warn') on quoted author account": {
+    "// Imperative label ('!warn') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -257,12 +255,8 @@
       "author": "alice",
       "labels": { "post": ["!no-unauthenticated"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!no-unauthenticated",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        }
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
     "Imperative label ('!no-unauthenticated') on author profile when logged out": {
@@ -271,17 +265,10 @@
       "author": "alice",
       "labels": { "profile": ["!no-unauthenticated"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!no-unauthenticated",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": {
-          "cause": "label:!no-unauthenticated",
-          "blur": true,
-          "noOverride": true
-        }
+        "avatar": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
     "Imperative label ('!no-unauthenticated') on author account when logged out": {
@@ -290,20 +277,13 @@
       "author": "alice",
       "labels": { "account": ["!no-unauthenticated"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!no-unauthenticated",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": {
-          "cause": "label:!no-unauthenticated",
-          "blur": true,
-          "noOverride": true
-        }
+        "avatar": ["blur", "noOverride"],
+        "displayName": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Imperative label ('!no-unauthenticated') on quoted post when logged out": {
+    "// Imperative label ('!no-unauthenticated') on quoted post when logged out": {
       "cfg": "logged-out",
       "subject": "post",
       "author": "alice",
@@ -318,7 +298,7 @@
         }
       }
     },
-    "Imperative label ('!no-unauthenticated') on quoted author account when logged out": {
+    "// Imperative label ('!no-unauthenticated') on quoted author account when logged out": {
       "cfg": "logged-out",
       "subject": "post",
       "author": "alice",
@@ -355,7 +335,7 @@
       "labels": { "account": ["!no-unauthenticated"] },
       "behaviors": {}
     },
-    "Imperative label ('!no-unauthenticated') on quoted post when logged in": {
+    "// Imperative label ('!no-unauthenticated') on quoted post when logged in": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -363,7 +343,7 @@
       "labels": { "quotedPost": ["!no-unauthenticated"] },
       "behaviors": {}
     },
-    "Imperative label ('!no-unauthenticated') on quoted author account when logged in": {
+    "// Imperative label ('!no-unauthenticated') on quoted author account when logged in": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -378,7 +358,8 @@
       "author": "alice",
       "labels": { "post": ["intolerant"] },
       "behaviors": {
-        "content": { "cause": "label:intolerant", "filter": true, "blur": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
     "Blur label ('intolerant') on author profile (hide)": {
@@ -387,7 +368,9 @@
       "author": "alice",
       "labels": { "profile": ["intolerant"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "displayName": ["blur"],
+        "contentList": ["filter"]
       }
     },
     "Blur label ('intolerant') on author account (hide)": {
@@ -396,15 +379,11 @@
       "author": "alice",
       "labels": { "account": ["intolerant"] },
       "behaviors": {
-        "content": {
-          "cause": "label:intolerant",
-          "filter": true,
-          "blur": true
-        },
-        "avatar": { "blur": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
-    "Blur label ('intolerant') on quoted post (hide)": {
+    "// Blur label ('intolerant') on quoted post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -415,7 +394,7 @@
         "embed": { "cause": "label:intolerant", "blur": true }
       }
     },
-    "Blur label ('intolerant') on quoted author account (hide)": {
+    "// Blur label ('intolerant') on quoted author account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -433,7 +412,8 @@
       "author": "alice",
       "labels": { "post": ["intolerant"] },
       "behaviors": {
-        "content": { "cause": "label:intolerant", "blur": true }
+        "contentList": ["blur"],
+        "contentView": ["alert"]
       }
     },
     "Blur label ('intolerant') on author profile (warn)": {
@@ -442,7 +422,8 @@
       "author": "alice",
       "labels": { "profile": ["intolerant"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "displayName": ["blur"]
       }
     },
     "Blur label ('intolerant') on author account (warn)": {
@@ -451,11 +432,11 @@
       "author": "alice",
       "labels": { "account": ["intolerant"] },
       "behaviors": {
-        "content": { "cause": "label:intolerant", "blur": true },
-        "avatar": { "blur": true }
+        "contentList": ["blur"],
+        "contentView": ["alert"]
       }
     },
-    "Blur label ('intolerant') on quoted post (warn)": {
+    "// Blur label ('intolerant') on quoted post (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -465,7 +446,7 @@
         "embed": { "cause": "label:intolerant", "blur": true }
       }
     },
-    "Blur label ('intolerant') on quoted author account (warn)": {
+    "// Blur label ('intolerant') on quoted author account (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -497,7 +478,7 @@
       "labels": { "account": ["intolerant"] },
       "behaviors": {}
     },
-    "Blur label ('intolerant') on quoted post (ignore)": {
+    "// Blur label ('intolerant') on quoted post (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
@@ -505,7 +486,7 @@
       "labels": { "quotedPost": ["intolerant"] },
       "behaviors": {}
     },
-    "Blur label ('intolerant') on quoted author account (ignore)": {
+    "// Blur label ('intolerant') on quoted author account (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
@@ -520,8 +501,8 @@
       "author": "alice",
       "labels": { "post": ["porn"] },
       "behaviors": {
-        "content": { "cause": "label:porn", "filter": true },
-        "embed": { "cause": "label:porn", "blur": true }
+        "contentList": ["filter"],
+        "contentMedia": ["blur"]
       }
     },
     "Blur-media label ('porn') on author profile (hide)": {
@@ -530,7 +511,8 @@
       "author": "alice",
       "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "avatar": ["blur"],
+        "contentList": ["filter"]
       }
     },
     "Blur-media label ('porn') on author account (hide)": {
@@ -538,13 +520,9 @@
       "subject": "post",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "content": { "cause": "label:porn", "filter": true },
-        "avatar": { "blur": true },
-        "embed": { "cause": "label:porn", "blur": true }
-      }
+      "behaviors": {}
     },
-    "Blur-media label ('porn') on quoted post (hide)": {
+    "// Blur-media label ('porn') on quoted post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -555,15 +533,13 @@
         "embed": { "cause": "label:porn", "blur": true }
       }
     },
-    "Blur-media label ('porn') on quoted author account (hide)": {
+    "// Blur-media label ('porn') on quoted author account (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
       "quoteAuthor": "alice",
       "labels": { "quotedAccount": ["porn"] },
-      "behaviors": {
-        "content": { "cause": "label:porn", "filter": true }
-      }
+      "behaviors": {}
     },
 
     "Blur-media label ('porn') on post (warn)": {
@@ -572,7 +548,7 @@
       "author": "alice",
       "labels": { "post": ["porn"] },
       "behaviors": {
-        "embed": { "cause": "label:porn", "blur": true }
+        "contentMedia": ["blur"]
       }
     },
     "Blur-media label ('porn') on author profile (warn)": {
@@ -581,7 +557,7 @@
       "author": "alice",
       "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": { "blur": true }
+        "avatar": ["blur"]
       }
     },
     "Blur-media label ('porn') on author account (warn)": {
@@ -589,12 +565,9 @@
       "subject": "post",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "avatar": { "blur": true },
-        "embed": { "cause": "label:porn", "blur": true }
-      }
+      "behaviors": {}
     },
-    "Blur-media label ('porn') on quoted post (warn)": {
+    "// Blur-media label ('porn') on quoted post (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -604,7 +577,7 @@
         "embed": { "cause": "label:porn", "blur": true }
       }
     },
-    "Blur-media label ('porn') on quoted author account (warn)": {
+    "// Blur-media label ('porn') on quoted author account (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -634,7 +607,7 @@
       "labels": { "account": ["porn"] },
       "behaviors": {}
     },
-    "Blur-media label ('porn') on quoted post (ignore)": {
+    "// Blur-media label ('porn') on quoted post (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
@@ -642,7 +615,7 @@
       "labels": { "quotedPost": ["porn"] },
       "behaviors": {}
     },
-    "Blur-media label ('porn') on quoted author account (ignore)": {
+    "// Blur-media label ('porn') on quoted author account (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
@@ -657,7 +630,8 @@
       "author": "alice",
       "labels": { "post": ["scam"] },
       "behaviors": {
-        "content": { "cause": "label:scam", "filter": true, "alert": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
     "Notice label ('scam') on author profile (hide)": {
@@ -665,9 +639,7 @@
       "subject": "post",
       "author": "alice",
       "labels": { "profile": ["scam"] },
-      "behaviors": {
-        "avatar": { "alert": true }
-      }
+      "behaviors": {}
     },
     "Notice label ('scam') on author account (hide)": {
       "cfg": "scam-hide",
@@ -675,11 +647,12 @@
       "author": "alice",
       "labels": { "account": ["scam"] },
       "behaviors": {
-        "content": { "cause": "label:scam", "filter": true, "alert": true },
-        "avatar": { "alert": true }
+        "avatar": ["alert"],
+        "contentList": ["filter", "blur"],
+        "contentView": ["alert"]
       }
     },
-    "Notice label ('scam') on quoted post (hide)": {
+    "// Notice label ('scam') on quoted post (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -690,7 +663,7 @@
         "embed": { "cause": "label:scam", "alert": true }
       }
     },
-    "Notice label ('scam') on quoted author account (hide)": {
+    "// Notice label ('scam') on quoted author account (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -708,7 +681,8 @@
       "author": "alice",
       "labels": { "post": ["scam"] },
       "behaviors": {
-        "content": { "cause": "label:scam", "alert": true }
+        "contentList": ["blur"],
+        "contentView": ["alert"]
       }
     },
     "Notice label ('scam') on author profile (warn)": {
@@ -716,9 +690,7 @@
       "subject": "post",
       "author": "alice",
       "labels": { "profile": ["scam"] },
-      "behaviors": {
-        "avatar": { "alert": true }
-      }
+      "behaviors": {}
     },
     "Notice label ('scam') on author account (warn)": {
       "cfg": "scam-warn",
@@ -726,11 +698,12 @@
       "author": "alice",
       "labels": { "account": ["scam"] },
       "behaviors": {
-        "content": { "cause": "label:scam", "alert": true },
-        "avatar": { "alert": true }
+        "avatar": ["alert"],
+        "contentList": ["blur"],
+        "contentView": ["alert"]
       }
     },
-    "Notice label ('scam') on quoted post (warn)": {
+    "// Notice label ('scam') on quoted post (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -740,7 +713,7 @@
         "embed": { "cause": "label:scam", "alert": true }
       }
     },
-    "Notice label ('scam') on quoted author account (warn)": {
+    "// Notice label ('scam') on quoted author account (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -772,7 +745,7 @@
       "labels": { "account": ["scam"] },
       "behaviors": {}
     },
-    "Notice label ('scam') on quoted post (ignore)": {
+    "// Notice label ('scam') on quoted post (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
@@ -780,7 +753,7 @@
       "labels": { "quotedPost": ["scam"] },
       "behaviors": {}
     },
-    "Notice label ('scam') on quoted author account (ignore)": {
+    "// Notice label ('scam') on quoted author account (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
@@ -795,12 +768,8 @@
       "author": "alice",
       "labels": { "post": ["porn"] },
       "behaviors": {
-        "content": {
-          "cause": "label:porn",
-          "filter": true,
-          "noOverride": true
-        },
-        "embed": { "cause": "label:porn", "blur": true, "noOverride": true }
+        "contentList": ["filter"],
+        "contentMedia": ["blur", "noOverride"]
       }
     },
     "Adult-only label on author profile when adult content is disabled": {
@@ -809,25 +778,18 @@
       "author": "alice",
       "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": { "cause": "label:porn", "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "contentList": ["filter"]
       }
     },
-    "Adult-only label on author account when adult content is disabled": {
+    "Adult-only label on author account when adult content is disabled (no effect -- porn doesnt apply to accounts)": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
       "labels": { "account": ["porn"] },
-      "behaviors": {
-        "content": {
-          "cause": "label:porn",
-          "filter": true,
-          "noOverride": true
-        },
-        "avatar": { "cause": "label:porn", "blur": true, "noOverride": true },
-        "embed": { "cause": "label:porn", "blur": true, "noOverride": true }
-      }
+      "behaviors": {}
     },
-    "Adult-only label on quoted post when adult content is disabled": {
+    "// Adult-only label on quoted post when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
@@ -838,15 +800,13 @@
         "embed": { "cause": "label:porn", "blur": true, "noOverride": true }
       }
     },
-    "Adult-only label on quoted author account when adult content is disabled": {
+    "// Adult-only label on quoted author account when adult content is disabled (no effect -- porn doesnt apply to accounts)": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
       "quoteAuthor": "alice",
       "labels": { "quotedAccount": ["porn"] },
-      "behaviors": {
-        "content": { "cause": "label:porn", "filter": true }
-      }
+      "behaviors": {}
     },
 
     "Self-post: Imperative label ('!hide') on post": {
@@ -854,9 +814,7 @@
       "subject": "post",
       "author": "self",
       "labels": { "post": ["!hide"] },
-      "behaviors": {
-        "content": { "cause": "label:!hide", "blur": true }
-      }
+      "behaviors": {}
     },
     "Self-post: Imperative label ('!hide') on author profile": {
       "cfg": "none",
@@ -872,7 +830,7 @@
       "labels": { "account": ["!hide"] },
       "behaviors": {}
     },
-    "Self-post: Imperative label ('!hide') on quoted post": {
+    "// Self-post: Imperative label ('!hide') on quoted post": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
@@ -882,7 +840,7 @@
         "embed": { "cause": "label:!hide", "blur": true }
       }
     },
-    "Self-post: Imperative label ('!hide') on quoted author account": {
+    "// Self-post: Imperative label ('!hide') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
@@ -896,9 +854,7 @@
       "subject": "post",
       "author": "self",
       "labels": { "post": ["!warn"] },
-      "behaviors": {
-        "content": { "cause": "label:!warn", "blur": true }
-      }
+      "behaviors": {}
     },
     "Self-post: Imperative label ('!warn') on author profile": {
       "cfg": "none",
@@ -914,7 +870,7 @@
       "labels": { "account": ["!warn"] },
       "behaviors": {}
     },
-    "Self-post: Imperative label ('!warn') on quoted post": {
+    "// Self-post: Imperative label ('!warn') on quoted post": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
@@ -924,96 +880,12 @@
         "embed": { "cause": "label:!warn", "blur": true }
       }
     },
-    "Self-post: Imperative label ('!warn') on quoted author account": {
+    "// Self-post: Imperative label ('!warn') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
       "quoteAuthor": "self",
       "labels": { "quotedAccount": ["!warn"] },
-      "behaviors": {}
-    },
-
-    "Self-post: Blur-media label ('porn') on post (hide)": {
-      "cfg": "porn-hide",
-      "subject": "post",
-      "author": "self",
-      "labels": { "post": ["porn"] },
-      "behaviors": {
-        "embed": { "cause": "label:porn", "blur": true }
-      }
-    },
-    "Self-post: Blur-media label ('porn') on author profile (hide)": {
-      "cfg": "porn-hide",
-      "subject": "post",
-      "author": "self",
-      "labels": { "profile": ["porn"] },
-      "behaviors": {}
-    },
-    "Self-post: Blur-media label ('porn') on author account (hide)": {
-      "cfg": "porn-hide",
-      "subject": "post",
-      "author": "self",
-      "labels": { "account": ["porn"] },
-      "behaviors": {}
-    },
-    "Self-post: Blur-media label ('porn') on quoted post (hide)": {
-      "cfg": "porn-hide",
-      "subject": "post",
-      "author": "self",
-      "quoteAuthor": "self",
-      "labels": { "quotedPost": ["porn"] },
-      "behaviors": {
-        "embed": { "cause": "label:porn", "blur": true }
-      }
-    },
-    "Self-post: Blur-media label ('porn') on quoted author account (hide)": {
-      "cfg": "porn-hide",
-      "subject": "post",
-      "author": "self",
-      "quoteAuthor": "self",
-      "labels": { "quotedAccount": ["porn"] },
-      "behaviors": {}
-    },
-
-    "Self-post: Blur-media label ('porn') on post (warn)": {
-      "cfg": "porn-warn",
-      "subject": "post",
-      "author": "self",
-      "labels": { "post": ["porn"] },
-      "behaviors": {
-        "embed": { "cause": "label:porn", "blur": true }
-      }
-    },
-    "Self-post: Blur-media label ('porn') on author profile (warn)": {
-      "cfg": "porn-warn",
-      "subject": "post",
-      "author": "self",
-      "labels": { "profile": ["porn"] },
-      "behaviors": {}
-    },
-    "Self-post: Blur-media label ('porn') on author account (warn)": {
-      "cfg": "porn-warn",
-      "subject": "post",
-      "author": "self",
-      "labels": { "account": ["porn"] },
-      "behaviors": {}
-    },
-    "Self-post: Blur-media label ('porn') on quoted post (warn)": {
-      "cfg": "porn-warn",
-      "subject": "post",
-      "author": "self",
-      "quoteAuthor": "self",
-      "labels": { "quotedPost": ["porn"] },
-      "behaviors": {
-        "embed": { "cause": "label:porn", "blur": true }
-      }
-    },
-    "Self-post: Blur-media label ('porn') on quoted author account (warn)": {
-      "cfg": "porn-warn",
-      "subject": "post",
-      "author": "self",
-      "quoteAuthor": "self",
-      "labels": { "quotedAccount": ["porn"] },
       "behaviors": {}
     },
 
@@ -1023,16 +895,12 @@
       "author": "bob",
       "labels": {},
       "behaviors": {
-        "content": {
-          "cause": "blocking",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Post with blocked quoted author": {
+    "// Post with blocked quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -1050,16 +918,12 @@
       "author": "carla",
       "labels": {},
       "behaviors": {
-        "content": {
-          "cause": "blocked-by",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Post with quoted author blocking user": {
+    "// Post with quoted author blocking user": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -1077,10 +941,11 @@
       "author": "dan",
       "labels": {},
       "behaviors": {
-        "content": { "cause": "muted", "filter": true, "blur": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["inform"]
       }
     },
-    "Post with muted quoted author": {
+    "// Post with muted quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -1098,10 +963,11 @@
       "author": "elise",
       "labels": {},
       "behaviors": {
-        "content": { "cause": "muted-by-list", "filter": true, "blur": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["inform"]
       }
     },
-    "Post with muted-by-list quoted author": {
+    "// Post with muted-by-list quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -1113,22 +979,18 @@
       }
     },
 
-    "Prioritization: post with blocking & blocked-by author": {
+    "Merging: post with blocking & blocked-by author": {
       "cfg": "none",
       "subject": "post",
       "author": "fern",
       "labels": {},
       "behaviors": {
-        "content": {
-          "cause": "blocking",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Prioritization: post with blocking & blocked-by quoted author": {
+    "// Merging: post with blocking & blocked-by quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -1139,22 +1001,18 @@
         "embed": { "cause": "blocking", "blur": true, "noOverride": true }
       }
     },
-    "Prioritization: '!hide' label on post by blocked user": {
+    "Merging: '!hide' label on post by blocked user": {
       "cfg": "none",
       "subject": "post",
       "author": "bob",
       "labels": { "post": ["!hide"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        },
-        "avatar": { "blur": true, "noOverride": true }
+        "avatar": ["blur", "noOverride"],
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"]
       }
     },
-    "Prioritization: '!hide' label on quoted post, post by blocked user": {
+    "// Merging: '!hide' label on quoted post, post by blocked user": {
       "cfg": "none",
       "subject": "post",
       "author": "bob",
@@ -1171,51 +1029,46 @@
         "embed": { "cause": "label:!hide", "blur": true, "noOverride": true }
       }
     },
-    "Prioritization: '!hide' and 'intolerant' labels on post (hide)": {
+    "Merging: '!hide' and 'intolerant' labels on post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
       "labels": { "post": ["!hide", "intolerant"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        }
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "alert", "noOverride"]
       }
     },
-    "Prioritization: '!warn' and 'intolerant' labels on post (hide)": {
+    "Merging: '!warn' and 'intolerant' labels on post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
       "labels": { "post": ["!warn", "intolerant"] },
       "behaviors": {
-        "content": { "cause": "label:intolerant", "filter": true, "blur": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["blur", "alert"]
       }
     },
-    "Prioritization: '!hide' and 'porn' labels on post (hide)": {
+    "Merging: '!hide' and 'porn' labels on post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
       "labels": { "post": ["!hide", "porn"] },
       "behaviors": {
-        "content": {
-          "cause": "label:!hide",
-          "filter": true,
-          "blur": true,
-          "noOverride": true
-        }
+        "contentList": ["filter", "blur", "noOverride"],
+        "contentView": ["blur", "noOverride"],
+        "contentMedia": ["blur"]
       }
     },
-    "Prioritization: '!warn' and 'porn' labels on post (hide)": {
+    "Merging: '!warn' and 'porn' labels on post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
       "labels": { "post": ["!warn", "porn"] },
       "behaviors": {
-        "content": { "cause": "label:porn", "filter": true },
-        "embed": { "cause": "label:porn", "blur": true }
+        "contentList": ["filter", "blur"],
+        "contentView": ["blur"],
+        "contentMedia": ["blur"]
       }
     }
   }

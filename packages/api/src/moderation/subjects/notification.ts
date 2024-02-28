@@ -1,8 +1,8 @@
 import { ModerationDecision } from '../decision'
-import { ModerationSubjectPost, ModerationOpts } from '../types'
+import { ModerationSubjectNotification, ModerationOpts } from '../types'
 
-export function decidePost(
-  subject: ModerationSubjectPost,
+export function decideNotification(
+  subject: ModerationSubjectNotification,
   opts: ModerationOpts,
 ): ModerationDecision {
   const acc = new ModerationDecision()

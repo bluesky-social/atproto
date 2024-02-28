@@ -1,18 +1,14 @@
-import { ModerationCauseAccumulator } from '../accumulator'
-import {
-  Label,
-  ModerationSubjectProfile,
-  ModerationOpts,
-  ModerationDecision,
-} from '../types'
+import { ModerationDecision } from '../decision'
+import { Label, ModerationSubjectProfile, ModerationOpts } from '../types'
 
 export function decideAccount(
   subject: ModerationSubjectProfile,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationDecision()
 
   acc.setDid(subject.did)
+  acc.setIsMe(subject.did === opts.userDid)
   if (subject.viewer?.muted) {
     if (subject.viewer?.mutedByList) {
       acc.addMutedByList(subject.viewer?.mutedByList)
@@ -30,10 +26,10 @@ export function decideAccount(
   acc.addBlockedBy(subject.viewer?.blockedBy)
 
   for (const label of filterAccountLabels(subject.labels)) {
-    acc.addLabel(label, opts)
+    acc.addLabel('account', label, opts)
   }
 
-  return acc.finalizeDecision(opts)
+  return acc
 }
 
 export function filterAccountLabels(labels?: Label[]): Label[] {
