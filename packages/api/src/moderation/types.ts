@@ -5,7 +5,6 @@ import {
   AppBskyGraphDefs,
   ComAtprotoLabelDefs,
 } from '../client/index'
-import { LabelGroupId } from './const/label-groups'
 import { KnownLabelValue } from './const/labels'
 
 // behaviors
@@ -65,11 +64,9 @@ export type LabelDefinitionLocalizedStringsMap = Record<
 >
 
 export interface LabelDefinition {
-  id: KnownLabelValue
-  groupId: string
+  identifier: KnownLabelValue
   configurable: boolean
-  targets: LabelTarget[]
-  fixedPreference?: LabelPreference
+  defaultSetting: LabelPreference
   flags: LabelDefinitionFlag[]
   behaviors: {
     account?: ModerationBehavior
@@ -78,14 +75,7 @@ export interface LabelDefinition {
   }
 }
 
-export interface LabelGroupDefinition {
-  id: LabelGroupId
-  configurable: boolean
-  labels: LabelDefinition[]
-}
-
 export type LabelDefinitionMap = Record<KnownLabelValue, LabelDefinition>
-export type LabelGroupDefinitionMap = Record<LabelGroupId, LabelGroupDefinition>
 
 // subjects
 // =
@@ -138,9 +128,14 @@ export type ModerationCause =
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
   | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
 
+export interface ModerationOptsModerator {
+  did: string
+  labels: Record<string, LabelPreference>
+}
+
 export interface ModerationOpts {
   userDid: string
   adultContentEnabled: boolean
-  labelGroups: Record<string, LabelPreference>
-  mods: AppBskyActorDefs.ModsPref['mods']
+  labels: Record<string, LabelPreference>
+  mods: ModerationOptsModerator[]
 }

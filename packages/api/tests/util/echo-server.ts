@@ -8,7 +8,11 @@ export async function createHeaderEchoServer(port: number) {
       .on('request', (request, response) => {
         response.setHeader('content-type', 'application/json')
         response.end(
-          JSON.stringify({ ...request.headers, availableUserDomains: [] }),
+          JSON.stringify({
+            ...request.headers,
+            did: 'did:web:fake.com',
+            availableUserDomains: [],
+          }),
         )
       })
       .on('listening', () => resolve(server))

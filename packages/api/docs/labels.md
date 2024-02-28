@@ -41,426 +41,68 @@ The kind of UI behavior used when a warning must be applied.
   <table>
     <tr>
       <th>ID</th>
-      <th>Group</th>
       <th>Configurable</th>
-      <th>Targets</th>
       <th>Flags</th>
       <th>On Warn</th>
     </tr>
     <tr>
   <td>!hide</td>
-  <td>system</td>
-  <td>❌ (hide)</td>
-  <td>account, profile, content</td>
+  <td>❌ (undefined)</td>
   <td>no-override, no-self</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>!no-promote</td>
-  <td>system</td>
-  <td>❌ (hide)</td>
-  <td>account, content</td>
+  <td>❌ (undefined)</td>
   <td>no-self</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>!warn</td>
-  <td>system</td>
-  <td>❌ (warn)</td>
-  <td>account, profile, content</td>
+  <td>❌ (undefined)</td>
   <td>no-self</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>!no-unauthenticated</td>
-  <td>system</td>
-  <td>❌ (hide)</td>
-  <td>account, profile, content</td>
+  <td>❌ (undefined)</td>
   <td>no-override, unauthed</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>dmca-violation</td>
-  <td>legal</td>
-  <td>❌ (hide)</td>
-  <td>content</td>
+  <td>❌ (undefined)</td>
   <td>no-override, no-self</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>doxxing</td>
-  <td>legal</td>
-  <td>❌ (hide)</td>
-  <td>account, content</td>
+  <td>❌ (undefined)</td>
   <td>no-override, no-self</td>
   <td>undefined</td>
 </tr>
 <tr>
-  <td>plagiarism</td>
-  <td>intellectual-property</td>
-  <td>✅</td>
-  <td>content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>porn</td>
   <td>porn</td>
   <td>✅</td>
-  <td>profile, content</td>
   <td>adult</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>sexual</td>
-  <td>suggestive</td>
   <td>✅</td>
-  <td>profile, content</td>
   <td>adult</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>nudity</td>
-  <td>nudity</td>
   <td>✅</td>
-  <td>profile, content</td>
-  <td>adult</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>nsfl</td>
-  <td>violence</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td>adult</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>corpse</td>
-  <td>violence</td>
-  <td>✅</td>
-  <td>profile, content</td>
   <td>adult</td>
   <td>undefined</td>
 </tr>
 <tr>
   <td>gore</td>
-  <td>violence</td>
   <td>✅</td>
-  <td>profile, content</td>
   <td>adult</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>torture</td>
-  <td>violence</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td>adult</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>substance-abuse</td>
-  <td>drugs-alcohol</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>self-harm</td>
-  <td>self-harm</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>eating-disorder</td>
-  <td>self-harm</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>intolerant-race</td>
-  <td>intolerance</td>
-  <td>✅</td>
-  <td>account, profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>intolerant-gender</td>
-  <td>intolerance</td>
-  <td>✅</td>
-  <td>account, profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>intolerant-sexual-orientation</td>
-  <td>intolerance</td>
-  <td>✅</td>
-  <td>account, profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>intolerant-religion</td>
-  <td>intolerance</td>
-  <td>✅</td>
-  <td>account, profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>intolerant</td>
-  <td>intolerance</td>
-  <td>✅</td>
-  <td>account, profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>harassment</td>
-  <td>bad-behavior</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>bullying</td>
-  <td>bad-behavior</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>threat</td>
-  <td>bad-behavior</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>rude</td>
-  <td>rude</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>disgusting</td>
-  <td>upsetting</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>upsetting</td>
-  <td>upsetting</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>troubling</td>
-  <td>troubling</td>
-  <td>✅</td>
-  <td>content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>dispiriting</td>
-  <td>troubling</td>
-  <td>✅</td>
-  <td>content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>bad-news</td>
-  <td>troubling</td>
-  <td>✅</td>
-  <td>content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>icon-intolerant</td>
-  <td>hate-group-mention</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>discourse</td>
-  <td>discourse</td>
-  <td>✅</td>
-  <td>content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>drama</td>
-  <td>discourse</td>
-  <td>✅</td>
-  <td>content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>dislike</td>
-  <td>curation</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>spam</td>
-  <td>spam</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>interaction-noise</td>
-  <td>spam</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>engagement-farming</td>
-  <td>spam</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>shilling</td>
-  <td>spam</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>impersonation</td>
-  <td>misrepresentation</td>
-  <td>✅</td>
-  <td>account</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>scam</td>
-  <td>misrepresentation</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>account-security</td>
-  <td>security</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>net-abuse</td>
-  <td>security</td>
-  <td>✅</td>
-  <td>account, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>misinfo</td>
-  <td>misinfo</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>misleading</td>
-  <td>misinfo</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>unverified</td>
-  <td>misinfo</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>manipulated</td>
-  <td>misinfo</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>fringe</td>
-  <td>misinfo</td>
-  <td>✅</td>
-  <td>profile, content</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>satire</td>
-  <td>context</td>
-  <td>❌ (warn)</td>
-  <td>account, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>parody</td>
-  <td>context</td>
-  <td>❌ (warn)</td>
-  <td>account, content</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>bot</td>
-  <td>context</td>
-  <td>❌ (undefined)</td>
-  <td>account</td>
-  <td></td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>ai-generated</td>
-  <td>context</td>
-  <td>❌ (undefined)</td>
-  <td>account, profile, content</td>
-  <td></td>
   <td>undefined</td>
 </tr>
   </table>

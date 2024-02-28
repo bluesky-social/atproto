@@ -17,10 +17,6 @@ export * from './rich-text/unicode'
 export * from './moderation'
 export * from './moderation/types'
 export * from './mocker'
-export { LABELS } from './moderation/const/labels'
-export {
-  LABEL_GROUPS,
-  DEFAULT_LABEL_GROUP_SETTINGS,
-} from './moderation/const/label-groups'
+export { LABELS, DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 export { BskyAgent } from './bsky-agent'
 export { AtpAgent as default } from './agent'

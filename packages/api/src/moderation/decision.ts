@@ -205,35 +205,29 @@ export class ModerationDecision {
       return
     }
 
-    if (!labelDef.targets.includes(target)) {
-      // ignore labels that don't apply to this context
-      return
-    }
-
     // look up the label preference
     const isSelf = label.src === this.did
     const labeler = isSelf
       ? undefined
       : opts.mods.find((s) => s.did === label.src)
 
-    if (!isSelf && (!labeler || !labeler.enabled)) {
+    if (!isSelf && !labeler) {
       return // skip labelers not configured by the user
     }
     if (isSelf && labelDef.flags.includes('no-self')) {
       return // skip self-labels that arent supported
     }
-    if (labeler && labeler.disabledLabelGroups?.includes(labelDef.groupId)) {
-      return // skip disabled label groups on the labeler
-    }
 
     // establish the label preference for interpretation
     let labelPref: LabelPreference = 'ignore'
     if (!labelDef.configurable) {
-      labelPref = labelDef.fixedPreference || 'hide'
+      labelPref = labelDef.defaultSetting || 'hide'
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
       labelPref = 'hide'
-    } else if (opts.labelGroups[labelDef.groupId]) {
-      labelPref = opts.labelGroups[labelDef.groupId]
+    } else if (labeler?.labels[labelDef.identifier]) {
+      labelPref = labeler?.labels[labelDef.identifier]
+    } else if (opts.labels[labelDef.identifier]) {
+      labelPref = opts.labels[labelDef.identifier]
     }
 
     // ignore labels the user has asked to ignore

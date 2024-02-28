@@ -30,10 +30,10 @@ Key:
 <tr>
 <td><strong>Imperative label ('!hide') on post</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -52,7 +52,7 @@ Key:
 
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -62,13 +62,13 @@ Key:
 <tr>
 <td><strong>Imperative label ('!hide') on author account</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -76,7 +76,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!hide') on quoted post</strong></td>
+<td><strong>// Imperative label ('!hide') on quoted post</strong></td>
 <td>
 ❌
 </td>
@@ -92,7 +92,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!hide') on quoted author account</strong></td>
+<td><strong>// Imperative label ('!hide') on quoted author account</strong></td>
 <td>
 ❌
 </td>
@@ -107,10 +107,11 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Imperative label ('!no-promote') on post</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
@@ -142,6 +143,22 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-promote') on author account</strong></td>
 <td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>// Imperative label ('!no-promote') on quoted post</strong></td>
+<td>
 ❌
 </td>
 <td>
@@ -156,7 +173,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-promote') on quoted post</strong></td>
+<td><strong>// Imperative label ('!no-promote') on quoted author account</strong></td>
 <td>
 ❌
 </td>
@@ -171,29 +188,14 @@ Key:
 </td>
 </tr>
 
-<tr>
-<td><strong>Imperative label ('!no-promote') on quoted author account</strong></td>
-<td>
-❌
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Imperative label ('!warn') on post</strong></td>
 <td>
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -212,7 +214,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -225,10 +227,10 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -236,7 +238,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!warn') on quoted post</strong></td>
+<td><strong>// Imperative label ('!warn') on quoted post</strong></td>
 <td>
 
 </td>
@@ -252,7 +254,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!warn') on quoted author account</strong></td>
+<td><strong>// Imperative label ('!warn') on quoted author account</strong></td>
 <td>
 
 </td>
@@ -267,13 +269,14 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on post when logged out</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -286,13 +289,13 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on author profile when logged out</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -302,13 +305,13 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on author account when logged out</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -316,7 +319,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-unauthenticated') on quoted post when logged out</strong></td>
+<td><strong>// Imperative label ('!no-unauthenticated') on quoted post when logged out</strong></td>
 <td>
 ❌
 </td>
@@ -332,7 +335,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-unauthenticated') on quoted author account when logged out</strong></td>
+<td><strong>// Imperative label ('!no-unauthenticated') on quoted author account when logged out</strong></td>
 <td>
 ❌
 </td>
@@ -347,6 +350,7 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on post when logged in</strong></td>
 <td>
@@ -396,7 +400,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-unauthenticated') on quoted post when logged in</strong></td>
+<td><strong>// Imperative label ('!no-unauthenticated') on quoted post when logged in</strong></td>
 <td>
 
 </td>
@@ -412,7 +416,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-unauthenticated') on quoted author account when logged in</strong></td>
+<td><strong>// Imperative label ('!no-unauthenticated') on quoted author account when logged in</strong></td>
 <td>
 
 </td>
@@ -431,10 +435,10 @@ Key:
 <tr>
 <td><strong>Blur label ('intolerant') on post (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -453,7 +457,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -463,13 +467,13 @@ Key:
 <tr>
 <td><strong>Blur label ('intolerant') on author account (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-✋
+
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -477,7 +481,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur label ('intolerant') on quoted post (hide)</strong></td>
+<td><strong>// Blur label ('intolerant') on quoted post (hide)</strong></td>
 <td>
 ❌
 </td>
@@ -493,7 +497,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur label ('intolerant') on quoted author account (hide)</strong></td>
+<td><strong>// Blur label ('intolerant') on quoted author account (hide)</strong></td>
 <td>
 ❌
 </td>
@@ -508,13 +512,14 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Blur label ('intolerant') on post (warn)</strong></td>
 <td>
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -533,7 +538,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -546,10 +551,10 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -557,7 +562,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur label ('intolerant') on quoted post (warn)</strong></td>
+<td><strong>// Blur label ('intolerant') on quoted post (warn)</strong></td>
 <td>
 
 </td>
@@ -573,7 +578,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur label ('intolerant') on quoted author account (warn)</strong></td>
+<td><strong>// Blur label ('intolerant') on quoted author account (warn)</strong></td>
 <td>
 
 </td>
@@ -588,6 +593,7 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Blur label ('intolerant') on post (ignore)</strong></td>
 <td>
@@ -637,7 +643,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur label ('intolerant') on quoted post (ignore)</strong></td>
+<td><strong>// Blur label ('intolerant') on quoted post (ignore)</strong></td>
 <td>
 
 </td>
@@ -653,7 +659,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur label ('intolerant') on quoted author account (ignore)</strong></td>
+<td><strong>// Blur label ('intolerant') on quoted author account (ignore)</strong></td>
 <td>
 
 </td>
@@ -672,16 +678,16 @@ Key:
 <tr>
 <td><strong>Blur-media label ('porn') on post (hide)</strong></td>
 <td>
-❌
-</td>
-<td>
 
 </td>
 <td>
 
 </td>
 <td>
-✋
+
+</td>
+<td>
+
 </td>
 </tr>
 
@@ -694,7 +700,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -718,7 +724,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur-media label ('porn') on quoted post (hide)</strong></td>
+<td><strong>// Blur-media label ('porn') on quoted post (hide)</strong></td>
 <td>
 ❌
 </td>
@@ -734,7 +740,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur-media label ('porn') on quoted author account (hide)</strong></td>
+<td><strong>// Blur-media label ('porn') on quoted author account (hide)</strong></td>
 <td>
 
 </td>
@@ -749,6 +755,7 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Blur-media label ('porn') on post (warn)</strong></td>
 <td>
@@ -761,7 +768,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 </tr>
 
@@ -774,7 +781,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -798,7 +805,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur-media label ('porn') on quoted post (warn)</strong></td>
+<td><strong>// Blur-media label ('porn') on quoted post (warn)</strong></td>
 <td>
 
 </td>
@@ -814,7 +821,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur-media label ('porn') on quoted author account (warn)</strong></td>
+<td><strong>// Blur-media label ('porn') on quoted author account (warn)</strong></td>
 <td>
 
 </td>
@@ -829,6 +836,7 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Blur-media label ('porn') on post (ignore)</strong></td>
 <td>
@@ -878,7 +886,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur-media label ('porn') on quoted post (ignore)</strong></td>
+<td><strong>// Blur-media label ('porn') on quoted post (ignore)</strong></td>
 <td>
 
 </td>
@@ -894,7 +902,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Blur-media label ('porn') on quoted author account (ignore)</strong></td>
+<td><strong>// Blur-media label ('porn') on quoted author account (ignore)</strong></td>
 <td>
 
 </td>
@@ -913,10 +921,10 @@ Key:
 <tr>
 <td><strong>Notice label ('scam') on post (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🪧
+
 </td>
 <td>
 
@@ -935,7 +943,7 @@ Key:
 
 </td>
 <td>
-🪧
+
 </td>
 <td>
 
@@ -945,13 +953,13 @@ Key:
 <tr>
 <td><strong>Notice label ('scam') on author account (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🪧
+
 </td>
 <td>
-🪧
+
 </td>
 <td>
 
@@ -959,7 +967,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Notice label ('scam') on quoted post (hide)</strong></td>
+<td><strong>// Notice label ('scam') on quoted post (hide)</strong></td>
 <td>
 ❌
 </td>
@@ -975,7 +983,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Notice label ('scam') on quoted author account (hide)</strong></td>
+<td><strong>// Notice label ('scam') on quoted author account (hide)</strong></td>
 <td>
 ❌
 </td>
@@ -990,13 +998,14 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Notice label ('scam') on post (warn)</strong></td>
 <td>
 
 </td>
 <td>
-🪧
+
 </td>
 <td>
 
@@ -1015,7 +1024,7 @@ Key:
 
 </td>
 <td>
-🪧
+
 </td>
 <td>
 
@@ -1028,10 +1037,10 @@ Key:
 
 </td>
 <td>
-🪧
+
 </td>
 <td>
-🪧
+
 </td>
 <td>
 
@@ -1039,7 +1048,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Notice label ('scam') on quoted post (warn)</strong></td>
+<td><strong>// Notice label ('scam') on quoted post (warn)</strong></td>
 <td>
 
 </td>
@@ -1055,7 +1064,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Notice label ('scam') on quoted author account (warn)</strong></td>
+<td><strong>// Notice label ('scam') on quoted author account (warn)</strong></td>
 <td>
 
 </td>
@@ -1070,6 +1079,7 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Notice label ('scam') on post (ignore)</strong></td>
 <td>
@@ -1119,7 +1129,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Notice label ('scam') on quoted post (ignore)</strong></td>
+<td><strong>// Notice label ('scam') on quoted post (ignore)</strong></td>
 <td>
 
 </td>
@@ -1135,7 +1145,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Notice label ('scam') on quoted author account (ignore)</strong></td>
+<td><strong>// Notice label ('scam') on quoted author account (ignore)</strong></td>
 <td>
 
 </td>
@@ -1154,16 +1164,16 @@ Key:
 <tr>
 <td><strong>Adult-only label on post when adult content is disabled</strong></td>
 <td>
-❌
-</td>
-<td>
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
+
 </td>
 </tr>
 
@@ -1176,7 +1186,7 @@ Key:
 
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -1200,7 +1210,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Adult-only label on quoted post when adult content is disabled</strong></td>
+<td><strong>// Adult-only label on quoted post when adult content is disabled</strong></td>
 <td>
 ❌
 </td>
@@ -1216,7 +1226,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Adult-only label on quoted author account when adult content is disabled (no effect -- porn doesnt apply to accounts)</strong></td>
+<td><strong>// Adult-only label on quoted author account when adult content is disabled (no effect -- porn doesnt apply to accounts)</strong></td>
 <td>
 
 </td>
@@ -1238,7 +1248,7 @@ Key:
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -1281,7 +1291,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Self-post: Imperative label ('!hide') on quoted post</strong></td>
+<td><strong>// Self-post: Imperative label ('!hide') on quoted post</strong></td>
 <td>
 
 </td>
@@ -1297,7 +1307,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Self-post: Imperative label ('!hide') on quoted author account</strong></td>
+<td><strong>// Self-post: Imperative label ('!hide') on quoted author account</strong></td>
 <td>
 
 </td>
@@ -1312,13 +1322,14 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Self-post: Imperative label ('!warn') on post</strong></td>
 <td>
 
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -1361,7 +1372,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Self-post: Imperative label ('!warn') on quoted post</strong></td>
+<td><strong>// Self-post: Imperative label ('!warn') on quoted post</strong></td>
 <td>
 
 </td>
@@ -1377,167 +1388,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Self-post: Imperative label ('!warn') on quoted author account</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on post (hide)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-✋
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on author profile (hide)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on author account (hide)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on quoted post (hide)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-✋
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on quoted author account (hide)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on post (warn)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-✋
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on author profile (warn)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on author account (warn)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on quoted post (warn)</strong></td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-✋
-</td>
-</tr>
-
-<tr>
-<td><strong>Self-post: Blur-media label ('porn') on quoted author account (warn)</strong></td>
+<td><strong>// Self-post: Imperative label ('!warn') on quoted author account</strong></td>
 <td>
 
 </td>
@@ -1556,13 +1407,13 @@ Key:
 <tr>
 <td><strong>Post with blocked author</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -1570,7 +1421,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Post with blocked quoted author</strong></td>
+<td><strong>// Post with blocked quoted author</strong></td>
 <td>
 ❌
 </td>
@@ -1585,16 +1436,17 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Post with author blocking user</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
-🚫
+
 </td>
 <td>
 
@@ -1602,7 +1454,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Post with quoted author blocking user</strong></td>
+<td><strong>// Post with quoted author blocking user</strong></td>
 <td>
 ❌
 </td>
@@ -1617,13 +1469,14 @@ Key:
 </td>
 </tr>
 
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
 <td><strong>Post with muted author</strong></td>
 <td>
-❌
+
 </td>
 <td>
-✋
+
 </td>
 <td>
 
@@ -1634,39 +1487,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Post with muted quoted author</strong></td>
-<td>
-❌
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-<td>
-✋
-</td>
-</tr>
-
-<tr>
-<td><strong>Post with muted-by-list author</strong></td>
-<td>
-❌
-</td>
-<td>
-✋
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Post with muted-by-list quoted author</strong></td>
+<td><strong>// Post with muted quoted author</strong></td>
 <td>
 ❌
 </td>
@@ -1683,76 +1504,12 @@ Key:
 
 <tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
 <tr>
-<td><strong>Prioritization: post with blocking & blocked-by author</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
-</td>
-<td>
-🚫
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: post with blocking & blocked-by quoted author</strong></td>
-<td>
-❌
-</td>
+<td><strong>Post with muted-by-list author</strong></td>
 <td>
 
 </td>
 <td>
 
-</td>
-<td>
-🚫
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!hide' label on post by blocked user</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
-</td>
-<td>
-🚫
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!hide' label on quoted post, post by blocked user</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
-</td>
-<td>
-🚫
-</td>
-<td>
-🚫
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!hide' and 'intolerant' labels on post (hide)</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
 </td>
 <td>
 
@@ -1763,39 +1520,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Prioritization: '!warn' and 'intolerant' labels on post (hide)</strong></td>
-<td>
-❌
-</td>
-<td>
-✋
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!hide' and 'porn' labels on post (hide)</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
-</td>
-<td>
-
-</td>
-<td>
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!warn' and 'porn' labels on post (hide)</strong></td>
+<td><strong>// Post with muted-by-list quoted author</strong></td>
 <td>
 ❌
 </td>
@@ -1807,6 +1532,137 @@ Key:
 </td>
 <td>
 ✋
+</td>
+</tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Merging: post with blocking & blocked-by author</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>// Merging: post with blocking & blocked-by quoted author</strong></td>
+<td>
+❌
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+🚫
+</td>
+</tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Merging: '!hide' label on post by blocked user</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>// Merging: '!hide' label on quoted post, post by blocked user</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+</td>
+<td>
+🚫
+</td>
+<td>
+🚫
+</td>
+</tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Merging: '!hide' and 'intolerant' labels on post (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Merging: '!warn' and 'intolerant' labels on post (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Merging: '!hide' and 'porn' labels on post (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Merging: '!warn' and 'porn' labels on post (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
 </td>
 </tr>
 

@@ -30,17 +30,15 @@ Key:
 <tr>
 <td><strong>Imperative label ('!hide') on account</strong></td>
 <td>
-❌
-</td>
-<td>
-🚫
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -54,11 +52,9 @@ Key:
 
 </td>
 <td>
-🚫
 
 </td>
 <td>
-🚫
 
 </td>
 </tr>
@@ -66,7 +62,7 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-promote') on account</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
@@ -101,14 +97,12 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 <td>
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -122,11 +116,9 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -134,17 +126,15 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on account when logged out</strong></td>
 <td>
-❌
-</td>
-<td>
-🚫
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -152,18 +142,15 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on profile when logged out</strong></td>
 <td>
-❌
-</td>
-<td>
-🚫
 
 </td>
 <td>
-🚫
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -204,17 +191,15 @@ Key:
 <tr>
 <td><strong>Blur label ('intolerant') on account (hide)</strong></td>
 <td>
-❌
-</td>
-<td>
-✋
 
 </td>
 <td>
 
 </td>
 <td>
-✋
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -228,11 +213,9 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -243,14 +226,12 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 <td>
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -264,11 +245,9 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -334,7 +313,6 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -367,7 +345,6 @@ Key:
 
 </td>
 <td>
-✋
 
 </td>
 </tr>
@@ -408,11 +385,6 @@ Key:
 <tr>
 <td><strong>Notice label ('scam') on account (hide)</strong></td>
 <td>
-❌
-</td>
-<td>
-
-🪧
 
 </td>
 <td>
@@ -420,7 +392,8 @@ Key:
 </td>
 <td>
 
-🪧
+</td>
+<td>
 
 </td>
 </tr>
@@ -435,12 +408,8 @@ Key:
 </td>
 <td>
 
-🪧
-
 </td>
 <td>
-
-🪧
 
 </td>
 </tr>
@@ -452,15 +421,11 @@ Key:
 </td>
 <td>
 
-🪧
-
 </td>
 <td>
 
 </td>
 <td>
-
-🪧
 
 </td>
 </tr>
@@ -475,12 +440,8 @@ Key:
 </td>
 <td>
 
-🪧
-
 </td>
 <td>
-
-🪧
 
 </td>
 </tr>
@@ -546,7 +507,6 @@ Key:
 
 </td>
 <td>
-🚫
 
 </td>
 </tr>
@@ -559,15 +519,11 @@ Key:
 </td>
 <td>
 
-🪧
-
 </td>
 <td>
 
 </td>
 <td>
-
-🪧
 
 </td>
 </tr>
@@ -582,12 +538,8 @@ Key:
 </td>
 <td>
 
-🪧
-
 </td>
 <td>
-
-🪧
 
 </td>
 </tr>
@@ -596,16 +548,15 @@ Key:
 <tr>
 <td><strong>Mute/block: Blocking user</strong></td>
 <td>
-❌
-</td>
-<td>
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -613,16 +564,15 @@ Key:
 <tr>
 <td><strong>Mute/block: Blocking-by-list user</strong></td>
 <td>
-❌
-</td>
-<td>
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -630,16 +580,15 @@ Key:
 <tr>
 <td><strong>Mute/block: Blocked by user</strong></td>
 <td>
-❌
-</td>
-<td>
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -647,7 +596,7 @@ Key:
 <tr>
 <td><strong>Mute/block: Muted user</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
@@ -663,7 +612,7 @@ Key:
 <tr>
 <td><strong>Mute/block: Muted-by-list user</strong></td>
 <td>
-❌
+
 </td>
 <td>
 
@@ -678,10 +627,7 @@ Key:
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
-<td><strong>Prioritization: blocking & blocked-by user</strong></td>
-<td>
-❌
-</td>
+<td><strong>Merging: blocking & blocked-by user</strong></td>
 <td>
 
 </td>
@@ -689,119 +635,108 @@ Key:
 
 </td>
 <td>
-🚫
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
+<tr>
+<td><strong>Merging: '!hide' label on account of blocked user</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
 
 </td>
 </tr>
 
 <tr>
-<td><strong>Prioritization: '!hide' label on account of blocked user</strong></td>
+<td><strong>Merging: '!hide' and 'intolerant' labels on account (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-🚫
 
 </td>
 <td>
 
 </td>
 <td>
-🚫
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: '!hide' and 'intolerant' labels on account (hide)</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
-
-</td>
-<td>
-
-</td>
-<td>
-🚫
 
 </td>
 </tr>
 
 <tr>
-<td><strong>Prioritization: '!warn' and 'intolerant' labels on account (hide)</strong></td>
+<td><strong>Merging: '!warn' and 'intolerant' labels on account (hide)</strong></td>
 <td>
-❌
+
 </td>
 <td>
-✋
 
 </td>
 <td>
 
 </td>
 <td>
-✋
+
+</td>
+</tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
+<tr>
+<td><strong>Merging: intolerant label on account (hide) and scam label on account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
+<tr>
+<td><strong>Merging: !hide on account, !warn on profile</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
 
 </td>
 </tr>
 
 <tr>
-<td><strong>Prioritization: intolerant label on account (hide) and scam label on profile (warn)</strong></td>
-<td>
-❌
-</td>
-<td>
-✋
-
-</td>
-<td>
-
-🪧
-
-</td>
-<td>
-✋
-🪧
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: !hide on account, !warn on profile</strong></td>
-<td>
-❌
-</td>
-<td>
-🚫
-
-</td>
-<td>
-✋
-
-</td>
-<td>
-🚫
-
-</td>
-</tr>
-
-<tr>
-<td><strong>Prioritization: !warn on account, !hide on profile</strong></td>
+<td><strong>Merging: !warn on account, !hide on profile</strong></td>
 <td>
 
 </td>
 <td>
-✋
 
 </td>
 <td>
-🚫
 
 </td>
 <td>
-🚫
 
 </td>
 </tr>

@@ -6,16 +6,12 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
-import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 
 export interface ModServiceView {
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
-  description?: string
-  descriptionFacets?: AppBskyRichtextFacet.Main[]
   likeCount?: number
   viewer?: ModServiceViewerState
   indexedAt: string
@@ -39,8 +35,6 @@ export interface ModServiceViewDetailed {
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
-  description?: string
-  descriptionFacets?: AppBskyRichtextFacet.Main[]
   policies: ModServicePolicies
   likeCount?: number
   viewer?: ModServiceViewerState
@@ -83,10 +77,10 @@ export function validateModServiceViewerState(v: unknown): ValidationResult {
 }
 
 export interface ModServicePolicies {
-  description?: string
-  descriptionFacets?: AppBskyRichtextFacet.Main[]
-  reportReasons: ComAtprotoModerationDefs.ReasonType[]
+  /** The label values which this labeler publishes. Be sure to prefix custom labels with 'x-'. */
   labelValues: ComAtprotoLabelDefs.LabelValue[]
+  /** Label values created by this labeler and scoped exclusively to it. */
+  customLabelValues?: ComAtprotoLabelDefs.LabelValueDefinition[]
   [k: string]: unknown
 }
 

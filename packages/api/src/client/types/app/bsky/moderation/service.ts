@@ -5,13 +5,10 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyModerationDefs from './defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface Record {
-  description?: string
-  descriptionFacets?: AppBskyRichtextFacet.Main[]
   policies: AppBskyModerationDefs.ModServicePolicies
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
