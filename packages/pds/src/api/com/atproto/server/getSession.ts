@@ -7,7 +7,7 @@ import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessDeactived,
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(

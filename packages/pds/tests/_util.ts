@@ -43,11 +43,11 @@ export const forSnapshot = (obj: unknown) => {
         return constantDate
       }
     }
-    if (str.match(/^\d+::bafy/)) {
+    // handles both pds and appview cursor separators
+    if (str.match(/^\d+(?:__|::)bafy/)) {
       return constantKeysetCursor
     }
-
-    if (str.match(/^\d+::did:plc/)) {
+    if (str.match(/^\d+(?:__|::)did:plc/)) {
       return constantDidCursor
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {

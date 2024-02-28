@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of notifications.",
+      "description": "Enumerate notifications for the requesting account. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {

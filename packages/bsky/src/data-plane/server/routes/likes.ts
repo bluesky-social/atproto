@@ -1,5 +1,5 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
 import { keyBy } from '@atproto/common'
@@ -82,20 +82,5 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       })),
       cursor: keyset.packFromResult(likes),
     }
-  },
-
-  async getLikeCounts(req) {
-    const uris = req.refs.map((ref) => ref.uri)
-    if (uris.length === 0) {
-      return { counts: [] }
-    }
-    const res = await db.db
-      .selectFrom('post_agg')
-      .where('uri', 'in', uris)
-      .selectAll()
-      .execute()
-    const byUri = keyBy(res, 'uri')
-    const counts = uris.map((uri) => byUri[uri]?.likeCount ?? 0)
-    return { counts }
   },
 })

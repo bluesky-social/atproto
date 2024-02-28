@@ -2,7 +2,7 @@ import assert from 'assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { Notification } from '../data-plane/gen/bsky_pb'
+import { Notification } from '../proto/bsky_pb'
 import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
@@ -42,6 +42,8 @@ import {
   PostAggs,
   PostViewerStates,
   Threadgates,
+  FeedItem,
+  ItemRef,
 } from './feed'
 
 export type HydrateCtx = {
@@ -96,6 +98,35 @@ export class Hydrator {
   }
 
   // app.bsky.actor.defs#profileView
+  // - profile viewer
+  //   - list basic
+  // Note: builds on the naive profile viewer hydrator and removes references to lists that have been deleted
+  async hydrateProfileViewers(
+    dids: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const viewer = ctx.viewer
+    if (!viewer) return {}
+    const profileViewers = await this.actor.getProfileViewerStatesNaive(
+      dids,
+      viewer,
+    )
+    const listUris: string[] = []
+    profileViewers?.forEach((item) => {
+      listUris.push(...listUrisFromProfileViewer(item))
+    })
+    const listState = await this.hydrateListsBasic(listUris, ctx)
+    // if a list no longer exists or is not a mod list, then remove from viewer state
+    profileViewers?.forEach((item) => {
+      removeNonModListsFromProfileViewer(item, listState)
+    })
+    return mergeStates(listState, {
+      profileViewers,
+      ctx,
+    })
+  }
+
+  // app.bsky.actor.defs#profileView
   // - profile
   //   - list basic
   async hydrateProfiles(
@@ -103,22 +134,14 @@ export class Hydrator {
     ctx: HydrateCtx,
     includeTakedowns = false,
   ): Promise<HydrationState> {
-    const [actors, labels, profileViewers] = await Promise.all([
+    const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
-      ctx.viewer
-        ? this.actor.getProfileViewerStates(dids, ctx.viewer)
-        : undefined,
+      this.hydrateProfileViewers(dids, ctx),
     ])
-    const listUris: string[] = []
-    profileViewers?.forEach((item) => {
-      listUris.push(...listUrisFromProfileViewer(item))
-    })
-    const listState = await this.hydrateListsBasic(listUris, ctx)
-    return mergeStates(listState, {
+    return mergeStates(profileViewersState ?? {}, {
       actors,
       labels,
-      profileViewers,
       ctx,
     })
   }
@@ -211,11 +234,17 @@ export class Hydrator {
   //     - profile
   //       - list basic
   async hydratePosts(
-    uris: string[],
+    refs: ItemRef[],
     ctx: HydrateCtx,
     includeTakedowns = false,
+    state: HydrationState = {},
   ): Promise<HydrationState> {
-    const postsLayer0 = await this.feed.getPosts(uris, includeTakedowns)
+    const uris = refs.map((ref) => ref.uri)
+    const postsLayer0 = await this.feed.getPosts(
+      uris,
+      includeTakedowns,
+      state.posts,
+    )
     // first level embeds plus thread roots we haven't fetched yet
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
@@ -266,8 +295,8 @@ export class Hydrator {
       feedGenState,
       modServiceState,
     ] = await Promise.all([
-      this.feed.getPostAggregates(uris),
-      ctx.viewer ? this.feed.getPostViewerStates(uris, ctx.viewer) : undefined,
+      this.feed.getPostAggregates(refs),
+      ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx, includeTakedowns),
@@ -344,49 +373,31 @@ export class Hydrator {
   //     - list basic
   //   - post
   //     - ...
-  async hydrateFeedPosts(
-    uris: string[],
+  async hydrateFeedItems(
+    items: FeedItem[],
     ctx: HydrateCtx,
     includeTakedowns = false,
   ): Promise<HydrationState> {
-    const collectionUris = urisByCollection(uris)
-    const postUris = collectionUris.get(ids.AppBskyFeedPost) ?? []
-    const repostUris = collectionUris.get(ids.AppBskyFeedRepost) ?? []
+    const postUris = items.map((item) => item.post.uri)
+    const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [posts, reposts, repostProfileState] = await Promise.all([
       this.feed.getPosts(postUris, includeTakedowns),
-      this.feed.getReposts(repostUris),
+      this.feed.getReposts(repostUris, includeTakedowns),
       this.hydrateProfiles(repostUris.map(didFromUri), ctx, includeTakedowns),
     ])
-    const repostPostUris = mapDefined(
-      [...reposts.values()],
-      (repost) => repost?.record.subject.uri,
-    )
-    const repostPosts = await this.feed.getPosts(
-      repostPostUris,
-      includeTakedowns,
-    )
-    const repostedAndReplyUris: string[] = []
-    repostPosts.forEach((post, uri) => {
-      repostedAndReplyUris.push(uri)
-      if (post?.record.reply) {
-        repostedAndReplyUris.push(
-          post.record.reply.root.uri,
-          post.record.reply.parent.uri,
-        )
-      }
-    })
-    posts.forEach((post) => {
-      if (post?.record.reply) {
-        repostedAndReplyUris.push(
-          post.record.reply.root.uri,
-          post.record.reply.parent.uri,
-        )
+    const postAndReplyRefs: ItemRef[] = []
+    posts.forEach((post, uri) => {
+      if (!post) return
+      postAndReplyRefs.push({ uri, cid: post.cid })
+      if (post.record.reply) {
+        postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
       }
     })
     const postState = await this.hydratePosts(
-      [...postUris, ...repostedAndReplyUris],
+      postAndReplyRefs,
       ctx,
       includeTakedowns,
+      { posts },
     )
     return mergeManyStates(postState, repostProfileState, {
       reposts,
@@ -405,10 +416,10 @@ export class Hydrator {
   //     - profile
   //       - list basic
   async hydrateThreadPosts(
-    uris: string[],
+    refs: ItemRef[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    return this.hydratePosts(uris, ctx)
+    return this.hydratePosts(refs, ctx)
   }
 
   // app.bsky.feed.defs#generatorView
@@ -416,13 +427,13 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateFeedGens(
-    uris: string[],
+    uris: string[], // @TODO any way to get refs here?
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [feedgens, feedgenAggs, feedgenViewers, profileState] =
       await Promise.all([
         this.feed.getFeedGens(uris),
-        this.feed.getFeedGenAggregates(uris),
+        this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
         ctx.viewer
           ? this.feed.getFeedGenViewerStates(uris, ctx.viewer)
           : undefined,
@@ -602,10 +613,10 @@ export class Hydrator {
       )
       if (!actor?.profile || !actor?.profileCid) return undefined
       return {
-        record: actor?.profile,
-        cid: actor?.profileCid,
-        indexedAt: actor?.indexedAt,
-        takenDown: actor?.takendown,
+        record: actor.profile,
+        cid: actor.profileCid,
+        sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
+        takedownRef: actor.profileTakedownRef,
       }
     }
   }
@@ -619,7 +630,35 @@ const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
   if (item?.blockingByList) {
     listUris.push(item.blockingByList)
   }
+  // blocked-by list does not appear in views, but will be used to evaluate the existence of a block between users.
+  if (item?.blockedByList) {
+    listUris.push(item.blockedByList)
+  }
   return listUris
+}
+
+const removeNonModListsFromProfileViewer = (
+  item: ProfileViewerState | null,
+  state: HydrationState,
+) => {
+  if (!isModList(item?.mutedByList, state)) {
+    delete item?.mutedByList
+  }
+  if (!isModList(item?.blockingByList, state)) {
+    delete item?.blockingByList
+  }
+  if (!isModList(item?.blockedByList, state)) {
+    delete item?.blockedByList
+  }
+}
+
+const isModList = (
+  listUri: string | undefined,
+  state: HydrationState,
+): boolean => {
+  if (!listUri) return false
+  const list = state.lists?.get(listUri)
+  return list?.record.purpose === 'app.bsky.graph.defs#modlist'
 }
 
 const labelSubjectsForDid = (dids: string[]) => {

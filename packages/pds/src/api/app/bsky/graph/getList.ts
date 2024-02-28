@@ -1,19 +1,20 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.graph.getList({
     auth: ctx.authVerifier.access,
     handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.graph.getList(
+      return pipethrough(
+        bskyAppView.url,
+        'app.bsky.graph.getList',
         params,
         await ctx.appviewAuthHeaders(requester, req),
       )
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
     },
   })
 }

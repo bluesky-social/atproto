@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import {
   InvalidRequestError,
   UpstreamFailureError,
@@ -5,17 +6,12 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import {
-  DidDocument,
-  PoorlyFormattedDidDocumentError,
-  getFeedGen,
-} from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+import { noUndefinedVals } from '@atproto/common'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AlgoResponse, AlgoResponseItem } from '../../../feed-gen/types'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -23,8 +19,15 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { mapDefined } from '@atproto/common'
 import { HydrateCtx } from '../../../../hydration/hydrator'
+import { FeedItem } from '../../../../hydration/feed'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -39,9 +42,13 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
-
-      const { timerSkele, timerHydr, ...result } = await getFeed(
-        { ...params, hydrateCtx, authorization: req.headers['authorization'] },
+      const headers = noUndefinedVals({
+        authorization: req.headers['authorization'],
+        'accept-language': req.headers['accept-language'],
+      })
+      // @NOTE feed cursors should not be affected by appview swap
+      const { timerSkele, timerHydr, resHeaders, ...result } = await getFeed(
+        { ...params, hydrateCtx, headers },
         ctx,
       )
 
@@ -49,6 +56,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: result,
         headers: {
+          ...(resHeaders ?? {}),
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }
@@ -61,16 +69,19 @@ const skeleton = async (
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const timerSkele = new ServerTimer('skele').start()
-  const localAlgo = ctx.algos[params.feed]
-  const { feedItems, cursor, ...passthrough } =
-    localAlgo !== undefined
-      ? await localAlgo(ctx, params, params.hydrateCtx.viewer)
-      : await skeletonFromFeedGen(ctx, params)
+  const {
+    feedItems: algoItems,
+    cursor,
+    resHeaders,
+    ...passthrough
+  } = await skeletonFromFeedGen(ctx, params)
+
   return {
     cursor,
-    feedItems,
+    items: algoItems.map(toFeedItem),
     timerSkele: timerSkele.stop(),
     timerHydr: new ServerTimer('hydr').start(),
+    resHeaders,
     passthrough,
   }
 }
@@ -80,9 +91,8 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = inputs
   const timerHydr = new ServerTimer('hydr').start()
-  const feedItemUris = skeleton.feedItems.map((item) => item.itemUri)
-  const hydration = await ctx.hydrator.hydrateFeedPosts(
-    feedItemUris,
+  const hydration = await ctx.hydrator.hydrateFeedItems(
+    skeleton.items,
     params.hydrateCtx,
   )
   skeleton.timerHydr = timerHydr.stop()
@@ -91,8 +101,8 @@ const hydration = async (
 
 const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.feedItems = skeleton.feedItems.filter((item) => {
-    const bam = ctx.views.feedItemBlocksAndMutes(item.itemUri, hydration)
+  skeleton.items = skeleton.items.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.authorMuted &&
@@ -107,30 +117,30 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.feedItems, (item) => {
-    const view = ctx.views.feedViewPost(item.itemUri, hydration)
-    if (view?.post.uri !== item.postUri) {
-      return undefined
-    } else {
-      return view
-    }
+  const feed = mapDefined(skeleton.items, (item) => {
+    return ctx.views.feedViewPost(item, hydration)
   }).slice(0, params.limit)
   return {
     feed,
     cursor: skeleton.cursor,
     timerSkele: skeleton.timerSkele,
     timerHydr: skeleton.timerHydr,
+    resHeaders: skeleton.resHeaders,
     ...skeleton.passthrough,
   }
 }
 
 type Context = AppContext
 
-type Params = GetFeedParams & { hydrateCtx: HydrateCtx; authorization?: string }
+type Params = GetFeedParams & {
+  hydrateCtx: HydrateCtx
+  headers: Record<string, string>
+}
 
 type Skeleton = {
-  feedItems: AlgoResponseItem[]
+  items: FeedItem[]
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
+  resHeaders?: Record<string, string>
   cursor?: string
   timerSkele: ServerTimer
   timerHydr: ServerTimer
@@ -140,27 +150,28 @@ const skeletonFromFeedGen = async (
   ctx: Context,
   params: Params,
 ): Promise<AlgoResponse> => {
-  const { feed } = params
+  const { feed, headers } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
   const feedDid = await found.get(feed)?.record.did
   if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
 
-  let resolved: DidDocument | null
+  let identity: GetIdentityByDidResponse
   try {
-    resolved = await ctx.idResolver.did.resolve(feedDid)
+    identity = await ctx.dataplane.getIdentityByDid({ did: feedDid })
   } catch (err) {
-    if (err instanceof PoorlyFormattedDidDocumentError) {
-      throw new InvalidRequestError(`invalid did document: ${feedDid}`)
+    if (isDataplaneError(err, Code.NotFound)) {
+      throw new InvalidRequestError(`could not resolve identity: ${feedDid}`)
     }
     throw err
   }
-  if (!resolved) {
-    throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
-  }
 
-  const fgEndpoint = getFeedGen(resolved)
+  const services = unpackIdentityServices(identity.services)
+  const fgEndpoint = getServiceEndpoint(services, {
+    id: 'bsky_fg',
+    type: 'BskyFeedGenerator',
+  })
   if (!fgEndpoint) {
     throw new InvalidRequestError(
       `invalid feed generator service details in did document: ${feedDid}`,
@@ -170,11 +181,9 @@ const skeletonFromFeedGen = async (
   const agent = new AtpAgent({ service: fgEndpoint })
 
   let skeleton: SkeletonOutput
+  let resHeaders: Record<string, string> | undefined = undefined
   try {
     // @TODO currently passthrough auth headers from pds
-    const headers: Record<string, string> = params.authorization
-      ? { authorization: params.authorization }
-      : {}
     const result = await agent.api.app.bsky.feed.getFeedSkeleton(
       {
         feed: params.feed,
@@ -186,6 +195,11 @@ const skeletonFromFeedGen = async (
       },
     )
     skeleton = result.data
+    if (result.headers['content-language']) {
+      resHeaders = {
+        'content-language': result.headers['content-language'],
+      }
+    }
   } catch (err) {
     if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
       throw new InvalidRequestError(err.message, 'UnknownFeed')
@@ -211,5 +225,24 @@ const skeletonFromFeedGen = async (
     postUri: item.post,
   }))
 
-  return { ...skele, feedItems }
+  return { ...skele, resHeaders, feedItems }
 }
+
+export type AlgoResponse = {
+  feedItems: AlgoResponseItem[]
+  resHeaders?: Record<string, string>
+  cursor?: string
+}
+
+export type AlgoResponseItem = {
+  itemUri: string
+  postUri: string
+}
+
+export const toFeedItem = (feedItem: AlgoResponseItem): FeedItem => ({
+  post: { uri: feedItem.postUri },
+  repost:
+    feedItem.itemUri === feedItem.postUri
+      ? undefined
+      : { uri: feedItem.itemUri },
+})

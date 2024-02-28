@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { setRepoRev } from '../../../util'
+import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -12,6 +12,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { mapDefined } from '@atproto/common'
+import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {
   const getTimeline = createPipeline(
@@ -27,11 +28,9 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
 
-      const [result, repoRev] = await Promise.all([
-        getTimeline({ ...params, hydrateCtx }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getTimeline({ ...params, hydrateCtx }, ctx)
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {
@@ -47,13 +46,21 @@ export const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { items: [] }
+  }
   const res = await ctx.dataplane.getTimeline({
     actorDid: params.hydrateCtx.viewer,
     limit: params.limit,
     cursor: params.cursor,
   })
   return {
-    uris: res.items.map((item) => item.repost || item.uri),
+    items: res.items.map((item) => ({
+      post: { uri: item.uri, cid: item.cid || undefined },
+      repost: item.repost
+        ? { uri: item.repost, cid: item.repostCid || undefined }
+        : undefined,
+    })),
     cursor: parseString(res.cursor),
   }
 }
@@ -64,7 +71,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.hydrateCtx)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -73,8 +80,8 @@ const noBlocksOrMutes = (inputs: {
   hydration: HydrationState
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.uris = skeleton.uris.filter((uri) => {
-    const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
+  skeleton.items = skeleton.items.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.authorMuted &&
@@ -91,8 +98,8 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.uris, (uri) =>
-    ctx.views.feedViewPost(uri, hydration),
+  const feed = mapDefined(skeleton.items, (item) =>
+    ctx.views.feedViewPost(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }
@@ -106,6 +113,6 @@ type Context = {
 type Params = QueryParams & { hydrateCtx: HydrateCtx & { viewer: string } }
 
 type Skeleton = {
-  uris: string[]
+  items: FeedItem[]
   cursor?: string
 }

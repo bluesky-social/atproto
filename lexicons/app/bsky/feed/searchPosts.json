@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find posts matching search criteria.",
+      "description": "Find posts matching search criteria, returning views of those posts.",
       "parameters": {
         "type": "params",
         "required": ["q"],

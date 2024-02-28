@@ -118,9 +118,8 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: sc.dids.dan,
-      takenDown: true,
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: sc.dids.dan,
     })
 
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
@@ -132,9 +131,8 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: sc.dids.dan,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: sc.dids.dan,
     })
   })
 
@@ -228,9 +226,8 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: sc.dids.dan,
-      takenDown: true,
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: sc.dids.dan,
     })
 
     const aliceFollows = await agent.api.app.bsky.graph.getFollows(
@@ -242,9 +239,18 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: sc.dids.dan,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: sc.dids.dan,
     })
+  })
+
+  it('fetches relationships between users', async () => {
+    const res = await agent.api.app.bsky.graph.getRelationships({
+      actor: sc.dids.bob,
+      others: [sc.dids.alice, sc.dids.bob, sc.dids.carol],
+    })
+    expect(res.data.actor).toEqual(sc.dids.bob)
+    expect(res.data.relationships.length).toBe(3)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 })

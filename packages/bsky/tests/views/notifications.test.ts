@@ -129,7 +129,7 @@ describe('notification views', () => {
     expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map(() => false))
+    expect(readStates).toEqual(notifs.map((_, i) => i !== 0)) // only first appears unread
 
     expect(forSnapshot(sort(notifs))).toMatchSnapshot()
   })
@@ -221,7 +221,7 @@ describe('notification views', () => {
     expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
+    expect(readStates).toEqual(notifs.map((n) => n.indexedAt < seenAt))
     // reset last-seen
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
@@ -237,9 +237,8 @@ describe('notification views', () => {
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        network.bsky.ctx.dataplane.updateTakedown({
+        network.bsky.ctx.dataplane.takedownRecord({
           recordUri: postRef.uriStr,
-          takenDown: true,
         }),
       ),
     )
@@ -261,11 +260,19 @@ describe('notification views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        network.bsky.ctx.dataplane.updateTakedown({
+        network.bsky.ctx.dataplane.untakedownRecord({
           recordUri: postRef.uriStr,
-          takenDown: false,
         }),
       ),
     )
+  })
+
+  it('fails open on clearly bad cursor.', async () => {
+    const { data: notifs } =
+      await agent.api.app.bsky.notification.listNotifications(
+        { cursor: '90210::bafycid' },
+        { headers: await network.serviceHeaders(alice) },
+      )
+    expect(notifs).toEqual({ notifications: [] })
   })
 })

@@ -251,6 +251,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setAdultContentEnabled(true)
@@ -281,6 +286,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setAdultContentEnabled(false)
@@ -311,6 +321,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -341,6 +356,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setContentLabelPref('spam', 'ignore')
@@ -375,6 +395,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -412,6 +437,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -449,6 +479,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removePinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -486,6 +521,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -523,6 +563,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -560,6 +605,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake2')
@@ -603,6 +653,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -640,6 +695,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -677,6 +737,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -714,6 +779,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -751,6 +821,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('other', { hideReplies: true })
@@ -795,6 +870,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -839,6 +919,11 @@ describe('agent', () => {
           sort: 'random',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setThreadViewPrefs({ sort: 'oldest' })
@@ -883,6 +968,50 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
+      })
+
+      await agent.setInterestsPref({ tags: ['foo', 'bar'] })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          other: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+        interests: {
+          tags: ['foo', 'bar'],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
     })
 
@@ -1043,6 +1172,11 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setAdultContentEnabled(false)
@@ -1123,6 +1257,11 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.removeModService('did:plc:other')
@@ -1200,6 +1339,11 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -1237,6 +1381,11 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1274,6 +1423,11 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       await agent.setFeedViewPrefs('home', {
@@ -1322,6 +1476,11 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          tags: [],
+        },
+        mutedWords: [],
+        hiddenPosts: [],
       })
 
       const res = await agent.app.bsky.actor.getPreferences()
@@ -1373,6 +1532,146 @@ describe('agent', () => {
         ].sort(byType),
       )
     })
+
+    describe('muted words', () => {
+      let agent: BskyAgent
+      const mutedWords = [
+        { value: 'both', targets: ['content', 'tag'] },
+        { value: 'content', targets: ['content'] },
+        { value: 'tag', targets: ['tag'] },
+        { value: 'tag_then_both', targets: ['tag'] },
+        { value: 'tag_then_content', targets: ['tag'] },
+        { value: 'tag_then_none', targets: ['tag'] },
+      ]
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user7.test',
+          email: 'user7@test.com',
+          password: 'password',
+        })
+      })
+
+      it('upsertMutedWords', async () => {
+        await agent.upsertMutedWords(mutedWords)
+        await agent.upsertMutedWords(mutedWords) // double
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'mutedWords',
+          mutedWords,
+        )
+      })
+
+      it('upsertMutedWords with #', async () => {
+        await agent.upsertMutedWords([
+          { value: 'hashtag', targets: ['content'] },
+        ])
+        await agent.upsertMutedWords([{ value: '#hashtag', targets: ['tag'] }])
+        const { mutedWords } = await agent.getPreferences()
+        expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
+          value: 'hashtag',
+          targets: ['content', 'tag'],
+        })
+        expect(mutedWords.filter((m) => m.value === 'hashtag').length).toBe(1)
+      })
+
+      it('updateMutedWord', async () => {
+        await agent.updateMutedWord({
+          value: 'tag_then_content',
+          targets: ['content'],
+        })
+        await agent.updateMutedWord({
+          value: 'tag_then_both',
+          targets: ['content', 'tag'],
+        })
+        await agent.updateMutedWord({ value: 'tag_then_none', targets: [] })
+        await agent.updateMutedWord({ value: 'no_exist', targets: ['tag'] })
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_content'),
+        ).toHaveProperty('targets', ['content'])
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_both'),
+        ).toHaveProperty('targets', ['content', 'tag'])
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_none'),
+        ).toHaveProperty('targets', [])
+        expect(mutedWords.find((m) => m.value === 'no_exist')).toBeFalsy()
+      })
+
+      it('updateMutedWord with #', async () => {
+        await agent.updateMutedWord({
+          value: 'hashtag',
+          targets: ['tag', 'content'],
+        })
+        const { mutedWords } = await agent.getPreferences()
+        expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
+          value: 'hashtag',
+          targets: ['tag', 'content'],
+        })
+      })
+
+      it('removeMutedWord', async () => {
+        await agent.removeMutedWord({ value: 'tag_then_content', targets: [] })
+        await agent.removeMutedWord({ value: 'tag_then_both', targets: [] })
+        await agent.removeMutedWord({ value: 'tag_then_none', targets: [] })
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(
+          mutedWords.find((m) => m.value === 'tag_then_content'),
+        ).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === 'tag_then_both')).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === 'tag_then_none')).toBeFalsy()
+      })
+
+      it('removeMutedWord with #', async () => {
+        await agent.removeMutedWord({ value: '#hashtag', targets: [] })
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === 'hashtag')).toBeFalsy()
+      })
+    })
+
+    describe('hidden posts', () => {
+      let agent: BskyAgent
+      const postUri = 'at://did:plc:fake/app.bsky.feed.post/fake'
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user8.test',
+          email: 'user8@test.com',
+          password: 'password',
+        })
+      })
+
+      it('hidePost', async () => {
+        await agent.hidePost(postUri)
+        await agent.hidePost(postUri) // double, should dedupe
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'hiddenPosts',
+          [postUri],
+        )
+      })
+
+      it('unhidePost', async () => {
+        await agent.unhidePost(postUri)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'hiddenPosts',
+          [],
+        )
+        // no issues calling a second time
+        await agent.unhidePost(postUri)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'hiddenPosts',
+          [],
+        )
+      })
+    })
+
+    // end
   })
 })
 

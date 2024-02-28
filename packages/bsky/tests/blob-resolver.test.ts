@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
-import { verifyCidForBytes } from '@atproto/common'
+import { cidForCbor, verifyCidForBytes } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { randomBytes } from '@atproto/crypto'
 
@@ -44,13 +44,25 @@ describe('blob resolver', () => {
   })
 
   it('404s on missing blob.', async () => {
+    const badCid = await cidForCbor({ unknown: true })
+    const { data, status } = await client.get(
+      `/blob/${fileDid}/${badCid.toString()}`,
+    )
+    expect(status).toEqual(404)
+    expect(data).toEqual({
+      error: 'NotFoundError',
+      message: 'Blob not found',
+    })
+  })
+
+  it('404s on missing identity.', async () => {
     const { data, status } = await client.get(
       `/blob/did:plc:unknown/${fileCid.toString()}`,
     )
     expect(status).toEqual(404)
     expect(data).toEqual({
       error: 'NotFoundError',
-      message: 'Blob not found',
+      message: 'Origin not found',
     })
   })
 

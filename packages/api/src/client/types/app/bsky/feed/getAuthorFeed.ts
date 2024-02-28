@@ -12,6 +12,7 @@ export interface QueryParams {
   actor: string
   limit?: number
   cursor?: string
+  /** Combinations of post/repost types to include in response. */
   filter?:
     | 'posts_with_replies'
     | 'posts_no_replies'

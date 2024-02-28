@@ -20,11 +20,9 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { viewer, labelers }
 
-      const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, hydrateCtx }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getProfile({ ...params, hydrateCtx }, ctx)
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {

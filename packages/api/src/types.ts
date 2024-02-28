@@ -40,16 +40,6 @@ export interface AtpAgentOpts {
 }
 
 /**
- * AtpAgent createAccount() opts
- */
-export interface AtpAgentCreateAccountOpts {
-  email: string
-  password: string
-  handle: string
-  inviteCode?: string
-}
-
-/**
  * AtpAgent login() opts
  */
 export interface AtpAgentLoginOpts {
@@ -103,6 +93,14 @@ export interface BskyThreadViewPreference {
 }
 
 /**
+ * Bluesky interests preferences
+ */
+export interface BskyInterestsPreference {
+  tags: string[]
+  [key: string]: any
+}
+
+/**
  * Bluesky preferences
  */
 export interface BskyPreferences {
@@ -114,4 +112,7 @@ export interface BskyPreferences {
   threadViewPrefs: BskyThreadViewPreference
   moderationOpts: ModerationOpts
   birthDate: Date | undefined
+  interests: BskyInterestsPreference
+  mutedWords: AppBskyActorDefs.MutedWord[]
+  hiddenPosts: string[]
 }

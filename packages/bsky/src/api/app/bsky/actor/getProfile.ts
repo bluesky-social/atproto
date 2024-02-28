@@ -20,11 +20,12 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
 
-      const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, hydrateCtx, canViewTakedowns }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getProfile(
+        { ...params, hydrateCtx, canViewTakedowns },
+        ctx,
+      )
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {
@@ -75,7 +76,7 @@ const presentation = (input: {
     ctx.views.actorIsTakendown(skeleton.did, hydration)
   ) {
     throw new InvalidRequestError(
-      'Account has been taken down',
+      'Account has been suspended',
       'AccountTakedown',
     )
   }

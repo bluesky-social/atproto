@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about the repo, including the list of collections.",
+      "description": "Get information about an account and repository, including the list of collections. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["repo"],
@@ -30,12 +30,19 @@
           "properties": {
             "handle": { "type": "string", "format": "handle" },
             "did": { "type": "string", "format": "did" },
-            "didDoc": { "type": "unknown" },
+            "didDoc": {
+              "type": "unknown",
+              "description": "The complete DID document for this account."
+            },
             "collections": {
               "type": "array",
+              "description": "List of all the collections (NSIDs) for which this repo contains at least one record.",
               "items": { "type": "string", "format": "nsid" }
             },
-            "handleIsCorrect": { "type": "boolean" }
+            "handleIsCorrect": {
+              "type": "boolean",
+              "description": "Indicates if handle is currently valid (resolves bi-directionally)"
+            }
           }
         }
       }

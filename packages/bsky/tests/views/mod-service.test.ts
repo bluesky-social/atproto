@@ -145,9 +145,8 @@ describe('mod service views', () => {
   })
 
   it('blocked by mod service takedown', async () => {
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: aliceService.uriStr,
-      takenDown: true,
     })
     const promise = agent.api.app.bsky.moderation.getService(
       { did: alice },
@@ -164,9 +163,8 @@ describe('mod service views', () => {
     expect(res.data.views[0].creator.did).toEqual(bob)
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownRecord({
+      recordUri: aliceService.uriStr,
     })
   })
 })

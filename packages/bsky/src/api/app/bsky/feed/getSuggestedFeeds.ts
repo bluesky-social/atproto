@@ -10,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
 
+      // @NOTE no need to coordinate the cursor for appview swap, as v1 doesn't use the cursor
       const suggestedRes = await ctx.dataplane.getSuggestedFeeds({
         actorDid: viewer ?? undefined,
         limit: params.limit,

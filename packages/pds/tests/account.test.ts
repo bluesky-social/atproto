@@ -559,4 +559,46 @@ describe('account', () => {
       }),
     ).resolves.toBeDefined()
   })
+
+  it('allows an admin to update password', async () => {
+    const tryUnauthed = agent.api.com.atproto.admin.updateAccountPassword({
+      did,
+      password: 'new-admin-pass',
+    })
+    await expect(tryUnauthed).rejects.toThrow('Authentication Required')
+
+    const tryAsModerator = agent.api.com.atproto.admin.updateAccountPassword(
+      { did, password: 'new-admin-pass' },
+      {
+        headers: network.pds.adminAuthHeaders('moderator'),
+        encoding: 'application/json',
+      },
+    )
+    await expect(tryAsModerator).rejects.toThrow(
+      'Must be an admin to update an account password',
+    )
+
+    await agent.api.com.atproto.admin.updateAccountPassword(
+      { did, password: 'new-admin-password' },
+      {
+        headers: network.pds.adminAuthHeaders('admin'),
+        encoding: 'application/json',
+      },
+    )
+
+    // old password fails
+    await expect(
+      agent.api.com.atproto.server.createSession({
+        identifier: did,
+        password,
+      }),
+    ).rejects.toThrow('Invalid identifier or password')
+
+    await expect(
+      agent.api.com.atproto.server.createSession({
+        identifier: did,
+        password: 'new-admin-password',
+      }),
+    ).resolves.toBeDefined()
+  })
 })

@@ -1,5 +1,5 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { keyBy } from '@atproto/common'
 import { getRecords } from './records'
 import { Database } from '../db'
@@ -25,6 +25,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         handle: row?.handle ?? undefined,
         profile: profiles.records[i],
         takenDown: !!row?.takedownRef,
+        takedownRef: row?.takedownRef || undefined,
+        tombstonedAt: undefined, // in current implementation, tombstoned actors are deleted
       }
     })
     return { actors }

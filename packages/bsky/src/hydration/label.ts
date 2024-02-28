@@ -37,11 +37,11 @@ export class LabelHydrator {
     subjects: string[],
     issuers: string[],
   ): Promise<Labels> {
-    issuers = ([] as string[]).concat(issuers ?? [])
+    if (!subjects.length || !issuers.length) return new HydrationMap<Label[]>()
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined
-      if (!label) return acc
+      if (!label || label.neg) return acc
       const entry = acc.get(label.uri)
       if (entry) {
         entry.push(label)
@@ -85,10 +85,10 @@ export class LabelHydrator {
 
   async getModServiceAggregates(dids: string[]): Promise<ModServiceAggs> {
     const refs = dids.map((did) => ({ uri: modServiceDidToUri(did) }))
-    const likes = await this.dataplane.getLikeCounts({ refs })
+    const counts = await this.dataplane.getInteractionCounts({ refs })
     return dids.reduce((acc, did, i) => {
       return acc.set(did, {
-        likes: likes.counts[i] ?? 0,
+        likes: counts.likes[i] ?? 0,
       })
     }, new HydrationMap<ModServiceAgg>())
   }

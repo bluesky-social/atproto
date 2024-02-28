@@ -1,6 +1,6 @@
 import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
 
@@ -73,20 +73,5 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       uris: reposts.map((l) => l.uri),
       cursor: keyset.packFromResult(reposts),
     }
-  },
-
-  async getRepostCounts(req) {
-    const uris = req.refs.map((ref) => ref.uri)
-    if (uris.length === 0) {
-      return { counts: [] }
-    }
-    const res = await db.db
-      .selectFrom('post_agg')
-      .where('uri', 'in', uris)
-      .selectAll()
-      .execute()
-    const byUri = keyBy(res, 'uri')
-    const counts = uris.map((uri) => byUri[uri]?.repostCount ?? 0)
-    return { counts }
   },
 })

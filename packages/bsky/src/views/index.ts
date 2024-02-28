@@ -1,4 +1,5 @@
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { mapDefined } from '@atproto/common'
 import { ImageUriBuilder } from '../image/uri'
 import { HydrationState } from '../hydration/hydrator'
 import { ids } from '../lexicon/lexicons'
@@ -19,8 +20,7 @@ import {
   ThreadgateView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
-import { compositeTime, creatorFromUri, parseThreadGate } from './util'
-import { mapDefined } from '@atproto/common'
+import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -46,13 +46,13 @@ import {
   isRecordWithMedia,
 } from './types'
 import { Label } from '../hydration/label'
-import { Repost } from '../hydration/feed'
+import { FeedItem, Post, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
-import { Notification } from '../data-plane/gen/bsky_pb'
 import {
   ModServiceView,
   ModServiceViewDetailed,
 } from '../lexicon/types/app/bsky/moderation/defs'
+import { Notification } from '../proto/bsky_pb'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -61,7 +61,7 @@ export class Views {
   // ------------
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    return state.actors?.get(did)?.takendown ?? false
+    return !!state.actors?.get(did)?.takedownRef
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -96,7 +96,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'banner',
             did,
-            actor.profile.banner.ref,
+            cidFromBlobJson(actor.profile.banner),
           )
         : undefined,
       followersCount: profileAggs?.followers,
@@ -113,7 +113,7 @@ export class Views {
     return {
       ...basicView,
       description: actor.profile?.description || undefined,
-      indexedAt: actor.indexedAt?.toISOString(),
+      indexedAt: actor.sortedAt?.toISOString(),
     }
   }
 
@@ -145,7 +145,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             did,
-            actor.profile.avatar.ref,
+            cidFromBlobJson(actor.profile.avatar),
           )
         : undefined,
       viewer: this.profileViewer(did, state),
@@ -208,10 +208,7 @@ export class Views {
       creator,
       description: list.record.description,
       descriptionFacets: list.record.descriptionFacets,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(list.record.createdAt),
-        list.indexedAt?.toISOString(),
-      ),
+      indexedAt: list.sortedAt.toISOString(),
     }
   }
 
@@ -224,20 +221,17 @@ export class Views {
     const creator = new AtUri(uri).hostname
     return {
       uri,
-      cid: list.cid.toString(),
+      cid: list.cid,
       name: list.record.name,
       purpose: list.record.purpose,
       avatar: list.record.avatar
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creator,
-            list.record.avatar.ref,
+            cidFromBlobJson(list.record.avatar),
           )
         : undefined,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(list.record.createdAt),
-        list.indexedAt?.toISOString(),
-      ),
+      indexedAt: list.sortedAt.toISOString(),
       viewer: listViewer
         ? {
             muted: !!listViewer.viewerMuted,
@@ -298,10 +292,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(modService.record.createdAt),
-        modService.indexedAt?.toISOString(),
-      ),
+      indexedAt: modService.sortedAt.toISOString(),
       labels,
     }
   }
@@ -325,7 +316,7 @@ export class Views {
   // ------------
 
   feedItemBlocksAndMutes(
-    uri: string,
+    item: FeedItem,
     state: HydrationState,
   ): {
     originatorMuted: boolean
@@ -333,24 +324,15 @@ export class Views {
     authorMuted: boolean
     authorBlocked: boolean
   } {
-    const parsed = new AtUri(uri)
-    if (parsed.collection === ids.AppBskyFeedRepost) {
-      const repost = state.reposts?.get(uri)
-      const postUri = repost?.record.subject.uri
-      const postDid = postUri ? creatorFromUri(postUri) : undefined
-      return {
-        originatorMuted: this.viewerMuteExists(parsed.hostname, state),
-        originatorBlocked: this.viewerBlockExists(parsed.hostname, state),
-        authorMuted: !!postDid && this.viewerMuteExists(postDid, state),
-        authorBlocked: !!postDid && this.viewerBlockExists(postDid, state),
-      }
-    } else {
-      return {
-        originatorMuted: this.viewerMuteExists(parsed.hostname, state),
-        originatorBlocked: this.viewerBlockExists(parsed.hostname, state),
-        authorMuted: this.viewerMuteExists(parsed.hostname, state),
-        authorBlocked: this.viewerBlockExists(parsed.hostname, state),
-      }
+    const authorDid = creatorFromUri(item.post.uri)
+    const originatorDid = item.repost
+      ? creatorFromUri(item.repost.uri)
+      : authorDid
+    return {
+      originatorMuted: this.viewerMuteExists(originatorDid, state),
+      originatorBlocked: this.viewerBlockExists(originatorDid, state),
+      authorMuted: this.viewerMuteExists(authorDid, state),
+      authorBlocked: this.viewerBlockExists(authorDid, state),
     }
   }
 
@@ -365,7 +347,7 @@ export class Views {
 
     return {
       uri,
-      cid: feedgen.cid.toString(),
+      cid: feedgen.cid,
       did: feedgen.record.did,
       creator,
       displayName: feedgen.record.displayName,
@@ -375,7 +357,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creatorDid,
-            feedgen.record.avatar.ref,
+            cidFromBlobJson(feedgen.record.avatar),
           )
         : undefined,
       likeCount: aggs?.likes,
@@ -384,10 +366,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(feedgen.record.createdAt),
-        feedgen.indexedAt?.toISOString(),
-      ),
+      indexedAt: feedgen.sortedAt.toISOString(),
     }
   }
 
@@ -396,7 +375,7 @@ export class Views {
     if (!gate) return
     return {
       uri,
-      cid: gate.cid.toString(),
+      cid: gate.cid,
       record: gate.record,
       lists: mapDefined(gate.record.allow ?? [], (rule) => {
         if (!isListRule(rule)) return
@@ -423,13 +402,13 @@ export class Views {
       ...(state.labels?.get(uri) ?? []),
       ...this.selfLabels({
         uri,
-        cid: post.cid.toString(),
+        cid: post.cid,
         record: post.record,
       }),
     ]
     return {
       uri,
-      cid: post.cid.toString(),
+      cid: post.cid,
       author,
       record: post.record,
       embed:
@@ -439,7 +418,7 @@ export class Views {
       replyCount: aggs?.replies,
       repostCount: aggs?.reposts,
       likeCount: aggs?.likes,
-      indexedAt: (post.indexedAt ?? new Date()).toISOString(),
+      indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -454,27 +433,26 @@ export class Views {
     }
   }
 
-  feedViewPost(uri: string, state: HydrationState): FeedViewPost | undefined {
-    const parsedUri = new AtUri(uri)
-    const postInfo = state.posts?.get(uri)
-    let postUri: AtUri
+  feedViewPost(
+    item: FeedItem,
+    state: HydrationState,
+  ): FeedViewPost | undefined {
+    const postInfo = state.posts?.get(item.post.uri)
     let reason: ReasonRepost | undefined
-    if (parsedUri.collection === ids.AppBskyFeedRepost) {
-      const repost = state.reposts?.get(uri)
+    if (item.repost) {
+      const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
-      reason = this.reasonRepost(parsedUri.hostname, repost, state)
+      if (repost.record.subject.uri !== item.post.uri) return
+      reason = this.reasonRepost(creatorFromUri(item.repost.uri), repost, state)
       if (!reason) return
-      postUri = new AtUri(repost.record.subject.uri)
-    } else {
-      postUri = parsedUri
     }
-    const post = this.post(postUri.toString(), state)
+    const post = this.post(item.post.uri, state)
     if (!post) return
     return {
       post,
       reason,
       reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(postUri.toString(), state)
+        ? this.replyRef(item.post.uri, state)
         : undefined,
     }
   }
@@ -546,11 +524,10 @@ export class Views {
   ): ReasonRepost | undefined {
     const creator = this.profileBasic(creatorDid, state)
     if (!creator) return
-    if (!repost.indexedAt) return
     return {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: creator,
-      indexedAt: repost.indexedAt.toISOString(),
+      indexedAt: repost.sortedAt.toISOString(),
     }
   }
 
@@ -564,7 +541,8 @@ export class Views {
   ): ThreadViewPost | NotFoundPost | BlockedPost {
     const { anchor, uris } = skele
     const post = this.post(anchor, state)
-    if (!post) return this.notFoundPost(anchor)
+    const postInfo = state.posts?.get(anchor)
+    if (!postInfo || !post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
     }
@@ -579,22 +557,30 @@ export class Views {
       childrenByParentUri[parentUri] ??= []
       childrenByParentUri[parentUri].push(uri)
     })
-    const violatesThreadGate = state.posts?.get(anchor)?.violatesThreadGate
+    const rootUri = getRootUri(anchor, postInfo)
+    const violatesThreadGate = postInfo.violatesThreadGate
 
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: !violatesThreadGate
-        ? this.threadParent(anchor, state, opts.height)
+        ? this.threadParent(anchor, rootUri, state, opts.height)
         : undefined,
       replies: !violatesThreadGate
-        ? this.threadReplies(anchor, childrenByParentUri, state, opts.depth)
+        ? this.threadReplies(
+            anchor,
+            rootUri,
+            childrenByParentUri,
+            state,
+            opts.depth,
+          )
         : undefined,
     }
   }
 
   threadParent(
     childUri: string,
+    rootUri: string,
     state: HydrationState,
     height: number,
   ): ThreadViewPost | NotFoundPost | BlockedPost | undefined {
@@ -605,19 +591,22 @@ export class Views {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
-    if (!post) return this.notFoundPost(parentUri)
+    const postInfo = state.posts?.get(parentUri)
+    if (!postInfo || !post) return this.notFoundPost(parentUri)
+    if (rootUri !== getRootUri(parentUri, postInfo)) return // outside thread boundary
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(parentUri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
-      parent: this.threadParent(parentUri, state, height - 1),
+      parent: this.threadParent(parentUri, rootUri, state, height - 1),
     }
   }
 
   threadReplies(
     parentUri: string,
+    rootUri: string,
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
@@ -625,21 +614,29 @@ export class Views {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
-      if (state.posts?.get(uri)?.violatesThreadGate) {
+      const postInfo = state.posts?.get(uri)
+      if (postInfo?.violatesThreadGate) {
         return undefined
       }
       if (state.postBlocks?.get(uri)?.reply) {
         return undefined
       }
       const post = this.post(uri, state)
-      if (!post) return this.notFoundPost(parentUri)
+      if (!postInfo || !post) return this.notFoundPost(uri)
+      if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
-        return this.blockedPost(parentUri, post.author.did, state)
+        return this.blockedPost(uri, post.author.did, state)
       }
       return {
         $type: 'app.bsky.feed.defs#threadViewPost',
         post,
-        replies: this.threadReplies(uri, childrenByParentUri, state, depth - 1),
+        replies: this.threadReplies(
+          uri,
+          rootUri,
+          childrenByParentUri,
+          state,
+          depth - 1,
+        ),
       }
     })
   }
@@ -671,12 +668,12 @@ export class Views {
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
         did,
-        img.image.ref,
+        cidFromBlobJson(img.image),
       ),
       fullsize: this.imgUriBuilder.getPresetUri(
         'feed_fullsize',
         did,
-        img.image.ref,
+        cidFromBlobJson(img.image),
       ),
       alt: img.alt,
       aspectRatio: img.aspectRatio,
@@ -696,7 +693,11 @@ export class Views {
         title,
         description,
         thumb: thumb
-          ? this.imgUriBuilder.getPresetUri('feed_thumbnail', did, thumb.ref)
+          ? this.imgUriBuilder.getPresetUri(
+              'feed_thumbnail',
+              did,
+              cidFromBlobJson(thumb),
+            )
           : undefined,
       },
     }
@@ -879,18 +880,21 @@ export class Views {
     const labels = state.labels?.get(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
-      cid: recordInfo.cid.toString(),
+      cid: recordInfo.cid,
       record: recordInfo.record,
     })
     const indexedAt = notif.timestamp.toDate().toISOString()
     return {
       uri: notif.uri,
-      cid: recordInfo.cid.toString(),
+      cid: recordInfo.cid,
       author,
       reason: notif.reason,
       reasonSubject: notif.reasonSubject || undefined,
       record: recordInfo.record,
-      isRead: lastSeenAt ? lastSeenAt >= indexedAt : false,
+      // @NOTE works with a hack in listNotifications so that when there's no last-seen time,
+      // the user's first notification is marked unread, and all previous read. in this case,
+      // the last seen time will be equal to the first notification's indexed time.
+      isRead: lastSeenAt ? lastSeenAt > indexedAt : true,
       indexedAt: notif.timestamp.toDate().toISOString(),
       labels: [...labels, ...selfLabels],
     }
@@ -903,4 +907,8 @@ const postToGateUri = (uri: string) => {
     aturi.collection = ids.AppBskyFeedThreadgate
   }
   return aturi.toString()
+}
+
+const getRootUri = (uri: string, post: Post): string => {
+  return post.record.reply?.root.uri ?? uri
 }

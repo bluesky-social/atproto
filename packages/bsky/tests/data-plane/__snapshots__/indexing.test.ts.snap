@@ -17,7 +17,7 @@ Array [
     },
   },
   Object {
-    "cursor": "0000000000000::bafycid",
+    "cursor": "0000000000000__bafycid",
     "feed": Array [
       Object {
         "post": Object {
@@ -413,7 +413,7 @@ Array [
     ],
   },
   Object {
-    "cursor": "0000000000000::bafycid",
+    "cursor": "0000000000000__bafycid",
     "follows": Array [
       Object {
         "did": "user(3)",

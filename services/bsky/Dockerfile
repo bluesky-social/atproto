@@ -1,4 +1,4 @@
-FROM node:18-alpine as build
+FROM node:20.11-alpine as build
 
 RUN npm install -g pnpm
 
@@ -33,7 +33,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/bsky
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:20.11-alpine
 
 RUN apk add --update dumb-init
 

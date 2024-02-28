@@ -85,12 +85,6 @@ describe('feed generation', () => {
     await network.close()
   })
 
-  // @TODO enable once getFeed is implemented
-  it('describes the feed generator', async () => {
-    const res = await agent.api.app.bsky.feed.describeFeedGenerator()
-    expect(res.data.did).toBe(network.bsky.ctx.cfg.feedGenDid)
-  })
-
   it('feed gen records can be created.', async () => {
     const all = await pdsAgent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'all' },
@@ -156,9 +150,8 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: prime.uri,
-      takenDown: true,
     })
 
     feedUriAll = all.uri
@@ -349,18 +342,26 @@ describe('feed generation', () => {
     })
   })
 
-  // @TODO support from dataplane
-  describe.skip('getPopularFeedGenerators', () => {
+  describe('getPopularFeedGenerators', () => {
     it('gets popular feed generators', async () => {
-      const resEven =
-        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
-          {},
-          { headers: await network.serviceHeaders(sc.dids.bob) },
-        )
-      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([
-        2, 0, 0, 0, 0,
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+        {},
+        { headers: await network.serviceHeaders(sc.dids.bob) },
+      )
+      expect(res.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+      expect(res.data.feeds.map((f) => f.uri)).toEqual([
+        feedUriAll,
+        feedUriEven,
+        feedUriBadPagination,
       ])
-      expect(resEven.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+    })
+
+    it('searches feed generators', async () => {
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'all' },
+        { headers: await network.serviceHeaders(sc.dids.bob) },
+      )
+      expect(res.data.feeds.map((f) => f.uri)).toEqual([feedUriAll])
     })
 
     it('paginates', async () => {
@@ -369,7 +370,6 @@ describe('feed generation', () => {
           {},
           { headers: await network.serviceHeaders(sc.dids.bob) },
         )
-
       const resOne =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
           { limit: 2 },

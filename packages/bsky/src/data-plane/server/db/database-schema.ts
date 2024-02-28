@@ -31,6 +31,7 @@ import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
 import * as suggestedFollow from './tables/suggested-follow'
 import * as suggestedFeed from './tables/suggested-feed'
+import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
 import * as modService from './tables/mod-service'
 
@@ -67,7 +68,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   suggestedFollow.PartialDB &
   suggestedFeed.PartialDB &
   blobTakedown.PartialDB &
-  modService.PartialDB
+  modService.PartialDB &
+  taggedSuggestion.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

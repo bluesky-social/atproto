@@ -81,6 +81,20 @@ export const formatSeqHandleUpdate = async (
   }
 }
 
+export const formatSeqIdentityEvt = async (
+  did: string,
+): Promise<RepoSeqInsert> => {
+  const evt: IdentityEvt = {
+    did,
+  }
+  return {
+    did,
+    eventType: 'identity',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
 export const formatSeqTombstone = async (
   did: string,
 ): Promise<RepoSeqInsert> => {
@@ -126,6 +140,11 @@ export const handleEvt = z.object({
 })
 export type HandleEvt = z.infer<typeof handleEvt>
 
+export const identityEvt = z.object({
+  did: z.string(),
+})
+export type IdentityEvt = z.infer<typeof identityEvt>
+
 export const tombstoneEvt = z.object({
   did: z.string(),
 })
@@ -143,10 +162,20 @@ type TypedHandleEvt = {
   time: string
   evt: HandleEvt
 }
+type TypedIdentityEvt = {
+  type: 'identity'
+  seq: number
+  time: string
+  evt: IdentityEvt
+}
 type TypedTombstoneEvt = {
   type: 'tombstone'
   seq: number
   time: string
   evt: TombstoneEvt
 }
-export type SeqEvt = TypedCommitEvt | TypedHandleEvt | TypedTombstoneEvt
+export type SeqEvt =
+  | TypedCommitEvt
+  | TypedHandleEvt
+  | TypedIdentityEvt
+  | TypedTombstoneEvt

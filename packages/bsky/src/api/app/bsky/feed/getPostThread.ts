@@ -1,7 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import {
+  QueryParams,
+  OutputSchema,
+} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
 import {
@@ -13,7 +16,7 @@ import {
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
+import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -29,21 +32,21 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
 
-      const [result, repoRev] = await Promise.allSettled([
-        getPostThread({ ...params, hydrateCtx }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      let result: OutputSchema
+      try {
+        result = await getPostThread({ ...params, hydrateCtx }, ctx)
+      } catch (err) {
+        const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+        setRepoRev(res, repoRev)
+        throw err
+      }
 
-      if (repoRev.status === 'fulfilled') {
-        setRepoRev(res, repoRev.value)
-      }
-      if (result.status === 'rejected') {
-        throw result.reason
-      }
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
-        body: result.value,
+        body: result,
       }
     },
   })
@@ -51,14 +54,25 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const res = await ctx.dataplane.getThread({
-    postUri: params.uri,
-    above: params.parentHeight,
-    below: params.depth,
-  })
-  return {
-    anchor: params.uri,
-    uris: res.uris,
+  try {
+    const res = await ctx.dataplane.getThread({
+      postUri: params.uri,
+      above: params.parentHeight,
+      below: params.depth,
+    })
+    return {
+      anchor: params.uri,
+      uris: res.uris,
+    }
+  } catch (err) {
+    if (isDataplaneError(err, Code.NotFound)) {
+      return {
+        anchor: params.uri,
+        uris: [],
+      }
+    } else {
+      throw err
+    }
   }
 }
 
@@ -66,7 +80,10 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateThreadPosts(skeleton.uris, params.hydrateCtx)
+  return ctx.hydrator.hydrateThreadPosts(
+    skeleton.uris.map((uri) => ({ uri })),
+    params.hydrateCtx,
+  )
 }
 
 const presentation = (

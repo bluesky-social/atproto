@@ -5,7 +5,8 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
-import { DidCache, IdResolver } from '@atproto/identity'
+import AtpAgent from '@atproto/api'
+import { IdResolver } from '@atproto/identity'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -14,21 +15,20 @@ import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import AppContext from './context'
-import { MountedAlgos } from './api/feed-gen/types'
 import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
+import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
-export type { MountedAlgos } from './api/feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
-export { makeAlgos } from './api/feed-gen'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -44,35 +44,25 @@ export class BskyAppView {
   static create(opts: {
     config: ServerConfig
     signingKey: Keypair
-    didCache?: DidCache
-    algos?: MountedAlgos
   }): BskyAppView {
-    const { config, signingKey, didCache, algos = {} } = opts
+    const { config, signingKey } = opts
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
 
+    // used solely for handle resolution: identity lookups occur on dataplane
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
-      didCache,
       backupNameservers: config.handleResolveNameservers,
     })
 
-    const authVerifier = new AuthVerifier(idResolver, {
-      ownDid: config.serverDid,
-      adminDid: config.modServiceDid,
-      adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
-    })
-
     const imgUriBuilder = new ImageUriBuilder(
-      config.imgUriEndpoint || `${config.publicUrl}/img`,
+      config.cdnUrl || `${config.publicUrl}/img`,
     )
 
     let imgProcessingServer: ImageProcessingServer | undefined
-    if (!config.imgUriEndpoint) {
+    if (!config.cdnUrl) {
       const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
       imgProcessingServer = new ImageProcessingServer(
         config,
@@ -80,6 +70,9 @@ export class BskyAppView {
       )
     }
 
+    const searchAgent = config.searchUrl
+      ? new AtpAgent({ service: config.searchUrl })
+      : undefined
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
@@ -87,16 +80,39 @@ export class BskyAppView {
     const hydrator = new Hydrator(dataplane)
     const views = new Views(imgUriBuilder)
 
+    const bsyncClient = createBsyncClient({
+      baseUrl: config.bsyncUrl,
+      httpVersion: config.bsyncHttpVersion ?? '2',
+      nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
+      interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
+    })
+
+    const courierClient = createCourierClient({
+      baseUrl: config.courierUrl,
+      httpVersion: config.courierHttpVersion ?? '2',
+      nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+      interceptors: config.courierApiKey
+        ? [courierAuth(config.courierApiKey)]
+        : [],
+    })
+
+    const authVerifier = new AuthVerifier(dataplane, {
+      ownDid: config.serverDid,
+      adminDid: config.modServiceDid,
+      adminPasses: config.adminPasswords,
+    })
+
     const ctx = new AppContext({
       cfg: config,
       dataplane,
+      searchAgent,
       hydrator,
       views,
       signingKey,
       idResolver,
-      didCache,
+      bsyncClient,
+      courierClient,
       authVerifier,
-      algos,
     })
 
     let server = createServer({

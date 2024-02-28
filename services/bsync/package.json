@@ -1,0 +1,8 @@
+{
+  "name": "bsync-service",
+  "private": true,
+  "dependencies": {
+    "@atproto/bsync": "workspace:^",
+    "dd-trace": "3.13.2"
+  }
+}

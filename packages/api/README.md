@@ -197,7 +197,7 @@ const profileMod = moderateProfile(profileView, getOpts())
 // =
 
 if (postMod.content.filter) {
-  // dont render in feeds or similar
+  // don't render in feeds or similar
   // in contexts where this is disruptive (eg threads) you should ignore this and instead check blur
 }
 if (postMod.content.blur) {
@@ -315,7 +315,7 @@ import { BskyAgent } from '@atproto/api'
 
 const agent = new BskyAgent({ service: 'https://example.com' })
 
-// provide a custom fetch implementation (shouldnt be needed in node or the browser)
+// provide a custom fetch implementation (shouldn't be needed in node or the browser)
 import {
   AtpAgentFetchHeaders,
   AtpAgentFetchHandlerResponse,

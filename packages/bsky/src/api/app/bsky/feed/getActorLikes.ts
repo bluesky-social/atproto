@@ -3,7 +3,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -14,6 +14,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
+import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = createPipeline(
@@ -29,11 +30,9 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
 
-      const [result, repoRev] = await Promise.all([
-        getActorLikes({ ...params, hydrateCtx }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getActorLikes({ ...params, hydrateCtx }, ctx)
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {
@@ -51,7 +50,9 @@ const skeleton = async (inputs: {
   const { ctx, params } = inputs
   const { actor, limit, cursor } = params
   const viewer = params.hydrateCtx.viewer
-
+  if (clearlyBadCursor(cursor)) {
+    return { items: [] }
+  }
   const [actorDid] = await ctx.hydrator.actor.getDids([actor])
   if (!actorDid || !viewer || viewer !== actorDid) {
     throw new InvalidRequestError('Profile not found')
@@ -63,10 +64,10 @@ const skeleton = async (inputs: {
     cursor,
   })
 
-  const postUris = likesRes.likes.map((l) => l.subject)
+  const items = likesRes.likes.map((l) => ({ post: { uri: l.subject } }))
 
   return {
-    postUris,
+    items,
     cursor: parseString(likesRes.cursor),
   }
 }
@@ -77,10 +78,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedPosts(
-    skeleton.postUris,
-    params.hydrateCtx,
-  )
+  return await ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
 }
 
 const noPostBlocks = (inputs: {
@@ -89,8 +87,8 @@ const noPostBlocks = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.postUris = skeleton.postUris.filter((uri) => {
-    const creator = creatorFromUri(uri)
+  skeleton.items = skeleton.items.filter((item) => {
+    const creator = creatorFromUri(item.post.uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
   })
   return skeleton
@@ -102,8 +100,8 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.postUris, (uri) =>
-    ctx.views.feedViewPost(uri, hydration),
+  const feed = mapDefined(skeleton.items, (item) =>
+    ctx.views.feedViewPost(item, hydration),
   )
   return {
     feed,
@@ -120,6 +118,6 @@ type Context = {
 type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  postUris: string[]
+  items: FeedItem[]
   cursor?: string
 }

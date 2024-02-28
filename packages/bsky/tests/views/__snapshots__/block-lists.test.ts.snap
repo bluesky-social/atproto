@@ -263,11 +263,11 @@ Object {
           "did": "user(2)",
           "viewer": Object {
             "blockedBy": false,
-            "blocking": "record(5)",
+            "blocking": "record(6)",
           },
         },
         "blocked": true,
-        "uri": "record(0)",
+        "uri": "record(5)",
       },
       Object {
         "$type": "app.bsky.feed.defs#blockedPost",
@@ -275,11 +275,11 @@ Object {
           "did": "user(3)",
           "viewer": Object {
             "blockedBy": false,
-            "blocking": "record(5)",
+            "blocking": "record(6)",
           },
         },
         "blocked": true,
-        "uri": "record(0)",
+        "uri": "record(7)",
       },
     ],
   },
@@ -288,7 +288,7 @@ Object {
 
 exports[`pds views with blocking from block lists returns a users own list blocks 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -383,7 +383,7 @@ Object {
 
 exports[`pds views with blocking from block lists returns lists associated with a user 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -477,7 +477,7 @@ Object {
 
 exports[`pds views with blocking from block lists returns the contents of a list 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "items": Array [
     Object {
       "subject": Object {

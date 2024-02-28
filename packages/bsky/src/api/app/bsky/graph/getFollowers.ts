@@ -17,6 +17,7 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFollowers = createPipeline(
@@ -50,6 +51,9 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
   if (!subjectDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
+  }
+  if (clearlyBadCursor(params.cursor)) {
+    return { subjectDid, followUris: [] }
   }
   const { followers, cursor } = await ctx.hydrator.graph.getActorFollowers({
     did: subjectDid,

@@ -11,7 +11,6 @@ import {
 } from './client'
 import {
   AtpSessionData,
-  AtpAgentCreateAccountOpts,
   AtpAgentLoginOpts,
   AtpAgentFetchHandler,
   AtpAgentFetchHandlerResponse,
@@ -97,15 +96,10 @@ export class AtpAgent {
    * Create a new account and hydrate its session in this agent.
    */
   async createAccount(
-    opts: AtpAgentCreateAccountOpts,
+    opts: ComAtprotoServerCreateAccount.InputSchema,
   ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
-      const res = await this.api.com.atproto.server.createAccount({
-        handle: opts.handle,
-        password: opts.password,
-        email: opts.email,
-        inviteCode: opts.inviteCode,
-      })
+      const res = await this.api.com.atproto.server.createAccount(opts)
       this.session = {
         accessJwt: res.data.accessJwt,
         refreshJwt: res.data.refreshJwt,
@@ -257,7 +251,7 @@ export class AtpAgent {
     // handle session-refreshes as needed
     if (isErrorResponse(res, ['ExpiredToken']) && this.session?.refreshJwt) {
       // attempt refresh
-      await this._refreshSession()
+      await this.refreshSession()
 
       // resend the request with the new access token
       res = await AtpAgent.fetch(
@@ -276,7 +270,7 @@ export class AtpAgent {
    * - Wraps the actual implementation in a promise-guard to ensure only
    *   one refresh is attempted at a time.
    */
-  private async _refreshSession() {
+  async refreshSession() {
     if (this._refreshSessionPromise) {
       return this._refreshSessionPromise
     }

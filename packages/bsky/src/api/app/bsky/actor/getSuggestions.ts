@@ -41,27 +41,21 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   const viewer = params.hydrateCtx.viewer
-  let dids: string[] = []
-  let cursor: string | undefined = params.cursor
-  // filter out follows and re-fetch if left with an empty page
-  while (dids.length === 0) {
-    const suggestions = await ctx.dataplane.getFollowSuggestions({
-      actorDid: viewer ?? undefined,
-      cursor,
-      limit: params.limit,
-    })
-    dids = suggestions.dids
-    cursor = parseString(suggestions.cursor)
-    if (!cursor || viewer === null) {
-      break
-    }
+  // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
+  const suggestions = await ctx.dataplane.getFollowSuggestions({
+    actorDid: viewer ?? undefined,
+    cursor: params.cursor,
+    limit: params.limit,
+  })
+  let dids = suggestions.dids
+  if (viewer !== null) {
     const follows = await ctx.dataplane.getActorFollowsActors({
       actorDid: viewer,
       targetDids: dids,
     })
     dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
   }
-  return { dids, cursor }
+  return { dids, cursor: parseString(suggestions.cursor) }
 }
 
 const hydration = async (input: {

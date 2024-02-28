@@ -10,6 +10,7 @@ import {
   BskyPreferences,
   BskyFeedViewPreference,
   BskyThreadViewPreference,
+  BskyInterestsPreference,
 } from './types'
 import { LabelPreference } from './moderation/types'
 import { BSKY_MODSERVICE_DID } from './const'
@@ -329,6 +330,11 @@ export class BskyAgent extends AtpAgent {
         mods: [],
       },
       birthDate: undefined,
+      interests: {
+        tags: [],
+      },
+      mutedWords: [],
+      hiddenPosts: [],
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -383,6 +389,27 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
+      } else if (
+        AppBskyActorDefs.isInterestsPref(pref) &&
+        AppBskyActorDefs.validateInterestsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.interests = { ...prefs.interests, ...v }
+      } else if (
+        AppBskyActorDefs.isMutedWordsPref(pref) &&
+        AppBskyActorDefs.validateMutedWordsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.mutedWords = v.items
+      } else if (
+        AppBskyActorDefs.isHiddenPostsPref(pref) &&
+        AppBskyActorDefs.validateHiddenPostsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.hiddenPosts = v.items
       }
     }
 
@@ -610,6 +637,42 @@ export class BskyAgent extends AtpAgent {
         .concat([{ ...pref, $type: 'app.bsky.actor.defs#threadViewPref' }])
     })
   }
+
+  async setInterestsPref(pref: Partial<BskyInterestsPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isInterestsPref(pref) &&
+          AppBskyActorDefs.validateInterestsPref(pref).success,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#interestsPref' }])
+    })
+  }
+
+  async upsertMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
+    await updateMutedWords(this, mutedWords, 'upsert')
+  }
+
+  async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    await updateMutedWords(this, [mutedWord], 'update')
+  }
+
+  async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    await updateMutedWords(this, [mutedWord], 'remove')
+  }
+
+  async hidePost(postUri: string) {
+    await updateHiddenPost(this, postUri, 'hide')
+  }
+
+  async unhidePost(postUri: string) {
+    await updateHiddenPost(this, postUri, 'unhide')
+  }
 }
 
 /**
@@ -762,4 +825,104 @@ function prefsArrayToLabelerDids(
     dids.unshift(BSKY_MODSERVICE_DID)
   }
   return dids
+}
+
+/**
+ * A helper specifically for updating muted words preferences
+ */
+async function updateMutedWords(
+  agent: BskyAgent,
+  mutedWords: AppBskyActorDefs.MutedWord[],
+  action: 'upsert' | 'update' | 'remove',
+) {
+  const sanitizeMutedWord = (word: AppBskyActorDefs.MutedWord) => ({
+    value: word.value.replace(/^#/, ''),
+    targets: word.targets,
+  })
+
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let mutedWordsPref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isMutedWordsPref(pref) &&
+        AppBskyActorDefs.validateMutedWordsPref(pref).success,
+    )
+
+    if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+      if (action === 'upsert' || action === 'update') {
+        for (const word of mutedWords) {
+          let foundMatch = false
+
+          for (const existingItem of mutedWordsPref.items) {
+            if (existingItem.value === sanitizeMutedWord(word).value) {
+              existingItem.targets =
+                action === 'upsert'
+                  ? Array.from(
+                      new Set([...existingItem.targets, ...word.targets]),
+                    )
+                  : word.targets
+              foundMatch = true
+              break
+            }
+          }
+
+          if (action === 'upsert' && !foundMatch) {
+            mutedWordsPref.items.push(sanitizeMutedWord(word))
+          }
+        }
+      } else if (action === 'remove') {
+        for (const word of mutedWords) {
+          for (let i = 0; i < mutedWordsPref.items.length; i++) {
+            const existing = mutedWordsPref.items[i]
+            if (existing.value === sanitizeMutedWord(word).value) {
+              mutedWordsPref.items.splice(i, 1)
+              break
+            }
+          }
+        }
+      }
+    } else {
+      // if the pref doesn't exist, create it
+      if (action === 'upsert') {
+        mutedWordsPref = {
+          items: mutedWords.map(sanitizeMutedWord),
+        }
+      }
+    }
+
+    return prefs
+      .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+      .concat([
+        { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+      ])
+  })
+}
+
+async function updateHiddenPost(
+  agent: BskyAgent,
+  postUri: string,
+  action: 'hide' | 'unhide',
+) {
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let pref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isHiddenPostsPref(pref) &&
+        AppBskyActorDefs.validateHiddenPostsPref(pref).success,
+    )
+    if (pref && AppBskyActorDefs.isHiddenPostsPref(pref)) {
+      pref.items =
+        action === 'hide'
+          ? Array.from(new Set([...pref.items, postUri]))
+          : pref.items.filter((uri) => uri !== postUri)
+    } else {
+      if (action === 'hide') {
+        pref = {
+          $type: 'app.bsky.actor.defs#hiddenPostsPref',
+          items: [postUri],
+        }
+      }
+    }
+    return prefs
+      .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+      .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
+  })
 }

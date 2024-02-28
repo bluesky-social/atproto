@@ -4,7 +4,7 @@ import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
 import { HydrationMap, RecordInfo, parseRecord } from './util'
-import { FollowInfo } from '../data-plane/gen/bsky_pb'
+import { FollowInfo } from '../proto/bsky_pb'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
@@ -29,12 +29,13 @@ export type RelationshipPair = [didA: string, didB: string]
 
 const dedupePairs = (pairs: RelationshipPair[]): RelationshipPair[] => {
   const mapped = pairs.reduce((acc, cur) => {
-    const sorted = cur.sort()
+    const sorted = ([...cur] as RelationshipPair).sort()
     acc[sorted.join('-')] = sorted
     return acc
   }, {} as Record<string, RelationshipPair>)
   return Object.values(mapped)
 }
+
 export class Blocks {
   _blocks: Map<string, boolean> = new Map()
   constructor() {}
@@ -55,6 +56,7 @@ export class Blocks {
   }
 
   isBlocked(didA: string, didB: string): boolean {
+    if (didA === didB) return false // ignore self-blocks
     const key = Blocks.key(didA, didB)
     return this._blocks.get(key) ?? false
   }
@@ -71,6 +73,7 @@ export class GraphHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
   async getLists(uris: string[], includeTakedowns = false): Promise<Lists> {
+    if (!uris.length) return new HydrationMap<List>()
     const res = await this.dataplane.getListRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<ListRecord>(res.records[i], includeTakedowns)
@@ -83,6 +86,7 @@ export class GraphHydrator {
     uris: string[],
     includeTakedowns = false,
   ): Promise<ListItems> {
+    if (!uris.length) return new HydrationMap<ListItem>()
     const res = await this.dataplane.getListItemRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<ListItemRecord>(
@@ -97,6 +101,7 @@ export class GraphHydrator {
     uris: string[],
     viewer: string,
   ): Promise<ListViewerStates> {
+    if (!uris.length) return new HydrationMap<ListViewerState>()
     const mutesAndBlocks = await Promise.all(
       uris.map((uri) => this.getMutesAndBlocks(uri, viewer)),
     )
@@ -131,6 +136,7 @@ export class GraphHydrator {
   }
 
   async getBidirectionalBlocks(pairs: RelationshipPair[]): Promise<Blocks> {
+    if (!pairs.length) return new Blocks()
     const deduped = dedupePairs(pairs).map(([a, b]) => ({ a, b }))
     const res = await this.dataplane.getBlockExistence({ pairs: deduped })
     const blocks = new Blocks()
@@ -142,6 +148,7 @@ export class GraphHydrator {
   }
 
   async getFollows(uris: string[], includeTakedowns = false): Promise<Follows> {
+    if (!uris.length) return new HydrationMap<Follow>()
     const res = await this.dataplane.getFollowRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<FollowRecord>(res.records[i], includeTakedowns)
@@ -150,6 +157,7 @@ export class GraphHydrator {
   }
 
   async getBlocks(uris: string[], includeTakedowns = false): Promise<Follows> {
+    if (!uris.length) return new HydrationMap<Block>()
     const res = await this.dataplane.getBlockRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<BlockRecord>(res.records[i], includeTakedowns)

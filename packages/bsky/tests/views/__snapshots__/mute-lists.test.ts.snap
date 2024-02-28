@@ -299,7 +299,7 @@ Object {
 
 exports[`bsky views with mutes from mute lists returns a users own list mutes 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -392,7 +392,7 @@ Object {
 
 exports[`bsky views with mutes from mute lists returns lists associated with a user 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -485,7 +485,7 @@ Object {
 
 exports[`bsky views with mutes from mute lists returns the contents of a list 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "items": Array [
     Object {
       "subject": Object {

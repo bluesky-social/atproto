@@ -100,6 +100,8 @@ export class RepoSubscription {
         await this.handleCommit(msg)
       } else if (message.isHandle(msg)) {
         await this.handleUpdateHandle(msg)
+      } else if (message.isIdentity(msg)) {
+        await this.handleIdentityEvt(msg)
       } else if (message.isTombstone(msg)) {
         await this.handleTombstone(msg)
       } else if (message.isMigrate(msg)) {
@@ -192,6 +194,10 @@ export class RepoSubscription {
     await this.indexingSvc.indexHandle(msg.did, msg.time, true)
   }
 
+  private async handleIdentityEvt(msg: message.Identity) {
+    await this.indexingSvc.indexHandle(msg.did, msg.time, true)
+  }
+
   private async handleTombstone(msg: message.Tombstone) {
     await this.indexingSvc.tombstoneActor(msg.did)
   }
@@ -261,6 +267,8 @@ function getMessageDetails(msg: Message):
   if (message.isCommit(msg)) {
     return { seq: msg.seq, repo: msg.repo, message: msg }
   } else if (message.isHandle(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isIdentity(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isMigrate(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }

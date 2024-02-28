@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of an actor's followers.",
+      "description": "Enumerates accounts which follow a specified account (actor).",
       "parameters": {
         "type": "params",
         "required": ["actor"],
