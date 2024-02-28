@@ -302,11 +302,9 @@ export class AuthVerifier {
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const { payload } = await verifyJwt({
-      key: this._jwtKey,
-      token,
-      verifyOptions,
-    })
+
+    const { payload } = await this.jwtVerify(token, verifyOptions)
+
     const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
@@ -426,6 +424,23 @@ export class AuthVerifier {
       return auth.credentials.did === did
     }
   }
+
+  protected async jwtVerify(
+    token: string,
+    verifyOptions?: jose.JWTVerifyOptions,
+  ) {
+    try {
+      return await jose.jwtVerify(token, this._jwtKey, verifyOptions)
+    } catch (err) {
+      if (err?.['code'] === 'ERR_JWT_EXPIRED') {
+        throw new InvalidRequestError('Token has expired', 'ExpiredToken')
+      }
+      throw new InvalidRequestError(
+        'Token could not be verified',
+        'InvalidToken',
+      )
+    }
+  }
 }
 
 // HELPERS
@@ -457,22 +472,6 @@ const isBasicToken = (req: express.Request): boolean => {
 const bearerTokenFromReq = (req: express.Request) => {
   const [type, token] = parseAuthorizationHeader(req.headers.authorization)
   return type === BEARER ? token : null
-}
-
-const verifyJwt = async (params: {
-  key: KeyObject
-  token: string
-  verifyOptions?: jose.JWTVerifyOptions
-}) => {
-  const { key, token, verifyOptions } = params
-  try {
-    return await jose.jwtVerify(token, key, verifyOptions)
-  } catch (err) {
-    if (err?.['code'] === 'ERR_JWT_EXPIRED') {
-      throw new InvalidRequestError('Token has expired', 'ExpiredToken')
-    }
-    throw new InvalidRequestError('Token could not be verified', 'InvalidToken')
-  }
 }
 
 export const parseBasicAuth = (
