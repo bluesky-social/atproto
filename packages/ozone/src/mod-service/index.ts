@@ -44,12 +44,15 @@ import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
 import { LabelChannel } from '../db/schema/label'
+import { Keypair } from '@atproto/crypto'
+import { signLabel } from './util'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
   constructor(
     public db: Database,
+    public signingKey: Keypair,
     public backgroundQueue: BackgroundQueue,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
@@ -58,6 +61,7 @@ export class ModerationService {
   ) {}
 
   static creator(
+    signingKey: Keypair,
     backgroundQueue: BackgroundQueue,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
@@ -67,6 +71,7 @@ export class ModerationService {
     return (db: Database) =>
       new ModerationService(
         db,
+        signingKey,
         backgroundQueue,
         eventPusher,
         appviewAgent,
@@ -75,7 +80,13 @@ export class ModerationService {
       )
   }
 
-  views = new ModerationViews(this.db, this.appviewAgent, this.appviewAuth)
+  views = new ModerationViews(
+    this.db,
+    this.signingKey,
+    this.backgroundQueue,
+    this.appviewAgent,
+    this.appviewAuth,
+  )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -851,10 +862,15 @@ export class ModerationService {
 
   async createLabels(labels: Label[]) {
     if (labels.length < 1) return
-    const dbVals = labels.map((l) => ({
+    const signedLabels = await Promise.all(
+      labels.map((l) => signLabel(l, this.signingKey)),
+    )
+    const signingKey = this.signingKey.did()
+    const dbVals = signedLabels.map((l) => ({
       ...l,
       cid: l.cid ?? '',
       neg: !!l.neg,
+      signingKey,
     }))
     const { ref } = this.db.db.dynamic
     await sql`notify ${ref(LabelChannel)}`.execute(this.db.db) // emitted transactionally

@@ -66,6 +66,7 @@ export class AppContext {
     })
 
     const modService = ModerationService.creator(
+      signingKey,
       backgroundQueue,
       eventPusher,
       appviewAgent,
@@ -79,7 +80,7 @@ export class AppContext {
       plcUrl: cfg.identity.plcUrl,
     })
 
-    const sequencer = new Sequencer(db)
+    const sequencer = new Sequencer(modService(db))
 
     return new AppContext(
       {

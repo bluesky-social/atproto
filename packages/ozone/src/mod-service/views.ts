@@ -24,7 +24,10 @@ import {
 } from './types'
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
-import { formatLabel } from './util'
+import { formatLabel, signLabel } from './util'
+import { Keypair } from '@atproto/crypto'
+import { LabelRow } from '../db/schema/label'
+import { BackgroundQueue } from '../background'
 
 export type AppviewAuth = () => Promise<
   | {
@@ -38,6 +41,8 @@ export type AppviewAuth = () => Promise<
 export class ModerationViews {
   constructor(
     private db: Database,
+    private signingKey: Keypair,
+    private backgroundQueue: BackgroundQueue,
     private appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
   ) {}
@@ -404,7 +409,24 @@ export class ModerationViews {
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
-    return res.map((l) => formatLabel(l))
+    return Promise.all(res.map((l) => this.formatLabelAndEnsureSig(l)))
+  }
+
+  async formatLabelAndEnsureSig(row: LabelRow) {
+    const signingKey = this.signingKey.did()
+    const formatted = formatLabel(row)
+    if (!!row.sig && row.signingKey === signingKey) {
+      return formatted
+    }
+    const signed = await signLabel(formatted, this.signingKey)
+    this.backgroundQueue.add(async (db) => {
+      await db.db
+        .updateTable('label')
+        .set({ sig: signed.sig, signingKey })
+        .where('id', '=', row.id)
+        .execute()
+    })
+    return signed
   }
 
   async getSubjectStatus(

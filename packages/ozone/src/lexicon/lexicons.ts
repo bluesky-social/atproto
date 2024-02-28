@@ -2225,6 +2225,10 @@ export const schemaDict = {
             format: 'datetime',
             description: 'Timestamp when this label was created.',
           },
+          sig: {
+            type: 'string',
+            description: 'Base64-encoded signature of label.',
+          },
         },
       },
       selfLabels: {

@@ -48,6 +48,7 @@ export class DaemonContext {
     })
     const backgroundQueue = new BackgroundQueue(db)
     const modService = ModerationService.creator(
+      signingKey,
       backgroundQueue,
       eventPusher,
       appviewAgent,

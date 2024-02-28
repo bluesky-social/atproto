@@ -20,6 +20,8 @@ export interface Label {
   neg?: boolean
   /** Timestamp when this label was created. */
   cts: string
+  /** Base64-encoded signature of label. */
+  sig?: string
   [k: string]: unknown
 }
 
