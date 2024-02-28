@@ -87,6 +87,10 @@ type ValidatedBearer = {
   audience: string | undefined
 }
 
+type ValidatedRefreshBearer = ValidatedBearer & {
+  tokenId: string
+}
+
 export type AuthVerifierOpts = {
   jwtKey: KeyObject
   adminPass: string
@@ -155,24 +159,32 @@ export class AuthVerifier {
   }
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
-    const { did, scope, token, audience, payload } =
-      await this.validateBearerToken(ctx.req, [AuthScope.Refresh], {
-        // when using entryway, proxying refresh credentials
-        audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
-      })
-    if (!payload.jti) {
-      throw new AuthRequiredError(
-        'Unexpected missing refresh token id',
-        'MissingTokenId',
-      )
-    }
+    const { did, scope, token, tokenId, audience } =
+      await this.validateRefreshToken(ctx.req)
+
     return {
       credentials: {
         type: 'refresh',
         did,
         scope,
         audience,
-        tokenId: payload.jti,
+        tokenId,
+      },
+      artifacts: token,
+    }
+  }
+
+  refreshExpired = async (ctx: ReqCtx): Promise<RefreshOutput> => {
+    const { did, scope, token, tokenId, audience } =
+      await this.validateRefreshToken(ctx.req, { clockTolerance: Infinity })
+
+    return {
+      credentials: {
+        type: 'refresh',
+        did,
+        scope,
+        audience,
+        tokenId,
       },
       artifacts: token,
     }
@@ -193,7 +205,7 @@ export class AuthVerifier {
   optionalAccessOrAdminToken = async (
     ctx: ReqCtx,
   ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
-    if (isBearerToken(ctx.req)) {
+    if (isAccessToken(ctx.req)) {
       return await this.access(ctx)
     } else if (isBasicToken(ctx.req)) {
       return await this.adminToken(ctx)
@@ -262,7 +274,26 @@ export class AuthVerifier {
     }
   }
 
-  async validateBearerToken(
+  protected async validateRefreshToken(
+    req: express.Request,
+    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience'>,
+  ): Promise<ValidatedRefreshBearer> {
+    const result = await this.validateBearerToken(req, [AuthScope.Refresh], {
+      ...verifyOptions,
+      // when using entryway, proxying refresh credentials
+      audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
+    })
+    const tokenId = result.payload.jti
+    if (!tokenId) {
+      throw new AuthRequiredError(
+        'Unexpected missing refresh token id',
+        'MissingTokenId',
+      )
+    }
+    return { ...result, tokenId }
+  }
+
+  protected async validateBearerToken(
     req: express.Request,
     scopes: AuthScope[],
     verifyOptions?: jose.JWTVerifyOptions,
@@ -271,7 +302,11 @@ export class AuthVerifier {
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const payload = await verifyJwt({ key: this._jwtKey, token, verifyOptions })
+    const { payload } = await verifyJwt({
+      key: this._jwtKey,
+      token,
+      verifyOptions,
+    })
     const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
@@ -280,6 +315,10 @@ export class AuthVerifier {
       aud !== undefined &&
       (typeof aud !== 'string' || !aud.startsWith('did:'))
     ) {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (payload.cnf) {
+      // DPoP bound tokens must not be usable as regular Bearer tokens
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
@@ -295,6 +334,24 @@ export class AuthVerifier {
   }
 
   async validateAccessToken(
+    req: express.Request,
+    scopes: AuthScope[],
+  ): Promise<AccessOutput> {
+    const [type] = parseAuthorizationHeader(req.headers.authorization)
+    switch (type) {
+      case BEARER:
+        return this.validateBearerAccessToken(req, scopes)
+      case null:
+        throw new AuthRequiredError(undefined, 'AuthMissing')
+      default:
+        throw new InvalidRequestError(
+          'Unexpected authorization type',
+          'InvalidToken',
+        )
+    }
+  }
+
+  async validateBearerAccessToken(
     req: express.Request,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
@@ -374,11 +431,23 @@ export class AuthVerifier {
 // HELPERS
 // ---------
 
-const BEARER = 'Bearer '
-const BASIC = 'Basic '
+const BASIC = 'Basic'
+const BEARER = 'Bearer'
+
+export const parseAuthorizationHeader = (authorization?: string) => {
+  const result = authorization?.split(' ', 2)
+  if (result?.length === 2) return result as [type: string, token: string]
+  return [null] as [type: null]
+}
+
+const isAccessToken = (req: express.Request): boolean => {
+  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  return type === BEARER
+}
 
 const isBearerToken = (req: express.Request): boolean => {
-  return req.headers.authorization?.startsWith(BEARER) ?? false
+  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  return type === BEARER
 }
 
 const isBasicToken = (req: express.Request): boolean => {
@@ -386,20 +455,18 @@ const isBasicToken = (req: express.Request): boolean => {
 }
 
 const bearerTokenFromReq = (req: express.Request) => {
-  const header = req.headers.authorization || ''
-  if (!header.startsWith(BEARER)) return null
-  return header.slice(BEARER.length)
+  const [type, token] = parseAuthorizationHeader(req.headers.authorization)
+  return type === BEARER ? token : null
 }
 
 const verifyJwt = async (params: {
   key: KeyObject
   token: string
   verifyOptions?: jose.JWTVerifyOptions
-}): Promise<jose.JWTPayload> => {
+}) => {
   const { key, token, verifyOptions } = params
   try {
-    const result = await jose.jwtVerify(token, key, verifyOptions)
-    return result.payload
+    return await jose.jwtVerify(token, key, verifyOptions)
   } catch (err) {
     if (err?.['code'] === 'ERR_JWT_EXPIRED') {
       throw new InvalidRequestError('Token has expired', 'ExpiredToken')
@@ -411,17 +478,18 @@ const verifyJwt = async (params: {
 export const parseBasicAuth = (
   token: string,
 ): { username: string; password: string } | null => {
-  if (!token.startsWith(BASIC)) return null
-  const b64 = token.slice(BASIC.length)
-  let parsed: string[]
   try {
-    parsed = ui8.toString(ui8.fromString(b64, 'base64pad'), 'utf8').split(':')
+    const [type, b64] = parseAuthorizationHeader(token)
+    if (type !== BASIC) return null
+    const parsed = ui8
+      .toString(ui8.fromString(b64, 'base64pad'), 'utf8')
+      .split(':', 2)
+    const [username, password] = parsed
+    if (!username || !password) return null
+    return { username, password }
   } catch (err) {
     return null
   }
-  const [username, password] = parsed
-  if (!username || !password) return null
-  return { username, password }
 }
 
 const authScopes = new Set(Object.values(AuthScope))
