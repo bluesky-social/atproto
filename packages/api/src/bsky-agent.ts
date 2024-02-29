@@ -576,7 +576,7 @@ export class BskyAgent extends AtpAgent {
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
         for (const updatedWord of newMutedWords) {
           let foundMatch = false
-          const sanitizedUpdatedValue = updatedWord.value.replace(/^#/, '')
+          const sanitizedUpdatedValue = sanitizeMuteWordValue(updatedWord.value)
 
           // was trimmed down to an empty string e.g. single `#`
           if (!sanitizedUpdatedValue) continue
@@ -603,7 +603,7 @@ export class BskyAgent extends AtpAgent {
         mutedWordsPref = {
           items: newMutedWords.map((w) => ({
             ...w,
-            value: w.value.replace(/^#/, ''),
+            value: sanitizeMuteWordValue(w.value),
           })),
         }
       }
@@ -764,4 +764,8 @@ async function updateHiddenPost(
       .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
       .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
   })
+}
+
+function sanitizeMuteWordValue(value: string) {
+  return value.replace(/^#(?!\ufe0f)/, '')
 }

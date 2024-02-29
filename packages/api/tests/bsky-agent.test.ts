@@ -1309,6 +1309,30 @@ describe('agent', () => {
 
         expect(b.mutedWords.find((w) => w.value === '#hashtag')).toBeFalsy()
       })
+
+      it('hash emoji #️⃣', async () => {
+        await agent.upsertMutedWords([{ value: '#️⃣', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '#️⃣')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '#️⃣', targets: [] })
+        const end = await agent.getPreferences()
+
+        expect(end.mutedWords.find((m) => m.value === '#️⃣')).toBeFalsy()
+      })
+
+      it('hash emoji ##️⃣', async () => {
+        await agent.upsertMutedWords([{ value: '##️⃣', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '#️⃣')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '#️⃣', targets: [] })
+        const end = await agent.getPreferences()
+
+        expect(end.mutedWords.find((m) => m.value === '#️⃣')).toBeFalsy()
+      })
     })
 
     describe('hidden posts', () => {
