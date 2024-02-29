@@ -1,5 +1,6 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
+import { formatLabel } from '../../mod-service/util'
 import {
   UNSPECCED_TAKEDOWN_BLOBS_LABEL,
   UNSPECCED_TAKEDOWN_LABEL,
@@ -28,10 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         .limit(limit)
         .execute()
 
-      const labels = labelRes.map((l) => ({
-        ...l,
-        cid: l.cid === '' ? undefined : l.cid,
-      }))
+      const labels = labelRes.map((l) => formatLabel(l))
 
       return {
         encoding: 'application/json',

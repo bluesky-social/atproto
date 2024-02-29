@@ -7,7 +7,7 @@ import {
   REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
-  REVIEWOPTIONAL,
+  REVIEWNONE,
 } from '../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
@@ -29,7 +29,7 @@ const getSubjectStatusForModerationEvent = ({
 }): Partial<ModerationSubjectStatusRow> => {
   const defaultReviewState = currentStatus
     ? currentStatus.reviewState
-    : REVIEWOPTIONAL
+    : REVIEWNONE
 
   switch (action) {
     case 'com.atproto.admin.defs#modEventAcknowledge':
@@ -160,9 +160,9 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.reviewState = REVIEWESCALATED
   }
 
-  if (currentStatus && subjectStatus.reviewState === REVIEWOPTIONAL) {
-    // reviewOptional is ONLY allowed when there is no current status
-    // If there is a current status, it should not be allowed to move back to reviewOptional
+  if (currentStatus && subjectStatus.reviewState === REVIEWNONE) {
+    // reviewNone is ONLY allowed when there is no current status
+    // If there is a current status, it should not be allowed to move back to reviewNone
     subjectStatus.reviewState = currentStatus.reviewState
   }
 
@@ -172,7 +172,7 @@ export const adjustModerationSubjectStatus = async (
     // Defaulting reviewState to open for any event may not be the desired behavior.
     // For instance, if a subject never had any event and we just want to leave a comment to keep an eye on it
     // that shouldn't mean we want to review the subject
-    reviewState: REVIEWOPTIONAL,
+    reviewState: REVIEWNONE,
     recordCid: subjectCid || null,
   }
   const newStatus = {

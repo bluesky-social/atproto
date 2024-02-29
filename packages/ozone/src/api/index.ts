@@ -8,6 +8,8 @@ import getRepo from './admin/getRepo'
 import queryModerationStatuses from './admin/queryModerationStatuses'
 import queryModerationEvents from './admin/queryModerationEvents'
 import getModerationEvent from './admin/getModerationEvent'
+import queryLabels from './label/queryLabels'
+import subscribeLabels from './label/subscribeLabels'
 import fetchLabels from './temp/fetchLabels'
 import createCommunicationTemplate from './admin/createCommunicationTemplate'
 import updateCommunicationTemplate from './admin/updateCommunicationTemplate'
@@ -27,6 +29,8 @@ export default function (server: Server, ctx: AppContext) {
   getModerationEvent(server, ctx)
   queryModerationEvents(server, ctx)
   queryModerationStatuses(server, ctx)
+  queryLabels(server, ctx)
+  subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
   listCommunicationTemplates(server, ctx)
   createCommunicationTemplate(server, ctx)

@@ -749,7 +749,7 @@ export const schemaDict = {
           'lex:com.atproto.admin.defs#reviewOpen',
           'lex:com.atproto.admin.defs#reviewEscalated',
           'lex:com.atproto.admin.defs#reviewClosed',
-          'lex:com.atproto.admin.defs#reviewOptional',
+          'lex:com.atproto.admin.defs#reviewNone',
         ],
       },
       reviewOpen: {
@@ -767,7 +767,7 @@ export const schemaDict = {
         description:
           'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
       },
-      reviewOptional: {
+      reviewNone: {
         type: 'token',
         description:
           'Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it',
