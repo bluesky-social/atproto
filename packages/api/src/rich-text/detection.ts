@@ -1,6 +1,11 @@
 import TLDs from 'tlds'
 import { AppBskyRichtextFacet } from '../client'
 import { UnicodeString } from './unicode'
+import {
+  HASHTAG_REGEX,
+  TRAILING_PUNCTUATION_REGEX,
+  LEADING_HASH_REGEX,
+} from '../hashtags'
 
 export type Facet = AppBskyRichtextFacet.Main
 
@@ -70,12 +75,12 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
+    const re = new RegExp(HASHTAG_REGEX, 'giu')
     while ((match = re.exec(text.utf16))) {
       let [tag] = match
       const hasLeadingSpace = /^\s/.test(tag)
 
-      tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
+      tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '') // strip ending punctuation
 
       // inclusive of #, max of 64 chars
       if (tag.length > 66) continue
@@ -85,12 +90,12 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       facets.push({
         index: {
           byteStart: text.utf16IndexToUtf8Index(index),
-          byteEnd: text.utf16IndexToUtf8Index(index + tag.length), // inclusive of last char
+          byteEnd: text.utf16IndexToUtf8Index(index + tag.length),
         },
         features: [
           {
             $type: 'app.bsky.richtext.facet#tag',
-            tag: tag.replace(/^#/, ''),
+            tag: tag.replace(LEADING_HASH_REGEX, ''), // strip leading #
           },
         ],
       })

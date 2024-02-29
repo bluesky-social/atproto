@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals'
 import { AtpAgent, RichText, RichTextSegment } from '../src'
 import { isTag } from '../src/client/types/app/bsky/richtext/facet'
 
@@ -240,6 +241,13 @@ describe('detectFacets', () => {
       ['body #tag body', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
       ['body #1', [], []],
       ['body #a1', ['a1'], [{ byteStart: 5, byteEnd: 8 }]],
+      ['body #a_b', ['a_b'], [{ byteStart: 5, byteEnd: 9 }]],
+      ['body #a__b', ['a__b'], [{ byteStart: 5, byteEnd: 10 }]],
+      ['body #_b', [], []],
+      ['body #b_', ['b'], [{ byteStart: 5, byteEnd: 7 }]],
+      ['body #a-b', ['a-b'], [{ byteStart: 5, byteEnd: 9 }]],
+      ['body #a--b', ['a--b'], [{ byteStart: 5, byteEnd: 10 }]],
+      ['body #-b', [], []],
       ['#', [], []],
       ['text #', [], []],
       ['text # text', [], []],
@@ -253,18 +261,11 @@ describe('detectFacets', () => {
         [],
         [],
       ],
-      [
-        'its a #double#rainbow',
-        ['double#rainbow'],
-        [{ byteStart: 6, byteEnd: 21 }],
-      ],
-      ['##hashash', ['#hashash'], [{ byteStart: 0, byteEnd: 9 }]],
-      ['some #n0n3s@n5e!', ['n0n3s@n5e'], [{ byteStart: 5, byteEnd: 15 }]],
-      [
-        'works #with,punctuation',
-        ['with,punctuation'],
-        [{ byteStart: 6, byteEnd: 23 }],
-      ],
+      ['its a #double#rainbow', [], []],
+      ['##hashash', [], []],
+      ['bsky.app/profile#header', [], []],
+      ['some #n0n3s@n5e!', ['n0n3s'], [{ byteStart: 5, byteEnd: 11 }]],
+      ['works #with,punctuation', ['with'], [{ byteStart: 6, byteEnd: 11 }]],
       [
         'strips trailing #punctuation, #like. #this!',
         ['punctuation', 'like', 'this'],
@@ -274,19 +275,19 @@ describe('detectFacets', () => {
           { byteStart: 37, byteEnd: 42 },
         ],
       ],
+      ['I like #turtles!!!', ['turtles'], [{ byteStart: 7, byteEnd: 15 }]],
       [
-        'strips #multi_trailing___...',
-        ['multi_trailing'],
-        [{ byteStart: 7, byteEnd: 22 }],
-      ],
-      [
-        'works with #🦋 emoji, and #butter🦋fly',
-        ['🦋', 'butter🦋fly'],
+        'works with #🦋 emoji, and #butter🦋fly, and #🦋🦋🦋',
+        ['🦋', 'butter🦋fly', '🦋🦋🦋'],
         [
           { byteStart: 11, byteEnd: 16 },
           { byteStart: 28, byteEnd: 42 },
+          { byteStart: 48, byteEnd: 61 },
         ],
       ],
+      // emoji modifiers
+      ['#👍🏻', ['👍🏻'], [{ byteStart: 0, byteEnd: 9 }]],
+      ['#👍🏿', ['👍🏿'], [{ byteStart: 0, byteEnd: 9 }]],
       [
         '#same #same #but #diff',
         ['same', 'same', 'but', 'diff'],
@@ -306,12 +307,12 @@ describe('detectFacets', () => {
       const detectedTags: string[] = []
       const detectedIndices: { byteStart: number; byteEnd: number }[] = []
 
-      for (const { facet } of rt.segments()) {
+      outer: for (const { facet } of rt.segments()) {
         if (!facet) continue
         for (const feature of facet.features) {
-          if (isTag(feature)) {
-            detectedTags.push(feature.tag)
-          }
+          if (!isTag(feature)) continue outer
+
+          detectedTags.push(feature.tag)
         }
         detectedIndices.push(facet.index)
       }
