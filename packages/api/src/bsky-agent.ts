@@ -577,7 +577,6 @@ export class BskyAgent extends AtpAgent {
         for (const updatedWord of newMutedWords) {
           let foundMatch = false
           const sanitizedUpdatedValue = sanitizeMuteWordValue(updatedWord.value)
-          console.log({ sanitizedUpdatedValue })
 
           // was trimmed down to an empty string e.g. single `#`
           if (!sanitizedUpdatedValue) continue
