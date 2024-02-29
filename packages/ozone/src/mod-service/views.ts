@@ -28,6 +28,7 @@ import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import { formatLabel, signLabel } from './util'
 import { LabelRow } from '../db/schema/label'
 import { BackgroundQueue } from '../background'
+import { dbLogger } from '../logger'
 
 export type AppviewAuth = () => Promise<
   | {
@@ -420,11 +421,15 @@ export class ModerationViews {
     }
     const signed = await signLabel(formatted, this.signingKey)
     this.backgroundQueue.add(async (db) => {
-      await db.db
-        .updateTable('label')
-        .set({ sig: signed.sig, signingKey })
-        .where('id', '=', row.id)
-        .execute()
+      try {
+        await db.db
+          .updateTable('label')
+          .set({ sig: signed.sig, signingKey })
+          .where('id', '=', row.id)
+          .execute()
+      } catch (err) {
+        dbLogger.error({ err, label: row }, 'failed to update resigned label')
+      }
     })
     return signed
   }
