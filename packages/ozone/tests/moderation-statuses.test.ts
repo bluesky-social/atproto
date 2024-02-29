@@ -1,18 +1,15 @@
 import assert from 'node:assert'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
-  ComAtprotoAdminDefs,
-  ComAtprotoAdminQueryModerationStatuses,
+  ToolsOzoneDefs,
+  ToolsOzoneQueryModerationStatuses,
 } from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  REVIEWOPEN,
-  REVIEWNONE,
-} from '../src/lexicon/types/com/atproto/admin/defs'
+import { REVIEWOPEN, REVIEWNONE } from '../src/lexicon/types/tools/ozone/defs'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
@@ -28,7 +25,7 @@ describe('moderation-statuses', () => {
   }
 
   const queryModerationStatuses = (statusQuery) =>
-    agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
+    agent.api.tools.ozone.queryModerationStatuses(statusQuery, {
       headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
@@ -119,10 +116,10 @@ describe('moderation-statuses', () => {
     it('returns paginated statuses', async () => {
       // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
-        params: ComAtprotoAdminQueryModerationStatuses.QueryParams,
+        params: ToolsOzoneQueryModerationStatuses.QueryParams,
       ) => {
         let cursor: string | undefined = ''
-        const statuses: ComAtprotoAdminDefs.SubjectStatusView[] = []
+        const statuses: ToolsOzoneDefs.SubjectStatusView[] = []
         let count = 0
         do {
           const results = await queryModerationStatuses({
@@ -265,7 +262,7 @@ describe('moderation-statuses', () => {
         createdBy: sc.dids.alice,
       })
       const { data: result } =
-        await pdsAgent.api.com.atproto.admin.queryModerationStatuses(
+        await pdsAgent.api.tools.ozone.queryModerationStatuses(
           { subject: post.ref.uriStr },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )
@@ -290,7 +287,7 @@ describe('moderation-statuses', () => {
         createdBy: sc.dids.alice,
       })
       const { data: result } =
-        await pdsAgent.api.com.atproto.admin.queryModerationStatuses(
+        await pdsAgent.api.tools.ozone.queryModerationStatuses(
           { subject: post.ref.uriStr },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )

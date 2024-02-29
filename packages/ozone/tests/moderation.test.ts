@@ -6,9 +6,9 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import AtpAgent, {
-  ComAtprotoAdminEmitModerationEvent,
-  ComAtprotoAdminQueryModerationStatuses,
+  ToolsOzoneQueryModerationStatuses,
   ComAtprotoModerationCreateReport,
+  ToolsOzoneEmitModerationEvent,
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
@@ -38,7 +38,7 @@ type CreateReportParams = BaseCreateReportParams & {
 } & Omit<ComAtprotoModerationCreateReport.InputSchema, 'subject'>
 
 type TakedownParams = BaseCreateReportParams &
-  Omit<ComAtprotoAdminEmitModerationEvent.InputSchema, 'subject'>
+  Omit<ToolsOzoneEmitModerationEvent.InputSchema, 'subject'>
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -134,9 +134,9 @@ describe('moderation', () => {
     )
 
   const getStatuses = async (
-    params: ComAtprotoAdminQueryModerationStatuses.QueryParams,
+    params: ToolsOzoneQueryModerationStatuses.QueryParams,
   ) => {
-    const { data } = await agent.api.com.atproto.admin.queryModerationStatuses(
+    const { data } = await agent.api.tools.ozone.queryModerationStatuses(
       params,
       { headers: ozone.adminAuthHeaders() },
     )
@@ -797,7 +797,7 @@ describe('moderation', () => {
       await ozone.processAll()
 
       const { data: statusesAfterTakedown } =
-        await agent.api.com.atproto.admin.queryModerationStatuses(
+        await agent.api.tools.ozone.queryModerationStatuses(
           { subject: sc.dids.bob },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )
@@ -815,11 +815,11 @@ describe('moderation', () => {
       await ozone.processAll()
 
       const [{ data: eventList }, { data: statuses }] = await Promise.all([
-        agent.api.com.atproto.admin.queryModerationEvents(
+        agent.api.tools.ozone.queryModerationEvents(
           { subject: sc.dids.bob },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         ),
-        agent.api.com.atproto.admin.queryModerationStatuses(
+        agent.api.tools.ozone.queryModerationStatuses(
           { subject: sc.dids.bob },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         ),

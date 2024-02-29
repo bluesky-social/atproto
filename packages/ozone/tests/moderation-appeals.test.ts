@@ -1,19 +1,20 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
   ComAtprotoAdminDefs,
-  ComAtprotoAdminEmitModerationEvent,
-  ComAtprotoAdminQueryModerationStatuses,
+  ToolsOzoneDefs,
+  ToolsOzoneEmitModerationEvent,
+  ToolsOzoneQueryModerationStatuses,
 } from '@atproto/api'
 import {
   REASONMISLEADING,
   REASONSPAM,
+  REASONAPPEAL,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
+  REVIEWESCALATED,
   REVIEWCLOSED,
   REVIEWOPEN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { REASONAPPEAL } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { REVIEWESCALATED } from '../src/lexicon/types/com/atproto/admin/defs'
+} from '../src/lexicon/types/tools/ozone/defs'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork
@@ -22,7 +23,7 @@ describe('moderation-appeals', () => {
   let sc: SeedClient
 
   const emitModerationEvent = async (
-    eventData: ComAtprotoAdminEmitModerationEvent.InputSchema,
+    eventData: ToolsOzoneEmitModerationEvent.InputSchema,
   ) => {
     return pdsAgent.api.tools.ozone.emitModerationEvent(eventData, {
       encoding: 'application/json',
@@ -31,9 +32,9 @@ describe('moderation-appeals', () => {
   }
 
   const queryModerationStatuses = (
-    statusQuery: ComAtprotoAdminQueryModerationStatuses.QueryParams,
+    statusQuery: ToolsOzoneQueryModerationStatuses.QueryParams,
   ) =>
-    agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
+    agent.api.tools.ozone.queryModerationStatuses(statusQuery, {
       headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
@@ -56,7 +57,7 @@ describe('moderation-appeals', () => {
     subject: string,
     status: string,
     appealed: boolean | undefined,
-  ): Promise<ComAtprotoAdminDefs.SubjectStatusView | undefined> => {
+  ): Promise<ToolsOzoneDefs.SubjectStatusView | undefined> => {
     const { data } = await queryModerationStatuses({
       subject,
     })

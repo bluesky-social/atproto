@@ -16,7 +16,7 @@ describe('moderation-status-tags', () => {
   }
 
   const queryModerationStatuses = (statusQuery) =>
-    agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
+    agent.api.tools.ozone.queryModerationStatuses(statusQuery, {
       headers: network.bsky.adminAuthHeaders('moderator'),
     })
 

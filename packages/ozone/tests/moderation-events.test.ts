@@ -27,7 +27,7 @@ describe('moderation-events', () => {
   }
 
   const queryModerationEvents = (eventQuery) =>
-    agent.api.com.atproto.admin.queryModerationEvents(eventQuery, {
+    agent.api.tools.ozone.queryModerationEvents(eventQuery, {
       headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
@@ -356,7 +356,7 @@ describe('moderation-events', () => {
 
   describe('get event', () => {
     it('gets an event by specific id', async () => {
-      const { data } = await pdsAgent.api.com.atproto.admin.getModerationEvent(
+      const { data } = await pdsAgent.api.tools.ozone.getModerationEvent(
         { id: 1 },
         { headers: network.ozone.adminAuthHeaders('moderator') },
       )
@@ -381,7 +381,7 @@ describe('moderation-events', () => {
         createdBy: sc.dids.alice,
       })
       const { data: result } =
-        await pdsAgent.api.com.atproto.admin.queryModerationEvents(
+        await pdsAgent.api.tools.ozone.queryModerationEvents(
           {
             subject: post.ref.uriStr,
             types: ['tools.ozone.defs#modEventTakedown'],
@@ -411,7 +411,7 @@ describe('moderation-events', () => {
         createdBy: sc.dids.alice,
       })
       const { data: result } =
-        await pdsAgent.api.com.atproto.admin.queryModerationEvents(
+        await pdsAgent.api.tools.ozone.queryModerationEvents(
           { subject: post.ref.uriStr },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )

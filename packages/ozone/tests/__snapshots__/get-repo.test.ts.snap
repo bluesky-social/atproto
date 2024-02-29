@@ -24,7 +24,7 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "did:example:admin",
-      "reviewState": "com.atproto.admin.defs#reviewClosed",
+      "reviewState": "tools.ozone.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(0)",

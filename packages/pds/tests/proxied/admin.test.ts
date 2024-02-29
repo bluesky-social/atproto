@@ -135,13 +135,12 @@ describe.skip('proxies admin requests', () => {
   })
 
   it('fetches moderation events.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.queryModerationEvents(
-        {
-          subject: sc.posts[sc.dids.bob][1].ref.uriStr,
-        },
-        { headers: network.pds.adminAuthHeaders() },
-      )
+    const { data: result } = await agent.api.tools.ozone.queryModerationEvents(
+      {
+        subject: sc.posts[sc.dids.bob][1].ref.uriStr,
+      },
+      { headers: network.pds.adminAuthHeaders() },
+    )
     expect(forSnapshot(result.events)).toMatchSnapshot()
   })
   it('fetches repo details.', async () => {
@@ -162,20 +161,18 @@ describe.skip('proxies admin requests', () => {
   })
 
   it('fetches event details.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.getModerationEvent(
-        { id: 2 },
-        { headers: network.pds.adminAuthHeaders() },
-      )
+    const { data: result } = await agent.api.tools.ozone.getModerationEvent(
+      { id: 2 },
+      { headers: network.pds.adminAuthHeaders() },
+    )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
 
   it('fetches a list of events.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.queryModerationEvents(
-        { subject: sc.dids.bob },
-        { headers: network.pds.adminAuthHeaders() },
-      )
+    const { data: result } = await agent.api.tools.ozone.queryModerationEvents(
+      { subject: sc.dids.bob },
+      { headers: network.pds.adminAuthHeaders() },
+    )
     expect(forSnapshot(result.events)).toMatchSnapshot()
   })
 
