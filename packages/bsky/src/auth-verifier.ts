@@ -45,9 +45,9 @@ type RoleOutput = {
   }
 }
 
-type AdminServiceOutput = {
+type ModServiceOutput = {
   credentials: {
-    type: 'admin_service'
+    type: 'mod_service'
     aud: string
     iss: string
   }
@@ -55,18 +55,18 @@ type AdminServiceOutput = {
 
 export type AuthVerifierOpts = {
   ownDid: string
-  adminDid: string
+  modServiceDid: string
   adminPasses: string[]
 }
 
 export class AuthVerifier {
   public ownDid: string
-  public adminDid: string
+  public modServiceDid: string
   private adminPasses: Set<string>
 
   constructor(public dataplane: DataPlaneClient, opts: AuthVerifierOpts) {
     this.ownDid = opts.ownDid
-    this.adminDid = opts.adminDid
+    this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
   }
 
@@ -159,17 +159,17 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+  adminService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
-      iss: [this.adminDid],
+      iss: [this.modServiceDid],
     })
-    return { credentials: { type: 'admin_service', aud, iss } }
+    return { credentials: { type: 'mod_service', aud, iss } }
   }
 
   roleOrAdminService = async (
     reqCtx: ReqCtx,
-  ): Promise<RoleOutput | AdminServiceOutput> => {
+  ): Promise<RoleOutput | ModServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
       return this.adminService(reqCtx)
     } else {
@@ -236,16 +236,16 @@ export class AuthVerifier {
   }
 
   parseCreds(
-    creds: StandardOutput | RoleOutput | AdminServiceOutput | NullOutput,
+    creds: StandardOutput | RoleOutput | ModServiceOutput | NullOutput,
   ) {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'admin_service'
+      creds.credentials.type === 'mod_service'
     const canPerformTakedown =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'admin_service'
+      creds.credentials.type === 'mod_service'
     return {
       viewer,
       canViewTakedowns,
