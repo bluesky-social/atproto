@@ -962,6 +962,9 @@ importers:
 
   services/ozone:
     dependencies:
+      '@atproto/aws':
+        specifier: workspace:^
+        version: link:../../packages/aws
       '@atproto/ozone':
         specifier: workspace:^
         version: link:../../packages/ozone

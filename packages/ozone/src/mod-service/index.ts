@@ -39,11 +39,13 @@ import {
   RepoSubject,
   subjectFromStatusRow,
 } from './subject'
+import { jsonb } from '../db/types'
+import { LabelChannel } from '../db/schema/label'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
-import { jsonb } from '../db/types'
-import { LabelChannel } from '../db/schema/label'
+import { ImageInvalidator } from '../image-invalidator'
+import { httpLogger as log } from '../logger'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -55,6 +57,8 @@ export class ModerationService {
     public appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
     public serverDid: string,
+    public imgInvalidator?: ImageInvalidator,
+    public cdnPaths?: string[],
   ) {}
 
   static creator(
@@ -63,6 +67,8 @@ export class ModerationService {
     appviewAgent: AtpAgent,
     appviewAuth: AppviewAuth,
     serverDid: string,
+    imgInvalidator?: ImageInvalidator,
+    cdnPaths?: string[],
   ) {
     return (db: Database) =>
       new ModerationService(
@@ -72,6 +78,8 @@ export class ModerationService {
         appviewAgent,
         appviewAuth,
         serverDid,
+        imgInvalidator,
+        cdnPaths,
       )
   }
 
@@ -556,14 +564,38 @@ export class ModerationService {
               lastAttempted: null,
             }),
         )
-        .returning('id')
+        .returning(['id', 'subjectDid', 'subjectBlobCid', 'eventType'])
         .execute()
 
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
-          await Promise.all(
-            blobEvts.map((evt) => this.eventPusher.attemptBlobEvent(evt.id)),
+          await Promise.allSettled(
+            blobEvts.map((evt) =>
+              this.eventPusher
+                .attemptBlobEvent(evt.id)
+                .catch((err) =>
+                  log.error({ err, ...evt }, 'failed to push blob event'),
+                ),
+            ),
           )
+
+          if (this.imgInvalidator) {
+            await Promise.allSettled(
+              (subject.blobCids ?? []).map((cid) => {
+                const paths = (this.cdnPaths ?? []).map((path) =>
+                  path.replace('%s', subject.did).replace('%s', cid),
+                )
+                return this.imgInvalidator
+                  ?.invalidate(cid, paths)
+                  .catch((err) =>
+                    log.error(
+                      { err, paths, cid },
+                      'failed to invalidate blob on cdn',
+                    ),
+                  )
+              }),
+            )
+          }
         })
       })
     }

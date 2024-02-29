@@ -25,6 +25,7 @@ import {
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { EventReverser } from '../src'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
+import { ImageInvalidator } from '../src/image-invalidator'
 import {
   UNSPECCED_TAKEDOWN_BLOBS_LABEL,
   UNSPECCED_TAKEDOWN_LABEL,
@@ -43,6 +44,7 @@ type TakedownParams = BaseCreateReportParams &
 describe('moderation', () => {
   let network: TestNetwork
   let ozone: TestOzone
+  let mockInvalidator: MockInvalidator
   let agent: AtpAgent
   let bskyAgent: AtpAgent
   let pdsAgent: AtpAgent
@@ -155,8 +157,13 @@ describe('moderation', () => {
   }
 
   beforeAll(async () => {
+    mockInvalidator = new MockInvalidator()
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation',
+      ozone: {
+        imgInvalidator: mockInvalidator,
+        cdnPaths: ['/path1/%s/%s', '/path2/%s/%s'],
+      },
     })
     ozone = network.ozone
     agent = network.ozone.getClient()
@@ -981,6 +988,18 @@ describe('moderation', () => {
       expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
     })
 
+    it('invalidates the image in the cdn', async () => {
+      const blobCid = blob.image.ref.toString()
+      expect(mockInvalidator.invalidated.length).toBe(1)
+      expect(mockInvalidator.invalidated.at(0)?.subject).toBe(blobCid)
+      expect(mockInvalidator.invalidated.at(0)?.paths.at(0)).toEqual(
+        `/path1/${sc.dids.carol}/${blobCid}`,
+      )
+      expect(mockInvalidator.invalidated.at(0)?.paths.at(1)).toEqual(
+        `/path2/${sc.dids.carol}/${blobCid}`,
+      )
+    })
+
     it('fans takedown out to pds', async () => {
       const res = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
@@ -1059,3 +1078,11 @@ describe('moderation', () => {
     })
   })
 })
+
+class MockInvalidator implements ImageInvalidator {
+  invalidated: { subject: string; paths: string[] }[] = []
+
+  async invalidate(subject: string, paths: string[]) {
+    this.invalidated.push({ subject, paths })
+  }
+}

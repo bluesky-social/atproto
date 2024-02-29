@@ -13,6 +13,7 @@ import { createServer } from './lexicon'
 import AppContext, { AppContextOptions } from './context'
 
 export * from './config'
+export { type ImageInvalidator } from './image-invalidator'
 export { Database } from './db'
 export { OzoneDaemon, EventPusher, EventReverser } from './daemon'
 export { AppContext } from './context'
