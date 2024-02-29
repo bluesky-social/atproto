@@ -35,7 +35,7 @@
             "#modEventMute",
             "#modEventEmail",
             "#modEventResolveAppeal",
-            "#modEventDivertBlobs"
+            "#modEventDivert"
           ]
         },
         "subject": {
@@ -74,7 +74,7 @@
             "#modEventMute",
             "#modEventEmail",
             "#modEventResolveAppeal",
-            "#modEventDivertBlobs"
+            "#modEventDivert"
           ]
         },
         "subject": {
@@ -623,7 +623,7 @@
         }
       }
     },
-    "modEventDivertBlobs": {
+    "modEventDivert": {
       "type": "object",
       "description": "Divert a record's blobs to a 3rd party service for further scanning/tagging",
       "properties": {

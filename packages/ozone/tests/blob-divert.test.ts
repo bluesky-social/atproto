@@ -57,7 +57,7 @@ describe('blob divert', () => {
           cid: sc.posts[sc.dids.carol][0].ref.cidStr,
         },
         event: {
-          $type: 'com.atproto.admin.defs#modEventDivertBlobs',
+          $type: 'com.atproto.admin.defs#modEventDivert',
           comment: 'Diverting for test',
         },
         createdBy: sc.dids.alice,

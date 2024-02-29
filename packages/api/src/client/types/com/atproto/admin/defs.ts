@@ -41,7 +41,7 @@ export interface ModEventView {
     | ModEventMute
     | ModEventEmail
     | ModEventResolveAppeal
-    | ModEventDivertBlobs
+    | ModEventDivert
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoRef
@@ -80,7 +80,7 @@ export interface ModEventViewDetail {
     | ModEventMute
     | ModEventEmail
     | ModEventResolveAppeal
-    | ModEventDivertBlobs
+    | ModEventDivert
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -750,21 +750,21 @@ export function validateModEventTag(v: unknown): ValidationResult {
 }
 
 /** Divert a record's blobs to a 3rd party service for further scanning/tagging */
-export interface ModEventDivertBlobs {
+export interface ModEventDivert {
   comment?: string
   [k: string]: unknown
 }
 
-export function isModEventDivertBlobs(v: unknown): v is ModEventDivertBlobs {
+export function isModEventDivert(v: unknown): v is ModEventDivert {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#modEventDivertBlobs'
+    v.$type === 'com.atproto.admin.defs#modEventDivert'
   )
 }
 
-export function validateModEventDivertBlobs(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#modEventDivertBlobs', v)
+export function validateModEventDivert(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventDivert', v)
 }
 
 export interface CommunicationTemplateView {
