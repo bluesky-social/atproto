@@ -1,4 +1,4 @@
-export function sanitizeMuteWordValue(value: string) {
+export function sanitizeMutedWordValue(value: string) {
   return value
     .trim()
     .replace(/^#(?!\ufe0f)/, '')
