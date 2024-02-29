@@ -309,6 +309,16 @@ describe('detectFacets', () => {
           },
         ],
       ],
+      [
+        'this #t\nag should be a tag',
+        ['t'],
+        [
+          {
+            byteStart: 5,
+            byteEnd: 7,
+          },
+        ],
+      ],
     ]
 
     for (const [input, tags, indices] of inputs) {

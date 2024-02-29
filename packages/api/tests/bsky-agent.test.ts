@@ -1333,6 +1333,65 @@ describe('agent', () => {
 
         expect(end.mutedWords.find((m) => m.value === '#️⃣')).toBeFalsy()
       })
+
+      it('hash emoji ###️⃣', async () => {
+        await agent.upsertMutedWords([{ value: '###️⃣', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '##️⃣')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '##️⃣', targets: [] })
+        const end = await agent.getPreferences()
+
+        expect(end.mutedWords.find((m) => m.value === '##️⃣')).toBeFalsy()
+      })
+
+      describe(`invalid characters`, () => {
+        it('zero width space', async () => {
+          const prev = await agent.getPreferences()
+          const length = prev.mutedWords.length
+          await agent.upsertMutedWords([{ value: '#​', targets: [] }])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(mutedWords.length).toEqual(length)
+        })
+
+        it('newline', async () => {
+          await agent.upsertMutedWords([
+            { value: 'test value\n with newline', targets: [] },
+          ])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(
+            mutedWords.find((m) => m.value === 'test value with newline'),
+          ).toBeTruthy()
+        })
+
+        it('newline(s)', async () => {
+          await agent.upsertMutedWords([
+            { value: 'test value\n\r with newline', targets: [] },
+          ])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(
+            mutedWords.find((m) => m.value === 'test value with newline'),
+          ).toBeTruthy()
+        })
+
+        it('empty space', async () => {
+          await agent.upsertMutedWords([{ value: ' ', targets: [] }])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(mutedWords.find((m) => m.value === ' ')).toBeFalsy()
+        })
+
+        it('leading/trailing space', async () => {
+          await agent.upsertMutedWords([{ value: ' trim ', targets: [] }])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(mutedWords.find((m) => m.value === 'trim')).toBeTruthy()
+        })
+      })
     })
 
     describe('hidden posts', () => {

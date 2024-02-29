@@ -577,6 +577,7 @@ export class BskyAgent extends AtpAgent {
         for (const updatedWord of newMutedWords) {
           let foundMatch = false
           const sanitizedUpdatedValue = sanitizeMuteWordValue(updatedWord.value)
+          console.log({ sanitizedUpdatedValue })
 
           // was trimmed down to an empty string e.g. single `#`
           if (!sanitizedUpdatedValue) continue
@@ -767,5 +768,8 @@ async function updateHiddenPost(
 }
 
 function sanitizeMuteWordValue(value: string) {
-  return value.replace(/^#(?!\ufe0f)/, '')
+  return value
+    .trim()
+    .replace(/^#(?!\ufe0f)/, '')
+    .replace(/[\r\n\u00AD\u2060\u200D\u200C\u200B]+/, '')
 }
