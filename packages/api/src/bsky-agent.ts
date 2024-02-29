@@ -13,7 +13,7 @@ import {
   BskyThreadViewPreference,
   BskyInterestsPreference,
 } from './types'
-import { sanitizeMuteWordValue } from './util'
+import { sanitizeMutedWordValue } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -577,7 +577,7 @@ export class BskyAgent extends AtpAgent {
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
         for (const updatedWord of newMutedWords) {
           let foundMatch = false
-          const sanitizedUpdatedValue = sanitizeMuteWordValue(updatedWord.value)
+          const sanitizedUpdatedValue = sanitizeMutedWordValue(updatedWord.value)
 
           // was trimmed down to an empty string e.g. single `#`
           if (!sanitizedUpdatedValue) continue
@@ -604,7 +604,7 @@ export class BskyAgent extends AtpAgent {
         mutedWordsPref = {
           items: newMutedWords.map((w) => ({
             ...w,
-            value: sanitizeMuteWordValue(w.value),
+            value: sanitizeMutedWordValue(w.value),
           })),
         }
       }

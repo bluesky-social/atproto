@@ -2,4 +2,4 @@
 '@atproto/api': patch
 ---
 
-Handle has emoji in mute words
+Handle hash emoji in mute words
