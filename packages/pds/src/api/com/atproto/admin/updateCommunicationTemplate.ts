@@ -5,11 +5,11 @@ import { authPassthru } from '../../../proxy'
 export default function (server: Server, ctx: AppContext) {
   const { moderationAgent } = ctx
   if (!moderationAgent) return
-  server.com.atproto.admin.updateCommunicationTemplate({
+  server.tools.ozone.updateCommunicationTemplate({
     auth: ctx.authVerifier.role,
     handler: async ({ req, input }) => {
       const { data: result } =
-        await moderationAgent.com.atproto.admin.updateCommunicationTemplate(
+        await moderationAgent.tools.ozone.updateCommunicationTemplate(
           input.body,
           authPassthru(req, true),
         )

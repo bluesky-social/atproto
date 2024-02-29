@@ -436,7 +436,7 @@ export class SeedClient<
       reason = 'X',
       createdBy = 'did:example:admin',
     } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
+    const result = await this.agent.api.tools.ozone.emitModerationEvent(
       { event, subject, createdBy, reason },
       {
         encoding: 'application/json',
@@ -453,11 +453,11 @@ export class SeedClient<
     createdBy?: string
   }) {
     const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
+    const result = await this.agent.api.tools.ozone.emitModerationEvent(
       {
         subject,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
           comment: reason,
         },
         createdBy,

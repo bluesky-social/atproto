@@ -9,29 +9,21 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
-import * as ComAtprotoAdminCreateCommunicationTemplate from './types/com/atproto/admin/createCommunicationTemplate'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
-import * as ComAtprotoAdminDeleteCommunicationTemplate from './types/com/atproto/admin/deleteCommunicationTemplate'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
-import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
-import * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
-import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
-import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
-import * as ComAtprotoAdminUpdateCommunicationTemplate from './types/com/atproto/admin/updateCommunicationTemplate'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
@@ -137,13 +129,15 @@ import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unsp
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ToolsOzoneCreateCommunicationTemplate from './types/tools/ozone/createCommunicationTemplate'
+import * as ToolsOzoneDeleteCommunicationTemplate from './types/tools/ozone/deleteCommunicationTemplate'
+import * as ToolsOzoneEmitModerationEvent from './types/tools/ozone/emitModerationEvent'
+import * as ToolsOzoneGetModerationEvent from './types/tools/ozone/getModerationEvent'
+import * as ToolsOzoneListCommunicationTemplates from './types/tools/ozone/listCommunicationTemplates'
+import * as ToolsOzoneQueryModerationEvents from './types/tools/ozone/queryModerationEvents'
+import * as ToolsOzoneQueryModerationStatuses from './types/tools/ozone/queryModerationStatuses'
+import * as ToolsOzoneUpdateCommunicationTemplate from './types/tools/ozone/updateCommunicationTemplate'
 
-export const COM_ATPROTO_ADMIN = {
-  DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
-  DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
-  DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
-  DefsReviewNone: 'com.atproto.admin.defs#reviewNone',
-}
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
   DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
@@ -157,6 +151,12 @@ export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
 }
+export const TOOLS_OZONE = {
+  DefsReviewOpen: 'tools.ozone.defs#reviewOpen',
+  DefsReviewEscalated: 'tools.ozone.defs#reviewEscalated',
+  DefsReviewClosed: 'tools.ozone.defs#reviewClosed',
+  DefsReviewNone: 'tools.ozone.defs#reviewNone',
+}
 
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)
@@ -166,11 +166,13 @@ export class Server {
   xrpc: XrpcServer
   com: ComNS
   app: AppNS
+  tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.tools = new ToolsNS(this)
   }
 }
 
@@ -215,17 +217,6 @@ export class ComAtprotoAdminNS {
     this._server = server
   }
 
-  createCommunicationTemplate<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminCreateCommunicationTemplate.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminCreateCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.createCommunicationTemplate' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   deleteAccount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -234,17 +225,6 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.deleteAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  deleteCommunicationTemplate<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminDeleteCommunicationTemplate.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminDeleteCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.deleteCommunicationTemplate' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -267,17 +247,6 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  emitModerationEvent<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminEmitModerationEvent.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminEmitModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.emitModerationEvent' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -325,17 +294,6 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getModerationEvent<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetModerationEvent.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getModerationEvent' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getRecord<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -366,39 +324,6 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  listCommunicationTemplates<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminListCommunicationTemplates.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminListCommunicationTemplates.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.listCommunicationTemplates' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  queryModerationEvents<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminQueryModerationEvents.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminQueryModerationEvents.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.queryModerationEvents' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  queryModerationStatuses<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminQueryModerationStatuses.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminQueryModerationStatuses.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.queryModerationStatuses' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -454,17 +379,6 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateAccountPassword' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateCommunicationTemplate<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminUpdateCommunicationTemplate.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminUpdateCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.updateCommunicationTemplate' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1768,6 +1682,112 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsNS {
+  _server: Server
+  ozone: ToolsOzoneNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.ozone = new ToolsOzoneNS(server)
+  }
+}
+
+export class ToolsOzoneNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createCommunicationTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCreateCommunicationTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCreateCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.createCommunicationTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteCommunicationTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneDeleteCommunicationTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneDeleteCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.deleteCommunicationTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  emitModerationEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneEmitModerationEvent.Handler<ExtractAuth<AV>>,
+      ToolsOzoneEmitModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.emitModerationEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModerationEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneGetModerationEvent.Handler<ExtractAuth<AV>>,
+      ToolsOzoneGetModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.getModerationEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listCommunicationTemplates<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneListCommunicationTemplates.Handler<ExtractAuth<AV>>,
+      ToolsOzoneListCommunicationTemplates.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.listCommunicationTemplates' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryModerationEvents<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneQueryModerationEvents.Handler<ExtractAuth<AV>>,
+      ToolsOzoneQueryModerationEvents.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.queryModerationEvents' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryModerationStatuses<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneQueryModerationStatuses.Handler<ExtractAuth<AV>>,
+      ToolsOzoneQueryModerationStatuses.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.queryModerationStatuses' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateCommunicationTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneUpdateCommunicationTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneUpdateCommunicationTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.updateCommunicationTemplate' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

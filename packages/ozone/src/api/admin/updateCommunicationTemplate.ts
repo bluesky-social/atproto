@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateCommunicationTemplate({
+  server.tools.ozone.updateCommunicationTemplate({
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials

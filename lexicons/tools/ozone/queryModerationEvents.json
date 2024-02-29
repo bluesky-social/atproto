@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.queryModerationEvents",
+  "id": "tools.ozone.queryModerationEvents",
   "defs": {
     "main": {
       "type": "query",
@@ -11,7 +11,7 @@
           "types": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "The types of events (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned."
+            "description": "The types of events (fully qualified string in the format of tools.ozone#modEvent<name>) to filter by. If not specified, all events are returned."
           },
           "createdBy": {
             "type": "string",
@@ -93,7 +93,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "com.atproto.admin.defs#modEventView"
+                "ref": "tools.ozone.defs#modEventView"
               }
             }
           }

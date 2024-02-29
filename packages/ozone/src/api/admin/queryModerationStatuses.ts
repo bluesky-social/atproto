@@ -3,7 +3,7 @@ import AppContext from '../../context'
 import { getReviewState } from '../moderation/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.queryModerationStatuses({
+  server.tools.ozone.queryModerationStatuses({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const {

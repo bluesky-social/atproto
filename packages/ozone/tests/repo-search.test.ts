@@ -25,7 +25,7 @@ describe('admin repo search view', () => {
 
   beforeAll(async () => {
     await sc.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+      event: { $type: 'tools.ozone.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids['cara-wiegand69.test'],

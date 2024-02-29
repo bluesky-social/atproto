@@ -8,7 +8,7 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWNONE,
-} from '../lexicon/types/com/atproto/admin/defs'
+} from '../lexicon/types/tools/ozone/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
@@ -32,24 +32,24 @@ const getSubjectStatusForModerationEvent = ({
     : REVIEWNONE
 
   switch (action) {
-    case 'com.atproto.admin.defs#modEventAcknowledge':
+    case 'tools.ozone.defs#modEventAcknowledge':
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
         lastReviewedAt: createdAt,
       }
-    case 'com.atproto.admin.defs#modEventReport':
+    case 'tools.ozone.defs#modEventReport':
       return {
         reviewState: REVIEWOPEN,
         lastReportedAt: createdAt,
       }
-    case 'com.atproto.admin.defs#modEventEscalate':
+    case 'tools.ozone.defs#modEventEscalate':
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWESCALATED,
         lastReviewedAt: createdAt,
       }
-    case 'com.atproto.admin.defs#modEventReverseTakedown':
+    case 'tools.ozone.defs#modEventReverseTakedown':
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
@@ -57,7 +57,7 @@ const getSubjectStatusForModerationEvent = ({
         suspendUntil: null,
         lastReviewedAt: createdAt,
       }
-    case 'com.atproto.admin.defs#modEventUnmute':
+    case 'tools.ozone.defs#modEventUnmute':
       return {
         lastReviewedBy: createdBy,
         muteUntil: null,
@@ -66,7 +66,7 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: defaultReviewState,
         lastReviewedAt: createdAt,
       }
-    case 'com.atproto.admin.defs#modEventTakedown':
+    case 'tools.ozone.defs#modEventTakedown':
       return {
         takendown: true,
         lastReviewedBy: createdBy,
@@ -76,7 +76,7 @@ const getSubjectStatusForModerationEvent = ({
           ? new Date(Date.now() + durationInHours * HOUR).toISOString()
           : null,
       }
-    case 'com.atproto.admin.defs#modEventMute':
+    case 'tools.ozone.defs#modEventMute':
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
@@ -88,15 +88,15 @@ const getSubjectStatusForModerationEvent = ({
         // but if it does happen, default to unnecessary
         reviewState: defaultReviewState,
       }
-    case 'com.atproto.admin.defs#modEventComment':
+    case 'tools.ozone.defs#modEventComment':
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
         reviewState: defaultReviewState,
       }
-    case 'com.atproto.admin.defs#modEventTag':
+    case 'tools.ozone.defs#modEventTag':
       return { tags: [], reviewState: defaultReviewState }
-    case 'com.atproto.admin.defs#modEventResolveAppeal':
+    case 'tools.ozone.defs#modEventResolveAppeal':
       return {
         appealed: false,
       }
@@ -139,7 +139,7 @@ export const adjustModerationSubjectStatus = async (
     .executeTakeFirst()
 
   const isAppealEvent =
-    action === 'com.atproto.admin.defs#modEventReport' &&
+    action === 'tools.ozone.defs#modEventReport' &&
     meta?.reportType === REASONAPPEAL
 
   const subjectStatus = getSubjectStatusForModerationEvent({
@@ -181,7 +181,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'com.atproto.admin.defs#modEventReverseTakedown' &&
+    action === 'tools.ozone.defs#modEventReverseTakedown' &&
     !subjectStatus.takendown
   ) {
     newStatus.takendown = false
@@ -199,19 +199,19 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'com.atproto.admin.defs#modEventResolveAppeal' &&
+    action === 'tools.ozone.defs#modEventResolveAppeal' &&
     subjectStatus.appealed
   ) {
     newStatus.appealed = false
     subjectStatus.appealed = false
   }
 
-  if (action === 'com.atproto.admin.defs#modEventComment' && meta?.sticky) {
+  if (action === 'tools.ozone.defs#modEventComment' && meta?.sticky) {
     newStatus.comment = comment
     subjectStatus.comment = comment
   }
 
-  if (action === 'com.atproto.admin.defs#modEventTag') {
+  if (action === 'tools.ozone.defs#modEventTag') {
     let tags = currentStatus?.tags || []
     if (addedTags?.length) {
       tags = tags.concat(addedTags)

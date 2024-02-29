@@ -20,7 +20,7 @@ describe('moderation-events', () => {
   const emitModerationEvent = async (
     eventData: ComAtprotoAdminEmitModerationEvent.InputSchema,
   ) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
+    return pdsAgent.api.tools.ozone.emitModerationEvent(eventData, {
       encoding: 'application/json',
       headers: network.ozone.adminAuthHeaders('moderator'),
     })
@@ -54,7 +54,7 @@ describe('moderation-events', () => {
     for (let i = 0; i < 4; i++) {
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: i % 2 ? REASONSPAM : REASONMISLEADING,
           comment: 'X',
         },
@@ -64,7 +64,7 @@ describe('moderation-events', () => {
       })
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONSPAM,
           comment: 'X',
         },
@@ -114,7 +114,7 @@ describe('moderation-events', () => {
       await Promise.all([
         emitModerationEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventComment',
+            $type: 'tools.ozone.defs#modEventComment',
             comment: 'X',
           },
           subject: alicesAccount,
@@ -122,7 +122,7 @@ describe('moderation-events', () => {
         }),
         emitModerationEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventEscalate',
+            $type: 'tools.ozone.defs#modEventEscalate',
             comment: 'X',
           },
           subject: alicesAccount,
@@ -135,7 +135,7 @@ describe('moderation-events', () => {
         }),
         queryModerationEvents({
           subject: sc.dids.alice,
-          types: ['com.atproto.admin.defs#modEventReport'],
+          types: ['tools.ozone.defs#modEventReport'],
         }),
       ])
 
@@ -249,7 +249,7 @@ describe('moderation-events', () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
         emitModerationEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.defs#modEventLabel',
             comment: 'X',
             negateLabelVals: ['L1', 'L2'],
             createLabelVals: [],
@@ -263,7 +263,7 @@ describe('moderation-events', () => {
         }),
         emitModerationEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.defs#modEventLabel',
             comment: 'X',
             createLabelVals: ['L1', 'L2'],
             negateLabelVals: [],
@@ -314,7 +314,7 @@ describe('moderation-events', () => {
       }) =>
         emitModerationEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventTag',
+            $type: 'tools.ozone.defs#modEventTag',
             comment: 'X',
             add,
             remove,
@@ -370,7 +370,7 @@ describe('moderation-events', () => {
       assert(post.images.length > 1)
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.defs#modEventTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -384,14 +384,14 @@ describe('moderation-events', () => {
         await pdsAgent.api.com.atproto.admin.queryModerationEvents(
           {
             subject: post.ref.uriStr,
-            types: ['com.atproto.admin.defs#modEventTakedown'],
+            types: ['tools.ozone.defs#modEventTakedown'],
           },
           { headers: network.ozone.adminAuthHeaders('moderator') },
         )
       expect(result.events[0]).toMatchObject({
         createdBy: sc.dids.alice,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.defs#modEventTakedown',
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })
@@ -401,7 +401,7 @@ describe('moderation-events', () => {
       const post = sc.posts[sc.dids.carol][0]
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -418,7 +418,7 @@ describe('moderation-events', () => {
       expect(result.events[0]).toMatchObject({
         createdBy: sc.dids.alice,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })

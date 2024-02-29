@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.emitModerationEvent",
+  "id": "tools.ozone.emitModerationEvent",
   "defs": {
     "main": {
       "type": "procedure",
@@ -14,25 +14,22 @@
             "event": {
               "type": "union",
               "refs": [
-                "com.atproto.admin.defs#modEventTakedown",
-                "com.atproto.admin.defs#modEventAcknowledge",
-                "com.atproto.admin.defs#modEventEscalate",
-                "com.atproto.admin.defs#modEventComment",
-                "com.atproto.admin.defs#modEventLabel",
-                "com.atproto.admin.defs#modEventReport",
-                "com.atproto.admin.defs#modEventMute",
-                "com.atproto.admin.defs#modEventReverseTakedown",
-                "com.atproto.admin.defs#modEventUnmute",
-                "com.atproto.admin.defs#modEventEmail",
-                "com.atproto.admin.defs#modEventTag"
+                "tools.ozone.defs#modEventTakedown",
+                "tools.ozone.defs#modEventAcknowledge",
+                "tools.ozone.defs#modEventEscalate",
+                "tools.ozone.defs#modEventComment",
+                "tools.ozone.defs#modEventLabel",
+                "tools.ozone.defs#modEventReport",
+                "tools.ozone.defs#modEventMute",
+                "tools.ozone.defs#modEventReverseTakedown",
+                "tools.ozone.defs#modEventUnmute",
+                "tools.ozone.defs#modEventEmail",
+                "tools.ozone.defs#modEventTag"
               ]
             },
             "subject": {
               "type": "union",
-              "refs": [
-                "com.atproto.admin.defs#repoRef",
-                "com.atproto.repo.strongRef"
-              ]
+              "refs": ["tools.ozone.defs#repoRef", "com.atproto.repo.strongRef"]
             },
             "subjectBlobCids": {
               "type": "array",
@@ -46,7 +43,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#modEventView"
+          "ref": "tools.ozone.defs#modEventView"
         }
       },
       "errors": [{ "name": "SubjectHasAction" }]

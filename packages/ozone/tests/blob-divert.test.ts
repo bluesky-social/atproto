@@ -49,7 +49,7 @@ describe('blob divert', () => {
       success: false,
     })
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.emitModerationEvent(
       {
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -57,7 +57,7 @@ describe('blob divert', () => {
           cid: sc.posts[sc.dids.carol][0].ref.cidStr,
         },
         event: {
-          $type: 'com.atproto.admin.defs#modEventDivert',
+          $type: 'tools.ozone.defs#modEventDivert',
           comment: 'Diverting for test',
         },
         createdBy: sc.dids.alice,

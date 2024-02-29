@@ -5,6 +5,7 @@ import { addHoursToDate } from '@atproto/common'
 import { Database } from '../db'
 import { AppviewAuth, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
+import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
   isModEventComment,
   isModEventLabel,
@@ -13,10 +14,8 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
-  RepoRef,
-  RepoBlobRef,
   isModEventDivert,
-} from '../lexicon/types/com/atproto/admin/defs'
+} from '../lexicon/types/tools/ozone/defs'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
@@ -233,7 +232,7 @@ export class ModerationService {
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
-      .where('action', '=', 'com.atproto.admin.defs#modEventReport')
+      .where('action', '=', 'tools.ozone.defs#modEventReport')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
@@ -380,12 +379,12 @@ export class ModerationService {
     // Means the subject was suspended and needs to be unsuspended
     if (subject.reverseSuspend) {
       builder = builder
-        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .where('action', '=', 'tools.ozone.defs#modEventTakedown')
         .where('durationInHours', 'is not', null)
     }
     if (subject.reverseMute) {
       builder = builder
-        .where('action', '=', 'com.atproto.admin.defs#modEventMute')
+        .where('action', '=', 'tools.ozone.defs#modEventMute')
         .where('durationInHours', 'is not', null)
     }
 
@@ -431,14 +430,13 @@ export class ModerationService {
     action,
     subject,
   }: ReversibleModerationEvent): Promise<ModerationEventRow> {
-    const isRevertingTakedown =
-      action === 'com.atproto.admin.defs#modEventTakedown'
+    const isRevertingTakedown = action === 'tools.ozone.defs#modEventTakedown'
     this.db.assertTransaction()
     const { event } = await this.logEvent({
       event: {
         $type: isRevertingTakedown
-          ? 'com.atproto.admin.defs#modEventReverseTakedown'
-          : 'com.atproto.admin.defs#modEventUnmute',
+          ? 'tools.ozone.defs#modEventReverseTakedown'
+          : 'tools.ozone.defs#modEventUnmute',
         comment: comment ?? undefined,
       },
       createdAt,
@@ -683,7 +681,7 @@ export class ModerationService {
 
     const result = await this.logEvent({
       event: {
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.defs#modEventReport',
         reportType: reasonType,
         comment: reason,
       },

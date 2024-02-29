@@ -45,10 +45,10 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       if (ctx.moderationAgent) {
-        await ctx.moderationAgent.api.com.atproto.admin.emitModerationEvent(
+        await ctx.moderationAgent.api.tools.ozone.emitModerationEvent(
           {
             event: {
-              $type: 'com.atproto.admin.defs#modEventEmail',
+              $type: 'tools.ozone.defs#modEventEmail',
               subjectLine: subject,
               comment,
             },

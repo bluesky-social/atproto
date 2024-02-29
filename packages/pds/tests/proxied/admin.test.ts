@@ -99,40 +99,38 @@ describe.skip('proxies admin requests', () => {
 
   it('takes actions and resolves reports', async () => {
     const post = sc.posts[sc.dids.bob][1]
-    const { data: actionA } =
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.ref.uriStr,
-            cid: post.ref.cidStr,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    const { data: actionA } = await agent.api.tools.ozone.emitModerationEvent(
+      {
+        event: { $type: 'tools.ozone.defs#modEventAcknowledge' },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
         },
-        {
-          headers: network.pds.adminAuthHeaders(),
-          encoding: 'application/json',
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
     expect(forSnapshot(actionA)).toMatchSnapshot()
-    const { data: actionB } =
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.bob,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    const { data: actionB } = await agent.api.tools.ozone.emitModerationEvent(
+      {
+        event: { $type: 'tools.ozone.defs#modEventAcknowledge' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
         },
-        {
-          headers: network.pds.adminAuthHeaders(),
-          encoding: 'application/json',
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
     expect(forSnapshot(actionB)).toMatchSnapshot()
   })
 
@@ -204,9 +202,9 @@ describe.skip('proxies admin requests', () => {
 
   it('takesdown and labels repos, and reverts.', async () => {
     // takedown repo
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.emitModerationEvent(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        event: { $type: 'tools.ozone.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
@@ -233,14 +231,14 @@ describe.skip('proxies admin requests', () => {
       'Account has been taken down',
     )
     // reverse action
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.emitModerationEvent(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
         },
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
         },
         createdBy: 'did:example:admin',
         reason: 'X',
@@ -266,9 +264,9 @@ describe.skip('proxies admin requests', () => {
   it('takesdown and labels records, and reverts.', async () => {
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.emitModerationEvent(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        event: { $type: 'tools.ozone.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: post.ref.uriStr,
@@ -292,14 +290,14 @@ describe.skip('proxies admin requests', () => {
     )
     await expect(tryGetPost).rejects.toThrow(NotFoundError)
     // reverse action
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.emitModerationEvent(
       {
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: post.ref.uriStr,
           cid: post.ref.cidStr,
         },
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        event: { $type: 'tools.ozone.defs#modEventReverseTakedown' },
         createdBy: 'did:example:admin',
         reason: 'X',
       },

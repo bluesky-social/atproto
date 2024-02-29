@@ -3,7 +3,7 @@ import AppContext from '../../context'
 import { getEventType } from '../moderation/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.queryModerationEvents({
+  server.tools.ozone.queryModerationEvents({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const {

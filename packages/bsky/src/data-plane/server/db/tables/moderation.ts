@@ -11,15 +11,15 @@ export const subjectStatusTableName = 'moderation_subject_status'
 export interface ModerationEvent {
   id: Generated<number>
   action:
-    | 'com.atproto.admin.defs#modEventTakedown'
-    | 'com.atproto.admin.defs#modEventAcknowledge'
-    | 'com.atproto.admin.defs#modEventEscalate'
-    | 'com.atproto.admin.defs#modEventComment'
-    | 'com.atproto.admin.defs#modEventLabel'
-    | 'com.atproto.admin.defs#modEventReport'
-    | 'com.atproto.admin.defs#modEventMute'
-    | 'com.atproto.admin.defs#modEventReverseTakedown'
-    | 'com.atproto.admin.defs#modEventEmail'
+    | 'tools.ozone.defs#modEventTakedown'
+    | 'tools.ozone.defs#modEventAcknowledge'
+    | 'tools.ozone.defs#modEventEscalate'
+    | 'tools.ozone.defs#modEventComment'
+    | 'tools.ozone.defs#modEventLabel'
+    | 'tools.ozone.defs#modEventReport'
+    | 'tools.ozone.defs#modEventMute'
+    | 'tools.ozone.defs#modEventReverseTakedown'
+    | 'tools.ozone.defs#modEventEmail'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null

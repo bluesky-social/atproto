@@ -10,7 +10,7 @@ import { subjectFromInput } from '../../mod-service/subject'
 import { ModerationLangService } from '../../mod-service/lang'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.emitModerationEvent({
+  server.tools.ozone.emitModerationEvent({
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials

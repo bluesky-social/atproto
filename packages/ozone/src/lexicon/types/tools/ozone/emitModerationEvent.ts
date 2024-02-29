@@ -3,30 +3,39 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../lexicons'
+import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from './defs'
+import * as ToolsOzoneDefs from './defs'
+import * as ComAtprotoRepoStrongRef from '../../com/atproto/repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** ID of the template to be updated. */
-  id: string
-  /** Name of the template. */
-  name?: string
-  /** Content of the template, markdown supported, can contain variable placeholders. */
-  contentMarkdown?: string
-  /** Subject of the message, used in emails. */
-  subject?: string
-  /** DID of the user who is updating the template. */
-  updatedBy?: string
-  disabled?: boolean
+  event:
+    | ToolsOzoneDefs.ModEventTakedown
+    | ToolsOzoneDefs.ModEventAcknowledge
+    | ToolsOzoneDefs.ModEventEscalate
+    | ToolsOzoneDefs.ModEventComment
+    | ToolsOzoneDefs.ModEventLabel
+    | ToolsOzoneDefs.ModEventReport
+    | ToolsOzoneDefs.ModEventMute
+    | ToolsOzoneDefs.ModEventReverseTakedown
+    | ToolsOzoneDefs.ModEventUnmute
+    | ToolsOzoneDefs.ModEventEmail
+    | ToolsOzoneDefs.ModEventTag
+    | { $type: string; [k: string]: unknown }
+  subject:
+    | ToolsOzoneDefs.RepoRef
+    | ComAtprotoRepoStrongRef.Main
+    | { $type: string; [k: string]: unknown }
+  subjectBlobCids?: string[]
+  createdBy: string
   [k: string]: unknown
 }
 
-export type OutputSchema = ComAtprotoAdminDefs.CommunicationTemplateView
+export type OutputSchema = ToolsOzoneDefs.ModEventView
 
 export interface HandlerInput {
   encoding: 'application/json'
@@ -42,6 +51,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'SubjectHasAction'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

@@ -13,7 +13,7 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
-} from '../../lexicon/types/com/atproto/admin/defs'
+} from '../../lexicon/types/tools/ozone/defs'
 import { ModerationEvent } from '../../db/schema/moderation_event'
 import { ModerationSubjectStatusRow } from '../../mod-service/types'
 
@@ -52,16 +52,16 @@ const reasonTypes = new Set([
 ])
 
 const eventTypes = new Set([
-  'com.atproto.admin.defs#modEventTakedown',
-  'com.atproto.admin.defs#modEventAcknowledge',
-  'com.atproto.admin.defs#modEventEscalate',
-  'com.atproto.admin.defs#modEventComment',
-  'com.atproto.admin.defs#modEventLabel',
-  'com.atproto.admin.defs#modEventReport',
-  'com.atproto.admin.defs#modEventMute',
-  'com.atproto.admin.defs#modEventUnmute',
-  'com.atproto.admin.defs#modEventReverseTakedown',
-  'com.atproto.admin.defs#modEventEmail',
-  'com.atproto.admin.defs#modEventResolveAppeal',
-  'com.atproto.admin.defs#modEventTag',
+  'tools.ozone.defs#modEventTakedown',
+  'tools.ozone.defs#modEventAcknowledge',
+  'tools.ozone.defs#modEventEscalate',
+  'tools.ozone.defs#modEventComment',
+  'tools.ozone.defs#modEventLabel',
+  'tools.ozone.defs#modEventReport',
+  'tools.ozone.defs#modEventMute',
+  'tools.ozone.defs#modEventUnmute',
+  'tools.ozone.defs#modEventReverseTakedown',
+  'tools.ozone.defs#modEventEmail',
+  'tools.ozone.defs#modEventResolveAppeal',
+  'tools.ozone.defs#modEventTag',
 ])

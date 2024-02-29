@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.updateCommunicationTemplate",
+  "id": "tools.ozone.updateCommunicationTemplate",
   "defs": {
     "main": {
       "type": "procedure",

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.getModerationEvent",
+  "id": "tools.ozone.getModerationEvent",
   "defs": {
     "main": {
       "type": "query",
@@ -16,7 +16,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#modEventViewDetail"
+          "ref": "tools.ozone.defs#modEventViewDetail"
         }
       }
     }

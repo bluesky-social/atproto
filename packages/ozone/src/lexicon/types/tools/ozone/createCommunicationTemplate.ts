@@ -3,26 +3,23 @@
  */
 import express from 'express'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../lexicons'
+import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from './defs'
+import * as ComAtprotoAdminDefs from '../../com/atproto/admin/defs'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** ID of the template to be updated. */
-  id: string
   /** Name of the template. */
-  name?: string
+  name: string
   /** Content of the template, markdown supported, can contain variable placeholders. */
-  contentMarkdown?: string
+  contentMarkdown: string
   /** Subject of the message, used in emails. */
-  subject?: string
-  /** DID of the user who is updating the template. */
-  updatedBy?: string
-  disabled?: boolean
+  subject: string
+  /** DID of the user who is creating the template. */
+  createdBy?: string
   [k: string]: unknown
 }
 

@@ -1,7 +1,7 @@
 import Database from '../db'
 import { Selectable } from 'kysely'
 import { CommunicationTemplate } from '../db/schema/communication_template'
-import { CommunicationTemplateView } from '../lexicon/types/com/atproto/admin/defs'
+import { CommunicationTemplateView } from '../lexicon/types/tools/ozone/defs'
 
 export type CommunicationTemplateServiceCreator = (
   db: Database,

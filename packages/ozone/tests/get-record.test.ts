@@ -47,7 +47,7 @@ describe('admin get record view', () => {
       },
     })
     await sc.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+      event: { $type: 'tools.ozone.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,

@@ -81,10 +81,10 @@ describe('moderation', () => {
     durationInHours,
     ...rest
   }: TakedownParams & Pick<ModEventTakedown, 'durationInHours'>) =>
-    agent.api.com.atproto.admin.emitModerationEvent(
+    agent.api.tools.ozone.emitModerationEvent(
       {
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.defs#modEventTakedown',
           durationInHours,
         },
         subject:
@@ -108,10 +108,10 @@ describe('moderation', () => {
     )
 
   const performReverseTakedown = async (params: TakedownParams) =>
-    agent.api.com.atproto.admin.emitModerationEvent(
+    agent.api.tools.ozone.emitModerationEvent(
       {
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
         },
         subject:
           'account' in params
@@ -304,10 +304,10 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.tools.ozone.emitModerationEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventEscalate',
+            $type: 'tools.ozone.defs#modEventEscalate',
             comment: 'Y',
           },
           subject: alicesPostSubject,
@@ -337,10 +337,10 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.tools.ozone.emitModerationEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventComment',
+            $type: 'tools.ozone.defs#modEventComment',
             sticky: true,
             comment: 'This is a persistent note',
           },
@@ -376,7 +376,7 @@ describe('moderation', () => {
           },
           createdBy: 'did:example:admin',
         }
-        return agent.api.com.atproto.admin.emitModerationEvent(
+        return agent.api.tools.ozone.emitModerationEvent(
           {
             event,
             ...baseAction,
@@ -390,15 +390,15 @@ describe('moderation', () => {
       }
       // Validate that subject status is marked as escalated
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.defs#modEventReport',
         reportType: REASONSPAM,
       })
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.defs#modEventReport',
         reportType: REASONMISLEADING,
       })
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventEscalate',
+        $type: 'tools.ozone.defs#modEventEscalate',
       })
       const alicesPostStatusAfterEscalation = await getStatuses({
         subject: alicesPostRef.uriStr,
@@ -410,12 +410,12 @@ describe('moderation', () => {
       // Validate that subject status is marked as takendown
 
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventLabel',
+        $type: 'tools.ozone.defs#modEventLabel',
         createLabelVals: ['nsfw'],
         negateLabelVals: [],
       })
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventTakedown',
+        $type: 'tools.ozone.defs#modEventTakedown',
       })
 
       const alicesPostStatusAfterTakedown = await getStatuses({
@@ -427,7 +427,7 @@ describe('moderation', () => {
       })
 
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        $type: 'tools.ozone.defs#modEventReverseTakedown',
       })
       const alicesPostStatusAfterRevert = await getStatuses({
         subject: alicesPostRef.uriStr,
@@ -591,10 +591,10 @@ describe('moderation', () => {
     })
 
     it('does not allow triage moderators to label.', async () => {
-      const attemptLabel = agent.api.com.atproto.admin.emitModerationEvent(
+      const attemptLabel = agent.api.tools.ozone.emitModerationEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.defs#modEventLabel',
             negateLabelVals: ['a'],
             createLabelVals: ['b', 'c'],
           },
@@ -735,10 +735,10 @@ describe('moderation', () => {
     })
 
     it('allows full moderators to takedown.', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.tools.ozone.emitModerationEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventTakedown',
+            $type: 'tools.ozone.defs#modEventTakedown',
           },
           createdBy: 'did:example:moderator',
           subject: {
@@ -761,23 +761,22 @@ describe('moderation', () => {
     })
 
     it('does not allow non-full moderators to takedown.', async () => {
-      const attemptTakedownTriage =
-        agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: {
-              $type: 'com.atproto.admin.defs#modEventTakedown',
-            },
-            createdBy: 'did:example:moderator',
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.bob,
-            },
+      const attemptTakedownTriage = agent.api.tools.ozone.emitModerationEvent(
+        {
+          event: {
+            $type: 'tools.ozone.defs#modEventTakedown',
           },
-          {
-            encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('triage'),
+          createdBy: 'did:example:moderator',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
           },
-        )
+        },
+        {
+          encoding: 'application/json',
+          headers: network.ozone.adminAuthHeaders('triage'),
+        },
+      )
       await expect(attemptTakedownTriage).rejects.toThrow(
         'Must be a full moderator to take this type of action',
       )
@@ -835,7 +834,7 @@ describe('moderation', () => {
       expect(eventList.events[0]).toMatchObject({
         createdBy: action.createdBy,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
           comment:
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
@@ -866,10 +865,10 @@ describe('moderation', () => {
       },
     ) {
       const { createLabelVals, negateLabelVals } = opts
-      const result = await agent.api.com.atproto.admin.emitModerationEvent(
+      const result = await agent.api.tools.ozone.emitModerationEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.defs#modEventLabel',
             createLabelVals,
             negateLabelVals,
           },
@@ -890,10 +889,10 @@ describe('moderation', () => {
         subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
       },
     ) {
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.tools.ozone.emitModerationEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+            $type: 'tools.ozone.defs#modEventReverseTakedown',
           },
           createdBy: 'did:example:admin',
           reason: 'Y',

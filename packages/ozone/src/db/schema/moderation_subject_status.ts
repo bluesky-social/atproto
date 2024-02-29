@@ -4,7 +4,7 @@ import {
   REVIEWOPEN,
   REVIEWESCALATED,
   REVIEWNONE,
-} from '../../lexicon/types/com/atproto/admin/defs'
+} from '../../lexicon/types/tools/ozone/defs'
 
 export const subjectStatusTableName = 'moderation_subject_status'
 

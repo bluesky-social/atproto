@@ -21,7 +21,7 @@ describe('moderation-statuses', () => {
   let sc: SeedClient
 
   const emitModerationEvent = async (eventData) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
+    return pdsAgent.api.tools.ozone.emitModerationEvent(eventData, {
       encoding: 'application/json',
       headers: network.ozone.adminAuthHeaders('moderator'),
     })
@@ -55,7 +55,7 @@ describe('moderation-statuses', () => {
     for (let i = 0; i < 4; i++) {
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: i % 2 ? REASONSPAM : REASONMISLEADING,
           comment: 'X',
         },
@@ -65,7 +65,7 @@ describe('moderation-statuses', () => {
       })
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONSPAM,
           comment: 'X',
         },
@@ -146,7 +146,7 @@ describe('moderation-statuses', () => {
       await emitModerationEvent({
         subject: list[1].subject,
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'tools.ozone.defs#modEventAcknowledge',
           comment: 'X',
         },
         createdBy: sc.dids.bob,
@@ -189,7 +189,7 @@ describe('moderation-statuses', () => {
         emitModerationEvent({
           subject: bobsAccount,
           event: {
-            $type: 'com.atproto.admin.defs#modEventTag',
+            $type: 'tools.ozone.defs#modEventTag',
             add: ['newTag'],
             remove: [],
             comment: 'X',
@@ -199,7 +199,7 @@ describe('moderation-statuses', () => {
         emitModerationEvent({
           subject: bobsAccount,
           event: {
-            $type: 'com.atproto.admin.defs#modEventComment',
+            $type: 'tools.ozone.defs#modEventComment',
             comment: 'X',
           },
           createdBy: sc.dids.alice,
@@ -226,7 +226,7 @@ describe('moderation-statuses', () => {
       await emitModerationEvent({
         subject: alicesPost,
         event: {
-          $type: 'com.atproto.admin.defs#modEventComment',
+          $type: 'tools.ozone.defs#modEventComment',
           comment: 'X',
         },
         createdBy: sc.dids.alice,
@@ -237,7 +237,7 @@ describe('moderation-statuses', () => {
       await emitModerationEvent({
         subject: alicesPost,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONMISLEADING,
           comment: 'X',
         },
@@ -254,7 +254,7 @@ describe('moderation-statuses', () => {
       assert(post.images.length > 1)
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.defs#modEventTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -280,7 +280,7 @@ describe('moderation-statuses', () => {
       const post = sc.posts[sc.dids.carol][0]
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.defs#modEventReverseTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',

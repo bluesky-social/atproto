@@ -9,7 +9,7 @@ describe('moderation-status-tags', () => {
   let sc: SeedClient
 
   const emitModerationEvent = async (eventData) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
+    return pdsAgent.api.tools.ozone.emitModerationEvent(eventData, {
       encoding: 'application/json',
       headers: network.bsky.adminAuthHeaders('moderator'),
     })
@@ -44,7 +44,7 @@ describe('moderation-status-tags', () => {
       await emitModerationEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           comment: 'X',
           reportType: REASONSPAM,
         },
@@ -53,7 +53,7 @@ describe('moderation-status-tags', () => {
       await emitModerationEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTag',
+          $type: 'tools.ozone.defs#modEventTag',
           add: ['interaction-churn'],
           remove: [],
         },
@@ -71,7 +71,7 @@ describe('moderation-status-tags', () => {
       await emitModerationEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTag',
+          $type: 'tools.ozone.defs#modEventTag',
           remove: ['interaction-churn'],
           add: ['follow-churn'],
         },

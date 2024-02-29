@@ -24,7 +24,7 @@ describe('moderation-appeals', () => {
   const emitModerationEvent = async (
     eventData: ComAtprotoAdminEmitModerationEvent.InputSchema,
   ) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
+    return pdsAgent.api.tools.ozone.emitModerationEvent(eventData, {
       encoding: 'application/json',
       headers: network.ozone.adminAuthHeaders('moderator'),
     })
@@ -85,7 +85,7 @@ describe('moderation-appeals', () => {
       // Create a report by alice
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONMISLEADING,
         },
         subject: getBobsPostSubject(),
@@ -110,7 +110,7 @@ describe('moderation-appeals', () => {
       // Emit report event as moderator
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
@@ -153,7 +153,7 @@ describe('moderation-appeals', () => {
       // Resolve appeal with acknowledge
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventResolveAppeal',
+          $type: 'tools.ozone.defs#modEventResolveAppeal',
         },
         subject: getBobsPostSubject(),
         createdBy: sc.dids.carol,
@@ -163,7 +163,7 @@ describe('moderation-appeals', () => {
 
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
@@ -188,7 +188,7 @@ describe('moderation-appeals', () => {
       // Bob reports alice's post
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONMISLEADING,
         },
         subject: getAlicesPostSubject(),
@@ -198,7 +198,7 @@ describe('moderation-appeals', () => {
       // Moderator acknowledges the report, assume a label was applied too
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'tools.ozone.defs#modEventAcknowledge',
         },
         subject: getAlicesPostSubject(),
         createdBy: sc.dids.carol,
@@ -207,7 +207,7 @@ describe('moderation-appeals', () => {
       // Alice appeals the report
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONAPPEAL,
         },
         subject: getAlicesPostSubject(),
@@ -223,7 +223,7 @@ describe('moderation-appeals', () => {
       // Bob reports it again
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.defs#modEventReport',
           reportType: REASONSPAM,
         },
         subject: getAlicesPostSubject(),
@@ -240,7 +240,7 @@ describe('moderation-appeals', () => {
       // Emit an escalation event
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventEscalate',
+          $type: 'tools.ozone.defs#modEventEscalate',
         },
         subject: getAlicesPostSubject(),
         createdBy: sc.dids.carol,
@@ -255,7 +255,7 @@ describe('moderation-appeals', () => {
       // Emit an acknowledge event
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'tools.ozone.defs#modEventAcknowledge',
         },
         subject: getAlicesPostSubject(),
         createdBy: sc.dids.carol,
@@ -267,7 +267,7 @@ describe('moderation-appeals', () => {
       // Emit a resolveAppeal event
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventResolveAppeal',
+          $type: 'tools.ozone.defs#modEventResolveAppeal',
           comment: 'lgtm',
         },
         subject: getAlicesPostSubject(),

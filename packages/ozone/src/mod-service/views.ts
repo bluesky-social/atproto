@@ -5,17 +5,19 @@ import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Database } from '../db'
 import {
-  ModEventView,
   RepoView,
   RepoViewDetail,
   RecordView,
   RecordViewDetail,
   ReportViewDetail,
   BlobView,
-  SubjectStatusView,
-  ModEventViewDetail,
   AccountView,
 } from '../lexicon/types/com/atproto/admin/defs'
+import {
+  ModEventView,
+  SubjectStatusView,
+  ModEventViewDetail,
+} from '../lexicon/types/tools/ozone/defs'
 import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
 import { Label, isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -98,8 +100,8 @@ export class ModerationViews {
 
     if (
       [
-        'com.atproto.admin.defs#modEventTakedown',
-        'com.atproto.admin.defs#modEventMute',
+        'tools.ozone.defs#modEventTakedown',
+        'tools.ozone.defs#modEventMute',
       ].includes(event.action)
     ) {
       eventView.event = {
@@ -108,7 +110,7 @@ export class ModerationViews {
       }
     }
 
-    if (event.action === 'com.atproto.admin.defs#modEventLabel') {
+    if (event.action === 'tools.ozone.defs#modEventLabel') {
       eventView.event = {
         ...eventView.event,
         createLabelVals: event.createLabelVals?.length
@@ -123,9 +125,9 @@ export class ModerationViews {
     // This is for legacy data only, for new events, these types of events won't have labels attached
     if (
       [
-        'com.atproto.admin.defs#modEventAcknowledge',
-        'com.atproto.admin.defs#modEventTakedown',
-        'com.atproto.admin.defs#modEventEscalate',
+        'tools.ozone.defs#modEventAcknowledge',
+        'tools.ozone.defs#modEventTakedown',
+        'tools.ozone.defs#modEventEscalate',
       ].includes(event.action)
     ) {
       if (event.createLabelVals?.length) {
@@ -143,14 +145,14 @@ export class ModerationViews {
       }
     }
 
-    if (event.action === 'com.atproto.admin.defs#modEventReport') {
+    if (event.action === 'tools.ozone.defs#modEventReport') {
       eventView.event = {
         ...eventView.event,
         reportType: event.meta?.reportType ?? undefined,
       }
     }
 
-    if (event.action === 'com.atproto.admin.defs#modEventEmail') {
+    if (event.action === 'tools.ozone.defs#modEventEmail') {
       eventView.event = {
         ...eventView.event,
         subjectLine: event.meta?.subjectLine ?? '',
@@ -158,13 +160,13 @@ export class ModerationViews {
     }
 
     if (
-      event.action === 'com.atproto.admin.defs#modEventComment' &&
+      event.action === 'tools.ozone.defs#modEventComment' &&
       event.meta?.sticky
     ) {
       eventView.event.sticky = true
     }
 
-    if (event.action === 'com.atproto.admin.defs#modEventTag') {
+    if (event.action === 'tools.ozone.defs#modEventTag') {
       eventView.event.add = event.addedTags || []
       eventView.event.remove = event.removedTags || []
     }
