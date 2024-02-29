@@ -319,7 +319,7 @@ export const COM_ATPROTO_ADMIN = {
   DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
   DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
   DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
-  DefsReviewOptional: 'com.atproto.admin.defs#reviewOptional',
+  DefsReviewNone: 'com.atproto.admin.defs#reviewNone',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',

@@ -11,7 +11,7 @@ import {
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWOPEN,
-  REVIEWOPTIONAL,
+  REVIEWNONE,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 
 describe('moderation-statuses', () => {
@@ -165,7 +165,7 @@ describe('moderation-statuses', () => {
   })
 
   describe('reviewState changes', () => {
-    it('only sets state to #reviewOptional on first non-impactful event', async () => {
+    it('only sets state to #reviewNone on first non-impactful event', async () => {
       const bobsAccount = {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.bob,
@@ -211,7 +211,7 @@ describe('moderation-statuses', () => {
         bobsAccountStatusAfterTag.reviewState,
       )
 
-      // Since alice's post didn't have a reviewState it is set to reviewOptional on first non-impactful event
+      // Since alice's post didn't have a reviewState it is set to reviewNone on first non-impactful event
       const getAlicesPostStatus = async () => {
         const { data } = await queryModerationStatuses({
           subject: alicesPost.uri,
@@ -232,7 +232,7 @@ describe('moderation-statuses', () => {
         createdBy: sc.dids.alice,
       })
       const alicesPostStatusAfterTag = await getAlicesPostStatus()
-      expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWOPTIONAL)
+      expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWNONE)
 
       await emitModerationEvent({
         subject: alicesPost,
