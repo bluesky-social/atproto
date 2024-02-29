@@ -1204,12 +1204,15 @@ describe('agent', () => {
         ])
         await agent.upsertMutedWords([{ value: '#hashtag', targets: ['tag'] }])
         const { mutedWords } = await agent.getPreferences()
-        expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
         expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
           value: 'hashtag',
-          targets: ['content', 'tag'],
+          targets: ['content'],
         })
-        expect(mutedWords.filter((m) => m.value === 'hashtag').length).toBe(1)
+        expect(mutedWords.find((m) => m.value === '#hashtag')).toStrictEqual({
+          value: '#hashtag',
+          targets: ['tag'],
+        })
+        expect(mutedWords.filter((m) => m.value === '#hashtag').length).toBe(1)
       })
 
       it('updateMutedWord', async () => {
@@ -1266,7 +1269,15 @@ describe('agent', () => {
         await agent.removeMutedWord({ value: '#hashtag', targets: [] })
         const { mutedWords } = await agent.getPreferences()
 
-        expect(mutedWords.find((m) => m.value === 'hashtag')).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
+        expect(mutedWords.find((m) => m.value === 'hashtag')).toBeTruthy()
+      })
+
+      it('multi-hash ##', async () => {
+        await agent.upsertMutedWords([{ value: '##', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '##')).toBeTruthy()
       })
     })
 

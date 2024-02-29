@@ -651,14 +651,9 @@ async function updateFeedPreferences(
  */
 async function updateMutedWords(
   agent: BskyAgent,
-  mutedWords: AppBskyActorDefs.MutedWord[],
+  updatedMutedWords: AppBskyActorDefs.MutedWord[],
   action: 'upsert' | 'update' | 'remove',
 ) {
-  const sanitizeMutedWord = (word: AppBskyActorDefs.MutedWord) => ({
-    value: word.value.replace(/^#/, ''),
-    targets: word.targets,
-  })
-
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
     let mutedWordsPref = prefs.findLast(
       (pref) =>
@@ -668,31 +663,33 @@ async function updateMutedWords(
 
     if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
       if (action === 'upsert' || action === 'update') {
-        for (const word of mutedWords) {
+        for (const updatedWord of updatedMutedWords) {
           let foundMatch = false
-
           for (const existingItem of mutedWordsPref.items) {
-            if (existingItem.value === sanitizeMutedWord(word).value) {
+            if (existingItem.value === updatedWord.value) {
               existingItem.targets =
                 action === 'upsert'
                   ? Array.from(
-                      new Set([...existingItem.targets, ...word.targets]),
+                      new Set([
+                        ...existingItem.targets,
+                        ...updatedWord.targets,
+                      ]),
                     )
-                  : word.targets
+                  : updatedWord.targets
               foundMatch = true
               break
             }
           }
 
           if (action === 'upsert' && !foundMatch) {
-            mutedWordsPref.items.push(sanitizeMutedWord(word))
+            mutedWordsPref.items.push(updatedWord)
           }
         }
       } else if (action === 'remove') {
-        for (const word of mutedWords) {
+        for (const updatedWord of updatedMutedWords) {
           for (let i = 0; i < mutedWordsPref.items.length; i++) {
             const existing = mutedWordsPref.items[i]
-            if (existing.value === sanitizeMutedWord(word).value) {
+            if (existing.value === updatedWord.value) {
               mutedWordsPref.items.splice(i, 1)
               break
             }
@@ -703,7 +700,7 @@ async function updateMutedWords(
       // if the pref doesn't exist, create it
       if (action === 'upsert') {
         mutedWordsPref = {
-          items: mutedWords.map(sanitizeMutedWord),
+          items: updatedMutedWords,
         }
       }
     }
