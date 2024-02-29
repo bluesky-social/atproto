@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     for await (const evt of outbox.events(cursor, signal)) {
-      yield evt
+      yield { $type: 'com.atproto.label.subscribeLabels#labels', ...evt }
     }
   })
 }
