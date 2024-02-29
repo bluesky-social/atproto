@@ -70,7 +70,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
+    const re = /(?:^|\s)(#(?!\ufe0f)[^\d\s]\S*)(?=\s)?/g
     while ((match = re.exec(text.utf16))) {
       let [tag] = match
       const hasLeadingSpace = /^\s/.test(tag)

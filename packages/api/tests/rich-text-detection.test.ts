@@ -297,6 +297,7 @@ describe('detectFacets', () => {
           { byteStart: 17, byteEnd: 22 },
         ],
       ],
+      ['this #️⃣tag should not be a tag', [], []]
     ]
 
     for (const [input, tags, indices] of inputs) {
