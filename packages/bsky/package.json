@@ -42,6 +42,7 @@
     "@atproto/xrpc-server": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
+    "@connectrpc/connect-express": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "@did-plc/lib": "^0.0.1",
     "@isaacs/ttlcache": "^1.4.1",
@@ -80,6 +81,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "http2-express-bridge": "^1.0.7"
   }
 }

@@ -49,7 +49,7 @@ export const forSnapshot = (obj: unknown) => {
         return constantDate
       }
     }
-    if (str.match(/^\d+::bafy/)) {
+    if (str.match(/^\d+__bafy/)) {
       return constantKeysetCursor
     }
     if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
@@ -110,7 +110,7 @@ export function take(
 }
 
 export const constantDate = new Date(0).toISOString()
-export const constantKeysetCursor = '0000000000000::bafycid'
+export const constantKeysetCursor = '0000000000000__bafycid'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {

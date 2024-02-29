@@ -8,7 +8,8 @@ import {
 import { forSnapshot } from '../_util'
 import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
-describe('proxies admin requests', () => {
+// @TODO skipping during appview v2 buildout, as appview frontends no longer contains moderation endpoints
+describe.skip('proxies admin requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -32,7 +33,7 @@ describe('proxies admin requests', () => {
       )
     await basicSeed(sc, {
       inviteCode: invite.code,
-      addModLabels: true,
+      addModLabels: network.bsky,
     })
     await network.processAll()
   })

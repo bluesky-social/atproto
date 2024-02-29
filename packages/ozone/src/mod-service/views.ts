@@ -3,6 +3,7 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import AtpAgent, { AppBskyFeedDefs } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
+import { Keypair } from '@atproto/crypto'
 import { Database } from '../db'
 import {
   ModEventView,
@@ -25,7 +26,6 @@ import {
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import { formatLabel, signLabel } from './util'
-import { Keypair } from '@atproto/crypto'
 import { LabelRow } from '../db/schema/label'
 import { BackgroundQueue } from '../background'
 

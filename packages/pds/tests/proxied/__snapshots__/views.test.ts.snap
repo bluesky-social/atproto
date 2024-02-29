@@ -103,7 +103,7 @@ Object {
         Object {
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "user(3)",
+          "src": "did:example:labeler",
           "uri": "user(2)",
           "val": "repo-action-label",
         },
@@ -114,7 +114,7 @@ Object {
       },
     },
   ],
-  "cursor": "1:3",
+  "cursor": "1:2:3",
 }
 `;
 
@@ -183,7 +183,7 @@ Array [
       Object {
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "user(6)",
+        "src": "did:example:labeler",
         "uri": "user(5)",
         "val": "repo-action-label",
       },
@@ -258,7 +258,7 @@ Array [
       Object {
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "user(6)",
+        "src": "did:example:labeler",
         "uri": "user(5)",
         "val": "repo-action-label",
       },
@@ -303,24 +303,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(0)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(2)",
-            "uri": "record(0)",
-            "val": "test-label",
-          },
-          Object {
-            "cid": "cids(0)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(2)",
-            "uri": "record(0)",
-            "val": "test-label-2",
-          },
-        ],
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -362,8 +345,8 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
-            "did": "user(3)",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+            "did": "user(2)",
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [
@@ -371,7 +354,7 @@ Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "user(3)",
+                "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-a",
               },
@@ -379,7 +362,7 @@ Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "user(3)",
+                "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-b",
               },
@@ -406,8 +389,8 @@ Object {
         "root": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
-            "did": "user(3)",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+            "did": "user(2)",
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [
@@ -415,7 +398,7 @@ Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "user(3)",
+                "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-a",
               },
@@ -423,7 +406,7 @@ Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "user(3)",
+                "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-b",
               },
@@ -525,9 +508,11 @@ Object {
     "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [
         Object {
           "cid": "cids(2)",
@@ -568,9 +553,11 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
             "cid": "cids(2)",
@@ -753,24 +740,7 @@ Object {
             ],
           },
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(4)",
-              "uri": "record(3)",
-              "val": "test-label",
-            },
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(4)",
-              "uri": "record(3)",
-              "val": "test-label-2",
-            },
-          ],
+          "labels": Array [],
           "likeCount": 0,
           "record": Object {
             "$type": "app.bsky.feed.post",
@@ -881,24 +851,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(4)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(4)",
-            "uri": "record(3)",
-            "val": "test-label",
-          },
-          Object {
-            "cid": "cids(4)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(4)",
-            "uri": "record(3)",
-            "val": "test-label-2",
-          },
-        ],
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1063,14 +1016,14 @@ Object {
           "record": Object {
             "$type": "app.bsky.embed.record#viewRecord",
             "author": Object {
-              "did": "user(5)",
+              "did": "user(4)",
               "handle": "dan.test",
               "labels": Array [
                 Object {
                   "cts": "1970-01-01T00:00:00.000Z",
                   "neg": false,
-                  "src": "user(4)",
-                  "uri": "user(5)",
+                  "src": "did:example:labeler",
+                  "uri": "user(4)",
                   "val": "repo-action-label",
                 },
               ],
@@ -1087,7 +1040,7 @@ Object {
                 "record": Object {
                   "$type": "app.bsky.embed.record#viewRecord",
                   "author": Object {
-                    "did": "user(6)",
+                    "did": "user(5)",
                     "handle": "carol.test",
                     "labels": Array [],
                     "viewer": Object {
@@ -1177,16 +1130,7 @@ Object {
           },
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(6)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(4)",
-            "uri": "record(6)",
-            "val": "test-label",
-          },
-        ],
+        "labels": Array [],
         "likeCount": 2,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1621,7 +1565,7 @@ Object {
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "user(3)",
+              "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
             },
@@ -1638,8 +1582,8 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-            "did": "user(4)",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+            "did": "user(3)",
             "displayName": "bobby",
             "handle": "bob.test",
             "labels": Array [],
@@ -1656,30 +1600,13 @@ Object {
             "images": Array [
               Object {
                 "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
               },
             ],
           },
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(3)",
-              "uri": "record(3)",
-              "val": "test-label",
-            },
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(3)",
-              "uri": "record(3)",
-              "val": "test-label-2",
-            },
-          ],
+          "labels": Array [],
           "likeCount": 0,
           "record": Object {
             "$type": "app.bsky.feed.post",
@@ -1816,7 +1743,7 @@ Object {
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "user(3)",
+              "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
             },
@@ -1839,7 +1766,7 @@ Object {
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "user(3)",
+              "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
             },
@@ -1856,7 +1783,7 @@ Object {
           "record": Object {
             "$type": "app.bsky.embed.record#viewRecord",
             "author": Object {
-              "did": "user(6)",
+              "did": "user(5)",
               "handle": "carol.test",
               "labels": Array [],
               "viewer": Object {
@@ -1875,13 +1802,13 @@ Object {
                   "images": Array [
                     Object {
                       "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(5)@jpeg",
-                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(5)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5)@jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5)@jpeg",
                     },
                     Object {
                       "alt": "../dev-env/src/seed/img/key-alt.jpg",
-                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(8)@jpeg",
-                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(8)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(8)@jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(8)@jpeg",
                     },
                   ],
                 },
@@ -1889,8 +1816,8 @@ Object {
                   "record": Object {
                     "$type": "app.bsky.embed.record#viewRecord",
                     "author": Object {
-                      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-                      "did": "user(4)",
+                      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+                      "did": "user(3)",
                       "displayName": "bobby",
                       "handle": "bob.test",
                       "labels": Array [],
@@ -2001,7 +1928,7 @@ Object {
       "reason": Object {
         "$type": "app.bsky.feed.defs#reasonRepost",
         "by": Object {
-          "did": "user(6)",
+          "did": "user(5)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
@@ -2072,8 +1999,8 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-            "did": "user(4)",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+            "did": "user(3)",
             "displayName": "bobby",
             "handle": "bob.test",
             "labels": Array [],
@@ -2090,30 +2017,13 @@ Object {
             "images": Array [
               Object {
                 "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
               },
             ],
           },
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(3)",
-              "uri": "record(3)",
-              "val": "test-label",
-            },
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(3)",
-              "uri": "record(3)",
-              "val": "test-label-2",
-            },
-          ],
+          "labels": Array [],
           "likeCount": 0,
           "record": Object {
             "$type": "app.bsky.feed.post",
@@ -2200,7 +2110,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "did": "user(6)",
+          "did": "user(5)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
@@ -2328,8 +2238,8 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-          "did": "user(4)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
@@ -2346,30 +2256,13 @@ Object {
           "images": Array [
             Object {
               "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(4)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(3)",
-            "uri": "record(3)",
-            "val": "test-label",
-          },
-          Object {
-            "cid": "cids(4)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(3)",
-            "uri": "record(3)",
-            "val": "test-label-2",
-          },
-        ],
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -2540,7 +2433,7 @@ Object {
                 Object {
                   "cts": "1970-01-01T00:00:00.000Z",
                   "neg": false,
-                  "src": "user(3)",
+                  "src": "did:example:labeler",
                   "uri": "user(2)",
                   "val": "repo-action-label",
                 },
@@ -2558,7 +2451,7 @@ Object {
                 "record": Object {
                   "$type": "app.bsky.embed.record#viewRecord",
                   "author": Object {
-                    "did": "user(6)",
+                    "did": "user(5)",
                     "handle": "carol.test",
                     "labels": Array [],
                     "viewer": Object {
@@ -2648,16 +2541,7 @@ Object {
           },
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(11)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(3)",
-            "uri": "record(13)",
-            "val": "test-label",
-          },
-        ],
+        "labels": Array [],
         "likeCount": 2,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -2680,8 +2564,8 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-          "did": "user(4)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
@@ -2761,7 +2645,7 @@ Object {
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "user(3)",
+              "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
             },
@@ -2778,7 +2662,7 @@ Object {
           "record": Object {
             "$type": "app.bsky.embed.record#viewRecord",
             "author": Object {
-              "did": "user(6)",
+              "did": "user(5)",
               "handle": "carol.test",
               "labels": Array [],
               "viewer": Object {
@@ -2797,13 +2681,13 @@ Object {
                   "images": Array [
                     Object {
                       "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(5)@jpeg",
-                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(5)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5)@jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5)@jpeg",
                     },
                     Object {
                       "alt": "../dev-env/src/seed/img/key-alt.jpg",
-                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(8)@jpeg",
-                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(8)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(8)@jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(8)@jpeg",
                     },
                   ],
                 },
@@ -2811,8 +2695,8 @@ Object {
                   "record": Object {
                     "$type": "app.bsky.embed.record#viewRecord",
                     "author": Object {
-                      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-                      "did": "user(4)",
+                      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+                      "did": "user(3)",
                       "displayName": "bobby",
                       "handle": "bob.test",
                       "labels": Array [],
@@ -2930,7 +2814,7 @@ Object {
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "user(3)",
+              "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
             },
@@ -2959,7 +2843,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "did": "user(6)",
+          "did": "user(5)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
@@ -2977,13 +2861,13 @@ Object {
             "images": Array [
               Object {
                 "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5)@jpeg",
               },
               Object {
                 "alt": "../dev-env/src/seed/img/key-alt.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(8)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(8)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(8)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(8)@jpeg",
               },
             ],
           },
@@ -2991,8 +2875,8 @@ Object {
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-                "did": "user(4)",
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+                "did": "user(3)",
                 "displayName": "bobby",
                 "handle": "bob.test",
                 "labels": Array [],
@@ -3075,8 +2959,8 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
-          "did": "user(4)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
@@ -3215,7 +3099,7 @@ Object {
         Object {
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "user(1)",
+          "src": "did:example:labeler",
           "uri": "user(0)",
           "val": "repo-action-label",
         },
@@ -3227,9 +3111,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "description": "its me!",
-      "did": "user(2)",
+      "did": "user(1)",
       "displayName": "ali",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -3238,7 +3122,7 @@ Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "user(2)",
+          "src": "user(1)",
           "uri": "record(1)",
           "val": "self-label-a",
         },
@@ -3246,7 +3130,7 @@ Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "user(2)",
+          "src": "user(1)",
           "uri": "record(1)",
           "val": "self-label-b",
         },
@@ -3258,9 +3142,9 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
     "description": "hi im bob label_me",
-    "did": "user(4)",
+    "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -3515,48 +3399,6 @@ Object {
 
 exports[`proxies view requests unspecced.getPopularFeedGenerators 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
-  "feeds": Array [
-    Object {
-      "cid": "cids(0)",
-      "creator": Object {
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
-        "description": "its me!",
-        "did": "user(0)",
-        "displayName": "ali",
-        "handle": "alice.test",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(2)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(0)",
-            "uri": "record(1)",
-            "val": "self-label-a",
-          },
-          Object {
-            "cid": "cids(2)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(0)",
-            "uri": "record(1)",
-            "val": "self-label-b",
-          },
-        ],
-        "viewer": Object {
-          "blockedBy": false,
-          "muted": false,
-        },
-      },
-      "description": "Provides all feed candidates",
-      "did": "did:example:feedgen",
-      "displayName": "All",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "likeCount": 0,
-      "uri": "record(0)",
-      "viewer": Object {},
-    },
-  ],
+  "feeds": Array [],
 }
 `;

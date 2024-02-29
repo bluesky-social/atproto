@@ -1,3 +1,6 @@
+import assert from 'assert'
+import { XRPCError } from '@atproto/xrpc'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
 import {
@@ -16,9 +19,6 @@ import {
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { forSnapshot, paginateAll } from './_util'
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import assert from 'assert'
-import { XRPCError } from '@atproto/xrpc'
 
 describe('feed generation', () => {
   let network: TestNetwork
@@ -74,9 +74,8 @@ describe('feed generation', () => {
       { uri: feedUriBadPagination.toString(), order: 3 },
       { uri: primeUri.toString(), order: 4 },
     ]
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('suggested_feed')
+    await network.bsky.db.db
+      .insertInto('suggested_feed')
       .values(feedSuggestions)
       .execute()
   })
@@ -151,23 +150,10 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: prime.uri,
-          cid: prime.cid,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: prime.uri,
+    })
+
     feedUriAll = all.uri
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
@@ -319,7 +305,6 @@ describe('feed generation', () => {
         sc.getHeaders(sc.dids.bob),
       )
       await network.processAll()
-      await network.bsky.processAll()
 
       // now take it offline
       await bobFg.close()
@@ -359,15 +344,24 @@ describe('feed generation', () => {
 
   describe('getPopularFeedGenerators', () => {
     it('gets popular feed generators', async () => {
-      const resEven =
-        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
-          {},
-          { headers: await network.serviceHeaders(sc.dids.bob) },
-        )
-      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([
-        2, 0, 0, 0, 0,
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+        {},
+        { headers: await network.serviceHeaders(sc.dids.bob) },
+      )
+      expect(res.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+      expect(res.data.feeds.map((f) => f.uri)).toEqual([
+        feedUriAll,
+        feedUriEven,
+        feedUriBadPagination,
       ])
-      expect(resEven.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+    })
+
+    it('searches feed generators', async () => {
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'all' },
+        { headers: await network.serviceHeaders(sc.dids.bob) },
+      )
+      expect(res.data.feeds.map((f) => f.uri)).toEqual([feedUriAll])
     })
 
     it('paginates', async () => {
@@ -376,7 +370,6 @@ describe('feed generation', () => {
           {},
           { headers: await network.serviceHeaders(sc.dids.bob) },
         )
-
       const resOne =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
           { limit: 2 },

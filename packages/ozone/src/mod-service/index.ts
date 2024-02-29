@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { Database } from '../db'
 import { AppviewAuth, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
@@ -44,7 +45,6 @@ import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
 import { LabelChannel } from '../db/schema/label'
-import { Keypair } from '@atproto/crypto'
 import { formatLabel, signLabel } from './util'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
@@ -872,7 +872,7 @@ export class ModerationService {
       signingKey,
     }))
     const { ref } = this.db.db.dynamic
-    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db) // emitted transactionally
+    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
     const res = await this.db.db
       .insertInto('label')

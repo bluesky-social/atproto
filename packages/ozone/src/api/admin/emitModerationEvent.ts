@@ -27,17 +27,23 @@ export default function (server: Server, ctx: AppContext) {
 
       // apply access rules
 
-      // if less than moderator access then can not takedown an account
-      if (!access.moderator && isTakedownEvent && subject.isRepo()) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to perform an account takedown',
-        )
-      }
       // if less than moderator access then can only take ack and escalation actions
-      if (!access.moderator && (isTakedownEvent || isReverseTakedownEvent)) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to take this type of action',
-        )
+      if (isTakedownEvent || isReverseTakedownEvent) {
+        if (!access.moderator) {
+          throw new AuthRequiredError(
+            'Must be a full moderator to take this type of action',
+          )
+        }
+
+        // Non admins should not be able to take down feed generators
+        if (
+          !access.admin &&
+          subject.recordPath?.includes('app.bsky.feed.generator/')
+        ) {
+          throw new AuthRequiredError(
+            'Must be a full admin to take this type of action on feed generators',
+          )
+        }
       }
       // if less than moderator access then can not apply labels
       if (!access.moderator && isLabelEvent) {

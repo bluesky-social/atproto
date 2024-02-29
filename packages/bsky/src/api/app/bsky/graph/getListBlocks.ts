@@ -1,13 +1,17 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { Actor } from '../../../../db/tables/actor'
-import { GraphService, ListInfo } from '../../../../services/graph'
-import { ActorService, ProfileHydrationState } from '../../../../services/actor'
-import { createPipeline, noRules } from '../../../../pipeline'
+import {
+  createPipeline,
+  HydrationFnInput,
+  noRules,
+  PresentationFnInput,
+  SkeletonFnInput,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getListBlocks = createPipeline(
@@ -19,16 +23,8 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getListBlocks({
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const graphService = ctx.services.graph(db)
-      const actorService = ctx.services.actor(db)
       const viewer = auth.credentials.iss
-
-      const result = await getListBlocks(
-        { ...params, viewer },
-        { db, actorService, graphService },
-      )
-
+      const result = await getListBlocks({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -38,72 +34,40 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const skeleton = async (
-  params: Params,
-  ctx: Context,
+  input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
-  const { db, graphService } = ctx
-  const { limit, cursor, viewer } = params
-  const { ref } = db.db.dynamic
-
-  if (TimeCidKeyset.clearlyBad(cursor)) {
-    return { params, listInfos: [] }
+  const { ctx, params } = input
+  if (clearlyBadCursor(params.cursor)) {
+    return { listUris: [] }
   }
-
-  let listsReq = graphService
-    .getListsQb(viewer)
-    .whereExists(
-      db.db
-        .selectFrom('list_block')
-        .where('list_block.creator', '=', viewer)
-        .whereRef('list_block.subjectUri', '=', ref('list.uri'))
-        .selectAll(),
-    )
-
-  const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
-
-  listsReq = paginate(listsReq, {
-    limit,
-    cursor,
-    keyset,
-  })
-
-  const listInfos = await listsReq.execute()
-
-  return {
-    params,
-    listInfos,
-    cursor: keyset.packFromResult(listInfos),
-  }
+  const { listUris, cursor } =
+    await ctx.hydrator.dataplane.getBlocklistSubscriptions({
+      actorDid: params.viewer,
+      cursor: params.cursor,
+      limit: params.limit,
+    })
+  return { listUris, cursor: cursor || undefined }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, listInfos } = state
-  const profileState = await actorService.views.profileHydration(
-    listInfos.map((list) => list.creator),
-    { viewer: params.viewer },
-  )
-  return { ...state, ...profileState }
+const hydration = async (
+  input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, params, skeleton } = input
+  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.viewer)
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { actorService, graphService } = ctx
-  const { params, listInfos, cursor, ...profileState } = state
-  const actors = actorService.views.profilePresentation(
-    Object.keys(profileState.profiles),
-    profileState,
-    params.viewer,
-  )
-  const lists = mapDefined(listInfos, (list) =>
-    graphService.formatListView(list, actors),
-  )
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, skeleton, hydration } = input
+  const { listUris, cursor } = skeleton
+  const lists = mapDefined(listUris, (uri) => ctx.views.list(uri, hydration))
   return { lists, cursor }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
@@ -111,9 +75,6 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  params: Params
-  listInfos: (Actor & ListInfo)[]
+  listUris: string[]
   cursor?: string
 }
-
-type HydrationState = SkeletonState & ProfileHydrationState

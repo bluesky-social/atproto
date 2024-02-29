@@ -20,7 +20,10 @@ export default function (server: Server, ctx: AppContext) {
             if (pattern.indexOf('*') < pattern.length - 1) {
               throw new InvalidRequestError(`invalid pattern: ${pattern}`)
             }
-            const searchPattern = pattern.slice(0, -1)
+            const searchPattern = pattern
+              .slice(0, -1)
+              .replaceAll('%', '') // sanitize search pattern
+              .replaceAll('_', '\\_') // escape any underscores
             qb = qb.orWhere('uri', 'like', `${searchPattern}%`)
           }
         }
@@ -31,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       builder = builder.where('src', 'in', sources)
     }
     if (cursor) {
-      const cursorId = parseInt(cursor)
+      const cursorId = parseInt(cursor, 10)
       if (isNaN(cursorId)) {
         throw new InvalidRequestError('invalid cursor')
       }

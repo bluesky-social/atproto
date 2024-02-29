@@ -1,56 +1,107 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
+import AtpAgent from '@atproto/api'
+import { mapDefined } from '@atproto/common'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
-  cleanQuery,
-  getUserSearchQuerySimple,
-} from '../../../../services/util/search'
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipeline,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
+  const searchActorsTypeahead = createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const { limit } = params
-      const requester = auth.credentials.iss
-      const rawQuery = params.q ?? params.term
-      const query = cleanQuery(rawQuery || '')
-      const db = ctx.db.getReplica('search')
-
-      let results: string[]
-      if (ctx.searchAgent) {
-        const res =
-          await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
-            q: query,
-            typeahead: true,
-            limit,
-          })
-        results = res.data.actors.map((a) => a.did)
-      } else {
-        const res = query
-          ? await getUserSearchQuerySimple(db, { query, limit })
-              .selectAll('actor')
-              .execute()
-          : []
-        results = res.map((a) => a.did)
-      }
-
-      const actors = await ctx.services
-        .actor(db)
-        .views.profilesBasic(results, requester)
-
-      const SKIP = []
-      const filtered = results.flatMap((did) => {
-        const actor = actors[did]
-        if (!actor) return SKIP
-        if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
-        return actor
-      })
-
+      const viewer = auth.credentials.iss
+      const results = await searchActorsTypeahead({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
-        body: {
-          actors: filtered,
-        },
+        body: results,
       }
     },
   })
+}
+
+const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  // @TODO
+  // add typeahead option
+  // add hits total
+
+  if (ctx.searchAgent) {
+    const { data: res } =
+      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+        typeahead: true,
+        q: term,
+        limit: params.limit,
+      })
+    return {
+      dids: res.actors.map(({ did }) => did),
+      cursor: parseString(res.cursor),
+    }
+  }
+
+  const res = await ctx.dataplane.searchActors({
+    term,
+    limit: params.limit,
+  })
+  return {
+    dids: res.dids,
+    cursor: parseString(res.cursor),
+  }
+}
+
+const hydration = async (
+  inputs: HydrationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, params.viewer)
+}
+
+const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.dids = skeleton.dids.filter(
+    (did) => !ctx.views.viewerBlockExists(did, hydration),
+  )
+  return skeleton
+}
+
+const presentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, skeleton, hydration } = inputs
+  const actors = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profileBasic(did, hydration),
+  )
+  return {
+    actors,
+  }
+}
+
+type Context = {
+  dataplane: DataPlaneClient
+  hydrator: Hydrator
+  views: Views
+  searchAgent?: AtpAgent
+}
+
+type Params = QueryParams & { viewer: string | null }
+
+type Skeleton = {
+  dids: string[]
 }

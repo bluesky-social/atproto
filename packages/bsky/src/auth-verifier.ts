@@ -2,9 +2,16 @@ import {
   AuthRequiredError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
+import {
+  Code,
+  DataPlaneClient,
+  getKeyAsDidKey,
+  isDataplaneError,
+  unpackIdentityKeys,
+} from './data-plane'
+import { GetIdentityByDidResponse } from './proto/bsky_pb'
 
 type ReqCtx = {
   req: express.Request
@@ -35,8 +42,6 @@ type RoleOutput = {
   credentials: {
     type: 'role'
     admin: boolean
-    moderator: boolean
-    triage: boolean
   }
 }
 
@@ -51,29 +56,35 @@ type AdminServiceOutput = {
 export type AuthVerifierOpts = {
   ownDid: string
   adminDid: string
-  adminPass: string
-  moderatorPass: string
-  triagePass: string
+  adminPasses: string[]
 }
 
 export class AuthVerifier {
-  private _adminPass: string
-  private _moderatorPass: string
-  private _triagePass: string
   public ownDid: string
   public adminDid: string
+  private adminPasses: Set<string>
 
-  constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
-    this._adminPass = opts.adminPass
-    this._moderatorPass = opts.moderatorPass
-    this._triagePass = opts.triagePass
+  constructor(public dataplane: DataPlaneClient, opts: AuthVerifierOpts) {
     this.ownDid = opts.ownDid
     this.adminDid = opts.adminDid
+    this.adminPasses = new Set(opts.adminPasses)
   }
 
   // verifiers (arrow fns to preserve scope)
 
   standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
+    // @TODO remove! basic auth + did supported just for testing.
+    if (isBasicToken(ctx.req)) {
+      const aud = this.ownDid
+      const iss = ctx.req.headers['appview-as-did']
+      if (typeof iss !== 'string' || !iss.startsWith('did:')) {
+        throw new AuthRequiredError('bad issuer')
+      }
+      if (!this.parseRoleCreds(ctx.req).admin) {
+        throw new AuthRequiredError('bad credentials')
+      }
+      return { credentials: { type: 'standard', iss, aud } }
+    }
     const { iss, aud } = await this.verifyServiceJwt(ctx, {
       aud: this.ownDid,
       iss: null,
@@ -84,7 +95,7 @@ export class AuthVerifier {
   standardOptional = async (
     ctx: ReqCtx,
   ): Promise<StandardOutput | NullOutput> => {
-    if (isBearerToken(ctx.req)) {
+    if (isBearerToken(ctx.req) || isBasicToken(ctx.req)) {
       return this.standard(ctx)
     }
     return this.nullCreds()
@@ -173,16 +184,10 @@ export class AuthVerifier {
       return { status: Missing, admin: false, moderator: false, triage: false }
     }
     const { username, password } = parsed
-    if (username === 'admin' && password === this._adminPass) {
-      return { status: Valid, admin: true, moderator: true, triage: true }
+    if (username === 'admin' && this.adminPasses.has(password)) {
+      return { status: Valid, admin: true }
     }
-    if (username === 'admin' && password === this._moderatorPass) {
-      return { status: Valid, admin: false, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._triagePass) {
-      return { status: Valid, admin: false, moderator: false, triage: true }
-    }
-    return { status: Invalid, admin: false, moderator: false, triage: false }
+    return { status: Invalid, admin: false }
   }
 
   async verifyServiceJwt(
@@ -191,12 +196,26 @@ export class AuthVerifier {
   ) {
     const getSigningKey = async (
       did: string,
-      forceRefresh: boolean,
+      _forceRefresh: boolean, // @TODO consider propagating to dataplane
     ): Promise<string> => {
       if (opts.iss !== null && !opts.iss.includes(did)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+      let identity: GetIdentityByDidResponse
+      try {
+        identity = await this.dataplane.getIdentityByDid({ did })
+      } catch (err) {
+        if (isDataplaneError(err, Code.NotFound)) {
+          throw new AuthRequiredError('identity unknown')
+        }
+        throw err
+      }
+      const keys = unpackIdentityKeys(identity.keys)
+      const didKey = getKeyAsDidKey(keys, { id: 'atproto' })
+      if (!didKey) {
+        throw new AuthRequiredError('missing or bad key')
+      }
+      return didKey
     }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)
@@ -222,10 +241,10 @@ export class AuthVerifier {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
-      (creds.credentials.type === 'role' && creds.credentials.triage) ||
+      (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'admin_service'
     const canPerformTakedown =
-      (creds.credentials.type === 'role' && creds.credentials.moderator) ||
+      (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'admin_service'
     return {
       viewer,
@@ -243,6 +262,10 @@ const BASIC = 'Basic '
 
 const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
+}
+
+const isBasicToken = (req: express.Request): boolean => {
+  return req.headers.authorization?.startsWith(BASIC) ?? false
 }
 
 const bearerTokenFromReq = (req: express.Request) => {

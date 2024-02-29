@@ -1,11 +1,11 @@
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
+import { Selectable } from 'kysely'
+import { PoolClient } from 'pg'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 import { LabelChannel, Label as LabelTable } from '../db/schema/label'
-import { Selectable } from 'kysely'
-import { PoolClient } from 'pg'
 import { ModerationService } from '../mod-service'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'

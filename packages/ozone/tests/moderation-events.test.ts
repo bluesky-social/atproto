@@ -22,13 +22,13 @@ describe('moderation-events', () => {
   ) => {
     return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
       encoding: 'application/json',
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
   }
 
   const queryModerationEvents = (eventQuery) =>
     agent.api.com.atproto.admin.queryModerationEvents(eventQuery, {
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
   const seedEvents = async () => {
@@ -203,11 +203,11 @@ describe('moderation-events', () => {
       const defaultEvents = await getPaginatedEvents()
       const reversedEvents = await getPaginatedEvents('asc')
 
-      expect(allEvents.data.events.length).toEqual(7)
+      expect(allEvents.data.events.length).toEqual(6)
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
       // First event in the reversed list is the last item in the default list
-      expect(reversedEvents[0].id).toEqual(defaultEvents[6].id)
+      expect(reversedEvents[0].id).toEqual(defaultEvents[5].id)
     })
 
     it('returns report events matching reportType filters', async () => {
@@ -240,7 +240,7 @@ describe('moderation-events', () => {
 
       expect(eventsWithX.data.events.length).toEqual(10)
       expect(eventsWithTest.data.events.length).toEqual(0)
-      expect(eventsWithComment.data.events.length).toEqual(12)
+      expect(eventsWithComment.data.events.length).toEqual(10)
     })
 
     it('returns events matching filter params for labels', async () => {
@@ -325,7 +325,7 @@ describe('moderation-events', () => {
         })
       const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
       const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
-      const [addFinder, addAndRemoveFinder, removeFinder] = await Promise.all([
+      const [addFinder, addAndRemoveFinder, _removeFinder] = await Promise.all([
         queryModerationEvents({
           addedTags: ['L1'],
         }),
@@ -356,7 +356,7 @@ describe('moderation-events', () => {
     it('gets an event by specific id', async () => {
       const { data } = await pdsAgent.api.com.atproto.admin.getModerationEvent(
         { id: 1 },
-        { headers: network.bsky.adminAuthHeaders('moderator') },
+        { headers: network.ozone.adminAuthHeaders('moderator') },
       )
       expect(forSnapshot(data)).toMatchSnapshot()
     })

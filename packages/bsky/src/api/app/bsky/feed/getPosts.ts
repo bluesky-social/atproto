@@ -1,30 +1,19 @@
-import { dedupeStrs } from '@atproto/common'
+import { dedupeStrs, mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
 import { createPipeline } from '../../../../pipeline'
-import { ActorService } from '../../../../services/actor'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { creatorFromUri } from '../../../../views/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const feedService = ctx.services.feed(db)
-      const actorService = ctx.services.actor(db)
       const viewer = auth.credentials.iss
-
-      const results = await getPosts(
-        { ...params, viewer },
-        { db, feedService, actorService },
-      )
+      const results = await getPosts({ ...params, viewer }, ctx)
 
       return {
         encoding: 'application/json',
@@ -34,68 +23,55 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (params: Params, ctx: Context) => {
-  const deduped = dedupeStrs(params.uris)
-  const feedItems = await ctx.feedService.postUrisToFeedItems(deduped)
-  return { params, feedItems }
+const skeleton = async (inputs: { params: Params }) => {
+  return { posts: dedupeStrs(inputs.params.uris) }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
-  })
-  return { ...state, ...hydrated }
-}
-
-const noBlocks = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.feedItems = state.feedItems.filter((item) => {
-    if (!viewer) return true
-    return !state.bam.block([viewer, item.postAuthorDid])
-  })
-  return state
-}
-
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService, actorService } = ctx
-  const { feedItems, profiles, params } = state
-  const SKIP = []
-  const actors = actorService.views.profileBasicPresentation(
-    Object.keys(profiles),
-    state,
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydratePosts(
+    skeleton.posts.map((uri) => ({ uri })),
     params.viewer,
   )
-  const postViews = feedItems.flatMap((item) => {
-    const postView = feedService.views.formatPostView(
-      item.postUri,
-      actors,
-      state.posts,
-      state.threadgates,
-      state.embeds,
-      state.labels,
-      state.lists,
-      params.viewer,
-    )
-    return postView ?? SKIP
+}
+
+const noBlocks = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.posts = skeleton.posts.filter((uri) => {
+    const creator = creatorFromUri(uri)
+    return !ctx.views.viewerBlockExists(creator, hydration)
   })
-  return { posts: postViews }
+  return skeleton
+}
+
+const presentation = (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const posts = mapDefined(skeleton.posts, (uri) =>
+    ctx.views.post(uri, hydration),
+  )
+  return { posts }
 }
 
 type Context = {
-  db: Database
-  feedService: FeedService
-  actorService: ActorService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & { viewer: string | null }
 
-type SkeletonState = {
-  params: Params
-  feedItems: FeedRow[]
+type Skeleton = {
+  posts: string[]
 }
-
-type HydrationState = SkeletonState & FeedHydrationState

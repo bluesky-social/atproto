@@ -1,108 +1,85 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { Actor } from '../../../../db/tables/actor'
-import {
-  ActorService,
-  ProfileDetailHydrationState,
-} from '../../../../services/actor'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
-import { ModerationService } from '../../../../services/moderation'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, res }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const modService = ctx.services.moderation(ctx.db.getPrimary())
       const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
-      const [result, repoRev] = await Promise.allSettled([
-        getProfile(
-          { ...params, viewer, canViewTakedowns },
-          { db, actorService, modService },
-        ),
-        actorService.getRepoRev(viewer),
-      ])
+      const result = await getProfile(
+        { ...params, viewer, canViewTakedowns },
+        ctx,
+      )
 
-      if (repoRev.status === 'fulfilled') {
-        setRepoRev(res, repoRev.value)
-      }
-      if (result.status === 'rejected') {
-        throw result.reason
-      }
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
-        body: result.value,
+        body: result,
       }
     },
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { actorService } = ctx
-  const { canViewTakedowns } = params
-  const actor = await actorService.getActor(params.actor, true)
-  if (!actor) {
+const skeleton = async (input: {
+  ctx: Context
+  params: Params
+}): Promise<SkeletonState> => {
+  const { ctx, params } = input
+  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  if (!canViewTakedowns && softDeleted(actor)) {
-    if (actor.takedownRef?.includes('SUSPEND')) {
-      throw new InvalidRequestError(
-        'Account has been temporarily suspended',
-        'AccountTakedown',
-      )
-    } else {
-      throw new InvalidRequestError(
-        'Account has been taken down',
-        'AccountTakedown',
-      )
-    }
-  }
-  return { params, actor }
+  return { did }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, actor } = state
-  const { viewer, canViewTakedowns } = params
-  const hydration = await actorService.views.profileDetailHydration(
-    [actor.did],
-    { viewer, includeSoftDeleted: canViewTakedowns },
+const hydration = async (input: {
+  ctx: Context
+  params: Params
+  skeleton: SkeletonState
+}) => {
+  const { ctx, params, skeleton } = input
+  return ctx.hydrator.hydrateProfilesDetailed(
+    [skeleton.did],
+    params.viewer,
+    true,
   )
-  return { ...state, ...hydration }
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, actor } = state
-  const { viewer } = params
-  const profiles = actorService.views.profileDetailPresentation(
-    [actor.did],
-    state,
-    { viewer },
-  )
-  const profile = profiles[actor.did]
+const presentation = (input: {
+  ctx: Context
+  params: Params
+  skeleton: SkeletonState
+  hydration: HydrationState
+}) => {
+  const { ctx, params, skeleton, hydration } = input
+  const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
+  } else if (
+    !params.canViewTakedowns &&
+    ctx.views.actorIsTakendown(skeleton.did, hydration)
+  ) {
+    throw new InvalidRequestError(
+      'Account has been suspended',
+      'AccountTakedown',
+    )
   }
   return profile
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  modService: ModerationService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
@@ -110,6 +87,4 @@ type Params = QueryParams & {
   canViewTakedowns: boolean
 }
 
-type SkeletonState = { params: Params; actor: Actor }
-
-type HydrationState = SkeletonState & ProfileDetailHydrationState
+type SkeletonState = { did: string }

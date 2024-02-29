@@ -19,13 +19,13 @@ describe('moderation-statuses', () => {
   const emitModerationEvent = async (eventData) => {
     return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
       encoding: 'application/json',
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
   }
 
   const queryModerationStatuses = (statusQuery) =>
     agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
   const seedEvents = async () => {

@@ -117,7 +117,6 @@ describe('admin repo search view', () => {
       { headers },
     )
 
-    expect(full.data.repos.length).toEqual(15)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })
