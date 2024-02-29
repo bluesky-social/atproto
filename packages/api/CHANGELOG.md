@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.10.3
+
+### Patch Changes
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix double sanitization bug when editing muted words.
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - More sanitization of muted words, including newlines and leading/trailing whitespace
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `sanitizeMutedWordValue` util
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Handle hash emoji in mute words
+
 ## 0.10.2
 
 ### Patch Changes
