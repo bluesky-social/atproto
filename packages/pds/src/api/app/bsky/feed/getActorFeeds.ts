@@ -7,13 +7,14 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.feed.getActorFeeds({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, params }) => {
+    handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
       return pipethrough(
-        bskyAppView.url,
+        ctx,
+        req,
         'app.bsky.feed.getActorFeeds',
         params,
-        await ctx.appviewAuthHeaders(requester),
+        requester,
       )
     },
   })

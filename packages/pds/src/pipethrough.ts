@@ -1,22 +1,35 @@
+import express from 'express'
 import * as ui8 from 'uint8arrays'
 import { jsonToLex } from '@atproto/lexicon'
-import { HandlerPipeThrough } from '@atproto/xrpc-server'
-import { CallOptions, ResponseType, XRPCError } from '@atproto/xrpc'
+import { HandlerPipeThrough, InvalidRequestError } from '@atproto/xrpc-server'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { lexicons } from './lexicon/lexicons'
 import { httpLogger } from './logger'
-import { noUndefinedVals } from '@atproto/common'
+import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
+import AppContext from './context'
 
 export const pipethrough = async (
-  serviceUrl: string,
+  ctx: AppContext,
+  req: express.Request,
   nsid: string,
   params: Record<string, any>,
-  opts?: CallOptions,
+  requester: string,
+  audOverride?: string,
 ): Promise<HandlerPipeThrough> => {
+  const proxyTo = await parseProxyHeader(ctx, req)
+  const serviceUrl = proxyTo?.serviceUrl ?? ctx.cfg.bskyAppView?.url
+  const aud = audOverride ?? proxyTo?.did ?? ctx.cfg.bskyAppView?.did
+  if (!serviceUrl || !aud) {
+    throw new InvalidRequestError(`No service configured for ${nsid}`)
+  }
+  const reqHeaders = await ctx.serviceAuthHeaders(requester, aud)
+  // forward accept-language header to upstream services
+  reqHeaders.headers['accept-language'] = req.headers['accept-language']
   const url = constructUrl(serviceUrl, nsid, params)
   let res: Response
   let buffer: ArrayBuffer
   try {
-    res = await fetch(url, opts)
+    res = await fetch(url, reqHeaders)
     buffer = await res.arrayBuffer()
   } catch (err) {
     httpLogger.warn({ err }, 'pipethrough network error')
@@ -35,11 +48,29 @@ export const pipethrough = async (
   const encoding = res.headers.get('content-type') ?? 'application/json'
   const repoRevHeader = res.headers.get('atproto-repo-rev')
   const contentLanguage = res.headers.get('content-language')
-  const headers = noUndefinedVals({
+  const resHeaders = noUndefinedVals({
     ['atproto-repo-rev']: repoRevHeader ?? undefined,
     ['content-language']: contentLanguage ?? undefined,
   })
-  return { encoding, buffer, headers }
+  return { encoding, buffer, headers: resHeaders }
+}
+
+export const parseProxyHeader = async (
+  ctx: AppContext,
+  req: express.Request,
+): Promise<{ did: string; serviceUrl: string } | undefined> => {
+  const proxyTo = req.header('atproto-proxy')
+  if (!proxyTo) return
+  const [did, serviceId] = proxyTo.split('#')
+  const didDoc = await ctx.idResolver.did.resolve(did)
+  if (!didDoc) {
+    throw new InvalidRequestError('could not resolve proxy did')
+  }
+  const serviceUrl = getServiceEndpoint(didDoc, { id: `#${serviceId}` })
+  if (!serviceUrl) {
+    throw new InvalidRequestError('could not resolve proxy did service url')
+  }
+  return { did, serviceUrl }
 }
 
 export const constructUrl = (
