@@ -7,15 +7,9 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(
-        ctx,
-        req,
-        'app.bsky.actor.getSuggestions',
-        params,
-        requester,
-      )
+      return pipethrough(ctx, req, requester)
     },
   })
 }

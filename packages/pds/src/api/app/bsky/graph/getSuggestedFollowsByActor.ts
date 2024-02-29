@@ -7,15 +7,9 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.graph.getSuggestedFollowsByActor({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, auth, params }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(
-        ctx,
-        req,
-        'app.bsky.graph.getSuggestedFollowsByActor',
-        params,
-        requester,
-      )
+      return pipethrough(ctx, req, requester)
     },
   })
 }

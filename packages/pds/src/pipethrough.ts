@@ -1,5 +1,6 @@
 import express from 'express'
 import * as ui8 from 'uint8arrays'
+import net from 'node:net'
 import { jsonToLex } from '@atproto/lexicon'
 import { HandlerPipeThrough, InvalidRequestError } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
@@ -11,8 +12,6 @@ import AppContext from './context'
 export const pipethrough = async (
   ctx: AppContext,
   req: express.Request,
-  nsid: string,
-  params: Record<string, any>,
   requester?: string,
   audOverride?: string,
 ): Promise<HandlerPipeThrough> => {
@@ -20,14 +19,17 @@ export const pipethrough = async (
   const serviceUrl = proxyTo?.serviceUrl ?? ctx.cfg.bskyAppView?.url
   const aud = audOverride ?? proxyTo?.did ?? ctx.cfg.bskyAppView?.did
   if (!serviceUrl || !aud) {
-    throw new InvalidRequestError(`No service configured for ${nsid}`)
+    throw new InvalidRequestError(`No service configured for ${req.path}`)
+  }
+  const url = new URL(req.originalUrl, serviceUrl)
+  if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
+    throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
   }
   const reqHeaders = requester
     ? await ctx.serviceAuthHeaders(requester, aud)
     : { headers: {} }
   // forward accept-language header to upstream services
   reqHeaders.headers['accept-language'] = req.headers['accept-language']
-  const url = constructUrl(serviceUrl, nsid, params)
   let res: Response
   let buffer: ArrayBuffer
   try {
@@ -96,6 +98,13 @@ export const constructUrl = (
   }
 
   return uri.toString()
+}
+
+const isSafeUrl = (url: URL) => {
+  if (url.protocol !== 'https:') return false
+  if (!url.hostname || url.hostname === 'localhost') return false
+  if (net.isIP(url.hostname) === 0) return false
+  return true
 }
 
 export const parseRes = <T>(nsid: string, res: HandlerPipeThrough): T => {

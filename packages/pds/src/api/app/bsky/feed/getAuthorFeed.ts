@@ -16,9 +16,9 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      const res = await pipethrough(ctx, req, METHOD_NSID, params, requester)
+      const res = await pipethrough(ctx, req, requester)
       if (!requester) {
         return res
       }

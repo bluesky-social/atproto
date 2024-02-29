@@ -16,14 +16,7 @@ export default function (server: Server, ctx: AppContext) {
           { feed: params.feed },
           await ctx.appviewAuthHeaders(requester),
         )
-      return pipethrough(
-        ctx,
-        req,
-        'app.bsky.feed.getFeed',
-        params,
-        requester,
-        feed.view.did,
-      )
+      return pipethrough(ctx, req, requester, feed.view.did)
     },
   })
 }
