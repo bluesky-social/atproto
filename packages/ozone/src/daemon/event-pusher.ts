@@ -205,7 +205,7 @@ export class EventPusher {
             ? { confirmedAt: new Date() }
             : {
                 lastAttempted: new Date(),
-                attempts: evt.attempts ?? 0 + 1,
+                attempts: (evt.attempts ?? 0) + 1,
               },
         )
         .where('subjectDid', '=', evt.subjectDid)
@@ -244,7 +244,7 @@ export class EventPusher {
             ? { confirmedAt: new Date() }
             : {
                 lastAttempted: new Date(),
-                attempts: evt.attempts ?? 0 + 1,
+                attempts: (evt.attempts ?? 0) + 1,
               },
         )
         .where('subjectUri', '=', evt.subjectUri)
@@ -284,7 +284,7 @@ export class EventPusher {
             ? { confirmedAt: new Date() }
             : {
                 lastAttempted: new Date(),
-                attempts: evt.attempts ?? 0 + 1,
+                attempts: (evt.attempts ?? 0) + 1,
               },
         )
         .where('subjectDid', '=', evt.subjectDid)
