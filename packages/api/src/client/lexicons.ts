@@ -2261,6 +2261,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Declares a label value and its expected interpertations and behaviors.',
+        required: ['identifier', 'severity', 'blurs', 'locales'],
         properties: {
           identifier: {
             type: 'string',
@@ -2270,8 +2271,8 @@ export const schemaDict = {
           severity: {
             type: 'string',
             description:
-              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning.",
-            knownValues: ['inform', 'alert'],
+              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing.",
+            knownValues: ['inform', 'alert', 'none'],
           },
           blurs: {
             type: 'string',
@@ -2334,24 +2335,7 @@ export const schemaDict = {
           'sexual',
           'nudity',
           'nsfl',
-          'corpse',
           'gore',
-          'torture',
-          'self-harm',
-          'intolerant-race',
-          'intolerant-gender',
-          'intolerant-sexual-orientation',
-          'intolerant-religion',
-          'intolerant',
-          'icon-intolerant',
-          'threat',
-          'spoiler',
-          'spam',
-          'account-security',
-          'net-abuse',
-          'impersonation',
-          'scam',
-          'misleading',
         ],
       },
     },
