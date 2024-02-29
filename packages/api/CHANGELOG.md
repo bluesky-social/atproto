@@ -1,5 +1,20 @@
 # @atproto/api
 
+## 0.10.2
+
+### Patch Changes
+
+- [#2245](https://github.com/bluesky-social/atproto/pull/2245) [`61b3d2525`](https://github.com/bluesky-social/atproto/commit/61b3d25253353db2da1336004f94e7dc5adb0410) Thanks [@mary-ext](https://github.com/mary-ext)! - Prevent hashtag emoji from being parsed as a tag
+
+- [#2218](https://github.com/bluesky-social/atproto/pull/2218) [`43531905c`](https://github.com/bluesky-social/atproto/commit/43531905ce1aec6d36d9be5943782811ecca6e6d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix mute word upsert logic by ensuring we're comparing sanitized word values
+
+- [#2245](https://github.com/bluesky-social/atproto/pull/2245) [`61b3d2525`](https://github.com/bluesky-social/atproto/commit/61b3d25253353db2da1336004f94e7dc5adb0410) Thanks [@mary-ext](https://github.com/mary-ext)! - Properly calculate length of tag
+
+- Updated dependencies [[`0c815b964`](https://github.com/bluesky-social/atproto/commit/0c815b964c030aa0f277c40bf9786f130dc320f4)]:
+  - @atproto/syntax@0.2.0
+  - @atproto/lexicon@0.3.2
+  - @atproto/xrpc@0.4.2
+
 ## 0.10.1
 
 ### Patch Changes
