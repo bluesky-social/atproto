@@ -15,6 +15,7 @@ import {
   isModEventTag,
   RepoRef,
   RepoBlobRef,
+  isModEventDivertBlobs,
 } from '../lexicon/types/com/atproto/admin/defs'
 import {
   adjustModerationSubjectStatus,
@@ -43,6 +44,7 @@ import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
+import { BlobDiverter } from '../daemon/blob-diverter'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -51,6 +53,7 @@ export class ModerationService {
     public db: Database,
     public backgroundQueue: BackgroundQueue,
     public eventPusher: EventPusher,
+    public blobDiverter: BlobDiverter,
     public appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
     public serverDid: string,
@@ -59,6 +62,7 @@ export class ModerationService {
   static creator(
     backgroundQueue: BackgroundQueue,
     eventPusher: EventPusher,
+    blobDiverter: BlobDiverter,
     appviewAgent: AtpAgent,
     appviewAuth: AppviewAuth,
     serverDid: string,
@@ -68,6 +72,7 @@ export class ModerationService {
         db,
         backgroundQueue,
         eventPusher,
+        blobDiverter,
         appviewAgent,
         appviewAuth,
         serverDid,
@@ -320,6 +325,33 @@ export class ModerationService {
       modEvent,
       subject.blobCids,
     )
+
+    if (
+      isModEventDivertBlobs(event) &&
+      subjectInfo.subjectUri &&
+      subjectInfo.subjectBlobCids?.length
+    ) {
+      const blobDiverts = await Promise.all(
+        subjectInfo.subjectBlobCids?.map((subjectBlobCid) =>
+          this.blobDiverter.logDivertEvent({
+            subjectDid: subjectInfo.subjectDid,
+            subjectBlobCid: subjectBlobCid,
+            // TODO: Check is done above already
+            // @ts-ignore
+            subjectUri: subjectInfo.subjectUri,
+          }),
+        ),
+      )
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.all(
+            blobDiverts.map((divert) =>
+              this.blobDiverter.attemptBlobDivert(divert[0].id),
+            ),
+          )
+        })
+      })
+    }
 
     return { event: modEvent, subjectStatus }
   }

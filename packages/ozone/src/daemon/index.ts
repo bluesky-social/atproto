@@ -3,6 +3,7 @@ import DaemonContext from './context'
 import { AppContextOptions } from '../context'
 
 export { EventPusher } from './event-pusher'
+export { BlobDiverter } from './blob-diverter'
 export { EventReverser } from './event-reverser'
 
 export class OzoneDaemon {
@@ -19,15 +20,18 @@ export class OzoneDaemon {
   async start() {
     this.ctx.eventPusher.start()
     this.ctx.eventReverser.start()
+    this.ctx.blobDiverter.start()
   }
 
   async processAll() {
     await this.ctx.eventPusher.processAll()
+    await this.ctx.blobDiverter.processAll()
   }
 
   async destroy() {
     await this.ctx.eventReverser.destroy()
     await this.ctx.eventPusher.destroy()
+    await this.ctx.blobDiverter.destroy()
     await this.ctx.db.close()
   }
 }

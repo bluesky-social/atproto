@@ -40,12 +40,18 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
   }
 
+  const blobReportServiceCfg = {
+    url: env.blobReportServiceUrl,
+    authToken: env.blobReportServiceAuthToken,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
     appview: appviewCfg,
     pds: pdsCfg,
     identity: identityCfg,
+    blobReportService: blobReportServiceCfg,
   }
 }
 
@@ -55,6 +61,7 @@ export type OzoneConfig = {
   appview: AppviewConfig
   pds: PdsConfig | null
   identity: IdentityConfig
+  blobReportService: BlobReportServiceConfig
 }
 
 export type ServiceConfig = {
@@ -62,6 +69,11 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
+}
+
+export type BlobReportServiceConfig = {
+  url?: string
+  authToken?: string
 }
 
 export type DatabaseConfig = {

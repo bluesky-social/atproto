@@ -18,6 +18,8 @@ export const readEnv = (): OzoneEnvironment => {
     moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
     triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
+    blobReportServiceUrl: envStr('OZONE_BLOB_REPORT_SERVICE_URL'),
+    blobReportServiceAuthToken: envStr('OZONE_BLOB_REPORT_SERVICE_AUTH_TOKEN'),
   }
 }
 
@@ -38,4 +40,6 @@ export type OzoneEnvironment = {
   moderatorPassword?: string
   triagePassword?: string
   signingKeyHex?: string
+  blobReportServiceUrl?: string
+  blobReportServiceAuthToken?: string
 }

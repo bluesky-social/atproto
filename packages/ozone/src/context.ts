@@ -14,6 +14,7 @@ import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { BlobDiverter } from './daemon/blob-diverter'
 
 export type AppContextOptions = {
   db: Database
@@ -59,10 +60,16 @@ export class AppContext {
       appview: cfg.appview,
       pds: cfg.pds ?? undefined,
     })
+    const blobDiverter = new BlobDiverter(db, {
+      serviceConfig: cfg.blobReportService,
+      appview: cfg.appview,
+      pds: cfg.pds ?? undefined,
+    })
 
     const modService = ModerationService.creator(
       backgroundQueue,
       eventPusher,
+      blobDiverter,
       appviewAgent,
       appviewAuth,
       cfg.service.did,

@@ -92,6 +92,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventMute',
               'lex:com.atproto.admin.defs#modEventEmail',
               'lex:com.atproto.admin.defs#modEventResolveAppeal',
+              'lex:com.atproto.admin.defs#modEventDivertBlobs',
             ],
           },
           subject: {
@@ -150,6 +151,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventMute',
               'lex:com.atproto.admin.defs#modEventEmail',
               'lex:com.atproto.admin.defs#modEventResolveAppeal',
+              'lex:com.atproto.admin.defs#modEventDivertBlobs',
             ],
           },
           subject: {
@@ -933,6 +935,16 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      modEventDivertBlobs: {
+        type: 'object',
+        description:
+          "Divert a record's blobs to a 3rd party service for further scanning/tagging",
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },

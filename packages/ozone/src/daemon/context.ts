@@ -7,6 +7,7 @@ import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { ModerationService, ModerationServiceCreator } from '../mod-service'
 import { BackgroundQueue } from '../background'
+import { BlobDiverter } from './blob-diverter'
 
 export type DaemonContextOptions = {
   db: Database
@@ -14,6 +15,7 @@ export type DaemonContextOptions = {
   modService: ModerationServiceCreator
   signingKey: Keypair
   eventPusher: EventPusher
+  blobDiverter: BlobDiverter
   eventReverser: EventReverser
 }
 
@@ -46,10 +48,16 @@ export class DaemonContext {
       appview: cfg.appview,
       pds: cfg.pds ?? undefined,
     })
+    const blobDiverter = new BlobDiverter(db, {
+      serviceConfig: cfg.blobReportService,
+      appview: cfg.appview,
+      pds: cfg.pds ?? undefined,
+    })
     const backgroundQueue = new BackgroundQueue(db)
     const modService = ModerationService.creator(
       backgroundQueue,
       eventPusher,
+      blobDiverter,
       appviewAgent,
       appviewAuth,
       cfg.service.did,
@@ -62,6 +70,7 @@ export class DaemonContext {
       modService,
       signingKey,
       eventPusher,
+      blobDiverter,
       eventReverser,
       ...(overrides ?? {}),
     })
@@ -81,6 +90,10 @@ export class DaemonContext {
 
   get eventPusher(): EventPusher {
     return this.opts.eventPusher
+  }
+
+  get blobDiverter(): BlobDiverter {
+    return this.opts.blobDiverter
   }
 
   get eventReverser(): EventReverser {
