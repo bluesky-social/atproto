@@ -99,6 +99,11 @@ export class BskyAgent extends AtpAgent {
     (params, opts) =>
       this.api.app.bsky.notification.getUnreadCount(params, opts)
 
+  getModServices: typeof this.api.app.bsky.moderation.getServices = (
+    params,
+    opts,
+  ) => this.api.app.bsky.moderation.getServices(params, opts)
+
   async post(
     record: Partial<AppBskyFeedPost.Record> &
       Omit<AppBskyFeedPost.Record, 'createdAt'>,

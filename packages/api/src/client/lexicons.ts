@@ -8590,33 +8590,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModerationGetService: {
-    lexicon: 1,
-    id: 'app.bsky.moderation.getService',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get information about a moderation service.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServiceViewDetailed',
-          },
-        },
-      },
-    },
-  },
   AppBskyModerationGetServices: {
     lexicon: 1,
     id: 'app.bsky.moderation.getServices',
@@ -8635,6 +8608,10 @@ export const schemaDict = {
                 format: 'did',
               },
             },
+            detailed: {
+              type: 'boolean',
+              default: false,
+            },
           },
         },
         output: {
@@ -8646,8 +8623,11 @@ export const schemaDict = {
               views: {
                 type: 'array',
                 items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.moderation.defs#modServiceView',
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.moderation.defs#modServiceView',
+                    'lex:app.bsky.moderation.defs#modServiceViewDetailed',
+                  ],
                 },
               },
             },
@@ -9379,7 +9359,6 @@ export const ids = {
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyModerationDefs: 'app.bsky.moderation.defs',
-  AppBskyModerationGetService: 'app.bsky.moderation.getService',
   AppBskyModerationGetServices: 'app.bsky.moderation.getServices',
   AppBskyModerationService: 'app.bsky.moderation.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',

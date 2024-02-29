@@ -151,7 +151,6 @@ import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyModerationDefs from './types/app/bsky/moderation/defs'
-import * as AppBskyModerationGetService from './types/app/bsky/moderation/getService'
 import * as AppBskyModerationGetServices from './types/app/bsky/moderation/getServices'
 import * as AppBskyModerationService from './types/app/bsky/moderation/service'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
@@ -309,7 +308,6 @@ export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyModerationDefs from './types/app/bsky/moderation/defs'
-export * as AppBskyModerationGetService from './types/app/bsky/moderation/getService'
 export * as AppBskyModerationGetServices from './types/app/bsky/moderation/getServices'
 export * as AppBskyModerationService from './types/app/bsky/moderation/service'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
@@ -2582,17 +2580,6 @@ export class AppBskyModerationNS {
   constructor(service: AtpServiceClient) {
     this._service = service
     this.service = new ServiceRecord(service)
-  }
-
-  getService(
-    params?: AppBskyModerationGetService.QueryParams,
-    opts?: AppBskyModerationGetService.CallOptions,
-  ): Promise<AppBskyModerationGetService.Response> {
-    return this._service.xrpc
-      .call('app.bsky.moderation.getService', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyModerationGetService.toKnownErr(e)
-      })
   }
 
   getServices(

@@ -12,6 +12,10 @@
           "dids": {
             "type": "array",
             "items": { "type": "string", "format": "did" }
+          },
+          "detailed": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -24,8 +28,11 @@
             "views": {
               "type": "array",
               "items": {
-                "type": "ref",
-                "ref": "app.bsky.moderation.defs#modServiceView"
+                "type": "union",
+                "refs": [
+                  "app.bsky.moderation.defs#modServiceView",
+                  "app.bsky.moderation.defs#modServiceViewDetailed"
+                ]
               }
             }
           }
