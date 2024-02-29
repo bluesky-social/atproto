@@ -13,7 +13,7 @@ export const pipethrough = async (
   req: express.Request,
   nsid: string,
   params: Record<string, any>,
-  requester: string,
+  requester?: string,
   audOverride?: string,
 ): Promise<HandlerPipeThrough> => {
   const proxyTo = await parseProxyHeader(ctx, req)
@@ -22,7 +22,9 @@ export const pipethrough = async (
   if (!serviceUrl || !aud) {
     throw new InvalidRequestError(`No service configured for ${nsid}`)
   }
-  const reqHeaders = await ctx.serviceAuthHeaders(requester, aud)
+  const reqHeaders = requester
+    ? await ctx.serviceAuthHeaders(requester, aud)
+    : { headers: {} }
   // forward accept-language header to upstream services
   reqHeaders.headers['accept-language'] = req.headers['accept-language']
   const url = constructUrl(serviceUrl, nsid, params)
