@@ -13,6 +13,7 @@ import {
   BskyThreadViewPreference,
   BskyInterestsPreference,
 } from './types'
+import { sanitizeMuteWordValue } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -764,8 +765,4 @@ async function updateHiddenPost(
       .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
       .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
   })
-}
-
-function sanitizeMuteWordValue(value: string) {
-  return value.replace(/^#(?!\ufe0f)/, '')
 }
