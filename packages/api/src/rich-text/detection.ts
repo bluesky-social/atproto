@@ -5,7 +5,7 @@ import { UnicodeString } from './unicode'
 export type Facet = AppBskyRichtextFacet.Main
 
 export function detectFacets(text: UnicodeString): Facet[] | undefined {
-  let match
+  let match: RegExpExecArray | null | undefined
   const facets: Facet[] = []
   {
     // mentions
@@ -70,27 +70,37 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
+    const re = /(^|\s)#([^\d\s]\S*)(?=\s)?/g
     while ((match = re.exec(text.utf16))) {
-      let [tag] = match
-      const hasLeadingSpace = /^\s/.test(tag)
+      let [, leading, tag] = match
 
-      tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
+      const isEmojiTag = tag.charCodeAt(0) === 0xfe0f
 
-      // inclusive of #, max of 64 chars
-      if (tag.length > 66) continue
+      if (isEmojiTag) {
+        // If the variation isn't an keycap, this isn't the hashtag emoji
+        if (tag.charCodeAt(1) !== 0x20e3) continue
 
-      const index = match.index + (hasLeadingSpace ? 1 : 0)
+        // Normalize the tag
+        tag = tag.slice(2)
+      }
+
+      // Strip ending punctuation
+      tag = tag.trimEnd().replace(/\p{P}+$/gu, '')
+
+      // Do not include empty tags, or tags that are over 64 characters long
+      if (tag.length === 0 || tag.length > 64) continue
+
+      const index = match.index + leading.length
 
       facets.push({
         index: {
           byteStart: text.utf16IndexToUtf8Index(index),
-          byteEnd: text.utf16IndexToUtf8Index(index + tag.length), // inclusive of last char
+          byteEnd: text.utf16IndexToUtf8Index(index + 1 + tag.length),
         },
         features: [
           {
             $type: 'app.bsky.richtext.facet#tag',
-            tag: tag.replace(/^#/, ''),
+            tag: tag,
           },
         ],
       })
