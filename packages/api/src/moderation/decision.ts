@@ -8,7 +8,7 @@ import {
   LabelPreference,
   ModerationCause,
   ModerationOpts,
-  LabelDefinition,
+  InterprettedLabelValueDefinition,
   LabelTarget,
   ModerationBehavior,
 } from './types'
@@ -199,7 +199,9 @@ export class ModerationDecision {
 
   addLabel(target: LabelTarget, label: Label, opts: ModerationOpts) {
     // look up the label definition
-    const labelDef = LABELS[label.val] as LabelDefinition
+    const labelDef = label.val.startsWith('x-')
+      ? opts.labelDefs?.[label.src]?.find((def) => def.identifier === label.val)
+      : LABELS[label.val]
     if (!labelDef) {
       // ignore labels we don't understand
       return
@@ -209,7 +211,7 @@ export class ModerationDecision {
     const isSelf = label.src === this.did
     const labeler = isSelf
       ? undefined
-      : opts.mods.find((s) => s.did === label.src)
+      : opts.prefs.mods.find((s) => s.did === label.src)
 
     if (!isSelf && !labeler) {
       return // skip labelers not configured by the user
@@ -222,12 +224,15 @@ export class ModerationDecision {
     let labelPref: LabelPreference = 'ignore'
     if (!labelDef.configurable) {
       labelPref = labelDef.defaultSetting || 'hide'
-    } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
+    } else if (
+      labelDef.flags.includes('adult') &&
+      !opts.prefs.adultContentEnabled
+    ) {
       labelPref = 'hide'
     } else if (labeler?.labels[labelDef.identifier]) {
       labelPref = labeler?.labels[labelDef.identifier]
-    } else if (opts.labels[labelDef.identifier]) {
-      labelPref = opts.labels[labelDef.identifier]
+    } else if (opts.prefs.labels[labelDef.identifier]) {
+      labelPref = opts.prefs.labels[labelDef.identifier]
     }
 
     // ignore labels the user has asked to ignore
@@ -247,7 +252,7 @@ export class ModerationDecision {
     )
     if (
       labelDef.flags.includes('no-override') ||
-      (labelDef.flags.includes('adult') && !opts.adultContentEnabled)
+      (labelDef.flags.includes('adult') && !opts.prefs.adultContentEnabled)
     ) {
       priority = 1
     } else if (labelPref === 'hide') {
@@ -266,7 +271,10 @@ export class ModerationDecision {
     let noOverride = false
     if (labelDef.flags.includes('no-override')) {
       noOverride = true
-    } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
+    } else if (
+      labelDef.flags.includes('adult') &&
+      !opts.prefs.adultContentEnabled
+    ) {
       noOverride = true
     }
 

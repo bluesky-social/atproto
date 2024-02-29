@@ -19,11 +19,13 @@ describe('Moderation', () => {
       }),
       {
         userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labels: {
-          porn: 'hide',
+        prefs: {
+          adultContentEnabled: true,
+          labels: {
+            porn: 'hide',
+          },
+          mods: [],
         },
-        mods: [],
       },
     )
     expect(res1.ui('avatar')).toBeModerationResult(
@@ -49,11 +51,13 @@ describe('Moderation', () => {
       }),
       {
         userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labels: {
-          porn: 'ignore',
+        prefs: {
+          adultContentEnabled: true,
+          labels: {
+            porn: 'ignore',
+          },
+          mods: [],
         },
-        mods: [],
       },
     )
     expect(res2.ui('avatar')).toBeModerationResult(
@@ -81,11 +85,13 @@ describe('Moderation', () => {
       }),
       {
         userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labels: {
-          porn: 'hide',
+        prefs: {
+          adultContentEnabled: true,
+          labels: {
+            porn: 'hide',
+          },
+          mods: [],
         },
-        mods: [],
       },
     )
     for (const k of [
@@ -121,16 +127,18 @@ describe('Moderation', () => {
       }),
       {
         userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labels: {
-          porn: 'ignore',
-        },
-        mods: [
-          {
-            did: 'did:web:labeler.test',
-            labels: { porn: 'ignore' },
+        prefs: {
+          adultContentEnabled: true,
+          labels: {
+            porn: 'ignore',
           },
-        ],
+          mods: [
+            {
+              did: 'did:web:labeler.test',
+              labels: { porn: 'ignore' },
+            },
+          ],
+        },
       },
     )
     for (const k of [
@@ -166,14 +174,16 @@ describe('Moderation', () => {
       }),
       {
         userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labels: {},
-        mods: [
-          {
-            did: 'did:web:labeler.test',
-            labels: {},
-          },
-        ],
+        prefs: {
+          adultContentEnabled: true,
+          labels: {},
+          mods: [
+            {
+              did: 'did:web:labeler.test',
+              labels: {},
+            },
+          ],
+        },
       },
     )
     res1.addHidden(true)
@@ -212,16 +222,18 @@ describe('Moderation', () => {
       }),
       {
         userDid: 'did:web:alice.test',
-        adultContentEnabled: true,
-        labels: {
-          porn: 'hide',
-        },
-        mods: [
-          {
-            did: 'did:web:labeler.test',
-            labels: {},
+        prefs: {
+          adultContentEnabled: true,
+          labels: {
+            porn: 'hide',
           },
-        ],
+          mods: [
+            {
+              did: 'did:web:labeler.test',
+              labels: {},
+            },
+          ],
+        },
       },
     )
     expect(res1.ui('contentList').filters[0].label.val).toBe('!hide')

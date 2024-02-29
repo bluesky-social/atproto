@@ -328,8 +328,7 @@ export class BskyAgent extends AtpAgent {
         },
       },
       threadViewPrefs: { ...THREAD_VIEW_PREF_DEFAULTS },
-      moderationOpts: {
-        userDid: this.session?.did || '',
+      moderationPrefs: {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS },
         mods: [],
@@ -349,7 +348,7 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.validateAdultContentPref(pref).success
       ) {
         // adult content preferences
-        prefs.moderationOpts.adultContentEnabled = pref.enabled
+        prefs.moderationPrefs.adultContentEnabled = pref.enabled
       } else if (
         AppBskyActorDefs.isContentLabelPref(pref) &&
         AppBskyActorDefs.validateContentLabelPref(pref).success
@@ -362,7 +361,7 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.validateModsPref(pref).success
       ) {
         // mods preferences
-        prefs.moderationOpts.mods = pref.mods.map((mod) => ({
+        prefs.moderationPrefs.mods = pref.mods.map((mod) => ({
           ...mod,
           labels: {},
         }))
@@ -422,11 +421,11 @@ export class BskyAgent extends AtpAgent {
     }
 
     // ensure the bluesky moderation is configured
-    const bskyModeration = prefs.moderationOpts.mods.find(
+    const bskyModeration = prefs.moderationPrefs.mods.find(
       (modPref) => modPref.did === BSKY_MODSERVICE_DID,
     )
     if (!bskyModeration) {
-      prefs.moderationOpts.mods.unshift({
+      prefs.moderationPrefs.mods.unshift({
         did: BSKY_MODSERVICE_DID,
         labels: {},
       })
@@ -435,13 +434,13 @@ export class BskyAgent extends AtpAgent {
     // apply the label prefs
     for (const pref of labelPrefs) {
       if (pref.labelerDid) {
-        const mod = prefs.moderationOpts.mods.find(
+        const mod = prefs.moderationPrefs.mods.find(
           (mod) => mod.did === pref.labelerDid,
         )
         if (!mod) continue
         mod.labels[pref.label] = pref.visibility as LabelPreference
       } else {
-        prefs.moderationOpts.labels[pref.label] =
+        prefs.moderationPrefs.labels[pref.label] =
           pref.visibility as LabelPreference
       }
     }

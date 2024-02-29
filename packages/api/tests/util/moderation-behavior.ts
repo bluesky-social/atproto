@@ -10,13 +10,16 @@ expect.extend({
   toBeModerationResult(
     actual: ModerationUI,
     expected: ModerationTestSuiteResultFlag[] | undefined,
-    context: string,
-    stringifiedResult: string,
+    context: string = '',
+    stringifiedResult: string | undefined = undefined,
     ignoreCause = false,
   ) {
     const fail = (msg: string) => ({
       pass: false,
-      message: () => `${msg}. Full result: ${stringifiedResult}`,
+      message: () =>
+        `${msg}.${
+          stringifiedResult ? ` Full result: ${stringifiedResult}` : ''
+        }`,
     })
     // let cause = actual.causes?.type as string
     // if (actual.cause?.type === 'label') {

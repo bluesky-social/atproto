@@ -44,30 +44,21 @@ export const NOOP_BEHAVIOR: ModerationBehavior = {}
 // =
 
 export type Label = ComAtprotoLabelDefs.Label
-
+export type LabelTarget = 'account' | 'profile' | 'content'
 export type LabelPreference = 'ignore' | 'warn' | 'hide'
-export type LabelDefinitionFlag =
+
+export type LabelValueDefinitionFlag =
   | 'no-override'
   | 'adult'
   | 'unauthed'
   | 'no-self'
-export type LabelTarget = 'account' | 'profile' | 'content'
 
-export interface LabelDefinitionLocalizedStrings {
-  name: string
-  description: string
-}
-
-export type LabelDefinitionLocalizedStringsMap = Record<
-  string,
-  LabelDefinitionLocalizedStrings
->
-
-export interface LabelDefinition {
-  identifier: KnownLabelValue
+export interface InterprettedLabelValueDefinition
+  extends ComAtprotoLabelDefs.LabelValueDefinition {
+  // identifier: string
   configurable: boolean
-  defaultSetting: LabelPreference
-  flags: LabelDefinitionFlag[]
+  defaultSetting: LabelPreference // type narrowing
+  flags: LabelValueDefinitionFlag[]
   behaviors: {
     account?: ModerationBehavior
     profile?: ModerationBehavior
@@ -75,7 +66,10 @@ export interface LabelDefinition {
   }
 }
 
-export type LabelDefinitionMap = Record<KnownLabelValue, LabelDefinition>
+export type LabelDefinitionMap = Record<
+  KnownLabelValue,
+  InterprettedLabelValueDefinition
+>
 
 // subjects
 // =
@@ -119,7 +113,7 @@ export type ModerationCause =
       type: 'label'
       source: ModerationCauseSource
       label: Label
-      labelDef: LabelDefinition
+      labelDef: InterprettedLabelValueDefinition
       setting: LabelPreference
       behavior: ModerationBehavior
       noOverride: boolean
@@ -128,14 +122,22 @@ export type ModerationCause =
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
   | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
 
-export interface ModerationOptsModerator {
+export interface ModerationPrefsModerator {
   did: string
   labels: Record<string, LabelPreference>
 }
 
-export interface ModerationOpts {
-  userDid: string
+export interface ModerationPrefs {
   adultContentEnabled: boolean
   labels: Record<string, LabelPreference>
-  mods: ModerationOptsModerator[]
+  mods: ModerationPrefsModerator[]
+}
+
+export interface ModerationOpts {
+  userDid: string | undefined
+  prefs: ModerationPrefs
+  /**
+   * Map of labeler did -> custom definitions
+   */
+  labelDefs?: Record<string, InterprettedLabelValueDefinition[]>
 }

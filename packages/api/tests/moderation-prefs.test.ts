@@ -55,8 +55,7 @@ describe('agent', () => {
       },
       hiddenPosts: [],
       interests: { tags: [] },
-      moderationOpts: {
-        userDid,
+      moderationPrefs: {
         adultContentEnabled: false,
         labels: {
           porn: 'ignore',
@@ -109,8 +108,7 @@ describe('agent', () => {
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
       interests: { tags: [] },
-      moderationOpts: {
-        userDid,
+      moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
@@ -151,8 +149,7 @@ describe('agent', () => {
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
       interests: { tags: [] },
-      moderationOpts: {
-        userDid,
+      moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
@@ -197,8 +194,7 @@ describe('agent', () => {
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
       interests: { tags: [] },
-      moderationOpts: {
-        userDid,
+      moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
@@ -246,8 +242,7 @@ describe('agent', () => {
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
       interests: { tags: [] },
-      moderationOpts: {
-        userDid,
+      moderationPrefs: {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore' },
         mods: [

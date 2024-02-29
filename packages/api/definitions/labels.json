@@ -4,6 +4,8 @@
     "configurable": false,
     "defaultSetting": "hide",
     "flags": ["no-override", "no-self"],
+    "severity": "alert",
+    "blurs": "content",
     "behaviors": {
       "account": {
         "profileList": "blur",
@@ -30,6 +32,8 @@
     "configurable": false,
     "defaultSetting": "hide",
     "flags": ["no-self"],
+    "severity": "none",
+    "blurs": "none",
     "behaviors": {}
   },
   {
@@ -37,6 +41,8 @@
     "configurable": false,
     "defaultSetting": "warn",
     "flags": ["no-self"],
+    "severity": "none",
+    "blurs": "content",
     "behaviors": {
       "account": {
         "profileList": "blur",
@@ -62,6 +68,8 @@
     "configurable": false,
     "defaultSetting": "hide",
     "flags": ["no-override", "unauthed"],
+    "severity": "none",
+    "blurs": "content",
     "behaviors": {
       "account": {
         "profileList": "blur",
@@ -88,6 +96,8 @@
     "configurable": false,
     "defaultSetting": "hide",
     "flags": ["no-override", "no-self"],
+    "severity": "none",
+    "blurs": "content",
     "behaviors": {
       "content": {
         "contentList": "blur",
@@ -100,6 +110,8 @@
     "configurable": false,
     "defaultSetting": "hide",
     "flags": ["no-override", "no-self"],
+    "severity": "none",
+    "blurs": "content",
     "behaviors": {
       "account": {
         "profileList": "blur",
@@ -118,6 +130,8 @@
     "configurable": true,
     "defaultSetting": "hide",
     "flags": ["adult"],
+    "severity": "none",
+    "blurs": "media",
     "behaviors": {
       "profile": {
         "avatar": "blur",
@@ -133,6 +147,8 @@
     "configurable": true,
     "defaultSetting": "warn",
     "flags": ["adult"],
+    "severity": "none",
+    "blurs": "media",
     "behaviors": {
       "profile": {
         "avatar": "blur",
@@ -148,6 +164,8 @@
     "configurable": true,
     "defaultSetting": "warn",
     "flags": ["adult"],
+    "severity": "none",
+    "blurs": "media",
     "behaviors": {
       "profile": {
         "avatar": "blur",
@@ -163,6 +181,8 @@
     "flags": ["adult"],
     "configurable": true,
     "defaultSetting": "warn",
+    "severity": "none",
+    "blurs": "media",
     "behaviors": {
       "profile": {
         "avatar": "blur",

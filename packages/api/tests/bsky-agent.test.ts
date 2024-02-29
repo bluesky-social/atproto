@@ -226,8 +226,7 @@ describe('agent', () => {
 
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
           mods: [
@@ -261,8 +260,7 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(true)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: true,
           labels: DEFAULT_LABEL_SETTINGS,
           mods: [
@@ -296,8 +294,7 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
           mods: [
@@ -331,8 +328,7 @@ describe('agent', () => {
       await agent.setContentLabelPref('misinfo', 'hide')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
           mods: [
@@ -366,8 +362,7 @@ describe('agent', () => {
       await agent.setContentLabelPref('spam', 'ignore')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -408,8 +403,7 @@ describe('agent', () => {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -450,8 +444,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -492,8 +485,7 @@ describe('agent', () => {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -534,8 +526,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -576,8 +567,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -624,8 +614,7 @@ describe('agent', () => {
             'at://bob.com/app.bsky.feed.generator/fake2',
           ],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -666,8 +655,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -708,8 +696,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -750,8 +737,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -792,8 +778,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -834,8 +819,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -883,8 +867,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -932,8 +915,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -981,8 +963,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationOpts: {
-          userDid: res.data.did,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1147,8 +1128,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: true,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1192,8 +1172,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1237,8 +1216,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1282,8 +1260,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1323,8 +1300,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1364,8 +1340,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
@@ -1416,8 +1391,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationOpts: {
-          userDid,
+        moderationPrefs: {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
