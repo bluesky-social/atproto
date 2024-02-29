@@ -34,7 +34,7 @@ export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   dbPostgresUrl: string
   migration?: string
   signingKey?: ExportableKeypair
-  imgInvalidator?: ImageInvalidator
+  imgInvalidator?: ozone.ImageInvalidator
 }
 
 export type TestServerParams = {
