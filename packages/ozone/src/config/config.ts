@@ -44,6 +44,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   }
 
   const accessCfg: OzoneConfig['access'] = {
+    admins: env.adminDids,
     moderators: env.moderatorDids,
     triage: env.triageDids,
   }
@@ -97,6 +98,7 @@ export type IdentityConfig = {
 }
 
 export type AccessConfig = {
+  admins: string[]
   moderators: string[]
   triage: string[]
 }

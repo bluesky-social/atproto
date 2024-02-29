@@ -10,6 +10,7 @@ type ReqCtx = {
 type RoleOutput = {
   credentials: {
     type: 'role'
+    isAdmin: boolean
     isModerator: boolean
     isTriage: true
   }
@@ -20,6 +21,7 @@ type ModeratorOutput = {
     type: 'moderator'
     aud: string
     iss: string
+    isAdmin: boolean
     isModerator: boolean
     isTriage: true
   }
@@ -30,6 +32,7 @@ type StandardOutput = {
     type: 'standard'
     aud: string
     iss: string
+    isAdmin: boolean
     isModerator: boolean
     isTriage: boolean
   }
@@ -44,6 +47,7 @@ type NullOutput = {
 
 export type AuthVerifierOpts = {
   serviceDid: string
+  admins: string[]
   moderators: string[]
   triage: string[]
   adminPassword: string
@@ -53,6 +57,7 @@ export type AuthVerifierOpts = {
 
 export class AuthVerifier {
   serviceDid: string
+  admins: string[]
   moderators: string[]
   triage: string[]
   private adminPassword: string
@@ -61,6 +66,7 @@ export class AuthVerifier {
 
   constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
     this.serviceDid = opts.serviceDid
+    this.admins = opts.admins
     this.moderators = opts.moderators
     this.triage = opts.triage
     this.adminPassword = opts.adminPassword
@@ -108,13 +114,15 @@ export class AuthVerifier {
     }
     const payload = await verifyJwt(jwtStr, this.serviceDid, getSigningKey)
     const iss = payload.iss
-    const isModerator = this.moderators.includes(iss)
+    const isAdmin = this.admins.includes(iss)
+    const isModerator = isAdmin || this.moderators.includes(iss)
     const isTriage = isModerator || this.triage.includes(iss)
     return {
       credentials: {
         type: 'standard',
         iss,
         aud: payload.aud,
+        isAdmin,
         isModerator,
         isTriage,
       },
@@ -130,33 +138,37 @@ export class AuthVerifier {
     return this.nullCreds()
   }
 
+  standardOptionalOrRole = async (
+    reqCtx: ReqCtx,
+  ): Promise<StandardOutput | RoleOutput | NullOutput> => {
+    if (isBearerToken(reqCtx.req)) {
+      return this.standard(reqCtx)
+    } else if (isBasicToken(reqCtx.req)) {
+      return this.role(reqCtx)
+    } else {
+      return this.nullCreds()
+    }
+  }
+
   role = async (reqCtx: ReqCtx): Promise<RoleOutput> => {
     const parsed = parseBasicAuth(reqCtx.req.headers.authorization ?? '')
     const { username, password } = parsed ?? {}
-    if (username === 'admin') {
+    if (username !== 'admin') {
       throw new AuthRequiredError()
     }
-    if (password === this.triagePassword) {
-      return {
-        credentials: {
-          type: 'role',
-          isModerator: false,
-          isTriage: true,
-        },
-      }
-    } else if (
-      password === this.moderatorPassword ||
-      password === this.adminPassword
-    ) {
-      return {
-        credentials: {
-          type: 'role',
-          isModerator: true,
-          isTriage: true,
-        },
-      }
-    } else {
+    const isAdmin = password === this.adminPassword
+    const isModerator = isAdmin || password === this.moderatorPassword
+    const isTriage = isModerator || password === this.triagePassword
+    if (!isTriage) {
       throw new AuthRequiredError()
+    }
+    return {
+      credentials: {
+        type: 'role',
+        isAdmin,
+        isModerator,
+        isTriage,
+      },
     }
   }
 
@@ -175,6 +187,10 @@ const BASIC = 'Basic '
 
 const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
+}
+
+const isBasicToken = (req: express.Request): boolean => {
+  return req.headers.authorization?.startsWith(BASIC) ?? false
 }
 
 export const getJwtStrFromReq = (req: express.Request): string | null => {

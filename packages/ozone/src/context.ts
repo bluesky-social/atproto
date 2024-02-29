@@ -84,6 +84,7 @@ export class AppContext {
 
     const authVerifier = new AuthVerifier(idResolver, {
       serviceDid: cfg.service.did,
+      admins: cfg.access.admins,
       moderators: cfg.access.moderators,
       triage: cfg.access.triage,
       adminPassword: secrets.adminPassword,

@@ -44,6 +44,9 @@ export class TestOzone {
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
+      adminDids: [],
+      moderatorDids: [],
+      triageDids: [],
     }
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
