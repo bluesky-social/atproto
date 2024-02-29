@@ -15,7 +15,7 @@ import {
   isModEventTag,
   RepoRef,
   RepoBlobRef,
-  isModEventDivertBlobs,
+  isModEventDivert,
 } from '../lexicon/types/com/atproto/admin/defs'
 import {
   adjustModerationSubjectStatus,
@@ -327,7 +327,7 @@ export class ModerationService {
     )
 
     if (
-      isModEventDivertBlobs(event) &&
+      isModEventDivert(event) &&
       subjectInfo.subjectUri &&
       subjectInfo.subjectBlobCids?.length
     ) {
