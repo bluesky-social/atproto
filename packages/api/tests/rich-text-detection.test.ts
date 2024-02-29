@@ -241,6 +241,7 @@ describe('detectFacets', () => {
       ['body #1', [], []],
       ['body #a1', ['a1'], [{ byteStart: 5, byteEnd: 8 }]],
       ['#', [], []],
+      ['#?', [], []],
       ['text #', [], []],
       ['text # text', [], []],
       [
@@ -298,6 +299,16 @@ describe('detectFacets', () => {
         ],
       ],
       ['this #️⃣tag should not be a tag', [], []],
+      [
+        'this ##️⃣tag should be a tag',
+        ['#️⃣tag'],
+        [
+          {
+            byteStart: 5,
+            byteEnd: 16,
+          },
+        ],
+      ],
     ]
 
     for (const [input, tags, indices] of inputs) {
