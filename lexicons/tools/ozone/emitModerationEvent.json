@@ -29,7 +29,10 @@
             },
             "subject": {
               "type": "union",
-              "refs": ["tools.ozone.defs#repoRef", "com.atproto.repo.strongRef"]
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ]
             },
             "subjectBlobCids": {
               "type": "array",

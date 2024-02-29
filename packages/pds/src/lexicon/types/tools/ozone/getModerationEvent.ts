@@ -9,15 +9,12 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneDefs from './defs'
 
-export interface QueryParams {}
-
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  communicationTemplates: ToolsOzoneDefs.CommunicationTemplateView[]
-  [k: string]: unknown
+export interface QueryParams {
+  id: number
 }
 
+export type InputSchema = undefined
+export type OutputSchema = ToolsOzoneDefs.ModEventViewDetail
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

@@ -7,9 +7,9 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoModerationDefs from '../moderation/defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import * as ToolsOzoneDefs from '../../../tools/ozone/defs'
 import * as ComAtprotoServerDefs from '../server/defs'
 import * as ComAtprotoLabelDefs from '../label/defs'
-import * as ToolsOzoneDefs from '../../../tools/ozone/defs'
 
 export interface StatusAttr {
   applied: boolean
@@ -66,10 +66,10 @@ export interface ReportViewDetail {
     | RecordView
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
-  subjectStatus?: SubjectStatusView
+  subjectStatus?: ToolsOzoneDefs.SubjectStatusView
   reportedBy: string
   createdAt: string
-  resolvedByActions: ModEventView[]
+  resolvedByActions: ToolsOzoneDefs.ModEventView[]
   [k: string]: unknown
 }
 

@@ -5,7 +5,7 @@ import {
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
-} from '../../lexicon/types/com/atproto/admin/defs'
+} from '../../lexicon/types/tools/ozone/defs'
 import { subjectFromInput } from '../../mod-service/subject'
 import { ModerationLangService } from '../../mod-service/lang'
 

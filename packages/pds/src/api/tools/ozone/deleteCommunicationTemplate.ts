@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
+import { Server } from '../../../lexicon'
+import AppContext from '../../../context'
+import { authPassthru } from '../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   const { moderationAgent } = ctx
@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.deleteCommunicationTemplate({
     auth: ctx.authVerifier.role,
     handler: async ({ req, input }) => {
-      await moderationAgent.tools.ozone.deleteCommunicationTemplate(
+      await moderationAgent.api.tools.ozone.deleteCommunicationTemplate(
         input.body,
         authPassthru(req, true),
       )

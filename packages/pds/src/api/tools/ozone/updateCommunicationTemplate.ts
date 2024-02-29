@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
+import { Server } from '../../../lexicon'
+import AppContext from '../../../context'
+import { authPassthru } from '../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   const { moderationAgent } = ctx
@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.role,
     handler: async ({ req, input }) => {
       const { data: result } =
-        await moderationAgent.tools.ozone.updateCommunicationTemplate(
+        await moderationAgent.api.tools.ozone.updateCommunicationTemplate(
           input.body,
           authPassthru(req, true),
         )

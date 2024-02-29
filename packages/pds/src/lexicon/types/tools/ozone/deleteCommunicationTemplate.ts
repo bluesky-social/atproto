@@ -7,23 +7,17 @@ import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneDefs from './defs'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  communicationTemplates: ToolsOzoneDefs.CommunicationTemplateView[]
+export interface InputSchema {
+  id: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
-
-export interface HandlerSuccess {
+export interface HandlerInput {
   encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
+  body: InputSchema
 }
 
 export interface HandlerError {
@@ -31,7 +25,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
+export type HandlerOutput = HandlerError | void
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

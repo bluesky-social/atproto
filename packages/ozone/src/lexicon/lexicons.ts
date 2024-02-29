@@ -99,7 +99,7 @@ export const schemaDict = {
           },
           subjectStatus: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
+            ref: 'lex:tools.ozone.defs#subjectStatusView',
           },
           reportedBy: {
             type: 'string',
@@ -7974,7 +7974,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
+            ref: 'lex:tools.ozone.defs#communicationTemplateView',
           },
         },
       },
@@ -8017,7 +8017,7 @@ export const schemaDict = {
           subject: {
             type: 'union',
             refs: [
-              'lex:tools.ozone.defs#repoRef',
+              'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
             ],
           },
@@ -8076,17 +8076,17 @@ export const schemaDict = {
           subject: {
             type: 'union',
             refs: [
-              'lex:tools.ozone.defs#repoView',
-              'lex:tools.ozone.defs#repoViewNotFound',
-              'lex:tools.ozone.defs#recordView',
-              'lex:tools.ozone.defs#recordViewNotFound',
+              'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
+              'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           subjectBlobs: {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:tools.ozone.defs#blobView',
+              ref: 'lex:com.atproto.admin.defs#blobView',
             },
           },
           createdBy: {
@@ -8109,7 +8109,7 @@ export const schemaDict = {
           subject: {
             type: 'union',
             refs: [
-              'lex:tools.ozone.defs#repoRef',
+              'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
             ],
           },
@@ -8492,7 +8492,7 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:tools.ozone.defs#repoRef',
+                  'lex:com.atproto.admin.defs#repoRef',
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
@@ -8568,7 +8568,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
+                  ref: 'lex:tools.ozone.defs#communicationTemplateView',
                 },
               },
             },
@@ -8875,7 +8875,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
+            ref: 'lex:tools.ozone.defs#communicationTemplateView',
           },
         },
       },

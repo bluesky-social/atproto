@@ -32,7 +32,10 @@
         },
         "subject": {
           "type": "union",
-          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
         },
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
         "createdBy": { "type": "string", "format": "did" },
@@ -72,15 +75,15 @@
         "subject": {
           "type": "union",
           "refs": [
-            "#repoView",
-            "#repoViewNotFound",
-            "#recordView",
-            "#recordViewNotFound"
+            "com.atproto.admin.defs#repoView",
+            "com.atproto.admin.defs#repoViewNotFound",
+            "com.atproto.admin.defs#recordView",
+            "com.atproto.admin.defs#recordViewNotFound"
           ]
         },
         "subjectBlobs": {
           "type": "array",
-          "items": { "type": "ref", "ref": "#blobView" }
+          "items": { "type": "ref", "ref": "com.atproto.admin.defs#blobView" }
         },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" }
@@ -93,7 +96,10 @@
         "id": { "type": "integer" },
         "subject": {
           "type": "union",
-          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
         },
         "subjectBlobCids": {
           "type": "array",

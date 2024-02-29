@@ -1,12 +1,11 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
+import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
+import { lexicons } from '../../../lexicons'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneDefs from './defs'
 import * as ComAtprotoAdminDefs from '../../com/atproto/admin/defs'
 import * as ComAtprotoRepoStrongRef from '../../com/atproto/repo/strongRef'
@@ -38,31 +37,27 @@ export interface InputSchema {
 
 export type OutputSchema = ToolsOzoneDefs.ModEventView
 
-export interface HandlerInput {
+export interface CallOptions {
+  headers?: Headers
+  qp?: QueryParams
   encoding: 'application/json'
-  body: InputSchema
 }
 
-export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
+export interface Response {
+  success: boolean
+  headers: Headers
+  data: OutputSchema
 }
 
-export interface HandlerError {
-  status: number
-  message?: string
-  error?: 'SubjectHasAction'
+export class SubjectHasActionError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
+export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'SubjectHasAction') return new SubjectHasActionError(e)
+  }
+  return e
 }
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput

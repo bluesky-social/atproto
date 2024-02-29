@@ -35,7 +35,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#communicationTemplateView"
+          "ref": "tools.ozone.defs#communicationTemplateView"
         }
       }
     }

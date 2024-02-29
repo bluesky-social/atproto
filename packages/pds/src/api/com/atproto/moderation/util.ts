@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
 import { ModerationReport } from '../../../../db/tables/moderation'
 import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'
-import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/emitModerationEvent'
+import { InputSchema as ActionInput } from '../../../../lexicon/types/tools/ozone/emitModerationEvent'
 import {
   REASONOTHER,
   REASONSPAM,

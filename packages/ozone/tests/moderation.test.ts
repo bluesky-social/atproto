@@ -22,7 +22,7 @@ import {
   ModEventTakedown,
   REVIEWCLOSED,
   REVIEWESCALATED,
-} from '../src/lexicon/types/com/atproto/admin/defs'
+} from '../src/lexicon/types/tools/ozone/defs'
 import { EventReverser } from '../src'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
 import {

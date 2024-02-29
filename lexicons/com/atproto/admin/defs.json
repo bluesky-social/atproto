@@ -68,7 +68,7 @@
         },
         "subjectStatus": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#subjectStatusView"
+          "ref": "tools.ozone.defs#subjectStatusView"
         },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
