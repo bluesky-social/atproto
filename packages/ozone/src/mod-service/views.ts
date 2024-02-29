@@ -24,6 +24,7 @@ import {
 } from './types'
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
+import { formatLabel } from './util'
 
 export type AppviewAuth = () => Promise<
   | {
@@ -403,11 +404,7 @@ export class ModerationViews {
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
-    return res.map((l) => ({
-      ...l,
-      cid: l.cid === '' ? undefined : l.cid,
-      neg: l.neg,
-    }))
+    return res.map((l) => formatLabel(l))
   }
 
   async getSubjectStatus(
