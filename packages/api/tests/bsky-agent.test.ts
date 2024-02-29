@@ -1202,17 +1202,19 @@ describe('agent', () => {
         await agent.upsertMutedWords([
           { value: 'hashtag', targets: ['content'] },
         ])
+        // is sanitized to `hashtag`
         await agent.upsertMutedWords([{ value: '#hashtag', targets: ['tag'] }])
+
         const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
+        // merged with existing
         expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
           value: 'hashtag',
-          targets: ['content'],
+          targets: ['content', 'tag'],
         })
-        expect(mutedWords.find((m) => m.value === '#hashtag')).toStrictEqual({
-          value: '#hashtag',
-          targets: ['tag'],
-        })
-        expect(mutedWords.filter((m) => m.value === '#hashtag').length).toBe(1)
+        // only one added
+        expect(mutedWords.filter((m) => m.value === 'hashtag').length).toBe(1)
       })
 
       it('updateMutedWord', async () => {
@@ -1240,15 +1242,21 @@ describe('agent', () => {
         expect(mutedWords.find((m) => m.value === 'no_exist')).toBeFalsy()
       })
 
-      it('updateMutedWord with #', async () => {
+      it('updateMutedWord with #, does not update', async () => {
+        await agent.upsertMutedWords([
+          {
+            value: '#just_a_tag',
+            targets: ['tag'],
+          },
+        ])
         await agent.updateMutedWord({
-          value: 'hashtag',
+          value: '#just_a_tag',
           targets: ['tag', 'content'],
         })
         const { mutedWords } = await agent.getPreferences()
-        expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
-          value: 'hashtag',
-          targets: ['tag', 'content'],
+        expect(mutedWords.find((m) => m.value === 'just_a_tag')).toStrictEqual({
+          value: 'just_a_tag',
+          targets: ['tag'],
         })
       })
 
@@ -1265,19 +1273,41 @@ describe('agent', () => {
         expect(mutedWords.find((m) => m.value === 'tag_then_none')).toBeFalsy()
       })
 
-      it('removeMutedWord with #', async () => {
+      it('removeMutedWord with #, no match, no removal', async () => {
         await agent.removeMutedWord({ value: '#hashtag', targets: [] })
         const { mutedWords } = await agent.getPreferences()
 
-        expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
+        // was inserted with #hashtag, but we don't sanitize on remove
         expect(mutedWords.find((m) => m.value === 'hashtag')).toBeTruthy()
+      })
+
+      it('single-hash #', async () => {
+        const prev = await agent.getPreferences()
+        const length = prev.mutedWords.length
+        await agent.upsertMutedWords([{ value: '#', targets: [] }])
+        const end = await agent.getPreferences()
+
+        // sanitized to empty string, not inserted
+        expect(end.mutedWords.length).toEqual(length)
       })
 
       it('multi-hash ##', async () => {
         await agent.upsertMutedWords([{ value: '##', targets: [] }])
         const { mutedWords } = await agent.getPreferences()
 
-        expect(mutedWords.find((m) => m.value === '##')).toBeTruthy()
+        expect(mutedWords.find((m) => m.value === '#')).toBeTruthy()
+      })
+
+      it('multi-hash ##hashtag', async () => {
+        await agent.upsertMutedWords([{ value: '##hashtag', targets: [] }])
+        const a = await agent.getPreferences()
+
+        expect(a.mutedWords.find((w) => w.value === '#hashtag')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '#hashtag', targets: [] })
+        const b = await agent.getPreferences()
+
+        expect(b.mutedWords.find((w) => w.value === '#hashtag')).toBeFalsy()
       })
     })
 
