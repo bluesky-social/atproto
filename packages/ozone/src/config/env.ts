@@ -22,8 +22,6 @@ export const readEnv = (): OzoneEnvironment => {
     moderatorDids: envList('OZONE_MODERATOR_DIDS'),
     triageDids: envList('OZONE_TRIAGE_DIDS'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
-    moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
-    triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
   }
 }
@@ -49,7 +47,5 @@ export type OzoneEnvironment = {
   moderatorDids: string[]
   triageDids: string[]
   adminPassword?: string
-  moderatorPassword?: string
-  triagePassword?: string
   signingKeyHex?: string
 }

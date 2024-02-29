@@ -11,12 +11,13 @@ import { ModerationLangService } from '../../mod-service/lang'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.moderator,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
+      const createdBy = access.iss
       const db = ctx.db
       const moderationService = ctx.modService(db)
-      const { createdBy, event } = input.body
+      const { event } = input.body
       const isTakedownEvent = isModEventTakedown(event)
       const isReverseTakedownEvent = isModEventReverseTakedown(event)
       const isLabelEvent = isModEventLabel(event)

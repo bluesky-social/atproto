@@ -92,8 +92,6 @@ export class AppContext {
       moderators: cfg.access.moderators,
       triage: cfg.access.triage,
       adminPassword: secrets.adminPassword,
-      moderatorPassword: secrets.moderatorPassword,
-      triagePassword: secrets.triagePassword,
     })
 
     return new AppContext(
