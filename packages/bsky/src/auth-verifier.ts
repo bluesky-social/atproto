@@ -83,13 +83,21 @@ export class AuthVerifier {
       if (!this.parseRoleCreds(ctx.req).admin) {
         throw new AuthRequiredError('bad credentials')
       }
-      return { credentials: { type: 'standard', iss, aud } }
+      return {
+        credentials: { type: 'standard', iss, aud },
+      }
     }
     const { iss, aud } = await this.verifyServiceJwt(ctx, {
       aud: this.ownDid,
       iss: null,
     })
-    return { credentials: { type: 'standard', iss, aud } }
+    return {
+      credentials: {
+        type: 'standard',
+        iss,
+        aud,
+      },
+    }
   }
 
   standardOptional = async (
@@ -159,19 +167,19 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
+  modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
-      iss: [this.modServiceDid],
+      iss: [this.modServiceDid, `${this.modServiceDid}#atproto-mod`],
     })
     return { credentials: { type: 'mod_service', aud, iss } }
   }
 
-  roleOrAdminService = async (
+  roleOrModService = async (
     reqCtx: ReqCtx,
   ): Promise<RoleOutput | ModServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
+      return this.modService(reqCtx)
     } else {
       return this.role(reqCtx)
     }
@@ -195,12 +203,13 @@ export class AuthVerifier {
     opts: { aud: string | null; iss: string[] | null },
   ) {
     const getSigningKey = async (
-      did: string,
+      iss: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
     ): Promise<string> => {
-      if (opts.iss !== null && !opts.iss.includes(did)) {
+      if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
+      const [did, serviceId] = iss.split('#')
       let identity: GetIdentityByDidResponse
       try {
         identity = await this.dataplane.getIdentityByDid({ did })
@@ -211,7 +220,8 @@ export class AuthVerifier {
         throw err
       }
       const keys = unpackIdentityKeys(identity.keys)
-      const didKey = getKeyAsDidKey(keys, { id: 'atproto' })
+      const keyId = serviceId === 'atproto-mod' ? 'atproto-mod-key' : 'atproto'
+      const didKey = getKeyAsDidKey(keys, { id: keyId })
       if (!didKey) {
         throw new AuthRequiredError('missing or bad key')
       }
@@ -224,6 +234,12 @@ export class AuthVerifier {
     }
     const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
     return { iss: payload.iss, aud: payload.aud }
+  }
+
+  isModService(iss: string): boolean {
+    return [this.modServiceDid, `${this.modServiceDid}#atproto-mod`].includes(
+      iss,
+    )
   }
 
   nullCreds(): NullOutput {
@@ -242,10 +258,13 @@ export class AuthVerifier {
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'mod_service'
+      creds.credentials.type === 'mod_service' ||
+      (creds.credentials.type === 'standard' &&
+        this.isModService(creds.credentials.iss))
     const canPerformTakedown =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'mod_service'
+
     return {
       viewer,
       canViewTakedowns,
