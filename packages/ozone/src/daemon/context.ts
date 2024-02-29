@@ -1,5 +1,6 @@
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { IdResolver } from '@atproto/identity'
 import AtpAgent from '@atproto/api'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
@@ -33,6 +34,10 @@ export class DaemonContext {
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
 
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
@@ -49,9 +54,8 @@ export class DaemonContext {
       pds: cfg.pds ?? undefined,
     })
     const blobDiverter = new BlobDiverter(db, {
+      idResolver,
       serviceConfig: cfg.blobReportService,
-      appview: cfg.appview,
-      pds: cfg.pds ?? undefined,
     })
     const backgroundQueue = new BackgroundQueue(db)
     const modService = ModerationService.creator(

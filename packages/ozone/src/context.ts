@@ -51,6 +51,10 @@ export class AppContext {
       ? new AtpAgent({ service: cfg.pds.url })
       : undefined
 
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
         iss: cfg.service.did,
@@ -66,9 +70,8 @@ export class AppContext {
       pds: cfg.pds ?? undefined,
     })
     const blobDiverter = new BlobDiverter(db, {
+      idResolver,
       serviceConfig: cfg.blobReportService,
-      appview: cfg.appview,
-      pds: cfg.pds ?? undefined,
     })
 
     const modService = ModerationService.creator(
@@ -81,10 +84,6 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
-
-    const idResolver = new IdResolver({
-      plcUrl: cfg.identity.plcUrl,
-    })
 
     const sequencer = new Sequencer(db)
 

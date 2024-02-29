@@ -1,5 +1,14 @@
-import AtpAgent, { ComAtprotoSyncGetBlob } from '@atproto/api'
-import { SECOND } from '@atproto/common'
+import {
+  SECOND,
+  VerifyCidTransform,
+  forwardStreamErrors,
+  getPdsEndpoint,
+} from '@atproto/common'
+import { IdResolver } from '@atproto/identity'
+import axios from 'axios'
+import { Readable } from 'stream'
+import { CID } from 'multiformats/cid'
+
 import Database from '../db'
 import { retryHttp } from '../util'
 import { dbLogger } from '../logger'
@@ -10,11 +19,6 @@ type PollState = {
   promise: Promise<void>
 }
 
-type Service = {
-  agent: AtpAgent
-  did: string
-}
-
 export class BlobDiverter {
   destroyed = false
 
@@ -22,37 +26,18 @@ export class BlobDiverter {
     promise: Promise.resolve(),
   }
 
-  appview: Service | undefined
-  pds: Service | undefined
   serviceConfig: BlobReportServiceConfig
+  idResolver: IdResolver
 
   constructor(
     public db: Database,
     services: {
+      idResolver: IdResolver
       serviceConfig: BlobReportServiceConfig
-      appview?: {
-        url: string
-        did: string
-      }
-      pds?: {
-        url: string
-        did: string
-      }
     },
   ) {
     this.serviceConfig = services.serviceConfig
-    if (services.appview) {
-      this.appview = {
-        agent: new AtpAgent({ service: services.appview.url }),
-        did: services.appview.did,
-      }
-    }
-    if (services.pds) {
-      this.pds = {
-        agent: new AtpAgent({ service: services.pds.url }),
-        did: services.pds.did,
-      }
-    }
+    this.idResolver = services.idResolver
   }
 
   start() {
@@ -97,30 +82,57 @@ export class BlobDiverter {
     await Promise.all(toPush.map((evt) => this.attemptBlobDivert(evt.id)))
   }
 
-  private async getBlob(opts: { did: string; cid: string }) {
-    // TODO: Is this safe to do or should we be reaching out to the pds instead?
-    // do we need to resolve the pds url before we can call this?
-    return this.pds?.agent.api.com.atproto.sync.getBlob(opts)
+  private async getBlob({
+    pds,
+    did,
+    cid,
+  }: {
+    pds: string
+    did: string
+    cid: string
+  }) {
+    const blobResponse = await axios.get(
+      `${pds}/xrpc/com.atproto.sync.getBlob`,
+      {
+        params: { did, cid },
+        decompress: true,
+        responseType: 'stream',
+        timeout: 5000, // 5sec of inactivity on the connection
+      },
+    )
+    const imageStream: Readable = blobResponse.data
+    const verifyCid = new VerifyCidTransform(CID.parse(cid))
+    forwardStreamErrors(imageStream, verifyCid)
+
+    return {
+      contentType:
+        blobResponse.headers['content-type'] || 'application/octet-stream',
+      imageStream: imageStream.pipe(verifyCid),
+    }
   }
 
   private async uploadBlob(
-    blobResponse: ComAtprotoSyncGetBlob.Response,
+    {
+      imageStream,
+      contentType,
+    }: { imageStream: Readable; contentType: string },
     { subjectDid, subjectUri }: { subjectDid: string; subjectUri: string },
   ) {
     if (!this.serviceConfig.authToken || !this.serviceConfig.url) {
-      return null
+      return false
     }
 
     const url = `${this.serviceConfig.url}?did=${subjectDid}&uri=${subjectUri}`
-    return fetch(url, {
+    const result = await axios(url, {
       method: 'POST',
-      body: blobResponse.data,
+      data: imageStream,
       headers: {
         Authorization: this.serviceConfig.authToken,
-        'Content-Type':
-          blobResponse.headers['content-type'] || 'application/octet-stream',
+        'Content-Type': contentType,
       },
     })
+
+    return result.status === 200
   }
 
   private async uploadBlobOnService({
@@ -137,19 +149,30 @@ export class BlobDiverter {
         throw new Error('Blob divert service not configured')
       }
 
-      const blobResult = await retryHttp(() =>
-        this.getBlob({ did: subjectDid, cid: subjectBlobCid }),
-      )
+      const didDoc = await this.idResolver.did.resolve(subjectDid)
 
-      if (!blobResult?.success) {
-        throw new Error('Failed to get blob')
+      if (!didDoc) {
+        throw new Error('Error resolving DID')
       }
 
-      const uploadResult = await retryHttp(() =>
-        this.uploadBlob(blobResult, { subjectDid, subjectUri }),
+      const pds = getPdsEndpoint(didDoc)
+
+      if (!pds) {
+        throw new Error('Error resolving PDS')
+      }
+
+      const { imageStream, contentType } = await retryHttp(() =>
+        this.getBlob({ pds, did: subjectDid, cid: subjectBlobCid }),
       )
 
-      return uploadResult?.status === 200
+      const uploadResult = await retryHttp(() =>
+        this.uploadBlob(
+          { imageStream, contentType },
+          { subjectDid, subjectUri },
+        ),
+      )
+
+      return uploadResult
     } catch (err) {
       dbLogger.error({ err }, 'failed to upload diverted blob')
       return false
