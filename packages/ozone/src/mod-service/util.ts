@@ -14,6 +14,7 @@ export const formatLabel = (row: LabelRow): Label => {
     val: row.val,
     neg: row.neg,
     cts: row.cts,
+    exp: row.exp ?? undefined,
     sig: row.sig ?? undefined,
   }
 }
@@ -22,7 +23,7 @@ export const signLabel = async (
   label: Label,
   signingKey: Keypair,
 ): Promise<SignedLabel> => {
-  const { src, uri, cid, val, neg, cts } = label
+  const { src, uri, cid, val, neg, cts, exp } = label
   const reformatted = noUndefinedVals({
     src,
     uri,
@@ -30,6 +31,7 @@ export const signLabel = async (
     val,
     neg,
     cts,
+    exp,
   }) as Label
 
   const bytes = cborEncode(reformatted)

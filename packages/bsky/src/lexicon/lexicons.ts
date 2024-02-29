@@ -2225,6 +2225,12 @@ export const schemaDict = {
             format: 'datetime',
             description: 'Timestamp when this label was created.',
           },
+          exp: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp at which this label expires (no longer applies).',
+          },
           sig: {
             type: 'string',
             description:

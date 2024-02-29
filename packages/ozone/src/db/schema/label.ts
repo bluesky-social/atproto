@@ -10,6 +10,7 @@ export interface Label {
   val: string
   neg: boolean
   cts: string
+  exp: string | null
   sig: string | null
   signingKey: string | null
 }
