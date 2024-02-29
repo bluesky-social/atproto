@@ -5,18 +5,24 @@ import {
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
+import { TestOzone } from '@atproto/dev-env/src/ozone'
+import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('admin get repo view', () => {
   let network: TestNetwork
+  let ozone: TestOzone
   let agent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_admin_get_repo',
     })
-    agent = network.pds.getClient()
+    ozone = network.ozone
+    agent = ozone.getClient()
     sc = network.getSeedClient()
+    modClient = ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -26,7 +32,7 @@ describe('admin get repo view', () => {
   })
 
   beforeAll(async () => {
-    await sc.emitModerationEvent({
+    await modClient.emitModerationEvent({
       event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
@@ -50,7 +56,7 @@ describe('admin get repo view', () => {
         did: sc.dids.alice,
       },
     })
-    await sc.emitModerationEvent({
+    await modClient.emitModerationEvent({
       event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
@@ -62,7 +68,7 @@ describe('admin get repo view', () => {
   it('gets a repo by did, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.alice },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -70,15 +76,15 @@ describe('admin get repo view', () => {
   it('does not include account emails for triage mods.', async () => {
     const { data: admin } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     const { data: moderator } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
-      { headers: network.pds.adminAuthHeaders('moderator') },
+      { headers: await ozone.modHeaders('moderator') },
     )
     const { data: triage } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
-      { headers: network.pds.adminAuthHeaders('triage') },
+      { headers: await ozone.modHeaders('triage') },
     )
     expect(admin.email).toEqual('bob@test.com')
     expect(moderator.email).toEqual('bob@test.com')
@@ -90,7 +96,7 @@ describe('admin get repo view', () => {
     const { data: beforeEmailVerification } =
       await agent.api.com.atproto.admin.getRepo(
         { did: sc.dids.bob },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: await ozone.modHeaders() },
       )
 
     expect(beforeEmailVerification.emailConfirmedAt).toBeUndefined()
@@ -112,7 +118,7 @@ describe('admin get repo view', () => {
     const { data: afterEmailVerification } =
       await agent.api.com.atproto.admin.getRepo(
         { did: sc.dids.bob },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: await ozone.modHeaders() },
       )
 
     expect(afterEmailVerification.emailConfirmedAt).toBeTruthy()
@@ -124,7 +130,7 @@ describe('admin get repo view', () => {
   it('fails when repo does not exist.', async () => {
     const promise = agent.api.com.atproto.admin.getRepo(
       { did: 'did:plc:doesnotexist' },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     await expect(promise).rejects.toThrow('Repo not found')
   })
