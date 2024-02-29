@@ -2227,7 +2227,8 @@ export const schemaDict = {
           },
           sig: {
             type: 'string',
-            description: 'Base64-encoded signature of label.',
+            description:
+              'Base64-encoded signature of label (standard base64 not url, padding optional).',
           },
         },
       },
