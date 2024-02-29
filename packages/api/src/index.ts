@@ -8,6 +8,7 @@ export {
 } from '@atproto/lexicon'
 export { parseLanguage } from '@atproto/common-web'
 export * from './types'
+export * from './util'
 export * from './client'
 export * from './agent'
 export * from './rich-text/rich-text'
