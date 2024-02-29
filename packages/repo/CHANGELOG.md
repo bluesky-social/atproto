@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.3.7
+
+### Patch Changes
+
+- [#2173](https://github.com/bluesky-social/atproto/pull/2173) [`fcf8e3faf`](https://github.com/bluesky-social/atproto/commit/fcf8e3faf311559162c3aa0d9af36f84951914bc) Thanks [@bnewbold](https://github.com/bnewbold)! - repo commit object prev field is nullable, but no longer nullable
+
 ## 0.3.6
 
 ### Patch Changes

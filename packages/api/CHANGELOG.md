@@ -1,5 +1,39 @@
 # @atproto/api
 
+## 0.10.1
+
+### Patch Changes
+
+- [#2215](https://github.com/bluesky-social/atproto/pull/2215) [`514aab92d`](https://github.com/bluesky-social/atproto/commit/514aab92d26acd43859285f46318e386846522b1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add missing `getPreferences` union return types
+
+## 0.10.0
+
+### Minor Changes
+
+- [#2170](https://github.com/bluesky-social/atproto/pull/2170) [`4c511b3d9`](https://github.com/bluesky-social/atproto/commit/4c511b3d9de41ffeae3fc11db941e7df04f4468a) Thanks [@dholms](https://github.com/dholms)! - Add lexicons and methods for account migration
+
+### Patch Changes
+
+- [#2195](https://github.com/bluesky-social/atproto/pull/2195) [`b60719480`](https://github.com/bluesky-social/atproto/commit/b60719480f5f00bffd074a40e8ddc03aa93d137d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add muted words/tags and hidden posts prefs and methods"
+
+## 0.9.8
+
+### Patch Changes
+
+- [#2192](https://github.com/bluesky-social/atproto/pull/2192) [`f79cc6339`](https://github.com/bluesky-social/atproto/commit/f79cc63390ae9dbd47a4ff5d694eec25b78b788e) Thanks [@foysalit](https://github.com/foysalit)! - Tag event on moderation subjects and allow filtering events and subjects by tags
+
+## 0.9.7
+
+### Patch Changes
+
+- [#2188](https://github.com/bluesky-social/atproto/pull/2188) [`8c94979f7`](https://github.com/bluesky-social/atproto/commit/8c94979f73fc5057449e24e66ef2e09b0e17e55b) Thanks [@dholms](https://github.com/dholms)! - Added timelineIndex to savedFeedsPref
+
+## 0.9.6
+
+### Patch Changes
+
+- [#2124](https://github.com/bluesky-social/atproto/pull/2124) [`e4ec7af03`](https://github.com/bluesky-social/atproto/commit/e4ec7af03608949fc3b00a845f547a77599b5ad0) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering for comment, label, report type and date range on queryModerationEvents endpoint.
+
 ## 0.9.5
 
 ### Patch Changes

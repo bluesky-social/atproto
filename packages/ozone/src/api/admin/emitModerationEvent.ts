@@ -7,6 +7,7 @@ import {
   isModEventTakedown,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { subjectFromInput } from '../../mod-service/subject'
+import { ModerationLangService } from '../../mod-service/lang'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -26,17 +27,23 @@ export default function (server: Server, ctx: AppContext) {
 
       // apply access rules
 
-      // if less than moderator access then can not takedown an account
-      if (!access.moderator && isTakedownEvent && subject.isRepo()) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to perform an account takedown',
-        )
-      }
       // if less than moderator access then can only take ack and escalation actions
-      if (!access.moderator && (isTakedownEvent || isReverseTakedownEvent)) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to take this type of action',
-        )
+      if (isTakedownEvent || isReverseTakedownEvent) {
+        if (!access.moderator) {
+          throw new AuthRequiredError(
+            'Must be a full moderator to take this type of action',
+          )
+        }
+
+        // Non admins should not be able to take down feed generators
+        if (
+          !access.admin &&
+          subject.recordPath?.includes('app.bsky.feed.generator/')
+        ) {
+          throw new AuthRequiredError(
+            'Must be a full admin to take this type of action on feed generators',
+          )
+        }
       }
       // if less than moderator access then can not apply labels
       if (!access.moderator && isLabelEvent) {
@@ -51,16 +58,20 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (isTakedownEvent || isReverseTakedownEvent) {
-        const isSubjectTakendown = await moderationService.isSubjectTakendown(
-          subject,
-        )
+        const status = await moderationService.getStatus(subject)
 
-        if (isSubjectTakendown && isTakedownEvent) {
+        if (status?.takendown && isTakedownEvent) {
           throw new InvalidRequestError(`Subject is already taken down`)
         }
 
-        if (!isSubjectTakendown && isReverseTakedownEvent) {
+        if (!status?.takendown && isReverseTakedownEvent) {
           throw new InvalidRequestError(`Subject is not taken down`)
+        }
+
+        if (status?.takendown && isReverseTakedownEvent && subject.isRecord()) {
+          // due to the way blob status is modeled, we should reverse takedown on all
+          // blobs for the record being restored, which aren't taken down on another record.
+          subject.blobCids = status.blobCids ?? []
         }
       }
 
@@ -73,10 +84,21 @@ export default function (server: Server, ctx: AppContext) {
           createdBy,
         })
 
+        const moderationLangService = new ModerationLangService(moderationTxn)
+        await moderationLangService.tagSubjectWithLang({
+          subject,
+          createdBy: ctx.cfg.service.did,
+          subjectStatus: result.subjectStatus,
+        })
+
         if (subject.isRepo()) {
           if (isTakedownEvent) {
-            const isSuspend = !!result.durationInHours
-            await moderationTxn.takedownRepo(subject, result.id, isSuspend)
+            const isSuspend = !!result.event.durationInHours
+            await moderationTxn.takedownRepo(
+              subject,
+              result.event.id,
+              isSuspend,
+            )
           } else if (isReverseTakedownEvent) {
             await moderationTxn.reverseTakedownRepo(subject)
           }
@@ -84,7 +106,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (subject.isRecord()) {
           if (isTakedownEvent) {
-            await moderationTxn.takedownRecord(subject, result.id)
+            await moderationTxn.takedownRecord(subject, result.event.id)
           } else if (isReverseTakedownEvent) {
             await moderationTxn.reverseTakedownRecord(subject)
           }
@@ -92,20 +114,20 @@ export default function (server: Server, ctx: AppContext) {
 
         if (isLabelEvent) {
           await moderationTxn.formatAndCreateLabels(
-            result.subjectUri ?? result.subjectDid,
-            result.subjectCid,
+            result.event.subjectUri ?? result.event.subjectDid,
+            result.event.subjectCid,
             {
-              create: result.createLabelVals?.length
-                ? result.createLabelVals.split(' ')
+              create: result.event.createLabelVals?.length
+                ? result.event.createLabelVals.split(' ')
                 : undefined,
-              negate: result.negateLabelVals?.length
-                ? result.negateLabelVals.split(' ')
+              negate: result.event.negateLabelVals?.length
+                ? result.event.negateLabelVals.split(' ')
                 : undefined,
             },
           )
         }
 
-        return result
+        return result.event
       })
 
       return {

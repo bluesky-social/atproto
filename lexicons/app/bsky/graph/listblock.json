@@ -4,13 +4,17 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A block of an entire list of actors.",
+      "description": "Record representing a block relationship against an entire an entire list of accounts (actors).",
       "key": "tid",
       "record": {
         "type": "object",
         "required": ["subject", "createdAt"],
         "properties": {
-          "subject": { "type": "string", "format": "at-uri" },
+          "subject": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference (AT-URI) to the mod list record."
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }

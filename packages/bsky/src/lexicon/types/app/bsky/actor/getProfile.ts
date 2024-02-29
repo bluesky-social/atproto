@@ -6,10 +6,11 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
+  /** Handle or DID of account to fetch profile of. */
   actor: string
 }
 
@@ -28,7 +29,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

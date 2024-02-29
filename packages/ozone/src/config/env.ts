@@ -13,6 +13,9 @@ export const readEnv = (): OzoneEnvironment => {
     pdsDid: envStr('OZONE_PDS_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
+    dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
+    dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
+    dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
     cdnPaths: envList('OZONE_CDN_PATHS'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
@@ -34,6 +37,9 @@ export type OzoneEnvironment = {
   pdsDid?: string
   dbPostgresUrl?: string
   dbPostgresSchema?: string
+  dbPoolSize?: number
+  dbPoolMaxUses?: number
+  dbPoolIdleTimeoutMs?: number
   didPlcUrl?: string
   cdnPaths?: string[]
   adminPassword?: string

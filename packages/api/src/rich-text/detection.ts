@@ -70,27 +70,25 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
+    const re = /(^|\s)#((?!\ufe0f)[^\d\s]\S*)(?=\s)?/g
     while ((match = re.exec(text.utf16))) {
-      let [tag] = match
-      const hasLeadingSpace = /^\s/.test(tag)
+      let [, leading, tag] = match
 
       tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
 
-      // inclusive of #, max of 64 chars
-      if (tag.length > 66) continue
+      if (tag.length === 0 || tag.length > 64) continue
 
-      const index = match.index + (hasLeadingSpace ? 1 : 0)
+      const index = match.index + leading.length
 
       facets.push({
         index: {
           byteStart: text.utf16IndexToUtf8Index(index),
-          byteEnd: text.utf16IndexToUtf8Index(index + tag.length), // inclusive of last char
+          byteEnd: text.utf16IndexToUtf8Index(index + 1 + tag.length),
         },
         features: [
           {
             $type: 'app.bsky.richtext.facet#tag',
-            tag: tag.replace(/^#/, ''),
+            tag: tag,
           },
         ],
       })

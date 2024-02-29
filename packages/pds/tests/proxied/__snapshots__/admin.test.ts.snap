@@ -14,7 +14,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 5,
+    "id": 6,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",
@@ -34,7 +34,7 @@ Array [
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-    "id": 7,
+    "id": 9,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -51,7 +51,7 @@ Array [
       "comment": "impersonation",
       "reportType": "com.atproto.moderation.defs#reasonOther",
     },
-    "id": 5,
+    "id": 6,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -62,6 +62,25 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventTag",
+      "add": Array [
+        "lang:en",
+        "lang:i",
+      ],
+      "remove": Array [],
+    },
+    "id": 5,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(3)",
     "creatorHandle": "alice.test",
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventReport",
@@ -118,6 +137,10 @@ Object {
           },
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "bob.test",
+          "tags": Array [
+            "lang:en",
+            "lang:i",
+          ],
           "takendown": false,
           "updatedAt": "1970-01-01T00:00:00.000Z",
         },
@@ -180,11 +203,30 @@ exports[`proxies admin requests fetches moderation events. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventTag",
+      "add": Array [
+        "lang:und",
+      ],
+      "remove": Array [],
+    },
+    "id": 8,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-    "id": 6,
+    "id": 7,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -206,7 +248,7 @@ Object {
   "moderation": Object {
     "subjectStatus": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "id": 3,
+      "id": 4,
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "did:example:admin",
       "reviewState": "com.atproto.admin.defs#reviewClosed",
@@ -217,6 +259,9 @@ Object {
       },
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "bob.test",
+      "tags": Array [
+        "lang:und",
+      ],
       "takendown": false,
       "updatedAt": "1970-01-01T00:00:00.000Z",
     },
@@ -267,6 +312,10 @@ Object {
         },
         "subjectBlobCids": Array [],
         "subjectRepoHandle": "bob.test",
+        "tags": Array [
+          "lang:en",
+          "lang:i",
+        ],
         "takendown": false,
         "updatedAt": "1970-01-01T00:00:00.000Z",
       },
@@ -368,7 +417,7 @@ Object {
   "event": Object {
     "$type": "com.atproto.admin.defs#modEventAcknowledge",
   },
-  "id": 6,
+  "id": 7,
   "subject": Object {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
@@ -385,7 +434,7 @@ Object {
   "event": Object {
     "$type": "com.atproto.admin.defs#modEventAcknowledge",
   },
-  "id": 7,
+  "id": 9,
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoRef",
     "did": "user(0)",

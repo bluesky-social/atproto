@@ -10,8 +10,8 @@ import {
 } from '../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
-import { sql } from 'kysely'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
+import { jsonb } from '../db/types'
 
 const getSubjectStatusForModerationEvent = ({
   action,
@@ -82,6 +82,8 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
       }
+    case 'com.atproto.admin.defs#modEventTag':
+      return { tags: [] }
     case 'com.atproto.admin.defs#modEventResolveAppeal':
       return {
         appealed: false,
@@ -106,6 +108,8 @@ export const adjustModerationSubjectStatus = async (
     subjectCid,
     createdBy,
     meta,
+    addedTags,
+    removedTags,
     comment,
     createdAt,
   } = moderationEvent
@@ -175,6 +179,9 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.appealed = true
     newStatus.lastAppealedAt = createdAt
     subjectStatus.lastAppealedAt = createdAt
+    // Set reviewState to escalated when appeal events are emitted
+    subjectStatus.reviewState = REVIEWESCALATED
+    newStatus.reviewState = REVIEWESCALATED
   }
 
   if (
@@ -190,10 +197,22 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.comment = comment
   }
 
+  if (action === 'com.atproto.admin.defs#modEventTag') {
+    let tags = currentStatus?.tags || []
+    if (addedTags?.length) {
+      tags = tags.concat(addedTags)
+    }
+    if (removedTags?.length) {
+      tags = tags.filter((tag) => !removedTags.includes(tag))
+    }
+    newStatus.tags = jsonb([...new Set(tags)]) as unknown as string[]
+    subjectStatus.tags = newStatus.tags
+  }
+
   if (blobCids?.length) {
-    const newBlobCids = sql<string[]>`${JSON.stringify(
+    const newBlobCids = jsonb(
       blobCids,
-    )}` as unknown as ModerationSubjectStatusRow['blobCids']
+    ) as unknown as ModerationSubjectStatusRow['blobCids']
     newStatus.blobCids = newBlobCids
     subjectStatus.blobCids = newBlobCids
   }
@@ -205,7 +224,6 @@ export const adjustModerationSubjectStatus = async (
       ...newStatus,
       createdAt: now,
       updatedAt: now,
-      // TODO: Need to get the types right here.
     } as ModerationSubjectStatusRow)
     .onConflict((oc) =>
       oc.constraint('moderation_status_unique_idx').doUpdateSet({
@@ -214,8 +232,8 @@ export const adjustModerationSubjectStatus = async (
       }),
     )
 
-  const status = await insertQuery.executeTakeFirst()
-  return status
+  const status = await insertQuery.returningAll().executeTakeFirst()
+  return status || null
 }
 
 type ModerationSubjectStatusFilter =

@@ -10,6 +10,7 @@ import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
 import { EventPusher } from './daemon'
+import Sequencer from './sequencer/sequencer'
 import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
@@ -27,6 +28,7 @@ export type AppContextOptions = {
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
+  sequencer: Sequencer
 }
 
 export class AppContext {
@@ -40,6 +42,9 @@ export class AppContext {
     const db = new Database({
       url: cfg.db.postgresUrl,
       schema: cfg.db.postgresSchema,
+      poolSize: cfg.db.poolSize,
+      poolMaxUses: cfg.db.poolMaxUses,
+      poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
@@ -78,6 +83,8 @@ export class AppContext {
       plcUrl: cfg.identity.plcUrl,
     })
 
+    const sequencer = new Sequencer(db)
+
     return new AppContext(
       {
         db,
@@ -89,6 +96,7 @@ export class AppContext {
         signingKey,
         idResolver,
         backgroundQueue,
+        sequencer,
         ...(overrides ?? {}),
       },
       secrets,
@@ -141,6 +149,10 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
+  }
+
+  get sequencer(): Sequencer {
+    return this.opts.sequencer
   }
 
   get authVerifier() {

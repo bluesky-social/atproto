@@ -8,7 +8,6 @@ describe('feedgen proxy view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-
   let feedUri: AtUri
 
   beforeAll(async () => {
@@ -17,7 +16,7 @@ describe('feedgen proxy view', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc, { addModLabels: network.bsky })
 
     feedUri = AtUri.make(sc.dids.alice, 'app.bsky.feed.generator', 'mutuals')
 

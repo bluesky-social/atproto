@@ -9,6 +9,8 @@ export const readEnv = (): ServerEnvironment => {
     version: envStr('PDS_VERSION'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
+    blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -75,6 +77,10 @@ export const readEnv = (): ServerEnvironment => {
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),
     modServiceDid: envStr('PDS_MOD_SERVICE_DID'),
 
+    // report service
+    reportServiceUrl: envStr('PDS_REPORT_SERVICE_URL'),
+    reportServiceDid: envStr('PDS_REPORT_SERVICE_DID'),
+
     // rate limits
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
     rateLimitBypassKey: envStr('PDS_RATE_LIMIT_BYPASS_KEY'),
@@ -110,6 +116,8 @@ export type ServerEnvironment = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  acceptingImports?: boolean
+  blobUploadLimit?: number
 
   // database
   dataDirectory?: string
@@ -173,6 +181,10 @@ export type ServerEnvironment = {
   // mod service
   modServiceUrl?: string
   modServiceDid?: string
+
+  // report service
+  reportServiceUrl?: string
+  reportServiceDid?: string
 
   // rate limits
   rateLimitsEnabled?: boolean

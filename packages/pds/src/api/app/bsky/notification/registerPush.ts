@@ -6,6 +6,8 @@ import { AtpAgent } from '@atproto/api'
 import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
+  const { appViewAgent } = ctx
+  if (!appViewAgent) return
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.accessDeactived,
     handler: async ({ auth, input }) => {
@@ -16,14 +18,11 @@ export default function (server: Server, ctx: AppContext) {
 
       const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
 
-      if (ctx.cfg.bskyAppView.did === serviceDid) {
-        await ctx.appViewAgent.api.app.bsky.notification.registerPush(
-          input.body,
-          {
-            ...authHeaders,
-            encoding: 'application/json',
-          },
-        )
+      if (ctx.cfg.bskyAppView?.did === serviceDid) {
+        await appViewAgent.api.app.bsky.notification.registerPush(input.body, {
+          ...authHeaders,
+          encoding: 'application/json',
+        })
         return
       }
 

@@ -73,6 +73,14 @@ type RefreshOutput = {
   artifacts: string
 }
 
+type UserDidOutput = {
+  credentials: {
+    type: 'user_did'
+    aud: string
+    iss: string
+  }
+}
+
 type ValidatedBearer = {
   did: string
   scope: AuthScope
@@ -89,7 +97,7 @@ export type AuthVerifierOpts = {
   dids: {
     pds: string
     entryway?: string
-    admin: string
+    admin?: string
   }
 }
 
@@ -126,7 +134,9 @@ export class AuthVerifier {
       AuthScope.Access,
       AuthScope.AppPass,
     ])
-    const found = await this.accountManager.getAccount(result.credentials.did)
+    const found = await this.accountManager.getAccount(result.credentials.did, {
+      includeDeactivated: true,
+    })
     if (!found) {
       // will be turned into ExpiredToken for the client if proxied by entryway
       throw new ForbiddenError('Account not found', 'AccountNotFound')
@@ -219,24 +229,38 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
-    const jwtStr = bearerTokenFromReq(reqCtx.req)
-    if (!jwtStr) {
-      throw new AuthRequiredError('missing jwt', 'MissingJwt')
-    }
-    const payload = await verifyServiceJwt(
-      jwtStr,
-      this.dids.entryway ?? this.dids.pds,
-      async (did, forceRefresh) => {
-        if (did !== this.dids.admin) {
-          throw new AuthRequiredError(
-            'Untrusted issuer for admin actions',
-            'UntrustedIss',
-          )
-        }
-        return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+  userDidAuth = async (reqCtx: ReqCtx): Promise<UserDidOutput> => {
+    const payload = await this.verifyServiceJwt(reqCtx, {
+      aud: this.dids.entryway ?? this.dids.pds,
+      iss: null,
+    })
+    return {
+      credentials: {
+        type: 'user_did',
+        aud: payload.aud,
+        iss: payload.iss,
       },
-    )
+    }
+  }
+
+  userDidAuthOptional = async (
+    reqCtx: ReqCtx,
+  ): Promise<UserDidOutput | NullOutput> => {
+    if (isBearerToken(reqCtx.req)) {
+      return await this.userDidAuth(reqCtx)
+    } else {
+      return { credentials: null }
+    }
+  }
+
+  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+    if (!this.dids.admin) {
+      throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+    }
+    const payload = await this.verifyServiceJwt(reqCtx, {
+      aud: this.dids.entryway ?? this.dids.pds,
+      iss: [this.dids.admin],
+    })
     return {
       credentials: {
         type: 'service',
@@ -306,6 +330,28 @@ export class AuthVerifier {
       },
       artifacts: token,
     }
+  }
+
+  async verifyServiceJwt(
+    reqCtx: ReqCtx,
+    opts: { aud: string | null; iss: string[] | null },
+  ) {
+    const getSigningKey = async (
+      did: string,
+      forceRefresh: boolean,
+    ): Promise<string> => {
+      if (opts.iss !== null && !opts.iss.includes(did)) {
+        throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
+      }
+      return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+    }
+
+    const jwtStr = bearerTokenFromReq(reqCtx.req)
+    if (!jwtStr) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    return { iss: payload.iss, aud: payload.aud }
   }
 
   parseRoleCreds(req: express.Request) {

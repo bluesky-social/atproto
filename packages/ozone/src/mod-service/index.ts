@@ -12,6 +12,7 @@ import {
   isModEventReport,
   isModEventTakedown,
   isModEventEmail,
+  isModEventTag,
   RepoRef,
   RepoBlobRef,
 } from '../lexicon/types/com/atproto/admin/defs'
@@ -38,6 +39,8 @@ import {
   RepoSubject,
   subjectFromStatusRow,
 } from './subject'
+import { jsonb } from '../db/types'
+import { LabelChannel } from '../db/schema/label'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
@@ -104,6 +107,15 @@ export class ModerationService {
     includeAllUserRecords: boolean
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
+    hasComment?: boolean
+    comment?: string
+    createdAfter?: string
+    createdBefore?: string
+    addedLabels: string[]
+    removedLabels: string[]
+    addedTags: string[]
+    removedTags: string[]
+    reportTypes?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -113,7 +125,17 @@ export class ModerationService {
       includeAllUserRecords,
       sortDirection = 'desc',
       types,
+      hasComment,
+      comment,
+      createdAfter,
+      createdBefore,
+      addedLabels,
+      removedLabels,
+      addedTags,
+      removedTags,
+      reportTypes,
     } = opts
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
       builder = builder.where((qb) => {
@@ -147,8 +169,42 @@ export class ModerationService {
     if (createdBy) {
       builder = builder.where('createdBy', '=', createdBy)
     }
+    if (createdAfter) {
+      builder = builder.where('createdAt', '>=', createdAfter)
+    }
+    if (createdBefore) {
+      builder = builder.where('createdAt', '<=', createdBefore)
+    }
+    if (comment) {
+      builder = builder.where('comment', 'ilike', `%${comment}%`)
+    }
+    if (hasComment) {
+      builder = builder.where('comment', 'is not', null)
+    }
 
-    const { ref } = this.db.db.dynamic
+    // If multiple labels are passed, then only retrieve events where all those labels exist
+    if (addedLabels.length) {
+      addedLabels.forEach((label) => {
+        builder = builder.where('createLabelVals', 'ilike', `%${label}%`)
+      })
+    }
+    if (removedLabels.length) {
+      removedLabels.forEach((label) => {
+        builder = builder.where('negateLabelVals', 'ilike', `%${label}%`)
+      })
+    }
+    if (addedTags.length) {
+      builder = builder.where(sql`${ref('addedTags')} @> ${jsonb(addedTags)}`)
+    }
+    if (removedTags.length) {
+      builder = builder.where(
+        sql`${ref('removedTags')} @> ${jsonb(removedTags)}`,
+      )
+    }
+    if (reportTypes?.length) {
+      builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
+    }
+
     const keyset = new TimeIdKeyset(
       ref(`moderation_event.createdAt`),
       ref('moderation_event.id'),
@@ -204,7 +260,10 @@ export class ModerationService {
     subject: ModSubject
     createdBy: string
     createdAt?: Date
-  }): Promise<ModerationEventRow> {
+  }): Promise<{
+    event: ModerationEventRow
+    subjectStatus: ModerationSubjectStatusRow | null
+  }> {
     this.db.assertTransaction()
     const { event, subject, createdBy, createdAt = new Date() } = info
 
@@ -219,6 +278,9 @@ export class ModerationService {
 
     const meta: Record<string, string | boolean> = {}
 
+    const addedTags = isModEventTag(event) ? jsonb(event.add) : null
+    const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
+
     if (isModEventReport(event)) {
       meta.reportType = event.reportType
     }
@@ -231,6 +293,8 @@ export class ModerationService {
       meta.subjectLine = event.subjectLine
     }
 
+    const subjectInfo = subject.info()
+
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
@@ -240,6 +304,8 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        addedTags,
+        removedTags,
         durationInHours: event.durationInHours
           ? Number(event.durationInHours)
           : null,
@@ -249,14 +315,22 @@ export class ModerationService {
           event.durationInHours
             ? addHoursToDate(event.durationInHours, createdAt).toISOString()
             : undefined,
-        ...subject.info(),
+        subjectType: subjectInfo.subjectType,
+        subjectDid: subjectInfo.subjectDid,
+        subjectUri: subjectInfo.subjectUri,
+        subjectCid: subjectInfo.subjectCid,
+        subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids)
+    const subjectStatus = await adjustModerationSubjectStatus(
+      this.db,
+      modEvent,
+      subject.blobCids,
+    )
 
-    return modEvent
+    return { event: modEvent, subjectStatus }
   }
 
   async getLastReversibleEventForSubject(subject: ReversalSubject) {
@@ -336,7 +410,7 @@ export class ModerationService {
     const isRevertingTakedown =
       action === 'com.atproto.admin.defs#modEventTakedown'
     this.db.assertTransaction()
-    const result = await this.logEvent({
+    const { event } = await this.logEvent({
       event: {
         $type: isRevertingTakedown
           ? 'com.atproto.admin.defs#modEventReverseTakedown'
@@ -356,7 +430,7 @@ export class ModerationService {
       }
     }
 
-    return result
+    return event
   }
 
   async takedownRepo(
@@ -373,24 +447,22 @@ export class ModerationService {
       takedownRef,
     }))
 
-    const [repoEvts] = await Promise.all([
-      this.db.db
-        .insertInto('repo_push_event')
-        .values(values)
-        .onConflict((oc) =>
-          oc.columns(['subjectDid', 'eventType']).doUpdateSet({
-            takedownRef,
-            confirmedAt: null,
-            attempts: 0,
-            lastAttempted: null,
-          }),
-        )
-        .returning('id')
-        .execute(),
-      this.formatAndCreateLabels(subject.did, null, {
-        create: [UNSPECCED_TAKEDOWN_LABEL],
-      }),
-    ])
+    const repoEvts = await this.db.db
+      .insertInto('repo_push_event')
+      .values(values)
+      .onConflict((oc) =>
+        oc.columns(['subjectDid', 'eventType']).doUpdateSet({
+          takedownRef,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        }),
+      )
+      .returning('id')
+      .execute()
+    await this.formatAndCreateLabels(subject.did, null, {
+      create: [UNSPECCED_TAKEDOWN_LABEL],
+    })
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -402,23 +474,21 @@ export class ModerationService {
   }
 
   async reverseTakedownRepo(subject: RepoSubject) {
-    const [repoEvts] = await Promise.all([
-      this.db.db
-        .updateTable('repo_push_event')
-        .where('eventType', 'in', TAKEDOWNS)
-        .where('subjectDid', '=', subject.did)
-        .set({
-          takedownRef: null,
-          confirmedAt: null,
-          attempts: 0,
-          lastAttempted: null,
-        })
-        .returning('id')
-        .execute(),
-      this.formatAndCreateLabels(subject.did, null, {
-        negate: [UNSPECCED_TAKEDOWN_LABEL],
-      }),
-    ])
+    const repoEvts = await this.db.db
+      .updateTable('repo_push_event')
+      .where('eventType', 'in', TAKEDOWNS)
+      .where('subjectDid', '=', subject.did)
+      .set({
+        takedownRef: null,
+        confirmedAt: null,
+        attempts: 0,
+        lastAttempted: null,
+      })
+      .returning('id')
+      .execute()
+    await this.formatAndCreateLabels(subject.did, null, {
+      negate: [UNSPECCED_TAKEDOWN_LABEL],
+    })
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -444,22 +514,22 @@ export class ModerationService {
     if (blobCids && blobCids.length > 0) {
       labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
     }
-    const [recordEvts] = await Promise.all([
-      this.db.db
-        .insertInto('record_push_event')
-        .values(values)
-        .onConflict((oc) =>
-          oc.columns(['subjectUri', 'eventType']).doUpdateSet({
-            takedownRef,
-            confirmedAt: null,
-            attempts: 0,
-            lastAttempted: null,
-          }),
-        )
-        .returning('id')
-        .execute(),
-      this.formatAndCreateLabels(subject.uri, subject.cid, { create: labels }),
-    ])
+    const recordEvts = await this.db.db
+      .insertInto('record_push_event')
+      .values(values)
+      .onConflict((oc) =>
+        oc.columns(['subjectUri', 'eventType']).doUpdateSet({
+          takedownRef,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        }),
+      )
+      .returning('id')
+      .execute()
+    await this.formatAndCreateLabels(subject.uri, subject.cid, {
+      create: labels,
+    })
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -538,29 +608,31 @@ export class ModerationService {
     if (blobCids && blobCids.length > 0) {
       labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
     }
-    const [recordEvts] = await Promise.all([
-      this.db.db
-        .updateTable('record_push_event')
-        .where('eventType', 'in', TAKEDOWNS)
-        .where('subjectDid', '=', subject.did)
-        .where('subjectUri', '=', subject.uri)
-        .set({
-          takedownRef: null,
-          confirmedAt: null,
-          attempts: 0,
-          lastAttempted: null,
-        })
-        .returning('id')
-        .execute(),
-      this.formatAndCreateLabels(subject.uri, subject.cid, { negate: labels }),
-    ])
-    this.db.onCommit(() => {
-      this.backgroundQueue.add(async () => {
-        await Promise.all(
-          recordEvts.map((evt) => this.eventPusher.attemptRecordEvent(evt.id)),
-        )
+    const recordEvts = await this.db.db
+      .updateTable('record_push_event')
+      .where('eventType', 'in', TAKEDOWNS)
+      .where('subjectDid', '=', subject.did)
+      .where('subjectUri', '=', subject.uri)
+      .set({
+        takedownRef: null,
+        confirmedAt: null,
+        attempts: 0,
+        lastAttempted: null,
       })
-    })
+      .returning('id')
+      .execute()
+    await this.formatAndCreateLabels(subject.uri, subject.cid, {
+      negate: labels,
+    }),
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.all(
+            recordEvts.map((evt) =>
+              this.eventPusher.attemptRecordEvent(evt.id),
+            ),
+          )
+        })
+      })
 
     if (blobCids && blobCids.length > 0) {
       const blobEvts = await this.db.db
@@ -597,7 +669,10 @@ export class ModerationService {
     subject: ModSubject
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationEventRow> {
+  }): Promise<{
+    event: ModerationEventRow
+    subjectStatus: ModerationSubjectStatusRow | null
+  }> {
     const {
       reasonType,
       reason,
@@ -606,7 +681,7 @@ export class ModerationService {
       subject,
     } = info
 
-    const event = await this.logEvent({
+    const result = await this.logEvent({
       event: {
         $type: 'com.atproto.admin.defs#modEventReport',
         reportType: reasonType,
@@ -617,7 +692,7 @@ export class ModerationService {
       createdAt,
     })
 
-    return event
+    return result
   }
 
   async getSubjectStatuses({
@@ -636,6 +711,8 @@ export class ModerationService {
     lastReviewedBy,
     sortField,
     subject,
+    tags,
+    excludeTags,
   }: {
     cursor?: string
     limit?: number
@@ -652,8 +729,11 @@ export class ModerationService {
     sortDirection: 'asc' | 'desc'
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
+    tags: string[]
+    excludeTags: string[]
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+    const { ref } = this.db.db.dynamic
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
@@ -715,7 +795,24 @@ export class ModerationService {
       )
     }
 
-    const { ref } = this.db.db.dynamic
+    if (tags.length) {
+      builder = builder.where(
+        sql`${ref('moderation_subject_status.tags')} @> ${jsonb(tags)}`,
+      )
+    }
+
+    if (excludeTags.length) {
+      builder = builder.where((qb) =>
+        qb
+          .where(
+            sql`NOT(${ref('moderation_subject_status.tags')} @> ${jsonb(
+              excludeTags,
+            )})`,
+          )
+          .orWhere('tags', 'is', null),
+      )
+    }
+
     const keyset = new StatusKeyset(
       ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
@@ -745,15 +842,16 @@ export class ModerationService {
     }
   }
 
-  async isSubjectTakendown(subject: ModSubject): Promise<boolean> {
-    const builder = this.db.db
+  async getStatus(
+    subject: ModSubject,
+  ): Promise<ModerationSubjectStatusRow | null> {
+    const result = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath || '')
-
-    const result = await builder.select('takendown').executeTakeFirst()
-
-    return !!result?.takendown
+      .where('recordPath', '=', subject.recordPath ?? '')
+      .selectAll()
+      .executeTakeFirst()
+    return result ?? null
   }
 
   async formatAndCreateLabels(
@@ -791,12 +889,14 @@ export class ModerationService {
       neg: !!l.neg,
     }))
     const { ref } = this.db.db.dynamic
+    await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
     await this.db.db
       .insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
         oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({
+          id: sql`${excluded('id')}`,
           neg: sql`${excluded('neg')}`,
           cts: sql`${excluded('cts')}`,
         }),

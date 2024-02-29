@@ -1,7 +1,13 @@
-import { SeedClient } from './client'
 import usersSeed from './users'
+import { TestBsky } from '../bsky'
+import { TestNetwork } from '../network'
+import { TestNetworkNoAppView } from '../network-no-appview'
+import { SeedClient } from './client'
 
-export default async (sc: SeedClient, users = true) => {
+export default async (
+  sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
+  users = true,
+) => {
   if (users) await usersSeed(sc)
 
   const alice = sc.dids.alice
@@ -129,6 +135,25 @@ export default async (sc: SeedClient, users = true) => {
   await sc.repost(dan, sc.posts[alice][1].ref)
   await sc.repost(dan, alicesReplyToBob.ref)
 
+  if (sc.network instanceof TestNetwork) {
+    const bsky = sc.network.bsky
+    await createLabel(bsky, {
+      val: 'test-label',
+      uri: sc.posts[alice][2].ref.uriStr,
+      cid: sc.posts[alice][2].ref.cidStr,
+    })
+    await createLabel(bsky, {
+      val: 'test-label',
+      uri: sc.replies[bob][0].ref.uriStr,
+      cid: sc.replies[bob][0].ref.cidStr,
+    })
+    await createLabel(bsky, {
+      val: 'test-label-2',
+      uri: sc.replies[bob][0].ref.uriStr,
+      cid: sc.replies[bob][0].ref.cidStr,
+    })
+  }
+
   return sc
 }
 
@@ -143,4 +168,21 @@ export const replies = {
   alice: ['thanks bob'],
   bob: ['hear that label_me label_me_2'],
   carol: ['of course'],
+}
+
+const createLabel = async (
+  bsky: TestBsky,
+  opts: { uri: string; cid: string; val: string },
+) => {
+  await bsky.db.db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      neg: false,
+      src: 'did:example:labeler', // this did is also configured on labelsFromIssuerDids
+    })
+    .execute()
 }

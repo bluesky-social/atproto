@@ -1,43 +1,74 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { countAll, notSoftDeletedClause } from '../../../../db/util'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount'
 import AppContext from '../../../../context'
+import {
+  HydrationFnInput,
+  PresentationFnInput,
+  SkeletonFnInput,
+  createPipeline,
+  noRules,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
+  const getUnreadCount = createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const requester = auth.credentials.iss
-      if (params.seenAt) {
-        throw new InvalidRequestError('The seenAt parameter is unsupported')
-      }
-
-      const db = ctx.db.getReplica()
-      const { ref } = db.db.dynamic
-      const result = await db.db
-        .selectFrom('notification')
-        .select(countAll.as('count'))
-        .innerJoin('actor', 'actor.did', 'notification.did')
-        .leftJoin('actor_state', 'actor_state.did', 'actor.did')
-        .innerJoin('record', 'record.uri', 'notification.recordUri')
-        .where(notSoftDeletedClause(ref('actor')))
-        .where(notSoftDeletedClause(ref('record')))
-        // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
-        .where('notification.did', '=', requester)
-        .where(
-          'notification.sortAt',
-          '>',
-          sql`coalesce(${ref('actor_state.lastSeenNotifs')}, ${''})`,
-        )
-        .executeTakeFirst()
-
-      const count = result?.count ?? 0
-
+      const viewer = auth.credentials.iss
+      const result = await getUnreadCount({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
-        body: { count },
+        body: result,
       }
     },
   })
+}
+
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
+  const { params, ctx } = input
+  if (params.seenAt) {
+    throw new InvalidRequestError('The seenAt parameter is unsupported')
+  }
+  const res = await ctx.hydrator.dataplane.getUnreadNotificationCount({
+    actorDid: params.viewer,
+  })
+  return {
+    count: res.count,
+  }
+}
+
+const hydration = async (
+  _input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  return {}
+}
+
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton } = input
+  return { count: skeleton.count }
+}
+
+type Context = {
+  hydrator: Hydrator
+  views: Views
+}
+
+type Params = QueryParams & {
+  viewer: string
+}
+
+type SkeletonState = {
+  count: number
 }
