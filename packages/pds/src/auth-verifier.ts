@@ -5,14 +5,14 @@ import {
   InvalidRequestError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
-import { getDidKeyForId } from '@atproto/common'
+import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
@@ -350,7 +350,11 @@ export class AuthVerifier {
         throw new AuthRequiredError('could not resolve iss did')
       }
       const keyId = serviceId === 'atproto-mod' ? 'atproto-mod-key' : 'atproto'
-      const didKey = getDidKeyForId(didDoc, keyId)
+      const parsedKey = getVerificationMaterial(didDoc, keyId)
+      if (!parsedKey) {
+        throw new AuthRequiredError('missing or bad key in did doc')
+      }
+      const didKey = getDidKeyFromMultibase(parsedKey)
       if (!didKey) {
         throw new AuthRequiredError('missing or bad key in did doc')
       }

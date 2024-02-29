@@ -52,17 +52,10 @@ export const getVerificationMaterial = (
   }
 }
 
-export const getDidKeyForId = (
-  doc: DidDocument,
-  keyId: string,
-): string | undefined => {
-  const parsed = getVerificationMaterial(doc, keyId)
+export const getSigningDidKey = (doc: DidDocument): string | undefined => {
+  const parsed = getSigningKey(doc)
   if (!parsed) return
   return `did:key:${parsed.publicKeyMultibase}`
-}
-
-export const getSigningDidKey = (doc: DidDocument): string | undefined => {
-  return getDidKeyForId(doc, 'atproto')
 }
 
 export const getPdsEndpoint = (doc: DidDocument): string | undefined => {
