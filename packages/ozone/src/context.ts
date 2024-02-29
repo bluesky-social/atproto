@@ -15,6 +15,7 @@ import {
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
 import { AuthVerifier } from './auth-verifier'
+import { ImageInvalidator } from './image-invalidator'
 
 export type AppContextOptions = {
   db: Database
@@ -25,6 +26,7 @@ export type AppContextOptions = {
   pdsAgent: AtpAgent | undefined
   signingKey: Keypair
   idResolver: IdResolver
+  imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   authVerifier: AuthVerifier
@@ -72,6 +74,8 @@ export class AppContext {
       appviewAgent,
       appviewAuth,
       cfg.service.did,
+      overrides?.imgInvalidator,
+      cfg.cdn.paths,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
