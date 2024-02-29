@@ -66,6 +66,9 @@ export const parseProxyHeader = async (
   const proxyTo = req.header('atproto-proxy')
   if (!proxyTo) return
   const [did, serviceId] = proxyTo.split('#')
+  if (!serviceId) {
+    throw new InvalidRequestError('no service id specified')
+  }
   const didDoc = await ctx.idResolver.did.resolve(did)
   if (!didDoc) {
     throw new InvalidRequestError('could not resolve proxy did')
