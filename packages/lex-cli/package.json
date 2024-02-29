@@ -24,7 +24,7 @@
   "dependencies": {
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
-    "chalk": "^5.1.1",
+    "chalk": "^4.1.2",
     "commander": "^9.4.0",
     "ts-morph": "^16.0.0",
     "yesno": "^0.4.0",

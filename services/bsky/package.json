@@ -2,8 +2,8 @@
   "name": "bsky-app-view-service",
   "private": true,
   "dependencies": {
-    "@atproto/aws": "workspace:^",
     "@atproto/bsky": "workspace:^",
+    "@atproto/crypto": "workspace:^",
     "dd-trace": "3.13.2"
   }
 }

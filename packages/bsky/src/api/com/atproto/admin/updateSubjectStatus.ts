@@ -1,4 +1,5 @@
-import { AtUri } from '@atproto/syntax'
+import { Timestamp } from '@bufbuild/protobuf'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -6,8 +7,6 @@ import {
   isRepoBlobRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { CID } from 'multiformats/cid'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
@@ -19,43 +18,49 @@ export default function (server: Server, ctx: AppContext) {
           'Must be a full moderator to update subject state',
         )
       }
-
-      const modService = ctx.services.moderation(ctx.db.getPrimary())
-
+      const now = new Date()
       const { subject, takedown } = input.body
       if (takedown) {
         if (isRepoRef(subject)) {
-          const did = subject.did
           if (takedown.applied) {
-            await modService.takedownRepo({
-              takedownRef: takedown.ref ?? new Date().toISOString(),
-              did,
+            await ctx.dataplane.takedownActor({
+              did: subject.did,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
             })
           } else {
-            await modService.reverseTakedownRepo({ did })
+            await ctx.dataplane.untakedownActor({
+              did: subject.did,
+              seen: Timestamp.fromDate(now),
+            })
           }
         } else if (isStrongRef(subject)) {
-          const uri = new AtUri(subject.uri)
-          const cid = CID.parse(subject.cid)
           if (takedown.applied) {
-            await modService.takedownRecord({
-              takedownRef: takedown.ref ?? new Date().toISOString(),
-              uri,
-              cid,
+            await ctx.dataplane.takedownRecord({
+              recordUri: subject.uri,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
             })
           } else {
-            await modService.reverseTakedownRecord({ uri })
+            await ctx.dataplane.untakedownRecord({
+              recordUri: subject.uri,
+              seen: Timestamp.fromDate(now),
+            })
           }
         } else if (isRepoBlobRef(subject)) {
-          const { did, cid } = subject
           if (takedown.applied) {
-            await modService.takedownBlob({
-              takedownRef: takedown.ref ?? new Date().toISOString(),
-              did,
-              cid,
+            await ctx.dataplane.takedownBlob({
+              did: subject.did,
+              cid: subject.cid,
+              ref: takedown.ref,
+              seen: Timestamp.fromDate(now),
             })
           } else {
-            await modService.reverseTakedownBlob({ did, cid })
+            await ctx.dataplane.untakedownBlob({
+              did: subject.did,
+              cid: subject.cid,
+              seen: Timestamp.fromDate(now),
+            })
           }
         } else {
           throw new InvalidRequestError('Invalid subject')

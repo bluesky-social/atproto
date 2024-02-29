@@ -2,37 +2,28 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { jsonStringToLex } from '@atproto/lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord(async ({ params }) => {
     const { repo, collection, rkey, cid } = params
-    const db = ctx.db.getReplica()
-    const did = await ctx.services.actor(db).getActorDid(repo)
+    const [did] = await ctx.hydrator.actor.getDids([repo])
     if (!did) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
-    const uri = AtUri.make(did, collection, rkey)
+    const uri = AtUri.make(did, collection, rkey).toString()
+    const result = await ctx.hydrator.getRecord(uri, true)
 
-    let builder = db.db
-      .selectFrom('record')
-      .selectAll()
-      .where('uri', '=', uri.toString())
-    if (cid) {
-      builder = builder.where('cid', '=', cid)
-    }
-
-    const record = await builder.executeTakeFirst()
-    if (!record) {
+    if (!result || (cid && result.cid !== cid)) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
+
     return {
-      encoding: 'application/json',
+      encoding: 'application/json' as const,
       body: {
-        uri: record.uri,
-        cid: record.cid,
-        value: jsonStringToLex(record.json) as Record<string, unknown>,
+        uri: uri,
+        cid: result.cid,
+        value: result.record,
       },
     }
   })

@@ -47,7 +47,9 @@ export class RecordRef {
   }
 }
 
-export class SeedClient {
+export class SeedClient<
+  Network extends TestNetworkNoAppView = TestNetworkNoAppView,
+> {
   accounts: Record<
     string,
     {
@@ -83,7 +85,7 @@ export class SeedClient {
   >
   dids: Record<string, string>
 
-  constructor(public network: TestNetworkNoAppView, public agent: AtpAgent) {
+  constructor(public network: Network, public agent: AtpAgent) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}

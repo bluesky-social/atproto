@@ -115,7 +115,6 @@ describe('pds thread views', () => {
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
     await network.processAll()
-    await network.bsky.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -125,7 +124,6 @@ describe('pds thread views', () => {
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
     await network.processAll()
-    await network.bsky.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -138,6 +136,56 @@ describe('pds thread views', () => {
       { headers: await network.serviceHeaders(bob) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
+
+  it('omits parents and replies w/ different root than anchor post.', async () => {
+    const badRoot = sc.posts[alice][0]
+    const goodRoot = await sc.post(alice, 'good root')
+    const goodReply1 = await sc.reply(
+      alice,
+      goodRoot.ref,
+      goodRoot.ref,
+      'good reply 1',
+    )
+    const goodReply2 = await sc.reply(
+      alice,
+      goodRoot.ref,
+      goodReply1.ref,
+      'good reply 2',
+    )
+    const badReply = await sc.reply(
+      alice,
+      badRoot.ref,
+      goodReply1.ref,
+      'bad reply',
+    )
+    await network.processAll()
+    // good reply doesn't have replies w/ different root
+    const { data: goodReply1Thread } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { uri: goodReply1.ref.uriStr },
+        { headers: await network.serviceHeaders(alice) },
+      )
+    assertIsThreadViewPost(goodReply1Thread.thread)
+    assertIsThreadViewPost(goodReply1Thread.thread.parent)
+    expect(goodReply1Thread.thread.parent.post.uri).toEqual(goodRoot.ref.uriStr)
+    expect(
+      goodReply1Thread.thread.replies?.map((r) => {
+        assertIsThreadViewPost(r)
+        return r.post.uri
+      }),
+    ).toEqual([
+      goodReply2.ref.uriStr, // does not contain badReply
+    ])
+    expect(goodReply1Thread.thread.parent.replies).toBeUndefined()
+    // bad reply doesn't have a parent, which would have a different root
+    const { data: badReplyThread } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { uri: badReply.ref.uriStr },
+        { headers: await network.serviceHeaders(alice) },
+      )
+    assertIsThreadViewPost(badReplyThread.thread)
+    expect(badReplyThread.thread.parent).toBeUndefined() // is not goodReply1
   })
 
   it('reflects self-labels', async () => {
@@ -166,22 +214,9 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          takedown: {
-            applied: true,
-            ref: 'test',
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: alice,
+      })
 
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
@@ -194,40 +229,15 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          takedown: {
-            applied: false,
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: alice,
+      })
     })
 
     it('blocks replies by actor', async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: carol,
-          },
-          takedown: {
-            applied: true,
-            ref: 'test',
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: carol,
+      })
 
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -238,40 +248,15 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: carol,
-          },
-          takedown: {
-            applied: false,
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: carol,
+      })
     })
 
     it('blocks ancestors by actor', async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: bob,
-          },
-          takedown: {
-            applied: true,
-            ref: 'test',
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: bob,
+      })
 
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -282,42 +267,16 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: bob,
-          },
-          takedown: {
-            applied: false,
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: bob,
+      })
     })
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: postRef.uriStr,
-            cid: postRef.cidStr,
-          },
-          takedown: {
-            applied: true,
-            ref: 'test',
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: postRef.uriStr,
+      })
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
@@ -329,22 +288,9 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: postRef.uriStr,
-            cid: postRef.cidStr,
-          },
-          takedown: {
-            applied: false,
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: postRef.uriStr,
+      })
     })
 
     it('blocks ancestors by record', async () => {
@@ -355,23 +301,9 @@ describe('pds thread views', () => {
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: parent.uri,
-            cid: parent.cid,
-          },
-          takedown: {
-            applied: true,
-            ref: 'test',
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: parent.uri,
+      })
 
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -382,22 +314,9 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: parent.uri,
-            cid: parent.cid,
-          },
-          takedown: {
-            applied: false,
-          },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: parent.uri,
+      })
     })
 
     it('blocks replies by record', async () => {
@@ -410,23 +329,9 @@ describe('pds thread views', () => {
 
       await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.updateSubjectStatus(
-            {
-              subject: {
-                $type: 'com.atproto.repo.strongRef',
-                uri: post.uri,
-                cid: post.cid,
-              },
-              takedown: {
-                applied: true,
-                ref: 'test',
-              },
-            },
-            {
-              encoding: 'application/json',
-              headers: network.bsky.adminAuthHeaders(),
-            },
-          ),
+          network.bsky.ctx.dataplane.takedownRecord({
+            recordUri: post.uri,
+          }),
         ),
       )
 
@@ -441,25 +346,9 @@ describe('pds thread views', () => {
       // Cleanup
       await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.updateSubjectStatus(
-            {
-              event: {
-                $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-              },
-              subject: {
-                $type: 'com.atproto.repo.strongRef',
-                uri: post.uri,
-                cid: post.cid,
-              },
-              takedown: {
-                applied: false,
-              },
-            },
-            {
-              encoding: 'application/json',
-              headers: network.bsky.adminAuthHeaders(),
-            },
-          ),
+          network.bsky.ctx.dataplane.untakedownRecord({
+            recordUri: post.uri,
+          }),
         ),
       )
     })

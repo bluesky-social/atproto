@@ -54,7 +54,6 @@ Object {
           "like": "record(7)",
         },
       },
-      "replies": Array [],
     },
     "post": Object {
       "author": Object {
@@ -85,7 +84,7 @@ Object {
           "cid": "cids(4)",
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "user(4)",
+          "src": "did:example:labeler",
           "uri": "record(5)",
           "val": "test-label",
         },
@@ -93,7 +92,7 @@ Object {
           "cid": "cids(4)",
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "user(4)",
+          "src": "did:example:labeler",
           "uri": "record(5)",
           "val": "test-label-2",
         },
@@ -135,7 +134,6 @@ Object {
       "uri": "record(5)",
       "viewer": Object {},
     },
-    "replies": Array [],
   },
   "post": Object {
     "author": Object {
@@ -319,7 +317,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(5)",
+            "src": "did:example:labeler",
             "uri": "record(7)",
             "val": "test-label",
           },
@@ -327,7 +325,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(5)",
+            "src": "did:example:labeler",
             "uri": "record(7)",
             "val": "test-label-2",
           },
@@ -557,7 +555,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(5)",
+            "src": "did:example:labeler",
             "uri": "record(7)",
             "val": "test-label",
           },
@@ -565,7 +563,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(5)",
+            "src": "did:example:labeler",
             "uri": "record(7)",
             "val": "test-label-2",
           },
@@ -1074,6 +1072,11 @@ Object {
   },
   "replies": Array [
     Object {
+      "$type": "app.bsky.feed.defs#notFoundPost",
+      "notFound": true,
+      "uri": "record(5)",
+    },
+    Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
@@ -1104,16 +1107,16 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(4)",
-            "uri": "record(5)",
+            "src": "did:example:labeler",
+            "uri": "record(6)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(4)",
-            "uri": "record(5)",
+            "src": "did:example:labeler",
+            "uri": "record(6)",
             "val": "test-label-2",
           },
         ],
@@ -1151,7 +1154,7 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "uri": "record(5)",
+        "uri": "record(6)",
         "viewer": Object {},
       },
       "replies": Array [
@@ -1198,7 +1201,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(3)",
-                  "uri": "record(5)",
+                  "uri": "record(6)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -1209,9 +1212,9 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 2,
-            "uri": "record(6)",
+            "uri": "record(7)",
             "viewer": Object {
-              "repost": "record(7)",
+              "repost": "record(8)",
             },
           },
           "replies": Array [],
@@ -1304,7 +1307,7 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(4)",
+            "src": "did:example:labeler",
             "uri": "record(5)",
             "val": "test-label",
           },
@@ -1312,7 +1315,7 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(4)",
+            "src": "did:example:labeler",
             "uri": "record(5)",
             "val": "test-label-2",
           },

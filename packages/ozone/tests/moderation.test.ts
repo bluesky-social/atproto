@@ -607,7 +607,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('triage'),
+          headers: network.ozone.adminAuthHeaders('triage'),
         },
       )
       await expect(attemptLabel).rejects.toThrow(
@@ -748,7 +748,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('moderator'),
+          headers: network.ozone.adminAuthHeaders('moderator'),
         },
       )
       // cleanup
@@ -775,11 +775,11 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders('triage'),
+            headers: network.ozone.adminAuthHeaders('triage'),
           },
         )
       await expect(attemptTakedownTriage).rejects.toThrow(
-        'Must be a full moderator to perform an account takedown',
+        'Must be a full moderator to take this type of action',
       )
     })
 
@@ -800,7 +800,7 @@ describe('moderation', () => {
       const { data: statusesAfterTakedown } =
         await agent.api.com.atproto.admin.queryModerationStatuses(
           { subject: sc.dids.bob },
-          { headers: network.bsky.adminAuthHeaders('moderator') },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
         )
 
       expect(statusesAfterTakedown.subjectStatuses[0]).toMatchObject({
@@ -819,11 +819,11 @@ describe('moderation', () => {
       const [{ data: eventList }, { data: statuses }] = await Promise.all([
         agent.api.com.atproto.admin.queryModerationEvents(
           { subject: sc.dids.bob },
-          { headers: network.bsky.adminAuthHeaders('moderator') },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
         ),
         agent.api.com.atproto.admin.queryModerationStatuses(
           { subject: sc.dids.bob },
-          { headers: network.bsky.adminAuthHeaders('moderator') },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
         ),
       ])
 
@@ -880,7 +880,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
+          headers: network.ozone.adminAuthHeaders(),
         },
       )
       return result.data
@@ -902,7 +902,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
+          headers: network.ozone.adminAuthHeaders(),
         },
       )
     }
@@ -910,7 +910,7 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: network.bsky.adminAuthHeaders() },
+        { headers: network.ozone.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -919,7 +919,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: network.bsky.adminAuthHeaders() },
+        { headers: network.ozone.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -934,7 +934,7 @@ describe('moderation', () => {
       const { ctx } = network.bsky
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      imageUri = ctx.imgUriBuilder
+      imageUri = ctx.views.imgUriBuilder
         .getPresetUri(
           'feed_thumbnail',
           sc.dids.carol,
@@ -975,7 +975,8 @@ describe('moderation', () => {
       })
     })
 
-    it('prevents image blob from being served, even when cached.', async () => {
+    // @TODO add back in with image invalidation, see bluesky-social/atproto#2087
+    it.skip('prevents image blob from being served, even when cached.', async () => {
       const fetchImage = await fetch(imageUri)
       expect(fetchImage.status).toEqual(404)
       expect(await fetchImage.json()).toEqual({ message: 'Image not found' })

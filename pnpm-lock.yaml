@@ -180,6 +180,9 @@ importers:
       '@connectrpc/connect':
         specifier: ^1.1.4
         version: 1.3.0(@bufbuild/protobuf@1.6.0)
+      '@connectrpc/connect-express':
+        specifier: ^1.1.4
+        version: 1.3.0(@bufbuild/protobuf@1.6.0)(@connectrpc/connect-node@1.3.0)(@connectrpc/connect@1.3.0)
       '@connectrpc/connect-node':
         specifier: ^1.1.4
         version: 1.3.0(@bufbuild/protobuf@1.6.0)(@connectrpc/connect@1.3.0)
@@ -523,8 +526,8 @@ importers:
         specifier: workspace:^
         version: link:../syntax
       chalk:
-        specifier: ^5.1.1
-        version: 5.1.1
+        specifier: ^4.1.2
+        version: 4.1.2
       commander:
         specifier: ^9.4.0
         version: 9.4.0
@@ -961,12 +964,12 @@ importers:
 
   services/bsky:
     dependencies:
-      '@atproto/aws':
-        specifier: workspace:^
-        version: link:../../packages/aws
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../../packages/bsky
+      '@atproto/crypto':
+        specifier: workspace:^
+        version: link:../../packages/crypto
       dd-trace:
         specifier: 3.13.2
         version: 3.13.2
@@ -6866,12 +6869,6 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
-    dev: true
-
-  /chalk@5.1.1:
-    resolution: {integrity: sha512-OItMegkSDU3P7OJRWBbNRsQsL8SzgwlIGXSZRVfHCLBYrDgzYDuozwDMwvEDpiZdjr50tdOTbTzuubirtEozsg==}
-    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
-    dev: false
 
   /char-regex@1.0.2:
     resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
@@ -8482,7 +8479,6 @@ packages:
   /has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
-    dev: true
 
   /has-property-descriptors@1.0.0:
     resolution: {integrity: sha512-62DVLZGoiEBDHQyqG4w9xCuZ7eJEwNmJRWw2VY84Oedb7WFcA27fiEVe8oUQx9hAUJ4ekurquucTGwsyO1XGdQ==}
@@ -11324,7 +11320,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       has-flag: 4.0.0
-    dev: true
 
   /supports-color@8.1.1:
     resolution: {integrity: sha512-MpUEN2OodtUzxvKQl72cUF7RQ5EiHsGvSsVG0ia9c5RbWGL2CI4C7EpPS8UTBIplnlzZiNuV56w+FuNxy3ty2Q==}

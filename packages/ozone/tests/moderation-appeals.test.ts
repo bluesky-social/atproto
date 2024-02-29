@@ -115,10 +115,7 @@ describe('moderation-appeals', () => {
       })
 
       // Verify that appeal status changed when appeal report was emitted by moderator
-      const status = await assertBobsPostStatus(
-        ComAtprotoAdminDefs.REVIEWOPEN,
-        true,
-      )
+      const status = await assertBobsPostStatus(REVIEWESCALATED, true)
       expect(status?.appealedAt).not.toBeNull()
 
       // Create a report as normal user for carol's post
@@ -145,7 +142,7 @@ describe('moderation-appeals', () => {
       // Verify that the appeal status on carol's post is true
       await assertSubjectStatus(
         getCarolPostSubject().uri,
-        ComAtprotoAdminDefs.REVIEWOPEN,
+        REVIEWESCALATED,
         true,
       )
     })
@@ -159,10 +156,7 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.carol,
       })
 
-      const previousStatus = await assertBobsPostStatus(
-        ComAtprotoAdminDefs.REVIEWOPEN,
-        false,
-      )
+      const previousStatus = await assertBobsPostStatus(REVIEWESCALATED, false)
 
       await emitModerationEvent({
         event: {
@@ -174,10 +168,7 @@ describe('moderation-appeals', () => {
       })
 
       // Verify that even after the appeal event by bob for his post, the appeal status is true again with new timestamp
-      const newStatus = await assertBobsPostStatus(
-        ComAtprotoAdminDefs.REVIEWOPEN,
-        true,
-      )
+      const newStatus = await assertBobsPostStatus(REVIEWESCALATED, true)
       expect(
         new Date(`${previousStatus?.lastAppealedAt}`).getTime(),
       ).toBeLessThan(new Date(`${newStatus?.lastAppealedAt}`).getTime())
@@ -222,7 +213,7 @@ describe('moderation-appeals', () => {
 
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        ComAtprotoAdminDefs.REVIEWOPEN,
+        REVIEWESCALATED,
         true,
       )
 
@@ -236,10 +227,10 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.bob,
       })
 
-      // Assert that the status is still REVIEWOPEN, as report events are meant to do
+      // Assert that the status is still REVIEWESCALATED, as report events are meant to do
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        ComAtprotoAdminDefs.REVIEWOPEN,
+        REVIEWESCALATED,
         true,
       )
 
