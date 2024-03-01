@@ -17,14 +17,18 @@ export default function (server: Server, ctx: AppContext) {
 
       const views = mapDefined(dids, (did) => {
         if (detailed) {
+          const view = ctx.views.modServiceDetailed(did, hydration)
+          if (!view) return
           return {
             $type: 'app.bsky.moderation.defs#modServiceViewDetailed',
-            ...ctx.views.modServiceDetailed(did, hydration),
+            ...view,
           }
         } else {
+          const view = ctx.views.modService(did, hydration)
+          if (!view) return
           return {
             $type: 'app.bsky.moderation.defs#modServiceView',
-            ...ctx.views.modService(did, hydration),
+            ...view,
           }
         }
       })
