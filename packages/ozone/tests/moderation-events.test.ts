@@ -346,7 +346,7 @@ describe('moderation-events', () => {
         types: ['com.atproto.admin.defs#modEventTakedown'],
       })
       expect(result.events[0]).toMatchObject({
-        createdBy: network.ozone.adminAccnt.did,
+        createdBy: network.ozone.moderatorAccnt.did,
         event: {
           $type: 'com.atproto.admin.defs#modEventTakedown',
         },
@@ -370,7 +370,7 @@ describe('moderation-events', () => {
         subject: post.ref.uriStr,
       })
       expect(result.events[0]).toMatchObject({
-        createdBy: network.ozone.adminAccnt.did,
+        createdBy: network.ozone.moderatorAccnt.did,
         event: {
           $type: 'com.atproto.admin.defs#modEventReverseTakedown',
         },
