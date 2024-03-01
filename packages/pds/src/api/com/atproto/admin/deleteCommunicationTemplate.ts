@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   const { moderationAgent } = ctx
   if (!moderationAgent) return
   server.com.atproto.admin.deleteCommunicationTemplate({
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.access,
     handler: async ({ req, input }) => {
       await moderationAgent.com.atproto.admin.deleteCommunicationTemplate(
         input.body,

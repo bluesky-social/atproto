@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
   server.app.bsky.actor.getProfile({
-    auth: ctx.authVerifier.accessOrRole,
+    auth: ctx.authVerifier.access,
     handler: async ({ req, auth, params }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null

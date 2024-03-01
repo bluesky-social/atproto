@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   const { moderationAgent } = ctx
   if (!moderationAgent) return
   server.com.atproto.admin.getRecord({
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.moderator,
     handler: async ({ req, params }) => {
       const { data: recordDetailAppview } =
         await moderationAgent.com.atproto.admin.getRecord(

@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
   server.app.bsky.feed.getActorLikes({
-    auth: ctx.authVerifier.accessOrRole,
+    auth: ctx.authVerifier.access,
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null

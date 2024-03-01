@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   const { moderationAgent } = ctx
   if (!moderationAgent) return
   server.com.atproto.admin.createCommunicationTemplate({
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.access,
     handler: async ({ req, input }) => {
       const { data: result } =
         await moderationAgent.com.atproto.admin.createCommunicationTemplate(
