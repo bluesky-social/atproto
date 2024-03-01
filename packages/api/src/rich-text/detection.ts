@@ -70,11 +70,14 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(^|\s)#((?!\ufe0f)[^\s]\S*)(?=\s)?/g
+    const re = /(^|\s)#((?!\ufe0f)[^\s\u00AD\u2060\u200A\u200B\u200C\u200D]*)?/g
     while ((match = re.exec(text.utf16))) {
       let [, leading, tag] = match
 
-      tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
+      if (!tag) continue
+
+      // strip ending punctuation and any spaces
+      tag = tag.trim().replace(/\p{P}+$/gu, '')
 
       if (tag.length === 0 || tag.length > 64) continue
 

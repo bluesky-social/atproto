@@ -319,31 +319,31 @@ describe('detectFacets', () => {
           },
         ],
       ],
+      ['this #​ should not be a tag', [], []],
+      ['this #​a should not be a tag', [], []],
+      ['this #a​b should be a tag', ['a'], [{ byteStart: 5, byteEnd: 7 }]],
     ]
 
-    it.each(inputs)(
-      'correctly detects tags in %s',
-      async (input, tags, indices) => {
-        const rt = new RichText({ text: input })
-        await rt.detectFacets(agent)
+    it.each(inputs)('%s', async (input, tags, indices) => {
+      const rt = new RichText({ text: input })
+      await rt.detectFacets(agent)
 
-        const detectedTags: string[] = []
-        const detectedIndices: { byteStart: number; byteEnd: number }[] = []
+      const detectedTags: string[] = []
+      const detectedIndices: { byteStart: number; byteEnd: number }[] = []
 
-        for (const { facet } of rt.segments()) {
-          if (!facet) continue
-          for (const feature of facet.features) {
-            if (isTag(feature)) {
-              detectedTags.push(feature.tag)
-            }
+      for (const { facet } of rt.segments()) {
+        if (!facet) continue
+        for (const feature of facet.features) {
+          if (isTag(feature)) {
+            detectedTags.push(feature.tag)
           }
-          detectedIndices.push(facet.index)
         }
+        detectedIndices.push(facet.index)
+      }
 
-        expect(detectedTags).toEqual(tags)
-        expect(detectedIndices).toEqual(indices)
-      },
-    )
+      expect(detectedTags).toEqual(tags)
+      expect(detectedIndices).toEqual(indices)
+    })
   })
 })
 
