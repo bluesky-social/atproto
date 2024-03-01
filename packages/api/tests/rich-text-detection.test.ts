@@ -330,6 +330,8 @@ describe('detectFacets', () => {
       ['this #​ should not be a tag', [], []],
       ['this #​a should not be a tag', [], []],
       ['this #a​b should be a tag', ['a'], [{ byteStart: 5, byteEnd: 7 }]],
+      ['no match \\u20e2: #⃢tag', [], []],
+      ['no match a\\u20e2b: #a⃢b', ['a'], [{ byteStart: 19, byteEnd: 21 }]],
     ]
 
     it.each(inputs)('%s', async (input, tags, indices) => {
