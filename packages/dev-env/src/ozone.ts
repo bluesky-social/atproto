@@ -128,7 +128,7 @@ export class TestOzone {
     this.ctx.cfg.access.triage.push(did)
   }
 
-  async modHeaders(role: 'admin' | 'moderator' | 'triage' = 'admin') {
+  async modHeaders(role: 'admin' | 'moderator' | 'triage' = 'moderator') {
     const account =
       role === 'admin'
         ? this.adminAccnt

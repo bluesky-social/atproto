@@ -12,7 +12,7 @@ Object {
     Object {
       "cts": "1970-01-01T00:00:00.000Z",
       "neg": false,
-      "src": "user(1)",
+      "src": "user(2)",
       "uri": "user(0)",
       "val": "!unspecced-takedown",
     },
@@ -23,7 +23,7 @@ Object {
       "id": 1,
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
-      "lastReviewedBy": "did:example:admin",
+      "lastReviewedBy": "user(1)",
       "reviewState": "com.atproto.admin.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.admin.defs#repoRef",

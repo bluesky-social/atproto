@@ -1,17 +1,22 @@
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  SeedClient,
+  TestNetwork,
+  TestOzone,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
-import { TestOzone } from '@atproto/dev-env/src/ozone'
-import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('admin get repo view', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 
@@ -21,6 +26,7 @@ describe('admin get repo view', () => {
     })
     ozone = network.ozone
     agent = ozone.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
@@ -107,7 +113,7 @@ describe('admin get repo view', () => {
         sc.dids.bob,
         'confirm_email',
       )
-    await agent.api.com.atproto.server.confirmEmail(
+    await pdsAgent.api.com.atproto.server.confirmEmail(
       { email: bobsAccount.email, token: verificationToken },
       {
         encoding: 'application/json',

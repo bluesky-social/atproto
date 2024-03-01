@@ -1,4 +1,9 @@
-import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  usersBulkSeed,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { paginateAll } from './_util'
 
@@ -6,6 +11,7 @@ describe('admin repo search view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
@@ -14,8 +20,9 @@ describe('admin repo search view', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await usersBulkSeed(sc)
-    headers = network.pds.adminAuthHeaders()
+    headers = await network.ozone.modHeaders()
     await network.processAll()
   })
 
@@ -24,7 +31,7 @@ describe('admin repo search view', () => {
   })
 
   beforeAll(async () => {
-    await sc.emitModerationEvent({
+    await modClient.emitModerationEvent({
       event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
