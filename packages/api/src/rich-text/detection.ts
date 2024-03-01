@@ -34,7 +34,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
   {
     // links
     const re =
-      /(^|\s|\()((https?:\/\/[\S]+)|((?<domain>[a-z][a-z0-9]*(\.[a-z0-9]+)+)[\S]*))/gim
+      /(^|\s|\(|\b)((https?:\/\/[\S]+)|((?<domain>[a-z][a-z0-9]*(?!\.https?:\/\/)(\.[a-z0-9]+)+)[\S]*))/gim
     while ((match = re.exec(text.utf16))) {
       let uri = match[2]
       if (!uri.startsWith('http')) {
