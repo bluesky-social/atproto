@@ -89,7 +89,7 @@ export function interpretLabelValueDefinition(
     ...def,
     configurable: true,
     defaultSetting,
-    flags: [],
+    flags: ['no-self'],
     behaviors,
   }
 }
