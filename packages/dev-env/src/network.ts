@@ -112,6 +112,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.pds.processAll()
     await this.processFullSubscription(timeout)
     await this.bsky.sub.background.processAll()
+    await this.ozone.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

@@ -16,8 +16,7 @@ export const getPdsAccountInfo = async (
   try {
     const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
     return res.data
-  } catch (err) {
-    console.log('ERR: ', err)
+  } catch {
     return null
   }
 }
