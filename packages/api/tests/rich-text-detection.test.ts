@@ -260,6 +260,7 @@ describe('detectFacets', () => {
         [{ byteStart: 6, byteEnd: 21 }],
       ],
       ['##hashash', ['#hashash'], [{ byteStart: 0, byteEnd: 9 }]],
+      ['##', [], []],
       ['some #n0n3s@n5e!', ['n0n3s@n5e'], [{ byteStart: 5, byteEnd: 15 }]],
       [
         'works #with,punctuation',
