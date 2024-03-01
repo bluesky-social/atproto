@@ -218,7 +218,7 @@ describe('detectFacets', () => {
     }
   })
 
-  it('correctly detects tags inline', async () => {
+  describe('correctly detects tags inline', () => {
     const inputs: [
       string,
       string[],
@@ -233,12 +233,12 @@ describe('detectFacets', () => {
           { byteStart: 3, byteEnd: 5 },
         ],
       ],
-      ['#1', [], []],
+      ['#1', ['1'], [{ byteStart: 0, byteEnd: 2 }]],
       ['#tag', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
       ['body #tag', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
       ['#tag body', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
       ['body #tag body', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
-      ['body #1', [], []],
+      ['body #1', ['1'], [{ byteStart: 5, byteEnd: 7 }]],
       ['body #a1', ['a1'], [{ byteStart: 5, byteEnd: 8 }]],
       ['#', [], []],
       ['#?', [], []],
@@ -321,26 +321,29 @@ describe('detectFacets', () => {
       ],
     ]
 
-    for (const [input, tags, indices] of inputs) {
-      const rt = new RichText({ text: input })
-      await rt.detectFacets(agent)
+    it.each(inputs)(
+      'correctly detects tags in %s',
+      async (input, tags, indices) => {
+        const rt = new RichText({ text: input })
+        await rt.detectFacets(agent)
 
-      const detectedTags: string[] = []
-      const detectedIndices: { byteStart: number; byteEnd: number }[] = []
+        const detectedTags: string[] = []
+        const detectedIndices: { byteStart: number; byteEnd: number }[] = []
 
-      for (const { facet } of rt.segments()) {
-        if (!facet) continue
-        for (const feature of facet.features) {
-          if (isTag(feature)) {
-            detectedTags.push(feature.tag)
+        for (const { facet } of rt.segments()) {
+          if (!facet) continue
+          for (const feature of facet.features) {
+            if (isTag(feature)) {
+              detectedTags.push(feature.tag)
+            }
           }
+          detectedIndices.push(facet.index)
         }
-        detectedIndices.push(facet.index)
-      }
 
-      expect(detectedTags).toEqual(tags)
-      expect(detectedIndices).toEqual(indices)
-    }
+        expect(detectedTags).toEqual(tags)
+        expect(detectedIndices).toEqual(indices)
+      },
+    )
   })
 })
 
