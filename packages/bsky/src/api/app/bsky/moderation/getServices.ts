@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.moderation.getServices({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      const { dids } = params
+      const { dids, detailed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
 
@@ -15,9 +15,19 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
       })
 
-      const views = mapDefined(dids, (did) =>
-        ctx.views.modService(did, hydration),
-      )
+      const views = mapDefined(dids, (did) => {
+        if (detailed) {
+          return {
+            $type: 'app.bsky.moderation.defs#modServiceViewDetailed',
+            ...ctx.views.modServiceDetailed(did, hydration),
+          }
+        } else {
+          return {
+            $type: 'app.bsky.moderation.defs#modServiceView',
+            ...ctx.views.modService(did, hydration),
+          }
+        }
+      })
 
       return {
         encoding: 'application/json',
