@@ -31,7 +31,7 @@ describe('communication-templates', () => {
       await agent.api.com.atproto.admin.listCommunicationTemplates(
         {},
         {
-          headers: network.ozone.adminAuthHeaders('moderator'),
+          headers: await network.ozone.modHeaders('moderator'),
         },
       )
     return data.communicationTemplates
@@ -44,7 +44,7 @@ describe('communication-templates', () => {
           { ...templateOne, createdBy: sc.dids.bob },
           {
             encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('moderator'),
+            headers: await network.ozone.modHeaders('moderator'),
           },
         )
       await expect(moderatorReq).rejects.toThrow(
@@ -55,7 +55,7 @@ describe('communication-templates', () => {
           { ...templateOne, createdBy: sc.dids.bob },
           {
             encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('admin'),
+            headers: await network.ozone.modHeaders('admin'),
           },
         )
 
@@ -79,7 +79,7 @@ describe('communication-templates', () => {
         { ...templateTwo, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('admin'),
+          headers: await network.ozone.modHeaders('admin'),
         },
       )
 
@@ -95,7 +95,7 @@ describe('communication-templates', () => {
           { id: '1', updatedBy: sc.dids.bob, name: '1 Test template' },
           {
             encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('admin'),
+            headers: await network.ozone.modHeaders('admin'),
           },
         )
 
@@ -109,7 +109,7 @@ describe('communication-templates', () => {
         { id: '1' },
         {
           encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('moderator'),
+          headers: await network.ozone.modHeaders('moderator'),
         },
       )
 
@@ -121,7 +121,7 @@ describe('communication-templates', () => {
         { id: '1' },
         {
           encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('admin'),
+          headers: await network.ozone.modHeaders('admin'),
         },
       )
       const list = await listTemplates()
