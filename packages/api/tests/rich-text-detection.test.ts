@@ -330,12 +330,17 @@ describe('detectFacets', () => {
       ['no match (\\u200B): #​', [], []],
       ['no match (\\u200Ba): #​a', [], []],
       ['match (a\\u200Bb): #a​b', ['a'], [{ byteStart: 18, byteEnd: 20 }]],
-      ['no match (\\u20e2tag): #⃢⃢tag', [], []],
+      ['no match (\\u20e2tag): #⃢tag', [], []],
       ['no match (a\\u20e2b): #a⃢b', ['a'], [{ byteStart: 21, byteEnd: 23 }]],
       [
         'match full width number sign (tag): ＃tag',
         ['tag'],
         [{ byteStart: 36, byteEnd: 42 }],
+      ],
+      [
+        'match full width number sign (tag): ＃#️⃣tag',
+        ['#️⃣tag'],
+        [{ byteStart: 36, byteEnd: 49 }],
       ],
       ['no match 1?: #1?', [], []],
     ]
