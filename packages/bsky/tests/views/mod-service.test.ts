@@ -32,13 +32,7 @@ describe('mod service views', () => {
         collection: ids.AppBskyModerationService,
         rkey: 'self',
         record: {
-          description: 'alices labeler',
           policies: {
-            description: 'long policy description',
-            reportReasons: [
-              'com.atproto.moderation.defs#reasonSpam',
-              'com.atproto.moderation.defs#reasonOther',
-            ],
             labelValues: ['spam', '!hide', 'scam', 'impersonation'],
           },
           createdAt: new Date().toISOString(),
@@ -52,10 +46,7 @@ describe('mod service views', () => {
         collection: ids.AppBskyModerationService,
         rkey: 'self',
         record: {
-          description: 'bobs labeler',
           policies: {
-            description: 'another policy description',
-            reportReasons: ['com.atproto.moderation.defs#reasonSexual'],
             labelValues: ['nudity', 'sexual', 'porn'],
           },
           createdAt: new Date().toISOString(),
@@ -74,16 +65,7 @@ describe('mod service views', () => {
     await network.close()
   })
 
-  it('fetches mod service', async () => {
-    const view = await agent.api.app.bsky.moderation.getService(
-      { did: alice },
-      { headers: await network.serviceHeaders(bob) },
-    )
-
-    expect(forSnapshot(view.data)).toMatchSnapshot()
-  })
-
-  it('fetches multiple mod services', async () => {
+  it('fetches mod services', async () => {
     const view = await agent.api.app.bsky.moderation.getServices(
       { dids: [alice, bob, 'did:example:missing'] },
       { headers: await network.serviceHeaders(bob) },
@@ -92,15 +74,24 @@ describe('mod service views', () => {
     expect(forSnapshot(view.data)).toMatchSnapshot()
   })
 
-  it('fetches mod service unauthed', async () => {
-    const { data: authed } = await agent.api.app.bsky.moderation.getService(
-      { did: alice },
+  it('fetches mod services detailed', async () => {
+    const view = await agent.api.app.bsky.moderation.getServices(
+      { dids: [alice, bob, 'did:example:missing'], detailed: true },
       { headers: await network.serviceHeaders(bob) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.moderation.getService({
-      did: alice,
+
+    expect(forSnapshot(view.data)).toMatchSnapshot()
+  })
+
+  it('fetches mod services unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.moderation.getServices(
+      { dids: [alice] },
+      { headers: await network.serviceHeaders(bob) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.moderation.getServices({
+      dids: [alice],
     })
-    expect(unauthed).toEqual(stripViewerFromModService(authed))
+    expect(unauthed.views).toEqual(authed.views.map(stripViewerFromModService))
   })
 
   it('fetches multiple mod services unauthed', async () => {
@@ -148,18 +139,13 @@ describe('mod service views', () => {
     await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: aliceService.uriStr,
     })
-    const promise = agent.api.app.bsky.moderation.getService(
-      { did: alice },
-      { headers: await network.serviceHeaders(bob) },
-    )
-
-    await expect(promise).rejects.toThrow('could not find moderation service')
 
     const res = await agent.api.app.bsky.moderation.getServices(
       { dids: [alice, bob] },
       { headers: await network.serviceHeaders(bob) },
     )
     expect(res.data.views.length).toBe(1)
+    // @ts-ignore
     expect(res.data.views[0].creator.did).toEqual(bob)
 
     // Cleanup

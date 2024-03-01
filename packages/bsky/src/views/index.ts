@@ -284,8 +284,6 @@ export class Views {
       uri,
       cid: modService.cid.toString(),
       creator,
-      description: modService.record.description,
-      descriptionFacets: modService.record.descriptionFacets,
       likeCount: aggs?.likes,
       viewer: viewer
         ? {
