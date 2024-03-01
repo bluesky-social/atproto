@@ -11,12 +11,17 @@ import * as AppBskyModerationDefs from './defs'
 
 export interface QueryParams {
   dids: string[]
+  detailed: boolean
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  views: AppBskyModerationDefs.ModServiceView[]
+  views: (
+    | AppBskyModerationDefs.ModServiceView
+    | AppBskyModerationDefs.ModServiceViewDetailed
+    | { $type: string; [k: string]: unknown }
+  )[]
   [k: string]: unknown
 }
 

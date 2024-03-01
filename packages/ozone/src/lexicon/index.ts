@@ -129,7 +129,6 @@ import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
-import * as AppBskyModerationGetService from './types/app/bsky/moderation/getService'
 import * as AppBskyModerationGetServices from './types/app/bsky/moderation/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
@@ -1668,17 +1667,6 @@ export class AppBskyModerationNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  getService<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyModerationGetService.Handler<ExtractAuth<AV>>,
-      AppBskyModerationGetService.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.moderation.getService' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 
   getServices<AV extends AuthVerifier>(
