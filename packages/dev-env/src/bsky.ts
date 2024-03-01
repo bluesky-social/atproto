@@ -5,7 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
-import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
+import { ADMIN_PASSWORD } from './const'
 import { BackgroundQueue } from '@atproto/bsky/src/data-plane/server/background'
 
 export class TestBsky {
@@ -64,7 +64,7 @@ export class TestBsky {
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
       ...cfg,
-      adminPasswords: [ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD],
+      adminPasswords: [ADMIN_PASSWORD],
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."

@@ -1,16 +1,14 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru, resultPassthru } from '../../../proxy'
 
+// @TODO this needs to be refactored to come from ozone
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.authVerifier.role,
-    handler: async ({ req, input, auth }) => {
-      if (!auth.credentials.admin && !auth.credentials.moderator) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
-
+    auth: ctx.authVerifier.moderator,
+    handler: async ({ req, input }) => {
       const {
         content,
         recipientDid,

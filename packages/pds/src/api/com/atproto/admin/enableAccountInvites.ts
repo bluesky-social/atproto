@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.enableAccountInvites({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.moderator,
     handler: async ({ input }) => {
       if (ctx.cfg.entryway) {
         throw new InvalidRequestError(

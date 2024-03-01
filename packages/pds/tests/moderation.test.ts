@@ -57,14 +57,14 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
-      { headers: network.pds.adminAuthHeaders('moderator') },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(true)
@@ -79,14 +79,14 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
-      { headers: network.pds.adminAuthHeaders('moderator') },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(false)
@@ -101,14 +101,14 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         uri: recordSubject.uri,
       },
-      { headers: network.pds.adminAuthHeaders('moderator') },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(true)
@@ -123,46 +123,18 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         uri: recordSubject.uri,
       },
-      { headers: network.pds.adminAuthHeaders('moderator') },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(false)
     expect(res.data.takedown?.ref).toBeUndefined()
-  })
-
-  it('does not allow non-full moderators to update subject state', async () => {
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: sc.dids.bob,
-    }
-    const attemptTakedownTriage =
-      agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject,
-          takedown: { applied: true },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders('triage'),
-        },
-      )
-    await expect(attemptTakedownTriage).rejects.toThrow(
-      'Must be a full moderator to update subject state',
-    )
-    const res = await agent.api.com.atproto.admin.getSubjectStatus(
-      {
-        did: subject.did,
-      },
-      { headers: network.pds.adminAuthHeaders('moderator') },
-    )
-    expect(res.data.takedown?.applied).toBe(false)
   })
 
   describe('blob takedown', () => {
@@ -182,7 +154,7 @@ describe('moderation', () => {
           did: blobSubject.did,
           blob: blobSubject.cid,
         },
-        { headers: network.pds.adminAuthHeaders('moderator') },
+        { headers: network.pds.adminAuthHeaders() },
       )
       expect(res.data.subject.did).toEqual(blobSubject.did)
       expect(res.data.subject.cid).toEqual(blobSubject.cid)
@@ -272,11 +244,6 @@ describe('moderation', () => {
         headers: sc.getHeaders(sc.dids.bob),
       })
       await expect(attempt2).rejects.toThrow('Blob not found')
-      // non-admin role, disallow
-      const attempt3 = agent.api.com.atproto.sync.getBlob(blobParams, {
-        headers: network.pds.adminAuthHeaders('moderator'),
-      })
-      await expect(attempt3).rejects.toThrow('Blob not found')
       // logged-in as account, allow
       const res1 = await agent.api.com.atproto.sync.getBlob(blobParams, {
         headers: sc.getHeaders(sc.dids.carol),
@@ -284,7 +251,7 @@ describe('moderation', () => {
       expect(res1.data.byteLength).toBeGreaterThan(9000)
       // admin role, allow
       const res2 = await agent.api.com.atproto.sync.getBlob(blobParams, {
-        headers: network.pds.adminAuthHeaders('admin'),
+        headers: network.pds.adminAuthHeaders(),
       })
       expect(res2.data.byteLength).toBeGreaterThan(9000)
       // revert takedown

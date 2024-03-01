@@ -261,31 +261,6 @@ describe('account', () => {
     expect(accnt2?.email).toBe(email)
   })
 
-  it('disallows non-admin moderators to perform email updates', async () => {
-    const attemptUpdateMod = agent.api.com.atproto.admin.updateAccountEmail(
-      {
-        account: handle,
-        email: 'new@email.com',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
-      },
-    )
-    await expect(attemptUpdateMod).rejects.toThrow('Insufficient privileges')
-    const attemptUpdateTriage = agent.api.com.atproto.admin.updateAccountEmail(
-      {
-        account: handle,
-        email: 'new@email.com',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('triage'),
-      },
-    )
-    await expect(attemptUpdateTriage).rejects.toThrow('Insufficient privileges')
-  })
-
   it('disallows duplicate email addresses and handles', async () => {
     const email = 'bob@test.com'
     const handle = 'bob.test'
@@ -567,21 +542,10 @@ describe('account', () => {
     })
     await expect(tryUnauthed).rejects.toThrow('Authentication Required')
 
-    const tryAsModerator = agent.api.com.atproto.admin.updateAccountPassword(
-      { did, password: 'new-admin-pass' },
-      {
-        headers: network.pds.adminAuthHeaders('moderator'),
-        encoding: 'application/json',
-      },
-    )
-    await expect(tryAsModerator).rejects.toThrow(
-      'Must be an admin to update an account password',
-    )
-
     await agent.api.com.atproto.admin.updateAccountPassword(
       { did, password: 'new-admin-password' },
       {
-        headers: network.pds.adminAuthHeaders('admin'),
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
