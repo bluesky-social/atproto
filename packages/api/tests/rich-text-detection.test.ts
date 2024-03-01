@@ -337,6 +337,7 @@ describe('detectFacets', () => {
         ['tag'],
         [{ byteStart: 36, byteEnd: 42 }],
       ],
+      ['no match 1?: #1?', [], []],
     ]
 
     it.each(inputs)('%s', async (input, tags, indices) => {
