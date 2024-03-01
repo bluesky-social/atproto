@@ -28,6 +28,13 @@ export const getHandle = (doc: DidDocument): string | undefined => {
 export const getSigningKey = (
   doc: DidDocument,
 ): { type: string; publicKeyMultibase: string } | undefined => {
+  return getVerificationMaterial(doc, 'atproto')
+}
+
+export const getVerificationMaterial = (
+  doc: DidDocument,
+  keyId: string,
+): { type: string; publicKeyMultibase: string } | undefined => {
   const did = getDid(doc)
   let keys = doc.verificationMethod
   if (!keys) return undefined
@@ -36,7 +43,7 @@ export const getSigningKey = (
     keys = [keys]
   }
   const found = keys.find(
-    (key) => key.id === '#atproto' || key.id === `${did}#atproto`,
+    (key) => key.id === `#${keyId}` || key.id === `${did}#${keyId}`,
   )
   if (!found?.publicKeyMultibase) return undefined
   return {
@@ -44,6 +51,7 @@ export const getSigningKey = (
     publicKeyMultibase: found.publicKeyMultibase,
   }
 }
+
 export const getSigningDidKey = (doc: DidDocument): string | undefined => {
   const parsed = getSigningKey(doc)
   if (!parsed) return

@@ -44,6 +44,9 @@ export class TestOzone {
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
+      adminDids: [],
+      moderatorDids: [],
+      triageDids: [],
     }
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -62,7 +65,9 @@ export class TestOzone {
     const secrets = ozone.envToSecrets(env)
 
     // api server
-    const server = await ozone.OzoneService.create(cfg, secrets)
+    const server = await ozone.OzoneService.create(cfg, secrets, {
+      imgInvalidator: config.imgInvalidator,
+    })
     await server.start()
 
     const daemon = await ozone.OzoneDaemon.create(cfg, secrets)

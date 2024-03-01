@@ -6,7 +6,6 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { OzoneConfig, OzoneSecrets } from './config'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
-import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
 import { EventPusher } from './daemon'
@@ -15,6 +14,8 @@ import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { AuthVerifier } from './auth-verifier'
+import { ImageInvalidator } from './image-invalidator'
 
 export type AppContextOptions = {
   db: Database
@@ -25,8 +26,10 @@ export type AppContextOptions = {
   pdsAgent: AtpAgent | undefined
   signingKey: Keypair
   idResolver: IdResolver
+  imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
+  authVerifier: AuthVerifier
 }
 
 export class AppContext {
@@ -71,6 +74,8 @@ export class AppContext {
       appviewAgent,
       appviewAuth,
       cfg.service.did,
+      overrides?.imgInvalidator,
+      cfg.cdn.paths,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
@@ -80,6 +85,16 @@ export class AppContext {
     })
 
     const sequencer = new Sequencer(db)
+
+    const authVerifier = new AuthVerifier(idResolver, {
+      serviceDid: cfg.service.did,
+      admins: cfg.access.admins,
+      moderators: cfg.access.moderators,
+      triage: cfg.access.triage,
+      adminPassword: secrets.adminPassword,
+      moderatorPassword: secrets.moderatorPassword,
+      triagePassword: secrets.triagePassword,
+    })
 
     return new AppContext(
       {
@@ -93,6 +108,7 @@ export class AppContext {
         idResolver,
         backgroundQueue,
         sequencer,
+        authVerifier,
         ...(overrides ?? {}),
       },
       secrets,
@@ -151,34 +167,8 @@ export class AppContext {
     return this.opts.sequencer
   }
 
-  get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.service.did })
-  }
-
-  get authVerifierAnyAudience() {
-    return auth.authVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifierAnyAudience() {
-    return auth.authOptionalVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.service.did,
-    })
-  }
-
-  get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(
-      this.idResolver,
-      this.secrets,
-      this.cfg.service.did,
-    )
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.secrets)
+  get authVerifier(): AuthVerifier {
+    return this.opts.authVerifier
   }
 
   async serviceAuthHeaders(aud: string) {

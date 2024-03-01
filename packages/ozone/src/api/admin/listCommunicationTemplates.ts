@@ -4,12 +4,12 @@ import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.listCommunicationTemplates({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ auth }) => {
       const access = auth.credentials
       const db = ctx.db
 
-      if (!access.moderator) {
+      if (!access.isModerator) {
         throw new AuthRequiredError(
           'Must be a full moderator to view list of communication template',
         )

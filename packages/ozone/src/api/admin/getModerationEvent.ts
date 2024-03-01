@@ -3,7 +3,7 @@ import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationEvent({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ params }) => {
       const { id } = params
       const db = ctx.db
