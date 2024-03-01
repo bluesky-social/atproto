@@ -255,6 +255,11 @@ describe('detectFacets', () => {
         [],
       ],
       [
+        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!',
+        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        [{ byteStart: 5, byteEnd: 70 }],
+      ],
+      [
         'its a #double#rainbow',
         ['double#rainbow'],
         [{ byteStart: 6, byteEnd: 21 }],
