@@ -42,7 +42,10 @@ export default function (server: Server, ctx: AppContext) {
             throw new InvalidRequestError('Handle does not match DID doc')
           }
         } else {
-          await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
+          // plc does not manage did:web identities
+          if (!did.startsWith('did:web')) {
+            await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
+          }
         }
         await ctx.accountManager.updateHandle(did, handle)
       }
