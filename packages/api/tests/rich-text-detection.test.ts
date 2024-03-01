@@ -327,15 +327,15 @@ describe('detectFacets', () => {
           },
         ],
       ],
-      ['this #​ should not be a tag', [], []],
-      ['this #​a should not be a tag', [], []],
-      ['this #a​b should be a tag', ['a'], [{ byteStart: 5, byteEnd: 7 }]],
-      ['no match \\u20e2: #⃢tag', [], []],
-      ['no match a\\u20e2b: #a⃢b', ['a'], [{ byteStart: 19, byteEnd: 21 }]],
+      ['no match (\\u200B): #​', [], []],
+      ['no match (\\u200Ba): #​a', [], []],
+      ['match (a\\u200Bb): #a​b', ['a'], [{ byteStart: 18, byteEnd: 20 }]],
+      ['no match (\\u20e2tag): #⃢⃢tag', [], []],
+      ['no match (a\\u20e2b): #a⃢b', ['a'], [{ byteStart: 21, byteEnd: 23 }]],
       [
-        'full width number sign: ＃tag',
+        'match full width number sign (tag): ＃tag',
         ['tag'],
-        [{ byteStart: 24, byteEnd: 30 }],
+        [{ byteStart: 36, byteEnd: 42 }],
       ],
     ]
 
