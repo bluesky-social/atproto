@@ -3,7 +3,6 @@ import { AtUri } from '@atproto/syntax'
 import { Headers, XRPCError } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 import {
   ThreadViewPost,
   isThreadViewPost,
@@ -31,26 +30,11 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, params, auth }) => {
-      const requester =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
-
-      if (!requester) {
-        return pipethrough(
-          bskyAppView.url,
-          METHOD_NSID,
-          params,
-          authPassthru(req),
-        )
-      }
+    handler: async ({ req, auth, params }) => {
+      const requester = auth.credentials.did
 
       try {
-        const res = await pipethrough(
-          bskyAppView.url,
-          METHOD_NSID,
-          params,
-          await ctx.appviewAuthHeaders(requester),
-        )
+        const res = await pipethrough(ctx, req, requester)
 
         return await handleReadAfterWrite(
           ctx,
