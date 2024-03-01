@@ -1,5 +1,15 @@
 # @atproto/api
 
+## 0.10.4
+
+### Patch Changes
+
+- [#2260](https://github.com/bluesky-social/atproto/pull/2260) [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Export regex from rich text detection
+
+- [#2260](https://github.com/bluesky-social/atproto/pull/2260) [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Disallow rare unicode whitespace characters from tags
+
+- [#2260](https://github.com/bluesky-social/atproto/pull/2260) [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Allow tags to lead with numbers
+
 ## 0.10.3
 
 ### Patch Changes
