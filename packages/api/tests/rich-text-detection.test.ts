@@ -332,6 +332,11 @@ describe('detectFacets', () => {
       ['this #a​b should be a tag', ['a'], [{ byteStart: 5, byteEnd: 7 }]],
       ['no match \\u20e2: #⃢tag', [], []],
       ['no match a\\u20e2b: #a⃢b', ['a'], [{ byteStart: 19, byteEnd: 21 }]],
+      [
+        'full width number sign: ＃tag',
+        ['tag'],
+        [{ byteStart: 24, byteEnd: 30 }],
+      ],
     ]
 
     it.each(inputs)('%s', async (input, tags, indices) => {
