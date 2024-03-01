@@ -260,7 +260,7 @@ export class AuthVerifier {
     }
     const payload = await this.verifyServiceJwt(reqCtx, {
       aud: this.dids.entryway ?? this.dids.pds,
-      iss: [this.dids.modService, `${this.dids.modService}#atproto-mod`],
+      iss: [this.dids.modService, `${this.dids.modService}#atproto_mod`],
     })
     return {
       credentials: {
@@ -344,12 +344,11 @@ export class AuthVerifier {
       if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      const [did, serviceId] = iss.split('#')
+      const [did, keyId = 'atproto'] = iss.split('#')
       const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
       if (!didDoc) {
         throw new AuthRequiredError('could not resolve iss did')
       }
-      const keyId = serviceId === 'atproto-mod' ? 'atproto-mod-key' : 'atproto'
       const parsedKey = getVerificationMaterial(didDoc, keyId)
       if (!parsedKey) {
         throw new AuthRequiredError('missing or bad key in did doc')

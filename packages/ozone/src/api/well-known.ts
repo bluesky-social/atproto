@@ -15,7 +15,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
       id: ctx.cfg.service.did,
       verificationMethod: [
         {
-          id: `${ctx.cfg.service.did}#atproto`,
+          id: `${ctx.cfg.service.did}#atproto_mod`,
           type: 'Multikey',
           controller: ctx.cfg.service.did,
           publicKeyMultibase: ctx.signingKey.did().replace('did:key:', ''),
@@ -23,7 +23,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
       ],
       service: [
         {
-          id: '#atproto_mod',
+          id: '#atproto_mod_srvc',
           type: 'AtprotoModerationService',
           serviceEndpoint: `https://${hostname}`,
         },
