@@ -330,6 +330,7 @@ describe('detectFacets', () => {
       ['no match (\\u200B): #​', [], []],
       ['no match (\\u200Ba): #​a', [], []],
       ['match (a\\u200Bb): #a​b', ['a'], [{ byteStart: 18, byteEnd: 20 }]],
+      ['match (ab\\u200B): #ab​', ['ab'], [{ byteStart: 18, byteEnd: 21 }]],
       ['no match (\\u20e2tag): #⃢tag', [], []],
       ['no match (a\\u20e2b): #a⃢b', ['a'], [{ byteStart: 21, byteEnd: 23 }]],
       [
