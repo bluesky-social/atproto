@@ -1,13 +1,38 @@
 import express from 'express'
 import * as ui8 from 'uint8arrays'
 import net from 'node:net'
-import { jsonToLex } from '@atproto/lexicon'
+import { LexValue, jsonToLex, stringifyLex } from '@atproto/lexicon'
 import { HandlerPipeThrough, InvalidRequestError } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { lexicons } from './lexicon/lexicons'
+import { ids, lexicons } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
+
+const defaultService = (
+  ctx: AppContext,
+  path: string,
+): { url: string; did: string } | null => {
+  const nsid = path.replace('/xrpc/', '')
+  switch (nsid) {
+    case ids.ComAtprotoAdminCreateCommunicationTemplate:
+    case ids.ComAtprotoAdminDeleteCommunicationTemplate:
+    case ids.ComAtprotoAdminEmitModerationEvent:
+    case ids.ComAtprotoAdminGetModerationEvent:
+    case ids.ComAtprotoAdminGetRecord:
+    case ids.ComAtprotoAdminGetRepo:
+    case ids.ComAtprotoAdminListCommunicationTemplates:
+    case ids.ComAtprotoAdminQueryModerationEvents:
+    case ids.ComAtprotoAdminQueryModerationStatuses:
+    case ids.ComAtprotoAdminSearchRepos:
+    case ids.ComAtprotoAdminUpdateCommunicationTemplate:
+      return ctx.cfg.modService
+    case ids.ComAtprotoModerationCreateReport:
+      return ctx.cfg.reportService
+    default:
+      return ctx.cfg.bskyAppView
+  }
+}
 
 export const pipethrough = async (
   ctx: AppContext,
@@ -15,48 +40,38 @@ export const pipethrough = async (
   requester?: string,
   audOverride?: string,
 ): Promise<HandlerPipeThrough> => {
-  const proxyTo = await parseProxyHeader(ctx, req)
-  const serviceUrl = proxyTo?.serviceUrl ?? ctx.cfg.bskyAppView?.url
-  const aud = audOverride ?? proxyTo?.did ?? ctx.cfg.bskyAppView?.did
-  if (!serviceUrl || !aud) {
-    throw new InvalidRequestError(`No service configured for ${req.path}`)
+  const { url, headers } = await createUrlAndHeaders(
+    ctx,
+    req,
+    requester,
+    audOverride,
+  )
+  const reqInit: RequestInit = {
+    headers,
   }
-  const url = new URL(req.originalUrl, serviceUrl)
-  if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
-    throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
+  return doProxy(url, reqInit)
+}
+
+export const pipethroughProcedure = async (
+  ctx: AppContext,
+  req: express.Request,
+  body: LexValue,
+  requester?: string,
+  audOverride?: string,
+) => {
+  const { url, headers } = await createUrlAndHeaders(
+    ctx,
+    req,
+    requester,
+    audOverride,
+  )
+  const reqInit: RequestInit & { duplex: string } = {
+    method: 'post',
+    headers,
+    body: new TextEncoder().encode(stringifyLex(body)),
+    duplex: 'half',
   }
-  const reqHeaders = requester
-    ? await ctx.serviceAuthHeaders(requester, aud)
-    : { headers: {} }
-  // forward accept-language header to upstream services
-  reqHeaders.headers['accept-language'] = req.headers['accept-language']
-  let res: Response
-  let buffer: ArrayBuffer
-  try {
-    res = await fetch(url, reqHeaders)
-    buffer = await res.arrayBuffer()
-  } catch (err) {
-    httpLogger.warn({ err }, 'pipethrough network error')
-    throw new XRPCError(ResponseType.UpstreamFailure)
-  }
-  if (res.status !== ResponseType.Success) {
-    const ui8Buffer = new Uint8Array(buffer)
-    const errInfo = safeParseJson(ui8.toString(ui8Buffer, 'utf8'))
-    throw new XRPCError(
-      res.status,
-      safeString(errInfo?.['error']),
-      safeString(errInfo?.['message']),
-      simpleHeaders(res.headers),
-    )
-  }
-  const encoding = res.headers.get('content-type') ?? 'application/json'
-  const repoRevHeader = res.headers.get('atproto-repo-rev')
-  const contentLanguage = res.headers.get('content-language')
-  const resHeaders = noUndefinedVals({
-    ['atproto-repo-rev']: repoRevHeader ?? undefined,
-    ['content-language']: contentLanguage ?? undefined,
-  })
-  return { encoding, buffer, headers: resHeaders }
+  return doProxy(url, reqInit)
 }
 
 export const parseProxyHeader = async (
@@ -80,27 +95,60 @@ export const parseProxyHeader = async (
   return { did, serviceUrl }
 }
 
-export const constructUrl = (
-  serviceUrl: string,
-  nsid: string,
-  params?: Record<string, any>,
-): string => {
-  const uri = new URL(serviceUrl)
-  uri.pathname = `/xrpc/${nsid}`
-
-  for (const [key, value] of Object.entries(params ?? {})) {
-    if (value === undefined) {
-      continue
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        uri.searchParams.append(key, String(item))
-      }
-    } else {
-      uri.searchParams.set(key, String(value))
-    }
+export const createUrlAndHeaders = async (
+  ctx: AppContext,
+  req: express.Request,
+  requester?: string,
+  audOverride?: string,
+): Promise<{ url: URL; headers: { authorization?: string } }> => {
+  const proxyTo = await parseProxyHeader(ctx, req)
+  const defaultProxy = defaultService(ctx, req.path)
+  const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
+  const aud = audOverride ?? proxyTo?.did ?? defaultProxy?.did
+  if (!serviceUrl || !aud) {
+    throw new InvalidRequestError(`No service configured for ${req.path}`)
   }
+  const url = new URL(req.originalUrl, serviceUrl)
+  if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
+    throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
+  }
+  const headers = requester
+    ? (await ctx.serviceAuthHeaders(requester, aud)).headers
+    : {}
+  // forward accept-language header to upstream services
+  headers['accept-language'] = req.headers['accept-language']
+  headers['content-type'] = req.headers['content-type']
+  return { url, headers }
+}
 
-  return uri.toString()
+export const doProxy = async (url: URL, reqInit: RequestInit) => {
+  let res: Response
+  let buffer: ArrayBuffer
+  try {
+    res = await fetch(url, reqInit)
+    buffer = await res.arrayBuffer()
+  } catch (err) {
+    httpLogger.warn({ err }, 'pipethrough network error')
+    throw new XRPCError(ResponseType.UpstreamFailure)
+  }
+  if (res.status !== ResponseType.Success) {
+    const ui8Buffer = new Uint8Array(buffer)
+    const errInfo = safeParseJson(ui8.toString(ui8Buffer, 'utf8'))
+    throw new XRPCError(
+      res.status,
+      safeString(errInfo?.['error']),
+      safeString(errInfo?.['message']),
+      simpleHeaders(res.headers),
+    )
+  }
+  const encoding = res.headers.get('content-type') ?? 'application/json'
+  const repoRevHeader = res.headers.get('atproto-repo-rev')
+  const contentLanguage = res.headers.get('content-language')
+  const resHeaders = noUndefinedVals({
+    ['atproto-repo-rev']: repoRevHeader ?? undefined,
+    ['content-language']: contentLanguage ?? undefined,
+  })
+  return { encoding, buffer, headers: resHeaders }
 }
 
 const isSafeUrl = (url: URL) => {
