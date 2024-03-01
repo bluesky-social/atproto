@@ -6,7 +6,7 @@ import * as plc from '@did-plc/lib'
 import usersSeed from './seeds/users'
 import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 
-describe('admin auth', () => {
+describe('moderator auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
@@ -45,7 +45,7 @@ describe('admin auth', () => {
     altModDid = altModInfo.did
 
     network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'pds_admin_auth',
+      dbPostgresSchema: 'pds_moderator_auth',
       pds: {
         modServiceDid: modServiceInfo.did,
         modServiceUrl: 'https://mod.invalid',
