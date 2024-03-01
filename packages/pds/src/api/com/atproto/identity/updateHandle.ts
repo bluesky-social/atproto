@@ -51,8 +51,8 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
         }
       } else {
-        // plc does not manage did:web identities
-        if (!requester.startsWith('did:web')) {
+        // plc only manages did:plc identities
+        if (requester.startsWith('did:plc')) {
           await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
         }
         await ctx.accountManager.updateHandle(requester, handle)
