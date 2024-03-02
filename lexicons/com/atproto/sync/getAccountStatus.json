@@ -1,0 +1,46 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.getAccountStatus",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the repository hosting status for an account, on this server. Expected to be implemented by PDS and Relay.",
+      "parameters": {
+        "type": "params",
+        "required": ["identifier"],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The handle or DID of the account."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "active"],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "active": { "type": "boolean" },
+            "status": {
+              "type": "union",
+              "description": "If active=false, this optional field indicates a reason for why the account is not active.",
+              "refs": [
+                "com.atproto.sync.defs#takendown",
+                "com.atproto.sync.defs#suspended",
+                "com.atproto.sync.defs#deactivated"
+              ]
+            },
+            "rev": {
+              "type": "string",
+              "description": "Optional field, the current rev of the repo, if active=true"
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "AccountNotFound" }]
+    }
+  }
+}
