@@ -20,6 +20,7 @@
           "refs": [
             "#commit",
             "#identity",
+            "#account",
             "#handle",
             "#migrate",
             "#tombstone",
@@ -119,6 +120,30 @@
         "seq": { "type": "integer" },
         "did": { "type": "string", "format": "did" },
         "time": { "type": "string", "format": "datetime" }
+      }
+    },
+    "account": {
+      "type": "object",
+      "description": "Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active.",
+      "required": ["seq", "did", "time", "active"],
+      "properties": {
+        "seq": { "type": "integer" },
+        "did": { "type": "string", "format": "did" },
+        "time": { "type": "string", "format": "datetime" },
+        "active": {
+          "type": "boolean",
+          "description": "Indicates that the account has a repository which can be fetched from the host that emitted this event."
+        },
+        "status": {
+          "type": "union",
+          "description": "If active=false, this optional field indicates a reason for why the account is not active.",
+          "refs": [
+            "com.atproto.sync.defs#takendown",
+            "com.atproto.sync.defs#suspended",
+            "com.atproto.sync.defs#deleted",
+            "com.atproto.sync.defs#deactivated"
+          ]
+        }
       }
     },
     "handle": {
