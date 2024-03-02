@@ -27,7 +27,12 @@
           }
         }
       },
-      "errors": [{ "name": "RepoNotFound" }]
+      "errors": [
+        { "name": "AccountNotFound" },
+        { "name": "AccountTakendown" },
+        { "name": "AccountSuspended" },
+        { "name": "AccountDeactivated" }
+      ]
     }
   }
 }

@@ -22,7 +22,13 @@
       },
       "output": {
         "encoding": "application/vnd.ipld.car"
-      }
+      },
+      "errors": [
+        { "name": "AccountNotFound" },
+        { "name": "AccountTakendown" },
+        { "name": "AccountSuspended" },
+        { "name": "AccountDeactivated" }
+      ]
     }
   }
 }

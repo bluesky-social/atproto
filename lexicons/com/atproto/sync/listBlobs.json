@@ -40,7 +40,13 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        { "name": "AccountNotFound" },
+        { "name": "AccountTakendown" },
+        { "name": "AccountSuspended" },
+        { "name": "AccountDeactivated" }
+      ]
     }
   }
 }

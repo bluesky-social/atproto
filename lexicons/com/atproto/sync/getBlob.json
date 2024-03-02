@@ -23,7 +23,14 @@
       },
       "output": {
         "encoding": "*/*"
-      }
+      },
+      "errors": [
+        { "name": "BlobNotFound" },
+        { "name": "AccountNotFound" },
+        { "name": "AccountTakendown" },
+        { "name": "AccountSuspended" },
+        { "name": "AccountDeactivated" }
+      ]
     }
   }
 }
