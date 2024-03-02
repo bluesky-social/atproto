@@ -1,8 +1,8 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.moderation.defs",
+  "id": "app.bsky.labeler.defs",
   "defs": {
-    "modServiceView": {
+    "labelerView": {
       "type": "object",
       "required": ["uri", "cid", "creator", "indexedAt"],
       "properties": {
@@ -10,7 +10,7 @@
         "cid": { "type": "string", "format": "cid" },
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "likeCount": { "type": "integer", "minimum": 0 },
-        "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
+        "viewer": { "type": "ref", "ref": "#labelerViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" },
         "labels": {
           "type": "array",
@@ -18,7 +18,7 @@
         }
       }
     },
-    "modServiceViewDetailed": {
+    "labelerViewDetailed": {
       "type": "object",
       "required": ["uri", "cid", "creator", "policies", "indexedAt"],
       "properties": {
@@ -27,10 +27,10 @@
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "policies": {
           "type": "ref",
-          "ref": "app.bsky.moderation.defs#modServicePolicies"
+          "ref": "app.bsky.labeler.defs#labelerPolicies"
         },
         "likeCount": { "type": "integer", "minimum": 0 },
-        "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
+        "viewer": { "type": "ref", "ref": "#labelerViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" },
         "labels": {
           "type": "array",
@@ -38,13 +38,13 @@
         }
       }
     },
-    "modServiceViewerState": {
+    "labelerViewerState": {
       "type": "object",
       "properties": {
         "like": { "type": "string", "format": "at-uri" }
       }
     },
-    "modServicePolicies": {
+    "labelerPolicies": {
       "type": "object",
       "required": ["labelValues"],
       "properties": {

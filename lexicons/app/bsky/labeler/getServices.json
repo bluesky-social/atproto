@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.moderation.getServices",
+  "id": "app.bsky.labeler.getServices",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about a list of moderation services.",
+      "description": "Get information about a list of labeler services.",
       "parameters": {
         "type": "params",
         "required": ["dids"],
@@ -30,8 +30,8 @@
               "items": {
                 "type": "union",
                 "refs": [
-                  "app.bsky.moderation.defs#modServiceView",
-                  "app.bsky.moderation.defs#modServiceViewDetailed"
+                  "app.bsky.labeler.defs#labelerView",
+                  "app.bsky.labeler.defs#labelerViewDetailed"
                 ]
               }
             }

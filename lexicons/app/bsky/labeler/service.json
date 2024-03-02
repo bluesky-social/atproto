@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.moderation.service",
+  "id": "app.bsky.labeler.service",
   "defs": {
     "main": {
       "type": "record",
-      "description": "A declaration of the existence of moderation service.",
+      "description": "A declaration of the existence of labeler service.",
       "key": "literal:self",
       "record": {
         "type": "object",
@@ -12,7 +12,7 @@
         "properties": {
           "policies": {
             "type": "ref",
-            "ref": "app.bsky.moderation.defs#modServicePolicies"
+            "ref": "app.bsky.labeler.defs#labelerPolicies"
           },
           "labels": {
             "type": "union",

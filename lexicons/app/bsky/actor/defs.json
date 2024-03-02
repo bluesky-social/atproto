@@ -84,7 +84,7 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
-        "modservice": { "type": "boolean" }
+        "labeler": { "type": "boolean" }
       }
     },
     "viewerState": {

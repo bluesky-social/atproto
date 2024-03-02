@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyModerationDefs from './defs'
+import * as AppBskyLabelerDefs from './defs'
 
 export interface QueryParams {
   dids: string[]
@@ -17,8 +17,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   views: (
-    | AppBskyModerationDefs.ModServiceView
-    | AppBskyModerationDefs.ModServiceViewDetailed
+    | AppBskyLabelerDefs.LabelerView
+    | AppBskyLabelerDefs.LabelerViewDetailed
     | { $type: string; [k: string]: unknown }
   )[]
   [k: string]: unknown

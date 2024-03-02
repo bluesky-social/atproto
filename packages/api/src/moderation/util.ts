@@ -1,7 +1,7 @@
 import {
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
-  AppBskyModerationDefs,
+  AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
 import {
@@ -95,7 +95,7 @@ export function interpretLabelValueDefinition(
 }
 
 export function interpretLabelValueDefinitions(
-  modserviceView: AppBskyModerationDefs.ModServiceViewDetailed,
+  modserviceView: AppBskyLabelerDefs.LabelerViewDetailed,
 ): InterprettedLabelValueDefinition[] {
   return (modserviceView.policies?.customLabelValues || [])
     .filter(
