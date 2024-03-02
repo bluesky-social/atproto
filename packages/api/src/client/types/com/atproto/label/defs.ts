@@ -80,8 +80,6 @@ export interface LabelValueDefinition {
   severity: 'inform' | 'alert' | 'none' | (string & {})
   /** What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing. */
   blurs: 'content' | 'media' | 'none' | (string & {})
-  /** The default preference for the client to use on this label, if the user hasn't chosen a preference. */
-  defaultSetting?: 'hide' | 'warn' | 'ignore' | (string & {})
   locales: LabelValueDefinitionStrings[]
   [k: string]: unknown
 }

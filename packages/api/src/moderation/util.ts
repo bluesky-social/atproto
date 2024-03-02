@@ -4,11 +4,7 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
-import {
-  InterprettedLabelValueDefinition,
-  LabelPreference,
-  ModerationBehavior,
-} from './types'
+import { InterprettedLabelValueDefinition, ModerationBehavior } from './types'
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {
   return Boolean(embed && AppBskyEmbedRecord.isView(embed))
@@ -23,13 +19,6 @@ export function isQuotedPostWithMedia(
 export function interpretLabelValueDefinition(
   def: ComAtprotoLabelDefs.LabelValueDefinition,
 ): InterprettedLabelValueDefinition {
-  let defaultSetting: LabelPreference = 'warn'
-  if (def.defaultSetting === 'hide') {
-    defaultSetting = 'hide'
-  } else if (def.defaultSetting === 'ignore') {
-    defaultSetting = 'ignore'
-  }
-
   const behaviors: {
     account: ModerationBehavior
     profile: ModerationBehavior
@@ -88,7 +77,7 @@ export function interpretLabelValueDefinition(
   return {
     ...def,
     configurable: true,
-    defaultSetting,
+    defaultSetting: 'warn',
     flags: ['no-self'],
     behaviors,
   }

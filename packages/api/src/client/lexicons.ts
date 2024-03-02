@@ -2282,12 +2282,6 @@ export const schemaDict = {
               "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
             knownValues: ['content', 'media', 'none'],
           },
-          defaultSetting: {
-            type: 'string',
-            description:
-              "The default preference for the client to use on this label, if the user hasn't chosen a preference.",
-            knownValues: ['hide', 'warn', 'ignore'],
-          },
           locales: {
             type: 'array',
             items: {
