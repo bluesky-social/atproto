@@ -1,0 +1,46 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.refreshIdentity",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Request that the server re-resolve an identity (DID and handle). The server may ignore this request, or require authentication, depending on the role, implementation, and policy of the server.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["identifier"],
+          "properties": {
+            "hostname": {
+              "type": "string",
+              "format": "at-identifier"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "handle": {
+              "type": "string",
+              "format": "handle",
+              "description": "The validated handle of the account; or 'handle.invalid' if the handle did not resolve successfully."
+            },
+            "tombstoned": {
+              "type": "boolean",
+              "description": "If true, the DID has been deleted, and the other optional fields should be null."
+            },
+            "didDoc": {
+              "type": "unknown",
+              "description": "The complete DID document for the identity."
+            }
+          }
+        }
+      }
+    }
+  }
+}
