@@ -1,5 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BskyAgent, BSKY_MODSERVICE_DID, DEFAULT_LABEL_SETTINGS } from '..'
+import './util/moderation-behavior'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView

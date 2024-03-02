@@ -1,10 +1,63 @@
-import { ModerationUI, ModerationOpts, ComAtprotoLabelDefs } from '../../src'
-import type {
-  ModerationTestSuite,
-  ModerationTestSuiteScenario,
-  ModerationTestSuiteResultFlag,
-} from '../../definitions/moderation-behaviors'
+import {
+  ModerationUI,
+  ModerationOpts,
+  ComAtprotoLabelDefs,
+  LabelPreference,
+} from '../../src'
 import { mock as m } from '../../src/mocker'
+
+export type ModerationTestSuiteResultFlag =
+  | 'filter'
+  | 'blur'
+  | 'alert'
+  | 'inform'
+  | 'noOverride'
+
+export interface ModerationTestSuiteScenario {
+  cfg: string
+  subject: 'post' | 'profile' | 'userlist' | 'feedgen'
+  author: string
+  quoteAuthor?: string
+  labels: {
+    post?: string[]
+    profile?: string[]
+    account?: string[]
+    quotedPost?: string[]
+    quotedAccount?: string[]
+  }
+  behaviors: {
+    profileList?: ModerationTestSuiteResultFlag[]
+    profileView?: ModerationTestSuiteResultFlag[]
+    avatar?: ModerationTestSuiteResultFlag[]
+    banner?: ModerationTestSuiteResultFlag[]
+    displayName?: ModerationTestSuiteResultFlag[]
+    contentList?: ModerationTestSuiteResultFlag[]
+    contentView?: ModerationTestSuiteResultFlag[]
+    contentMedia?: ModerationTestSuiteResultFlag[]
+  }
+}
+
+export type SuiteUsers = Record<
+  string,
+  {
+    blocking: boolean
+    blockingByList: boolean
+    blockedBy: boolean
+    muted: boolean
+    mutedByList: boolean
+  }
+>
+
+export type SuiteConfigurations = Record<
+  string,
+  {
+    authed?: boolean
+    adultContentEnabled?: boolean
+    settings?: Record<string, LabelPreference>
+  }
+>
+
+export type SuiteScenarios = Record<string, ModerationTestSuiteScenario>
 
 expect.extend({
   toBeModerationResult(
@@ -102,7 +155,11 @@ expect.extend({
 })
 
 export class ModerationBehaviorSuiteRunner {
-  constructor(public suite: ModerationTestSuite) {}
+  constructor(
+    public users: SuiteUsers,
+    public configurations: SuiteConfigurations,
+    public scenarios: SuiteScenarios,
+  ) {}
 
   postScenario(scenario: ModerationTestSuiteScenario) {
     if (scenario.subject !== 'post') {
@@ -147,7 +204,7 @@ export class ModerationBehaviorSuiteRunner {
     name: string,
     scenarioLabels: ModerationTestSuiteScenario['labels'],
   ) {
-    const def = this.suite.users[name]
+    const def = this.users[name]
 
     const labels: ComAtprotoLabelDefs.Label[] = []
     if (scenarioLabels.account) {
@@ -189,19 +246,21 @@ export class ModerationBehaviorSuiteRunner {
   moderationOpts(scenario: ModerationTestSuiteScenario): ModerationOpts {
     return {
       userDid:
-        this.suite.configurations[scenario.cfg].authed === false
+        this.configurations[scenario.cfg].authed === false
           ? ''
           : 'did:web:self.test',
-      adultContentEnabled: Boolean(
-        this.suite.configurations[scenario.cfg].adultContentEnabled,
-      ),
-      labelGroups: this.suite.configurations[scenario.cfg].settings,
-      mods: [
-        {
-          did: 'did:plc:fake-labeler',
-          enabled: true,
-        },
-      ],
+      prefs: {
+        adultContentEnabled: Boolean(
+          this.configurations[scenario.cfg]?.adultContentEnabled,
+        ),
+        labels: this.configurations[scenario.cfg].settings || {},
+        mods: [
+          {
+            did: 'did:plc:fake-labeler',
+            labels: {},
+          },
+        ],
+      },
     }
   }
 }
