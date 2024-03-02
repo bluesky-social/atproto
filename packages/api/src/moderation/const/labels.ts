@@ -126,6 +126,16 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
       severity: 'none',
       blurs: 'content',
       behaviors: {
+        account: {
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+        },
+        profile: {
+          profileList: 'blur',
+          profileView: 'blur',
+        },
         content: {
           contentList: 'blur',
           contentView: 'blur',
@@ -147,6 +157,10 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
           contentList: 'blur',
           contentView: 'blur',
         },
+        profile: {
+          profileList: 'blur',
+          profileView: 'blur',
+        },
         content: {
           contentList: 'blur',
           contentView: 'blur',
@@ -162,6 +176,10 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
       severity: 'none',
       blurs: 'media',
       behaviors: {
+        account: {
+          avatar: 'blur',
+          banner: 'blur',
+        },
         profile: {
           avatar: 'blur',
           banner: 'blur',
@@ -180,6 +198,10 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
       severity: 'none',
       blurs: 'media',
       behaviors: {
+        account: {
+          avatar: 'blur',
+          banner: 'blur',
+        },
         profile: {
           avatar: 'blur',
           banner: 'blur',
@@ -198,6 +220,10 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
       severity: 'none',
       blurs: 'media',
       behaviors: {
+        account: {
+          avatar: 'blur',
+          banner: 'blur',
+        },
         profile: {
           avatar: 'blur',
           banner: 'blur',
@@ -216,6 +242,10 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
       severity: 'none',
       blurs: 'media',
       behaviors: {
+        account: {
+          avatar: 'blur',
+          banner: 'blur',
+        },
         profile: {
           avatar: 'blur',
           banner: 'blur',

@@ -392,6 +392,8 @@ const SCENARIOS: SuiteScenarios = {
     labels: { account: ['porn'] },
     behaviors: {
       profileList: ['filter'],
+      avatar: ['blur'],
+      banner: ['blur'],
       contentList: ['filter'],
     },
   },
@@ -435,6 +437,8 @@ const SCENARIOS: SuiteScenarios = {
     labels: { account: ['porn'] },
     behaviors: {
       profileList: ['filter'],
+      avatar: ['blur'],
+      banner: ['blur'],
       contentList: ['filter'],
     },
   },
@@ -444,7 +448,10 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'profile',
     author: 'alice',
     labels: { account: ['porn'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+    },
   },
   "Blur-media label ('porn') on profile (warn)": {
     cfg: 'porn-warn',
@@ -480,7 +487,10 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'post',
     author: 'alice',
     labels: { account: ['porn'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+    },
   },
 
   "Blur-media label ('porn') on account (ignore)": {
@@ -519,17 +529,18 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {},
   },
 
-  'Adult-only label on account when adult content is disabled (no effect -- porn doesnt apply to accounts)':
-    {
-      cfg: 'adult-disabled',
-      subject: 'profile',
-      author: 'alice',
-      labels: { account: ['porn'] },
-      behaviors: {
-        profileList: ['filter'],
-        contentList: ['filter'],
-      },
+  'Adult-only label on account when adult content is disabled': {
+    cfg: 'adult-disabled',
+    subject: 'profile',
+    author: 'alice',
+    labels: { account: ['porn'] },
+    behaviors: {
+      profileList: ['filter'],
+      avatar: ['blur', 'noOverride'],
+      banner: ['blur', 'noOverride'],
+      contentList: ['filter'],
     },
+  },
   'Adult-only label on profile when adult content is disabled': {
     cfg: 'adult-disabled',
     subject: 'profile',
@@ -563,16 +574,17 @@ const SCENARIOS: SuiteScenarios = {
       contentList: ['filter'],
     },
   },
-  'Adult-only label on author account when adult content is disabled (no effect -- porn doesnt apply to accounts)':
-    {
-      cfg: 'adult-disabled',
-      subject: 'post',
-      author: 'alice',
-      labels: { account: ['porn'] },
-      behaviors: {
-        contentList: ['filter'],
-      },
+  'Adult-only label on author account when adult content is disabled': {
+    cfg: 'adult-disabled',
+    subject: 'post',
+    author: 'alice',
+    labels: { account: ['porn'] },
+    behaviors: {
+      avatar: ['blur', 'noOverride'],
+      banner: ['blur', 'noOverride'],
+      contentList: ['filter'],
     },
+  },
 
   'Self-profile: !hide on account': {
     cfg: 'none',
