@@ -11,6 +11,7 @@ import {
   InterprettedLabelValueDefinition,
   LabelTarget,
   ModerationBehavior,
+  CUSTOM_LABEL_VALUE_RE,
 } from './types'
 import { ModerationUI } from './ui'
 import { LABELS } from './const/labels'
@@ -199,8 +200,10 @@ export class ModerationDecision {
 
   addLabel(target: LabelTarget, label: Label, opts: ModerationOpts) {
     // look up the label definition
-    const labelDef = label.val.startsWith('x-')
-      ? opts.labelDefs?.[label.src]?.find((def) => def.identifier === label.val)
+    const labelDef = CUSTOM_LABEL_VALUE_RE.test(label.val)
+      ? opts.labelDefs?.[label.src]?.find(
+          (def) => def.identifier === label.val,
+        ) || LABELS[label.val]
       : LABELS[label.val]
     if (!labelDef) {
       // ignore labels we don't understand

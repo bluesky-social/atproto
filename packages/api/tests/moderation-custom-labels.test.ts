@@ -262,7 +262,7 @@ describe('Moderation: custom labels', () => {
             }),
             labels: [
               mock.label({
-                val: 'x-custom',
+                val: 'custom',
                 uri: 'at://did:web:bob.test/app.bsky.feed.post/fake',
                 src: 'did:web:labeler.test',
               }),
@@ -277,7 +277,7 @@ describe('Moderation: custom labels', () => {
             displayName: 'Bob',
             labels: [
               mock.label({
-                val: 'x-custom',
+                val: 'custom',
                 uri: 'at://did:web:bob.test/app.bsky.actor.profile/self',
                 src: 'did:web:labeler.test',
               }),
@@ -292,7 +292,7 @@ describe('Moderation: custom labels', () => {
             displayName: 'Bob',
             labels: [
               mock.label({
-                val: 'x-custom',
+                val: 'custom',
                 uri: 'did:web:bob.test',
                 src: 'did:web:labeler.test',
               }),
@@ -334,7 +334,7 @@ function modOpts(blurs: string, severity: string): ModerationOpts {
       mods: [
         {
           did: 'did:web:labeler.test',
-          labels: { 'x-custom': 'hide' },
+          labels: { custom: 'hide' },
         },
       ],
     },
@@ -349,7 +349,7 @@ function makeCustomLabel(
   severity: string,
 ): InterprettedLabelValueDefinition {
   return interpretLabelValueDefinition({
-    identifier: 'x-custom',
+    identifier: 'custom',
     blurs,
     severity,
     defaultSetting: 'warn',

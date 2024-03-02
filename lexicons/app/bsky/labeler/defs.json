@@ -50,15 +50,15 @@
       "properties": {
         "labelValues": {
           "type": "array",
-          "description": "The label values which this labeler publishes. Be sure to prefix custom labels with 'x-'.",
+          "description": "The label values which this labeler publishes. May include global or custom labels.",
           "items": {
             "type": "ref",
             "ref": "com.atproto.label.defs#labelValue"
           }
         },
-        "customLabelValues": {
+        "labelValueDefinitions": {
           "type": "array",
-          "description": "Label values created by this labeler and scoped exclusively to it.",
+          "description": "Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler.",
           "items": {
             "type": "ref",
             "ref": "com.atproto.label.defs#labelValueDefinition"

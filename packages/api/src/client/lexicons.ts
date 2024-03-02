@@ -2266,7 +2266,9 @@ export const schemaDict = {
           identifier: {
             type: 'string',
             description:
-              "The value of the label being defined. When a definition is created by a labeling service, an 'x-' prefix will automatically be applied whether that prefix is included in this value or not. That prefix indicates that it is a custom label created by the labeling service.",
+              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
+            maxLength: 100,
+            maxGraphemes: 100,
           },
           severity: {
             type: 'string',
@@ -8555,16 +8557,16 @@ export const schemaDict = {
           labelValues: {
             type: 'array',
             description:
-              "The label values which this labeler publishes. Be sure to prefix custom labels with 'x-'.",
+              'The label values which this labeler publishes. May include global or custom labels.',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#labelValue',
             },
           },
-          customLabelValues: {
+          labelValueDefinitions: {
             type: 'array',
             description:
-              'Label values created by this labeler and scoped exclusively to it.',
+              'Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler.',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#labelValueDefinition',

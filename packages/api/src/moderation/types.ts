@@ -7,6 +7,11 @@ import {
 } from '../client/index'
 import { KnownLabelValue } from './const/labels'
 
+// syntax
+// =
+
+export const CUSTOM_LABEL_VALUE_RE = /^[a-z-]+$/
+
 // behaviors
 // =
 

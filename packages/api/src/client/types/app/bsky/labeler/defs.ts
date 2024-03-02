@@ -73,10 +73,10 @@ export function validateLabelerViewerState(v: unknown): ValidationResult {
 }
 
 export interface LabelerPolicies {
-  /** The label values which this labeler publishes. Be sure to prefix custom labels with 'x-'. */
+  /** The label values which this labeler publishes. May include global or custom labels. */
   labelValues: ComAtprotoLabelDefs.LabelValue[]
-  /** Label values created by this labeler and scoped exclusively to it. */
-  customLabelValues?: ComAtprotoLabelDefs.LabelValueDefinition[]
+  /** Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler. */
+  labelValueDefinitions?: ComAtprotoLabelDefs.LabelValueDefinition[]
   [k: string]: unknown
 }
 

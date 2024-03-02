@@ -97,7 +97,7 @@ export function interpretLabelValueDefinition(
 export function interpretLabelValueDefinitions(
   modserviceView: AppBskyLabelerDefs.LabelerViewDetailed,
 ): InterprettedLabelValueDefinition[] {
-  return (modserviceView.policies?.customLabelValues || [])
+  return (modserviceView.policies?.labelValueDefinitions || [])
     .filter(
       (labelValDef) =>
         ComAtprotoLabelDefs.isLabelValueDefinition(labelValDef) &&

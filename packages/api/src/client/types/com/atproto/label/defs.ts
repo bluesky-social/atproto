@@ -74,7 +74,7 @@ export function validateSelfLabel(v: unknown): ValidationResult {
 
 /** Declares a label value and its expected interpertations and behaviors. */
 export interface LabelValueDefinition {
-  /** The value of the label being defined. When a definition is created by a labeling service, an 'x-' prefix will automatically be applied whether that prefix is included in this value or not. That prefix indicates that it is a custom label created by the labeling service. */
+  /** The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+). */
   identifier: string
   /** How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing. */
   severity: 'inform' | 'alert' | 'none' | (string & {})
