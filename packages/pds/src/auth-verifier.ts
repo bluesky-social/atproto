@@ -260,7 +260,7 @@ export class AuthVerifier {
     }
     const payload = await this.verifyServiceJwt(reqCtx, {
       aud: this.dids.entryway ?? this.dids.pds,
-      iss: [this.dids.modService, `${this.dids.modService}#atproto_mod`],
+      iss: [this.dids.modService, `${this.dids.modService}#atproto_labeler`],
     })
     return {
       credentials: {
@@ -344,7 +344,9 @@ export class AuthVerifier {
       if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      const [did, keyId = 'atproto'] = iss.split('#')
+      const [did, serviceId] = iss.split('#')
+      const keyId =
+        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
       const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
       if (!didDoc) {
         throw new AuthRequiredError('could not resolve iss did')
