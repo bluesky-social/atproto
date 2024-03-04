@@ -7,7 +7,7 @@
       "description": "Get the repository hosting status for an account, on this server. Expected to be implemented by PDS and Relay.",
       "parameters": {
         "type": "params",
-        "required": ["identifier"],
+        "required": ["did"],
         "properties": {
           "did": {
             "type": "string",
