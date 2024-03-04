@@ -86,7 +86,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 export interface ProfileAssociated {
   lists?: number
   feedgens?: number
-  modservice?: boolean
+  labeler?: boolean
   [k: string]: unknown
 }
 
@@ -157,6 +157,8 @@ export function validateAdultContentPref(v: unknown): ValidationResult {
 }
 
 export interface ContentLabelPref {
+  /** Which labeler does this preference apply to? If undefined, applies globally. */
+  labelerDid?: string
   label: string
   visibility: 'ignore' | 'show' | 'warn' | 'hide' | (string & {})
   [k: string]: unknown
@@ -355,8 +357,6 @@ export function validateModsPref(v: unknown): ValidationResult {
 
 export interface ModPrefItem {
   did: string
-  enabled: boolean
-  disabledLabelGroups?: string[]
   [k: string]: unknown
 }
 

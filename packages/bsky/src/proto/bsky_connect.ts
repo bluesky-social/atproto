@@ -74,6 +74,8 @@ import {
   GetIdentityByHandleResponse,
   GetInteractionCountsRequest,
   GetInteractionCountsResponse,
+  GetLabelerRecordsRequest,
+  GetLabelerRecordsResponse,
   GetLabelsRequest,
   GetLabelsResponse,
   GetLatestRevRequest,
@@ -98,8 +100,6 @@ import {
   GetListMembersResponse,
   GetListRecordsRequest,
   GetListRecordsResponse,
-  GetModServiceRecordsRequest,
-  GetModServiceRecordsResponse,
   GetMutelistSubscriptionRequest,
   GetMutelistSubscriptionResponse,
   GetMutelistSubscriptionsRequest,
@@ -275,12 +275,12 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetModServiceRecords
+     * @generated from rpc bsky.Service.GetLabelerRecords
      */
-    getModServiceRecords: {
-      name: 'GetModServiceRecords',
-      I: GetModServiceRecordsRequest,
-      O: GetModServiceRecordsResponse,
+    getLabelerRecords: {
+      name: 'GetLabelerRecords',
+      I: GetLabelerRecordsRequest,
+      O: GetLabelerRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**

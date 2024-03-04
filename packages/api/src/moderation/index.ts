@@ -17,6 +17,10 @@ import { ModerationDecision } from './decision'
 
 export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'
+export {
+  interpretLabelValueDefinition,
+  interpretLabelValueDefinitions,
+} from './util'
 
 export function moderateProfile(
   subject: ModerationSubjectProfile,

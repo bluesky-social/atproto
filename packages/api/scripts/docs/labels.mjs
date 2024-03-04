@@ -59,9 +59,7 @@ The kind of UI behavior used when a warning must be applied.
   <table>
     <tr>
       <th>ID</th>
-      <th>Group</th>
       <th>Configurable</th>
-      <th>Targets</th>
       <th>Flags</th>
       <th>On Warn</th>
     </tr>
@@ -71,21 +69,17 @@ The kind of UI behavior used when a warning must be applied.
 
 function labelsRef() {
   const lines = []
-  for (const group of labelsDef) {
-    for (const label of group.labels) {
-      lines.push(stripIndent`
+  for (const label of labelsDef) {
+    lines.push(stripIndent`
         <tr>
-          <td>${label.id}</td>
-          <td>${group.id}</td>
+          <td>${label.identifier}</td>
           <td>${
-            group.configurable ? '✅' : `❌ (${label.fixedPreference})`
+            label.configurable ? '✅' : `❌ (${label.fixedPreference})`
           }</td>
-          <td>${label.targets.join(', ')}</td>
           <td>${label.flags.join(', ')}</td>
           <td>${label.onwarn}</td>
         </tr>
       `)
-    }
   }
   return lines.join('\n')
 }

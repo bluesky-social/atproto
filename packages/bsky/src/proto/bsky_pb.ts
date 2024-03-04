@@ -1475,21 +1475,21 @@ export class GetThreadGateRecordsResponse extends Message<GetThreadGateRecordsRe
 }
 
 /**
- * @generated from message bsky.GetModServiceRecordsRequest
+ * @generated from message bsky.GetLabelerRecordsRequest
  */
-export class GetModServiceRecordsRequest extends Message<GetModServiceRecordsRequest> {
+export class GetLabelerRecordsRequest extends Message<GetLabelerRecordsRequest> {
   /**
    * @generated from field: repeated string uris = 1;
    */
   uris: string[] = []
 
-  constructor(data?: PartialMessage<GetModServiceRecordsRequest>) {
+  constructor(data?: PartialMessage<GetLabelerRecordsRequest>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.GetModServiceRecordsRequest'
+  static readonly typeName = 'bsky.GetLabelerRecordsRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
@@ -1503,54 +1503,54 @@ export class GetModServiceRecordsRequest extends Message<GetModServiceRecordsReq
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): GetModServiceRecordsRequest {
-    return new GetModServiceRecordsRequest().fromBinary(bytes, options)
+  ): GetLabelerRecordsRequest {
+    return new GetLabelerRecordsRequest().fromBinary(bytes, options)
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): GetModServiceRecordsRequest {
-    return new GetModServiceRecordsRequest().fromJson(jsonValue, options)
+  ): GetLabelerRecordsRequest {
+    return new GetLabelerRecordsRequest().fromJson(jsonValue, options)
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): GetModServiceRecordsRequest {
-    return new GetModServiceRecordsRequest().fromJsonString(jsonString, options)
+  ): GetLabelerRecordsRequest {
+    return new GetLabelerRecordsRequest().fromJsonString(jsonString, options)
   }
 
   static equals(
     a:
-      | GetModServiceRecordsRequest
-      | PlainMessage<GetModServiceRecordsRequest>
+      | GetLabelerRecordsRequest
+      | PlainMessage<GetLabelerRecordsRequest>
       | undefined,
     b:
-      | GetModServiceRecordsRequest
-      | PlainMessage<GetModServiceRecordsRequest>
+      | GetLabelerRecordsRequest
+      | PlainMessage<GetLabelerRecordsRequest>
       | undefined,
   ): boolean {
-    return proto3.util.equals(GetModServiceRecordsRequest, a, b)
+    return proto3.util.equals(GetLabelerRecordsRequest, a, b)
   }
 }
 
 /**
- * @generated from message bsky.GetModServiceRecordsResponse
+ * @generated from message bsky.GetLabelerRecordsResponse
  */
-export class GetModServiceRecordsResponse extends Message<GetModServiceRecordsResponse> {
+export class GetLabelerRecordsResponse extends Message<GetLabelerRecordsResponse> {
   /**
    * @generated from field: repeated bsky.Record records = 1;
    */
   records: Record[] = []
 
-  constructor(data?: PartialMessage<GetModServiceRecordsResponse>) {
+  constructor(data?: PartialMessage<GetLabelerRecordsResponse>) {
     super()
     proto3.util.initPartial(data, this)
   }
 
   static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'bsky.GetModServiceRecordsResponse'
+  static readonly typeName = 'bsky.GetLabelerRecordsResponse'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
   ])
@@ -1558,38 +1558,35 @@ export class GetModServiceRecordsResponse extends Message<GetModServiceRecordsRe
   static fromBinary(
     bytes: Uint8Array,
     options?: Partial<BinaryReadOptions>,
-  ): GetModServiceRecordsResponse {
-    return new GetModServiceRecordsResponse().fromBinary(bytes, options)
+  ): GetLabelerRecordsResponse {
+    return new GetLabelerRecordsResponse().fromBinary(bytes, options)
   }
 
   static fromJson(
     jsonValue: JsonValue,
     options?: Partial<JsonReadOptions>,
-  ): GetModServiceRecordsResponse {
-    return new GetModServiceRecordsResponse().fromJson(jsonValue, options)
+  ): GetLabelerRecordsResponse {
+    return new GetLabelerRecordsResponse().fromJson(jsonValue, options)
   }
 
   static fromJsonString(
     jsonString: string,
     options?: Partial<JsonReadOptions>,
-  ): GetModServiceRecordsResponse {
-    return new GetModServiceRecordsResponse().fromJsonString(
-      jsonString,
-      options,
-    )
+  ): GetLabelerRecordsResponse {
+    return new GetLabelerRecordsResponse().fromJsonString(jsonString, options)
   }
 
   static equals(
     a:
-      | GetModServiceRecordsResponse
-      | PlainMessage<GetModServiceRecordsResponse>
+      | GetLabelerRecordsResponse
+      | PlainMessage<GetLabelerRecordsResponse>
       | undefined,
     b:
-      | GetModServiceRecordsResponse
-      | PlainMessage<GetModServiceRecordsResponse>
+      | GetLabelerRecordsResponse
+      | PlainMessage<GetLabelerRecordsResponse>
       | undefined,
   ): boolean {
-    return proto3.util.equals(GetModServiceRecordsResponse, a, b)
+    return proto3.util.equals(GetLabelerRecordsResponse, a, b)
   }
 }
 

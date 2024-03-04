@@ -1,5 +1,5 @@
 import { AppBskyActorDefs } from './client'
-import { ModerationOpts } from './moderation/types'
+import { ModerationPrefs } from './moderation/types'
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
@@ -110,7 +110,7 @@ export interface BskyPreferences {
   }
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
-  moderationOpts: ModerationOpts
+  moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
   mutedWords: AppBskyActorDefs.MutedWord[]

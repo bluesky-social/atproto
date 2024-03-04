@@ -5,8 +5,12 @@ import {
   AppBskyGraphDefs,
   ComAtprotoLabelDefs,
 } from '../client/index'
-import { LabelGroupId } from './const/label-groups'
 import { KnownLabelValue } from './const/labels'
+
+// syntax
+// =
+
+export const CUSTOM_LABEL_VALUE_RE = /^[a-z-]+$/
 
 // behaviors
 // =
@@ -45,32 +49,21 @@ export const NOOP_BEHAVIOR: ModerationBehavior = {}
 // =
 
 export type Label = ComAtprotoLabelDefs.Label
-
+export type LabelTarget = 'account' | 'profile' | 'content'
 export type LabelPreference = 'ignore' | 'warn' | 'hide'
-export type LabelDefinitionFlag =
+
+export type LabelValueDefinitionFlag =
   | 'no-override'
   | 'adult'
   | 'unauthed'
   | 'no-self'
-export type LabelTarget = 'account' | 'profile' | 'content'
 
-export interface LabelDefinitionLocalizedStrings {
-  name: string
-  description: string
-}
-
-export type LabelDefinitionLocalizedStringsMap = Record<
-  string,
-  LabelDefinitionLocalizedStrings
->
-
-export interface LabelDefinition {
-  id: KnownLabelValue
-  groupId: string
+export interface InterprettedLabelValueDefinition
+  extends ComAtprotoLabelDefs.LabelValueDefinition {
+  // identifier: string
   configurable: boolean
-  targets: LabelTarget[]
-  fixedPreference?: LabelPreference
-  flags: LabelDefinitionFlag[]
+  defaultSetting: LabelPreference // type narrowing
+  flags: LabelValueDefinitionFlag[]
   behaviors: {
     account?: ModerationBehavior
     profile?: ModerationBehavior
@@ -78,14 +71,10 @@ export interface LabelDefinition {
   }
 }
 
-export interface LabelGroupDefinition {
-  id: LabelGroupId
-  configurable: boolean
-  labels: LabelDefinition[]
-}
-
-export type LabelDefinitionMap = Record<KnownLabelValue, LabelDefinition>
-export type LabelGroupDefinitionMap = Record<LabelGroupId, LabelGroupDefinition>
+export type LabelDefinitionMap = Record<
+  KnownLabelValue,
+  InterprettedLabelValueDefinition
+>
 
 // subjects
 // =
@@ -129,7 +118,7 @@ export type ModerationCause =
       type: 'label'
       source: ModerationCauseSource
       label: Label
-      labelDef: LabelDefinition
+      labelDef: InterprettedLabelValueDefinition
       setting: LabelPreference
       behavior: ModerationBehavior
       noOverride: boolean
@@ -138,9 +127,22 @@ export type ModerationCause =
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
   | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
 
-export interface ModerationOpts {
-  userDid: string
+export interface ModerationPrefsModerator {
+  did: string
+  labels: Record<string, LabelPreference>
+}
+
+export interface ModerationPrefs {
   adultContentEnabled: boolean
-  labelGroups: Record<string, LabelPreference>
-  mods: AppBskyActorDefs.ModsPref['mods']
+  labels: Record<string, LabelPreference>
+  mods: ModerationPrefsModerator[]
+}
+
+export interface ModerationOpts {
+  userDid: string | undefined
+  prefs: ModerationPrefs
+  /**
+   * Map of labeler did -> custom definitions
+   */
+  labelDefs?: Record<string, InterprettedLabelValueDefinition[]>
 }

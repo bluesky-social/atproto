@@ -8,9 +8,10 @@ import {
   LabelPreference,
   ModerationCause,
   ModerationOpts,
-  LabelDefinition,
+  InterprettedLabelValueDefinition,
   LabelTarget,
   ModerationBehavior,
+  CUSTOM_LABEL_VALUE_RE,
 } from './types'
 import { ModerationUI } from './ui'
 import { LABELS } from './const/labels'
@@ -199,14 +200,13 @@ export class ModerationDecision {
 
   addLabel(target: LabelTarget, label: Label, opts: ModerationOpts) {
     // look up the label definition
-    const labelDef = LABELS[label.val] as LabelDefinition
+    const labelDef = CUSTOM_LABEL_VALUE_RE.test(label.val)
+      ? opts.labelDefs?.[label.src]?.find(
+          (def) => def.identifier === label.val,
+        ) || LABELS[label.val]
+      : LABELS[label.val]
     if (!labelDef) {
       // ignore labels we don't understand
-      return
-    }
-
-    if (!labelDef.targets.includes(target)) {
-      // ignore labels that don't apply to this context
       return
     }
 
@@ -214,26 +214,28 @@ export class ModerationDecision {
     const isSelf = label.src === this.did
     const labeler = isSelf
       ? undefined
-      : opts.mods.find((s) => s.did === label.src)
+      : opts.prefs.mods.find((s) => s.did === label.src)
 
-    if (!isSelf && (!labeler || !labeler.enabled)) {
+    if (!isSelf && !labeler) {
       return // skip labelers not configured by the user
     }
     if (isSelf && labelDef.flags.includes('no-self')) {
       return // skip self-labels that arent supported
     }
-    if (labeler && labeler.disabledLabelGroups?.includes(labelDef.groupId)) {
-      return // skip disabled label groups on the labeler
-    }
 
     // establish the label preference for interpretation
     let labelPref: LabelPreference = 'ignore'
     if (!labelDef.configurable) {
-      labelPref = labelDef.fixedPreference || 'hide'
-    } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
+      labelPref = labelDef.defaultSetting || 'hide'
+    } else if (
+      labelDef.flags.includes('adult') &&
+      !opts.prefs.adultContentEnabled
+    ) {
       labelPref = 'hide'
-    } else if (opts.labelGroups[labelDef.groupId]) {
-      labelPref = opts.labelGroups[labelDef.groupId]
+    } else if (labeler?.labels[labelDef.identifier]) {
+      labelPref = labeler?.labels[labelDef.identifier]
+    } else if (opts.prefs.labels[labelDef.identifier]) {
+      labelPref = opts.prefs.labels[labelDef.identifier]
     }
 
     // ignore labels the user has asked to ignore
@@ -253,7 +255,7 @@ export class ModerationDecision {
     )
     if (
       labelDef.flags.includes('no-override') ||
-      (labelDef.flags.includes('adult') && !opts.adultContentEnabled)
+      (labelDef.flags.includes('adult') && !opts.prefs.adultContentEnabled)
     ) {
       priority = 1
     } else if (labelPref === 'hide') {
@@ -272,7 +274,10 @@ export class ModerationDecision {
     let noOverride = false
     if (labelDef.flags.includes('no-override')) {
       noOverride = true
-    } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
+    } else if (
+      labelDef.flags.includes('adult') &&
+      !opts.prefs.adultContentEnabled
+    ) {
       noOverride = true
     }
 
