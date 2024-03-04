@@ -26,32 +26,57 @@ export const loggerMiddleware = pinoHttp({
     },
     req: (req) => {
       const serialized = pino.stdSerializers.req(req)
-      const authHeader = serialized.headers.authorization || ''
-      let auth: string | undefined = undefined
-      if (authHeader.startsWith('Bearer ')) {
-        const token = authHeader.slice('Bearer '.length)
-        const { iss } = jose.decodeJwt(token)
-        if (iss) {
-          auth = 'Bearer ' + iss
-        } else {
-          auth = 'Bearer Invalid'
-        }
-      }
-      if (authHeader.startsWith('Basic ')) {
-        const parsed = parseBasicAuth(authHeader)
-        if (!parsed) {
-          auth = 'Basic Invalid'
-        } else {
-          auth = 'Basic ' + parsed.username
-        }
-      }
+      const authHeader = serialized.headers.authorization
+
+      if (authHeader == null) return serialized
+
       return {
         ...serialized,
         headers: {
           ...serialized.headers,
-          authorization: auth,
+          authorization: obfuscateAuthHeader(authHeader),
         },
       }
     },
   },
 })
+
+function obfuscateAuthHeader(authHeader: string): string {
+  const [type, token] = authHeader.split(' ', 2)
+  switch (type) {
+    case 'Basic':
+      return `${type} ${obfuscateBasic(authHeader!)}`
+    case 'Bearer':
+    case 'DPoP':
+      return `${type} ${obfuscateBearer(token)}`
+    default:
+      return `Invalid`
+  }
+}
+
+function obfuscateBasic(authHeader: string): string {
+  const parsed = parseBasicAuth(authHeader)
+  if (parsed) return parsed.username
+  return 'Invalid'
+}
+
+function obfuscateBearer(token?: string): string {
+  if (token) {
+    if (token.includes('.')) {
+      try {
+        const { sub } = jose.decodeJwt(token)
+        if (sub) return sub
+      } catch {
+        // Not a JWT
+      }
+    }
+
+    if (token.length > 10) {
+      // Log no more than half the token, up to 10 characters. tokens should be
+      // long enough to be secure even when half of them are exposed.
+      return `${token.slice(0, Math.min(10, token.length / 2))}...`
+    }
+  }
+
+  return 'Invalid'
+}
