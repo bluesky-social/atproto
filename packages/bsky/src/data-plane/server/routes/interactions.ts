@@ -3,7 +3,6 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll } from '../db/util'
-import { sql } from 'kysely'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {
@@ -43,11 +42,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .whereRef('creator', '=', ref('profile_agg.did'))
           .select(countAll.as('val'))
           .as('listsCount'),
-        db.db
-          .selectFrom('mod_service')
-          .whereRef('creator', '=', ref('profile_agg.did'))
-          .select(sql<true>`${true}`.as('val'))
-          .as('isModService'),
       ])
       .execute()
     const byDid = keyBy(res, 'did')
@@ -57,7 +51,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       posts: req.dids.map((uri) => byDid[uri]?.postsCount ?? 0),
       lists: req.dids.map((uri) => byDid[uri]?.listsCount ?? 0),
       feeds: req.dids.map((uri) => byDid[uri]?.feedGensCount ?? 0),
-      isModService: req.dids.map((uri) => byDid[uri]?.isModService ?? false),
     }
   },
 })

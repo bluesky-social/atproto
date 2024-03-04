@@ -240,7 +240,6 @@ message GetCountsForUsersResponse {
   repeated int32 followers = 4;
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
-  repeated bool is_mod_service = 7;
 }
 
 //
@@ -307,6 +306,7 @@ message ActorInfo {
   bool taken_down = 4;
   string takedown_ref = 5;
   google.protobuf.Timestamp tombstoned_at = 6;
+  bool is_labeler = 7;
 }
 
 message GetActorsResponse {

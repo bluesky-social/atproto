@@ -15,6 +15,7 @@ export type Actor = {
   profileTakedownRef?: string
   sortedAt?: Date
   takedownRef?: string
+  isLabeler: boolean
 }
 
 export type Actors = HydrationMap<Actor>
@@ -38,7 +39,6 @@ export type ProfileAgg = {
   posts: number
   lists: number
   feeds: number
-  isModService: boolean
 }
 
 export type ProfileAggs = HydrationMap<ProfileAgg>
@@ -103,6 +103,7 @@ export class ActorHydrator {
         profileTakedownRef: safeTakedownRef(profile),
         sortedAt: profile?.sortedAt?.toDate(),
         takedownRef: safeTakedownRef(actor),
+        isLabeler: actor.isLabeler,
       })
     }, new HydrationMap<Actor>())
   }
@@ -148,7 +149,6 @@ export class ActorHydrator {
         posts: counts.posts[i] ?? 0,
         lists: counts.lists[i] ?? 0,
         feeds: counts.feeds[i] ?? 0,
-        isModService: counts.isModService[i] ?? 0,
       })
     }, new HydrationMap<ProfileAgg>())
   }

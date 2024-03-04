@@ -2721,11 +2721,6 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   feeds: number[] = []
 
-  /**
-   * @generated from field: repeated bool is_mod_service = 7;
-   */
-  isModService: boolean[] = []
-
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -2774,13 +2769,6 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
       name: 'feeds',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
-      repeated: true,
-    },
-    {
-      no: 7,
-      name: 'is_mod_service',
-      kind: 'scalar',
-      T: 8 /* ScalarType.BOOL */,
       repeated: true,
     },
   ])
@@ -3379,6 +3367,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   tombstonedAt?: Timestamp
 
+  /**
+   * @generated from field: bool is_labeler = 7;
+   */
+  isLabeler = false
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3398,6 +3391,7 @@ export class ActorInfo extends Message<ActorInfo> {
       T: 9 /* ScalarType.STRING */,
     },
     { no: 6, name: 'tombstoned_at', kind: 'message', T: Timestamp },
+    { no: 7, name: 'is_labeler', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
