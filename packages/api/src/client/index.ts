@@ -152,15 +152,10 @@ import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unsp
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
-import * as ToolsOzoneCreateCommunicationTemplate from './types/tools/ozone/createCommunicationTemplate'
-import * as ToolsOzoneDefs from './types/tools/ozone/defs'
-import * as ToolsOzoneDeleteCommunicationTemplate from './types/tools/ozone/deleteCommunicationTemplate'
-import * as ToolsOzoneEmitModerationEvent from './types/tools/ozone/emitModerationEvent'
-import * as ToolsOzoneGetModerationEvent from './types/tools/ozone/getModerationEvent'
-import * as ToolsOzoneListCommunicationTemplates from './types/tools/ozone/listCommunicationTemplates'
-import * as ToolsOzoneQueryModerationEvents from './types/tools/ozone/queryModerationEvents'
-import * as ToolsOzoneQueryModerationStatuses from './types/tools/ozone/queryModerationStatuses'
-import * as ToolsOzoneUpdateCommunicationTemplate from './types/tools/ozone/updateCommunicationTemplate'
+import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
+import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
+import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
+import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -307,15 +302,10 @@ export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unsp
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
-export * as ToolsOzoneCreateCommunicationTemplate from './types/tools/ozone/createCommunicationTemplate'
-export * as ToolsOzoneDefs from './types/tools/ozone/defs'
-export * as ToolsOzoneDeleteCommunicationTemplate from './types/tools/ozone/deleteCommunicationTemplate'
-export * as ToolsOzoneEmitModerationEvent from './types/tools/ozone/emitModerationEvent'
-export * as ToolsOzoneGetModerationEvent from './types/tools/ozone/getModerationEvent'
-export * as ToolsOzoneListCommunicationTemplates from './types/tools/ozone/listCommunicationTemplates'
-export * as ToolsOzoneQueryModerationEvents from './types/tools/ozone/queryModerationEvents'
-export * as ToolsOzoneQueryModerationStatuses from './types/tools/ozone/queryModerationStatuses'
-export * as ToolsOzoneUpdateCommunicationTemplate from './types/tools/ozone/updateCommunicationTemplate'
+export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
+export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
+export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
+export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -329,12 +319,6 @@ export const COM_ATPROTO_MODERATION = {
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
-}
-export const TOOLS_OZONE = {
-  DefsReviewOpen: 'tools.ozone.defs#reviewOpen',
-  DefsReviewEscalated: 'tools.ozone.defs#reviewEscalated',
-  DefsReviewClosed: 'tools.ozone.defs#reviewClosed',
-  DefsReviewNone: 'tools.ozone.defs#reviewNone',
 }
 
 export class AtpBaseClient {
@@ -2586,96 +2570,62 @@ export class ToolsNS {
 
 export class ToolsOzoneNS {
   _service: AtpServiceClient
+  communication: ToolsOzoneCommunicationNS
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.communication = new ToolsOzoneCommunicationNS(service)
+  }
+}
+
+export class ToolsOzoneCommunicationNS {
+  _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
   }
 
-  createCommunicationTemplate(
-    data?: ToolsOzoneCreateCommunicationTemplate.InputSchema,
-    opts?: ToolsOzoneCreateCommunicationTemplate.CallOptions,
-  ): Promise<ToolsOzoneCreateCommunicationTemplate.Response> {
+  createTemplate(
+    data?: ToolsOzoneCommunicationCreateTemplate.InputSchema,
+    opts?: ToolsOzoneCommunicationCreateTemplate.CallOptions,
+  ): Promise<ToolsOzoneCommunicationCreateTemplate.Response> {
     return this._service.xrpc
-      .call('tools.ozone.createCommunicationTemplate', opts?.qp, data, opts)
+      .call('tools.ozone.communication.createTemplate', opts?.qp, data, opts)
       .catch((e) => {
-        throw ToolsOzoneCreateCommunicationTemplate.toKnownErr(e)
+        throw ToolsOzoneCommunicationCreateTemplate.toKnownErr(e)
       })
   }
 
-  deleteCommunicationTemplate(
-    data?: ToolsOzoneDeleteCommunicationTemplate.InputSchema,
-    opts?: ToolsOzoneDeleteCommunicationTemplate.CallOptions,
-  ): Promise<ToolsOzoneDeleteCommunicationTemplate.Response> {
+  deleteTemplate(
+    data?: ToolsOzoneCommunicationDeleteTemplate.InputSchema,
+    opts?: ToolsOzoneCommunicationDeleteTemplate.CallOptions,
+  ): Promise<ToolsOzoneCommunicationDeleteTemplate.Response> {
     return this._service.xrpc
-      .call('tools.ozone.deleteCommunicationTemplate', opts?.qp, data, opts)
+      .call('tools.ozone.communication.deleteTemplate', opts?.qp, data, opts)
       .catch((e) => {
-        throw ToolsOzoneDeleteCommunicationTemplate.toKnownErr(e)
+        throw ToolsOzoneCommunicationDeleteTemplate.toKnownErr(e)
       })
   }
 
-  emitModerationEvent(
-    data?: ToolsOzoneEmitModerationEvent.InputSchema,
-    opts?: ToolsOzoneEmitModerationEvent.CallOptions,
-  ): Promise<ToolsOzoneEmitModerationEvent.Response> {
+  listTemplates(
+    params?: ToolsOzoneCommunicationListTemplates.QueryParams,
+    opts?: ToolsOzoneCommunicationListTemplates.CallOptions,
+  ): Promise<ToolsOzoneCommunicationListTemplates.Response> {
     return this._service.xrpc
-      .call('tools.ozone.emitModerationEvent', opts?.qp, data, opts)
+      .call('tools.ozone.communication.listTemplates', params, undefined, opts)
       .catch((e) => {
-        throw ToolsOzoneEmitModerationEvent.toKnownErr(e)
+        throw ToolsOzoneCommunicationListTemplates.toKnownErr(e)
       })
   }
 
-  getModerationEvent(
-    params?: ToolsOzoneGetModerationEvent.QueryParams,
-    opts?: ToolsOzoneGetModerationEvent.CallOptions,
-  ): Promise<ToolsOzoneGetModerationEvent.Response> {
+  updateTemplate(
+    data?: ToolsOzoneCommunicationUpdateTemplate.InputSchema,
+    opts?: ToolsOzoneCommunicationUpdateTemplate.CallOptions,
+  ): Promise<ToolsOzoneCommunicationUpdateTemplate.Response> {
     return this._service.xrpc
-      .call('tools.ozone.getModerationEvent', params, undefined, opts)
+      .call('tools.ozone.communication.updateTemplate', opts?.qp, data, opts)
       .catch((e) => {
-        throw ToolsOzoneGetModerationEvent.toKnownErr(e)
-      })
-  }
-
-  listCommunicationTemplates(
-    params?: ToolsOzoneListCommunicationTemplates.QueryParams,
-    opts?: ToolsOzoneListCommunicationTemplates.CallOptions,
-  ): Promise<ToolsOzoneListCommunicationTemplates.Response> {
-    return this._service.xrpc
-      .call('tools.ozone.listCommunicationTemplates', params, undefined, opts)
-      .catch((e) => {
-        throw ToolsOzoneListCommunicationTemplates.toKnownErr(e)
-      })
-  }
-
-  queryModerationEvents(
-    params?: ToolsOzoneQueryModerationEvents.QueryParams,
-    opts?: ToolsOzoneQueryModerationEvents.CallOptions,
-  ): Promise<ToolsOzoneQueryModerationEvents.Response> {
-    return this._service.xrpc
-      .call('tools.ozone.queryModerationEvents', params, undefined, opts)
-      .catch((e) => {
-        throw ToolsOzoneQueryModerationEvents.toKnownErr(e)
-      })
-  }
-
-  queryModerationStatuses(
-    params?: ToolsOzoneQueryModerationStatuses.QueryParams,
-    opts?: ToolsOzoneQueryModerationStatuses.CallOptions,
-  ): Promise<ToolsOzoneQueryModerationStatuses.Response> {
-    return this._service.xrpc
-      .call('tools.ozone.queryModerationStatuses', params, undefined, opts)
-      .catch((e) => {
-        throw ToolsOzoneQueryModerationStatuses.toKnownErr(e)
-      })
-  }
-
-  updateCommunicationTemplate(
-    data?: ToolsOzoneUpdateCommunicationTemplate.InputSchema,
-    opts?: ToolsOzoneUpdateCommunicationTemplate.CallOptions,
-  ): Promise<ToolsOzoneUpdateCommunicationTemplate.Response> {
-    return this._service.xrpc
-      .call('tools.ozone.updateCommunicationTemplate', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ToolsOzoneUpdateCommunicationTemplate.toKnownErr(e)
+        throw ToolsOzoneCommunicationUpdateTemplate.toKnownErr(e)
       })
   }
 }

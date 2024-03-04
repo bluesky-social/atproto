@@ -1,0 +1,105 @@
+{
+      "lexicon": 1,
+      "id": "tools.ozone.status.defs",
+      "defs": {
+        "subjectStatusView": {
+          "type": "object",
+          "required": ["id", "subject", "createdAt", "updatedAt", "reviewState"],
+          "properties": {
+            "id": { "type": "integer" },
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ]
+            },
+            "subjectBlobCids": {
+              "type": "array",
+              "items": { "type": "string", "format": "cid" }
+            },
+            "subjectRepoHandle": { "type": "string" },
+            "updatedAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "Timestamp referencing when the last update was made to the moderation status of the subject"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "Timestamp referencing the first moderation status impacting event was emitted on the subject"
+            },
+            "reviewState": {
+              "type": "ref",
+              "ref": "#subjectReviewState"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Sticky comment on the subject."
+            },
+            "muteUntil": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "lastReviewedBy": {
+              "type": "string",
+              "format": "did"
+            },
+            "lastReviewedAt": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "lastReportedAt": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "lastAppealedAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "Timestamp referencing when the author of the subject appealed a moderation action"
+            },
+            "takendown": {
+              "type": "boolean"
+            },
+            "appealed": {
+              "type": "boolean",
+              "description": "True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators."
+            },
+            "suspendUntil": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "subjectReviewState": {
+          "type": "string",
+          "knownValues": [
+            "#reviewOpen",
+            "#reviewEscalated",
+            "#reviewClosed",
+            "#reviewNone"
+          ]
+        },
+        "reviewOpen": {
+          "type": "token",
+          "description": "Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator"
+        },
+        "reviewEscalated": {
+          "type": "token",
+          "description": "Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator"
+        },
+        "reviewClosed": {
+          "type": "token",
+          "description": "Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator"
+        },
+        "reviewNone": {
+          "type": "token",
+          "description": "Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it"
+        }
+      }
+    }
+    

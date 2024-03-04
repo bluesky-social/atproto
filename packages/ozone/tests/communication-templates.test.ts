@@ -27,7 +27,7 @@ describe('communication-templates', () => {
   }
 
   const listTemplates = async () => {
-    const { data } = await agent.api.tools.ozone.listCommunicationTemplates(
+    const { data } = await agent.api.tools.ozone.communication.listTemplates(
       {},
       {
         headers: network.ozone.adminAuthHeaders('moderator'),
@@ -38,7 +38,7 @@ describe('communication-templates', () => {
 
   describe('create templates', () => {
     it('only allows admins to create new templates', async () => {
-      const moderatorReq = agent.api.tools.ozone.createCommunicationTemplate(
+      const moderatorReq = agent.api.tools.ozone.communication.createTemplate(
         { ...templateOne, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
@@ -48,7 +48,7 @@ describe('communication-templates', () => {
       await expect(moderatorReq).rejects.toThrow(
         'Must be an admin to create a communication template',
       )
-      const modReq = await agent.api.tools.ozone.createCommunicationTemplate(
+      const modReq = await agent.api.tools.ozone.communication.createTemplate(
         { ...templateOne, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
@@ -72,7 +72,7 @@ describe('communication-templates', () => {
         ...templateOne,
         name: 'Test template 2',
       }
-      await agent.api.tools.ozone.createCommunicationTemplate(
+      await agent.api.tools.ozone.communication.createTemplate(
         { ...templateTwo, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
@@ -87,7 +87,7 @@ describe('communication-templates', () => {
   })
   describe('update template', () => {
     it('allows moderators to update a template by id', async () => {
-      const { data } = await agent.api.tools.ozone.updateCommunicationTemplate(
+      const { data } = await agent.api.tools.ozone.communication.updateTemplate(
         { id: '1', updatedBy: sc.dids.bob, name: '1 Test template' },
         {
           encoding: 'application/json',
@@ -101,7 +101,7 @@ describe('communication-templates', () => {
   })
   describe('delete template', () => {
     it('allows admins to remove a template by id', async () => {
-      const modReq = agent.api.tools.ozone.deleteCommunicationTemplate(
+      const modReq = agent.api.tools.ozone.communication.deleteTemplate(
         { id: '1' },
         {
           encoding: 'application/json',
@@ -113,7 +113,7 @@ describe('communication-templates', () => {
         'Must be an admin to delete a communication template',
       )
 
-      await agent.api.tools.ozone.deleteCommunicationTemplate(
+      await agent.api.tools.ozone.communication.deleteTemplate(
         { id: '1' },
         {
           encoding: 'application/json',
