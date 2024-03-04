@@ -4,11 +4,13 @@ import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitData } from '@atproto/repo'
 import {
+  AccountEvt,
   CommitEvt,
   HandleEvt,
   IdentityEvt,
   SeqEvt,
   TombstoneEvt,
+  formatSeqAccountEvt,
   formatSeqCommit,
   formatSeqHandleUpdate,
   formatSeqIdentityEvt,
@@ -220,6 +222,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async sequenceIdentityEvt(did: string) {
     const evt = await formatSeqIdentityEvt(did)
+    await this.sequenceEvt(evt)
+  }
+
+  async sequenceAccountEvt(
+    did: string,
+    active: boolean,
+    status?: AccountEvt['status'],
+  ) {
+    const evt = await formatSeqAccountEvt(did, active, status)
     await this.sequenceEvt(evt)
   }
 
