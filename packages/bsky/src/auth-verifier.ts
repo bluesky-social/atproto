@@ -170,7 +170,7 @@ export class AuthVerifier {
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
-      iss: [this.modServiceDid, `${this.modServiceDid}#atproto_mod`],
+      iss: [this.modServiceDid, `${this.modServiceDid}#atproto_labeler`],
     })
     return { credentials: { type: 'mod_service', aud, iss } }
   }
@@ -209,7 +209,9 @@ export class AuthVerifier {
       if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      const [did, keyId = 'atproto'] = iss.split('#')
+      const [did, serviceId] = iss.split('#')
+      const keyId =
+        serviceId === 'atproto-labeler' ? 'atproto-label' : 'atproto'
       let identity: GetIdentityByDidResponse
       try {
         identity = await this.dataplane.getIdentityByDid({ did })
@@ -236,9 +238,10 @@ export class AuthVerifier {
   }
 
   isModService(iss: string): boolean {
-    return [this.modServiceDid, `${this.modServiceDid}#atproto_mod`].includes(
-      iss,
-    )
+    return [
+      this.modServiceDid,
+      `${this.modServiceDid}#atproto_labeler`,
+    ].includes(iss)
   }
 
   nullCreds(): NullOutput {
