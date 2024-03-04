@@ -25,9 +25,9 @@
             "did": { "type": "string", "format": "did" },
             "active": { "type": "boolean" },
             "status": {
-              "type": "union",
+              "type": "string",
               "description": "If active=false, this optional field indicates a reason for why the account is not active.",
-              "refs": [
+              "knownValues": [
                 "com.atproto.sync.defs#takendown",
                 "com.atproto.sync.defs#suspended",
                 "com.atproto.sync.defs#deactivated"
