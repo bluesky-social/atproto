@@ -11,8 +11,6 @@ For more information, see the [Moderation Documentation](./docs/moderation.md) o
 Additional docs:
 
 - [Labels Reference](./labels.md)
-- [Post Moderation Behaviors](./moderation-behaviors/posts.md)
-- [Profile Moderation Behaviors](./moderation-behaviors/profiles.md)
 
 ## Configuration
 

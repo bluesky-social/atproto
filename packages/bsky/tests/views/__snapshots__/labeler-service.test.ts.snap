@@ -1,0 +1,160 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`labeler service views fetches labelers 1`] = `
+Object {
+  "views": Array [
+    Object {
+      "$type": "app.bsky.labeler.defs#labelerView",
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(3)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 1,
+      "uri": "record(0)",
+      "viewer": Object {
+        "like": "record(4)",
+      },
+    },
+    Object {
+      "$type": "app.bsky.labeler.defs#labelerView",
+      "cid": "cids(3)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "description": "hi im bob label_me",
+        "did": "user(2)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "uri": "record(5)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;
+
+exports[`labeler service views fetches labelers detailed 1`] = `
+Object {
+  "views": Array [
+    Object {
+      "$type": "app.bsky.labeler.defs#labelerViewDetailed",
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(3)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 1,
+      "policies": Object {
+        "labelValues": Array [
+          "spam",
+          "!hide",
+          "scam",
+          "impersonation",
+        ],
+      },
+      "uri": "record(0)",
+      "viewer": Object {
+        "like": "record(4)",
+      },
+    },
+    Object {
+      "$type": "app.bsky.labeler.defs#labelerViewDetailed",
+      "cid": "cids(3)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "description": "hi im bob label_me",
+        "did": "user(2)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "policies": Object {
+        "labelValues": Array [
+          "nudity",
+          "sexual",
+          "porn",
+        ],
+      },
+      "uri": "record(5)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;

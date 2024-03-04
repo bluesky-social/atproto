@@ -49,9 +49,9 @@ import { Label } from '../hydration/label'
 import { FeedItem, Post, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import {
-  ModServiceView,
-  ModServiceViewDetailed,
-} from '../lexicon/types/app/bsky/moderation/defs'
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 
 export class Views {
@@ -267,48 +267,46 @@ export class Views {
     })
   }
 
-  modService(did: string, state: HydrationState): ModServiceView | undefined {
-    const modService = state.modServices?.get(did)
-    if (!modService) return
+  labeler(did: string, state: HydrationState): LabelerView | undefined {
+    const labeler = state.labelers?.get(did)
+    if (!labeler) return
     const creator = this.profile(did, state)
     if (!creator) return
-    const viewer = state.modServiceViewers?.get(did)
-    const aggs = state.modServiceAggs?.get(did)
+    const viewer = state.labelerViewers?.get(did)
+    const aggs = state.labelerAggs?.get(did)
 
-    const uri = AtUri.make(did, ids.AppBskyModerationService, 'self').toString()
+    const uri = AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
     const labels = [
       ...(state.labels?.get(uri) ?? []),
       ...this.selfLabels({
         uri,
-        cid: modService.cid.toString(),
-        record: modService.record,
+        cid: labeler.cid.toString(),
+        record: labeler.record,
       }),
     ]
 
     return {
       uri,
-      cid: modService.cid.toString(),
+      cid: labeler.cid.toString(),
       creator,
-      description: modService.record.description,
-      descriptionFacets: modService.record.descriptionFacets,
       likeCount: aggs?.likes,
       viewer: viewer
         ? {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: modService.sortedAt.toISOString(),
+      indexedAt: labeler.sortedAt.toISOString(),
       labels,
     }
   }
 
-  modServiceDetailed(
+  labelerDetailed(
     did: string,
     state: HydrationState,
-  ): ModServiceViewDetailed | undefined {
-    const baseView = this.modService(did, state)
+  ): LabelerViewDetailed | undefined {
+    const baseView = this.labeler(did, state)
     if (!baseView) return
-    const record = state.modServices?.get(did)
+    const record = state.labelers?.get(did)
     if (!record) return
 
     return {
@@ -787,10 +785,10 @@ export class Views {
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
       return this.recordEmbedWrapper(view, withTypeTag)
-    } else if (parsedUri.collection === ids.AppBskyModerationService) {
-      const view = this.modService(parsedUri.hostname, state)
+    } else if (parsedUri.collection === ids.AppBskyLabelerService) {
+      const view = this.labeler(parsedUri.hostname, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.moderation.defs#modServiceView'
+      view.$type = 'app.bsky.labeler.defs#labelerView'
       return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)

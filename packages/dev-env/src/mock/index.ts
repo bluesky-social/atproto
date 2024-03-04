@@ -326,11 +326,11 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  await alice.agent.api.app.bsky.moderation.service.create(
+  await alice.agent.api.app.bsky.labeler.service.create(
     { repo: alice.did, rkey: 'self' },
     {
       displayName: 'alices labels',
-      description: 'labeling stuff',
+      description: 'Stopping spam and scams across the Atmosphere.',
       avatar: avatarRes.data.blob,
       policies: {
         reportReasons: [

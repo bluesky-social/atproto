@@ -2257,6 +2257,67 @@ export const schemaDict = {
           },
         },
       },
+      labelValueDefinition: {
+        type: 'object',
+        description:
+          'Declares a label value and its expected interpertations and behaviors.',
+        required: ['identifier', 'severity', 'blurs', 'locales'],
+        properties: {
+          identifier: {
+            type: 'string',
+            description:
+              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
+            maxLength: 100,
+            maxGraphemes: 100,
+          },
+          severity: {
+            type: 'string',
+            description:
+              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing.",
+            knownValues: ['inform', 'alert', 'none'],
+          },
+          blurs: {
+            type: 'string',
+            description:
+              "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
+            knownValues: ['content', 'media', 'none'],
+          },
+          locales: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinitionStrings',
+            },
+          },
+        },
+      },
+      labelValueDefinitionStrings: {
+        type: 'object',
+        description:
+          'Strings which describe the label in the UI, localized into a specific language.',
+        required: ['lang', 'name', 'description'],
+        properties: {
+          lang: {
+            type: 'string',
+            description:
+              'The code of the language these strings are written in.',
+            format: 'language',
+          },
+          name: {
+            type: 'string',
+            description: 'A short human-readable name for the label.',
+            maxGraphemes: 64,
+            maxLength: 640,
+          },
+          description: {
+            type: 'string',
+            description:
+              'A longer description of what the label means and why it might be applied.',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+          },
+        },
+      },
       labelValue: {
         type: 'string',
         knownValues: [
@@ -2270,24 +2331,7 @@ export const schemaDict = {
           'sexual',
           'nudity',
           'nsfl',
-          'corpse',
           'gore',
-          'torture',
-          'self-harm',
-          'intolerant-race',
-          'intolerant-gender',
-          'intolerant-sexual-orientation',
-          'intolerant-religion',
-          'intolerant',
-          'icon-intolerant',
-          'threat',
-          'spoiler',
-          'spam',
-          'account-security',
-          'net-abuse',
-          'impersonation',
-          'scam',
-          'misleading',
         ],
       },
     },
@@ -5103,7 +5147,7 @@ export const schemaDict = {
           feedgens: {
             type: 'integer',
           },
-          modservice: {
+          labeler: {
             type: 'boolean',
           },
         },
@@ -5172,12 +5216,18 @@ export const schemaDict = {
         type: 'object',
         required: ['label', 'visibility'],
         properties: {
+          labelerDid: {
+            type: 'string',
+            description:
+              'Which labeler does this preference apply to? If undefined, applies globally.',
+            format: 'did',
+          },
           label: {
             type: 'string',
           },
           visibility: {
             type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
+            knownValues: ['ignore', 'show', 'warn', 'hide'],
           },
         },
       },
@@ -5349,34 +5399,11 @@ export const schemaDict = {
       },
       modPrefItem: {
         type: 'object',
-        required: ['did', 'enabled', 'labelGroupSettings'],
+        required: ['did'],
         properties: {
           did: {
             type: 'string',
             format: 'did',
-          },
-          enabled: {
-            type: 'boolean',
-          },
-          labelGroupSettings: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#labelGroupSetting',
-            },
-          },
-        },
-      },
-      labelGroupSetting: {
-        type: 'object',
-        required: ['labelGroup', 'visibility'],
-        properties: {
-          labelGroup: {
-            type: 'string',
-          },
-          visibility: {
-            type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
           },
         },
       },
@@ -5884,7 +5911,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
-              'lex:app.bsky.moderation.defs#modServiceView',
+              'lex:app.bsky.labeler.defs#labelerView',
             ],
           },
         },
@@ -8426,11 +8453,11 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModerationDefs: {
+  AppBskyLabelerDefs: {
     lexicon: 1,
-    id: 'app.bsky.moderation.defs',
+    id: 'app.bsky.labeler.defs',
     defs: {
-      modServiceView: {
+      labelerView: {
         type: 'object',
         required: ['uri', 'cid', 'creator', 'indexedAt'],
         properties: {
@@ -8446,25 +8473,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          description: {
-            type: 'string',
-            maxGraphemes: 300,
-            maxLength: 3000,
-          },
-          descriptionFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
           likeCount: {
             type: 'integer',
             minimum: 0,
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
           },
           indexedAt: {
             type: 'string',
@@ -8479,7 +8494,7 @@ export const schemaDict = {
           },
         },
       },
-      modServiceViewDetailed: {
+      labelerViewDetailed: {
         type: 'object',
         required: ['uri', 'cid', 'creator', 'policies', 'indexedAt'],
         properties: {
@@ -8495,21 +8510,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          description: {
-            type: 'string',
-            maxGraphemes: 300,
-            maxLength: 3000,
-          },
-          descriptionFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
           policies: {
             type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
+            ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
           },
           likeCount: {
             type: 'integer',
@@ -8517,7 +8520,7 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
           },
           indexedAt: {
             type: 'string',
@@ -8532,7 +8535,7 @@ export const schemaDict = {
           },
         },
       },
-      modServiceViewerState: {
+      labelerViewerState: {
         type: 'object',
         properties: {
           like: {
@@ -8541,74 +8544,39 @@ export const schemaDict = {
           },
         },
       },
-      modServicePolicies: {
+      labelerPolicies: {
         type: 'object',
-        required: ['reportReasons', 'labelValues'],
+        required: ['labelValues'],
         properties: {
-          description: {
-            type: 'string',
-            maxGraphemes: 10000,
-            maxLength: 100000,
-          },
-          descriptionFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
-          reportReasons: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.moderation.defs#reasonType',
-            },
-          },
           labelValues: {
             type: 'array',
+            description:
+              'The label values which this labeler publishes. May include global or custom labels.',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#labelValue',
             },
           },
-        },
-      },
-    },
-  },
-  AppBskyModerationGetService: {
-    lexicon: 1,
-    id: 'app.bsky.moderation.getService',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get information about a moderation service.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
+          labelValueDefinitions: {
+            type: 'array',
+            description:
+              'Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinition',
             },
           },
         },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServiceViewDetailed',
-          },
-        },
       },
     },
   },
-  AppBskyModerationGetServices: {
+  AppBskyLabelerGetServices: {
     lexicon: 1,
-    id: 'app.bsky.moderation.getServices',
+    id: 'app.bsky.labeler.getServices',
     defs: {
       main: {
         type: 'query',
-        description: 'Get information about a list of moderation services.',
+        description: 'Get information about a list of labeler services.',
         parameters: {
           type: 'params',
           required: ['dids'],
@@ -8619,6 +8587,10 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+            },
+            detailed: {
+              type: 'boolean',
+              default: false,
             },
           },
         },
@@ -8631,8 +8603,11 @@ export const schemaDict = {
               views: {
                 type: 'array',
                 items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.moderation.defs#modServiceView',
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.labeler.defs#labelerView',
+                    'lex:app.bsky.labeler.defs#labelerViewDetailed',
+                  ],
                 },
               },
             },
@@ -8641,33 +8616,21 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModerationService: {
+  AppBskyLabelerService: {
     lexicon: 1,
-    id: 'app.bsky.moderation.service',
+    id: 'app.bsky.labeler.service',
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of the existence of moderation service.',
+        description: 'A declaration of the existence of labeler service.',
         key: 'literal:self',
         record: {
           type: 'object',
           required: ['policies', 'createdAt'],
           properties: {
-            description: {
-              type: 'string',
-              maxGraphemes: 300,
-              maxLength: 3000,
-            },
-            descriptionFacets: {
-              type: 'array',
-              items: {
-                type: 'ref',
-                ref: 'lex:app.bsky.richtext.facet',
-              },
-            },
             policies: {
               type: 'ref',
-              ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
+              ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
             },
             labels: {
               type: 'union',
@@ -9375,10 +9338,9 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
-  AppBskyModerationDefs: 'app.bsky.moderation.defs',
-  AppBskyModerationGetService: 'app.bsky.moderation.getService',
-  AppBskyModerationGetServices: 'app.bsky.moderation.getServices',
-  AppBskyModerationService: 'app.bsky.moderation.service',
+  AppBskyLabelerDefs: 'app.bsky.labeler.defs',
+  AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
+  AppBskyLabelerService: 'app.bsky.labeler.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

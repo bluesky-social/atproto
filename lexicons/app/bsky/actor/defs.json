@@ -84,7 +84,7 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
-        "modservice": { "type": "boolean" }
+        "labeler": { "type": "boolean" }
       }
     },
     "viewerState": {
@@ -134,10 +134,15 @@
       "type": "object",
       "required": ["label", "visibility"],
       "properties": {
+        "labelerDid": {
+          "type": "string",
+          "description": "Which labeler does this preference apply to? If undefined, applies globally.",
+          "format": "did"
+        },
         "label": { "type": "string" },
         "visibility": {
           "type": "string",
-          "knownValues": ["show", "warn", "hide"]
+          "knownValues": ["ignore", "show", "warn", "hide"]
         }
       }
     },
@@ -297,32 +302,11 @@
     },
     "modPrefItem": {
       "type": "object",
-      "required": ["did", "enabled", "labelGroupSettings"],
+      "required": ["did"],
       "properties": {
         "did": {
           "type": "string",
           "format": "did"
-        },
-        "enabled": {
-          "type": "boolean"
-        },
-        "labelGroupSettings": {
-          "type": "array",
-          "items": {
-            "type": "ref",
-            "ref": "#labelGroupSetting"
-          }
-        }
-      }
-    },
-    "labelGroupSetting": {
-      "type": "object",
-      "required": ["labelGroup", "visibility"],
-      "properties": {
-        "labelGroup": { "type": "string" },
-        "visibility": {
-          "type": "string",
-          "knownValues": ["show", "warn", "hide"]
         }
       }
     }

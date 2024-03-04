@@ -26,7 +26,7 @@ import * as ListItem from './plugins/list-item'
 import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
-import * as ModService from './plugins/mod-service'
+import * as Labeler from './plugins/labeler'
 import RecordProcessor from './processor'
 import { subLogger } from '../../../logger'
 import { retryHttp } from '../../../util/retry'
@@ -45,7 +45,7 @@ export class IndexingService {
     listBlock: ListBlock.PluginType
     block: Block.PluginType
     feedGenerator: FeedGenerator.PluginType
-    modService: ModService.PluginType
+    labeler: Labeler.PluginType
   }
 
   constructor(
@@ -65,7 +65,7 @@ export class IndexingService {
       listBlock: ListBlock.makePlugin(this.db, this.background),
       block: Block.makePlugin(this.db, this.background),
       feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
-      modService: ModService.makePlugin(this.db, this.background),
+      labeler: Labeler.makePlugin(this.db, this.background),
     }
   }
 
@@ -301,10 +301,7 @@ export class IndexingService {
       .deleteFrom('feed_generator')
       .where('creator', '=', did)
       .execute()
-    await this.db.db
-      .deleteFrom('mod_service')
-      .where('creator', '=', did)
-      .execute()
+    await this.db.db.deleteFrom('labeler').where('creator', '=', did).execute()
     // lists
     await this.db.db
       .deleteFrom('list_item')
