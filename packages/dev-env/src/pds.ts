@@ -68,7 +68,9 @@ export class TestPds {
   }
 
   getClient(): AtpAgent {
-    return new AtpAgent({ service: `http://localhost:${this.port}` })
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelersHeader([])
+    return agent
   }
 
   adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
