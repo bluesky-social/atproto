@@ -93,6 +93,29 @@ export async function generateMockSetup(env: TestNetwork) {
     )
   }
 
+  // Create moderator accounts
+  const triageRes =
+    await clients.loggedout.api.com.atproto.server.createAccount({
+      email: 'triage@test.com',
+      handle: 'triage.test',
+      password: 'triage-pass',
+    })
+  env.ozone.addAdminDid(triageRes.data.did)
+  const modRes = await clients.loggedout.api.com.atproto.server.createAccount({
+    email: 'mod@test.com',
+    handle: 'mod.test',
+    password: 'mod-pass',
+  })
+  env.ozone.addAdminDid(modRes.data.did)
+  const adminRes = await clients.loggedout.api.com.atproto.server.createAccount(
+    {
+      email: 'admin-mod@test.com',
+      handle: 'admin-mod.test',
+      password: 'admin-mod-pass',
+    },
+  )
+  env.ozone.addAdminDid(adminRes.data.did)
+
   // Report one user
   const reporter = picka(users)
   await reporter.agent.api.com.atproto.moderation.createReport({
