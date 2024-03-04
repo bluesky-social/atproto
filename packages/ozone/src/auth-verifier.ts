@@ -40,7 +40,7 @@ type StandardOutput = {
 
 type NullOutput = {
   credentials: {
-    type: 'null'
+    type: 'none'
     iss: null
   }
 }
@@ -175,7 +175,7 @@ export class AuthVerifier {
   nullCreds(): NullOutput {
     return {
       credentials: {
-        type: 'null',
+        type: 'none',
         iss: null,
       },
     }
