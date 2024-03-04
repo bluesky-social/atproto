@@ -326,7 +326,7 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  await alice.agent.api.app.bsky.moderation.service.create(
+  await alice.agent.api.app.bsky.labeler.service.create(
     { repo: alice.did, rkey: 'self' },
     {
       displayName: 'alices labels',

@@ -2266,7 +2266,9 @@ export const schemaDict = {
           identifier: {
             type: 'string',
             description:
-              "The value of the label being defined. When a definition is created by a labeling service, an 'x-' prefix will automatically be applied whether that prefix is included in this value or not. That prefix indicates that it is a custom label created by the labeling service.",
+              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
+            maxLength: 100,
+            maxGraphemes: 100,
           },
           severity: {
             type: 'string',
@@ -2279,12 +2281,6 @@ export const schemaDict = {
             description:
               "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
             knownValues: ['content', 'media', 'none'],
-          },
-          defaultSetting: {
-            type: 'string',
-            description:
-              "The default preference for the client to use on this label, if the user hasn't chosen a preference.",
-            knownValues: ['hide', 'warn', 'ignore'],
           },
           locales: {
             type: 'array',
@@ -5151,7 +5147,7 @@ export const schemaDict = {
           feedgens: {
             type: 'integer',
           },
-          modservice: {
+          labeler: {
             type: 'boolean',
           },
         },
@@ -5915,7 +5911,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
-              'lex:app.bsky.moderation.defs#modServiceView',
+              'lex:app.bsky.labeler.defs#labelerView',
             ],
           },
         },
@@ -8457,11 +8453,11 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModerationDefs: {
+  AppBskyLabelerDefs: {
     lexicon: 1,
-    id: 'app.bsky.moderation.defs',
+    id: 'app.bsky.labeler.defs',
     defs: {
-      modServiceView: {
+      labelerView: {
         type: 'object',
         required: ['uri', 'cid', 'creator', 'indexedAt'],
         properties: {
@@ -8483,7 +8479,7 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
           },
           indexedAt: {
             type: 'string',
@@ -8498,7 +8494,7 @@ export const schemaDict = {
           },
         },
       },
-      modServiceViewDetailed: {
+      labelerViewDetailed: {
         type: 'object',
         required: ['uri', 'cid', 'creator', 'policies', 'indexedAt'],
         properties: {
@@ -8516,7 +8512,7 @@ export const schemaDict = {
           },
           policies: {
             type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
+            ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
           },
           likeCount: {
             type: 'integer',
@@ -8524,7 +8520,7 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
           },
           indexedAt: {
             type: 'string',
@@ -8539,7 +8535,7 @@ export const schemaDict = {
           },
         },
       },
-      modServiceViewerState: {
+      labelerViewerState: {
         type: 'object',
         properties: {
           like: {
@@ -8548,23 +8544,23 @@ export const schemaDict = {
           },
         },
       },
-      modServicePolicies: {
+      labelerPolicies: {
         type: 'object',
         required: ['labelValues'],
         properties: {
           labelValues: {
             type: 'array',
             description:
-              "The label values which this labeler publishes. Be sure to prefix custom labels with 'x-'.",
+              'The label values which this labeler publishes. May include global or custom labels.',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#labelValue',
             },
           },
-          customLabelValues: {
+          labelValueDefinitions: {
             type: 'array',
             description:
-              'Label values created by this labeler and scoped exclusively to it.',
+              'Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler.',
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#labelValueDefinition',
@@ -8574,13 +8570,13 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModerationGetServices: {
+  AppBskyLabelerGetServices: {
     lexicon: 1,
-    id: 'app.bsky.moderation.getServices',
+    id: 'app.bsky.labeler.getServices',
     defs: {
       main: {
         type: 'query',
-        description: 'Get information about a list of moderation services.',
+        description: 'Get information about a list of labeler services.',
         parameters: {
           type: 'params',
           required: ['dids'],
@@ -8609,8 +8605,8 @@ export const schemaDict = {
                 items: {
                   type: 'union',
                   refs: [
-                    'lex:app.bsky.moderation.defs#modServiceView',
-                    'lex:app.bsky.moderation.defs#modServiceViewDetailed',
+                    'lex:app.bsky.labeler.defs#labelerView',
+                    'lex:app.bsky.labeler.defs#labelerViewDetailed',
                   ],
                 },
               },
@@ -8620,13 +8616,13 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModerationService: {
+  AppBskyLabelerService: {
     lexicon: 1,
-    id: 'app.bsky.moderation.service',
+    id: 'app.bsky.labeler.service',
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of the existence of moderation service.',
+        description: 'A declaration of the existence of labeler service.',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -8634,7 +8630,7 @@ export const schemaDict = {
           properties: {
             policies: {
               type: 'ref',
-              ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
+              ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
             },
             labels: {
               type: 'union',
@@ -9342,9 +9338,9 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
-  AppBskyModerationDefs: 'app.bsky.moderation.defs',
-  AppBskyModerationGetServices: 'app.bsky.moderation.getServices',
-  AppBskyModerationService: 'app.bsky.moderation.service',
+  AppBskyLabelerDefs: 'app.bsky.labeler.defs',
+  AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
+  AppBskyLabelerService: 'app.bsky.labeler.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

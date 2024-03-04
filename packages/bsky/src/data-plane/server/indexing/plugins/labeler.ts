@@ -1,26 +1,26 @@
 import { Selectable } from 'kysely'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as ModService from '../../../../lexicon/types/app/bsky/moderation/service'
+import * as Labeler from '../../../../lexicon/types/app/bsky/labeler/service'
 import * as lex from '../../../../lexicon/lexicons'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
 
-const lexId = lex.ids.AppBskyModerationService
-type IndexedModService = Selectable<DatabaseSchemaType['mod_service']>
+const lexId = lex.ids.AppBskyLabelerService
+type IndexedLabeler = Selectable<DatabaseSchemaType['labeler']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: ModService.Record,
+  obj: Labeler.Record,
   timestamp: string,
-): Promise<IndexedModService | null> => {
+): Promise<IndexedLabeler | null> => {
   if (uri.rkey !== 'self') return null
   const inserted = await db
-    .insertInto('mod_service')
+    .insertInto('labeler')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
@@ -45,9 +45,9 @@ const notifsForInsert = () => {
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedModService | null> => {
+): Promise<IndexedLabeler | null> => {
   const deleted = await db
-    .deleteFrom('mod_service')
+    .deleteFrom('labeler')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -58,7 +58,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<ModService.Record, IndexedModService>
+export type PluginType = RecordProcessor<Labeler.Record, IndexedLabeler>
 
 export const makePlugin = (
   db: Database,

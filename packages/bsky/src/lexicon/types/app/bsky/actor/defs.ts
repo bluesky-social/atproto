@@ -86,7 +86,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 export interface ProfileAssociated {
   lists?: number
   feedgens?: number
-  modservice?: boolean
+  labeler?: boolean
   [k: string]: unknown
 }
 

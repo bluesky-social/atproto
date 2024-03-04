@@ -129,7 +129,7 @@ import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
-import * as AppBskyModerationGetServices from './types/app/bsky/moderation/getServices'
+import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -1205,7 +1205,7 @@ export class AppBskyNS {
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
-  moderation: AppBskyModerationNS
+  labeler: AppBskyLabelerNS
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
@@ -1216,7 +1216,7 @@ export class AppBskyNS {
     this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
-    this.moderation = new AppBskyModerationNS(server)
+    this.labeler = new AppBskyLabelerNS(server)
     this.notification = new AppBskyNotificationNS(server)
     this.richtext = new AppBskyRichtextNS(server)
     this.unspecced = new AppBskyUnspeccedNS(server)
@@ -1662,7 +1662,7 @@ export class AppBskyGraphNS {
   }
 }
 
-export class AppBskyModerationNS {
+export class AppBskyLabelerNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1672,11 +1672,11 @@ export class AppBskyModerationNS {
   getServices<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyModerationGetServices.Handler<ExtractAuth<AV>>,
-      AppBskyModerationGetServices.HandlerReqCtx<ExtractAuth<AV>>
+      AppBskyLabelerGetServices.Handler<ExtractAuth<AV>>,
+      AppBskyLabelerGetServices.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.moderation.getServices' // @ts-ignore
+    const nsid = 'app.bsky.labeler.getServices' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

@@ -1,8 +1,8 @@
 import { GeneratedAlways } from 'kysely'
 
-export const tableName = 'mod_service'
+export const tableName = 'labeler'
 
-export interface ModService {
+export interface Labeler {
   uri: string
   cid: string
   creator: string
@@ -12,5 +12,5 @@ export interface ModService {
 }
 
 export type PartialDB = {
-  [tableName]: ModService
+  [tableName]: Labeler
 }

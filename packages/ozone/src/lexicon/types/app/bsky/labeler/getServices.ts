@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyModerationDefs from './defs'
+import * as AppBskyLabelerDefs from './defs'
 
 export interface QueryParams {
   dids: string[]
@@ -18,8 +18,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   views: (
-    | AppBskyModerationDefs.ModServiceView
-    | AppBskyModerationDefs.ModServiceViewDetailed
+    | AppBskyLabelerDefs.LabelerView
+    | AppBskyLabelerDefs.LabelerViewDetailed
     | { $type: string; [k: string]: unknown }
   )[]
   [k: string]: unknown

@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`mod service views fetches mod services 1`] = `
+exports[`labeler service views fetches labelers 1`] = `
 Object {
   "views": Array [
     Object {
-      "$type": "app.bsky.moderation.defs#modServiceView",
+      "$type": "app.bsky.labeler.defs#labelerView",
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -47,7 +47,7 @@ Object {
       },
     },
     Object {
-      "$type": "app.bsky.moderation.defs#modServiceView",
+      "$type": "app.bsky.labeler.defs#labelerView",
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -72,11 +72,11 @@ Object {
 }
 `;
 
-exports[`mod service views fetches mod services detailed 1`] = `
+exports[`labeler service views fetches labelers detailed 1`] = `
 Object {
   "views": Array [
     Object {
-      "$type": "app.bsky.moderation.defs#modServiceViewDetailed",
+      "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -127,7 +127,7 @@ Object {
       },
     },
     Object {
-      "$type": "app.bsky.moderation.defs#modServiceViewDetailed",
+      "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",

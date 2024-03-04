@@ -1,9 +1,9 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromModService } from '../_util'
+import { forSnapshot, stripViewerFromLabeler } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 
-describe('mod service views', () => {
+describe('labeler service views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
@@ -17,7 +17,7 @@ describe('mod service views', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_mod_service',
+      dbPostgresSchema: 'bsky_views_labeler_service',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
@@ -29,7 +29,7 @@ describe('mod service views', () => {
     const aliceRes = await pdsAgent.api.com.atproto.repo.createRecord(
       {
         repo: alice,
-        collection: ids.AppBskyModerationService,
+        collection: ids.AppBskyLabelerService,
         rkey: 'self',
         record: {
           policies: {
@@ -43,7 +43,7 @@ describe('mod service views', () => {
     await pdsAgent.api.com.atproto.repo.createRecord(
       {
         repo: bob,
-        collection: ids.AppBskyModerationService,
+        collection: ids.AppBskyLabelerService,
         rkey: 'self',
         record: {
           policies: {
@@ -65,8 +65,8 @@ describe('mod service views', () => {
     await network.close()
   })
 
-  it('fetches mod services', async () => {
-    const view = await agent.api.app.bsky.moderation.getServices(
+  it('fetches labelers', async () => {
+    const view = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob, 'did:example:missing'] },
       { headers: await network.serviceHeaders(bob) },
     )
@@ -74,8 +74,8 @@ describe('mod service views', () => {
     expect(forSnapshot(view.data)).toMatchSnapshot()
   })
 
-  it('fetches mod services detailed', async () => {
-    const view = await agent.api.app.bsky.moderation.getServices(
+  it('fetches labelers detailed', async () => {
+    const view = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob, 'did:example:missing'], detailed: true },
       { headers: await network.serviceHeaders(bob) },
     )
@@ -83,36 +83,36 @@ describe('mod service views', () => {
     expect(forSnapshot(view.data)).toMatchSnapshot()
   })
 
-  it('fetches mod services unauthed', async () => {
-    const { data: authed } = await agent.api.app.bsky.moderation.getServices(
+  it('fetches labelers unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice] },
       { headers: await network.serviceHeaders(bob) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.moderation.getServices({
+    const { data: unauthed } = await agent.api.app.bsky.labeler.getServices({
       dids: [alice],
     })
-    expect(unauthed.views).toEqual(authed.views.map(stripViewerFromModService))
+    expect(unauthed.views).toEqual(authed.views.map(stripViewerFromLabeler))
   })
 
-  it('fetches multiple mod services unauthed', async () => {
-    const { data: authed } = await agent.api.app.bsky.moderation.getServices(
+  it('fetches multiple labelers unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.labeler.getServices(
       {
         dids: [alice, bob, 'did:example:missing'],
       },
       { headers: await network.serviceHeaders(bob) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.moderation.getServices({
+    const { data: unauthed } = await agent.api.app.bsky.labeler.getServices({
       dids: [alice, bob, 'did:example:missing'],
     })
     expect(unauthed.views.length).toBeGreaterThan(0)
-    expect(unauthed.views).toEqual(authed.views.map(stripViewerFromModService))
+    expect(unauthed.views).toEqual(authed.views.map(stripViewerFromLabeler))
   })
 
-  it('renders a post embed of a mod service', async () => {
+  it('renders a post embed of a labeler', async () => {
     const postRes = await pdsAgent.api.app.bsky.feed.post.create(
       { repo: sc.dids.bob },
       {
-        text: 'check out this mod service',
+        text: 'check out this labeler',
         embed: {
           $type: 'app.bsky.embed.record',
           record: aliceService.raw,
@@ -127,7 +127,7 @@ describe('mod service views', () => {
     const postViews = await agent.api.app.bsky.feed.getPosts({
       uris: [postRes.uri],
     })
-    const serviceViews = await agent.api.app.bsky.moderation.getServices({
+    const serviceViews = await agent.api.app.bsky.labeler.getServices({
       dids: [alice],
     })
     expect(postViews.data.posts[0].embed?.record).toMatchObject(
@@ -135,12 +135,12 @@ describe('mod service views', () => {
     )
   })
 
-  it('blocked by mod service takedown', async () => {
+  it('blocked by labeler takedown', async () => {
     await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: aliceService.uriStr,
     })
 
-    const res = await agent.api.app.bsky.moderation.getServices(
+    const res = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob] },
       { headers: await network.serviceHeaders(bob) },
     )
