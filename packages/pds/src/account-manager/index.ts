@@ -51,12 +51,6 @@ export class AccountManager {
     return account.getAccountByEmail(this.db, email, flags)
   }
 
-  // Repo exists and is not taken-down
-  async isRepoAvailable(did: string) {
-    const got = await this.getAccount(did)
-    return !!got
-  }
-
   async isAccountActivated(did: string): Promise<boolean> {
     const account = await this.getAccount(did, { includeDeactivated: true })
     if (!account) return false
