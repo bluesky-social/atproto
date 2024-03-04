@@ -19,6 +19,9 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const dbCfg: OzoneConfig['db'] = {
     postgresUrl: env.dbPostgresUrl,
     postgresSchema: env.dbPostgresSchema,
+    poolSize: env.dbPoolSize,
+    poolMaxUses: env.dbPoolMaxUses,
+    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   }
 
   assert(env.appviewUrl)
@@ -35,6 +38,10 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     did: env.pdsDid,
   }
 
+  const cdnCfg: OzoneConfig['cdn'] = {
+    paths: env.cdnPaths,
+  }
+
   assert(env.didPlcUrl)
   const identityCfg: OzoneConfig['identity'] = {
     plcUrl: env.didPlcUrl,
@@ -45,6 +52,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     db: dbCfg,
     appview: appviewCfg,
     pds: pdsCfg,
+    cdn: cdnCfg,
     identity: identityCfg,
   }
 }
@@ -54,6 +62,7 @@ export type OzoneConfig = {
   db: DatabaseConfig
   appview: AppviewConfig
   pds: PdsConfig | null
+  cdn: CdnConfig
   identity: IdentityConfig
 }
 
@@ -67,6 +76,9 @@ export type ServiceConfig = {
 export type DatabaseConfig = {
   postgresUrl: string
   postgresSchema?: string
+  poolSize?: number
+  poolMaxUses?: number
+  poolIdleTimeoutMs?: number
 }
 
 export type AppviewConfig = {
@@ -81,4 +93,8 @@ export type PdsConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+}
+
+export type CdnConfig = {
+  paths?: string[]
 }

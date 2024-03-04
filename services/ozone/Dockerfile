@@ -8,10 +8,12 @@ COPY ./*.* ./
 # NOTE ozones's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./packages/ozone ./packages/ozone
 COPY ./packages/api ./packages/api
+COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/identity ./packages/identity
+COPY ./packages/repo ./packages/repo
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/xrpc ./packages/xrpc
