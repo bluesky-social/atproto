@@ -28,10 +28,10 @@
       },
       "errors": [
         { "name": "RecordNotFound" },
-        { "name": "AccountNotFound" },
-        { "name": "AccountTakendown" },
-        { "name": "AccountSuspended" },
-        { "name": "AccountDeactivated" }
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
       ]
     }
   }

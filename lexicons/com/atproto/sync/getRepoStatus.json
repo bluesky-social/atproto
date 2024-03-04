@@ -1,18 +1,18 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.getAccountStatus",
+  "id": "com.atproto.sync.getRepoStatus",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the repository hosting status for an account, on this server. Expected to be implemented by PDS and Relay.",
+      "description": "Get the hosting status for a repository, on this server. Expected to be implemented by PDS and Relay.",
       "parameters": {
         "type": "params",
         "required": ["did"],
         "properties": {
           "did": {
             "type": "string",
-            "format": "at-identifier",
-            "description": "The handle or DID of the account."
+            "format": "did",
+            "description": "The handle or DID of the repo."
           }
         }
       },
@@ -40,7 +40,7 @@
           }
         }
       },
-      "errors": [{ "name": "AccountNotFound" }]
+      "errors": [{ "name": "RepoNotFound" }]
     }
   }
 }
