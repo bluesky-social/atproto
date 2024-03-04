@@ -4,8 +4,8 @@ exports[`proxies view requests actor.getProfile 1`] = `
 Object {
   "associated": Object {
     "feedgens": 0,
+    "labeler": false,
     "lists": 0,
-    "modservice": false,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "hi im bob label_me",
@@ -32,8 +32,8 @@ Object {
     Object {
       "associated": Object {
         "feedgens": 1,
+        "labeler": false,
         "lists": 1,
-        "modservice": false,
       },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "description": "its me!",
@@ -70,8 +70,8 @@ Object {
     Object {
       "associated": Object {
         "feedgens": 0,
+        "labeler": false,
         "lists": 0,
-        "modservice": false,
       },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "hi im bob label_me",

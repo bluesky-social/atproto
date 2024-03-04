@@ -5,8 +5,8 @@ Array [
   Object {
     "associated": Object {
       "feedgens": 0,
+      "labeler": false,
       "lists": 0,
-      "modservice": false,
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "its me!",
@@ -45,8 +45,8 @@ Array [
   Object {
     "associated": Object {
       "feedgens": 0,
+      "labeler": false,
       "lists": 0,
-      "modservice": false,
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "description": "hi im bob label_me",
@@ -66,8 +66,8 @@ Array [
   Object {
     "associated": Object {
       "feedgens": 0,
+      "labeler": false,
       "lists": 0,
-      "modservice": false,
     },
     "did": "user(4)",
     "followersCount": 2,
@@ -84,8 +84,8 @@ Array [
   Object {
     "associated": Object {
       "feedgens": 0,
+      "labeler": false,
       "lists": 0,
-      "modservice": false,
     },
     "did": "user(5)",
     "followersCount": 1,
@@ -106,8 +106,8 @@ exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "associated": Object {
     "feedgens": 0,
+    "labeler": false,
     "lists": 0,
-    "modservice": false,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "its me!",
@@ -149,8 +149,8 @@ exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
   "associated": Object {
     "feedgens": 0,
+    "labeler": false,
     "lists": 0,
-    "modservice": false,
   },
   "did": "user(0)",
   "followersCount": 1,
@@ -170,8 +170,8 @@ exports[`pds profile views fetches own profile 1`] = `
 Object {
   "associated": Object {
     "feedgens": 0,
+    "labeler": false,
     "lists": 0,
-    "modservice": false,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "its me!",
@@ -211,8 +211,8 @@ exports[`pds profile views presents avatars & banners 1`] = `
 Object {
   "associated": Object {
     "feedgens": 0,
+    "labeler": false,
     "lists": 0,
-    "modservice": false,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "banner": "https://bsky.public.url/img/banner/plain/user(1)/cids(1)@jpeg",

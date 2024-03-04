@@ -23,7 +23,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         .select([
           db.db
             .selectFrom('labeler')
-            .whereRef('creator', '=', ref('profile_agg.did'))
+            .whereRef('creator', '=', ref('actor.did'))
             .select(sql<true>`${true}`.as('val'))
             .as('isLabeler'),
         ])
@@ -40,7 +40,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         takenDown: !!row?.takedownRef,
         takedownRef: row?.takedownRef || undefined,
         tombstonedAt: undefined, // in current implementation, tombstoned actors are deleted
-        isLabeler: row.isLabeler ?? false,
+        isLabeler: row?.isLabeler ?? false,
       }
     })
     return { actors }
