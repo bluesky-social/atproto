@@ -77,6 +77,7 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
+import * as ComAtprotoSyncGetAccountStatus from './types/com/atproto/sync/getAccountStatus'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -151,6 +152,12 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
+export const COM_ATPROTO_SYNC = {
+  DefsTakendown: 'com.atproto.sync.defs#takendown',
+  DefsSuspended: 'com.atproto.sync.defs#suspended',
+  DefsDeleted: 'com.atproto.sync.defs#deleted',
+  DefsDeactivated: 'com.atproto.sync.defs#deactivated',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -1012,6 +1019,17 @@ export class ComAtprotoSyncNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getAccountStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncGetAccountStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncGetAccountStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.getAccountStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getBlob<AV extends AuthVerifier>(

@@ -8,15 +8,23 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
-  /** The DID of the repo. */
+  /** The handle or DID of the account. */
   did: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cid: string
-  rev: string
+  did: string
+  active: boolean
+  /** If active=false, this optional field indicates a reason for why the account is not active. */
+  status?:
+    | 'com.atproto.sync.defs#takendown'
+    | 'com.atproto.sync.defs#suspended'
+    | 'com.atproto.sync.defs#deactivated'
+    | (string & {})
+  /** Optional field, the current rev of the repo, if active=true */
+  rev?: string
   [k: string]: unknown
 }
 
@@ -36,30 +44,9 @@ export class AccountNotFoundError extends XRPCError {
   }
 }
 
-export class AccountTakendownError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
-export class AccountSuspendedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
-export class AccountDeactivatedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'AccountNotFound') return new AccountNotFoundError(e)
-    if (e.error === 'AccountTakendown') return new AccountTakendownError(e)
-    if (e.error === 'AccountSuspended') return new AccountSuspendedError(e)
-    if (e.error === 'AccountDeactivated') return new AccountDeactivatedError(e)
   }
   return e
 }

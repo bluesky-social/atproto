@@ -80,6 +80,8 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
+import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs'
+import * as ComAtprotoSyncGetAccountStatus from './types/com/atproto/sync/getAccountStatus'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -234,6 +236,8 @@ export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
+export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs'
+export * as ComAtprotoSyncGetAccountStatus from './types/com/atproto/sync/getAccountStatus'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -328,6 +332,12 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
+export const COM_ATPROTO_SYNC = {
+  DefsTakendown: 'com.atproto.sync.defs#takendown',
+  DefsSuspended: 'com.atproto.sync.defs#suspended',
+  DefsDeleted: 'com.atproto.sync.defs#deleted',
+  DefsDeactivated: 'com.atproto.sync.defs#deactivated',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -1223,6 +1233,17 @@ export class ComAtprotoSyncNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  getAccountStatus(
+    params?: ComAtprotoSyncGetAccountStatus.QueryParams,
+    opts?: ComAtprotoSyncGetAccountStatus.CallOptions,
+  ): Promise<ComAtprotoSyncGetAccountStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getAccountStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetAccountStatus.toKnownErr(e)
+      })
   }
 
   getBlob(

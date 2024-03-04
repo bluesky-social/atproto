@@ -4181,6 +4181,90 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncDefs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.defs',
+    defs: {
+      takendown: {
+        type: 'token',
+        description:
+          'Account hosting status indicating that an administrator has taken down the account, for a permanent period (though this may be reversed).',
+      },
+      suspended: {
+        type: 'token',
+        description:
+          'Account hosting status indicating that an administrator has taken down the account, for a limited (but possibly indefinite) time period.',
+      },
+      deleted: {
+        type: 'token',
+        description:
+          'Account hosting status indicating that the repository has been removed. The account may be re-opened or migrated back to this host in the future, but the contents have been deleted for now. Does not clarify if the account self-deleted or an administrator or operator intervened.',
+      },
+      deactivated: {
+        type: 'token',
+        description:
+          'Account hosting status indicating that the repository has been pause and should not be re-distributed, usually on request of the account holder. This may be temporary or indefinite.',
+      },
+    },
+  },
+  ComAtprotoSyncGetAccountStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getAccountStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the repository hosting status for an account, on this server. Expected to be implemented by PDS and Relay.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The handle or DID of the account.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'active'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a reason for why the account is not active.',
+                knownValues: [
+                  'com.atproto.sync.defs#takendown',
+                  'com.atproto.sync.defs#suspended',
+                  'com.atproto.sync.defs#deactivated',
+                ],
+              },
+              rev: {
+                type: 'string',
+                description:
+                  'Optional field, the current rev of the repo, if active=true',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountNotFound',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoSyncGetBlob: {
     lexicon: 1,
     id: 'com.atproto.sync.getBlob',
@@ -4208,6 +4292,23 @@ export const schemaDict = {
         output: {
           encoding: '*/*',
         },
+        errors: [
+          {
+            name: 'BlobNotFound',
+          },
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'AccountTakendown',
+          },
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'AccountDeactivated',
+          },
+        ],
       },
     },
   },
@@ -4240,6 +4341,23 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
+        errors: [
+          {
+            name: 'BlockNotFound',
+          },
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'AccountTakendown',
+          },
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'AccountDeactivated',
+          },
+        ],
       },
     },
   },
@@ -4344,7 +4462,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'RepoNotFound',
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'AccountTakendown',
+          },
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'AccountDeactivated',
           },
         ],
       },
@@ -4385,6 +4512,23 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'AccountTakendown',
+          },
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'AccountDeactivated',
+          },
+        ],
       },
     },
   },
@@ -4415,6 +4559,20 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
+        errors: [
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'AccountTakendown',
+          },
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'AccountDeactivated',
+          },
+        ],
       },
     },
   },
@@ -4469,6 +4627,20 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'AccountTakendown',
+          },
+          {
+            name: 'AccountSuspended',
+          },
+          {
+            name: 'AccountDeactivated',
+          },
+        ],
       },
     },
   },
@@ -4607,6 +4779,7 @@ export const schemaDict = {
             refs: [
               'lex:com.atproto.sync.subscribeRepos#commit',
               'lex:com.atproto.sync.subscribeRepos#identity',
+              'lex:com.atproto.sync.subscribeRepos#account',
               'lex:com.atproto.sync.subscribeRepos#handle',
               'lex:com.atproto.sync.subscribeRepos#migrate',
               'lex:com.atproto.sync.subscribeRepos#tombstone',
@@ -4729,6 +4902,41 @@ export const schemaDict = {
           time: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+      account: {
+        type: 'object',
+        description:
+          "Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active.",
+        required: ['seq', 'did', 'time', 'active'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
+          status: {
+            type: 'string',
+            description:
+              'If active=false, this optional field indicates a reason for why the account is not active.',
+            knownValues: [
+              'com.atproto.sync.defs#takendown',
+              'com.atproto.sync.defs#suspended',
+              'com.atproto.sync.defs#deleted',
+              'com.atproto.sync.defs#deactivated',
+            ],
           },
         },
       },
@@ -8949,6 +9157,8 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
+  ComAtprotoSyncDefs: 'com.atproto.sync.defs',
+  ComAtprotoSyncGetAccountStatus: 'com.atproto.sync.getAccountStatus',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
