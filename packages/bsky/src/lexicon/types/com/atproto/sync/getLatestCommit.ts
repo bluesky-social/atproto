@@ -32,11 +32,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?:
-    | 'AccountNotFound'
-    | 'AccountTakendown'
-    | 'AccountSuspended'
-    | 'AccountDeactivated'
+  error?: 'RepoNotFound' | 'RepoTakendown' | 'RepoSuspended' | 'RepoDeactivated'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

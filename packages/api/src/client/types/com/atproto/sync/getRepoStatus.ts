@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
-  /** The handle or DID of the account. */
+  /** The handle or DID of the repo. */
   did: string
 }
 
@@ -38,7 +38,7 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AccountNotFoundError extends XRPCError {
+export class RepoNotFoundError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
@@ -46,7 +46,7 @@ export class AccountNotFoundError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AccountNotFound') return new AccountNotFoundError(e)
+    if (e.error === 'RepoNotFound') return new RepoNotFoundError(e)
   }
   return e
 }

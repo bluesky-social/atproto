@@ -34,25 +34,25 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AccountNotFoundError extends XRPCError {
+export class RepoNotFoundError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
 }
 
-export class AccountTakendownError extends XRPCError {
+export class RepoTakendownError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
 }
 
-export class AccountSuspendedError extends XRPCError {
+export class RepoSuspendedError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
 }
 
-export class AccountDeactivatedError extends XRPCError {
+export class RepoDeactivatedError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
@@ -60,10 +60,10 @@ export class AccountDeactivatedError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AccountNotFound') return new AccountNotFoundError(e)
-    if (e.error === 'AccountTakendown') return new AccountTakendownError(e)
-    if (e.error === 'AccountSuspended') return new AccountSuspendedError(e)
-    if (e.error === 'AccountDeactivated') return new AccountDeactivatedError(e)
+    if (e.error === 'RepoNotFound') return new RepoNotFoundError(e)
+    if (e.error === 'RepoTakendown') return new RepoTakendownError(e)
+    if (e.error === 'RepoSuspended') return new RepoSuspendedError(e)
+    if (e.error === 'RepoDeactivated') return new RepoDeactivatedError(e)
   }
   return e
 }

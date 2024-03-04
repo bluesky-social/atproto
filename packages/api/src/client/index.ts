@@ -81,7 +81,6 @@ import * as ComAtprotoServerResetPassword from './types/com/atproto/server/reset
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs'
-import * as ComAtprotoSyncGetAccountStatus from './types/com/atproto/sync/getAccountStatus'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -89,6 +88,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -237,7 +237,6 @@ export * as ComAtprotoServerResetPassword from './types/com/atproto/server/reset
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs'
-export * as ComAtprotoSyncGetAccountStatus from './types/com/atproto/sync/getAccountStatus'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -245,6 +244,7 @@ export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -1235,17 +1235,6 @@ export class ComAtprotoSyncNS {
     this._service = service
   }
 
-  getAccountStatus(
-    params?: ComAtprotoSyncGetAccountStatus.QueryParams,
-    opts?: ComAtprotoSyncGetAccountStatus.CallOptions,
-  ): Promise<ComAtprotoSyncGetAccountStatus.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getAccountStatus', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetAccountStatus.toKnownErr(e)
-      })
-  }
-
   getBlob(
     params?: ComAtprotoSyncGetBlob.QueryParams,
     opts?: ComAtprotoSyncGetBlob.CallOptions,
@@ -1320,6 +1309,17 @@ export class ComAtprotoSyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
+      })
+  }
+
+  getRepoStatus(
+    params?: ComAtprotoSyncGetRepoStatus.QueryParams,
+    opts?: ComAtprotoSyncGetRepoStatus.CallOptions,
+  ): Promise<ComAtprotoSyncGetRepoStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getRepoStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetRepoStatus.toKnownErr(e)
       })
   }
 

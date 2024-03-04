@@ -4188,80 +4188,22 @@ export const schemaDict = {
       takendown: {
         type: 'token',
         description:
-          'Account hosting status indicating that an administrator has taken down the account, for a permanent period (though this may be reversed).',
+          'Repo hosting status indicating that an administrator has taken down the repo, for a permanent period (though this may be reversed).',
       },
       suspended: {
         type: 'token',
         description:
-          'Account hosting status indicating that an administrator has taken down the account, for a limited (but possibly indefinite) time period.',
+          'Repo hosting status indicating that an administrator has taken down the repo, for a limited (but possibly indefinite) time period.',
       },
       deleted: {
         type: 'token',
         description:
-          'Account hosting status indicating that the repository has been removed. The account may be re-opened or migrated back to this host in the future, but the contents have been deleted for now. Does not clarify if the account self-deleted or an administrator or operator intervened.',
+          'Repo hosting status indicating that the repository has been removed. The repo may be re-opened or migrated back to this host in the future, but the contents have been deleted for now. Does not clarify if the account self-deleted or an administrator or operator intervened.',
       },
       deactivated: {
         type: 'token',
         description:
-          'Account hosting status indicating that the repository has been pause and should not be re-distributed, usually on request of the account holder. This may be temporary or indefinite.',
-      },
-    },
-  },
-  ComAtprotoSyncGetAccountStatus: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getAccountStatus',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get the repository hosting status for an account, on this server. Expected to be implemented by PDS and Relay.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'at-identifier',
-              description: 'The handle or DID of the account.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'active'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              active: {
-                type: 'boolean',
-              },
-              status: {
-                type: 'string',
-                description:
-                  'If active=false, this optional field indicates a reason for why the account is not active.',
-                knownValues: [
-                  'com.atproto.sync.defs#takendown',
-                  'com.atproto.sync.defs#suspended',
-                  'com.atproto.sync.defs#deactivated',
-                ],
-              },
-              rev: {
-                type: 'string',
-                description:
-                  'Optional field, the current rev of the repo, if active=true',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'AccountNotFound',
-          },
-        ],
+          'Repo hosting status indicating that the repository has been pause and should not be re-distributed, usually on request of the account holder. This may be temporary or indefinite.',
       },
     },
   },
@@ -4297,16 +4239,16 @@ export const schemaDict = {
             name: 'BlobNotFound',
           },
           {
-            name: 'AccountNotFound',
+            name: 'RepoNotFound',
           },
           {
-            name: 'AccountTakendown',
+            name: 'RepoTakendown',
           },
           {
-            name: 'AccountSuspended',
+            name: 'RepoSuspended',
           },
           {
-            name: 'AccountDeactivated',
+            name: 'RepoDeactivated',
           },
         ],
       },
@@ -4346,16 +4288,16 @@ export const schemaDict = {
             name: 'BlockNotFound',
           },
           {
-            name: 'AccountNotFound',
+            name: 'RepoNotFound',
           },
           {
-            name: 'AccountTakendown',
+            name: 'RepoTakendown',
           },
           {
-            name: 'AccountSuspended',
+            name: 'RepoSuspended',
           },
           {
-            name: 'AccountDeactivated',
+            name: 'RepoDeactivated',
           },
         ],
       },
@@ -4462,16 +4404,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'AccountNotFound',
+            name: 'RepoNotFound',
           },
           {
-            name: 'AccountTakendown',
+            name: 'RepoTakendown',
           },
           {
-            name: 'AccountSuspended',
+            name: 'RepoSuspended',
           },
           {
-            name: 'AccountDeactivated',
+            name: 'RepoDeactivated',
           },
         ],
       },
@@ -4517,16 +4459,16 @@ export const schemaDict = {
             name: 'RecordNotFound',
           },
           {
-            name: 'AccountNotFound',
+            name: 'RepoNotFound',
           },
           {
-            name: 'AccountTakendown',
+            name: 'RepoTakendown',
           },
           {
-            name: 'AccountSuspended',
+            name: 'RepoSuspended',
           },
           {
-            name: 'AccountDeactivated',
+            name: 'RepoDeactivated',
           },
         ],
       },
@@ -4561,16 +4503,74 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'AccountNotFound',
+            name: 'RepoNotFound',
           },
           {
-            name: 'AccountTakendown',
+            name: 'RepoTakendown',
           },
           {
-            name: 'AccountSuspended',
+            name: 'RepoSuspended',
           },
           {
-            name: 'AccountDeactivated',
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetRepoStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRepoStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the hosting status for a repository, on this server. Expected to be implemented by PDS and Relay.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The handle or DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'active'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a reason for why the account is not active.',
+                knownValues: [
+                  'com.atproto.sync.defs#takendown',
+                  'com.atproto.sync.defs#suspended',
+                  'com.atproto.sync.defs#deactivated',
+                ],
+              },
+              rev: {
+                type: 'string',
+                description:
+                  'Optional field, the current rev of the repo, if active=true',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
           },
         ],
       },
@@ -4629,16 +4629,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'AccountNotFound',
+            name: 'RepoNotFound',
           },
           {
-            name: 'AccountTakendown',
+            name: 'RepoTakendown',
           },
           {
-            name: 'AccountSuspended',
+            name: 'RepoSuspended',
           },
           {
-            name: 'AccountDeactivated',
+            name: 'RepoDeactivated',
           },
         ],
       },
@@ -9158,7 +9158,6 @@ export const ids = {
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSyncDefs: 'com.atproto.sync.defs',
-  ComAtprotoSyncGetAccountStatus: 'com.atproto.sync.getAccountStatus',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
@@ -9166,6 +9165,7 @@ export const ids = {
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncGetRepoStatus: 'com.atproto.sync.getRepoStatus',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',

@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  /** The handle or DID of the account. */
+  /** The handle or DID of the repo. */
   did: string
 }
 
@@ -40,7 +40,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AccountNotFound'
+  error?: 'RepoNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

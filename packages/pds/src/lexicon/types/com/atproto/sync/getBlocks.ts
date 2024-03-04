@@ -29,10 +29,10 @@ export interface HandlerError {
   message?: string
   error?:
     | 'BlockNotFound'
-    | 'AccountNotFound'
-    | 'AccountTakendown'
-    | 'AccountSuspended'
-    | 'AccountDeactivated'
+    | 'RepoNotFound'
+    | 'RepoTakendown'
+    | 'RepoSuspended'
+    | 'RepoDeactivated'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
