@@ -2711,6 +2711,16 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   followers: number[] = []
 
+  /**
+   * @generated from field: repeated int32 lists = 5;
+   */
+  lists: number[] = []
+
+  /**
+   * @generated from field: repeated int32 feeds = 6;
+   */
+  feeds: number[] = []
+
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -2743,6 +2753,20 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
     {
       no: 4,
       name: 'followers',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 5,
+      name: 'lists',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 6,
+      name: 'feeds',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
@@ -3343,6 +3367,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   tombstonedAt?: Timestamp
 
+  /**
+   * @generated from field: bool is_labeler = 7;
+   */
+  isLabeler = false
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3362,6 +3391,7 @@ export class ActorInfo extends Message<ActorInfo> {
       T: 9 /* ScalarType.STRING */,
     },
     { no: 6, name: 'tombstoned_at', kind: 'message', T: Timestamp },
+    { no: 7, name: 'is_labeler', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
