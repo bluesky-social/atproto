@@ -271,8 +271,6 @@ export class AuthVerifier {
         'BadJwtAudience',
       )
     }
-
-    payload.aud
     return {
       credentials: {
         type: 'mod_service',
