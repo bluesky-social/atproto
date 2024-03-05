@@ -267,9 +267,9 @@
           "description": "The accounts for which this muted word applies.",
           "items": { "type": "string", "format": "did" }
         },
-        "ttl": {
+        "expiresAt": {
           "type": "string",
-          "description": "The time-to-live for the muted word."
+          "description": "The date and time at which the muted word will expire and no longer be applied."
         }
       }
     },
