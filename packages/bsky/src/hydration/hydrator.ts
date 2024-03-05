@@ -7,6 +7,7 @@ import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import type { Label } from '../lexicon/types/com/atproto/label/defs'
 import {
   ActorHydrator,
   ProfileAggs,
@@ -126,6 +127,9 @@ export class Hydrator {
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
       viewer ? this.hydrateProfileViewers(dids, viewer) : undefined,
     ])
+    if (!includeTakedowns) {
+      actionTakedownLabels(dids, actors, labels)
+    }
     return mergeStates(profileViewersState ?? {}, {
       actors,
       labels,
@@ -170,10 +174,15 @@ export class Hydrator {
   async hydrateLists(
     uris: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
     const [listsState, profilesState] = await Promise.all([
-      await this.hydrateListsBasic(uris, viewer),
-      await this.hydrateProfilesBasic(uris.map(didFromUri), viewer),
+      await this.hydrateListsBasic(uris, viewer, includeTakedowns),
+      await this.hydrateProfilesBasic(
+        uris.map(didFromUri),
+        viewer,
+        includeTakedowns,
+      ),
     ])
     return mergeStates(listsState, profilesState)
   }
@@ -183,12 +192,19 @@ export class Hydrator {
   async hydrateListsBasic(
     uris: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
-    const [lists, listViewers] = await Promise.all([
+    const [lists, listViewers, labels] = await Promise.all([
       this.graph.getLists(uris),
       viewer ? this.graph.getListViewerStates(uris, viewer) : undefined,
+      this.label.getLabelsForSubjects(uris),
     ])
-    return { lists, listViewers, viewer }
+
+    if (!includeTakedowns) {
+      actionTakedownLabels(uris, lists, labels)
+    }
+
+    return { lists, listViewers, labels, viewer }
   }
 
   // app.bsky.graph.defs#listItemView
@@ -286,9 +302,16 @@ export class Hydrator {
         viewer,
         includeTakedowns,
       ),
-      this.hydrateLists([...nestedListUris, ...gateListUris], viewer),
-      this.hydrateFeedGens(nestedFeedGenUris, viewer),
+      this.hydrateLists(
+        [...nestedListUris, ...gateListUris],
+        viewer,
+        includeTakedowns,
+      ),
+      this.hydrateFeedGens(nestedFeedGenUris, viewer, includeTakedowns),
     ])
+    if (!includeTakedowns) {
+      actionTakedownLabels(allPostUris, posts, labels)
+    }
     // combine all hydration state
     return mergeManyStates(profileState, listState, feedGenState, {
       posts,
@@ -401,8 +424,9 @@ export class Hydrator {
   async hydrateThreadPosts(
     refs: ItemRef[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
-    return this.hydratePosts(refs, viewer)
+    return this.hydratePosts(refs, viewer, includeTakedowns)
   }
 
   // app.bsky.feed.defs#generatorView
@@ -412,18 +436,24 @@ export class Hydrator {
   async hydrateFeedGens(
     uris: string[], // @TODO any way to get refs here?
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
-    const [feedgens, feedgenAggs, feedgenViewers, profileState] =
+    const [feedgens, feedgenAggs, feedgenViewers, profileState, labels] =
       await Promise.all([
         this.feed.getFeedGens(uris),
         this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
         viewer ? this.feed.getFeedGenViewerStates(uris, viewer) : undefined,
         this.hydrateProfiles(uris.map(didFromUri), viewer),
+        this.label.getLabelsForSubjects(uris),
       ])
+    if (!includeTakedowns) {
+      actionTakedownLabels(uris, feedgens, labels)
+    }
     return mergeStates(profileState, {
       feedgens,
       feedgenAggs,
       feedgenViewers,
+      labels,
       viewer,
     })
   }
@@ -478,6 +508,7 @@ export class Hydrator {
         this.label.getLabelsForSubjects(uris),
         this.hydrateProfiles(uris.map(didFromUri), viewer),
       ])
+    actionTakedownLabels(postUris, posts, labels)
     return mergeStates(profileState, {
       posts,
       likes,
@@ -724,3 +755,23 @@ const mergeManyStates = (...states: HydrationState[]) => {
 const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
   return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
 }
+
+const actionTakedownLabels = <T>(
+  keys: string[],
+  hydrationMap: HydrationMap<T>,
+  labels: Labels,
+) => {
+  for (const key of keys) {
+    const subjectLabels = labels.get(key)
+    if (!subjectLabels) continue
+    if (includesTakedownLabel(subjectLabels)) {
+      hydrationMap.set(key, null)
+    }
+  }
+}
+
+const includesTakedownLabel = (labels: Label[]) => {
+  return labels.some((l) => l.val === TAKEDOWN_LABEL)
+}
+
+const TAKEDOWN_LABEL = '!takedown'
