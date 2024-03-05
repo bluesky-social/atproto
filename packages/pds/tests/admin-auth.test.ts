@@ -29,14 +29,14 @@ describe('admin auth', () => {
 
     modServiceKey = await Secp256k1Keypair.create()
     const origResolve = network.pds.ctx.idResolver.did.resolveAtprotoKey
-    network.pds.ctx.idResolver.did.resolveAtprotoKey = async (
+    network.pds.ctx.idResolver.did.resolveAtprotoKey = async function (
       did: string,
       forceRefresh?: boolean,
-    ) => {
+    ) {
       if (did === modServiceDid || did === altModDid) {
         return modServiceKey.did()
       }
-      return origResolve(did, forceRefresh)
+      return origResolve.call(this, did, forceRefresh)
     }
 
     agent = network.pds.getClient()
@@ -141,5 +141,77 @@ describe('admin auth', () => {
     await expect(attempt).rejects.toThrow(
       'jwt audience does not match service did',
     )
+  })
+
+  describe('account service auth', () => {
+    it('succeeds when account exists', async () => {
+      const headers = await network.pds.ctx.serviceAuthHeaders(
+        sc.dids.alice,
+        network.pds.ctx.cfg.service.did,
+      )
+      const attempt = agent.api.com.atproto.admin.sendEmail(
+        {
+          subject: 'Subject',
+          content: 'Content',
+          recipientDid: sc.dids.alice,
+          senderDid: sc.dids.alice,
+        },
+        {
+          ...headers,
+          encoding: 'application/json',
+        },
+      )
+      await expect(attempt).resolves.toBeDefined()
+    })
+
+    it("fails on account that doesn't exist", async () => {
+      await agent.api.com.atproto.admin.deleteAccount(
+        { did: sc.dids.dan },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+      await network.pds.processAll()
+      const headers = await network.pds.ctx.serviceAuthHeaders(
+        sc.dids.dan,
+        network.pds.ctx.cfg.service.did,
+      )
+      const attempt = agent.api.com.atproto.admin.sendEmail(
+        {
+          subject: 'Subject',
+          content: 'Content',
+          recipientDid: sc.dids.dan,
+          senderDid: sc.dids.dan,
+        },
+        {
+          ...headers,
+          encoding: 'application/json',
+        },
+      )
+      await expect(attempt).rejects.toThrow('Unknown account')
+    })
+
+    it('fails on bad audience', async () => {
+      const headers = await network.pds.ctx.serviceAuthHeaders(
+        sc.dids.alice,
+        sc.dids.bob,
+      )
+      const attempt = agent.api.com.atproto.admin.sendEmail(
+        {
+          subject: 'Subject',
+          content: 'Content',
+          recipientDid: sc.dids.alice,
+          senderDid: sc.dids.alice,
+        },
+        {
+          ...headers,
+          encoding: 'application/json',
+        },
+      )
+      await expect(attempt).rejects.toThrow(
+        'jwt audience does not match service did',
+      )
+    })
   })
 })
