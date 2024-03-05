@@ -13,6 +13,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     publicUrl: env.publicUrl,
     did: env.serverDid,
     version: env.version,
+    devMode: env.devMode,
   }
 
   assert(env.dbPostgresUrl)
@@ -71,6 +72,7 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
+  devMode?: boolean
 }
 
 export type DatabaseConfig = {
