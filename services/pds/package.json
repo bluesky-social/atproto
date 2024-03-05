@@ -6,5 +6,12 @@
     "@opentelemetry/instrumentation": "^0.45.0",
     "dd-trace": "^4.18.0",
     "opentelemetry-plugin-better-sqlite3": "^1.1.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "scripts": {
+    "start": "node --enable-source-maps --heapsnapshot-signal=SIGUSR2 --require=./tracer.js index.js",
+    "dev": "node --enable-source-maps --require=dotenv/config --watch index.js"
   }
 }
