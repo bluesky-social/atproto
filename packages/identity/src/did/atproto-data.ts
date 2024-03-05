@@ -34,6 +34,23 @@ export const getKey = (doc: DidDocument): string | undefined => {
   return didKey
 }
 
+export const getDidKeyFromMultibase = (key: {
+  type: string
+  publicKeyMultibase: string
+}): string | undefined => {
+  const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
+  let didKey: string | undefined = undefined
+  if (key.type === 'EcdsaSecp256r1VerificationKey2019') {
+    didKey = crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
+  } else if (key.type === 'EcdsaSecp256k1VerificationKey2019') {
+    didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
+  } else if (key.type === 'Multikey') {
+    const parsed = crypto.parseMultikey(key.publicKeyMultibase)
+    didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
+  }
+  return didKey
+}
+
 export const parseToAtprotoDocument = (
   doc: DidDocument,
 ): Partial<AtprotoData> => {
