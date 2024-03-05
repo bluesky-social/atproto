@@ -151,6 +151,7 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         subjectLine: event.meta?.subjectLine ?? '',
+        content: event.meta?.content,
       }
     }
 

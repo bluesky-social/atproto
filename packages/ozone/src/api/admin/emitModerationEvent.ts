@@ -22,7 +22,6 @@ export default function (server: Server, ctx: AppContext) {
       const isTakedownEvent = isModEventTakedown(event)
       const isReverseTakedownEvent = isModEventReverseTakedown(event)
       const isLabelEvent = isModEventLabel(event)
-      const isEmailEvent = isModEventEmail(event)
       const subject = subjectFromInput(
         input.body.subject,
         input.body.subjectBlobCids,
@@ -78,17 +77,17 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      if (isEmailEvent && typeof event.meta?.['content'] === 'string') {
+      if (isModEventEmail(event) && event.content) {
         // sending email prior to logging the event to avoid a long transaction below
         if (!subject.isRepo()) {
           throw new InvalidRequestError(
             'Email can only be sent to a repo subject',
           )
         }
-        const content = event.meta['content']
+        const { content, subjectLine } = event
         await retryHttp(() =>
           ctx.modService(db).sendEmail({
-            subject: event.subjectLine,
+            subject: subjectLine,
             content,
             recipientDid: subject.did,
           }),

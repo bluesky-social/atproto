@@ -302,6 +302,9 @@ export class ModerationService {
 
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
+      if (event.content) {
+        meta.content = event.content
+      }
     }
 
     const subjectInfo = subject.info()
