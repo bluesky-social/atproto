@@ -3,12 +3,11 @@ import * as uint8arrays from 'uint8arrays'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { Client as PlcClient } from '@did-plc/lib'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
-import { TestOzone } from './ozone'
+import { TestOzone, createOzoneDid } from './ozone'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { Secp256k1Keypair } from '@atproto/crypto'
@@ -43,13 +42,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     const ozonePort = params.ozone?.port ?? (await getPort())
 
     const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
-    const ozoneDid = await new PlcClient(plc.url).createDid({
-      signingKey: ozoneKey.did(),
-      rotationKeys: [ozoneKey.did()],
-      handle: 'ozone.test',
-      pds: `http://pds.invalid`,
-      signer: ozoneKey,
-    })
+    const ozoneDid = await createOzoneDid(plc.url, ozoneKey)
 
     const bsky = await TestBsky.create({
       port: bskyPort,

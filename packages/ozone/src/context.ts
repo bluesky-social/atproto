@@ -55,7 +55,7 @@ export class AppContext {
 
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
-        iss: cfg.service.did,
+        iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
       })
@@ -170,7 +170,7 @@ export class AppContext {
   }
 
   async serviceAuthHeaders(aud: string) {
-    const iss = this.cfg.service.did
+    const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
       aud,

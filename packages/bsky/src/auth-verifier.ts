@@ -211,7 +211,7 @@ export class AuthVerifier {
       }
       const [did, serviceId] = iss.split('#')
       const keyId =
-        serviceId === 'atproto-labeler' ? 'atproto-label' : 'atproto'
+        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
       let identity: GetIdentityByDidResponse
       try {
         identity = await this.dataplane.getIdentityByDid({ did })
