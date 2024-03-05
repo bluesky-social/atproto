@@ -1,4 +1,5 @@
 import { AtUri, ensureValidDid } from '@atproto/syntax'
+import { v4 as uuid } from 'uuid'
 import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,
@@ -767,7 +768,11 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async upsertMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
+  async addMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    const sanitizedValue = sanitizeMutedWordValue(mutedWord.value)
+
+    if (!sanitizedValue) return
+
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       let mutedWordsPref = prefs.findLast(
         (pref) =>
@@ -775,40 +780,27 @@ export class BskyAgent extends AtpAgent {
           AppBskyActorDefs.validateMutedWordsPref(pref).success,
       )
 
+      const newMutedWord: AppBskyActorDefs.MutedWord = {
+        id: uuid(),
+        value: sanitizedValue,
+        targets: mutedWord.targets || [],
+        actors: mutedWord.actors || [],
+        ttl: mutedWord.ttl || undefined,
+      }
+
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        for (const updatedWord of newMutedWords) {
-          let foundMatch = false
-          const sanitizedUpdatedValue = sanitizeMutedWordValue(
-            updatedWord.value,
-          )
+        mutedWordsPref.items.push(newMutedWord)
 
-          // was trimmed down to an empty string e.g. single `#`
-          if (!sanitizedUpdatedValue) continue
-
-          for (const existingItem of mutedWordsPref.items) {
-            if (existingItem.value === sanitizedUpdatedValue) {
-              existingItem.targets = Array.from(
-                new Set([...existingItem.targets, ...updatedWord.targets]),
-              )
-              foundMatch = true
-              break
-            }
-          }
-
-          if (!foundMatch) {
-            mutedWordsPref.items.push({
-              ...updatedWord,
-              value: sanitizedUpdatedValue,
-            })
-          }
-        }
+        /**
+         * Migrate any old muted words that don't have an id
+         */
+        mutedWordsPref.items = migrateLegacyMutedWordsItems(
+          mutedWordsPref.items,
+        )
       } else {
         // if the pref doesn't exist, create it
         mutedWordsPref = {
-          items: newMutedWords.map((w) => ({
-            ...w,
-            value: sanitizeMutedWordValue(w.value),
-          })),
+          items: [newMutedWord],
         }
       }
 
@@ -820,6 +812,15 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
+  /**
+   * @deprecated use `addMutedWord` instead
+   */
+  async upsertMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
+    for (const word of newMutedWords) {
+      await this.addMutedWord(word)
+    }
+  }
+
   async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       const mutedWordsPref = prefs.findLast(
@@ -829,12 +830,38 @@ export class BskyAgent extends AtpAgent {
       )
 
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        for (const existingItem of mutedWordsPref.items) {
-          if (existingItem.value === mutedWord.value) {
-            existingItem.targets = mutedWord.targets
-            break
+        mutedWordsPref.items.map((existingItem) => {
+          // id is undefined in legacy implementation
+          const existingId = existingItem.id as string | undefined
+          // prefer matching based on id
+          const matchById = existingId && existingId === mutedWord.id
+          // handle legacy case where id is not set
+          const legacyMatchByValue =
+            !existingId && existingItem.value === mutedWord.value
+
+          if (matchById || legacyMatchByValue) {
+            const updated = {
+              ...existingItem,
+              ...mutedWord,
+            }
+            return {
+              id: existingId || uuid(),
+              value: updated.value,
+              targets: updated.targets || [],
+              actors: updated.actors || [],
+              ttl: updated.ttl || undefined,
+            }
+          } else {
+            return existingItem
           }
-        }
+        })
+
+        /**
+         * Migrate any old muted words that don't have an id
+         */
+        mutedWordsPref.items = migrateLegacyMutedWordsItems(
+          mutedWordsPref.items,
+        )
       }
 
       return prefs
@@ -855,12 +882,27 @@ export class BskyAgent extends AtpAgent {
 
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
         for (let i = 0; i < mutedWordsPref.items.length; i++) {
-          const existing = mutedWordsPref.items[i]
-          if (existing.value === mutedWord.value) {
+          const existingItem = mutedWordsPref.items[i]
+          // id is undefined in legacy implementation
+          const existingId = existingItem.id as string | undefined
+          // prefer matching based on id
+          const matchById = existingId && existingId === mutedWord.id
+          // handle legacy case where id is not set
+          const legacyMatchByValue =
+            !existingId && existingItem.value === mutedWord.value
+
+          if (matchById || legacyMatchByValue) {
             mutedWordsPref.items.splice(i, 1)
             break
           }
         }
+
+        /**
+         * Migrate any old muted words that don't have an id
+         */
+        mutedWordsPref.items = migrateLegacyMutedWordsItems(
+          mutedWordsPref.items,
+        )
       }
 
       return prefs
@@ -1042,4 +1084,13 @@ function isBskyPrefs(v: any): v is BskyPreferences {
 
 function isModPrefs(v: any): v is ModerationPrefs {
   return v && typeof v === 'object' && 'labelers' in v
+}
+
+function migrateLegacyMutedWordsItems(items: AppBskyActorDefs.MutedWord[]) {
+  return items.map((item) => ({
+    ...item,
+    id: item.id || uuid(),
+    actors: item.actors || [],
+    ttl: item.ttl || undefined,
+  }))
 }

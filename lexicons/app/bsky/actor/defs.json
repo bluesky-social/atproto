@@ -245,8 +245,9 @@
     "mutedWord": {
       "type": "object",
       "description": "A word that the account owner has muted.",
-      "required": ["value", "targets"],
+      "required": ["id", "value", "targets"],
       "properties": {
+        "id": { "type": "string" },
         "value": {
           "type": "string",
           "description": "The muted word itself.",
@@ -260,6 +261,15 @@
             "type": "ref",
             "ref": "app.bsky.actor.defs#mutedWordTarget"
           }
+        },
+        "actors": {
+          "type": "array",
+          "description": "The accounts for which this muted word applies.",
+          "items": { "type": "string", "format": "did" }
+        },
+        "ttl": {
+          "type": "string",
+          "description": "The time-to-live for the muted word."
         }
       }
     },
