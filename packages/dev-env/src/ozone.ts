@@ -3,7 +3,7 @@ import * as ui8 from 'uint8arrays'
 import * as ozone from '@atproto/ozone'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { Client as PlcClient } from '@did-plc/lib'
+import * as plc from '@did-plc/lib'
 import { OzoneConfig } from './types'
 import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
@@ -21,18 +21,32 @@ export class TestOzone {
     const signingKeyHex = ui8.toString(await serviceKeypair.export(), 'hex')
     let serverDid = config.serverDid
     if (!serverDid) {
-      const plcClient = new PlcClient(config.plcUrl)
-      serverDid = await plcClient.createDid({
-        signingKey: serviceKeypair.did(),
-        rotationKeys: [serviceKeypair.did()],
-        handle: 'ozone.test',
-        pds: `https://pds.invalid`,
-        signer: serviceKeypair,
-      })
+      const plcClient = new plc.Client(config.plcUrl)
+      const plcOp = await plc.signOperation(
+        {
+          type: 'plc_operation',
+          alsoKnownAs: [],
+          rotationKeys: [serviceKeypair.did()],
+          verificationMethods: {
+            atproto_label: serviceKeypair.did(),
+          },
+          services: {
+            atproto_labeler: {
+              type: 'AtprotoLabeler',
+              endpoint: 'https://ozone.public.url',
+            },
+          },
+          prev: null,
+        },
+        serviceKeypair,
+      )
+      serverDid = await plc.didForCreateOp(plcOp)
+      await plcClient.sendOperation(serverDid, plcOp)
     }
 
     const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
+
     const env: ozone.OzoneEnvironment = {
       devMode: true,
       version: '0.0.0',
