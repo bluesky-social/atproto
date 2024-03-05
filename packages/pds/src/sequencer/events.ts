@@ -16,6 +16,7 @@ import {
   SUSPENDED,
   TAKENDOWN,
 } from '../lexicon/types/com/atproto/sync/defs'
+import { AccountStatus } from '../account-manager/helpers/account'
 
 export const formatSeqCommit = async (
   did: string,
@@ -103,13 +104,27 @@ export const formatSeqIdentityEvt = async (
 
 export const formatSeqAccountEvt = async (
   did: string,
-  active: boolean,
-  status?: AccountEvt['status'],
+  status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
+  let active = false
+  let evtStatus: AccountEvt['status'] = undefined
+  if (status === 'active') {
+    active = true
+  } else if (status === 'takendown') {
+    evtStatus = TAKENDOWN
+  } else if (status === 'suspended') {
+    evtStatus = SUSPENDED
+  } else if (status === 'deleted') {
+    evtStatus = DELETED
+  } else if (status === 'deactivated') {
+    evtStatus = DEACTIVATED
+  } else {
+    throw new Error(`Unknown status: ${status}`)
+  }
   const evt: AccountEvt = {
     did,
     active,
-    status,
+    status: evtStatus,
   }
   return {
     did,

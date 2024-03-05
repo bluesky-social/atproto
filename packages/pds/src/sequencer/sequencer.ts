@@ -4,7 +4,6 @@ import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitData } from '@atproto/repo'
 import {
-  AccountEvt,
   CommitEvt,
   HandleEvt,
   IdentityEvt,
@@ -25,6 +24,7 @@ import {
 } from './db'
 import { PreparedWrite } from '../repo'
 import { Crawlers } from '../crawlers'
+import { AccountStatus } from '../account-manager/helpers/account'
 
 export * from './events'
 
@@ -225,12 +225,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await this.sequenceEvt(evt)
   }
 
-  async sequenceAccountEvt(
-    did: string,
-    active: boolean,
-    status?: AccountEvt['status'],
-  ) {
-    const evt = await formatSeqAccountEvt(did, active, status)
+  async sequenceAccountEvt(did: string, status: AccountStatus) {
+    const evt = await formatSeqAccountEvt(did, status)
     await this.sequenceEvt(evt)
   }
 

@@ -65,6 +65,22 @@ export class AccountManager {
     return got?.did ?? null
   }
 
+  async getAccountStatus(handleOrDid: string): Promise<account.AccountStatus> {
+    const got = await this.getAccount(handleOrDid, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+    if (!got) {
+      return 'deleted'
+    } else if (got.takedownRef) {
+      return 'takendown'
+    } else if (got.deactivatedAt) {
+      return 'deactivated'
+    } else {
+      return 'active'
+    }
+  }
+
   async createAccount(opts: {
     did: string
     handle: string

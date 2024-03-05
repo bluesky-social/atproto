@@ -10,6 +10,8 @@ export default function (server: Server, ctx: AppContext) {
         requester,
         input.body.deleteAfter ?? null,
       )
+      const status = await ctx.accountManager.getAccountStatus(requester)
+      await ctx.sequencer.sequenceAccountEvt(requester, status)
     },
   })
 }
