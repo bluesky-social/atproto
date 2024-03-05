@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import EventEmitter, { once } from 'node:events'
 import {
   TestNetwork,
   SeedClient,
@@ -6,6 +7,7 @@ import {
   ModeratorClient,
 } from '@atproto/dev-env'
 import { ComAtprotoAdminDefs } from '@atproto/api'
+import Mail from 'nodemailer/lib/mailer'
 import { forSnapshot } from './_util'
 import {
   REASONAPPEAL,
@@ -375,6 +377,52 @@ describe('moderation-events', () => {
           $type: 'com.atproto.admin.defs#modEventReverseTakedown',
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
+    })
+  })
+
+  describe('email event', () => {
+    let sendMailOriginal
+    const mailCatcher = new EventEmitter()
+    const getMailFrom = async (promise): Promise<Mail.Options> => {
+      const result = await Promise.all([once(mailCatcher, 'mail'), promise])
+      return result[0][0]
+    }
+
+    beforeAll(() => {
+      const mailer = network.pds.ctx.moderationMailer
+      // Catch emails for use in tests
+      sendMailOriginal = mailer.transporter.sendMail
+      mailer.transporter.sendMail = async (opts) => {
+        const result = await sendMailOriginal.call(mailer.transporter, opts)
+        mailCatcher.emit('mail', opts)
+        return result
+      }
+    })
+
+    afterAll(() => {
+      network.pds.ctx.moderationMailer.transporter.sendMail = sendMailOriginal
+    })
+
+    it('sends email via pds.', async () => {
+      const mail = await getMailFrom(
+        modClient.emitModerationEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventEmail',
+            comment: 'Reaching out to Alice',
+            subjectLine: 'Hello',
+            content: 'Hey Alice, how are you?',
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.alice,
+          },
+        }),
+      )
+      expect(mail).toEqual({
+        to: 'alice@test.com',
+        subject: 'Hello',
+        html: 'Hey Alice, how are you?',
       })
     })
   })

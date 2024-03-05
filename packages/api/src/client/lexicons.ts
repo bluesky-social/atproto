@@ -897,6 +897,10 @@ export const schemaDict = {
             type: 'string',
             description: 'The subject line of the email sent to the user.',
           },
+          content: {
+            type: 'string',
+            description: 'The content of the email sent to the user.',
+          },
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
