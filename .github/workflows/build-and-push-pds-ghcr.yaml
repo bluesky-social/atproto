@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - pds-proxy-headers
+      - rm-basic-auth
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
