@@ -1,8 +1,9 @@
-import { envInt, envList, envStr } from '@atproto/common'
+import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): OzoneEnvironment => {
   return {
     nodeEnv: envStr('NODE_ENV'),
+    devMode: envBool('OZONE_DEV_MODE'),
     version: envStr('OZONE_VERSION'),
     port: envInt('OZONE_PORT'),
     publicUrl: envStr('OZONE_PUBLIC_URL'),
@@ -27,6 +28,7 @@ export const readEnv = (): OzoneEnvironment => {
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  devMode?: boolean
   version?: string
   port?: number
   publicUrl?: string

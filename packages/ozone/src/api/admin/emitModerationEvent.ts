@@ -2,12 +2,14 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
+  isModEventEmail,
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { subjectFromInput } from '../../mod-service/subject'
 import { ModerationLangService } from '../../mod-service/lang'
+import { retryHttp } from '../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -20,6 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       const isTakedownEvent = isModEventTakedown(event)
       const isReverseTakedownEvent = isModEventReverseTakedown(event)
       const isLabelEvent = isModEventLabel(event)
+      const isEmailEvent = isModEventEmail(event)
       const subject = subjectFromInput(
         input.body.subject,
         input.body.subjectBlobCids,
@@ -73,6 +76,23 @@ export default function (server: Server, ctx: AppContext) {
           // blobs for the record being restored, which aren't taken down on another record.
           subject.blobCids = status.blobCids ?? []
         }
+      }
+
+      if (isEmailEvent && typeof event.meta?.['content'] === 'string') {
+        // sending email prior to logging the event to avoid a long transaction below
+        if (!subject.isRepo()) {
+          throw new InvalidRequestError(
+            'Email can only be sent to a repo subject',
+          )
+        }
+        const content = event.meta['content']
+        await retryHttp(() =>
+          ctx.modService(db).sendEmail({
+            subject: event.subjectLine,
+            content,
+            recipientDid: subject.did,
+          }),
+        )
       }
 
       const moderationEvent = await db.transaction(async (dbTxn) => {

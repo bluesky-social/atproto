@@ -34,6 +34,7 @@ export class TestOzone {
     const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
     const env: ozone.OzoneEnvironment = {
+      devMode: true,
       version: '0.0.0',
       port,
       didPlcUrl: config.plcUrl,

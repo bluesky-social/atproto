@@ -26,20 +26,17 @@ import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import { formatLabel } from './util'
 
-export type AppviewAuth = () => Promise<
-  | {
-      headers: {
-        authorization: string
-      }
-    }
-  | undefined
->
+export type AuthHeaders = {
+  headers: {
+    authorization: string
+  }
+}
 
 export class ModerationViews {
   constructor(
     private db: Database,
     private appviewAgent: AtpAgent,
-    private appviewAuth: AppviewAuth,
+    private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
