@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const since =
         params.since !== undefined ? new Date(params.since).toISOString() : ''
       const includeUnspeccedTakedowns =
-        auth.credentials.type === 'null' ? false : auth.credentials.isAdmin
+        auth.credentials.type === 'none' ? false : auth.credentials.isAdmin
       const labelRes = await ctx.db.db
         .selectFrom('label')
         .selectAll()
