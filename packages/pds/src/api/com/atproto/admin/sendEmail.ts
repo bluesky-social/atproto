@@ -6,7 +6,7 @@ import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.authVerifier.roleOrAdminService,
+    auth: ctx.authVerifier.roleOrModService,
     handler: async ({ input, auth }) => {
       if (auth.credentials.type === 'role' && !auth.credentials.moderator) {
         throw new AuthRequiredError('Insufficient privileges')
