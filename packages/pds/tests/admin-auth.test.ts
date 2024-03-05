@@ -28,13 +28,28 @@ describe('admin auth', () => {
     pdsDid = network.pds.ctx.cfg.service.did
 
     modServiceKey = await Secp256k1Keypair.create()
-    const origResolve = network.pds.ctx.idResolver.did.resolveAtprotoKey
-    network.pds.ctx.idResolver.did.resolveAtprotoKey = async function (
+    const origResolve = network.pds.ctx.idResolver.did.resolve
+    network.pds.ctx.idResolver.did.resolve = async function (
       did: string,
       forceRefresh?: boolean,
     ) {
       if (did === modServiceDid || did === altModDid) {
-        return modServiceKey.did()
+        return {
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3id.org/security/multikey/v1',
+            'https://w3id.org/security/suites/secp256k1-2019/v1',
+          ],
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#atproto`,
+              type: 'Multikey',
+              controller: did,
+              publicKeyMultibase: modServiceKey.did().replace('did:key:', ''),
+            },
+          ],
+        }
       }
       return origResolve.call(this, did, forceRefresh)
     }

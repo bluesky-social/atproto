@@ -12,7 +12,7 @@ import {
   InvalidRequestError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
@@ -20,6 +20,7 @@ import KeyEncoder from 'key-encoder'
 import Database from './db'
 import { softDeleted } from './db/util'
 import { SigningKeyMemory, VerifyKey } from './config'
+import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
@@ -260,14 +261,32 @@ export class AuthVerifier {
     const payload = await verifyServiceJwt(
       jwtStr,
       this._pdsServiceDid,
-      async (did, forceRefresh) => {
-        if (did !== this._modServiceDid) {
+      async (iss, forceRefresh) => {
+        if (
+          iss !== this._modServiceDid &&
+          iss !== `${this._modServiceDid}#atproto_labeler`
+        ) {
           throw new AuthRequiredError(
             'Untrusted issuer for admin actions',
             'UntrustedIss',
           )
         }
-        return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+        const [did, serviceId] = iss.split('#')
+        const keyId =
+          serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+        const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
+        if (!didDoc) {
+          throw new AuthRequiredError('could not resolve iss did')
+        }
+        const parsedKey = getVerificationMaterial(didDoc, keyId)
+        if (!parsedKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        const didKey = getDidKeyFromMultibase(parsedKey)
+        if (!didKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        return didKey
       },
     )
     return {
