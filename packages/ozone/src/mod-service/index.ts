@@ -958,7 +958,7 @@ export class ModerationService {
 const isSafeUrl = (url: URL) => {
   if (url.protocol !== 'https:') return false
   if (!url.hostname || url.hostname === 'localhost') return false
-  if (net.isIP(url.hostname) === 0) return false
+  if (net.isIP(url.hostname) !== 0) return false
   return true
 }
 
