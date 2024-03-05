@@ -259,9 +259,20 @@ export class AuthVerifier {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
     }
     const payload = await this.verifyServiceJwt(reqCtx, {
-      aud: this.dids.entryway ?? this.dids.pds,
+      aud: null,
       iss: [this.dids.modService, `${this.dids.modService}#atproto_labeler`],
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
+
+    payload.aud
     return {
       credentials: {
         type: 'mod_service',
