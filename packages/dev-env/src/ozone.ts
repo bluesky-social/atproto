@@ -2,7 +2,7 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as ozone from '@atproto/ozone'
 import { AtpAgent } from '@atproto/api'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
 import { OzoneConfig } from './types'
 import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
@@ -21,27 +21,7 @@ export class TestOzone {
     const signingKeyHex = ui8.toString(await serviceKeypair.export(), 'hex')
     let serverDid = config.serverDid
     if (!serverDid) {
-      const plcClient = new plc.Client(config.plcUrl)
-      const plcOp = await plc.signOperation(
-        {
-          type: 'plc_operation',
-          alsoKnownAs: [],
-          rotationKeys: [serviceKeypair.did()],
-          verificationMethods: {
-            atproto_label: serviceKeypair.did(),
-          },
-          services: {
-            atproto_labeler: {
-              type: 'AtprotoLabeler',
-              endpoint: 'https://ozone.public.url',
-            },
-          },
-          prev: null,
-        },
-        serviceKeypair,
-      )
-      serverDid = await plc.didForCreateOp(plcOp)
-      await plcClient.sendOperation(serverDid, plcOp)
+      serverDid = await createOzoneDid(config.plcUrl, serviceKeypair)
     }
 
     const port = config.port || (await getPort())
@@ -129,4 +109,32 @@ export class TestOzone {
     await this.daemon.destroy()
     await this.server.destroy()
   }
+}
+
+export const createOzoneDid = async (
+  plcUrl: string,
+  keypair: Keypair,
+): Promise<string> => {
+  const plcClient = new plc.Client(plcUrl)
+  const plcOp = await plc.signOperation(
+    {
+      type: 'plc_operation',
+      alsoKnownAs: [],
+      rotationKeys: [keypair.did()],
+      verificationMethods: {
+        atproto_label: keypair.did(),
+      },
+      services: {
+        atproto_labeler: {
+          type: 'AtprotoLabeler',
+          endpoint: 'https://ozone.public.url',
+        },
+      },
+      prev: null,
+    },
+    keypair,
+  )
+  const did = await plc.didForCreateOp(plcOp)
+  await plcClient.sendOperation(did, plcOp)
+  return did
 }
