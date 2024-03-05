@@ -660,6 +660,9 @@ importers:
       axios:
         specifier: ^0.27.2
         version: 0.27.2
+      nodemailer:
+        specifier: ^6.8.0
+        version: 6.8.0
 
   packages/pds:
     dependencies:
