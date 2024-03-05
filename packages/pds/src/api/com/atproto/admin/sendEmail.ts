@@ -5,9 +5,15 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.roleOrAccountService,
     handler: async ({ req, input, auth }) => {
-      if (!auth.credentials.admin && !auth.credentials.moderator) {
+      if (auth.credentials.type === 'role' && !auth.credentials.moderator) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+      if (
+        auth.credentials.type === 'account_service' &&
+        auth.credentials.did !== input.body.recipientDid
+      ) {
         throw new AuthRequiredError('Insufficient privileges')
       }
 
@@ -32,21 +38,26 @@ export default function (server: Server, ctx: AppContext) {
         { content },
         { subject, to: userInfo.email },
       )
-      await ctx.moderationAgent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: {
-            $type: 'com.atproto.admin.defs#modEventEmail',
-            subjectLine: subject,
-            comment,
+
+      if (auth.credentials.type === 'role') {
+        // @TODO this behavior is deprecated, remove after service auth takes effect
+        await ctx.moderationAgent.api.com.atproto.admin.emitModerationEvent(
+          {
+            event: {
+              $type: 'com.atproto.admin.defs#modEventEmail',
+              subjectLine: subject,
+              comment,
+            },
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: recipientDid,
+            },
+            createdBy: senderDid,
           },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: recipientDid,
-          },
-          createdBy: senderDid,
-        },
-        { ...authPassthru(req), encoding: 'application/json' },
-      )
+          { ...authPassthru(req), encoding: 'application/json' },
+        )
+      }
+
       return {
         encoding: 'application/json',
         body: { sent: true },

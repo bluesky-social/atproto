@@ -71,6 +71,14 @@ type AccessOutput = {
   artifacts: string
 }
 
+type AccountServiceOutput = {
+  credentials: {
+    type: 'account_service'
+    did: string
+  }
+  artifacts: string
+}
+
 type AccessCheckedOutput = AccessOutput & {
   credentials: {
     pdsDid: string | null
@@ -271,11 +279,49 @@ export class AuthVerifier {
     }
   }
 
+  accountService = async (reqCtx: ReqCtx): Promise<AccountServiceOutput> => {
+    const token = bearerTokenFromReq(reqCtx.req)
+    if (!token) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+    const payload = await verifyServiceJwt(
+      token,
+      this._pdsServiceDid,
+      (did, forceRefresh) =>
+        this.idResolver.did.resolveAtprotoKey(did, forceRefresh),
+    )
+    const found = await this.db.db
+      .selectFrom('user_account')
+      .where('did', '=', payload.iss)
+      .select('did')
+      .executeTakeFirst()
+    if (!found) {
+      throw new AuthRequiredError('Unknown account', 'UntrustedIss')
+    }
+    return {
+      credentials: {
+        type: 'account_service',
+        did: payload.iss,
+      },
+      artifacts: token,
+    }
+  }
+
   roleOrAdminService = async (
     reqCtx: ReqCtx,
   ): Promise<RoleOutput | AdminServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
       return this.adminService(reqCtx)
+    } else {
+      return this.role(reqCtx)
+    }
+  }
+
+  roleOrAccountService = async (
+    reqCtx: ReqCtx,
+  ): Promise<RoleOutput | AccountServiceOutput> => {
+    if (isBearerToken(reqCtx.req)) {
+      return this.accountService(reqCtx)
     } else {
       return this.role(reqCtx)
     }
