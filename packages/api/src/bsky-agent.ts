@@ -1,5 +1,5 @@
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import { v4 as uuid } from 'uuid'
+import {TID} from '@atproto/common-web'
 import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,
@@ -781,7 +781,7 @@ export class BskyAgent extends AtpAgent {
       )
 
       const newMutedWord: AppBskyActorDefs.MutedWord = {
-        id: uuid(),
+        id: TID.nextStr(),
         value: sanitizedValue,
         targets: mutedWord.targets || [],
         actors: mutedWord.actors || [],
@@ -845,7 +845,7 @@ export class BskyAgent extends AtpAgent {
               ...mutedWord,
             }
             return {
-              id: existingId || uuid(),
+              id: existingId || TID.nextStr(),
               value: updated.value,
               targets: updated.targets || [],
               actors: updated.actors || [],
@@ -1089,7 +1089,7 @@ function isModPrefs(v: any): v is ModerationPrefs {
 function migrateLegacyMutedWordsItems(items: AppBskyActorDefs.MutedWord[]) {
   return items.map((item) => ({
     ...item,
-    id: item.id || uuid(),
+    id: item.id || TID.nextStr(),
     actors: item.actors || [],
     expiresAt: item.expiresAt || undefined,
   }))
