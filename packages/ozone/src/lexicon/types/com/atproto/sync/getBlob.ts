@@ -28,6 +28,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?:
+    | 'BlobNotFound'
+    | 'RepoNotFound'
+    | 'RepoTakendown'
+    | 'RepoSuspended'
+    | 'RepoDeactivated'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
