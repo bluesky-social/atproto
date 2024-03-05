@@ -59,8 +59,6 @@ export class AppContext {
         aud,
         keypair: signingKey,
       })
-    const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
     const backgroundQueue = new BackgroundQueue(db)
     const eventPusher = new EventPusher(db, createAuthHeaders, {
@@ -68,21 +66,23 @@ export class AppContext {
       pds: cfg.pds ?? undefined,
     })
 
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
     const modService = ModerationService.creator(
+      cfg,
       backgroundQueue,
+      idResolver,
       eventPusher,
       appviewAgent,
-      appviewAuth,
+      createAuthHeaders,
       cfg.service.did,
       overrides?.imgInvalidator,
       cfg.cdn.paths,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
-
-    const idResolver = new IdResolver({
-      plcUrl: cfg.identity.plcUrl,
-    })
 
     const sequencer = new Sequencer(db)
 

@@ -1,9 +1,13 @@
+import net from 'node:net'
+import { Insertable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
+import { IdResolver } from '@atproto/identity'
+import AtpAgent from '@atproto/api'
 import { Database } from '../db'
-import { AppviewAuth, ModerationViews } from './views'
+import { AuthHeaders, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
   isModEventComment,
@@ -30,9 +34,7 @@ import {
 } from './types'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
-import AtpAgent from '@atproto/api'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
-import { Insertable, sql } from 'kysely'
 import {
   ModSubject,
   RecordSubject,
@@ -46,26 +48,31 @@ import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
+import { OzoneConfig } from '../config'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
   constructor(
     public db: Database,
+    public cfg: OzoneConfig,
     public backgroundQueue: BackgroundQueue,
+    public idResolver: IdResolver,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
-    private appviewAuth: AppviewAuth,
+    private createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
     public serverDid: string,
     public imgInvalidator?: ImageInvalidator,
     public cdnPaths?: string[],
   ) {}
 
   static creator(
+    cfg: OzoneConfig,
     backgroundQueue: BackgroundQueue,
+    idResolver: IdResolver,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
-    appviewAuth: AppviewAuth,
+    createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
     serverDid: string,
     imgInvalidator?: ImageInvalidator,
     cdnPaths?: string[],
@@ -73,17 +80,21 @@ export class ModerationService {
     return (db: Database) =>
       new ModerationService(
         db,
+        cfg,
         backgroundQueue,
+        idResolver,
         eventPusher,
         appviewAgent,
-        appviewAuth,
+        createAuthHeaders,
         serverDid,
         imgInvalidator,
         cdnPaths,
       )
   }
 
-  views = new ModerationViews(this.db, this.appviewAgent, this.appviewAuth)
+  views = new ModerationViews(this.db, this.appviewAgent, () =>
+    this.createAuthHeaders(this.cfg.appview.did),
+  )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -291,6 +302,9 @@ export class ModerationService {
 
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
+      if (event.content) {
+        meta.content = event.content
+      }
     }
 
     const subjectInfo = subject.info()
@@ -903,6 +917,49 @@ export class ModerationService {
       )
       .execute()
   }
+
+  async sendEmail(opts: {
+    content: string
+    recipientDid: string
+    subject: string
+  }) {
+    const { subject, content, recipientDid } = opts
+    const { pds } = await this.idResolver.did.resolveAtprotoData(recipientDid)
+    const url = new URL(pds)
+    if (!this.cfg.service.devMode && !isSafeUrl(url)) {
+      throw new InvalidRequestError('Invalid pds service in DID doc')
+    }
+    const agent = new AtpAgent({ service: url })
+    const { data: serverInfo } =
+      await agent.api.com.atproto.server.describeServer()
+    if (serverInfo.did !== `did:web:${url.hostname}`) {
+      // @TODO do bidirectional check once implemented. in the meantime,
+      // matching did to hostname we're talking to is pretty good.
+      throw new InvalidRequestError('Invalid pds service in DID doc')
+    }
+    const { data: delivery } = await agent.api.com.atproto.admin.sendEmail(
+      {
+        subject,
+        content,
+        recipientDid,
+        senderDid: this.cfg.service.did,
+      },
+      {
+        encoding: 'application/json',
+        ...(await this.createAuthHeaders(serverInfo.did)),
+      },
+    )
+    if (!delivery.sent) {
+      throw new InvalidRequestError('Email was accepted but not sent')
+    }
+  }
+}
+
+const isSafeUrl = (url: URL) => {
+  if (url.protocol !== 'https:') return false
+  if (!url.hostname || url.hostname === 'localhost') return false
+  if (net.isIP(url.hostname) === 0) return false
+  return true
 }
 
 const TAKEDOWNS = ['pds_takedown' as const, 'appview_takedown' as const]
