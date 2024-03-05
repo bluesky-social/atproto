@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - appview-v2
+      - pds-proxy-headers
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
