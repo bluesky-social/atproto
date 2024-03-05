@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.app.bsky.actor.getProfiles({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.moderator,
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
         request.params,
@@ -59,7 +59,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.app.bsky.feed.getFeedGenerator({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.moderator,
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
         request.params,
@@ -101,7 +101,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.app.bsky.graph.getList({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.moderator,
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
         request.params,
