@@ -4,6 +4,7 @@ import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitData } from '@atproto/repo'
 import {
+  AccountEvt,
   CommitEvt,
   HandleEvt,
   IdentityEvt,
@@ -155,6 +156,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           seq: row.seq,
           time: row.sequencedAt,
           evt: evt as IdentityEvt,
+        })
+      } else if (row.eventType === 'account') {
+        seqEvts.push({
+          type: 'account',
+          seq: row.seq,
+          time: row.sequencedAt,
+          evt: evt as AccountEvt,
         })
       } else if (row.eventType === 'tombstone') {
         seqEvts.push({

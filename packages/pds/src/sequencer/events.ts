@@ -106,26 +106,21 @@ export const formatSeqAccountEvt = async (
   did: string,
   status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
-  let active = false
-  let evtStatus: AccountEvt['status'] = undefined
-  if (status === 'active') {
-    active = true
-  } else if (status === 'takendown') {
-    evtStatus = TAKENDOWN
-  } else if (status === 'suspended') {
-    evtStatus = SUSPENDED
-  } else if (status === 'deleted') {
-    evtStatus = DELETED
-  } else if (status === 'deactivated') {
-    evtStatus = DEACTIVATED
-  } else {
-    throw new Error(`Unknown status: ${status}`)
-  }
   const evt: AccountEvt = {
     did,
-    active,
-    status: evtStatus,
+    active: status === 'active',
   }
+
+  if (status === 'takendown') {
+    evt.status = TAKENDOWN
+  } else if (status === 'suspended') {
+    evt.status = SUSPENDED
+  } else if (status === 'deleted') {
+    evt.status = DELETED
+  } else if (status === 'deactivated') {
+    evt.status = DEACTIVATED
+  }
+
   return {
     did,
     eventType: 'account',
