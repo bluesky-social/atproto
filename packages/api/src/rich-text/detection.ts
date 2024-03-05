@@ -1,6 +1,12 @@
 import TLDs from 'tlds'
 import { AppBskyRichtextFacet } from '../client'
 import { UnicodeString } from './unicode'
+import {
+  URL_REGEX,
+  MENTION_REGEX,
+  TAG_REGEX,
+  TRAILING_PUNCTUATION_REGEX,
+} from './util'
 
 export type Facet = AppBskyRichtextFacet.Main
 
@@ -9,7 +15,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
   const facets: Facet[] = []
   {
     // mentions
-    const re = /(^|\s|\()(@)([a-zA-Z0-9.-]+)(\b)/g
+    const re = MENTION_REGEX
     while ((match = re.exec(text.utf16))) {
       if (!isValidDomain(match[3]) && !match[3].endsWith('.test')) {
         continue // probably not a handle
@@ -33,8 +39,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
   }
   {
     // links
-    const re =
-      /(^|\s|\()((https?:\/\/[\S]+)|((?<domain>[a-z][a-z0-9]*(\.[a-z0-9]+)+)[\S]*))/gim
+    const re = URL_REGEX
     while ((match = re.exec(text.utf16))) {
       let uri = match[2]
       if (!uri.startsWith('http')) {
@@ -70,11 +75,14 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(^|\s)#((?!\ufe0f)[^\d\s]\S*)(?=\s)?/g
+    const re = TAG_REGEX
     while ((match = re.exec(text.utf16))) {
       let [, leading, tag] = match
 
-      tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
+      if (!tag) continue
+
+      // strip ending punctuation and any spaces
+      tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
 
       if (tag.length === 0 || tag.length > 64) continue
 
