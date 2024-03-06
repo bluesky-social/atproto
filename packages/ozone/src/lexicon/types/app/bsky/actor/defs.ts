@@ -197,7 +197,7 @@ export interface FeedViewPref {
   /** Hide replies in the feed. */
   hideReplies?: boolean
   /** Hide replies in the feed if they are not by followed users. */
-  hideRepliesByUnfollowed?: boolean
+  hideRepliesByUnfollowed: boolean
   /** Hide replies in the feed if they do not have this number of likes. */
   hideRepliesByLikeCount?: number
   /** Hide reposts in the feed. */

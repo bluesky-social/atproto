@@ -226,7 +226,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -252,7 +252,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -278,7 +278,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -306,7 +306,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -336,7 +336,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -368,7 +368,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -400,7 +400,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -432,7 +432,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -464,7 +464,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -496,7 +496,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -534,7 +534,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -566,7 +566,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -598,7 +598,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -630,7 +630,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -662,7 +662,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -694,14 +694,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -733,14 +733,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -772,14 +772,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -811,14 +811,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -907,7 +907,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -916,7 +916,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -946,7 +946,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -977,7 +977,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1008,7 +1008,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1039,7 +1039,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1070,7 +1070,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1089,7 +1089,7 @@ describe('agent', () => {
 
       await agent.setFeedViewPrefs('home', {
         hideReplies: false,
-        hideRepliesByUnfollowed: false,
+        hideRepliesByUnfollowed: true,
         hideRepliesByLikeCount: 0,
         hideReposts: false,
         hideQuotePosts: false,
@@ -1112,7 +1112,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -1155,7 +1155,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
