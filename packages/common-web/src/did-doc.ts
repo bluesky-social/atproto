@@ -44,6 +44,28 @@ export const getSigningKey = (
     publicKeyMultibase: found.publicKeyMultibase,
   }
 }
+
+export const getVerificationMaterial = (
+  doc: DidDocument,
+  keyId: string,
+): { type: string; publicKeyMultibase: string } | undefined => {
+  const did = getDid(doc)
+  let keys = doc.verificationMethod
+  if (!keys) return undefined
+  if (typeof keys !== 'object') return undefined
+  if (!Array.isArray(keys)) {
+    keys = [keys]
+  }
+  const found = keys.find(
+    (key) => key.id === `#${keyId}` || key.id === `${did}#${keyId}`,
+  )
+  if (!found?.publicKeyMultibase) return undefined
+  return {
+    type: found.type,
+    publicKeyMultibase: found.publicKeyMultibase,
+  }
+}
+
 export const getSigningDidKey = (doc: DidDocument): string | undefined => {
   const parsed = getSigningKey(doc)
   if (!parsed) return
