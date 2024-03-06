@@ -1,6 +1,5 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
-import Mail from 'nodemailer/lib/mailer'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
   ComAtprotoAdminDefs,
@@ -428,7 +427,9 @@ describe('moderation-events', () => {
   describe('email event', () => {
     let sendMailOriginal
     const mailCatcher = new EventEmitter()
-    const getMailFrom = async (promise): Promise<Mail.Options> => {
+    const getMailFrom = async (
+      promise,
+    ): Promise<{ to: string; subject: string; from: string }> => {
       const result = await Promise.all([once(mailCatcher, 'mail'), promise])
       return result[0][0]
     }
