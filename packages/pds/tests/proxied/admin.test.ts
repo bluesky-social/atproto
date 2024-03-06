@@ -8,7 +8,6 @@ import {
 import { forSnapshot } from '../_util'
 import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
-// @TODO skipping during appview v2 buildout, as appview frontends no longer contains moderation endpoints
 describe('proxies admin requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
