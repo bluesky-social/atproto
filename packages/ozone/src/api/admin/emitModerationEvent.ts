@@ -13,7 +13,7 @@ import { retryHttp } from '../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // if less than moderator access then can only take ack and escalation actions
       if (isTakedownEvent || isReverseTakedownEvent) {
-        if (!access.moderator) {
+        if (!access.isModerator) {
           throw new AuthRequiredError(
             'Must be a full moderator to take this type of action',
           )
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
 
         // Non admins should not be able to take down feed generators
         if (
-          !access.admin &&
+          !access.isAdmin &&
           subject.recordPath?.includes('app.bsky.feed.generator/')
         ) {
           throw new AuthRequiredError(
@@ -48,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
       // if less than moderator access then can not apply labels
-      if (!access.moderator && isLabelEvent) {
+      if (!access.isModerator && isLabelEvent) {
         throw new AuthRequiredError('Must be a full moderator to label content')
       }
 

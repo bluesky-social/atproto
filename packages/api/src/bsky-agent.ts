@@ -17,7 +17,7 @@ import { sanitizeMutedWordValue } from './util'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
-  hideRepliesByUnfollowed: false,
+  hideRepliesByUnfollowed: true,
   hideRepliesByLikeCount: 0,
   hideReposts: false,
   hideQuotePosts: false,
