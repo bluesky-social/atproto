@@ -21,6 +21,8 @@ export interface ServerConfigValues {
   courierIgnoreBadTls?: boolean
   searchUrl?: string
   cdnUrl?: string
+  blobRateLimitBypassKey?: string
+  blobRateLimitBypassHostname?: string
   // identity
   didPlcUrl: string
   handleResolveNameservers?: string[]
@@ -76,6 +78,15 @@ export class ServerConfig {
     const courierIgnoreBadTls =
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+    const blobRateLimitBypassKey =
+      process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_KEY || undefined
+    // single domain would be e.g. "mypds.com", subdomains are supported with a leading dot e.g. ".mypds.com"
+    const blobRateLimitBypassHostname =
+      process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_HOSTNAME || undefined
+    assert(
+      !blobRateLimitBypassKey || blobRateLimitBypassHostname,
+      'must specify a hostname when using a blob rate limit bypass key',
+    )
     const adminPasswords = envList(
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
@@ -106,6 +117,8 @@ export class ServerConfig {
       courierApiKey,
       courierHttpVersion,
       courierIgnoreBadTls,
+      blobRateLimitBypassKey,
+      blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
       ...stripUndefineds(overrides ?? {}),
@@ -195,6 +208,14 @@ export class ServerConfig {
 
   get cdnUrl() {
     return this.cfg.cdnUrl
+  }
+
+  get blobRateLimitBypassKey() {
+    return this.cfg.blobRateLimitBypassKey
+  }
+
+  get blobRateLimitBypassHostname() {
+    return this.cfg.blobRateLimitBypassHostname
   }
 
   get didPlcUrl() {
