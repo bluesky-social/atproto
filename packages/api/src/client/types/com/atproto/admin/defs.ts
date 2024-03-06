@@ -497,6 +497,7 @@ export type SubjectReviewState =
   | 'lex:com.atproto.admin.defs#reviewOpen'
   | 'lex:com.atproto.admin.defs#reviewEscalated'
   | 'lex:com.atproto.admin.defs#reviewClosed'
+  | 'lex:com.atproto.admin.defs#reviewNone'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
@@ -505,6 +506,8 @@ export const REVIEWOPEN = 'com.atproto.admin.defs#reviewOpen'
 export const REVIEWESCALATED = 'com.atproto.admin.defs#reviewEscalated'
 /** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
 export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
+/** Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it */
+export const REVIEWNONE = 'com.atproto.admin.defs#reviewNone'
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {
