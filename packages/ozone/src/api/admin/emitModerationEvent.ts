@@ -2,16 +2,18 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
+  isModEventEmail,
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { subjectFromInput } from '../../mod-service/subject'
 import { ModerationLangService } from '../../mod-service/lang'
+import { retryHttp } from '../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
@@ -27,20 +29,26 @@ export default function (server: Server, ctx: AppContext) {
 
       // apply access rules
 
-      // if less than moderator access then can not takedown an account
-      if (!access.moderator && isTakedownEvent && subject.isRepo()) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to perform an account takedown',
-        )
-      }
       // if less than moderator access then can only take ack and escalation actions
-      if (!access.moderator && (isTakedownEvent || isReverseTakedownEvent)) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to take this type of action',
-        )
+      if (isTakedownEvent || isReverseTakedownEvent) {
+        if (!access.isModerator) {
+          throw new AuthRequiredError(
+            'Must be a full moderator to take this type of action',
+          )
+        }
+
+        // Non admins should not be able to take down feed generators
+        if (
+          !access.isAdmin &&
+          subject.recordPath?.includes('app.bsky.feed.generator/')
+        ) {
+          throw new AuthRequiredError(
+            'Must be a full admin to take this type of action on feed generators',
+          )
+        }
       }
       // if less than moderator access then can not apply labels
-      if (!access.moderator && isLabelEvent) {
+      if (!access.isModerator && isLabelEvent) {
         throw new AuthRequiredError('Must be a full moderator to label content')
       }
 
@@ -67,6 +75,23 @@ export default function (server: Server, ctx: AppContext) {
           // blobs for the record being restored, which aren't taken down on another record.
           subject.blobCids = status.blobCids ?? []
         }
+      }
+
+      if (isModEventEmail(event) && event.content) {
+        // sending email prior to logging the event to avoid a long transaction below
+        if (!subject.isRepo()) {
+          throw new InvalidRequestError(
+            'Email can only be sent to a repo subject',
+          )
+        }
+        const { content, subjectLine } = event
+        await retryHttp(() =>
+          ctx.modService(db).sendEmail({
+            subject: subjectLine,
+            content,
+            recipientDid: subject.did,
+          }),
+        )
       }
 
       const moderationEvent = await db.transaction(async (dbTxn) => {

@@ -5,7 +5,7 @@ import { addAccountInfoToRepoViewDetail, getPdsAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ params, auth }) => {
       const { did } = params
       const db = ctx.db
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       const repo = addAccountInfoToRepoViewDetail(
         partialRepo,
         accountInfo,
-        auth.credentials.moderator,
+        auth.credentials.isModerator,
       )
       return {
         encoding: 'application/json',

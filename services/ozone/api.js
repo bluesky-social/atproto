@@ -13,6 +13,11 @@ require('dd-trace') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const {
+  BunnyInvalidator,
+  CloudfrontInvalidator,
+  MultiImageInvalidator,
+} = require('@atproto/aws')
+const {
   OzoneService,
   envToCfg,
   envToSecrets,
@@ -24,7 +29,38 @@ const main = async () => {
   const env = readEnv()
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
-  const ozone = await OzoneService.create(cfg, secrets)
+
+  // configure zero, one, or more image invalidators
+  const imgUriEndpoint = process.env.OZONE_IMG_URI_ENDPOINT
+  const bunnyAccessKey = process.env.OZONE_BUNNY_ACCESS_KEY
+  const cfDistributionId = process.env.OZONE_CF_DISTRIBUTION_ID
+
+  const imgInvalidators = []
+
+  if (bunnyAccessKey) {
+    imgInvalidators.push(
+      new BunnyInvalidator({
+        accessKey: bunnyAccessKey,
+        urlPrefix: imgUriEndpoint,
+      }),
+    )
+  }
+
+  if (cfDistributionId) {
+    imgInvalidators.push(
+      new CloudfrontInvalidator({
+        distributionId: cfDistributionId,
+        pathPrefix: imgUriEndpoint && new URL(imgUriEndpoint).pathname,
+      }),
+    )
+  }
+
+  const imgInvalidator =
+    imgInvalidators.length > 1
+      ? new MultiImageInvalidator(imgInvalidators)
+      : imgInvalidators[0]
+
+  const ozone = await OzoneService.create(cfg, secrets, { imgInvalidator })
 
   await ozone.start()
 

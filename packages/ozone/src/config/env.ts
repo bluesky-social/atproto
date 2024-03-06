@@ -1,8 +1,9 @@
-import { envInt, envStr } from '@atproto/common'
+import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): OzoneEnvironment => {
   return {
     nodeEnv: envStr('NODE_ENV'),
+    devMode: envBool('OZONE_DEV_MODE'),
     version: envStr('OZONE_VERSION'),
     port: envInt('OZONE_PORT'),
     publicUrl: envStr('OZONE_PUBLIC_URL'),
@@ -13,7 +14,14 @@ export const readEnv = (): OzoneEnvironment => {
     pdsDid: envStr('OZONE_PDS_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
+    dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
+    dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
+    dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
+    cdnPaths: envList('OZONE_CDN_PATHS'),
+    adminDids: envList('OZONE_ADMIN_DIDS'),
+    moderatorDids: envList('OZONE_MODERATOR_DIDS'),
+    triageDids: envList('OZONE_TRIAGE_DIDS'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
     triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
@@ -23,6 +31,7 @@ export const readEnv = (): OzoneEnvironment => {
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  devMode?: boolean
   version?: string
   port?: number
   publicUrl?: string
@@ -33,7 +42,14 @@ export type OzoneEnvironment = {
   pdsDid?: string
   dbPostgresUrl?: string
   dbPostgresSchema?: string
+  dbPoolSize?: number
+  dbPoolMaxUses?: number
+  dbPoolIdleTimeoutMs?: number
   didPlcUrl?: string
+  cdnPaths?: string[]
+  adminDids: string[]
+  moderatorDids: string[]
+  triageDids: string[]
   adminPassword?: string
   moderatorPassword?: string
   triagePassword?: string

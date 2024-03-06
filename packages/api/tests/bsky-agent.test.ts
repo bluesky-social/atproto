@@ -218,7 +218,7 @@ describe('agent', () => {
     it('gets and sets preferences correctly', async () => {
       const agent = new BskyAgent({ service: network.pds.url })
 
-      const res = await agent.createAccount({
+      await agent.createAccount({
         handle: 'user5.test',
         email: 'user5@test.com',
         password: 'password',
@@ -240,7 +240,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -274,7 +274,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -308,7 +308,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -342,7 +342,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -380,7 +380,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -421,7 +421,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -462,7 +462,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -503,7 +503,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -544,7 +544,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -585,7 +585,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -632,7 +632,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -673,7 +673,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -714,7 +714,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -755,7 +755,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -796,7 +796,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -837,14 +837,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -885,14 +885,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -933,14 +933,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -981,14 +981,14 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
           },
           other: {
             hideReplies: true,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -1009,12 +1009,11 @@ describe('agent', () => {
     it('resolves duplicates correctly', async () => {
       const agent = new BskyAgent({ service: network.pds.url })
 
-      const userRes = await agent.createAccount({
+      await agent.createAccount({
         handle: 'user6.test',
         email: 'user6@test.com',
         password: 'password',
       })
-      const userDid = userRes.data.did
 
       await agent.app.bsky.actor.putPreferences({
         preferences: [
@@ -1097,7 +1096,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -1106,7 +1105,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1149,7 +1148,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1193,7 +1192,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1237,7 +1236,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1277,7 +1276,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1317,7 +1316,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1357,7 +1356,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: true,
-            hideRepliesByUnfollowed: true,
+            hideRepliesByUnfollowed: false,
             hideRepliesByLikeCount: 10,
             hideReposts: true,
             hideQuotePosts: true,
@@ -1376,7 +1375,7 @@ describe('agent', () => {
 
       await agent.setFeedViewPrefs('home', {
         hideReplies: false,
-        hideRepliesByUnfollowed: false,
+        hideRepliesByUnfollowed: true,
         hideRepliesByLikeCount: 0,
         hideReposts: false,
         hideQuotePosts: false,
@@ -1408,7 +1407,7 @@ describe('agent', () => {
         feedViewPrefs: {
           home: {
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -1459,7 +1458,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
-            hideRepliesByUnfollowed: false,
+            hideRepliesByUnfollowed: true,
             hideRepliesByLikeCount: 0,
             hideReposts: false,
             hideQuotePosts: false,
@@ -1506,13 +1505,18 @@ describe('agent', () => {
         await agent.upsertMutedWords([
           { value: 'hashtag', targets: ['content'] },
         ])
+        // is sanitized to `hashtag`
         await agent.upsertMutedWords([{ value: '#hashtag', targets: ['tag'] }])
+
         const { mutedWords } = await agent.getPreferences()
+
         expect(mutedWords.find((m) => m.value === '#hashtag')).toBeFalsy()
+        // merged with existing
         expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
           value: 'hashtag',
           targets: ['content', 'tag'],
         })
+        // only one added
         expect(mutedWords.filter((m) => m.value === 'hashtag').length).toBe(1)
       })
 
@@ -1541,15 +1545,21 @@ describe('agent', () => {
         expect(mutedWords.find((m) => m.value === 'no_exist')).toBeFalsy()
       })
 
-      it('updateMutedWord with #', async () => {
+      it('updateMutedWord with #, does not update', async () => {
+        await agent.upsertMutedWords([
+          {
+            value: '#just_a_tag',
+            targets: ['tag'],
+          },
+        ])
         await agent.updateMutedWord({
-          value: 'hashtag',
+          value: '#just_a_tag',
           targets: ['tag', 'content'],
         })
         const { mutedWords } = await agent.getPreferences()
-        expect(mutedWords.find((m) => m.value === 'hashtag')).toStrictEqual({
-          value: 'hashtag',
-          targets: ['tag', 'content'],
+        expect(mutedWords.find((m) => m.value === 'just_a_tag')).toStrictEqual({
+          value: 'just_a_tag',
+          targets: ['tag'],
         })
       })
 
@@ -1566,11 +1576,124 @@ describe('agent', () => {
         expect(mutedWords.find((m) => m.value === 'tag_then_none')).toBeFalsy()
       })
 
-      it('removeMutedWord with #', async () => {
+      it('removeMutedWord with #, no match, no removal', async () => {
         await agent.removeMutedWord({ value: '#hashtag', targets: [] })
         const { mutedWords } = await agent.getPreferences()
 
-        expect(mutedWords.find((m) => m.value === 'hashtag')).toBeFalsy()
+        // was inserted with #hashtag, but we don't sanitize on remove
+        expect(mutedWords.find((m) => m.value === 'hashtag')).toBeTruthy()
+      })
+
+      it('single-hash #', async () => {
+        const prev = await agent.getPreferences()
+        const length = prev.mutedWords.length
+        await agent.upsertMutedWords([{ value: '#', targets: [] }])
+        const end = await agent.getPreferences()
+
+        // sanitized to empty string, not inserted
+        expect(end.mutedWords.length).toEqual(length)
+      })
+
+      it('multi-hash ##', async () => {
+        await agent.upsertMutedWords([{ value: '##', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '#')).toBeTruthy()
+      })
+
+      it('multi-hash ##hashtag', async () => {
+        await agent.upsertMutedWords([{ value: '##hashtag', targets: [] }])
+        const a = await agent.getPreferences()
+
+        expect(a.mutedWords.find((w) => w.value === '#hashtag')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '#hashtag', targets: [] })
+        const b = await agent.getPreferences()
+
+        expect(b.mutedWords.find((w) => w.value === '#hashtag')).toBeFalsy()
+      })
+
+      it('hash emoji #️⃣', async () => {
+        await agent.upsertMutedWords([{ value: '#️⃣', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '#️⃣')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '#️⃣', targets: [] })
+        const end = await agent.getPreferences()
+
+        expect(end.mutedWords.find((m) => m.value === '#️⃣')).toBeFalsy()
+      })
+
+      it('hash emoji ##️⃣', async () => {
+        await agent.upsertMutedWords([{ value: '##️⃣', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '#️⃣')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '#️⃣', targets: [] })
+        const end = await agent.getPreferences()
+
+        expect(end.mutedWords.find((m) => m.value === '#️⃣')).toBeFalsy()
+      })
+
+      it('hash emoji ###️⃣', async () => {
+        await agent.upsertMutedWords([{ value: '###️⃣', targets: [] }])
+        const { mutedWords } = await agent.getPreferences()
+
+        expect(mutedWords.find((m) => m.value === '##️⃣')).toBeTruthy()
+
+        await agent.removeMutedWord({ value: '##️⃣', targets: [] })
+        const end = await agent.getPreferences()
+
+        expect(end.mutedWords.find((m) => m.value === '##️⃣')).toBeFalsy()
+      })
+
+      describe(`invalid characters`, () => {
+        it('zero width space', async () => {
+          const prev = await agent.getPreferences()
+          const length = prev.mutedWords.length
+          await agent.upsertMutedWords([{ value: '#​', targets: [] }])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(mutedWords.length).toEqual(length)
+        })
+
+        it('newline', async () => {
+          await agent.upsertMutedWords([
+            { value: 'test value\n with newline', targets: [] },
+          ])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(
+            mutedWords.find((m) => m.value === 'test value with newline'),
+          ).toBeTruthy()
+        })
+
+        it('newline(s)', async () => {
+          await agent.upsertMutedWords([
+            { value: 'test value\n\r with newline', targets: [] },
+          ])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(
+            mutedWords.find((m) => m.value === 'test value with newline'),
+          ).toBeTruthy()
+        })
+
+        it('empty space', async () => {
+          await agent.upsertMutedWords([{ value: ' ', targets: [] }])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(mutedWords.find((m) => m.value === ' ')).toBeFalsy()
+        })
+
+        it('leading/trailing space', async () => {
+          await agent.upsertMutedWords([{ value: ' trim ', targets: [] }])
+          const { mutedWords } = await agent.getPreferences()
+
+          expect(mutedWords.find((m) => m.value === 'trim')).toBeTruthy()
+        })
       })
     })
 

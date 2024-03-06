@@ -18,12 +18,11 @@ describe('agent', () => {
   it('migrates legacy content-label prefs (no mutations)', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 
-    const userRes = await agent.createAccount({
+    await agent.createAccount({
       handle: 'user1.test',
       email: 'user1@test.com',
       password: 'password',
     })
-    const userDid = userRes.data.did
 
     await agent.app.bsky.actor.putPreferences({
       preferences: [
@@ -77,7 +76,7 @@ describe('agent', () => {
           hideQuotePosts: false,
           hideReplies: false,
           hideRepliesByLikeCount: 0,
-          hideRepliesByUnfollowed: false,
+          hideRepliesByUnfollowed: true,
           hideReposts: false,
         },
       },
@@ -93,12 +92,11 @@ describe('agent', () => {
   it('adds/removes moderation services', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 
-    const userRes = await agent.createAccount({
+    await agent.createAccount({
       handle: 'user5.test',
       email: 'user5@test.com',
       password: 'password',
     })
-    const userDid = userRes.data.did
 
     await agent.addModService('did:plc:other')
     expect(agent.labelersHeader).toStrictEqual([
@@ -127,7 +125,7 @@ describe('agent', () => {
       feedViewPrefs: {
         home: {
           hideReplies: false,
-          hideRepliesByUnfollowed: false,
+          hideRepliesByUnfollowed: true,
           hideRepliesByLikeCount: 0,
           hideReposts: false,
           hideQuotePosts: false,
@@ -164,7 +162,7 @@ describe('agent', () => {
       feedViewPrefs: {
         home: {
           hideReplies: false,
-          hideRepliesByUnfollowed: false,
+          hideRepliesByUnfollowed: true,
           hideRepliesByLikeCount: 0,
           hideReposts: false,
           hideQuotePosts: false,
@@ -182,12 +180,11 @@ describe('agent', () => {
   it('cant remove the default moderation service', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 
-    const userRes = await agent.createAccount({
+    await agent.createAccount({
       handle: 'user6.test',
       email: 'user6@test.com',
       password: 'password',
     })
-    const userDid = userRes.data.did
 
     await agent.removeModService(BSKY_MODSERVICE_DID)
     expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
@@ -209,7 +206,7 @@ describe('agent', () => {
       feedViewPrefs: {
         home: {
           hideReplies: false,
-          hideRepliesByUnfollowed: false,
+          hideRepliesByUnfollowed: true,
           hideRepliesByLikeCount: 0,
           hideReposts: false,
           hideQuotePosts: false,
@@ -227,12 +224,11 @@ describe('agent', () => {
   it('sets label preferences globally and per-moderator', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 
-    const userRes = await agent.createAccount({
+    await agent.createAccount({
       handle: 'user7.test',
       email: 'user7@test.com',
       password: 'password',
     })
-    const userDid = userRes.data.did
 
     await agent.addModService('did:plc:other')
     await agent.setContentLabelPref('porn', 'ignore')
@@ -264,7 +260,7 @@ describe('agent', () => {
       feedViewPrefs: {
         home: {
           hideReplies: false,
-          hideRepliesByUnfollowed: false,
+          hideRepliesByUnfollowed: true,
           hideRepliesByLikeCount: 0,
           hideReposts: false,
           hideQuotePosts: false,

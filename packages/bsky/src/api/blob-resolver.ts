@@ -106,7 +106,9 @@ export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
     throw createError(404, 'Blob not found')
   }
 
-  const blobResult = await retryHttp(() => getBlob({ pds, did, cid: cidStr }))
+  const blobResult = await retryHttp(() =>
+    getBlob(ctx, { pds, did, cid: cidStr }),
+  )
   const imageStream: Readable = blobResult.data
   const verifyCid = new VerifyCidTransform(cid)
 
@@ -119,12 +121,40 @@ export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
   }
 }
 
-async function getBlob(opts: { pds: string; did: string; cid: string }) {
+async function getBlob(
+  ctx: AppContext,
+  opts: { pds: string; did: string; cid: string },
+) {
   const { pds, did, cid } = opts
   return axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
     params: { did, cid },
     decompress: true,
     responseType: 'stream',
     timeout: 5000, // 5sec of inactivity on the connection
+    headers: getRateLimitBypassHeaders(ctx, pds),
   })
+}
+
+function getRateLimitBypassHeaders(
+  ctx: AppContext,
+  pds: string,
+): { 'x-ratelimit-bypass'?: string } {
+  const {
+    blobRateLimitBypassKey: bypassKey,
+    blobRateLimitBypassHostname: bypassHostname,
+  } = ctx.cfg
+  if (!bypassKey || !bypassHostname) {
+    return {}
+  }
+  const url = new URL(pds)
+  if (bypassHostname.startsWith('.')) {
+    if (url.hostname.endsWith(bypassHostname)) {
+      return { 'x-ratelimit-bypass': bypassKey }
+    }
+  } else {
+    if (url.hostname === bypassHostname) {
+      return { 'x-ratelimit-bypass': bypassKey }
+    }
+  }
+  return {}
 }

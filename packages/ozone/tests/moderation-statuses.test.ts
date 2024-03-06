@@ -9,6 +9,10 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import {
+  REVIEWOPEN,
+  REVIEWNONE,
+} from '../src/lexicon/types/com/atproto/admin/defs'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
@@ -157,6 +161,90 @@ describe('moderation-statuses', () => {
       // while the result set always contains same number of items regardless of sorting
       expect(listReviewedFirst[0].id).toEqual(list[1].id)
       expect(listReviewedFirst.length).toEqual(list.length)
+    })
+  })
+
+  describe('reviewState changes', () => {
+    it('only sets state to #reviewNone on first non-impactful event', async () => {
+      const bobsAccount = {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.bob,
+      }
+      const alicesPost = {
+        $type: 'com.atproto.repo.strongRef',
+        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
+      }
+      const getBobsAccountStatus = async () => {
+        const { data } = await queryModerationStatuses({
+          subject: bobsAccount.did,
+        })
+
+        return data.subjectStatuses[0]
+      }
+      // Since bob's account already had a reviewState, it won't be changed by non-impactful events
+      const bobsAccountStatusBeforeTag = await getBobsAccountStatus()
+
+      await Promise.all([
+        emitModerationEvent({
+          subject: bobsAccount,
+          event: {
+            $type: 'com.atproto.admin.defs#modEventTag',
+            add: ['newTag'],
+            remove: [],
+            comment: 'X',
+          },
+          createdBy: sc.dids.alice,
+        }),
+        emitModerationEvent({
+          subject: bobsAccount,
+          event: {
+            $type: 'com.atproto.admin.defs#modEventComment',
+            comment: 'X',
+          },
+          createdBy: sc.dids.alice,
+        }),
+      ])
+      const bobsAccountStatusAfterTag = await getBobsAccountStatus()
+
+      expect(bobsAccountStatusBeforeTag.reviewState).toEqual(
+        bobsAccountStatusAfterTag.reviewState,
+      )
+
+      // Since alice's post didn't have a reviewState it is set to reviewNone on first non-impactful event
+      const getAlicesPostStatus = async () => {
+        const { data } = await queryModerationStatuses({
+          subject: alicesPost.uri,
+        })
+
+        return data.subjectStatuses[0]
+      }
+
+      const alicesPostStatusBeforeTag = await getAlicesPostStatus()
+      expect(alicesPostStatusBeforeTag).toBeUndefined()
+
+      await emitModerationEvent({
+        subject: alicesPost,
+        event: {
+          $type: 'com.atproto.admin.defs#modEventComment',
+          comment: 'X',
+        },
+        createdBy: sc.dids.alice,
+      })
+      const alicesPostStatusAfterTag = await getAlicesPostStatus()
+      expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWNONE)
+
+      await emitModerationEvent({
+        subject: alicesPost,
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReport',
+          reportType: REASONMISLEADING,
+          comment: 'X',
+        },
+        createdBy: sc.dids.alice,
+      })
+      const alicesPostStatusAfterReport = await getAlicesPostStatus()
+      expect(alicesPostStatusAfterReport.reviewState).toEqual(REVIEWOPEN)
     })
   })
 

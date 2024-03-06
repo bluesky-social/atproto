@@ -5,13 +5,14 @@ import {
   InvalidRequestError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
+import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
@@ -44,9 +45,9 @@ type RoleOutput = {
   }
 }
 
-type AdminServiceOutput = {
+type ModServiceOutput = {
   credentials: {
-    type: 'service'
+    type: 'mod_service'
     aud: string
     iss: string
   }
@@ -97,7 +98,7 @@ export type AuthVerifierOpts = {
   dids: {
     pds: string
     entryway?: string
-    admin?: string
+    modService?: string
   }
 }
 
@@ -253,28 +254,37 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
-    if (!this.dids.admin) {
+  modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
+    if (!this.dids.modService) {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
     }
     const payload = await this.verifyServiceJwt(reqCtx, {
-      aud: this.dids.entryway ?? this.dids.pds,
-      iss: [this.dids.admin],
+      aud: null,
+      iss: [this.dids.modService, `${this.dids.modService}#atproto_labeler`],
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
-        type: 'service',
+        type: 'mod_service',
         aud: payload.aud,
         iss: payload.iss,
       },
     }
   }
 
-  roleOrAdminService = async (
+  roleOrModService = async (
     reqCtx: ReqCtx,
-  ): Promise<RoleOutput | AdminServiceOutput> => {
+  ): Promise<RoleOutput | ModServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
+      return this.modService(reqCtx)
     } else {
       return this.role(reqCtx)
     }
@@ -337,13 +347,28 @@ export class AuthVerifier {
     opts: { aud: string | null; iss: string[] | null },
   ) {
     const getSigningKey = async (
-      did: string,
+      iss: string,
       forceRefresh: boolean,
     ): Promise<string> => {
-      if (opts.iss !== null && !opts.iss.includes(did)) {
+      if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+      const [did, serviceId] = iss.split('#')
+      const keyId =
+        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+      const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
+      if (!didDoc) {
+        throw new AuthRequiredError('could not resolve iss did')
+      }
+      const parsedKey = getVerificationMaterial(didDoc, keyId)
+      if (!parsedKey) {
+        throw new AuthRequiredError('missing or bad key in did doc')
+      }
+      const didKey = getDidKeyFromMultibase(parsedKey)
+      if (!didKey) {
+        throw new AuthRequiredError('missing or bad key in did doc')
+      }
+      return didKey
     }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)

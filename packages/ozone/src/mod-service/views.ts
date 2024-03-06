@@ -24,36 +24,40 @@ import {
 } from './types'
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
+import { formatLabel } from './util'
+import { httpLogger as log } from '../logger'
 
-export type AppviewAuth = () => Promise<
-  | {
-      headers: {
-        authorization: string
-      }
-    }
-  | undefined
->
+export type AuthHeaders = {
+  headers: {
+    authorization: string
+  }
+}
 
 export class ModerationViews {
   constructor(
     private db: Database,
     private appviewAgent: AtpAgent,
-    private appviewAuth: AppviewAuth,
+    private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
     const auth = await this.appviewAuth()
     if (!auth) return new Map()
-    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
-      {
-        dids: dedupeStrs(dids),
-      },
-      auth,
-    )
-    return res.data.infos.reduce((acc, cur) => {
-      return acc.set(cur.did, cur)
-    }, new Map<string, AccountView>())
+    try {
+      const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
+        {
+          dids: dedupeStrs(dids),
+        },
+        auth,
+      )
+      return res.data.infos.reduce((acc, cur) => {
+        return acc.set(cur.did, cur)
+      }, new Map<string, AccountView>())
+    } catch (err) {
+      log.error({ err, dids }, 'failed to resolve account infos from appview')
+      return new Map()
+    }
   }
 
   async repos(dids: string[]): Promise<Map<string, RepoView>> {
@@ -153,6 +157,7 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         subjectLine: event.meta?.subjectLine ?? '',
+        content: event.meta?.content,
       }
     }
 
@@ -403,11 +408,7 @@ export class ModerationViews {
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
-    return res.map((l) => ({
-      ...l,
-      cid: l.cid === '' ? undefined : l.cid,
-      neg: l.neg,
-    }))
+    return res.map((l) => formatLabel(l))
   }
 
   async getSubjectStatus(

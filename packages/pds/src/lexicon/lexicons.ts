@@ -747,6 +747,7 @@ export const schemaDict = {
           'lex:com.atproto.admin.defs#reviewOpen',
           'lex:com.atproto.admin.defs#reviewEscalated',
           'lex:com.atproto.admin.defs#reviewClosed',
+          'lex:com.atproto.admin.defs#reviewNone',
         ],
       },
       reviewOpen: {
@@ -763,6 +764,11 @@ export const schemaDict = {
         type: 'token',
         description:
           'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
+      },
+      reviewNone: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it',
       },
       modEventTakedown: {
         type: 'object',
@@ -896,6 +902,10 @@ export const schemaDict = {
           subjectLine: {
             type: 'string',
             description: 'The subject line of the email sent to the user.',
+          },
+          content: {
+            type: 'string',
+            description: 'The content of the email sent to the user.',
           },
           comment: {
             type: 'string',
@@ -5281,6 +5291,7 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'Hide replies in the feed if they are not by followed users.',
+            default: true,
           },
           hideRepliesByLikeCount: {
             type: 'integer',
