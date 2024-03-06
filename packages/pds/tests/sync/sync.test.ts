@@ -213,7 +213,7 @@ describe('repo sync', () => {
 
     it('does not sync repo unauthed', async () => {
       const tryGetRepo = agent.api.com.atproto.sync.getRepo({ did })
-      await expect(tryGetRepo).rejects.toThrow(/Could not find repo for DID/)
+      await expect(tryGetRepo).rejects.toThrow(/Repo has been takendown/)
     })
 
     it('syncs repo to owner or admin', async () => {
@@ -231,7 +231,7 @@ describe('repo sync', () => {
 
     it('does not sync latest commit unauthed', async () => {
       const tryGetLatest = agent.api.com.atproto.sync.getLatestCommit({ did })
-      await expect(tryGetLatest).rejects.toThrow(/Could not find root for DID/)
+      await expect(tryGetLatest).rejects.toThrow(/Repo has been takendown/)
     })
 
     it('does not sync a record proof unauthed', async () => {
@@ -242,7 +242,7 @@ describe('repo sync', () => {
         collection,
         rkey,
       })
-      await expect(tryGetRecord).rejects.toThrow(/Could not find repo for DID/)
+      await expect(tryGetRecord).rejects.toThrow(/Repo has been takendown/)
     })
   })
 })

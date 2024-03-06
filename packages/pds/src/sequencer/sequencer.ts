@@ -4,11 +4,13 @@ import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitData } from '@atproto/repo'
 import {
+  AccountEvt,
   CommitEvt,
   HandleEvt,
   IdentityEvt,
   SeqEvt,
   TombstoneEvt,
+  formatSeqAccountEvt,
   formatSeqCommit,
   formatSeqHandleUpdate,
   formatSeqIdentityEvt,
@@ -23,6 +25,7 @@ import {
 } from './db'
 import { PreparedWrite } from '../repo'
 import { Crawlers } from '../crawlers'
+import { AccountStatus } from '../account-manager/helpers/account'
 
 export * from './events'
 
@@ -154,6 +157,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           time: row.sequencedAt,
           evt: evt as IdentityEvt,
         })
+      } else if (row.eventType === 'account') {
+        seqEvts.push({
+          type: 'account',
+          seq: row.seq,
+          time: row.sequencedAt,
+          evt: evt as AccountEvt,
+        })
       } else if (row.eventType === 'tombstone') {
         seqEvts.push({
           type: 'tombstone',
@@ -220,6 +230,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async sequenceIdentityEvt(did: string) {
     const evt = await formatSeqIdentityEvt(did)
+    await this.sequenceEvt(evt)
+  }
+
+  async sequenceAccountEvt(did: string, status: AccountStatus) {
+    const evt = await formatSeqAccountEvt(did, status)
     await this.sequenceEvt(evt)
   }
 
