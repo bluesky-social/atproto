@@ -5,7 +5,7 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfo({
-    auth: ctx.authVerifier.roleOrAdminService,
+    auth: ctx.authVerifier.roleOrModService,
     handler: async ({ params }) => {
       const [account, invites, invitedBy] = await Promise.all([
         ctx.accountManager.getAccount(params.did, {

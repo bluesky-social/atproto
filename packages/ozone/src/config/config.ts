@@ -13,6 +13,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     publicUrl: env.publicUrl,
     did: env.serverDid,
     version: env.version,
+    devMode: env.devMode,
   }
 
   assert(env.dbPostgresUrl)
@@ -47,6 +48,12 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
   }
 
+  const accessCfg: OzoneConfig['access'] = {
+    admins: env.adminDids,
+    moderators: env.moderatorDids,
+    triage: env.triageDids,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -54,6 +61,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     pds: pdsCfg,
     cdn: cdnCfg,
     identity: identityCfg,
+    access: accessCfg,
   }
 }
 
@@ -64,6 +72,7 @@ export type OzoneConfig = {
   pds: PdsConfig | null
   cdn: CdnConfig
   identity: IdentityConfig
+  access: AccessConfig
 }
 
 export type ServiceConfig = {
@@ -71,6 +80,7 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
+  devMode?: boolean
 }
 
 export type DatabaseConfig = {
@@ -91,10 +101,16 @@ export type PdsConfig = {
   did: string
 }
 
+export type CdnConfig = {
+  paths?: string[]
+}
+
 export type IdentityConfig = {
   plcUrl: string
 }
 
-export type CdnConfig = {
-  paths?: string[]
+export type AccessConfig = {
+  admins: string[]
+  moderators: string[]
+  triage: string[]
 }
