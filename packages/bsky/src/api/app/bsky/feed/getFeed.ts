@@ -19,6 +19,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
+import { HydrateCtx } from '../../../../hydration/hydrator'
 import { FeedItem } from '../../../../hydration/feed'
 import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
 import {
@@ -39,13 +40,15 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptionalAnyAud,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
       const headers = noUndefinedVals({
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
       })
       // @NOTE feed cursors should not be affected by appview swap
       const { timerSkele, timerHydr, resHeaders, ...result } = await getFeed(
-        { ...params, viewer, headers },
+        { ...params, hydrateCtx, headers },
         ctx,
       )
 
@@ -90,7 +93,7 @@ const hydration = async (
   const timerHydr = new ServerTimer('hydr').start()
   const hydration = await ctx.hydrator.hydrateFeedItems(
     skeleton.items,
-    params.viewer,
+    params.hydrateCtx,
   )
   skeleton.timerHydr = timerHydr.stop()
   return hydration
@@ -130,7 +133,7 @@ const presentation = (
 type Context = AppContext
 
 type Params = GetFeedParams & {
-  viewer: string | null
+  hydrateCtx: HydrateCtx
   headers: Record<string, string>
 }
 

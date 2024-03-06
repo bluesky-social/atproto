@@ -7,13 +7,13 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.graph.getLists({
     auth: ctx.authVerifier.access,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
       return pipethrough(
         bskyAppView.url,
         'app.bsky.graph.getLists',
         params,
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, req),
       )
     },
   })

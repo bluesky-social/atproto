@@ -3,6 +3,11 @@
 exports[`indexing indexRepo updates indexes when records change. 1`] = `
 Array [
   Object {
+    "associated": Object {
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+    },
     "description": "freshening things up",
     "did": "user(0)",
     "followersCount": 2,
@@ -620,6 +625,11 @@ Object {
 
 exports[`indexing indexes profiles. 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "displayName": "dan",
   "followersCount": 0,
@@ -637,6 +647,11 @@ Object {
 
 exports[`indexing indexes profiles. 2`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "displayName": "danny",
   "followersCount": 0,
@@ -654,6 +669,11 @@ Object {
 
 exports[`indexing indexes profiles. 3`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "followersCount": 0,
   "followsCount": 0,

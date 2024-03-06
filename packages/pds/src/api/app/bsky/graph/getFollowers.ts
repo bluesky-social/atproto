@@ -15,7 +15,9 @@ export default function (server: Server, ctx: AppContext) {
         bskyAppView.url,
         'app.bsky.graph.getFollowers',
         params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
+        requester
+          ? await ctx.appviewAuthHeaders(requester, req)
+          : authPassthru(req),
       )
     },
   })

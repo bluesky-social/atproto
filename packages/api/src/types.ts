@@ -1,5 +1,5 @@
-import { AppBskyActorNS, AppBskyActorDefs } from './client'
-import { LabelPreference } from './moderation/types'
+import { AppBskyActorDefs } from './client'
+import { ModerationPrefs } from './moderation/types'
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
@@ -71,12 +71,6 @@ export interface AtpAgentGlobalOpts {
 }
 
 /**
- * Content-label preference
- */
-export type BskyLabelPreference = LabelPreference | 'show'
-// TEMP we need to permanently convert 'show' to 'ignore', for now we manually convert -prf
-
-/**
  * Bluesky feed view preferences
  */
 
@@ -116,8 +110,7 @@ export interface BskyPreferences {
   }
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
-  adultContentEnabled: boolean
-  contentLabels: Record<string, BskyLabelPreference>
+  moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
   mutedWords: AppBskyActorDefs.MutedWord[]

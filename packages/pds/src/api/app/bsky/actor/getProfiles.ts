@@ -15,14 +15,14 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
       const requester = auth.credentials.did
 
       const res = await pipethrough(
         bskyAppView.url,
         METHOD_NSID,
         params,
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, req),
       )
       return handleReadAfterWrite(
         ctx,

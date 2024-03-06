@@ -6,7 +6,7 @@ import { MuteOperation_Type } from '../../../../proto/bsync_pb'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActor({
     auth: ctx.authVerifier.standard,
-    handler: async ({ req, auth, input }) => {
+    handler: async ({ auth, input }) => {
       const { actor } = input.body
       const requester = auth.credentials.iss
       const [did] = await ctx.hydrator.actor.getDids([actor])

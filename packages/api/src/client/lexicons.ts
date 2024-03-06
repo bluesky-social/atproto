@@ -2267,6 +2267,83 @@ export const schemaDict = {
           },
         },
       },
+      labelValueDefinition: {
+        type: 'object',
+        description:
+          'Declares a label value and its expected interpertations and behaviors.',
+        required: ['identifier', 'severity', 'blurs', 'locales'],
+        properties: {
+          identifier: {
+            type: 'string',
+            description:
+              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
+            maxLength: 100,
+            maxGraphemes: 100,
+          },
+          severity: {
+            type: 'string',
+            description:
+              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing.",
+            knownValues: ['inform', 'alert', 'none'],
+          },
+          blurs: {
+            type: 'string',
+            description:
+              "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
+            knownValues: ['content', 'media', 'none'],
+          },
+          locales: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinitionStrings',
+            },
+          },
+        },
+      },
+      labelValueDefinitionStrings: {
+        type: 'object',
+        description:
+          'Strings which describe the label in the UI, localized into a specific language.',
+        required: ['lang', 'name', 'description'],
+        properties: {
+          lang: {
+            type: 'string',
+            description:
+              'The code of the language these strings are written in.',
+            format: 'language',
+          },
+          name: {
+            type: 'string',
+            description: 'A short human-readable name for the label.',
+            maxGraphemes: 64,
+            maxLength: 640,
+          },
+          description: {
+            type: 'string',
+            description:
+              'A longer description of what the label means and why it might be applied.',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+          },
+        },
+      },
+      labelValue: {
+        type: 'string',
+        knownValues: [
+          '!hide',
+          '!no-promote',
+          '!warn',
+          '!no-unauthenticated',
+          'dmca-violation',
+          'doxxing',
+          'porn',
+          'sexual',
+          'nudity',
+          'nsfl',
+          'gore',
+        ],
+      },
     },
   },
   ComAtprotoLabelQueryLabels: {
@@ -5050,6 +5127,10 @@ export const schemaDict = {
           postsCount: {
             type: 'integer',
           },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -5064,6 +5145,20 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+        },
+      },
+      profileAssociated: {
+        type: 'object',
+        properties: {
+          lists: {
+            type: 'integer',
+          },
+          feedgens: {
+            type: 'integer',
+          },
+          labeler: {
+            type: 'boolean',
           },
         },
       },
@@ -5131,12 +5226,18 @@ export const schemaDict = {
         type: 'object',
         required: ['label', 'visibility'],
         properties: {
+          labelerDid: {
+            type: 'string',
+            description:
+              'Which labeler does this preference apply to? If undefined, applies globally.',
+            format: 'did',
+          },
           label: {
             type: 'string',
           },
           visibility: {
             type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
+            knownValues: ['ignore', 'show', 'warn', 'hide'],
           },
         },
       },
@@ -5291,6 +5392,29 @@ export const schemaDict = {
             },
             description:
               'A list of URIs of posts the account owner has hidden.',
+          },
+        },
+      },
+      modsPref: {
+        type: 'object',
+        required: ['mods'],
+        properties: {
+          mods: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#modPrefItem',
+            },
+          },
+        },
+      },
+      modPrefItem: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
           },
         },
       },
@@ -5798,6 +5922,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
+              'lex:app.bsky.labeler.defs#labelerView',
             ],
           },
         },
@@ -8339,6 +8464,198 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyLabelerDefs: {
+    lexicon: 1,
+    id: 'app.bsky.labeler.defs',
+    defs: {
+      labelerView: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      labelerViewDetailed: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'policies', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          policies: {
+            type: 'ref',
+            ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      labelerViewerState: {
+        type: 'object',
+        properties: {
+          like: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      labelerPolicies: {
+        type: 'object',
+        required: ['labelValues'],
+        properties: {
+          labelValues: {
+            type: 'array',
+            description:
+              'The label values which this labeler publishes. May include global or custom labels.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValue',
+            },
+          },
+          labelValueDefinitions: {
+            type: 'array',
+            description:
+              'Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinition',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelerGetServices: {
+    lexicon: 1,
+    id: 'app.bsky.labeler.getServices',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a list of labeler services.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+            detailed: {
+              type: 'boolean',
+              default: false,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['views'],
+            properties: {
+              views: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.labeler.defs#labelerView',
+                    'lex:app.bsky.labeler.defs#labelerViewDetailed',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelerService: {
+    lexicon: 1,
+    id: 'app.bsky.labeler.service',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of the existence of labeler service.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['policies', 'createdAt'],
+          properties: {
+            policies: {
+              type: 'ref',
+              ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationGetUnreadCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getUnreadCount',
@@ -9032,6 +9349,9 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyLabelerDefs: 'app.bsky.labeler.defs',
+  AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
+  AppBskyLabelerService: 'app.bsky.labeler.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

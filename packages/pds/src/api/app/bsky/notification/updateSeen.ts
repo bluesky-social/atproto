@@ -6,11 +6,11 @@ export default function (server: Server, ctx: AppContext) {
   if (!appViewAgent) return
   server.app.bsky.notification.updateSeen({
     auth: ctx.authVerifier.access,
-    handler: async ({ input, auth }) => {
+    handler: async ({ input, auth, req }) => {
       const requester = auth.credentials.did
 
       await appViewAgent.api.app.bsky.notification.updateSeen(input.body, {
-        ...(await ctx.appviewAuthHeaders(requester)),
+        ...(await ctx.appviewAuthHeaders(requester, req)),
         encoding: 'application/json',
       })
     },

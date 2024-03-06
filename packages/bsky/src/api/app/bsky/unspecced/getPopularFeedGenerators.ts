@@ -10,8 +10,10 @@ import { clearlyBadCursor } from '../../../util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { viewer, labelers }
 
       if (clearlyBadCursor(params.cursor)) {
         return {
@@ -40,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor = parseString(res.cursor)
       }
 
-      const hydration = await ctx.hydrator.hydrateFeedGens(uris, viewer)
+      const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
       const feedViews = mapDefined(uris, (uri) =>
         ctx.views.feedGenerator(uri, hydration),
       )
