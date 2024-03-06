@@ -135,6 +135,8 @@ export const adjustModerationSubjectStatus = async (
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
     .where('recordPath', '=', identifier.recordPath)
+    // Make sure we respect other updates that may be happening at the same time
+    .forUpdate()
     .selectAll()
     .executeTakeFirst()
 
