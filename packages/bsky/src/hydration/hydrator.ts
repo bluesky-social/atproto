@@ -7,7 +7,6 @@ import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
-import type { Label } from '../lexicon/types/com/atproto/label/defs'
 import {
   ActorHydrator,
   ProfileAggs,
@@ -762,16 +761,8 @@ const actionTakedownLabels = <T>(
   labels: Labels,
 ) => {
   for (const key of keys) {
-    const subjectLabels = labels.get(key)
-    if (!subjectLabels) continue
-    if (includesTakedownLabel(subjectLabels)) {
+    if (labels.get(key)?.isTakendown) {
       hydrationMap.set(key, null)
     }
   }
 }
-
-const includesTakedownLabel = (labels: Label[]) => {
-  return labels.some((l) => l.val === TAKEDOWN_LABEL)
-}
-
-const TAKEDOWN_LABEL = '!takedown'

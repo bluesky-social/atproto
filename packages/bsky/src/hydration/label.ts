@@ -4,7 +4,12 @@ import { HydrationMap, parseJsonBytes } from './util'
 
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
-export type Labels = HydrationMap<Label[]>
+export type SubjectLabels = {
+  isTakendown: boolean
+  labels: Label[]
+}
+
+export type Labels = HydrationMap<SubjectLabels>
 
 export class LabelHydrator {
   constructor(
@@ -19,18 +24,27 @@ export class LabelHydrator {
     issuers = ([] as string[])
       .concat(issuers ?? [])
       .concat(this.opts?.labelsFromIssuerDids ?? [])
-    if (!subjects.length || !issuers.length) return new HydrationMap<Label[]>()
+    if (!subjects.length || !issuers.length)
+      return new HydrationMap<SubjectLabels>()
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined
       if (!label || label.neg) return acc
-      const entry = acc.get(label.uri)
-      if (entry) {
-        entry.push(label)
-      } else {
-        acc.set(label.uri, [label])
+      let entry = acc.get(label.uri)
+      if (!entry) {
+        entry = {
+          isTakendown: false,
+          labels: [],
+        }
+        acc.set(label.uri, entry)
+      }
+      entry.labels.push(label)
+      if (TAKEDOWN_LABELS.includes(label.val) && !label.neg) {
+        entry.isTakendown = true
       }
       return acc
-    }, new HydrationMap<Label[]>())
+    }, new HydrationMap<SubjectLabels>())
   }
 }
+
+const TAKEDOWN_LABELS = ['!takedown', '!suspend']

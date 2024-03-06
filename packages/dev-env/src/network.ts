@@ -60,6 +60,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       redisHost,
       modServiceDid: ozoneDid,
+      labelsFromIssuerDids: [ozoneDid],
       ...params.bsky,
     })
 

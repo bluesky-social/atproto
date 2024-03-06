@@ -22,7 +22,7 @@ describe('bsky takedown labels', () => {
 
   const addTakedownLabels = async (subjects: string[]) => {
     if (subjects.length === 0) return
-    const src = network.bsky.ctx.cfg.modServiceDid
+    const src = network.ozone.ctx.cfg.service.did
     const cts = new Date().toISOString()
     const labels = subjects.map((uri) => ({
       src,
