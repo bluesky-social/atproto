@@ -5,6 +5,9 @@ import { retryHttp } from '../util'
 import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
 import assert from 'assert'
+import { BlobPushEvent } from '../db/schema/blob_push_event'
+import { Insertable, Selectable } from 'kysely'
+import { BlobDiverter } from './blob-diverter'
 
 type EventSubject = InputSchema['subject']
 
@@ -39,6 +42,7 @@ export class EventPusher {
 
   appview: Service | undefined
   pds: Service | undefined
+  blobDiverter: BlobDiverter | undefined
 
   constructor(
     public db: Database,
@@ -52,8 +56,10 @@ export class EventPusher {
         url: string
         did: string
       }
+      blobDiverter
     },
   ) {
+    this.blobDiverter = services.blobDiverter
     if (services.appview) {
       this.appview = {
         agent: new AtpAgent({ service: services.appview.url }),
@@ -265,32 +271,67 @@ export class EventPusher {
         .executeTakeFirst()
       if (!evt) return
 
-      const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-      assert(service)
-      const subject = {
-        $type: 'com.atproto.admin.defs#repoBlobRef',
-        did: evt.subjectDid,
-        cid: evt.subjectBlobCid,
-      }
-      const succeeded = await this.updateSubjectOnService(
-        service,
-        subject,
-        evt.takedownRef,
-      )
-      await dbTxn.db
-        .updateTable('blob_push_event')
-        .set(
-          succeeded
-            ? { confirmedAt: new Date() }
-            : {
-                lastAttempted: new Date(),
-                attempts: evt.attempts ?? 0 + 1,
-              },
+      let succeeded = false
+      if (evt.eventType === 'blob_divert') {
+        succeeded = await (this.blobDiverter
+          ? this.blobDiverter.uploadBlobOnService(evt)
+          : Promise.resolve(false))
+      } else {
+        const service =
+          evt.eventType === 'pds_takedown' ? this.pds : this.appview
+        assert(service)
+        const subject = {
+          $type: 'com.atproto.admin.defs#repoBlobRef',
+          did: evt.subjectDid,
+          cid: evt.subjectBlobCid,
+        }
+        succeeded = await this.updateSubjectOnService(
+          service,
+          subject,
+          evt.takedownRef,
         )
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('subjectBlobCid', '=', evt.subjectBlobCid)
-        .where('eventType', '=', evt.eventType)
-        .execute()
+      }
+      await this.markBlobEventAttempt(dbTxn, evt, succeeded)
     })
+  }
+
+  async markBlobEventAttempt(
+    dbTxn: Database,
+    event: Selectable<BlobPushEvent>,
+    succeeded: boolean,
+  ) {
+    await dbTxn.db
+      .updateTable('blob_push_event')
+      .set(
+        succeeded
+          ? { confirmedAt: new Date() }
+          : {
+              lastAttempted: new Date(),
+              attempts: (event.attempts ?? 0) + 1,
+            },
+      )
+      .where('subjectDid', '=', event.subjectDid)
+      .where('subjectBlobCid', '=', event.subjectBlobCid)
+      .where('eventType', '=', event.eventType)
+      .execute()
+  }
+
+  async logBlobPushEvent(
+    blobValues: Insertable<BlobPushEvent>[],
+    takedownRef?: string | null,
+  ) {
+    return this.db.db
+      .insertInto('blob_push_event')
+      .values(blobValues)
+      .onConflict((oc) =>
+        oc.columns(['subjectDid', 'subjectBlobCid', 'eventType']).doUpdateSet({
+          takedownRef,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        }),
+      )
+      .returning('id')
+      .execute()
   }
 }

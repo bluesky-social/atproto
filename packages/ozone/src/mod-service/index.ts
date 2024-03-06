@@ -15,7 +15,6 @@ import {
   isModEventTag,
   RepoRef,
   RepoBlobRef,
-  isModEventDivert,
 } from '../lexicon/types/com/atproto/admin/defs'
 import {
   adjustModerationSubjectStatus,
@@ -44,7 +43,6 @@ import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
 import { jsonb } from '../db/types'
-import { BlobDiverter } from '../daemon/blob-diverter'
 import { LabelChannel } from '../db/schema/label'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
@@ -54,7 +52,6 @@ export class ModerationService {
     public db: Database,
     public backgroundQueue: BackgroundQueue,
     public eventPusher: EventPusher,
-    public blobDiverter: BlobDiverter,
     public appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
     public serverDid: string,
@@ -63,7 +60,6 @@ export class ModerationService {
   static creator(
     backgroundQueue: BackgroundQueue,
     eventPusher: EventPusher,
-    blobDiverter: BlobDiverter,
     appviewAgent: AtpAgent,
     appviewAuth: AppviewAuth,
     serverDid: string,
@@ -73,7 +69,6 @@ export class ModerationService {
         db,
         backgroundQueue,
         eventPusher,
-        blobDiverter,
         appviewAgent,
         appviewAuth,
         serverDid,
@@ -327,33 +322,6 @@ export class ModerationService {
       subject.blobCids,
     )
 
-    if (
-      isModEventDivert(event) &&
-      subjectInfo.subjectUri &&
-      subjectInfo.subjectBlobCids?.length
-    ) {
-      const blobDiverts = await Promise.all(
-        subjectInfo.subjectBlobCids?.map((subjectBlobCid) =>
-          this.blobDiverter.logDivertEvent({
-            subjectDid: subjectInfo.subjectDid,
-            subjectBlobCid: subjectBlobCid,
-            // TODO: Check is done above already
-            // @ts-ignore
-            subjectUri: subjectInfo.subjectUri,
-          }),
-        ),
-      )
-      this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          await Promise.all(
-            blobDiverts.map((divert) =>
-              this.blobDiverter.attemptBlobDivert(divert[0].id),
-            ),
-          )
-        })
-      })
-    }
-
     return { event: modEvent, subjectStatus }
   }
 
@@ -569,27 +537,17 @@ export class ModerationService {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,
-            subjectDid: subject.did,
-            subjectBlobCid: cid.toString(),
             takedownRef,
+            subjectDid: subject.did,
+            subjectUri: subject.uri || null,
+            subjectBlobCid: cid.toString(),
           })
         }
       }
-      const blobEvts = await this.db.db
-        .insertInto('blob_push_event')
-        .values(blobValues)
-        .onConflict((oc) =>
-          oc
-            .columns(['subjectDid', 'subjectBlobCid', 'eventType'])
-            .doUpdateSet({
-              takedownRef,
-              confirmedAt: null,
-              attempts: 0,
-              lastAttempted: null,
-            }),
-        )
-        .returning('id')
-        .execute()
+      const blobEvts = await this.eventPusher.logBlobPushEvent(
+        blobValues,
+        takedownRef,
+      )
 
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
@@ -599,6 +557,29 @@ export class ModerationService {
         })
       })
     }
+  }
+
+  async divertBlobs(subject: RecordSubject) {
+    const subjectInfo = subject.info()
+
+    const blobDiverts = await this.eventPusher.logBlobPushEvent(
+      subjectInfo.subjectBlobCids.map((subjectBlobCid) => ({
+        subjectDid: subjectInfo.subjectDid,
+        subjectBlobCid: subjectBlobCid,
+        subjectUri: subjectInfo.subjectUri,
+        eventType: 'blob_divert',
+      })),
+    )
+
+    this.db.onCommit(() => {
+      this.backgroundQueue.add(async () => {
+        await Promise.all(
+          blobDiverts.map((divert) =>
+            this.eventPusher.attemptBlobEvent(divert[0].id),
+          ),
+        )
+      })
+    })
   }
 
   async reverseTakedownRecord(subject: RecordSubject) {

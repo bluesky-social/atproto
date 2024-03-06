@@ -1,5 +1,4 @@
 import {
-  SECOND,
   VerifyCidTransform,
   forwardStreamErrors,
   getPdsEndpoint,
@@ -14,18 +13,7 @@ import { retryHttp } from '../util'
 import { dbLogger } from '../logger'
 import { BlobReportServiceConfig } from '../config'
 
-type PollState = {
-  timer?: NodeJS.Timer
-  promise: Promise<void>
-}
-
 export class BlobDiverter {
-  destroyed = false
-
-  pollState: PollState = {
-    promise: Promise.resolve(),
-  }
-
   serviceConfig: BlobReportServiceConfig
   idResolver: IdResolver
 
@@ -38,48 +26,6 @@ export class BlobDiverter {
   ) {
     this.serviceConfig = services.serviceConfig
     this.idResolver = services.idResolver
-  }
-
-  start() {
-    this.poll(this.pollState, () => this.divertBlob())
-  }
-
-  poll(state: PollState, fn: () => Promise<void>) {
-    if (this.destroyed) return
-    state.promise = fn()
-      .catch((err) => {
-        dbLogger.error({ err }, 'blob divert failed')
-      })
-      .finally(() => {
-        state.timer = setTimeout(() => this.poll(state, fn), 30 * SECOND)
-      })
-  }
-
-  async processAll() {
-    await Promise.all([this.divertBlob(), this.pollState.promise])
-  }
-
-  async destroy() {
-    this.destroyed = true
-    const destroyState = (state: PollState) => {
-      if (state.timer) {
-        clearTimeout(state.timer)
-      }
-      return state.promise
-    }
-    await destroyState(this.pollState)
-  }
-
-  async divertBlob() {
-    const toPush = await this.db.db
-      .selectFrom('blob_divert_event')
-      .select('id')
-      .forUpdate()
-      .skipLocked()
-      .where('divertedAt', 'is', null)
-      .where('attempts', '<', 10)
-      .execute()
-    await Promise.all(toPush.map((evt) => this.attemptBlobDivert(evt.id)))
   }
 
   private async getBlob({
@@ -111,18 +57,15 @@ export class BlobDiverter {
     }
   }
 
-  private async uploadBlob(
-    {
-      imageStream,
-      contentType,
-    }: { imageStream: Readable; contentType: string },
-    { subjectDid, subjectUri }: { subjectDid: string; subjectUri: string },
-  ) {
-    if (!this.serviceConfig.authToken || !this.serviceConfig.url) {
-      return false
-    }
-
-    const url = `${this.serviceConfig.url}?did=${subjectDid}&uri=${subjectUri}`
+  async sendImage({
+    url,
+    imageStream,
+    contentType,
+  }: {
+    url: string
+    imageStream: Readable
+    contentType: string
+  }) {
     const result = await axios(url, {
       method: 'POST',
       data: imageStream,
@@ -135,20 +78,38 @@ export class BlobDiverter {
     return result.status === 200
   }
 
-  private async uploadBlobOnService({
+  private async uploadBlob(
+    {
+      imageStream,
+      contentType,
+    }: { imageStream: Readable; contentType: string },
+    {
+      subjectDid,
+      subjectUri,
+    }: { subjectDid: string; subjectUri: string | null },
+  ) {
+    const url = new URL(this.serviceConfig.url)
+    url.searchParams.set('did', subjectDid)
+    if (subjectUri) url.searchParams.set('uri', subjectUri)
+    const result = await this.sendImage({
+      url: url.toString(),
+      imageStream,
+      contentType,
+    })
+
+    return result
+  }
+
+  async uploadBlobOnService({
     subjectDid,
     subjectUri,
     subjectBlobCid,
   }: {
     subjectDid: string
-    subjectUri: string
+    subjectUri: string | null
     subjectBlobCid: string
   }): Promise<boolean> {
     try {
-      if (!this.serviceConfig.authToken || !this.serviceConfig.url) {
-        throw new Error('Blob divert service not configured')
-      }
-
       const didDoc = await this.idResolver.did.resolve(subjectDid)
 
       if (!didDoc) {
@@ -161,69 +122,23 @@ export class BlobDiverter {
         throw new Error('Error resolving PDS')
       }
 
-      const { imageStream, contentType } = await retryHttp(() =>
-        this.getBlob({ pds, did: subjectDid, cid: subjectBlobCid }),
-      )
-
-      const uploadResult = await retryHttp(() =>
-        this.uploadBlob(
+      // attempt to download and upload within the same retry block since the imageStream is not reusable
+      const uploadResult = await retryHttp(async () => {
+        const { imageStream, contentType } = await this.getBlob({
+          pds,
+          did: subjectDid,
+          cid: subjectBlobCid,
+        })
+        return this.uploadBlob(
           { imageStream, contentType },
           { subjectDid, subjectUri },
-        ),
-      )
+        )
+      })
 
       return uploadResult
     } catch (err) {
       dbLogger.error({ err }, 'failed to upload diverted blob')
       return false
     }
-  }
-
-  async attemptBlobDivert(id: number) {
-    await this.db.transaction(async (dbTxn) => {
-      const evt = await dbTxn.db
-        .selectFrom('blob_divert_event')
-        .selectAll()
-        .forUpdate()
-        .skipLocked()
-        .where('id', '=', id)
-        .where('divertedAt', 'is', null)
-        .executeTakeFirst()
-      if (!evt) return
-
-      const succeeded = await this.uploadBlobOnService(evt)
-      await dbTxn.db
-        .updateTable('blob_divert_event')
-        .set(
-          succeeded
-            ? { divertedAt: new Date() }
-            : {
-                lastAttempted: new Date(),
-                attempts: (evt.attempts ?? 0) + 1,
-              },
-        )
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('subjectBlobCid', '=', evt.subjectBlobCid)
-        .execute()
-    })
-  }
-
-  async logDivertEvent(values: {
-    subjectDid: string
-    subjectUri: string
-    subjectBlobCid: string
-  }) {
-    return this.db.db
-      .insertInto('blob_divert_event')
-      .values(values)
-      .onConflict((oc) =>
-        oc.columns(['subjectDid', 'subjectBlobCid']).doUpdateSet({
-          divertedAt: null,
-          attempts: 0,
-          lastAttempted: null,
-        }),
-      )
-      .returning('id')
-      .execute()
   }
 }

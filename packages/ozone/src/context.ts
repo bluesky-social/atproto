@@ -65,19 +65,20 @@ export class AppContext {
       cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
     const backgroundQueue = new BackgroundQueue(db)
+    const blobDiverter = cfg.blobReportService
+      ? new BlobDiverter(db, {
+          idResolver,
+          serviceConfig: cfg.blobReportService,
+        })
+      : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview,
       pds: cfg.pds ?? undefined,
+      blobDiverter,
     })
-    const blobDiverter = new BlobDiverter(db, {
-      idResolver,
-      serviceConfig: cfg.blobReportService,
-    })
-
     const modService = ModerationService.creator(
       backgroundQueue,
       eventPusher,
-      blobDiverter,
       appviewAgent,
       appviewAuth,
       cfg.service.did,

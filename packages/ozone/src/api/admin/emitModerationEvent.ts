@@ -2,6 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
+  isModEventDivert,
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
@@ -90,6 +91,10 @@ export default function (server: Server, ctx: AppContext) {
           createdBy: ctx.cfg.service.did,
           subjectStatus: result.subjectStatus,
         })
+
+        if (isModEventDivert(event) && subject.isRecord()) {
+          await moderationTxn.divertBlobs(subject)
+        }
 
         if (subject.isRepo()) {
           if (isTakedownEvent) {
