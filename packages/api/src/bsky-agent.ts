@@ -8,6 +8,7 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
+import { MutedWord } from './client/types/app/bsky/actor/defs'
 import {
   BskyPreferences,
   BskyFeedViewPreference,
@@ -768,7 +769,13 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async addMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+  /**
+   * Add a muted word to user preferences. If called in succession, this
+   * method must be called sequentially, not in parallel.
+   */
+  async addMutedWord(
+    mutedWord: Pick<MutedWord, 'value' | 'targets' | 'actors' | 'expiresAt'>,
+  ) {
     const sanitizedValue = sanitizeMutedWordValue(mutedWord.value)
 
     if (!sanitizedValue) return
@@ -813,14 +820,25 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `addMutedWord` instead
+   * Convenience method to sequentially add muted words to user preferences
    */
-  async upsertMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
+  async addMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
     for (const word of newMutedWords) {
       await this.addMutedWord(word)
     }
   }
 
+  /**
+   * @deprecated use `addMutedWords` or `addMutedWord` instead
+   */
+  async upsertMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
+    await this.addMutedWords(mutedWords)
+  }
+
+  /**
+   * Update a muted word in user preferences. If called in succession, this
+   * method must be called sequentially, not in parallel.
+   */
   async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       const mutedWordsPref = prefs.findLast(
@@ -830,23 +848,17 @@ export class BskyAgent extends AtpAgent {
       )
 
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        mutedWordsPref.items.map((existingItem) => {
-          // id is undefined in legacy implementation
-          const existingId = existingItem.id as string | undefined
-          // prefer matching based on id
-          const matchById = existingId && existingId === mutedWord.id
-          // handle legacy case where id is not set
-          const legacyMatchByValue =
-            !existingId && existingItem.value === mutedWord.value
+        mutedWordsPref.items = mutedWordsPref.items.map((existingItem) => {
+          const match = matchMutedWord(existingItem, mutedWord)
 
-          if (matchById || legacyMatchByValue) {
+          if (match) {
             const updated = {
               ...existingItem,
               ...mutedWord,
             }
             return {
-              id: existingId || TID.nextStr(),
-              value: updated.value,
+              id: existingItem.id || TID.nextStr(),
+              value: sanitizeMutedWordValue(updated.value),
               targets: updated.targets || [],
               actors: updated.actors || [],
               expiresAt: updated.expiresAt || undefined,
@@ -862,16 +874,22 @@ export class BskyAgent extends AtpAgent {
         mutedWordsPref.items = migrateLegacyMutedWordsItems(
           mutedWordsPref.items,
         )
+
+        return prefs
+          .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+          .concat([
+            { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+          ])
       }
 
       return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
     })
   }
 
+  /**
+   * Remove a muted word from user preferences. If called in succession, this
+   * method must be called sequentially, not in parallel.
+   */
   async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       const mutedWordsPref = prefs.findLast(
@@ -882,16 +900,9 @@ export class BskyAgent extends AtpAgent {
 
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
         for (let i = 0; i < mutedWordsPref.items.length; i++) {
-          const existingItem = mutedWordsPref.items[i]
-          // id is undefined in legacy implementation
-          const existingId = existingItem.id as string | undefined
-          // prefer matching based on id
-          const matchById = existingId && existingId === mutedWord.id
-          // handle legacy case where id is not set
-          const legacyMatchByValue =
-            !existingId && existingItem.value === mutedWord.value
+          const match = matchMutedWord(mutedWordsPref.items[i], mutedWord)
 
-          if (matchById || legacyMatchByValue) {
+          if (match) {
             mutedWordsPref.items.splice(i, 1)
             break
           }
@@ -903,14 +914,26 @@ export class BskyAgent extends AtpAgent {
         mutedWordsPref.items = migrateLegacyMutedWordsItems(
           mutedWordsPref.items,
         )
+
+        return prefs
+          .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+          .concat([
+            { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+          ])
       }
 
       return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
     })
+  }
+
+  /**
+   * Convenience method to sequentially remove muted words from user
+   * preferences
+   */
+  async removeMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
+    for (const word of mutedWords) {
+      await this.removeMutedWord(word)
+    }
   }
 
   async hidePost(postUri: string) {
@@ -1093,4 +1116,18 @@ function migrateLegacyMutedWordsItems(items: AppBskyActorDefs.MutedWord[]) {
     actors: item.actors || [],
     expiresAt: item.expiresAt || undefined,
   }))
+}
+
+function matchMutedWord(
+  existingWord: AppBskyActorDefs.MutedWord,
+  newWord: AppBskyActorDefs.MutedWord,
+): boolean {
+  // id is undefined in legacy implementation
+  const existingId = existingWord.id
+  // prefer matching based on id
+  const matchById = existingId && existingId === newWord.id
+  // handle legacy case where id is not set
+  const legacyMatchByValue = !existingId && existingWord.value === newWord.value
+
+  return matchById || legacyMatchByValue
 }
