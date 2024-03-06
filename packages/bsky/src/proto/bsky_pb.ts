@@ -3368,9 +3368,9 @@ export class ActorInfo extends Message<ActorInfo> {
   tombstonedAt?: Timestamp
 
   /**
-   * @generated from field: bool is_labeler = 7;
+   * @generated from field: bool labeler = 7;
    */
-  isLabeler = false
+  labeler = false
 
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
@@ -3391,7 +3391,7 @@ export class ActorInfo extends Message<ActorInfo> {
       T: 9 /* ScalarType.STRING */,
     },
     { no: 6, name: 'tombstoned_at', kind: 'message', T: Timestamp },
-    { no: 7, name: 'is_labeler', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: 'labeler', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(

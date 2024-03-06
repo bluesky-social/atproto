@@ -103,7 +103,7 @@ export class ActorHydrator {
         profileTakedownRef: safeTakedownRef(profile),
         sortedAt: profile?.sortedAt?.toDate(),
         takedownRef: safeTakedownRef(actor),
-        isLabeler: actor.isLabeler,
+        isLabeler: actor.labeler ?? false,
       })
     }, new HydrationMap<Actor>())
   }

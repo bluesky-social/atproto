@@ -40,7 +40,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         takenDown: !!row?.takedownRef,
         takedownRef: row?.takedownRef || undefined,
         tombstonedAt: undefined, // in current implementation, tombstoned actors are deleted
-        isLabeler: row?.isLabeler ?? false,
+        labeler: row?.isLabeler ?? false,
       }
     })
     return { actors }
