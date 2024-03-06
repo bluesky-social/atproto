@@ -16,6 +16,7 @@ import {
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
 import { BlobDiverter } from './daemon/blob-diverter'
+import { ImageInvalidator } from './image-invalidator'
 
 export type AppContextOptions = {
   db: Database
@@ -26,6 +27,7 @@ export type AppContextOptions = {
   pdsAgent: AtpAgent | undefined
   signingKey: Keypair
   idResolver: IdResolver
+  imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
 }
@@ -61,8 +63,6 @@ export class AppContext {
         aud,
         keypair: signingKey,
       })
-    const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
     const backgroundQueue = new BackgroundQueue(db)
     const blobDiverter = cfg.blobReportService
@@ -77,11 +77,15 @@ export class AppContext {
       blobDiverter,
     })
     const modService = ModerationService.creator(
+      cfg,
       backgroundQueue,
+      idResolver,
       eventPusher,
       appviewAgent,
-      appviewAuth,
+      createAuthHeaders,
       cfg.service.did,
+      overrides?.imgInvalidator,
+      cfg.cdn.paths,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()

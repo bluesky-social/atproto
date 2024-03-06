@@ -46,9 +46,6 @@ export class DaemonContext {
         keypair: signingKey,
       })
 
-    const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
-
     const blobDiverter = cfg.blobReportService
       ? new BlobDiverter(db, {
           idResolver,
@@ -60,14 +57,19 @@ export class DaemonContext {
       pds: cfg.pds ?? undefined,
       blobDiverter,
     })
+
     const backgroundQueue = new BackgroundQueue(db)
+
     const modService = ModerationService.creator(
+      cfg,
       backgroundQueue,
+      idResolver,
       eventPusher,
       appviewAgent,
-      appviewAuth,
+      createAuthHeaders,
       cfg.service.did,
     )
+
     const eventReverser = new EventReverser(db, modService)
 
     return new DaemonContext({

@@ -34,6 +34,7 @@ export class TestOzone {
     const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
     const env: ozone.OzoneEnvironment = {
+      devMode: true,
       version: '0.0.0',
       port,
       didPlcUrl: config.plcUrl,
@@ -62,7 +63,9 @@ export class TestOzone {
     const secrets = ozone.envToSecrets(env)
 
     // api server
-    const server = await ozone.OzoneService.create(cfg, secrets)
+    const server = await ozone.OzoneService.create(cfg, secrets, {
+      imgInvalidator: config.imgInvalidator,
+    })
     await server.start()
 
     const daemon = await ozone.OzoneDaemon.create(cfg, secrets)

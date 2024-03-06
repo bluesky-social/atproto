@@ -1,8 +1,9 @@
-import { envInt, envStr } from '@atproto/common'
+import { envBool, envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): OzoneEnvironment => {
   return {
     nodeEnv: envStr('NODE_ENV'),
+    devMode: envBool('OZONE_DEV_MODE'),
     version: envStr('OZONE_VERSION'),
     port: envInt('OZONE_PORT'),
     publicUrl: envStr('OZONE_PUBLIC_URL'),
@@ -17,6 +18,7 @@ export const readEnv = (): OzoneEnvironment => {
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
+    cdnPaths: envList('OZONE_CDN_PATHS'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
     triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
@@ -28,6 +30,7 @@ export const readEnv = (): OzoneEnvironment => {
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  devMode?: boolean
   version?: string
   port?: number
   publicUrl?: string
@@ -42,6 +45,7 @@ export type OzoneEnvironment = {
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
   didPlcUrl?: string
+  cdnPaths?: string[]
   adminPassword?: string
   moderatorPassword?: string
   triagePassword?: string
