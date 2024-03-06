@@ -4,7 +4,7 @@ import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ params }) => {
       const modService = ctx.modService(ctx.db)
 

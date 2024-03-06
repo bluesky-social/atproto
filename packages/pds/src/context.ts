@@ -199,7 +199,7 @@ export class AppContext {
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.modService?.did,
+        modService: cfg.modService?.did,
       },
     })
 

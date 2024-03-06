@@ -6,7 +6,6 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { OzoneConfig, OzoneSecrets } from './config'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
-import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
 import { EventPusher } from './daemon'
@@ -16,6 +15,7 @@ import {
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
 import { BlobDiverter } from './daemon/blob-diverter'
+import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
 
 export type AppContextOptions = {
@@ -30,6 +30,7 @@ export type AppContextOptions = {
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
+  authVerifier: AuthVerifier
 }
 
 export class AppContext {
@@ -59,7 +60,7 @@ export class AppContext {
 
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
-        iss: cfg.service.did,
+        iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
       })
@@ -92,6 +93,16 @@ export class AppContext {
 
     const sequencer = new Sequencer(db)
 
+    const authVerifier = new AuthVerifier(idResolver, {
+      serviceDid: cfg.service.did,
+      admins: cfg.access.admins,
+      moderators: cfg.access.moderators,
+      triage: cfg.access.triage,
+      adminPassword: secrets.adminPassword,
+      moderatorPassword: secrets.moderatorPassword,
+      triagePassword: secrets.triagePassword,
+    })
+
     return new AppContext(
       {
         db,
@@ -104,6 +115,7 @@ export class AppContext {
         idResolver,
         backgroundQueue,
         sequencer,
+        authVerifier,
         ...(overrides ?? {}),
       },
       secrets,
@@ -162,38 +174,12 @@ export class AppContext {
     return this.opts.sequencer
   }
 
-  get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.service.did })
-  }
-
-  get authVerifierAnyAudience() {
-    return auth.authVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifierAnyAudience() {
-    return auth.authOptionalVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.service.did,
-    })
-  }
-
-  get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(
-      this.idResolver,
-      this.secrets,
-      this.cfg.service.did,
-    )
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.secrets)
+  get authVerifier(): AuthVerifier {
+    return this.opts.authVerifier
   }
 
   async serviceAuthHeaders(aud: string) {
-    const iss = this.cfg.service.did
+    const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
       aud,

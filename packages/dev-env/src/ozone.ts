@@ -2,8 +2,8 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as ozone from '@atproto/ozone'
 import { AtpAgent } from '@atproto/api'
-import { Secp256k1Keypair } from '@atproto/crypto'
-import { Client as PlcClient } from '@did-plc/lib'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import * as plc from '@did-plc/lib'
 import { OzoneConfig } from './types'
 import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
@@ -21,18 +21,12 @@ export class TestOzone {
     const signingKeyHex = ui8.toString(await serviceKeypair.export(), 'hex')
     let serverDid = config.serverDid
     if (!serverDid) {
-      const plcClient = new PlcClient(config.plcUrl)
-      serverDid = await plcClient.createDid({
-        signingKey: serviceKeypair.did(),
-        rotationKeys: [serviceKeypair.did()],
-        handle: 'ozone.test',
-        pds: `https://pds.invalid`,
-        signer: serviceKeypair,
-      })
+      serverDid = await createOzoneDid(config.plcUrl, serviceKeypair)
     }
 
     const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
+
     const env: ozone.OzoneEnvironment = {
       devMode: true,
       version: '0.0.0',
@@ -45,6 +39,9 @@ export class TestOzone {
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
+      adminDids: [],
+      moderatorDids: [],
+      triageDids: [],
     }
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -112,4 +109,32 @@ export class TestOzone {
     await this.daemon.destroy()
     await this.server.destroy()
   }
+}
+
+export const createOzoneDid = async (
+  plcUrl: string,
+  keypair: Keypair,
+): Promise<string> => {
+  const plcClient = new plc.Client(plcUrl)
+  const plcOp = await plc.signOperation(
+    {
+      type: 'plc_operation',
+      alsoKnownAs: [],
+      rotationKeys: [keypair.did()],
+      verificationMethods: {
+        atproto_label: keypair.did(),
+      },
+      services: {
+        atproto_labeler: {
+          type: 'AtprotoLabeler',
+          endpoint: 'https://ozone.public.url',
+        },
+      },
+      prev: null,
+    },
+    keypair,
+  )
+  const did = await plc.didForCreateOp(plcOp)
+  await plcClient.sendOperation(did, plcOp)
+  return did
 }

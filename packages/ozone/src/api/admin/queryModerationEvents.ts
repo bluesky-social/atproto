@@ -4,7 +4,7 @@ import { getEventType } from '../moderation/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.queryModerationEvents({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ params }) => {
       const {
         subject,

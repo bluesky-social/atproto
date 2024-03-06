@@ -55,6 +55,11 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
           authToken: env.blobReportServiceAuthToken,
         }
       : undefined
+  const accessCfg: OzoneConfig['access'] = {
+    admins: env.adminDids,
+    moderators: env.moderatorDids,
+    triage: env.triageDids,
+  }
 
   return {
     service: serviceCfg,
@@ -64,6 +69,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     cdn: cdnCfg,
     identity: identityCfg,
     blobReportService: blobReportServiceCfg,
+    access: accessCfg,
   }
 }
 
@@ -75,6 +81,7 @@ export type OzoneConfig = {
   cdn: CdnConfig
   identity: IdentityConfig
   blobReportService?: BlobReportServiceConfig
+  access: AccessConfig
 }
 
 export type ServiceConfig = {
@@ -108,10 +115,16 @@ export type PdsConfig = {
   did: string
 }
 
+export type CdnConfig = {
+  paths?: string[]
+}
+
 export type IdentityConfig = {
   plcUrl: string
 }
 
-export type CdnConfig = {
-  paths?: string[]
+export type AccessConfig = {
+  admins: string[]
+  moderators: string[]
+  triage: string[]
 }

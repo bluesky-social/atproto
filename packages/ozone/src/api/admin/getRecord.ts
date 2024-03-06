@@ -6,7 +6,7 @@ import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ params, auth }) => {
       const db = ctx.db
 
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       record.repo = addAccountInfoToRepoView(
         record.repo,
         accountInfo,
-        auth.credentials.moderator,
+        auth.credentials.isModerator,
       )
 
       return {

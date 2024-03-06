@@ -48,7 +48,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
-  getSigningKey: (did: string, forceRefresh: boolean) => Promise<string>,
+  getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
   if (parts.length !== 3) {

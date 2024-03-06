@@ -5202,6 +5202,7 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'Hide replies in the feed if they are not by followed users.',
+            default: true,
           },
           hideRepliesByLikeCount: {
             type: 'integer',
