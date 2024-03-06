@@ -331,7 +331,13 @@ export class EventPusher {
           lastAttempted: null,
         }),
       )
-      .returning(['id', 'subjectDid', 'subjectUri', 'subjectBlobCid', 'eventType'])
+      .returning([
+        'id',
+        'subjectDid',
+        'subjectUri',
+        'subjectBlobCid',
+        'eventType',
+      ])
       .execute()
   }
 }
