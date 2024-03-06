@@ -15,6 +15,7 @@ import createCommunicationTemplate from './admin/createCommunicationTemplate'
 import updateCommunicationTemplate from './admin/updateCommunicationTemplate'
 import deleteCommunicationTemplate from './admin/deleteCommunicationTemplate'
 import listCommunicationTemplates from './admin/listCommunicationTemplates'
+import proxied from './proxied'
 
 export * as health from './health'
 
@@ -36,5 +37,6 @@ export default function (server: Server, ctx: AppContext) {
   createCommunicationTemplate(server, ctx)
   updateCommunicationTemplate(server, ctx)
   deleteCommunicationTemplate(server, ctx)
+  proxied(server, ctx)
   return server
 }

@@ -4,13 +4,13 @@ import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.deleteCommunicationTemplate({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.modOrRole,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
       const { id } = input.body
 
-      if (!access.admin) {
+      if (!access.isAdmin) {
         throw new AuthRequiredError(
           'Must be an admin to delete a communication template',
         )

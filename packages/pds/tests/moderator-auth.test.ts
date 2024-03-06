@@ -1,43 +1,62 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import * as plc from '@did-plc/lib'
 import usersSeed from './seeds/users'
 import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 
-describe('admin auth', () => {
+describe('moderator auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
   let repoSubject: RepoRef
 
-  const modServiceDid = 'did:example:mod'
-  const altModDid = 'did:example:alt'
+  let modServiceDid: string
+  let altModDid: string
   let modServiceKey: Secp256k1Keypair
   let pdsDid: string
 
+  const opAndDid = async (handle: string, key: Keypair) => {
+    const op = await plc.signOperation(
+      {
+        type: 'plc_operation',
+        alsoKnownAs: [handle],
+        verificationMethods: {
+          atproto: key.did(),
+        },
+        rotationKeys: [key.did()],
+        services: {},
+        prev: null,
+      },
+      key,
+    )
+    const did = await plc.didForCreateOp(op)
+    return { op, did }
+  }
+
   beforeAll(async () => {
+    // kinda goofy but we need to know the dids before creating the testnet for the PDS's config
+    modServiceKey = await Secp256k1Keypair.create()
+    const modServiceInfo = await opAndDid('mod.test', modServiceKey)
+    const altModInfo = await opAndDid('alt-mod.test', modServiceKey)
+    modServiceDid = modServiceInfo.did
+    altModDid = altModInfo.did
+
     network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'pds_admin_auth',
+      dbPostgresSchema: 'pds_moderator_auth',
       pds: {
-        modServiceDid,
+        modServiceDid: modServiceInfo.did,
+        modServiceUrl: 'https://mod.invalid',
       },
     })
 
     pdsDid = network.pds.ctx.cfg.service.did
 
-    modServiceKey = await Secp256k1Keypair.create()
-    const origResolve = network.pds.ctx.idResolver.did.resolveAtprotoKey
-    network.pds.ctx.idResolver.did.resolveAtprotoKey = async (
-      did: string,
-      forceRefresh?: boolean,
-    ) => {
-      if (did === modServiceDid || did === altModDid) {
-        return modServiceKey.did()
-      }
-      return origResolve(did, forceRefresh)
-    }
+    const plcClient = network.plc.getClient()
+    await plcClient.sendOperation(modServiceInfo.did, modServiceInfo.op)
+    await plcClient.sendOperation(altModInfo.did, altModInfo.op)
 
     agent = network.pds.getClient()
     sc = network.getSeedClient()

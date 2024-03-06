@@ -11,7 +11,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
-    auth: ctx.authVerifier.roleOrAdminService,
+    auth: ctx.authVerifier.roleOrModService,
     handler: async ({ input, auth }) => {
       // if less than moderator access then cannot perform a takedown
       if (auth.credentials.type === 'role' && !auth.credentials.moderator) {

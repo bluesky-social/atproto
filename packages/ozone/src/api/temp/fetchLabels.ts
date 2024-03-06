@@ -8,13 +8,13 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.fetchLabels({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.standardOptionalOrRole,
     handler: async ({ auth, params }) => {
       const { limit } = params
       const since =
         params.since !== undefined ? new Date(params.since).toISOString() : ''
       const includeUnspeccedTakedowns =
-        auth.credentials.type === 'role' && auth.credentials.admin
+        auth.credentials.type === 'none' ? false : auth.credentials.isAdmin
       const labelRes = await ctx.db.db
         .selectFrom('label')
         .selectAll()
