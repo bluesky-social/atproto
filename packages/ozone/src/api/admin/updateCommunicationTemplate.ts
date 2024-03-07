@@ -4,7 +4,7 @@ import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateCommunicationTemplate({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db

@@ -8,8 +8,7 @@ import { ModerationLangService } from '../../mod-service/lang'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
-    // @TODO anonymous reports w/ optional auth are a temporary measure
-    auth: ctx.authVerifier.standardOptionalOrRole,
+    auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const requester =
         'iss' in auth.credentials ? auth.credentials.iss : ctx.cfg.service.did

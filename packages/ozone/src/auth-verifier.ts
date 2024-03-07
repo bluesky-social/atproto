@@ -7,11 +7,11 @@ type ReqCtx = {
   req: express.Request
 }
 
-type RoleOutput = {
+type AdminTokenOutput = {
   credentials: {
-    type: 'role'
-    isAdmin: boolean
-    isModerator: boolean
+    type: 'admin_token'
+    isAdmin: true
+    isModerator: true
     isTriage: true
   }
 }
@@ -51,8 +51,6 @@ export type AuthVerifierOpts = {
   moderators: string[]
   triage: string[]
   adminPassword: string
-  moderatorPassword: string
-  triagePassword: string
 }
 
 export class AuthVerifier {
@@ -61,8 +59,6 @@ export class AuthVerifier {
   moderators: string[]
   triage: string[]
   private adminPassword: string
-  private moderatorPassword: string
-  private triagePassword: string
 
   constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
     this.serviceDid = opts.serviceDid
@@ -70,15 +66,15 @@ export class AuthVerifier {
     this.moderators = opts.moderators
     this.triage = opts.triage
     this.adminPassword = opts.adminPassword
-    this.moderatorPassword = opts.moderatorPassword
-    this.triagePassword = opts.triagePassword
   }
 
-  modOrRole = async (reqCtx: ReqCtx): Promise<ModeratorOutput | RoleOutput> => {
-    if (isBearerToken(reqCtx.req)) {
-      return this.moderator(reqCtx)
+  modOrAdminToken = async (
+    reqCtx: ReqCtx,
+  ): Promise<ModeratorOutput | AdminTokenOutput> => {
+    if (isBasicToken(reqCtx.req)) {
+      return this.adminToken(reqCtx)
     } else {
-      return this.role(reqCtx)
+      return this.moderator(reqCtx)
     }
   }
 
@@ -138,36 +134,30 @@ export class AuthVerifier {
     return this.nullCreds()
   }
 
-  standardOptionalOrRole = async (
+  standardOptionalOrAdminToken = async (
     reqCtx: ReqCtx,
-  ): Promise<StandardOutput | RoleOutput | NullOutput> => {
+  ): Promise<StandardOutput | AdminTokenOutput | NullOutput> => {
     if (isBearerToken(reqCtx.req)) {
       return this.standard(reqCtx)
     } else if (isBasicToken(reqCtx.req)) {
-      return this.role(reqCtx)
+      return this.adminToken(reqCtx)
     } else {
       return this.nullCreds()
     }
   }
 
-  role = async (reqCtx: ReqCtx): Promise<RoleOutput> => {
+  adminToken = async (reqCtx: ReqCtx): Promise<AdminTokenOutput> => {
     const parsed = parseBasicAuth(reqCtx.req.headers.authorization ?? '')
     const { username, password } = parsed ?? {}
-    if (username !== 'admin') {
-      throw new AuthRequiredError()
-    }
-    const isAdmin = password === this.adminPassword
-    const isModerator = isAdmin || password === this.moderatorPassword
-    const isTriage = isModerator || password === this.triagePassword
-    if (!isTriage) {
+    if (username !== 'admin' || password !== this.adminPassword) {
       throw new AuthRequiredError()
     }
     return {
       credentials: {
-        type: 'role',
-        isAdmin,
-        isModerator,
-        isTriage,
+        type: 'admin_token',
+        isAdmin: true,
+        isModerator: true,
+        isTriage: true,
       },
     }
   }

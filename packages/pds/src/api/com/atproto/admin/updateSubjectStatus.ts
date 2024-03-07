@@ -7,19 +7,12 @@ import {
   isRepoBlobRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
-    auth: ctx.authVerifier.roleOrModService,
-    handler: async ({ input, auth }) => {
-      // if less than moderator access then cannot perform a takedown
-      if (auth.credentials.type === 'role' && !auth.credentials.moderator) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to update subject state',
-        )
-      }
-
+    auth: ctx.authVerifier.moderator,
+    handler: async ({ input }) => {
       const { subject, takedown } = input.body
       if (takedown) {
         if (isRepoRef(subject)) {

@@ -194,8 +194,6 @@ export class AppContext {
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
       jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
-      moderatorPass: secrets.moderatorPassword,
-      triagePass: secrets.triagePassword,
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
