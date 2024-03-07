@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - pds-proxy-headers
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

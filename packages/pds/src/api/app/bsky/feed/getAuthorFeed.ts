@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
@@ -16,18 +15,10 @@ export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx.cfg
   if (!bskyAppView) return
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.authVerifier.accessOrRole,
-    handler: async ({ req, params, auth }) => {
-      const requester =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await pipethrough(
-        bskyAppView.url,
-        METHOD_NSID,
-        params,
-        requester
-          ? await ctx.appviewAuthHeaders(requester, req)
-          : authPassthru(req),
-      )
+    auth: ctx.authVerifier.access,
+    handler: async ({ req, auth }) => {
+      const requester = auth.credentials.did
+      const res = await pipethrough(ctx, req, requester)
       if (!requester) {
         return res
       }
