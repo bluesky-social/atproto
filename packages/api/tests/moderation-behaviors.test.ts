@@ -172,55 +172,6 @@ const SCENARIOS: SuiteScenarios = {
     },
   },
 
-  "Imperative label ('!no-promote') on account": {
-    cfg: 'none',
-    subject: 'profile',
-    author: 'alice',
-    labels: { account: ['!no-promote'] },
-    behaviors: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on profile": {
-    cfg: 'none',
-    subject: 'profile',
-    author: 'alice',
-    labels: { profile: ['!no-promote'] },
-    behaviors: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on post": {
-    cfg: 'none',
-    subject: 'post',
-    author: 'alice',
-    labels: { post: ['!no-promote'] },
-    behaviors: {
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on author profile": {
-    cfg: 'none',
-    subject: 'post',
-    author: 'alice',
-    labels: { profile: ['!no-promote'] },
-    behaviors: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on author account": {
-    cfg: 'none',
-    subject: 'post',
-    author: 'alice',
-    labels: { account: ['!no-promote'] },
-    behaviors: {
-      contentList: ['filter'],
-    },
-  },
-
   "Imperative label ('!warn') on account": {
     cfg: 'none',
     subject: 'profile',
