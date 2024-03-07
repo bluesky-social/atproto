@@ -9,6 +9,11 @@ import {
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
+import {
+  LabelerView,
+  isLabelerView,
+  isLabelerViewDetailed,
+} from '../src/lexicon/types/app/bsky/labeler/defs'
 
 type ThreadViewPost = Extract<
   AppBskyFeedGetPostThread.OutputSchema['thread'],
@@ -203,4 +208,20 @@ export const stripViewerFromThread = <T>(thread: T): T => {
     thread.replies = thread.replies.map(stripViewerFromThread)
   }
   return thread
+}
+
+// @NOTE mutates
+export const stripViewerFromLabeler = (
+  serviceUnknown: unknown,
+): LabelerView => {
+  if (
+    serviceUnknown?.['$type'] &&
+    !isLabelerView(serviceUnknown) &&
+    !isLabelerViewDetailed(serviceUnknown)
+  ) {
+    throw new Error('Expected mod service view')
+  }
+  const labeler = serviceUnknown as LabelerView
+  labeler.creator = stripViewer(labeler.creator)
+  return stripViewer(labeler)
 }

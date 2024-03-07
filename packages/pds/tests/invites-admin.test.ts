@@ -177,31 +177,6 @@ describe('pds admin invite views', () => {
     expect(aliceView.data.invites?.length).toBe(6)
   })
 
-  it('does not allow triage moderators to disable invites.', async () => {
-    const attemptDisableInvites =
-      agent.api.com.atproto.admin.disableInviteCodes(
-        { codes: ['x'], accounts: [alice] },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders('triage'),
-        },
-      )
-    await expect(attemptDisableInvites).rejects.toThrow(
-      'Insufficient privileges',
-    )
-  })
-
-  it('does not allow non-admin moderators to create invites.', async () => {
-    const attemptCreateInvite = agent.api.com.atproto.server.createInviteCode(
-      { useCount: 5, forAccount: alice },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
-      },
-    )
-    await expect(attemptCreateInvite).rejects.toThrow('Insufficient privileges')
-  })
-
   it('disables an account from getting additional invite codes', async () => {
     await agent.api.com.atproto.admin.disableAccountInvites(
       { account: carol },
@@ -255,17 +230,6 @@ describe('pds admin invite views', () => {
     expect(res.every((row) => row.disabled === 1))
   })
 
-  it('does not allow triage moderators to disable account invites', async () => {
-    const attempt = agent.api.com.atproto.admin.disableAccountInvites(
-      { account: alice },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('triage'),
-      },
-    )
-    await expect(attempt).rejects.toThrow('Insufficient privileges')
-  })
-
   it('re-enables an accounts invites', async () => {
     await agent.api.com.atproto.admin.enableAccountInvites(
       { account: carol },
@@ -283,16 +247,5 @@ describe('pds admin invite views', () => {
       { headers: sc.getHeaders(carol) },
     )
     expect(invRes.data.codes.length).toBeGreaterThan(0)
-  })
-
-  it('does not allow triage moderators to enable account invites', async () => {
-    const attempt = agent.api.com.atproto.admin.enableAccountInvites(
-      { account: alice },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('triage'),
-      },
-    )
-    await expect(attempt).rejects.toThrow('Insufficient privileges')
   })
 })

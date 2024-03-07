@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -58,6 +58,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
+    "axios": "^0.27.2",
     "jest": "^28.1.2",
     "ts-node": "^10.8.2"
   }

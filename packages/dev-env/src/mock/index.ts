@@ -88,6 +88,29 @@ export async function generateMockSetup(env: TestNetwork) {
     )
   }
 
+  // Create moderator accounts
+  const triageRes =
+    await clients.loggedout.api.com.atproto.server.createAccount({
+      email: 'triage@test.com',
+      handle: 'triage.test',
+      password: 'triage-pass',
+    })
+  env.ozone.addAdminDid(triageRes.data.did)
+  const modRes = await clients.loggedout.api.com.atproto.server.createAccount({
+    email: 'mod@test.com',
+    handle: 'mod.test',
+    password: 'mod-pass',
+  })
+  env.ozone.addAdminDid(modRes.data.did)
+  const adminRes = await clients.loggedout.api.com.atproto.server.createAccount(
+    {
+      email: 'admin-mod@test.com',
+      handle: 'admin-mod.test',
+      password: 'admin-mod-pass',
+    },
+  )
+  env.ozone.addAdminDid(adminRes.data.did)
+
   // Report one user
   const reporter = picka(users)
   await reporter.agent.api.com.atproto.moderation.createReport({
@@ -326,6 +349,30 @@ export async function generateMockSetup(env: TestNetwork) {
       createdAt: date.next().value,
     },
   )
+
+  await alice.agent.api.app.bsky.labeler.service.create(
+    { repo: alice.did, rkey: 'self' },
+    {
+      displayName: 'alices labels',
+      description: 'Stopping spam and scams across the Atmosphere.',
+      avatar: avatarRes.data.blob,
+      policies: {
+        reportReasons: [
+          'com.atproto.moderation.defs#reasonSpam',
+          'com.atproto.moderation.defs#reasonViolation',
+          'com.atproto.moderation.defs#reasonMisleading',
+        ],
+        labelValues: ['spam', '!hide', 'scam', 'intolerant'],
+      },
+      createdAt: date.next().value,
+    },
+  )
+  await createLabel(env.bsky.db, {
+    uri: bob.did,
+    cid: '',
+    val: 'spam',
+    src: alice.did,
+  })
 }
 
 function ucfirst(str: string): string {
@@ -334,7 +381,7 @@ function ucfirst(str: string): string {
 
 const createLabel = async (
   db: Database,
-  opts: { uri: string; cid: string; val: string },
+  opts: { uri: string; cid: string; val: string; src?: string },
 ) => {
   await db.db
     .insertInto('label')
@@ -344,7 +391,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler',
+      src: opts.src ?? 'did:example:labeler',
     })
     .execute()
 }

@@ -10,7 +10,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,10 +22,12 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.graph.getSuggestedFollowsByActor({
     auth: ctx.authVerifier.standard,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
       const result = await getSuggestedFollowsByActor(
-        { ...params, viewer },
+        { ...params, hydrateCtx },
         ctx,
       )
       return {
@@ -43,7 +45,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     throw new InvalidRequestError('Actor not found')
   }
   const { dids, cursor } = await ctx.hydrator.dataplane.getFollowSuggestions({
-    actorDid: params.viewer,
+    actorDid: params.hydrateCtx.viewer,
     relativeToDid,
   })
   return {
@@ -56,9 +58,8 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { viewer } = params
   const { suggestedDids } = skeleton
-  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, viewer)
+  return ctx.hydrator.hydrateProfilesDetailed(suggestedDids, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (
@@ -90,7 +91,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

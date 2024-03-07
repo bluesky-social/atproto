@@ -1,23 +1,19 @@
-import { ModerationCauseAccumulator } from '../accumulator'
-import {
-  ModerationSubjectPost,
-  ModerationOpts,
-  ModerationDecision,
-} from '../types'
+import { ModerationDecision } from '../decision'
+import { ModerationSubjectPost, ModerationOpts } from '../types'
 
 export function decidePost(
   subject: ModerationSubjectPost,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationDecision()
 
   acc.setDid(subject.author.did)
-
+  acc.setIsMe(subject.author.did === opts.userDid)
   if (subject.labels?.length) {
     for (const label of subject.labels) {
-      acc.addLabel(label, opts)
+      acc.addLabel('content', label, opts)
     }
   }
 
-  return acc.finalizeDecision(opts)
+  return acc
 }

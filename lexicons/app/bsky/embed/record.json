@@ -21,7 +21,8 @@
             "#viewNotFound",
             "#viewBlocked",
             "app.bsky.feed.defs#generatorView",
-            "app.bsky.graph.defs#listView"
+            "app.bsky.graph.defs#listView",
+            "app.bsky.labeler.defs#labelerView"
           ]
         }
       }

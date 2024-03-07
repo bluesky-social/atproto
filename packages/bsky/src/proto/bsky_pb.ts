@@ -1475,6 +1475,122 @@ export class GetThreadGateRecordsResponse extends Message<GetThreadGateRecordsRe
 }
 
 /**
+ * @generated from message bsky.GetLabelerRecordsRequest
+ */
+export class GetLabelerRecordsRequest extends Message<GetLabelerRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetLabelerRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetLabelerRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetLabelerRecordsRequest {
+    return new GetLabelerRecordsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetLabelerRecordsRequest {
+    return new GetLabelerRecordsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetLabelerRecordsRequest {
+    return new GetLabelerRecordsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetLabelerRecordsRequest
+      | PlainMessage<GetLabelerRecordsRequest>
+      | undefined,
+    b:
+      | GetLabelerRecordsRequest
+      | PlainMessage<GetLabelerRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetLabelerRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetLabelerRecordsResponse
+ */
+export class GetLabelerRecordsResponse extends Message<GetLabelerRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(data?: PartialMessage<GetLabelerRecordsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetLabelerRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetLabelerRecordsResponse {
+    return new GetLabelerRecordsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetLabelerRecordsResponse {
+    return new GetLabelerRecordsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetLabelerRecordsResponse {
+    return new GetLabelerRecordsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetLabelerRecordsResponse
+      | PlainMessage<GetLabelerRecordsResponse>
+      | undefined,
+    b:
+      | GetLabelerRecordsResponse
+      | PlainMessage<GetLabelerRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetLabelerRecordsResponse, a, b)
+  }
+}
+
+/**
  * - Return follow uris where user A follows users B, C, D, …
  *     - E.g. for viewer state on `getProfiles`
  *
@@ -2595,6 +2711,16 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   followers: number[] = []
 
+  /**
+   * @generated from field: repeated int32 lists = 5;
+   */
+  lists: number[] = []
+
+  /**
+   * @generated from field: repeated int32 feeds = 6;
+   */
+  feeds: number[] = []
+
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -2627,6 +2753,20 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
     {
       no: 4,
       name: 'followers',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 5,
+      name: 'lists',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 6,
+      name: 'feeds',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
@@ -3227,6 +3367,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   tombstonedAt?: Timestamp
 
+  /**
+   * @generated from field: bool labeler = 7;
+   */
+  labeler = false
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3246,6 +3391,7 @@ export class ActorInfo extends Message<ActorInfo> {
       T: 9 /* ScalarType.STRING */,
     },
     { no: 6, name: 'tombstoned_at', kind: 'message', T: Timestamp },
+    { no: 7, name: 'labeler', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(

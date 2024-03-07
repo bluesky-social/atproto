@@ -4,17 +4,23 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, res }) => {
+    handler: async ({ auth, params, req, res }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { viewer, labelers }
 
-      const result = await getProfile({ ...params, viewer }, ctx)
+      const result = await getProfile({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
@@ -42,7 +48,7 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.viewer)
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
 }
 
 const presentation = (input: {
@@ -64,7 +70,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
+  hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = { dids: string[] }

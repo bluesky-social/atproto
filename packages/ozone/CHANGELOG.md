@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.0.16
+
+### Patch Changes
+
+- [#2279](https://github.com/bluesky-social/atproto/pull/2279) [`192223f12`](https://github.com/bluesky-social/atproto/commit/192223f127c0b226287df1ecfcd953636db08655) Thanks [@gaearon](https://github.com/gaearon)! - Change Following feed prefs to only show replies from people you follow by default
+
+- Updated dependencies [[`192223f12`](https://github.com/bluesky-social/atproto/commit/192223f127c0b226287df1ecfcd953636db08655)]:
+  - @atproto/api@0.10.5
+
 ## 0.0.15
 
 ### Patch Changes

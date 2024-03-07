@@ -8,7 +8,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.fetchLabels({
-    auth: ctx.authVerifier.standardOptionalOrRole,
+    auth: ctx.authVerifier.standardOptionalOrAdminToken,
     handler: async ({ auth, params }) => {
       const { limit } = params
       const since =

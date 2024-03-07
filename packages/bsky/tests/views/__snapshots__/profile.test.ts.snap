@@ -3,6 +3,11 @@
 exports[`pds profile views fetches multiple profiles 1`] = `
 Array [
   Object {
+    "associated": Object {
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "its me!",
     "did": "user(0)",
@@ -38,6 +43,11 @@ Array [
     },
   },
   Object {
+    "associated": Object {
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+    },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "description": "hi im bob label_me",
     "did": "user(2)",
@@ -54,6 +64,11 @@ Array [
     },
   },
   Object {
+    "associated": Object {
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+    },
     "did": "user(4)",
     "followersCount": 2,
     "followsCount": 1,
@@ -67,6 +82,11 @@ Array [
     },
   },
   Object {
+    "associated": Object {
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+    },
     "did": "user(5)",
     "followersCount": 1,
     "followsCount": 1,
@@ -84,6 +104,11 @@ Array [
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "its me!",
   "did": "user(0)",
@@ -122,6 +147,11 @@ Object {
 
 exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "followersCount": 1,
   "followsCount": 1,
@@ -138,6 +168,11 @@ Object {
 
 exports[`pds profile views fetches own profile 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "its me!",
   "did": "user(0)",
@@ -174,6 +209,11 @@ Object {
 
 exports[`pds profile views presents avatars & banners 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "banner": "https://bsky.public.url/img/banner/plain/user(1)/cids(1)@jpeg",
   "description": "new descript",

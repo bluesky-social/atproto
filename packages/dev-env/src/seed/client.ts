@@ -1,7 +1,6 @@
 import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import AtpAgent, {
-  ComAtprotoAdminEmitModerationEvent,
   ComAtprotoModerationCreateReport,
   AppBskyFeedPost,
   AppBskyRichtextFacet,
@@ -436,53 +435,6 @@ export class SeedClient<
     delete foundList.items[subject]
   }
 
-  async emitModerationEvent(opts: {
-    event: ComAtprotoAdminEmitModerationEvent.InputSchema['event']
-    subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
-    reason?: string
-    createdBy?: string
-    meta?: ComAtprotoAdminEmitModerationEvent.InputSchema['meta']
-  }) {
-    const {
-      event,
-      subject,
-      reason = 'X',
-      createdBy = 'did:example:admin',
-    } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
-      { event, subject, createdBy, reason },
-      {
-        encoding: 'application/json',
-        headers: this.adminAuthHeaders(),
-      },
-    )
-    return result.data
-  }
-
-  async reverseModerationAction(opts: {
-    id: number
-    subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
-    reason?: string
-    createdBy?: string
-  }) {
-    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        subject,
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-          comment: reason,
-        },
-        createdBy,
-      },
-      {
-        encoding: 'application/json',
-        headers: this.adminAuthHeaders(),
-      },
-    )
-    return result.data
-  }
-
   async createReport(opts: {
     reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
     subject: ComAtprotoModerationCreateReport.InputSchema['subject']
@@ -498,10 +450,6 @@ export class SeedClient<
       },
     )
     return result.data
-  }
-
-  adminAuthHeaders() {
-    return this.network.pds.adminAuthHeaders()
   }
 
   getHeaders(did: string) {

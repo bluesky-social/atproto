@@ -1,17 +1,13 @@
 import assert from 'node:assert'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.authVerifier.roleOrModService,
-    handler: async ({ input, auth }) => {
-      if (auth.credentials.type === 'role' && !auth.credentials.moderator) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
-
+    auth: ctx.authVerifier.moderator,
+    handler: async ({ input }) => {
       const {
         content,
         recipientDid,
