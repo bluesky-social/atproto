@@ -95,6 +95,12 @@ export const parseProxyHeader = async (
   return { did, serviceUrl }
 }
 
+const HEADERS_TO_FORWARD = [
+  'accept-language',
+  'content-type',
+  'atproto-labelers',
+]
+
 export const createUrlAndHeaders = async (
   ctx: AppContext,
   req: express.Request,
@@ -115,10 +121,13 @@ export const createUrlAndHeaders = async (
   const headers = requester
     ? (await ctx.serviceAuthHeaders(requester, aud)).headers
     : {}
-  // forward accept-language header to upstream services
-  headers['accept-language'] = req.headers['accept-language']
-  headers['content-type'] = req.headers['content-type']
-  headers['atproto-labelers'] = req.headers['atproto-labelers']
+  // forward select headers to upstream services
+  for (const header of HEADERS_TO_FORWARD) {
+    const val = req.headers[header]
+    if (val) {
+      headers[header] = val
+    }
+  }
   return { url, headers }
 }
 
