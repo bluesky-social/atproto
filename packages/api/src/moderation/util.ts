@@ -4,7 +4,12 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
-import { InterprettedLabelValueDefinition, ModerationBehavior } from './types'
+import {
+  InterprettedLabelValueDefinition,
+  ModerationBehavior,
+  LabelPreference,
+  LabelValueDefinitionFlag,
+} from './types'
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {
   return Boolean(embed && AppBskyEmbedRecord.isView(embed))
@@ -40,7 +45,7 @@ export function interpretLabelValueDefinition(
     behaviors.account.profileList = alertOrInform
     behaviors.account.profileView = alertOrInform
     behaviors.account.contentList = 'blur'
-    behaviors.account.contentView = alertOrInform
+    behaviors.account.contentView = def.adultOnly ? 'blur' : alertOrInform
     // target=profile, blurs=content
     behaviors.account.profileView = alertOrInform
     behaviors.profile.avatar = 'blur'
@@ -48,7 +53,7 @@ export function interpretLabelValueDefinition(
     behaviors.profile.displayName = 'blur'
     // target=content, blurs=content
     behaviors.content.contentList = 'blur'
-    behaviors.content.contentView = alertOrInform
+    behaviors.content.contentView = def.adultOnly ? 'blur' : alertOrInform
   } else if (def.blurs === 'media') {
     // target=account, blurs=media
     behaviors.account.profileList = alertOrInform
@@ -75,12 +80,22 @@ export function interpretLabelValueDefinition(
     behaviors.content.contentView = alertOrInform
   }
 
+  let defaultSetting: LabelPreference = 'warn'
+  if (def.defaultSetting === 'hide' || def.defaultSetting === 'ignore') {
+    defaultSetting = def.defaultSetting as LabelPreference
+  }
+
+  const flags: LabelValueDefinitionFlag[] = ['no-self']
+  if (def.adultOnly) {
+    flags.push('adult')
+  }
+
   return {
     ...def,
     definedBy,
     configurable: true,
-    defaultSetting: 'warn',
-    flags: ['no-self'],
+    defaultSetting,
+    flags,
     behaviors,
   }
 }
