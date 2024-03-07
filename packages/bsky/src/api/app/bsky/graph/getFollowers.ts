@@ -84,6 +84,7 @@ const hydration = async (
   const profileState = await ctx.hydrator.hydrateProfiles(
     dids,
     params.hydrateCtx,
+    params.canViewTakedowns,
   )
   return mergeStates(followState, profileState)
 }
