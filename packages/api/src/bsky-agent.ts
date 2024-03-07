@@ -329,7 +329,7 @@ export class BskyAgent extends AtpAgent {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS },
-        mods: [],
+        labelers: [],
       },
       birthDate: undefined,
       interests: {
@@ -355,12 +355,12 @@ export class BskyAgent extends AtpAgent {
         const adjustedPref = adjustLegacyContentLabelPref(pref)
         labelPrefs.push(adjustedPref)
       } else if (
-        AppBskyActorDefs.isModsPref(pref) &&
-        AppBskyActorDefs.validateModsPref(pref).success
+        AppBskyActorDefs.isLabelersPref(pref) &&
+        AppBskyActorDefs.validateLabelersPref(pref).success
       ) {
-        // mods preferences
-        prefs.moderationPrefs.mods = pref.mods.map((mod) => ({
-          ...mod,
+        // labelers preferences
+        prefs.moderationPrefs.labelers = pref.labelers.map((labeler) => ({
+          ...labeler,
           labels: {},
         }))
       } else if (
@@ -421,11 +421,11 @@ export class BskyAgent extends AtpAgent {
     // apply the label prefs
     for (const pref of labelPrefs) {
       if (pref.labelerDid) {
-        const mod = prefs.moderationPrefs.mods.find(
-          (mod) => mod.did === pref.labelerDid,
+        const labeler = prefs.moderationPrefs.labelers.find(
+          (labeler) => labeler.did === pref.labelerDid,
         )
-        if (!mod) continue
-        mod.labels[pref.label] = pref.visibility as LabelPreference
+        if (!labeler) continue
+        labeler.labels[pref.label] = pref.visibility as LabelPreference
       } else {
         prefs.moderationPrefs.labels[pref.label] =
           pref.visibility as LabelPreference
@@ -530,60 +530,64 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async addModService(did: string) {
+  async addLabeler(did: string) {
     const prefs = await updatePreferences(
       this,
       (prefs: AppBskyActorDefs.Preferences) => {
-        let modsPref = prefs.findLast(
+        let labelersPref = prefs.findLast(
           (pref) =>
-            AppBskyActorDefs.isModsPref(pref) &&
-            AppBskyActorDefs.validateModsPref(pref).success,
+            AppBskyActorDefs.isLabelersPref(pref) &&
+            AppBskyActorDefs.validateLabelersPref(pref).success,
         )
-        if (!modsPref) {
-          modsPref = {
-            $type: 'app.bsky.actor.defs#modsPref',
-            mods: [],
+        if (!labelersPref) {
+          labelersPref = {
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [],
           }
         }
-        if (AppBskyActorDefs.isModsPref(modsPref)) {
-          let modPrefItem = modsPref.mods.find((mod) => mod.did === did)
-          if (!modPrefItem) {
-            modPrefItem = {
+        if (AppBskyActorDefs.isLabelersPref(labelersPref)) {
+          let labelerPrefItem = labelersPref.labelers.find(
+            (labeler) => labeler.did === did,
+          )
+          if (!labelerPrefItem) {
+            labelerPrefItem = {
               did,
             }
-            modsPref.mods.push(modPrefItem)
+            labelersPref.labelers.push(labelerPrefItem)
           }
         }
         return prefs
-          .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
-          .concat([modsPref])
+          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+          .concat([labelersPref])
       },
     )
     // automatically configure the client
     this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
   }
 
-  async removeModService(did: string) {
+  async removeLabeler(did: string) {
     const prefs = await updatePreferences(
       this,
       (prefs: AppBskyActorDefs.Preferences) => {
-        let modsPref = prefs.findLast(
+        let labelersPref = prefs.findLast(
           (pref) =>
-            AppBskyActorDefs.isModsPref(pref) &&
-            AppBskyActorDefs.validateModsPref(pref).success,
+            AppBskyActorDefs.isLabelersPref(pref) &&
+            AppBskyActorDefs.validateLabelersPref(pref).success,
         )
-        if (!modsPref) {
-          modsPref = {
-            $type: 'app.bsky.actor.defs#modsPref',
-            mods: [],
+        if (!labelersPref) {
+          labelersPref = {
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [],
           }
         }
-        if (AppBskyActorDefs.isModsPref(modsPref)) {
-          modsPref.mods = modsPref.mods.filter((mod) => mod.did !== did)
+        if (AppBskyActorDefs.isLabelersPref(labelersPref)) {
+          labelersPref.labelers = labelersPref.labelers.filter(
+            (labeler) => labeler.did !== did,
+          )
         }
         return prefs
-          .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
-          .concat([modsPref])
+          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+          .concat([labelersPref])
       },
     )
     // automatically configure the client
@@ -872,14 +876,16 @@ function adjustLegacyContentLabelPref(
 function prefsArrayToLabelerDids(
   prefs: AppBskyActorDefs.Preferences,
 ): string[] {
-  const modsPref = prefs.findLast(
+  const labelersPref = prefs.findLast(
     (pref) =>
-      AppBskyActorDefs.isModsPref(pref) &&
-      AppBskyActorDefs.validateModsPref(pref).success,
+      AppBskyActorDefs.isLabelersPref(pref) &&
+      AppBskyActorDefs.validateLabelersPref(pref).success,
   )
   let dids: string[] = []
-  if (modsPref) {
-    dids = (modsPref as AppBskyActorDefs.ModsPref).mods.map((mod) => mod.did)
+  if (labelersPref) {
+    dids = (labelersPref as AppBskyActorDefs.LabelersPref).labelers.map(
+      (labeler) => labeler.did,
+    )
   }
   return dids
 }

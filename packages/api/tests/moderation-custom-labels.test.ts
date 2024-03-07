@@ -331,7 +331,7 @@ function modOpts(blurs: string, severity: string): ModerationOpts {
     prefs: {
       adultContentEnabled: true,
       labels: {},
-      mods: [
+      labelers: [
         {
           did: 'did:web:labeler.test',
           labels: { custom: 'hide' },

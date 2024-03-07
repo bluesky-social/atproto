@@ -338,36 +338,36 @@ export function validateHiddenPostsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#hiddenPostsPref', v)
 }
 
-export interface ModsPref {
-  mods: ModPrefItem[]
+export interface LabelersPref {
+  labelers: LabelerPrefItem[]
   [k: string]: unknown
 }
 
-export function isModsPref(v: unknown): v is ModsPref {
+export function isLabelersPref(v: unknown): v is LabelersPref {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#modsPref'
+    v.$type === 'app.bsky.actor.defs#labelersPref'
   )
 }
 
-export function validateModsPref(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#modsPref', v)
+export function validateLabelersPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelersPref', v)
 }
 
-export interface ModPrefItem {
+export interface LabelerPrefItem {
   did: string
   [k: string]: unknown
 }
 
-export function isModPrefItem(v: unknown): v is ModPrefItem {
+export function isLabelerPrefItem(v: unknown): v is LabelerPrefItem {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#modPrefItem'
+    v.$type === 'app.bsky.actor.defs#labelerPrefItem'
   )
 }
 
-export function validateModPrefItem(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#modPrefItem', v)
+export function validateLabelerPrefItem(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
 }
