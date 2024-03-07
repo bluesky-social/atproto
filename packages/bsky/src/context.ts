@@ -1,3 +1,4 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import AtpAgent from '@atproto/api'
@@ -8,6 +9,7 @@ import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
+import { dedupeStrs } from '@atproto/common'
 import { BsyncClient } from './bsync'
 import { CourierClient } from './courier'
 
@@ -78,6 +80,17 @@ export class AppContext {
       aud,
       keypair: this.signingKey,
     })
+  }
+
+  reqLabelers(req: express.Request): string[] {
+    const val = req.header('atproto-labelers')
+    if (!val) return this.cfg.labelsFromIssuerDids
+    return dedupeStrs(
+      val
+        .split(',')
+        .map((did) => did.trim())
+        .slice(0, 10),
+    )
   }
 }
 

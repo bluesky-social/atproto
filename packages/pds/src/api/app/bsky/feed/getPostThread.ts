@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
           bskyAppView.url,
           METHOD_NSID,
           params,
-          await ctx.appviewAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester, req),
         )
 
         return await handleReadAfterWrite(
@@ -206,7 +206,7 @@ const readAfterWriteNotFound = async (
       assert(ctx.appViewAgent)
       const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, null),
       )
       thread.parent = parentsRes.data.thread
     } catch (err) {

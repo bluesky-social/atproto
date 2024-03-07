@@ -24,7 +24,9 @@ export default function (server: Server, ctx: AppContext) {
         bskyAppView.url,
         METHOD_NSID,
         params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
+        requester
+          ? await ctx.appviewAuthHeaders(requester, req)
+          : authPassthru(req),
       )
       if (!requester) {
         return res

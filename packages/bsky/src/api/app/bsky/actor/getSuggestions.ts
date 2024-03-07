@@ -3,7 +3,11 @@ import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
@@ -17,9 +21,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getSuggestions({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { viewer, labelers }
+      const result = await getSuggestions({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -34,19 +40,20 @@ const skeleton = async (input: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = input
+  const viewer = params.hydrateCtx.viewer
   // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
   const suggestions = await ctx.dataplane.getFollowSuggestions({
-    actorDid: params.viewer ?? undefined,
+    actorDid: viewer ?? undefined,
     cursor: params.cursor,
     limit: params.limit,
   })
   let dids = suggestions.dids
-  if (params.viewer !== null) {
+  if (viewer !== null) {
     const follows = await ctx.dataplane.getActorFollowsActors({
-      actorDid: params.viewer,
+      actorDid: viewer,
       targetDids: dids,
     })
-    dids = dids.filter((did, i) => !follows.uris[i] && did !== params.viewer)
+    dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
   }
   return { dids, cursor: parseString(suggestions.cursor) }
 }
@@ -59,7 +66,7 @@ const hydration = async (input: {
   const { ctx, params, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     skeleton.dids,
-    params.viewer,
+    params.hydrateCtx,
     true,
   )
 }
@@ -102,7 +109,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
+  hydrateCtx: HydrateCtx
 }
 
 type Skeleton = { dids: string[]; cursor?: string }

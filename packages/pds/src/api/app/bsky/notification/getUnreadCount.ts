@@ -7,13 +7,13 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
       const requester = auth.credentials.did
       return pipethrough(
         bskyAppView.url,
         'app.bsky.notification.getUnreadCount',
         params,
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, req),
       )
     },
   })

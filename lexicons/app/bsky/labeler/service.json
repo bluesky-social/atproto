@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.labeler.service",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A declaration of the existence of labeler service.",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["policies", "createdAt"],
+        "properties": {
+          "policies": {
+            "type": "ref",
+            "ref": "app.bsky.labeler.defs#labelerPolicies"
+          },
+          "labels": {
+            "type": "union",
+            "refs": ["com.atproto.label.defs#selfLabels"]
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

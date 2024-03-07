@@ -6,11 +6,11 @@ export default function (server: Server, ctx: AppContext) {
   if (!appViewAgent) return
   server.app.bsky.graph.unmuteActorList({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const requester = auth.credentials.did
 
       await appViewAgent.api.app.bsky.graph.unmuteActorList(input.body, {
-        ...(await ctx.appviewAuthHeaders(requester)),
+        ...(await ctx.appviewAuthHeaders(requester, req)),
         encoding: 'application/json',
       })
     },

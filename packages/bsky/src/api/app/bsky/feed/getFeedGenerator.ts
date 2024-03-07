@@ -12,11 +12,15 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const { feed } = params
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
 
-      const hydration = await ctx.hydrator.hydrateFeedGens([feed], viewer)
+      const hydration = await ctx.hydrator.hydrateFeedGens([feed], {
+        viewer,
+        labelers,
+      })
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')

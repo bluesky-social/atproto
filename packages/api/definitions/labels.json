@@ -1,224 +1,226 @@
 [
   {
-    "id": "system",
+    "identifier": "!hide",
     "configurable": false,
-    "labels": [
-      {
-        "id": "!hide",
-        "preferences": ["hide"],
-        "flags": ["no-override"],
-        "onwarn": "blur"
+    "defaultSetting": "hide",
+    "flags": ["no-override", "no-self"],
+    "severity": "alert",
+    "blurs": "content",
+    "behaviors": {
+      "account": {
+        "profileList": "blur",
+        "profileView": "blur",
+        "avatar": "blur",
+        "banner": "blur",
+        "displayName": "blur",
+        "contentList": "blur",
+        "contentView": "blur"
       },
-      {
-        "id": "!no-promote",
-        "preferences": ["hide"],
-        "flags": [],
-        "onwarn": null
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur",
+        "displayName": "blur"
       },
-      {
-        "id": "!warn",
-        "preferences": ["warn"],
-        "flags": [],
-        "onwarn": "blur"
-      },
-      {
-        "id": "!no-unauthenticated",
-        "preferences": ["hide"],
-        "flags": ["no-override", "unauthed"],
-        "onwarn": "blur"
+      "content": {
+        "contentList": "blur",
+        "contentView": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "legal",
+    "identifier": "!no-promote",
     "configurable": false,
-    "labels": [
-      {
-        "id": "dmca-violation",
-        "preferences": ["hide"],
-        "flags": ["no-override"],
-        "onwarn": "blur"
-      },
-      {
-        "id": "doxxing",
-        "preferences": ["hide"],
-        "flags": ["no-override"],
-        "onwarn": "blur"
-      }
-    ]
+    "defaultSetting": "hide",
+    "flags": ["no-self"],
+    "severity": "none",
+    "blurs": "none",
+    "behaviors": {}
   },
   {
-    "id": "sexual",
-    "configurable": true,
-    "labels": [
-      {
-        "id": "porn",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
+    "identifier": "!warn",
+    "configurable": false,
+    "defaultSetting": "warn",
+    "flags": ["no-self"],
+    "severity": "none",
+    "blurs": "content",
+    "behaviors": {
+      "account": {
+        "profileList": "blur",
+        "profileView": "blur",
+        "avatar": "blur",
+        "banner": "blur",
+        "contentList": "blur",
+        "contentView": "blur"
       },
-      {
-        "id": "sexual",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur",
+        "displayName": "blur"
       },
-      {
-        "id": "nudity",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
+      "content": {
+        "contentList": "blur",
+        "contentView": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "violence",
-    "configurable": true,
-    "labels": [
-      {
-        "id": "nsfl",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
+    "identifier": "!no-unauthenticated",
+    "configurable": false,
+    "defaultSetting": "hide",
+    "flags": ["no-override", "unauthed"],
+    "severity": "none",
+    "blurs": "content",
+    "behaviors": {
+      "account": {
+        "profileList": "blur",
+        "profileView": "blur",
+        "avatar": "blur",
+        "banner": "blur",
+        "displayName": "blur",
+        "contentList": "blur",
+        "contentView": "blur"
       },
-      {
-        "id": "corpse",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur",
+        "displayName": "blur"
       },
-      {
-        "id": "gore",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
-      },
-      {
-        "id": "torture",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur"
-      },
-      {
-        "id": "self-harm",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
+      "content": {
+        "contentList": "blur",
+        "contentView": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "intolerance",
-    "configurable": true,
-    "labels": [
-      {
-        "id": "intolerant-race",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+    "identifier": "dmca-violation",
+    "configurable": false,
+    "defaultSetting": "hide",
+    "flags": ["no-override", "no-self"],
+    "severity": "none",
+    "blurs": "content",
+    "behaviors": {
+      "account": {
+        "profileList": "blur",
+        "profileView": "blur",
+        "contentList": "blur",
+        "contentView": "blur"
       },
-      {
-        "id": "intolerant-gender",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+      "profile": {
+        "profileList": "blur",
+        "profileView": "blur"
       },
-      {
-        "id": "intolerant-sexual-orientation",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
-      },
-      {
-        "id": "intolerant-religion",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
-      },
-      {
-        "id": "intolerant",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
-      },
-      {
-        "id": "icon-intolerant",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur-media"
+      "content": {
+        "contentList": "blur",
+        "contentView": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "rude",
-    "configurable": true,
-    "labels": [
-      {
-        "id": "threat",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+    "identifier": "doxxing",
+    "configurable": false,
+    "defaultSetting": "hide",
+    "flags": ["no-override", "no-self"],
+    "severity": "none",
+    "blurs": "content",
+    "behaviors": {
+      "account": {
+        "profileList": "blur",
+        "profileView": "blur",
+        "contentList": "blur",
+        "contentView": "blur"
+      },
+      "profile": {
+        "profileList": "blur",
+        "profileView": "blur"
+      },
+      "content": {
+        "contentList": "blur",
+        "contentView": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "curation",
+    "identifier": "porn",
     "configurable": true,
-    "labels": [
-      {
-        "id": "spoiler",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+    "defaultSetting": "hide",
+    "flags": ["adult"],
+    "severity": "none",
+    "blurs": "media",
+    "behaviors": {
+      "account": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "content": {
+        "contentMedia": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "spam",
+    "identifier": "sexual",
     "configurable": true,
-    "labels": [
-      {
-        "id": "spam",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+    "defaultSetting": "warn",
+    "flags": ["adult"],
+    "severity": "none",
+    "blurs": "media",
+    "behaviors": {
+      "account": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "content": {
+        "contentMedia": "blur"
       }
-    ]
+    }
   },
   {
-    "id": "misinfo",
+    "identifier": "nudity",
     "configurable": true,
-    "labels": [
-      {
-        "id": "account-security",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+    "defaultSetting": "warn",
+    "flags": ["adult"],
+    "severity": "none",
+    "blurs": "media",
+    "behaviors": {
+      "account": {
+        "avatar": "blur",
+        "banner": "blur"
       },
-      {
-        "id": "net-abuse",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur"
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur"
       },
-      {
-        "id": "impersonation",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "alert"
-      },
-      {
-        "id": "scam",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "alert"
-      },
-      {
-        "id": "misleading",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "alert"
+      "content": {
+        "contentMedia": "blur"
       }
-    ]
+    }
+  },
+  {
+    "identifier": "gore",
+    "flags": ["adult"],
+    "configurable": true,
+    "defaultSetting": "warn",
+    "severity": "none",
+    "blurs": "media",
+    "behaviors": {
+      "account": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "profile": {
+        "avatar": "blur",
+        "banner": "blur"
+      },
+      "content": {
+        "contentMedia": "blur"
+      }
+    }
   }
 ]

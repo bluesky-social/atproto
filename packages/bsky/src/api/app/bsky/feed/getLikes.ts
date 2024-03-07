@@ -4,7 +4,11 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
@@ -14,9 +18,11 @@ export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getLikes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getLikes({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const result = await getLikes({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -51,7 +57,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateLikes(skeleton.likes, params.viewer)
+  return await ctx.hydrator.hydrateLikes(skeleton.likes, params.hydrateCtx)
 }
 
 const noBlocks = (inputs: {
@@ -103,7 +109,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   likes: string[]
