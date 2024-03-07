@@ -224,7 +224,7 @@ export class ModerationDecision {
     }
 
     // establish the label preference for interpretation
-    let labelPref: LabelPreference = 'ignore'
+    let labelPref: LabelPreference = labelDef.defaultSetting || 'ignore'
     if (!labelDef.configurable) {
       labelPref = labelDef.defaultSetting || 'hide'
     } else if (
