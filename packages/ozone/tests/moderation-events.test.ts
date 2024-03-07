@@ -187,7 +187,9 @@ describe('moderation-events', () => {
       expect(defaultEvents.length).toEqual(allEvents.events.length)
       expect(reversedEvents.length).toEqual(allEvents.events.length)
       // First event in the reversed list is the last item in the default list
-      expect(reversedEvents[0].id).toEqual(defaultEvents[5].id)
+      expect(reversedEvents[0].id).toEqual(
+        defaultEvents[defaultEvents.length - 1].id,
+      )
     })
 
     it('returns report events matching reportType filters', async () => {

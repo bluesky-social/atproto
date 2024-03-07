@@ -118,6 +118,7 @@ export const createUrlAndHeaders = async (
   // forward accept-language header to upstream services
   headers['accept-language'] = req.headers['accept-language']
   headers['content-type'] = req.headers['content-type']
+  headers['atproto-labelers'] = req.headers['atproto-labelers']
   return { url, headers }
 }
 

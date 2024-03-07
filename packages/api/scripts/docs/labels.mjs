@@ -11,26 +11,6 @@ const labelsDef = JSON.parse(
     'utf8',
   ),
 )
-const labelGroupsEn = JSON.parse(
-  readFileSync(
-    join(
-      __dirname,
-      '..',
-      '..',
-      'definitions',
-      'locale',
-      'en',
-      'label-groups.json',
-    ),
-    'utf8',
-  ),
-)
-const labelsEn = JSON.parse(
-  readFileSync(
-    join(__dirname, '..', '..', 'definitions', 'locale', 'en', 'labels.json'),
-    'utf8',
-  ),
-)
 
 writeFileSync(join(__dirname, '..', '..', 'docs', 'labels.md'), doc(), 'utf8')
 
@@ -54,11 +34,9 @@ The possible client interpretations for a label.
 - <code>warn</code> Provide some form of warning on the content (see "On Warn" behavior).
 - <code>hide</code> Remove the content from feeds and apply the warning when directly viewed.
 
-Each label specifies which preferences it can support. If a label is not configurable, it must have only own supported preference.
-
 ### Configurable?
 
-Non-configurable labels cannot have their preference changed by the user.
+Non-configurable labels cannot have their preference changed by the user. If a label is not configurable, it must have only own supported preference.
 
 ### Flags
 
@@ -81,82 +59,27 @@ The kind of UI behavior used when a warning must be applied.
   <table>
     <tr>
       <th>ID</th>
-      <th>Group</th>
-      <th>Preferences</th>
       <th>Configurable</th>
       <th>Flags</th>
       <th>On Warn</th>
     </tr>
     ${labelsRef()}
-  </table>
-
-## Label Group Descriptions
-
-  <table>
-    <tr>
-      <th>ID</th>
-      <th>Description</th>
-    </tr>
-    ${labelGroupsDesc()}
-  </table>
-
-## Label Descriptions
-
-  <table>
-    <tr>
-      <th>ID</th>
-      <th>Description</th>
-    </tr>
-    ${labelsDesc()}
-  </table>
-  `
+  </table>`
 }
 
 function labelsRef() {
   const lines = []
-  for (const group of labelsDef) {
-    for (const label of group.labels) {
-      lines.push(stripIndent`
+  for (const label of labelsDef) {
+    lines.push(stripIndent`
         <tr>
-          <td>${label.id}</td>
-          <td>${group.id}</td>
-          <td>${label.preferences.join(', ')}</td>
-          <td>${group.configurable ? '✅' : '❌'}</td>
+          <td>${label.identifier}</td>
+          <td>${
+            label.configurable ? '✅' : `❌ (${label.fixedPreference})`
+          }</td>
           <td>${label.flags.join(', ')}</td>
           <td>${label.onwarn}</td>
         </tr>
       `)
-    }
-  }
-  return lines.join('\n')
-}
-
-function labelGroupsDesc() {
-  const lines = []
-  for (const id in labelGroupsEn) {
-    lines.push(stripIndent`
-      <tr>
-        <td>${id}</td>
-        <td><code>general</code><br><strong>${labelGroupsEn[id].name}</strong><br>${labelGroupsEn[id].description}</td>
-      </tr>
-    `)
-  }
-  return lines.join('\n')
-}
-
-function labelsDesc() {
-  const lines = []
-  for (const id in labelsEn) {
-    lines.push(stripIndent`
-      <tr>
-        <td>${id}</td>
-        <td>
-          <code>general</code><br><strong>${labelsEn[id].settings.name}</strong><br>${labelsEn[id].settings.description}<br><br>
-          <code>on an account</code><br><strong>${labelsEn[id].account.name}</strong><br>${labelsEn[id].account.description}<br><br>
-          <code>on content</code><br><strong>${labelsEn[id].content.name}</strong><br>${labelsEn[id].content.description}<br><br>
-        </td>
-      </tr>
-    `)
   }
   return lines.join('\n')
 }

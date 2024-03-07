@@ -103,7 +103,9 @@ export class TestBsky {
   }
 
   getClient() {
-    return new AtpAgent({ service: this.url })
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelersHeader([])
+    return agent
   }
 
   adminAuth(): string {

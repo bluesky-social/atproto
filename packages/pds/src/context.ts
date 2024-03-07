@@ -253,16 +253,6 @@ export class AppContext {
     return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
   }
 
-  async moderationAuthHeaders(did: string) {
-    assert(this.cfg.modService)
-    return this.serviceAuthHeaders(did, this.cfg.modService.did)
-  }
-
-  async reportingAuthHeaders(did: string) {
-    assert(this.cfg.reportService)
-    return this.serviceAuthHeaders(did, this.cfg.reportService.did)
-  }
-
   async serviceAuthHeaders(did: string, aud: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({

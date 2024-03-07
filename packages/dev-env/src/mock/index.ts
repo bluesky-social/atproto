@@ -348,6 +348,30 @@ export async function generateMockSetup(env: TestNetwork) {
       createdAt: date.next().value,
     },
   )
+
+  await alice.agent.api.app.bsky.labeler.service.create(
+    { repo: alice.did, rkey: 'self' },
+    {
+      displayName: 'alices labels',
+      description: 'Stopping spam and scams across the Atmosphere.',
+      avatar: avatarRes.data.blob,
+      policies: {
+        reportReasons: [
+          'com.atproto.moderation.defs#reasonSpam',
+          'com.atproto.moderation.defs#reasonViolation',
+          'com.atproto.moderation.defs#reasonMisleading',
+        ],
+        labelValues: ['spam', '!hide', 'scam', 'intolerant'],
+      },
+      createdAt: date.next().value,
+    },
+  )
+  await createLabel(env.bsky.db, {
+    uri: bob.did,
+    cid: '',
+    val: 'spam',
+    src: alice.did,
+  })
 }
 
 function ucfirst(str: string): string {
@@ -356,7 +380,7 @@ function ucfirst(str: string): string {
 
 const createLabel = async (
   db: Database,
-  opts: { uri: string; cid: string; val: string },
+  opts: { uri: string; cid: string; val: string; src?: string },
 ) => {
   await db.db
     .insertInto('label')
@@ -366,7 +390,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler',
+      src: opts.src ?? 'did:example:labeler',
     })
     .execute()
 }

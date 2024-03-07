@@ -3,7 +3,11 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
 import AppContext from '../../../../context'
 import { createPipeline, noRules } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
@@ -15,9 +19,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getFeedGenerators({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const view = await getFeedGenerators({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const view = await getFeedGenerators({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: view,
@@ -38,7 +44,10 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedGens(skeleton.feedUris, params.viewer)
+  return await ctx.hydrator.hydrateFeedGens(
+    skeleton.feedUris,
+    params.hydrateCtx,
+  )
 }
 
 const presentation = (inputs: {
@@ -60,7 +69,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   feedUris: string[]
