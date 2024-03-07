@@ -18,6 +18,8 @@ import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
+  // StreamAuthVerifier does not have "res"
+  res?: express.Response
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
@@ -519,10 +521,10 @@ export class AuthVerifier {
 
   protected async setAuthHeaders(ctx: ReqCtx) {
     // Prevent caching (on proxies) of auth dependent responses
-    ctx.req.res?.setHeader('Cache-Control', 'private')
+    ctx.res?.setHeader('Cache-Control', 'private')
 
     // Make sure that browsers do not return cached responses when the auth header changes
-    ctx.req.res?.appendHeader('Vary', 'Authorization')
+    ctx.res?.appendHeader('Vary', 'Authorization')
 
     /**
      * Return next DPoP nonce in response headers for DPoP bound tokens.
@@ -533,8 +535,8 @@ export class AuthVerifier {
       const dpopNonce = this._oauthVerifier.nextDpopNonce()
       if (dpopNonce) {
         const name = 'DPoP-Nonce'
-        ctx.req.res?.setHeader(name, dpopNonce)
-        ctx.req.res?.appendHeader('Access-Control-Expose-Headers', name)
+        ctx.res?.setHeader(name, dpopNonce)
+        ctx.res?.appendHeader('Access-Control-Expose-Headers', name)
       }
     }
   }
