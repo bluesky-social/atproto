@@ -349,29 +349,123 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  await alice.agent.api.app.bsky.labeler.service.create(
-    { repo: alice.did, rkey: 'self' },
-    {
-      displayName: 'alices labels',
-      description: 'Stopping spam and scams across the Atmosphere.',
-      avatar: avatarRes.data.blob,
-      policies: {
-        reportReasons: [
-          'com.atproto.moderation.defs#reasonSpam',
-          'com.atproto.moderation.defs#reasonViolation',
-          'com.atproto.moderation.defs#reasonMisleading',
-        ],
-        labelValues: ['spam', '!hide', 'scam', 'intolerant'],
+  // create a labeler account
+  {
+    const res = await clients.loggedout.api.com.atproto.server.createAccount({
+      email: 'labeler@test.com',
+      handle: 'labeler.test',
+      password: 'hunter2',
+    })
+    const agent = env.pds.getClient()
+    agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
+    await agent.api.app.bsky.actor.profile.create(
+      { repo: res.data.did },
+      {
+        displayName: 'Test Labeler',
+        description: `Labeling things across the atmosphere`,
       },
-      createdAt: date.next().value,
-    },
-  )
-  await createLabel(env.bsky.db, {
-    uri: bob.did,
-    cid: '',
-    val: 'spam',
-    src: alice.did,
-  })
+    )
+
+    await agent.api.app.bsky.labeler.service.create(
+      { repo: res.data.did, rkey: 'self' },
+      {
+        policies: {
+          labelValues: [
+            '!hide',
+            'porn',
+            'rude',
+            'spam',
+            'spider',
+            'misinfo',
+            'cool',
+            'curate',
+          ],
+          labelValueDefinitions: [
+            {
+              identifier: 'rude',
+              blurs: 'content',
+              severity: 'alert',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Rude',
+                  description: 'Just such a jerk, you wouldnt believe it.',
+                },
+              ],
+            },
+            {
+              identifier: 'spam',
+              blurs: 'content',
+              severity: 'inform',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Spam',
+                  description:
+                    'Low quality posts that dont add to the conversation.',
+                },
+              ],
+            },
+            {
+              identifier: 'spider',
+              blurs: 'media',
+              severity: 'alert',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Spider!',
+                  description: 'Oh no its a spider.',
+                },
+              ],
+            },
+            {
+              identifier: 'cool',
+              blurs: 'none',
+              severity: 'inform',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Cool',
+                  description: 'The coolest peeps in the atmosphere.',
+                },
+              ],
+            },
+            {
+              identifier: 'curate',
+              blurs: 'none',
+              severity: 'none',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Curation filter',
+                  description: 'We just dont want to see it as much.',
+                },
+              ],
+            },
+          ],
+        },
+        createdAt: date.next().value,
+      },
+    )
+    await createLabel(env.bsky.db, {
+      uri: alice.did,
+      cid: '',
+      val: 'rude',
+      src: res.data.did,
+    })
+    await createLabel(env.bsky.db, {
+      uri: bob.did,
+      cid: '',
+      val: 'cool',
+      src: res.data.did,
+    })
+    await createLabel(env.bsky.db, {
+      uri: carla.did,
+      cid: '',
+      val: 'spam',
+      src: res.data.did,
+    })
+  }
 }
 
 function ucfirst(str: string): string {
