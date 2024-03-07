@@ -56,13 +56,13 @@ import {
 } from './metadata/build-metadata.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Userinfo } from './oidc/userinfo.js'
+import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
 } from './output/build-error-payload.js'
 import {
   AuthorizationResultAuthorize,
-  authorizeAssetsMiddleware,
   sendAuthorizePage,
 } from './output/send-authorize-page.js'
 import {
@@ -1105,7 +1105,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     //- Private authorization endpoints
 
-    router.use(authorizeAssetsMiddleware('/oauth/'))
+    router.use(authorizeAssetsMiddleware())
 
     router.get('/oauth/authorize', async function (req, res) {
       try {
@@ -1194,42 +1194,50 @@ export class OAuthProvider extends OAuthVerifier {
     })
 
     router.get('/oauth/authorize/accept', async function (req, res) {
-      res.setHeader('Cache-Control', 'no-store')
+      try {
+        res.setHeader('Cache-Control', 'no-store')
 
-      validateFetchMode(req, res, ['navigate'])
-      validateSameOrigin(req, res, issuerOrigin)
+        validateFetchMode(req, res, ['navigate'])
+        validateSameOrigin(req, res, issuerOrigin)
 
-      const query = Object.fromEntries(this.url.searchParams)
-      const input = await acceptQuerySchema.parseAsync(query, {
-        path: ['query'],
-      })
+        const query = Object.fromEntries(this.url.searchParams)
+        const input = await acceptQuerySchema.parseAsync(query, {
+          path: ['query'],
+        })
 
-      validateReferer(req, res, {
-        origin: issuerOrigin,
-        pathname: '/oauth/authorize',
-        searchParams: [
-          ['request_uri', input.request_uri],
-          ['client_id', input.client_id],
-        ],
-      })
-      validateCsrfToken(
-        req,
-        res,
-        input.csrf_token,
-        csrfCookie(input.request_uri),
-        true,
-      )
+        validateReferer(req, res, {
+          origin: issuerOrigin,
+          pathname: '/oauth/authorize',
+          searchParams: [
+            ['request_uri', input.request_uri],
+            ['client_id', input.client_id],
+          ],
+        })
+        validateCsrfToken(
+          req,
+          res,
+          input.csrf_token,
+          csrfCookie(input.request_uri),
+          true,
+        )
 
-      const { deviceId } = await sessionManager.load(req, res)
+        const { deviceId } = await sessionManager.load(req, res)
 
-      const data = await server.acceptRequest(
-        deviceId,
-        input.request_uri,
-        input.client_id,
-        input.account_sub,
-      )
+        const data = await server.acceptRequest(
+          deviceId,
+          input.request_uri,
+          input.client_id,
+          input.account_sub,
+        )
 
-      return await sendAuthorizeRedirect(req, res, data)
+        return await sendAuthorizeRedirect(req, res, data)
+      } catch (err) {
+        await onError?.(req, res, err)
+
+        if (!res.headersSent) {
+          await sendErrorPage(req, res, err)
+        }
+      }
     })
 
     const rejectQuerySchema = z.object({
@@ -1239,41 +1247,49 @@ export class OAuthProvider extends OAuthVerifier {
     })
 
     router.get('/oauth/authorize/reject', async function (req, res) {
-      res.setHeader('Cache-Control', 'no-store')
+      try {
+        res.setHeader('Cache-Control', 'no-store')
 
-      validateFetchMode(req, res, ['navigate'])
-      validateSameOrigin(req, res, issuerOrigin)
+        validateFetchMode(req, res, ['navigate'])
+        validateSameOrigin(req, res, issuerOrigin)
 
-      const query = Object.fromEntries(this.url.searchParams)
-      const input = await rejectQuerySchema.parseAsync(query, {
-        path: ['query'],
-      })
+        const query = Object.fromEntries(this.url.searchParams)
+        const input = await rejectQuerySchema.parseAsync(query, {
+          path: ['query'],
+        })
 
-      validateReferer(req, res, {
-        origin: issuerOrigin,
-        pathname: '/oauth/authorize',
-        searchParams: [
-          ['request_uri', input.request_uri],
-          ['client_id', input.client_id],
-        ],
-      })
-      validateCsrfToken(
-        req,
-        res,
-        input.csrf_token,
-        csrfCookie(input.request_uri),
-        true,
-      )
+        validateReferer(req, res, {
+          origin: issuerOrigin,
+          pathname: '/oauth/authorize',
+          searchParams: [
+            ['request_uri', input.request_uri],
+            ['client_id', input.client_id],
+          ],
+        })
+        validateCsrfToken(
+          req,
+          res,
+          input.csrf_token,
+          csrfCookie(input.request_uri),
+          true,
+        )
 
-      const { deviceId } = await sessionManager.load(req, res)
+        const { deviceId } = await sessionManager.load(req, res)
 
-      const data = await server.rejectRequest(
-        deviceId,
-        input.request_uri,
-        input.client_id,
-      )
+        const data = await server.rejectRequest(
+          deviceId,
+          input.request_uri,
+          input.client_id,
+        )
 
-      return await sendAuthorizeRedirect(req, res, data)
+        return await sendAuthorizeRedirect(req, res, data)
+      } catch (err) {
+        await onError?.(req, res, err)
+
+        if (!res.headersSent) {
+          await sendErrorPage(req, res, err)
+        }
+      }
     })
 
     return router.handler

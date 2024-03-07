@@ -1,5 +1,4 @@
-type ManifestItem =
-  import('@atproto/rollup-plugin-bundle-manifest').ManifestItem
+import type { ManifestItem } from '@atproto/rollup-plugin-bundle-manifest'
 
 // If this library is used as a regular dependency (e.g. from node_modules), the
 // assets will simply be referenced from the node_modules directory. However, if
@@ -16,85 +15,53 @@ type ManifestItem =
 // imports out of the box.
 
 import { createReadStream } from 'node:fs'
-import { join } from 'node:path'
+import { join, posix } from 'node:path'
 import { Readable } from 'node:stream'
 
 // @ts-expect-error: This file is generated at build time
-import manifestData from '../app/bundle-manifest.json'
+import appBundleManifestJson from './app/bundle-manifest.json'
+import { Asset } from './asset'
 
-const assets: Map<string, ManifestItem> = new Map(Object.entries(manifestData))
+const appBundleManifest: Map<string, ManifestItem> = new Map(
+  Object.entries(appBundleManifestJson),
+)
 
-async function getAsset(
-  filename: string,
-): Promise<{ asset: ManifestItem; path: string }> {
-  // Prevent directory traversal attacks
+export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
+
+export async function getAsset(inputFilename: string): Promise<Asset> {
+  const filename = posix.normalize(inputFilename)
+
   if (
-    filename.includes(':') ||
-    filename.includes('/') ||
-    filename.includes('\\') ||
-    filename.startsWith('.')
+    filename.startsWith('/') || // Prevent absolute paths
+    filename.startsWith('../') || // Prevent directory traversal attacks
+    /[<>:"|?*\\]/.test(filename) // Windows disallowed characters
   ) {
     throw new AssetNotFoundError(filename)
   }
 
-  const asset = assets.get(filename)
-  if (!asset) throw new AssetNotFoundError(filename)
-
-  // We make it extra easy on the bundler by providing a list of known assets
-  // instead of relying on globbing (globbing with
-  // 'rollup-plugin-import-meta-assets' requires a file extension anyway).
-
-  // return {
-  //   asset,
-  //   url: new URL(`../app/${filename}`, import.meta.url),
-  // }
-
-  switch (filename) {
-    case 'main.js':
-      return {
-        asset,
-        path: join(__dirname, '../app/main.js'),
-      }
-    case 'main.js.map':
-      return {
-        asset,
-        path: join(__dirname, '../app/main.js.map'),
-      }
-    case 'main.css':
-      return {
-        asset,
-        path: join(__dirname, '../app/main.css'),
-      }
-    case 'main.css.map':
-      return {
-        asset,
-        path: join(__dirname, '../app/main.css.map'),
-      }
-    default:
-      // Should never happen
-      throw new AssetNotFoundError(filename)
-  }
-}
-
-export async function findAsset(
-  filename: string,
-): Promise<{ asset: ManifestItem; getStream: () => Readable }> {
-  const { asset, path } = await getAsset(filename)
+  const manifest = appBundleManifest.get(filename)
+  if (!manifest) throw new AssetNotFoundError(filename)
 
   // When this package is used as a regular "node_modules" dependency, and gets
-  // bundled by the consumer, the assets should be copied to the output
-  // directory. In case the bundler does not support copying assets based on the
-  // "new URL(path, import.meta.url)" pattern, this package's build system can
-  // be modified to embed the asset data directly into the bundle metadata (see
-  // rollup.config.mjs).
+  // bundled by the consumer, the assets should be copied to the bundle's output
+  // directory. In case the bundler does not support copying assets from the
+  // "dist/assets/app" folder, this package's build system can be modified to
+  // embed the asset data directly into the bundle-manifest.json (see the `data`
+  // option of "@atproto/rollup-plugin-bundle-manifest" in rollup.config.js).
 
-  const { data } = asset
+  const { data } = manifest
 
   return {
-    asset,
-    getStream: data
+    url: posix.join(ASSETS_URL_PREFIX, filename),
+    type: manifest.mime,
+    sha256: manifest.sha256,
+    createStream: data
       ? () => Readable.from(Buffer.from(data, 'base64'))
-      : () => createReadStream(path),
+      : () =>
+          // ESM version:
+          // createReadStream(new URL(`./app/${filename}`, import.meta.url))
+          // CJS version:
+          createReadStream(join(__dirname, './app', filename)),
   }
 }
 

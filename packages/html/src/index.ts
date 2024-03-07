@@ -1,65 +1,56 @@
+import { encode } from './encode.js'
+import { Html } from './html.js'
+import { javascriptEscaper, jsonEscaper } from './util.js'
+
 type NestedArray<V> = V | readonly NestedArray<V>[]
+
+export { Html }
+
+/**
+ * Escapes code to use as a JavaScript string inside a `<script>` tag.
+ */
+export const javascriptCode = (code: string) =>
+  Html.dangerouslyCreate(javascriptEscaper(code))
+
+/**
+ * Escapes a value to use as an JSON variable definition inside a `<script>` tag.
+ */
+export const jsonCode = (value: unknown) =>
+  Html.dangerouslyCreate(jsonEscaper(value))
 
 export function html(
   htmlFragment: TemplateStringsArray,
-  ...values: readonly NestedArray<string | TrustedHtml>[]
-): TrustedHtml {
-  const fragments: string[] = []
-  for (let i = 0; i < htmlFragment.length; i++) {
-    fragments.push(htmlFragment[i]!)
-    if (i < values.length) {
-      fragments.push(...valueToFragment(values[i]!))
-    }
-  }
-
-  return new TrustedHtml(fragments)
+  ...values: readonly NestedArray<string | Html>[]
+): Html {
+  const fragments: Iterable<string> = combineTemplateStringsFragments(
+    htmlFragment,
+    values,
+  )
+  return Html.dangerouslyCreate(fragments)
 }
 
-html.dangerouslyCreate = (fragment: string) => new TrustedHtml([fragment])
-
-html.scriptTag = (fragment: string) =>
-  // "</script>" can only appear in javascript strings, so we can safely escape
-  // the "<" without breaking the javascript.
-  new TrustedHtml([fragment.replace(/<\/script>/g, '\\u003c/script>')])
-
-/**
- * @see {@link https://redux.js.org/usage/server-rendering#security-considerations}
- */
-html.jsonForScriptTag = (value: unknown) =>
-  new TrustedHtml([JSON.stringify(value).replace(/</g, '\\u003c')])
+function* combineTemplateStringsFragments(
+  htmlFragment: TemplateStringsArray,
+  values: readonly NestedArray<string | Html>[],
+): Generator<string, void, undefined> {
+  for (let i = 0; i < htmlFragment.length; i++) {
+    yield htmlFragment[i]!
+    if (i < values.length) {
+      yield* valueToFragment(values[i]!)
+    }
+  }
+}
 
 function* valueToFragment(
-  value: NestedArray<string | TrustedHtml>,
+  value: NestedArray<string | Html>,
 ): Generator<string, void, undefined> {
   if (typeof value === 'string') {
     yield encode(value)
-  } else if (value instanceof TrustedHtml) {
+  } else if (value instanceof Html) {
     yield* value.fragments
   } else {
     for (const v of value) {
       yield* valueToFragment(v)
     }
-  }
-}
-
-const specialCharRegExp = /[<>"'&]/g
-const specialCharMap = new Map([
-  ['<', '&lt;'],
-  ['>', '&gt;'],
-  ['"', '&quot;'],
-  ["'", '&apos;'],
-  ['&', '&amp;'],
-])
-function encode(value: string): string {
-  return value.replace(specialCharRegExp, (c) => specialCharMap.get(c)!)
-}
-
-class TrustedHtml {
-  constructor(readonly fragments: readonly string[]) {}
-  toString() {
-    return this.fragments.join('')
-  }
-  toBuffer() {
-    return Buffer.concat(this.fragments.map((f) => Buffer.from(f)))
   }
 }

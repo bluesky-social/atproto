@@ -1,22 +1,24 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import { Authorize } from './components/authorize'
-import { Layout } from './components/layout'
-import { LoginForm } from './components/login-form'
-import { SessionSelector } from './components/session-selector'
-import { csrfToken } from './csrf-cookie'
-import { Account, Session } from './types'
+import type { BackendData } from '../backend-data'
+import { cookies } from '../cookies'
+import { Account, Session } from '../types'
 
-import type { BackendData } from './backend-data'
+import { GrantAccept } from './grant-accept'
+import { Layout } from './layout'
+import { LoginForm } from './login-form'
+import { SessionSelector } from './session-selector'
 
-export function App({
+export function Authorize({
   requestUri,
   clientId,
   clientMetadata,
+  csrfCookie,
   consentRequired: initialConsentRequired,
   loginHint: initialLoginHint,
   sessions: initialSessions,
-}: BackendData) {
+}: Exclude<BackendData, { error: string }>) {
+  const csrfToken = useMemo(() => cookies[csrfCookie], [csrfCookie])
   const [isDone, setIsDone] = useState(false)
   const [loginHint, setLoginHint] = useState(initialLoginHint)
   const [sessions, setSessions] = useState(initialSessions)
@@ -117,7 +119,7 @@ export function App({
   if (selectedSession) {
     if (selectedSession.loginRequired === false) {
       return (
-        <Authorize
+        <GrantAccept
           onBack={() => setSub(null)}
           onAccept={() => authorizeAccept(selectedSession.account)}
           onReject={() => authorizeReject()}
