@@ -75,6 +75,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       appviewUrl: bsky.url,
       appviewDid: bsky.ctx.cfg.serverDid,
+      appviewPushEvents: true,
       pdsUrl: pds.url,
       pdsDid: pds.ctx.cfg.service.did,
       ...params.ozone,
