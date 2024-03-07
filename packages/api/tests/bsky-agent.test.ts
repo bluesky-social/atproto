@@ -3,7 +3,7 @@ import {
   BskyAgent,
   ComAtprotoRepoPutRecord,
   AppBskyActorProfile,
-  BSKY_MODSERVICE_DID,
+  BSKY_LABELER_DID,
   DEFAULT_LABEL_SETTINGS,
 } from '..'
 
@@ -231,7 +231,7 @@ describe('agent', () => {
           labels: DEFAULT_LABEL_SETTINGS,
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -265,7 +265,7 @@ describe('agent', () => {
           labels: DEFAULT_LABEL_SETTINGS,
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -299,7 +299,7 @@ describe('agent', () => {
           labels: DEFAULT_LABEL_SETTINGS,
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -333,7 +333,7 @@ describe('agent', () => {
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -371,7 +371,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -412,7 +412,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -453,7 +453,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -494,7 +494,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -535,7 +535,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -576,7 +576,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -623,7 +623,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -664,7 +664,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -705,7 +705,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -746,7 +746,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -787,7 +787,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -828,7 +828,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -876,7 +876,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -924,7 +924,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -972,7 +972,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -1041,7 +1041,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#modsPref',
             mods: [
               {
-                did: BSKY_MODSERVICE_DID,
+                did: BSKY_LABELER_DID,
               },
             ],
           },
@@ -1049,7 +1049,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#modsPref',
             mods: [
               {
-                did: BSKY_MODSERVICE_DID,
+                did: BSKY_LABELER_DID,
               },
               {
                 did: 'did:plc:other',
@@ -1135,7 +1135,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
             {
@@ -1179,7 +1179,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
             {
@@ -1223,7 +1223,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
             {
@@ -1267,7 +1267,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -1307,7 +1307,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -1347,7 +1347,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -1398,7 +1398,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_MODSERVICE_DID,
+              did: BSKY_LABELER_DID,
               labels: {},
             },
           ],
@@ -1440,7 +1440,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#modsPref',
             mods: [
               {
-                did: BSKY_MODSERVICE_DID,
+                did: BSKY_LABELER_DID,
               },
             ],
           },

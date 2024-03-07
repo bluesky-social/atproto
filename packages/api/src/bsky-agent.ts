@@ -13,7 +13,7 @@ import {
   BskyInterestsPreference,
 } from './types'
 import { LabelPreference } from './moderation/types'
-import { BSKY_MODSERVICE_DID } from './const'
+import { BSKY_LABELER_DID } from './const'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 import { sanitizeMutedWordValue } from './util'
 
@@ -421,11 +421,11 @@ export class BskyAgent extends AtpAgent {
 
     // ensure the bluesky moderation is configured
     const bskyModeration = prefs.moderationPrefs.mods.find(
-      (modPref) => modPref.did === BSKY_MODSERVICE_DID,
+      (modPref) => modPref.did === BSKY_LABELER_DID,
     )
     if (!bskyModeration) {
       prefs.moderationPrefs.mods.unshift({
-        did: BSKY_MODSERVICE_DID,
+        did: BSKY_LABELER_DID,
         labels: {},
       })
     }
@@ -893,8 +893,8 @@ function prefsArrayToLabelerDids(
   if (modsPref) {
     dids = (modsPref as AppBskyActorDefs.ModsPref).mods.map((mod) => mod.did)
   }
-  if (!dids.includes(BSKY_MODSERVICE_DID)) {
-    dids.unshift(BSKY_MODSERVICE_DID)
+  if (!dids.includes(BSKY_LABELER_DID)) {
+    dids.unshift(BSKY_LABELER_DID)
   }
   return dids
 }
