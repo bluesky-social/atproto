@@ -52,12 +52,6 @@ The kind of UI behavior used when a warning must be applied.
   <td>undefined</td>
 </tr>
 <tr>
-  <td>!no-promote</td>
-  <td>❌ (undefined)</td>
-  <td>no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
   <td>!warn</td>
   <td>❌ (undefined)</td>
   <td>no-self</td>
@@ -67,18 +61,6 @@ The kind of UI behavior used when a warning must be applied.
   <td>!no-unauthenticated</td>
   <td>❌ (undefined)</td>
   <td>no-override, unauthed</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>dmca-violation</td>
-  <td>❌ (undefined)</td>
-  <td>no-override, no-self</td>
-  <td>undefined</td>
-</tr>
-<tr>
-  <td>doxxing</td>
-  <td>❌ (undefined)</td>
-  <td>no-override, no-self</td>
   <td>undefined</td>
 </tr>
 <tr>
