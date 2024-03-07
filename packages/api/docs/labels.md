@@ -78,7 +78,7 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>nudity</td>
   <td>✅</td>
-  <td>adult</td>
+  <td></td>
   <td>undefined</td>
 </tr>
 <tr>
