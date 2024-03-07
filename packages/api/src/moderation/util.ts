@@ -18,6 +18,7 @@ export function isQuotedPostWithMedia(
 
 export function interpretLabelValueDefinition(
   def: ComAtprotoLabelDefs.LabelValueDefinition,
+  definedBy: string | undefined,
 ): InterprettedLabelValueDefinition {
   const behaviors: {
     account: ModerationBehavior
@@ -76,6 +77,7 @@ export function interpretLabelValueDefinition(
 
   return {
     ...def,
+    definedBy,
     configurable: true,
     defaultSetting: 'warn',
     flags: ['no-self'],
@@ -84,13 +86,14 @@ export function interpretLabelValueDefinition(
 }
 
 export function interpretLabelValueDefinitions(
-  modserviceView: AppBskyLabelerDefs.LabelerViewDetailed,
+  labelerView: AppBskyLabelerDefs.LabelerViewDetailed,
 ): InterprettedLabelValueDefinition[] {
-  return (modserviceView.policies?.labelValueDefinitions || [])
+  return (labelerView.policies?.labelValueDefinitions || [])
     .filter(
       (labelValDef) =>
-        ComAtprotoLabelDefs.isLabelValueDefinition(labelValDef) &&
         ComAtprotoLabelDefs.validateLabelValueDefinition(labelValDef).success,
     )
-    .map((labelValDef) => interpretLabelValueDefinition(labelValDef))
+    .map((labelValDef) =>
+      interpretLabelValueDefinition(labelValDef, labelerView.creator.did),
+    )
 }

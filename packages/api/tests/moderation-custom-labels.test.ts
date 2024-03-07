@@ -348,11 +348,13 @@ function makeCustomLabel(
   blurs: string,
   severity: string,
 ): InterprettedLabelValueDefinition {
-  return interpretLabelValueDefinition({
-    identifier: 'custom',
-    blurs,
-    severity,
-    defaultSetting: 'warn',
-    locales: [],
-  })
+  return interpretLabelValueDefinition(
+    {
+      identifier: 'custom',
+      blurs,
+      severity,
+      locales: [],
+    },
+    'did:web:labeler.test',
+  )
 }
