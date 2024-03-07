@@ -3,11 +3,8 @@ import { InterprettedLabelValueDefinition, LabelPreference } from '../types'
 
 export type KnownLabelValue =
   | '!hide'
-  | '!no-promote'
   | '!warn'
   | '!no-unauthenticated'
-  | 'dmca-violation'
-  | 'doxxing'
   | 'porn'
   | 'sexual'
   | 'nudity'
@@ -49,16 +46,6 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
           contentView: 'blur',
         },
       },
-      locales: [],
-    },
-    '!no-promote': {
-      identifier: '!no-promote',
-      configurable: false,
-      defaultSetting: 'hide',
-      flags: ['no-self'],
-      severity: 'none',
-      blurs: 'none',
-      behaviors: {},
       locales: [],
     },
     '!warn': {
@@ -110,56 +97,6 @@ export const LABELS: Record<KnownLabelValue, InterprettedLabelValueDefinition> =
           avatar: 'blur',
           banner: 'blur',
           displayName: 'blur',
-        },
-        content: {
-          contentList: 'blur',
-          contentView: 'blur',
-        },
-      },
-      locales: [],
-    },
-    'dmca-violation': {
-      identifier: 'dmca-violation',
-      configurable: false,
-      defaultSetting: 'hide',
-      flags: ['no-override', 'no-self'],
-      severity: 'none',
-      blurs: 'content',
-      behaviors: {
-        account: {
-          profileList: 'blur',
-          profileView: 'blur',
-          contentList: 'blur',
-          contentView: 'blur',
-        },
-        profile: {
-          profileList: 'blur',
-          profileView: 'blur',
-        },
-        content: {
-          contentList: 'blur',
-          contentView: 'blur',
-        },
-      },
-      locales: [],
-    },
-    doxxing: {
-      identifier: 'doxxing',
-      configurable: false,
-      defaultSetting: 'hide',
-      flags: ['no-override', 'no-self'],
-      severity: 'none',
-      blurs: 'content',
-      behaviors: {
-        account: {
-          profileList: 'blur',
-          profileView: 'blur',
-          contentList: 'blur',
-          contentView: 'blur',
-        },
-        profile: {
-          profileList: 'blur',
-          profileView: 'blur',
         },
         content: {
           contentList: 'blur',

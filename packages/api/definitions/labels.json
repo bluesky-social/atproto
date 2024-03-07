@@ -28,15 +28,6 @@
     }
   },
   {
-    "identifier": "!no-promote",
-    "configurable": false,
-    "defaultSetting": "hide",
-    "flags": ["no-self"],
-    "severity": "none",
-    "blurs": "none",
-    "behaviors": {}
-  },
-  {
     "identifier": "!warn",
     "configurable": false,
     "defaultSetting": "warn",
@@ -84,54 +75,6 @@
         "avatar": "blur",
         "banner": "blur",
         "displayName": "blur"
-      },
-      "content": {
-        "contentList": "blur",
-        "contentView": "blur"
-      }
-    }
-  },
-  {
-    "identifier": "dmca-violation",
-    "configurable": false,
-    "defaultSetting": "hide",
-    "flags": ["no-override", "no-self"],
-    "severity": "none",
-    "blurs": "content",
-    "behaviors": {
-      "account": {
-        "profileList": "blur",
-        "profileView": "blur",
-        "contentList": "blur",
-        "contentView": "blur"
-      },
-      "profile": {
-        "profileList": "blur",
-        "profileView": "blur"
-      },
-      "content": {
-        "contentList": "blur",
-        "contentView": "blur"
-      }
-    }
-  },
-  {
-    "identifier": "doxxing",
-    "configurable": false,
-    "defaultSetting": "hide",
-    "flags": ["no-override", "no-self"],
-    "severity": "none",
-    "blurs": "content",
-    "behaviors": {
-      "account": {
-        "profileList": "blur",
-        "profileView": "blur",
-        "contentList": "blur",
-        "contentView": "blur"
-      },
-      "profile": {
-        "profileList": "blur",
-        "profileView": "blur"
       },
       "content": {
         "contentList": "blur",
