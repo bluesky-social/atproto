@@ -13,10 +13,13 @@ import { retryHttp } from '../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
-    auth: ctx.authVerifier.moderator,
+    auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const createdBy = access.iss
+      const createdBy =
+        auth.credentials.type === 'moderator'
+          ? auth.credentials.iss
+          : input.body.createdBy
       const db = ctx.db
       const moderationService = ctx.modService(db)
       const { event } = input.body

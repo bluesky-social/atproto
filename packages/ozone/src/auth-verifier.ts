@@ -68,6 +68,16 @@ export class AuthVerifier {
     this.adminPassword = opts.adminPassword
   }
 
+  modOrAdminToken = async (
+    reqCtx: ReqCtx,
+  ): Promise<ModeratorOutput | AdminTokenOutput> => {
+    if (isBasicToken(reqCtx.req)) {
+      return this.adminToken(reqCtx)
+    } else {
+      return this.moderator(reqCtx)
+    }
+  }
+
   moderator = async (reqCtx: ReqCtx): Promise<ModeratorOutput> => {
     const creds = await this.standard(reqCtx)
     if (!creds.credentials.isTriage) {
