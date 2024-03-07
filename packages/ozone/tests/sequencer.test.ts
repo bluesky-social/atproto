@@ -38,6 +38,7 @@ describe('sequencer', () => {
       id: e.seq,
       ...label,
       cid: label.cid ? label.cid : '',
+      sig: label.sig ? Buffer.from(label.sig) : null,
       signingKey: network.ozone.ctx.signingKey.did(),
     }
   }
