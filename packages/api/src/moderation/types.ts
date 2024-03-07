@@ -60,7 +60,7 @@ export type LabelValueDefinitionFlag =
 
 export interface InterprettedLabelValueDefinition
   extends ComAtprotoLabelDefs.LabelValueDefinition {
-  // identifier: string
+  definedBy?: string | undefined // did of labeler or undefined for global
   configurable: boolean
   defaultSetting: LabelPreference // type narrowing
   flags: LabelValueDefinitionFlag[]
