@@ -13,7 +13,6 @@ import {
   BskyInterestsPreference,
 } from './types'
 import { LabelPreference } from './moderation/types'
-import { BSKY_LABELER_DID } from './const'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -418,17 +417,6 @@ export class BskyAgent extends AtpAgent {
       }
     }
 
-    // ensure the bluesky moderation is configured
-    const bskyModeration = prefs.moderationPrefs.mods.find(
-      (modPref) => modPref.did === BSKY_LABELER_DID,
-    )
-    if (!bskyModeration) {
-      prefs.moderationPrefs.mods.unshift({
-        did: BSKY_LABELER_DID,
-        labels: {},
-      })
-    }
-
     // apply the label prefs
     for (const pref of labelPrefs) {
       if (pref.labelerDid) {
@@ -799,9 +787,6 @@ function prefsArrayToLabelerDids(
   let dids: string[] = []
   if (modsPref) {
     dids = (modsPref as AppBskyActorDefs.ModsPref).mods.map((mod) => mod.did)
-  }
-  if (!dids.includes(BSKY_LABELER_DID)) {
-    dids.unshift(BSKY_LABELER_DID)
   }
   return dids
 }
