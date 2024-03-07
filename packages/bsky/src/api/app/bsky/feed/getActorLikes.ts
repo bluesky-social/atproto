@@ -5,7 +5,11 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLik
 import AppContext from '../../../../context'
 import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
@@ -21,10 +25,12 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req, res }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
-      const result = await getActorLikes({ ...params, viewer }, ctx)
+      const result = await getActorLikes({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
@@ -42,7 +48,8 @@ const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
-  const { actor, limit, cursor, viewer } = params
+  const { actor, limit, cursor } = params
+  const viewer = params.hydrateCtx.viewer
   if (clearlyBadCursor(cursor)) {
     return { items: [] }
   }
@@ -71,7 +78,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedItems(skeleton.items, params.viewer)
+  return await ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
 }
 
 const noPostBlocks = (inputs: {
@@ -108,7 +115,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   items: FeedItem[]

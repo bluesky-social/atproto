@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   if (!appViewAgent || !bskyAppView) return
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
 
       const { data: feed } =

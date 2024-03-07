@@ -74,6 +74,8 @@ import {
   GetIdentityByHandleResponse,
   GetInteractionCountsRequest,
   GetInteractionCountsResponse,
+  GetLabelerRecordsRequest,
+  GetLabelerRecordsResponse,
   GetLabelsRequest,
   GetLabelsResponse,
   GetLatestRevRequest,
@@ -270,6 +272,15 @@ export const Service = {
       name: 'GetThreadGateRecords',
       I: GetThreadGateRecordsRequest,
       O: GetThreadGateRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetLabelerRecords
+     */
+    getLabelerRecords: {
+      name: 'GetLabelerRecords',
+      I: GetLabelerRecordsRequest,
+      O: GetLabelerRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
