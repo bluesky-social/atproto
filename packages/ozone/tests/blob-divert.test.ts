@@ -1,6 +1,7 @@
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { BlobDiverter } from '../src/daemon'
+import { forSnapshot } from './_util'
 
 describe('blob divert', () => {
   let network: TestNetwork
@@ -31,24 +32,18 @@ describe('blob divert', () => {
       .mockImplementation(async () => {
         return result
       })
-    // nock(BLOB_DIVERT_SERVICE_HOST)
-    //   .persist()
-    //   .post(BLOB_DIVERT_SERVICE_PATH, () => true)
-    //   .query(true)
-    //   .reply(status, data)
   }
 
-  it('fails and keeps attempt count when report service fails to accept upload.', async () => {
-    // Simulate failure to fail upload
-    const reportServiceRequest = mockReportServiceResponse(false)
+  const getSubject = () => ({
+    $type: 'com.atproto.repo.strongRef',
+    uri: sc.posts[sc.dids.carol][0].ref.uriStr,
+    cid: sc.posts[sc.dids.carol][0].ref.cidStr,
+  })
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
+  const emitDivertEvent = async () =>
+    agent.api.com.atproto.admin.emitModerationEvent(
       {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: sc.posts[sc.dids.carol][0].ref.uriStr,
-          cid: sc.posts[sc.dids.carol][0].ref.cidStr,
-        },
+        subject: getSubject(),
         event: {
           $type: 'com.atproto.admin.defs#modEventDivert',
           comment: 'Diverting for test',
@@ -58,18 +53,18 @@ describe('blob divert', () => {
           img.image.ref.toString(),
         ),
       },
-      { headers: network.pds.adminAuthHeaders(), encoding: 'application/json' },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
     )
 
-    await network.ozone.processAll()
+  it('fails and keeps attempt count when report service fails to accept upload.', async () => {
+    // Simulate failure to fail upload
+    const reportServiceRequest = mockReportServiceResponse(false)
 
-    const divertEvents = await network.ozone.ctx.db.db
-      .selectFrom('blob_push_event')
-      .selectAll()
-      .execute()
+    await expect(emitDivertEvent()).rejects.toThrow()
 
-    expect(divertEvents[0].attempts).toBeGreaterThan(0)
-    expect(divertEvents[1].attempts).toBeGreaterThan(0)
     expect(reportServiceRequest).toHaveBeenCalled()
   })
 
@@ -77,15 +72,22 @@ describe('blob divert', () => {
     // Simulate failure to accept upload
     const reportServiceRequest = mockReportServiceResponse(true)
 
-    await network.ozone.processAll()
+    const { data: divertEvent } = await emitDivertEvent()
 
-    const divertEvents = await network.ozone.ctx.db.db
-      .selectFrom('blob_push_event')
-      .selectAll()
-      .execute()
-
-    expect(divertEvents[0].confirmedAt).toBeTruthy()
-    expect(divertEvents[1].confirmedAt).toBeTruthy()
     expect(reportServiceRequest).toHaveBeenCalled()
+    expect(forSnapshot(divertEvent)).toMatchSnapshot()
+
+    const {
+      data: { subjectStatuses },
+    } = await agent.api.com.atproto.admin.queryModerationStatuses(
+      {
+        subject: getSubject().uri,
+      },
+      {
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+
+    expect(subjectStatuses[0].takendown).toBe(true)
   })
 })

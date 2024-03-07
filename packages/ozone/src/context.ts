@@ -25,6 +25,7 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
+  blobDiverter?: BlobDiverter
   signingKey: Keypair
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
@@ -75,7 +76,6 @@ export class AppContext {
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview,
       pds: cfg.pds ?? undefined,
-      blobDiverter,
     })
     const modService = ModerationService.creator(
       cfg,
@@ -116,6 +116,7 @@ export class AppContext {
         backgroundQueue,
         sequencer,
         authVerifier,
+        blobDiverter,
         ...(overrides ?? {}),
       },
       secrets,
@@ -140,6 +141,10 @@ export class AppContext {
 
   get modService(): ModerationServiceCreator {
     return this.opts.modService
+  }
+
+  get blobDiverter(): BlobDiverter | undefined {
+    return this.opts.blobDiverter
   }
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {

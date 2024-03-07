@@ -103,42 +103,45 @@ export class BlobDiverter {
   async uploadBlobOnService({
     subjectDid,
     subjectUri,
-    subjectBlobCid,
+    subjectBlobCids,
   }: {
     subjectDid: string
-    subjectUri: string | null
-    subjectBlobCid: string
+    subjectUri: string
+    subjectBlobCids: string[]
   }): Promise<boolean> {
-    try {
-      const didDoc = await this.idResolver.did.resolve(subjectDid)
+    const didDoc = await this.idResolver.did.resolve(subjectDid)
 
-      if (!didDoc) {
-        throw new Error('Error resolving DID')
-      }
-
-      const pds = getPdsEndpoint(didDoc)
-
-      if (!pds) {
-        throw new Error('Error resolving PDS')
-      }
-
-      // attempt to download and upload within the same retry block since the imageStream is not reusable
-      const uploadResult = await retryHttp(async () => {
-        const { imageStream, contentType } = await this.getBlob({
-          pds,
-          did: subjectDid,
-          cid: subjectBlobCid,
-        })
-        return this.uploadBlob(
-          { imageStream, contentType },
-          { subjectDid, subjectUri },
-        )
-      })
-
-      return uploadResult
-    } catch (err) {
-      dbLogger.error({ err }, 'failed to upload diverted blob')
-      return false
+    if (!didDoc) {
+      throw new Error('Error resolving DID')
     }
+
+    const pds = getPdsEndpoint(didDoc)
+
+    if (!pds) {
+      throw new Error('Error resolving PDS')
+    }
+
+    // attempt to download and upload within the same retry block since the imageStream is not reusable
+    const uploadResult = await Promise.all(
+      subjectBlobCids.map((cid) =>
+        retryHttp(async () => {
+          const { imageStream, contentType } = await this.getBlob({
+            pds,
+            cid,
+            did: subjectDid,
+          })
+          return this.uploadBlob(
+            { imageStream, contentType },
+            { subjectDid, subjectUri },
+          )
+        }),
+      ),
+    )
+
+    if (uploadResult.includes(false)) {
+      throw new Error(`Error uploading blob ${subjectUri}`)
+    }
+
+    return true
   }
 }

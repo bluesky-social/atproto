@@ -605,29 +605,6 @@ export class ModerationService {
     }
   }
 
-  async divertBlobs(subject: RecordSubject) {
-    const subjectInfo = subject.info()
-
-    const blobDiverts = await this.eventPusher.logBlobPushEvent(
-      subjectInfo.subjectBlobCids.map((subjectBlobCid) => ({
-        subjectDid: subjectInfo.subjectDid,
-        subjectBlobCid: subjectBlobCid,
-        subjectUri: subjectInfo.subjectUri,
-        eventType: 'blob_divert',
-      })),
-    )
-
-    this.db.onCommit(() => {
-      this.backgroundQueue.add(async () => {
-        await Promise.all(
-          blobDiverts.map((divert) =>
-            this.eventPusher.attemptBlobEvent(divert[0].id),
-          ),
-        )
-      })
-    })
-  }
-
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
     const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]

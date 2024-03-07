@@ -7,7 +7,6 @@ import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectSta
 import assert from 'assert'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { Insertable, Selectable } from 'kysely'
-import { BlobDiverter } from './blob-diverter'
 
 type EventSubject = InputSchema['subject']
 
@@ -42,7 +41,6 @@ export class EventPusher {
 
   appview: Service | undefined
   pds: Service | undefined
-  blobDiverter: BlobDiverter | undefined
 
   constructor(
     public db: Database,
@@ -56,10 +54,8 @@ export class EventPusher {
         url: string
         did: string
       }
-      blobDiverter
     },
   ) {
-    this.blobDiverter = services.blobDiverter
     if (services.appview) {
       this.appview = {
         agent: new AtpAgent({ service: services.appview.url }),
@@ -271,26 +267,18 @@ export class EventPusher {
         .executeTakeFirst()
       if (!evt) return
 
-      let succeeded = false
-      if (evt.eventType === 'blob_divert') {
-        succeeded = await (this.blobDiverter
-          ? this.blobDiverter.uploadBlobOnService(evt)
-          : Promise.resolve(false))
-      } else {
-        const service =
-          evt.eventType === 'pds_takedown' ? this.pds : this.appview
-        assert(service)
-        const subject = {
-          $type: 'com.atproto.admin.defs#repoBlobRef',
-          did: evt.subjectDid,
-          cid: evt.subjectBlobCid,
-        }
-        succeeded = await this.updateSubjectOnService(
-          service,
-          subject,
-          evt.takedownRef,
-        )
+      const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+      assert(service)
+      const subject = {
+        $type: 'com.atproto.admin.defs#repoBlobRef',
+        did: evt.subjectDid,
+        cid: evt.subjectBlobCid,
       }
+      const succeeded = await this.updateSubjectOnService(
+        service,
+        subject,
+        evt.takedownRef,
+      )
       await this.markBlobEventAttempt(dbTxn, evt, succeeded)
     })
   }

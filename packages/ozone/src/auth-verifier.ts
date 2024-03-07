@@ -7,7 +7,7 @@ type ReqCtx = {
   req: express.Request
 }
 
-type RoleOutput = {
+export type RoleOutput = {
   credentials: {
     type: 'role'
     isAdmin: boolean
@@ -16,7 +16,7 @@ type RoleOutput = {
   }
 }
 
-type ModeratorOutput = {
+export type ModeratorOutput = {
   credentials: {
     type: 'moderator'
     aud: string
