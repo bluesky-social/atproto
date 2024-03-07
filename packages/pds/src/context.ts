@@ -265,20 +265,24 @@ export class AppContext {
         })
       : undefined
 
+    /**
+     * Using the oauthProvider as oauthVerifier allows clients to use the
+     * same nonce when authenticating and making requests, avoiding
+     * un-necessary "invalid_nonce" errors. It also allows the use of
+     * AccessTokenType.id as access token type.
+     */
+    const oauthVerifier: OAuthVerifier =
+      oauthProvider ??
+      new OAuthVerifier({
+        issuer: cfg.oauth.issuer,
+        keyset,
+        dpopNonce,
+        replayStore,
+      })
+
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
       publicUrl: cfg.service.publicUrl,
-      oauthVerifier:
-        // Using the oauthProvider as oauthVerifier allows clients to use the
-        // same nonce when authenticating and making requests, avoiding
-        // un-necessary "invalid_nonce" errors. It also allows the use of
-        // AccessTokenType.id as access token type.
-        oauthProvider ??
-        new OAuthVerifier({
-          issuer: cfg.oauth.issuer,
-          keyset,
-          dpopNonce,
-          replayStore,
-        }),
+      oauthVerifier,
       jwtKey,
       adminPass: secrets.adminPassword,
       dids: {
