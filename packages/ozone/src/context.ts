@@ -62,7 +62,7 @@ export class AppContext {
 
     const backgroundQueue = new BackgroundQueue(db)
     const eventPusher = new EventPusher(db, createAuthHeaders, {
-      appview: cfg.appview,
+      appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
 
