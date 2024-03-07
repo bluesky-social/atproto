@@ -228,7 +228,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -257,7 +257,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: true,
           labels: DEFAULT_LABEL_SETTINGS,
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -286,7 +286,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -315,7 +315,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -348,7 +348,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -384,7 +384,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -420,7 +420,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -456,7 +456,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -492,7 +492,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -528,7 +528,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -570,7 +570,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -606,7 +606,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -642,7 +642,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -678,7 +678,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -714,7 +714,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -750,7 +750,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -793,7 +793,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -836,7 +836,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -879,7 +879,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -942,16 +942,16 @@ describe('agent', () => {
             visibility: 'warn',
           },
           {
-            $type: 'app.bsky.actor.defs#modsPref',
-            mods: [
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [
               {
                 did: 'did:plc:first-labeler',
               },
             ],
           },
           {
-            $type: 'app.bsky.actor.defs#modsPref',
-            mods: [
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [
               {
                 did: 'did:plc:first-labeler',
               },
@@ -1037,7 +1037,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'warn',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1081,7 +1081,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'warn',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1125,7 +1125,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1157,7 +1157,7 @@ describe('agent', () => {
         hiddenPosts: [],
       })
 
-      await agent.removeModService('did:plc:other')
+      await agent.removeLabeler('did:plc:other')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: [],
@@ -1169,7 +1169,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1209,7 +1209,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1249,7 +1249,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1300,7 +1300,7 @@ describe('agent', () => {
             ...DEFAULT_LABEL_SETTINGS,
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1341,8 +1341,8 @@ describe('agent', () => {
             visibility: 'ignore',
           },
           {
-            $type: 'app.bsky.actor.defs#modsPref',
-            mods: [
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [
               {
                 did: 'did:plc:first-labeler',
               },

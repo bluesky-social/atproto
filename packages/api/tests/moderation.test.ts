@@ -29,7 +29,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'hide',
           },
-          mods: [],
+          labelers: [],
         },
       },
     )
@@ -61,7 +61,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
       },
     )
@@ -95,7 +95,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'hide',
           },
-          mods: [],
+          labelers: [],
         },
       },
     )
@@ -137,7 +137,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:web:labeler.test',
               labels: { porn: 'ignore' },
@@ -182,7 +182,7 @@ describe('Moderation', () => {
         prefs: {
           adultContentEnabled: true,
           labels: {},
-          mods: [
+          labelers: [
             {
               did: 'did:web:labeler.test',
               labels: {},
@@ -232,7 +232,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'hide',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:web:labeler.test',
               labels: {},
@@ -253,7 +253,7 @@ describe('Moderation', () => {
       prefs: {
         adultContentEnabled: true,
         labels: { porn: 'warn' },
-        mods: [
+        labelers: [
           {
             did: 'did:web:labeler.test',
             labels: { porn: 'warn' },
@@ -311,7 +311,7 @@ describe('Moderation', () => {
       prefs: {
         adultContentEnabled: true,
         labels: {},
-        mods: [
+        labelers: [
           {
             did: 'did:web:labeler.test',
             labels: {},
@@ -374,7 +374,7 @@ describe('Moderation', () => {
       prefs: {
         adultContentEnabled: true,
         labels: {},
-        mods: [
+        labelers: [
           {
             did: 'did:web:labeler.test',
             labels: { BadLabel: 'hide', 'bad/label': 'hide' },

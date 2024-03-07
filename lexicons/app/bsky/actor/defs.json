@@ -288,20 +288,20 @@
         }
       }
     },
-    "modsPref": {
+    "labelersPref": {
       "type": "object",
-      "required": ["mods"],
+      "required": ["labelers"],
       "properties": {
-        "mods": {
+        "labelers": {
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "#modPrefItem"
+            "ref": "#labelerPrefItem"
           }
         }
       }
     },
-    "modPrefItem": {
+    "labelerPrefItem": {
       "type": "object",
       "required": ["did"],
       "properties": {

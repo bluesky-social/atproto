@@ -3958,20 +3958,20 @@ export const schemaDict = {
           },
         },
       },
-      modsPref: {
+      labelersPref: {
         type: 'object',
-        required: ['mods'],
+        required: ['labelers'],
         properties: {
-          mods: {
+          labelers: {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#modPrefItem',
+              ref: 'lex:app.bsky.actor.defs#labelerPrefItem',
             },
           },
         },
       },
-      modPrefItem: {
+      labelerPrefItem: {
         type: 'object',
         required: ['did'],
         properties: {

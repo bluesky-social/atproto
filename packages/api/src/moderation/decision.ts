@@ -214,7 +214,7 @@ export class ModerationDecision {
     const isSelf = label.src === this.did
     const labeler = isSelf
       ? undefined
-      : opts.prefs.mods.find((s) => s.did === label.src)
+      : opts.prefs.labelers.find((s) => s.did === label.src)
 
     if (!isSelf && !labeler) {
       return // skip labelers not configured by the user

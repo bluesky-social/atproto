@@ -63,7 +63,7 @@ describe('agent', () => {
           sexual: 'ignore',
           gore: 'ignore',
         },
-        mods: [],
+        labelers: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -92,7 +92,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    await agent.addModService('did:plc:other')
+    await agent.addLabeler('did:plc:other')
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
@@ -101,7 +101,7 @@ describe('agent', () => {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
-        mods: [
+        labelers: [
           {
             did: 'did:plc:other',
             labels: {},
@@ -126,7 +126,7 @@ describe('agent', () => {
     })
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
 
-    await agent.removeModService('did:plc:other')
+    await agent.removeLabeler('did:plc:other')
     expect(agent.labelersHeader).toStrictEqual([])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
@@ -135,7 +135,7 @@ describe('agent', () => {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
-        mods: [],
+        labelers: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -165,7 +165,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    await agent.addModService('did:plc:other')
+    await agent.addLabeler('did:plc:other')
     await agent.setContentLabelPref('porn', 'ignore')
     await agent.setContentLabelPref('porn', 'hide', 'did:plc:other')
     await agent.setContentLabelPref('x-custom', 'warn', 'did:plc:other')
@@ -177,7 +177,7 @@ describe('agent', () => {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore' },
-        mods: [
+        labelers: [
           {
             did: 'did:plc:other',
             labels: {

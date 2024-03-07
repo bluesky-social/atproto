@@ -127,7 +127,7 @@ export type ModerationCause =
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
   | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
 
-export interface ModerationPrefsModerator {
+export interface ModerationPrefsLabeler {
   did: string
   labels: Record<string, LabelPreference>
 }
@@ -135,7 +135,7 @@ export interface ModerationPrefsModerator {
 export interface ModerationPrefs {
   adultContentEnabled: boolean
   labels: Record<string, LabelPreference>
-  mods: ModerationPrefsModerator[]
+  labelers: ModerationPrefsLabeler[]
 }
 
 export interface ModerationOpts {
