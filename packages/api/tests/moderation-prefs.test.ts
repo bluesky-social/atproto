@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { BskyAgent, BSKY_LABELER_DID, DEFAULT_LABEL_SETTINGS } from '..'
+import { BskyAgent, DEFAULT_LABEL_SETTINGS } from '..'
 import './util/moderation-behavior'
 
 describe('agent', () => {
@@ -63,12 +63,7 @@ describe('agent', () => {
           sexual: 'ignore',
           gore: 'ignore',
         },
-        mods: [
-          {
-            did: BSKY_LABELER_DID,
-            labels: {},
-          },
-        ],
+        mods: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -86,7 +81,6 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
   })
 
   it('adds/removes moderation services', async () => {
@@ -99,10 +93,7 @@ describe('agent', () => {
     })
 
     await agent.addModService('did:plc:other')
-    expect(agent.labelersHeader).toStrictEqual([
-      BSKY_LABELER_DID,
-      'did:plc:other',
-    ])
+    expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
@@ -111,10 +102,6 @@ describe('agent', () => {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
-          {
-            did: BSKY_LABELER_DID,
-            labels: {},
-          },
           {
             did: 'did:plc:other',
             labels: {},
@@ -137,13 +124,10 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
-    expect(agent.labelersHeader).toStrictEqual([
-      BSKY_LABELER_DID,
-      'did:plc:other',
-    ])
+    expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
 
     await agent.removeModService('did:plc:other')
-    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
+    expect(agent.labelersHeader).toStrictEqual([])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
@@ -151,12 +135,7 @@ describe('agent', () => {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
-        mods: [
-          {
-            did: BSKY_LABELER_DID,
-            labels: {},
-          },
-        ],
+        mods: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -174,51 +153,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
-  })
-
-  it('cant remove the default moderation service', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    await agent.createAccount({
-      handle: 'user6.test',
-      email: 'user6@test.com',
-      password: 'password',
-    })
-
-    await agent.removeModService(BSKY_LABELER_DID)
-    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
-    await expect(agent.getPreferences()).resolves.toStrictEqual({
-      feeds: { pinned: undefined, saved: undefined },
-      hiddenPosts: [],
-      interests: { tags: [] },
-      moderationPrefs: {
-        adultContentEnabled: false,
-        labels: DEFAULT_LABEL_SETTINGS,
-        mods: [
-          {
-            did: BSKY_LABELER_DID,
-            labels: {},
-          },
-        ],
-      },
-      birthDate: undefined,
-      feedViewPrefs: {
-        home: {
-          hideReplies: false,
-          hideRepliesByUnfollowed: true,
-          hideRepliesByLikeCount: 0,
-          hideReposts: false,
-          hideQuotePosts: false,
-        },
-      },
-      mutedWords: [],
-      threadViewPrefs: {
-        sort: 'oldest',
-        prioritizeFollowedUsers: true,
-      },
-    })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
+    expect(agent.labelersHeader).toStrictEqual([])
   })
 
   it('sets label preferences globally and per-moderator', async () => {
@@ -243,10 +178,6 @@ describe('agent', () => {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore' },
         mods: [
-          {
-            did: BSKY_LABELER_DID,
-            labels: {},
-          },
           {
             did: 'did:plc:other',
             labels: {

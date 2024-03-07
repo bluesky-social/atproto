@@ -20,6 +20,8 @@ import {
 } from './types'
 import { BSKY_LABELER_DID } from './const'
 
+const MAX_MOD_AUTHORITIES = 3
+const MAX_LABELERS = 10
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
@@ -30,7 +32,7 @@ export class AtpAgent {
   service: URL
   api: AtpServiceClient
   session?: AtpSessionData
-  labelersHeader: string[] = [BSKY_LABELER_DID]
+  labelersHeader: string[] = []
 
   /**
    * The PDS URL, driven by the did doc. May be undefined.
@@ -51,10 +53,20 @@ export class AtpAgent {
   static fetch: AtpAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
+   * The moderation authorities to be used across all requests
+   */
+  static modAuthoritiesHeader: string[] = [BSKY_LABELER_DID]
+
+  /**
    * Configures the API globally.
    */
   static configure(opts: AtpAgentGlobalOpts) {
-    AtpAgent.fetch = opts.fetch
+    if (opts.fetch) {
+      AtpAgent.fetch = opts.fetch
+    }
+    if (opts.modAuthorities) {
+      AtpAgent.modAuthoritiesHeader = opts.modAuthorities
+    }
   }
 
   constructor(opts: AtpAgentOpts) {
@@ -212,12 +224,21 @@ export class AtpAgent {
         authorization: `Bearer ${this.session.accessJwt}`,
       }
     }
+    if (AtpAgent.modAuthoritiesHeader.length) {
+      reqHeaders = {
+        ...reqHeaders,
+        'atproto-mod-authorities': AtpAgent.modAuthoritiesHeader
+          .filter((str) => str.startsWith('did:'))
+          .slice(0, MAX_MOD_AUTHORITIES)
+          .join(','),
+      }
+    }
     if (this.labelersHeader.length) {
       reqHeaders = {
         ...reqHeaders,
         'atproto-labelers': this.labelersHeader
           .filter((str) => str.startsWith('did:'))
-          .slice(0, 10)
+          .slice(0, MAX_LABELERS)
           .join(','),
       }
     }

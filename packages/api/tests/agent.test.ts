@@ -5,6 +5,7 @@ import {
   AtpAgentFetchHandlerResponse,
   AtpSessionEvent,
   AtpSessionData,
+  BSKY_LABELER_DID,
 } from '..'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
@@ -478,6 +479,29 @@ describe('agent', () => {
       expect(events[0]).toEqual('create-failed')
       expect(sessions.length).toEqual(1)
       expect(sessions[0]).toEqual(undefined)
+    })
+  })
+
+  describe('Mod authorities header', () => {
+    it('adds the authorities header as expected', async () => {
+      const server = await createHeaderEchoServer(15991)
+      const agent = new AtpAgent({ service: 'http://localhost:15991' })
+      const agent2 = new AtpAgent({ service: 'http://localhost:15991' })
+
+      const res1 = await agent.com.atproto.server.describeServer()
+      expect(res1.data['atproto-mod-authorities']).toEqual(BSKY_LABELER_DID)
+
+      AtpAgent.configure({ modAuthorities: ['did:plc:test1', 'did:plc:test2'] })
+      const res2 = await agent.com.atproto.server.describeServer()
+      expect(res2.data['atproto-mod-authorities']).toEqual(
+        'did:plc:test1,did:plc:test2',
+      )
+      const res3 = await agent2.com.atproto.server.describeServer()
+      expect(res3.data['atproto-mod-authorities']).toEqual(
+        'did:plc:test1,did:plc:test2',
+      )
+
+      await new Promise((r) => server.close(r))
     })
   })
 

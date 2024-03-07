@@ -3,7 +3,6 @@ import {
   BskyAgent,
   ComAtprotoRepoPutRecord,
   AppBskyActorProfile,
-  BSKY_LABELER_DID,
   DEFAULT_LABEL_SETTINGS,
 } from '..'
 
@@ -229,12 +228,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -263,12 +257,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: true,
           labels: DEFAULT_LABEL_SETTINGS,
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -297,12 +286,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -331,12 +315,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -369,12 +348,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -410,12 +384,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -451,12 +420,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -492,12 +456,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -533,12 +492,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -574,12 +528,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -621,12 +570,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -662,12 +606,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -703,12 +642,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -744,12 +678,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -785,12 +714,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -826,12 +750,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -874,12 +793,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -922,12 +836,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -970,12 +879,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          mods: [
-            {
-              did: BSKY_LABELER_DID,
-              labels: {},
-            },
-          ],
+          mods: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -1041,7 +945,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#modsPref',
             mods: [
               {
-                did: BSKY_LABELER_DID,
+                did: 'did:plc:first-labeler',
               },
             ],
           },
@@ -1049,7 +953,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#modsPref',
             mods: [
               {
-                did: BSKY_LABELER_DID,
+                did: 'did:plc:first-labeler',
               },
               {
                 did: 'did:plc:other',
@@ -1135,7 +1039,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
             {
@@ -1179,7 +1083,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
             {
@@ -1223,7 +1127,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
             {
@@ -1267,7 +1171,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
           ],
@@ -1307,7 +1211,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
           ],
@@ -1347,7 +1251,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
           ],
@@ -1398,7 +1302,7 @@ describe('agent', () => {
           },
           mods: [
             {
-              did: BSKY_LABELER_DID,
+              did: 'did:plc:first-labeler',
               labels: {},
             },
           ],
@@ -1440,7 +1344,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#modsPref',
             mods: [
               {
-                did: BSKY_LABELER_DID,
+                did: 'did:plc:first-labeler',
               },
             ],
           },

@@ -67,7 +67,8 @@ export type AtpAgentFetchHandler = (
  * AtpAgent global config opts
  */
 export interface AtpAgentGlobalOpts {
-  fetch: AtpAgentFetchHandler
+  fetch?: AtpAgentFetchHandler
+  modAuthorities?: string[]
 }
 
 /**
