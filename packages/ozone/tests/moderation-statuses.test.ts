@@ -160,7 +160,7 @@ describe('moderation-statuses', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       }
       const getBobsAccountStatus = async () => {
-        const { data } = await queryModerationStatuses({
+        const data = await modClient.queryModerationStatuses({
           subject: bobsAccount.did,
         })
 
@@ -170,7 +170,7 @@ describe('moderation-statuses', () => {
       const bobsAccountStatusBeforeTag = await getBobsAccountStatus()
 
       await Promise.all([
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           subject: bobsAccount,
           event: {
             $type: 'com.atproto.admin.defs#modEventTag',
@@ -180,7 +180,7 @@ describe('moderation-statuses', () => {
           },
           createdBy: sc.dids.alice,
         }),
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           subject: bobsAccount,
           event: {
             $type: 'com.atproto.admin.defs#modEventComment',
@@ -197,7 +197,7 @@ describe('moderation-statuses', () => {
 
       // Since alice's post didn't have a reviewState it is set to reviewNone on first non-impactful event
       const getAlicesPostStatus = async () => {
-        const { data } = await queryModerationStatuses({
+        const data = await modClient.queryModerationStatuses({
           subject: alicesPost.uri,
         })
 
@@ -207,7 +207,7 @@ describe('moderation-statuses', () => {
       const alicesPostStatusBeforeTag = await getAlicesPostStatus()
       expect(alicesPostStatusBeforeTag).toBeUndefined()
 
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         subject: alicesPost,
         event: {
           $type: 'com.atproto.admin.defs#modEventComment',
@@ -218,7 +218,7 @@ describe('moderation-statuses', () => {
       const alicesPostStatusAfterTag = await getAlicesPostStatus()
       expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWNONE)
 
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         subject: alicesPost,
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
