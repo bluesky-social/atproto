@@ -20,8 +20,8 @@ export interface Label {
   neg?: boolean
   /** Timestamp when this label was created. */
   cts: string
-  /** Base64-encoded signature of label (standard base64 not url, padding optional). */
-  sig?: string
+  /** Signature of dag-cbor encoded label. */
+  sig?: Uint8Array
   [k: string]: unknown
 }
 

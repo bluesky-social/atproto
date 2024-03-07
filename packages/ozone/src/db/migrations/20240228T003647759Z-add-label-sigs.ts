@@ -1,7 +1,10 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema.alterTable('label').addColumn('sig', 'varchar').execute()
+  await db.schema
+    .alterTable('label')
+    .addColumn('sig', sql`bytea`)
+    .execute()
   await db.schema
     .alterTable('label')
     .addColumn('signingKey', 'varchar')

@@ -78,9 +78,7 @@ export class AppContext {
       eventPusher,
       appviewAgent,
       createAuthHeaders,
-      cfg.service.did,
       overrides?.imgInvalidator,
-      cfg.cdn.paths,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()

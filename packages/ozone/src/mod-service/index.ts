@@ -47,7 +47,7 @@ import { LabelChannel } from '../db/schema/label'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
-import { formatLabel, signLabel } from './util'
+import { formatLabel, formatLabelRow, signLabel } from './util'
 import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
@@ -64,9 +64,7 @@ export class ModerationService {
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
     private createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
-    public serverDid: string,
     public imgInvalidator?: ImageInvalidator,
-    public cdnPaths?: string[],
   ) {}
 
   static creator(
@@ -77,9 +75,7 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
-    serverDid: string,
     imgInvalidator?: ImageInvalidator,
-    cdnPaths?: string[],
   ) {
     return (db: Database) =>
       new ModerationService(
@@ -91,9 +87,7 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         createAuthHeaders,
-        serverDid,
         imgInvalidator,
-        cdnPaths,
       )
   }
 
@@ -605,7 +599,7 @@ export class ModerationService {
           if (this.imgInvalidator) {
             await Promise.allSettled(
               (subject.blobCids ?? []).map((cid) => {
-                const paths = (this.cdnPaths ?? []).map((path) =>
+                const paths = (this.cfg.cdn.paths ?? []).map((path) =>
                   path.replace('%s', subject.did).replace('%s', cid),
                 )
                 return this.imgInvalidator
@@ -884,7 +878,7 @@ export class ModerationService {
   ): Promise<Label[]> {
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
-      src: this.serverDid,
+      src: this.cfg.service.did,
       uri,
       cid: cid ?? undefined,
       val,
@@ -892,7 +886,7 @@ export class ModerationService {
       cts: new Date().toISOString(),
     }))
     const toNegate = negate.map((val) => ({
-      src: this.serverDid,
+      src: this.cfg.service.did,
       uri,
       cid: cid ?? undefined,
       val,
@@ -909,12 +903,7 @@ export class ModerationService {
       labels.map((l) => signLabel(l, this.signingKey)),
     )
     const signingKey = this.signingKey.did()
-    const dbVals = signedLabels.map((l) => ({
-      ...l,
-      cid: l.cid ?? '',
-      neg: !!l.neg,
-      signingKey,
-    }))
+    const dbVals = signedLabels.map((l) => formatLabelRow(l, signingKey))
     const { ref } = this.db.db.dynamic
     await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)

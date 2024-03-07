@@ -1,4 +1,3 @@
-import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
@@ -142,9 +141,8 @@ describe('ozone query labels', () => {
       if (!sig) {
         throw new Error('Missing signature')
       }
-      const sigBytes = ui8.fromString(sig, 'base64')
       const encodedLabel = cborEncode(rest)
-      const isValid = await verifySignature(signingKey, encodedLabel, sigBytes)
+      const isValid = await verifySignature(signingKey, encodedLabel, sig)
       expect(isValid).toBe(true)
     }
   })
@@ -165,7 +163,6 @@ describe('ozone query labels', () => {
         modSrvc.eventPusher,
         modSrvc.appviewAgent,
         ctx.serviceAuthHeaders,
-        modSrvc.serverDid,
       ),
     })
 
@@ -177,12 +174,11 @@ describe('ozone query labels', () => {
       if (!sig) {
         throw new Error('Missing signature')
       }
-      const sigBytes = ui8.fromString(sig, 'base64')
       const encodedLabel = cborEncode(rest)
       const isValid = await verifySignature(
         newSigningKey.did(),
         encodedLabel,
-        sigBytes,
+        sig,
       )
       expect(isValid).toBe(true)
     }
@@ -225,7 +221,13 @@ describe('ozone query labels', () => {
       for await (const message of sub) {
         resetDoneTimer()
         if (isLabels(message)) {
-          streamedLabels.push(...message.labels)
+          for (const label of message.labels) {
+            // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
+            streamedLabels.push({
+              ...label,
+              sig: label.sig ? new Uint8Array(label.sig) : undefined,
+            })
+          }
         }
       }
       expect(streamedLabels).toEqual(labels)

@@ -2236,9 +2236,8 @@ export const schemaDict = {
             description: 'Timestamp when this label was created.',
           },
           sig: {
-            type: 'string',
-            description:
-              'Base64-encoded signature of label (standard base64 not url, padding optional).',
+            type: 'bytes',
+            description: 'Signature of dag-cbor encoded label.',
           },
         },
       },

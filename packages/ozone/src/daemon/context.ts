@@ -58,7 +58,6 @@ export class DaemonContext {
       eventPusher,
       appviewAgent,
       createAuthHeaders,
-      cfg.service.did,
     )
 
     const eventReverser = new EventReverser(db, modService)

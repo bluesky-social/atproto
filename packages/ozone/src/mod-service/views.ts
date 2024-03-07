@@ -431,7 +431,7 @@ export class ModerationViews {
       try {
         await db.db
           .updateTable('label')
-          .set({ sig: signed.sig, signingKey })
+          .set({ sig: Buffer.from(signed.sig), signingKey })
           .where('id', '=', row.id)
           .execute()
       } catch (err) {
