@@ -262,13 +262,15 @@ describe('Moderation', () => {
       },
       labelDefs: {
         'did:web:labeler.test': [
-          interpretLabelValueDefinition({
-            identifier: 'porn',
-            blurs: 'none',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'porn',
+              blurs: 'none',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
         ],
       },
     }
@@ -318,13 +320,15 @@ describe('Moderation', () => {
       },
       labelDefs: {
         'did:web:labeler.test': [
-          interpretLabelValueDefinition({
-            identifier: '!hide',
-            blurs: 'none',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
+          interpretLabelValueDefinition(
+            {
+              identifier: '!hide',
+              blurs: 'none',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
         ],
       },
     }
@@ -379,20 +383,24 @@ describe('Moderation', () => {
       },
       labelDefs: {
         'did:web:labeler.test': [
-          interpretLabelValueDefinition({
-            identifier: 'BadLabel',
-            blurs: 'content',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
-          interpretLabelValueDefinition({
-            identifier: 'bad/label',
-            blurs: 'content',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'BadLabel',
+              blurs: 'content',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'bad/label',
+              blurs: 'content',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
         ],
       },
     }
