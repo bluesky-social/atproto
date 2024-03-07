@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { BskyAgent, BSKY_MODSERVICE_DID, DEFAULT_LABEL_SETTINGS } from '..'
+import { BskyAgent, BSKY_LABELER_DID, DEFAULT_LABEL_SETTINGS } from '..'
 import './util/moderation-behavior'
 
 describe('agent', () => {
@@ -66,7 +66,7 @@ describe('agent', () => {
         },
         mods: [
           {
-            did: BSKY_MODSERVICE_DID,
+            did: BSKY_LABELER_DID,
             labels: {},
           },
         ],
@@ -87,7 +87,7 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
+    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
   })
 
   it('adds/removes moderation services', async () => {
@@ -102,7 +102,7 @@ describe('agent', () => {
 
     await agent.addModService('did:plc:other')
     expect(agent.labelersHeader).toStrictEqual([
-      BSKY_MODSERVICE_DID,
+      BSKY_LABELER_DID,
       'did:plc:other',
     ])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
@@ -114,7 +114,7 @@ describe('agent', () => {
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
           {
-            did: BSKY_MODSERVICE_DID,
+            did: BSKY_LABELER_DID,
             labels: {},
           },
           {
@@ -140,12 +140,12 @@ describe('agent', () => {
       },
     })
     expect(agent.labelersHeader).toStrictEqual([
-      BSKY_MODSERVICE_DID,
+      BSKY_LABELER_DID,
       'did:plc:other',
     ])
 
     await agent.removeModService('did:plc:other')
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
+    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
@@ -155,7 +155,7 @@ describe('agent', () => {
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
           {
-            did: BSKY_MODSERVICE_DID,
+            did: BSKY_LABELER_DID,
             labels: {},
           },
         ],
@@ -176,7 +176,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
+    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
   })
 
   it('cant remove the default moderation service', async () => {
@@ -189,8 +189,8 @@ describe('agent', () => {
     })
     const userDid = userRes.data.did
 
-    await agent.removeModService(BSKY_MODSERVICE_DID)
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
+    await agent.removeModService(BSKY_LABELER_DID)
+    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       hiddenPosts: [],
@@ -200,7 +200,7 @@ describe('agent', () => {
         labels: DEFAULT_LABEL_SETTINGS,
         mods: [
           {
-            did: BSKY_MODSERVICE_DID,
+            did: BSKY_LABELER_DID,
             labels: {},
           },
         ],
@@ -221,7 +221,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
-    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
+    expect(agent.labelersHeader).toStrictEqual([BSKY_LABELER_DID])
   })
 
   it('sets label preferences globally and per-moderator', async () => {
@@ -248,7 +248,7 @@ describe('agent', () => {
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore' },
         mods: [
           {
-            did: BSKY_MODSERVICE_DID,
+            did: BSKY_LABELER_DID,
             labels: {},
           },
           {

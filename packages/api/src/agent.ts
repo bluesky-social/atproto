@@ -18,7 +18,7 @@ import {
   AtpPersistSessionHandler,
   AtpAgentOpts,
 } from './types'
-import { BSKY_MODSERVICE_DID } from './const'
+import { BSKY_LABELER_DID } from './const'
 
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
@@ -30,7 +30,7 @@ export class AtpAgent {
   service: URL
   api: AtpServiceClient
   session?: AtpSessionData
-  labelersHeader: string[] = [BSKY_MODSERVICE_DID]
+  labelersHeader: string[] = [BSKY_LABELER_DID]
 
   /**
    * The PDS URL, driven by the did doc. May be undefined.
