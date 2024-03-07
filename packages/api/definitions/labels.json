@@ -127,8 +127,8 @@
   {
     "identifier": "nudity",
     "configurable": true,
-    "defaultSetting": "warn",
-    "flags": ["adult"],
+    "defaultSetting": "ignore",
+    "flags": [],
     "severity": "none",
     "blurs": "media",
     "behaviors": {
