@@ -10,7 +10,11 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor } from '../../../util'
 
@@ -18,12 +22,14 @@ export default function (server: Server, ctx: AppContext) {
   const getFollows = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.graph.getFollows({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
       // @TODO ensure canViewTakedowns gets threaded through and applied properly
       const result = await getFollows(
-        { ...params, viewer, canViewTakedowns },
+        { ...params, hydrateCtx, canViewTakedowns },
         ctx,
       )
 
@@ -60,7 +66,6 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { viewer } = params
   const { followUris, subjectDid } = skeleton
   const followState = await ctx.hydrator.hydrateFollows(followUris)
   const dids = [subjectDid]
@@ -71,13 +76,16 @@ const hydration = async (
       }
     }
   }
-  const profileState = await ctx.hydrator.hydrateProfiles(dids, viewer)
+  const profileState = await ctx.hydrator.hydrateProfiles(
+    dids,
+    params.hydrateCtx,
+  )
   return mergeStates(followState, profileState)
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, params, hydration, ctx } = input
-  const { viewer } = params
+  const viewer = params.hydrateCtx.viewer
   skeleton.followUris = skeleton.followUris.filter((followUri) => {
     const follow = hydration.follows?.get(followUri)
     if (!follow) return false
@@ -121,7 +129,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
+  hydrateCtx: HydrateCtx
   canViewTakedowns: boolean
 }
 

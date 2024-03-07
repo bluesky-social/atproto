@@ -7,6 +7,7 @@ import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { ModerationService, ModerationServiceCreator } from '../mod-service'
 import { BackgroundQueue } from '../background'
+import { IdResolver } from '@atproto/identity'
 
 export type DaemonContextOptions = {
   db: Database
@@ -34,27 +35,32 @@ export class DaemonContext {
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
-        iss: cfg.service.did,
+        iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
       })
-
-    const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview,
       pds: cfg.pds ?? undefined,
     })
+
     const backgroundQueue = new BackgroundQueue(db)
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
     const modService = ModerationService.creator(
       signingKey,
+      cfg,
       backgroundQueue,
+      idResolver,
       eventPusher,
       appviewAgent,
-      appviewAuth,
+      createAuthHeaders,
       cfg.service.did,
     )
+
     const eventReverser = new EventReverser(db, modService)
 
     return new DaemonContext({

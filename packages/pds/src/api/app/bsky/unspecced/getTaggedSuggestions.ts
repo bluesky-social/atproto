@@ -8,14 +8,9 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.unspecced.getTaggedSuggestions({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, params }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(
-        bskyAppView.url,
-        'app.bsky.unspecced.getTaggedSuggestions',
-        params,
-        await ctx.appviewAuthHeaders(requester),
-      )
+      return pipethrough(ctx, req, requester)
     },
   })
 }

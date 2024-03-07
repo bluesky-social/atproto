@@ -10,7 +10,7 @@ import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/rep
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
-    auth: ctx.authVerifier.roleOrAdminService,
+    auth: ctx.authVerifier.roleOrModService,
     handler: async ({ input, auth }) => {
       const { canPerformTakedown } = ctx.authVerifier.parseCreds(auth)
       if (!canPerformTakedown) {

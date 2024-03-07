@@ -7,6 +7,7 @@ import {
   REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
+  REVIEWNONE,
 } from '../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
@@ -14,16 +15,22 @@ import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import { jsonb } from '../db/types'
 
 const getSubjectStatusForModerationEvent = ({
+  currentStatus,
   action,
   createdBy,
   createdAt,
   durationInHours,
 }: {
+  currentStatus?: ModerationSubjectStatusRow
   action: string
   createdBy: string
   createdAt: string
   durationInHours: number | null
-}): Partial<ModerationSubjectStatusRow> | null => {
+}): Partial<ModerationSubjectStatusRow> => {
+  const defaultReviewState = currentStatus
+    ? currentStatus.reviewState
+    : REVIEWNONE
+
   switch (action) {
     case 'com.atproto.admin.defs#modEventAcknowledge':
       return {
@@ -54,7 +61,9 @@ const getSubjectStatusForModerationEvent = ({
       return {
         lastReviewedBy: createdBy,
         muteUntil: null,
-        reviewState: REVIEWOPEN,
+        // It's not likely to receive an unmute event that does not already have a status row
+        // but if it does happen, default to unnecessary
+        reviewState: defaultReviewState,
         lastReviewedAt: createdAt,
       }
     case 'com.atproto.admin.defs#modEventTakedown':
@@ -70,26 +79,29 @@ const getSubjectStatusForModerationEvent = ({
     case 'com.atproto.admin.defs#modEventMute':
       return {
         lastReviewedBy: createdBy,
-        reviewState: REVIEWOPEN,
         lastReviewedAt: createdAt,
         // By default, mute for 24hrs
         muteUntil: new Date(
           Date.now() + (durationInHours || 24) * HOUR,
         ).toISOString(),
+        // It's not likely to receive a mute event on a subject that does not already have a status row
+        // but if it does happen, default to unnecessary
+        reviewState: defaultReviewState,
       }
     case 'com.atproto.admin.defs#modEventComment':
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
+        reviewState: defaultReviewState,
       }
     case 'com.atproto.admin.defs#modEventTag':
-      return { tags: [] }
+      return { tags: [], reviewState: defaultReviewState }
     case 'com.atproto.admin.defs#modEventResolveAppeal':
       return {
         appealed: false,
       }
     default:
-      return null
+      return {}
   }
 }
 
@@ -114,23 +126,6 @@ export const adjustModerationSubjectStatus = async (
     createdAt,
   } = moderationEvent
 
-  const isAppealEvent =
-    action === 'com.atproto.admin.defs#modEventReport' &&
-    meta?.reportType === REASONAPPEAL
-
-  const subjectStatus = getSubjectStatusForModerationEvent({
-    action,
-    createdBy,
-    createdAt,
-    durationInHours: moderationEvent.durationInHours,
-  })
-
-  // If there are no subjectStatus that means there are no side-effect of the incoming event
-  if (!subjectStatus) {
-    return null
-  }
-
-  const now = new Date().toISOString()
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
   const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)
 
@@ -140,16 +135,37 @@ export const adjustModerationSubjectStatus = async (
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
     .where('recordPath', '=', identifier.recordPath)
+    // Make sure we respect other updates that may be happening at the same time
+    .forUpdate()
     .selectAll()
     .executeTakeFirst()
 
+  const isAppealEvent =
+    action === 'com.atproto.admin.defs#modEventReport' &&
+    meta?.reportType === REASONAPPEAL
+
+  const subjectStatus = getSubjectStatusForModerationEvent({
+    currentStatus,
+    action,
+    createdBy,
+    createdAt,
+    durationInHours: moderationEvent.durationInHours,
+  })
+
+  const now = new Date().toISOString()
   if (
     currentStatus?.reviewState === REVIEWESCALATED &&
-    subjectStatus.reviewState === REVIEWOPEN
+    subjectStatus.reviewState !== REVIEWCLOSED
   ) {
-    // If the current status is escalated and the incoming event is to open the review
-    // We want to keep the status as escalated
+    // If the current status is escalated only allow incoming events to move the state to
+    // reviewClosed because escalated subjects should never move to any other state
     subjectStatus.reviewState = REVIEWESCALATED
+  }
+
+  if (currentStatus && subjectStatus.reviewState === REVIEWNONE) {
+    // reviewNone is ONLY allowed when there is no current status
+    // If there is a current status, it should not be allowed to move back to reviewNone
+    subjectStatus.reviewState = currentStatus.reviewState
   }
 
   // Set these because we don't want to override them if they're already set
@@ -158,7 +174,7 @@ export const adjustModerationSubjectStatus = async (
     // Defaulting reviewState to open for any event may not be the desired behavior.
     // For instance, if a subject never had any event and we just want to leave a comment to keep an eye on it
     // that shouldn't mean we want to review the subject
-    reviewState: REVIEWOPEN,
+    reviewState: REVIEWNONE,
     recordCid: subjectCid || null,
   }
   const newStatus = {

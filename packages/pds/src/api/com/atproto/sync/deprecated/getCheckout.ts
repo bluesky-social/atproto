@@ -5,7 +5,7 @@ import { getCarStream } from '../getRepo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getCheckout({
-    auth: ctx.authVerifier.optionalAccessOrRole,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did } = params
       // takedown check for anyone other than an admin or the user

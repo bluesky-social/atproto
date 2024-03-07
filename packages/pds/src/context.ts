@@ -194,12 +194,10 @@ export class AppContext {
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
       jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
-      moderatorPass: secrets.moderatorPassword,
-      triagePass: secrets.triagePassword,
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.modService?.did,
+        modService: cfg.modService?.did,
       },
     })
 
@@ -253,16 +251,6 @@ export class AppContext {
   async appviewAuthHeaders(did: string) {
     assert(this.cfg.bskyAppView)
     return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
-  }
-
-  async moderationAuthHeaders(did: string) {
-    assert(this.cfg.modService)
-    return this.serviceAuthHeaders(did, this.cfg.modService.did)
-  }
-
-  async reportingAuthHeaders(did: string) {
-    assert(this.cfg.reportService)
-    return this.serviceAuthHeaders(did, this.cfg.reportService.did)
   }
 
   async serviceAuthHeaders(did: string, aud: string) {

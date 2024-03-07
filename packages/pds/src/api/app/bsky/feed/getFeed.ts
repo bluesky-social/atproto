@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   if (!appViewAgent || !bskyAppView) return
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
 
       const { data: feed } =
@@ -16,19 +16,7 @@ export default function (server: Server, ctx: AppContext) {
           { feed: params.feed },
           await ctx.appviewAuthHeaders(requester),
         )
-      const serviceAuthHeaders = await ctx.serviceAuthHeaders(
-        requester,
-        feed.view.did,
-      )
-      // forward accept-language header to upstream services
-      serviceAuthHeaders.headers['accept-language'] =
-        req.headers['accept-language']
-      return pipethrough(
-        bskyAppView.url,
-        'app.bsky.feed.getFeed',
-        params,
-        serviceAuthHeaders,
-      )
+      return pipethrough(ctx, req, requester, feed.view.did)
     },
   })
 }

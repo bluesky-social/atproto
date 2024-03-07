@@ -25,7 +25,7 @@ export enum RoleStatus {
 
 type NullOutput = {
   credentials: {
-    type: 'null'
+    type: 'none'
     iss: null
   }
 }
@@ -45,9 +45,9 @@ type RoleOutput = {
   }
 }
 
-type AdminServiceOutput = {
+type ModServiceOutput = {
   credentials: {
-    type: 'admin_service'
+    type: 'mod_service'
     aud: string
     iss: string
   }
@@ -55,18 +55,18 @@ type AdminServiceOutput = {
 
 export type AuthVerifierOpts = {
   ownDid: string
-  adminDid: string
+  modServiceDid: string
   adminPasses: string[]
 }
 
 export class AuthVerifier {
   public ownDid: string
-  public adminDid: string
+  public modServiceDid: string
   private adminPasses: Set<string>
 
   constructor(public dataplane: DataPlaneClient, opts: AuthVerifierOpts) {
     this.ownDid = opts.ownDid
-    this.adminDid = opts.adminDid
+    this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
   }
 
@@ -83,13 +83,21 @@ export class AuthVerifier {
       if (!this.parseRoleCreds(ctx.req).admin) {
         throw new AuthRequiredError('bad credentials')
       }
-      return { credentials: { type: 'standard', iss, aud } }
+      return {
+        credentials: { type: 'standard', iss, aud },
+      }
     }
     const { iss, aud } = await this.verifyServiceJwt(ctx, {
       aud: this.ownDid,
       iss: null,
     })
-    return { credentials: { type: 'standard', iss, aud } }
+    return {
+      credentials: {
+        type: 'standard',
+        iss,
+        aud,
+      },
+    }
   }
 
   standardOptional = async (
@@ -159,19 +167,19 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+  modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
-      iss: [this.adminDid],
+      iss: [this.modServiceDid, `${this.modServiceDid}#atproto_labeler`],
     })
-    return { credentials: { type: 'admin_service', aud, iss } }
+    return { credentials: { type: 'mod_service', aud, iss } }
   }
 
-  roleOrAdminService = async (
+  roleOrModService = async (
     reqCtx: ReqCtx,
-  ): Promise<RoleOutput | AdminServiceOutput> => {
+  ): Promise<RoleOutput | ModServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
+      return this.modService(reqCtx)
     } else {
       return this.role(reqCtx)
     }
@@ -195,12 +203,15 @@ export class AuthVerifier {
     opts: { aud: string | null; iss: string[] | null },
   ) {
     const getSigningKey = async (
-      did: string,
+      iss: string,
       _forceRefresh: boolean, // @TODO consider propagating to dataplane
     ): Promise<string> => {
-      if (opts.iss !== null && !opts.iss.includes(did)) {
+      if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
+      const [did, serviceId] = iss.split('#')
+      const keyId =
+        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
       let identity: GetIdentityByDidResponse
       try {
         identity = await this.dataplane.getIdentityByDid({ did })
@@ -211,7 +222,7 @@ export class AuthVerifier {
         throw err
       }
       const keys = unpackIdentityKeys(identity.keys)
-      const didKey = getKeyAsDidKey(keys, { id: 'atproto' })
+      const didKey = getKeyAsDidKey(keys, { id: keyId })
       if (!didKey) {
         throw new AuthRequiredError('missing or bad key')
       }
@@ -226,26 +237,36 @@ export class AuthVerifier {
     return { iss: payload.iss, aud: payload.aud }
   }
 
+  isModService(iss: string): boolean {
+    return [
+      this.modServiceDid,
+      `${this.modServiceDid}#atproto_labeler`,
+    ].includes(iss)
+  }
+
   nullCreds(): NullOutput {
     return {
       credentials: {
-        type: 'null',
+        type: 'none',
         iss: null,
       },
     }
   }
 
   parseCreds(
-    creds: StandardOutput | RoleOutput | AdminServiceOutput | NullOutput,
+    creds: StandardOutput | RoleOutput | ModServiceOutput | NullOutput,
   ) {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'admin_service'
+      creds.credentials.type === 'mod_service' ||
+      (creds.credentials.type === 'standard' &&
+        this.isModService(creds.credentials.iss))
     const canPerformTakedown =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
-      creds.credentials.type === 'admin_service'
+      creds.credentials.type === 'mod_service'
+
     return {
       viewer,
       canViewTakedowns,

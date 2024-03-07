@@ -449,7 +449,12 @@
     },
     "subjectReviewState": {
       "type": "string",
-      "knownValues": ["#reviewOpen", "#reviewEscalated", "#reviewClosed"]
+      "knownValues": [
+        "#reviewOpen",
+        "#reviewEscalated",
+        "#reviewClosed",
+        "#reviewNone"
+      ]
     },
     "reviewOpen": {
       "type": "token",
@@ -462,6 +467,10 @@
     "reviewClosed": {
       "type": "token",
       "description": "Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator"
+    },
+    "reviewNone": {
+      "type": "token",
+      "description": "Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it"
     },
     "modEventTakedown": {
       "type": "object",
@@ -584,6 +593,10 @@
         "subjectLine": {
           "type": "string",
           "description": "The subject line of the email sent to the user."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the email sent to the user."
         },
         "comment": {
           "type": "string",

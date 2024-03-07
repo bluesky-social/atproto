@@ -114,6 +114,14 @@ message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetLabelerRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetLabelerRecordsResponse {
+  repeated Record records = 1;
+}
+
 
 //
 // Follows
@@ -230,6 +238,8 @@ message GetCountsForUsersResponse {
   repeated int32 reposts = 2;
   repeated int32 following = 3;
   repeated int32 followers = 4;
+  repeated int32 lists = 5;
+  repeated int32 feeds = 6;
 }
 
 //
@@ -296,6 +306,7 @@ message ActorInfo {
   bool taken_down = 4;
   string takedown_ref = 5;
   google.protobuf.Timestamp tombstoned_at = 6;
+  bool labeler = 7;
 }
 
 message GetActorsResponse {
@@ -944,6 +955,7 @@ service Service {
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);

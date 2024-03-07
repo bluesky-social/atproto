@@ -35,7 +35,10 @@ WORKDIR services/bsky
 # Uses assets from build stage to reduce build size
 FROM node:20.11-alpine
 
-RUN apk add --update dumb-init
+# dumb-init is used to handle signals properly.
+# runit is installed so it can be (optionally) used for logging via svlogd.
+RUN apk add --update dumb-init runit
+
 
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]

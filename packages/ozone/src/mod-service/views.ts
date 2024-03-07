@@ -29,15 +29,13 @@ import { formatLabel, signLabel } from './util'
 import { LabelRow } from '../db/schema/label'
 import { BackgroundQueue } from '../background'
 import { dbLogger } from '../logger'
+import { httpLogger } from '../logger'
 
-export type AppviewAuth = () => Promise<
-  | {
-      headers: {
-        authorization: string
-      }
-    }
-  | undefined
->
+export type AuthHeaders = {
+  headers: {
+    authorization: string
+  }
+}
 
 export class ModerationViews {
   constructor(
@@ -45,22 +43,30 @@ export class ModerationViews {
     private signingKey: Keypair,
     private backgroundQueue: BackgroundQueue,
     private appviewAgent: AtpAgent,
-    private appviewAuth: AppviewAuth,
+    private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
     const auth = await this.appviewAuth()
     if (!auth) return new Map()
-    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
-      {
-        dids: dedupeStrs(dids),
-      },
-      auth,
-    )
-    return res.data.infos.reduce((acc, cur) => {
-      return acc.set(cur.did, cur)
-    }, new Map<string, AccountView>())
+    try {
+      const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
+        {
+          dids: dedupeStrs(dids),
+        },
+        auth,
+      )
+      return res.data.infos.reduce((acc, cur) => {
+        return acc.set(cur.did, cur)
+      }, new Map<string, AccountView>())
+    } catch (err) {
+      httpLogger.error(
+        { err, dids },
+        'failed to resolve account infos from appview',
+      )
+      return new Map()
+    }
   }
 
   async repos(dids: string[]): Promise<Map<string, RepoView>> {
@@ -160,6 +166,7 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         subjectLine: event.meta?.subjectLine ?? '',
+        content: event.meta?.content,
       }
     }
 

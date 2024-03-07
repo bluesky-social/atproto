@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.2.0
+
+### Minor Changes
+
+- [#2223](https://github.com/bluesky-social/atproto/pull/2223) [`0c815b964`](https://github.com/bluesky-social/atproto/commit/0c815b964c030aa0f277c40bf9786f130dc320f4) Thanks [@bnewbold](https://github.com/bnewbold)! - allow colon character in record-key syntax
+
 ## 0.1.5
 
 ### Patch Changes

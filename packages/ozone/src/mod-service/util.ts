@@ -7,7 +7,7 @@ import { Label } from '../lexicon/types/com/atproto/label/defs'
 export type SignedLabel = Label & { sig: string }
 
 export const formatLabel = (row: LabelRow): Label => {
-  return {
+  return noUndefinedVals({
     src: row.src,
     uri: row.uri,
     cid: row.cid === '' ? undefined : row.cid,
@@ -15,7 +15,7 @@ export const formatLabel = (row: LabelRow): Label => {
     neg: row.neg,
     cts: row.cts,
     sig: row.sig ?? undefined,
-  }
+  }) as Label
 }
 
 export const signLabel = async (

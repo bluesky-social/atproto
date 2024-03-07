@@ -9,7 +9,7 @@ import {
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor } from '../../../util'
 
@@ -17,9 +17,11 @@ export default function (server: Server, ctx: AppContext) {
   const getLists = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getLists({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getLists({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
+      const result = await getLists({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -48,9 +50,8 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { viewer } = params
   const { listUris } = skeleton
-  return ctx.hydrator.hydrateLists(listUris, viewer)
+  return ctx.hydrator.hydrateLists(listUris, params.hydrateCtx)
 }
 
 const presentation = (
@@ -70,7 +71,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
+  hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {
