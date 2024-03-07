@@ -10,31 +10,44 @@ const { default: terser } = require('@rollup/plugin-terser')
 const { default: typescript } = require('@rollup/plugin-typescript')
 const postcss = ((m) => m.default || m)(require('rollup-plugin-postcss'))
 
-const NODE_ENV =
-  process.env['NODE_ENV'] === 'development' ? 'development' : 'production'
-const devMode = NODE_ENV === 'development'
+module.exports = defineConfig((commandLineArguments) => {
+  const NODE_ENV =
+    process.env['NODE_ENV'] ??
+    (commandLineArguments.watch ? 'development' : 'production')
 
-module.exports = defineConfig({
-  input: 'src/app/main.tsx',
-  output: {
-    manualChunks: undefined,
-    sourcemap: devMode,
-    file: 'dist/app/main.js',
-    format: 'iife',
-  },
-  plugins: [
-    nodeResolve({ preferBuiltins: false, browser: true }),
-    commonjs(),
-    postcss({ config: true, extract: true, minimize: !devMode }),
-    typescript({
-      tsconfig: './tsconfig.frontend.json',
-      outputToFilesystem: true,
-    }),
-    replace({
-      preventAssignment: true,
-      values: { 'process.env.NODE_ENV': JSON.stringify(NODE_ENV) },
-    }),
-    manifest(),
-    !devMode && terser({}),
-  ],
+  const minify = NODE_ENV !== 'development'
+
+  return {
+    input: 'src/assets/app/main.tsx',
+    output: {
+      manualChunks: undefined,
+      sourcemap: true,
+      file: 'dist/assets/app/main.js',
+      format: 'iife',
+    },
+    plugins: [
+      nodeResolve({ preferBuiltins: false, browser: true }),
+      commonjs(),
+      postcss({ config: true, extract: true, minimize: minify }),
+      typescript({
+        tsconfig: './tsconfig.frontend.json',
+        outputToFilesystem: true,
+      }),
+      replace({
+        preventAssignment: true,
+        values: { 'process.env.NODE_ENV': JSON.stringify(NODE_ENV) },
+      }),
+      // Change `data` to `true` to include assets data in the manifest,
+      // allowing for easier bundling of the backend code (eg. using esbuild) as
+      // bundlers know how to bundle JSON files but not how to bundle assets
+      // referenced at runtime.
+      manifest({ data: false }),
+      minify && terser({}),
+    ],
+    onwarn(warning, warn) {
+      // 'use client' directives are fine
+      if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
+      warn(warning)
+    },
+  }
 })
