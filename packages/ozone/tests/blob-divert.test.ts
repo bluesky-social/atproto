@@ -1,4 +1,9 @@
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { BlobDiverter } from '../src/daemon'
 import { forSnapshot } from './_util'
@@ -7,6 +12,7 @@ describe('blob divert', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -18,6 +24,7 @@ describe('blob divert', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -41,7 +48,7 @@ describe('blob divert', () => {
   })
 
   const emitDivertEvent = async () =>
-    agent.api.com.atproto.admin.emitModerationEvent(
+    modClient.emitModerationEvent(
       {
         subject: getSubject(),
         event: {
@@ -53,10 +60,7 @@ describe('blob divert', () => {
           img.image.ref.toString(),
         ),
       },
-      {
-        headers: network.pds.adminAuthHeaders(),
-        encoding: 'application/json',
-      },
+      'moderator',
     )
 
   it('fails and keeps attempt count when report service fails to accept upload.', async () => {
@@ -72,21 +76,14 @@ describe('blob divert', () => {
     // Simulate failure to accept upload
     const reportServiceRequest = mockReportServiceResponse(true)
 
-    const { data: divertEvent } = await emitDivertEvent()
+    const divertEvent = await emitDivertEvent()
 
     expect(reportServiceRequest).toHaveBeenCalled()
     expect(forSnapshot(divertEvent)).toMatchSnapshot()
 
-    const {
-      data: { subjectStatuses },
-    } = await agent.api.com.atproto.admin.queryModerationStatuses(
-      {
-        subject: getSubject().uri,
-      },
-      {
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    const { subjectStatuses } = await modClient.queryModerationStatuses({
+      subject: getSubject().uri,
+    })
 
     expect(subjectStatuses[0].takendown).toBe(true)
   })
