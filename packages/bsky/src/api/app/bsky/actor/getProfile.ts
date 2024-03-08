@@ -16,14 +16,11 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, req, res }) => {
-      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = { labelers, viewer, includeTakedowns }
 
-      const result = await getProfile(
-        { ...params, hydrateCtx, canViewTakedowns },
-        ctx,
-      )
+      const result = await getProfile({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
@@ -54,11 +51,7 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(
-    [skeleton.did],
-    params.hydrateCtx,
-    true,
-  )
+  return ctx.hydrator.hydrateProfilesDetailed([skeleton.did], params.hydrateCtx)
 }
 
 const presentation = (input: {
@@ -72,7 +65,7 @@ const presentation = (input: {
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
   } else if (
-    !params.canViewTakedowns &&
+    !params.hydrateCtx.includeTakedowns &&
     ctx.views.actorIsTakendown(skeleton.did, hydration)
   ) {
     throw new InvalidRequestError(
@@ -90,7 +83,6 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
-  canViewTakedowns: boolean
 }
 
 type SkeletonState = { did: string }

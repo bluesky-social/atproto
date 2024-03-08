@@ -258,7 +258,7 @@ export class AuthVerifier {
   ) {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
-    const canViewTakedowns =
+    const includeTakedowns =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'mod_service' ||
       (creds.credentials.type === 'standard' &&
@@ -269,7 +269,7 @@ export class AuthVerifier {
 
     return {
       viewer,
-      canViewTakedowns,
+      includeTakedowns,
       canPerformTakedown,
     }
   }
