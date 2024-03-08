@@ -738,9 +738,6 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
-      react-error-boundary:
-        specifier: ^4.0.13
-        version: 4.0.13(react@18.2.0)
       rollup:
         specifier: ^4.10.0
         version: 4.14.1
@@ -11298,15 +11295,6 @@ packages:
       loose-envify: 1.4.0
       react: 18.2.0
       scheduler: 0.23.0
-    dev: true
-
-  /react-error-boundary@4.0.13(react@18.2.0):
-    resolution: {integrity: sha512-b6PwbdSv8XeOSYvjt8LpgpKrZ0yGdtZokYwkwV2wlcZbxgopHX/hgPl5VgpnoVOWd868n1hktM8Qm4b+02MiLQ==}
-    peerDependencies:
-      react: '>=16.13.1'
-    dependencies:
-      '@babel/runtime': 7.22.10
-      react: 18.2.0
     dev: true
 
   /react-is@18.2.0:

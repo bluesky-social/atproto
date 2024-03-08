@@ -1,7 +1,7 @@
 import { Account, ClientMetadata } from '../types'
-import { Layout } from './layout'
+import { PageLayout } from './page-layout'
 
-export function GrantAccept({
+export function AcceptPage({
   account,
   clientId,
   clientMetadata,
@@ -20,7 +20,7 @@ export function GrantAccept({
   const clientName = clientMetadata.client_name || clientUri || clientId
 
   return (
-    <Layout
+    <PageLayout
       title="Authorize"
       subTitle={
         <>
@@ -40,7 +40,7 @@ export function GrantAccept({
           </div>
         )}
 
-        <h1 className="text-2xl font-semibold text-center text-blue-600">
+        <h1 className="text-2xl font-semibold text-center text-primary">
           {clientName}
         </h1>
 
@@ -66,7 +66,7 @@ export function GrantAccept({
             <button
               type="button"
               onClick={() => onBack()}
-              className="bg-transparent font-light text-blue-600 rounded-md py-2"
+              className="bg-transparent font-light text-primary rounded-md py-2"
             >
               Back
             </button>
@@ -77,7 +77,7 @@ export function GrantAccept({
           <button
             type="button"
             onClick={() => onReject()}
-            className="ml-2 bg-transparent text-blue-600 rounded-md py-2"
+            className="ml-2 bg-transparent text-primary rounded-md py-2"
           >
             Reject
           </button>
@@ -85,12 +85,12 @@ export function GrantAccept({
           <button
             type="button"
             onClick={() => onAccept()}
-            className="ml-2 bg-transparent text-blue-600 rounded-md py-2 font-semibold"
+            className="ml-2 bg-transparent text-primary rounded-md py-2 font-semibold"
           >
             Accept
           </button>
         </div>
       </div>
-    </Layout>
+    </PageLayout>
   )
 }
