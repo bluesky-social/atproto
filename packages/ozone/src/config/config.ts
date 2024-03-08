@@ -25,18 +25,20 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   }
 
-  assert(env.appviewUrl)
-  assert(env.appviewDid)
+  assert(env.appviewUrl && env.appviewDid)
   const appviewCfg: OzoneConfig['appview'] = {
     url: env.appviewUrl,
     did: env.appviewDid,
+    pushEvents: !!env.appviewPushEvents,
   }
 
-  assert(env.pdsUrl)
-  assert(env.pdsDid)
-  const pdsCfg: OzoneConfig['pds'] = {
-    url: env.pdsUrl,
-    did: env.pdsDid,
+  let pdsCfg: OzoneConfig['pds'] = null
+  if (env.pdsUrl || env.pdsDid) {
+    assert(env.pdsUrl && env.pdsDid)
+    pdsCfg = {
+      url: env.pdsUrl,
+      did: env.pdsDid,
+    }
   }
 
   const cdnCfg: OzoneConfig['cdn'] = {
@@ -94,6 +96,7 @@ export type DatabaseConfig = {
 export type AppviewConfig = {
   url: string
   did: string
+  pushEvents: boolean
 }
 
 export type PdsConfig = {
