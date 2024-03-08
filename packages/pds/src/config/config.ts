@@ -244,8 +244,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       }
 
   const safeFetchCfg: ServerConfig['safeFetch'] = {
-    allowHttp: false,
+    allowHttp: env.fetchDisableSafeties ? true : false,
     forbiddenDomainNames: [
+      'google.com',
       'example.com',
       'example.org',
       'example.net',
