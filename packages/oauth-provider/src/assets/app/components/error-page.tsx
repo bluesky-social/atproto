@@ -1,13 +1,10 @@
-import type { BackendData } from '../backend-data'
+import type { ErrorData } from '../backend-data'
 
-import { Layout } from './layout'
+import { PageLayout } from './page-layout'
 
-export function Error({
-  error,
-  error_description,
-}: Extract<BackendData, { error: string }>) {
+export function ErrorPage({ error, error_description }: ErrorData) {
   return (
-    <Layout title="An error occurred">
+    <PageLayout title="An error occurred">
       <div
         className="bg-red-100 border-t-4 border-red-500 rounded-b text-red-900 px-4 py-3 shadow-md"
         role="alert"
@@ -28,6 +25,6 @@ export function Error({
           </div>
         </div>
       </div>
-    </Layout>
+    </PageLayout>
   )
 }
