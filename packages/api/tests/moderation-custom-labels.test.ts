@@ -3,7 +3,7 @@ import {
   moderatePost,
   mock,
   ModerationOpts,
-  InterprettedLabelValueDefinition,
+  InterpretedLabelValueDefinition,
   interpretLabelValueDefinition,
 } from '../src'
 import './util/moderation-behavior'
@@ -347,7 +347,7 @@ function modOpts(blurs: string, severity: string): ModerationOpts {
 function makeCustomLabel(
   blurs: string,
   severity: string,
-): InterprettedLabelValueDefinition {
+): InterpretedLabelValueDefinition {
   return interpretLabelValueDefinition(
     {
       identifier: 'custom',

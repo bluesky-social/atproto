@@ -58,7 +58,7 @@ export type LabelValueDefinitionFlag =
   | 'unauthed'
   | 'no-self'
 
-export interface InterprettedLabelValueDefinition
+export interface InterpretedLabelValueDefinition
   extends ComAtprotoLabelDefs.LabelValueDefinition {
   definedBy?: string | undefined // did of labeler or undefined for global
   configurable: boolean
@@ -73,7 +73,7 @@ export interface InterprettedLabelValueDefinition
 
 export type LabelDefinitionMap = Record<
   KnownLabelValue,
-  InterprettedLabelValueDefinition
+  InterpretedLabelValueDefinition
 >
 
 // subjects
@@ -118,7 +118,7 @@ export type ModerationCause =
       type: 'label'
       source: ModerationCauseSource
       label: Label
-      labelDef: InterprettedLabelValueDefinition
+      labelDef: InterpretedLabelValueDefinition
       setting: LabelPreference
       behavior: ModerationBehavior
       noOverride: boolean
@@ -144,5 +144,5 @@ export interface ModerationOpts {
   /**
    * Map of labeler did -> custom definitions
    */
-  labelDefs?: Record<string, InterprettedLabelValueDefinition[]>
+  labelDefs?: Record<string, InterpretedLabelValueDefinition[]>
 }

@@ -5,7 +5,7 @@ import {
   ComAtprotoLabelDefs,
 } from '../client'
 import {
-  InterprettedLabelValueDefinition,
+  InterpretedLabelValueDefinition,
   ModerationBehavior,
   LabelPreference,
   LabelValueDefinitionFlag,
@@ -24,7 +24,7 @@ export function isQuotedPostWithMedia(
 export function interpretLabelValueDefinition(
   def: ComAtprotoLabelDefs.LabelValueDefinition,
   definedBy: string | undefined,
-): InterprettedLabelValueDefinition {
+): InterpretedLabelValueDefinition {
   const behaviors: {
     account: ModerationBehavior
     profile: ModerationBehavior
@@ -102,7 +102,7 @@ export function interpretLabelValueDefinition(
 
 export function interpretLabelValueDefinitions(
   labelerView: AppBskyLabelerDefs.LabelerViewDetailed,
-): InterprettedLabelValueDefinition[] {
+): InterpretedLabelValueDefinition[] {
   return (labelerView.policies?.labelValueDefinitions || [])
     .filter(
       (labelValDef) =>
