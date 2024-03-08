@@ -8,6 +8,8 @@ import { CID } from 'multiformats/cid'
 
 /** Metadata tag on an atproto resource (eg, repo or record). */
 export interface Label {
+  /** The AT Protocol version of the label object. */
+  ver?: number
   /** DID of the actor who created this label. */
   src: string
   /** AT URI of the record, repository (account), or other resource that this label applies to. */

@@ -7,6 +7,7 @@ export type SignedLabel = Label & { sig: Uint8Array }
 
 export const formatLabel = (row: LabelRow): Label => {
   return noUndefinedVals({
+    ver: 1,
     src: row.src,
     uri: row.uri,
     cid: row.cid === '' ? undefined : row.cid,
@@ -37,8 +38,9 @@ export const signLabel = async (
   label: Label,
   signingKey: Keypair,
 ): Promise<SignedLabel> => {
-  const { src, uri, cid, val, neg, cts } = label
+  const { ver, src, uri, cid, val, neg, cts } = label
   const reformatted = noUndefinedVals({
+    ver: ver ?? 1,
     src,
     uri,
     cid,
