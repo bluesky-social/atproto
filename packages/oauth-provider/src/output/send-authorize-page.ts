@@ -1,12 +1,13 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { html } from '@atproto/html'
+import { Html, html } from '@atproto/html'
 
 import { Account } from '../account/account.js'
 import { getAsset } from '../assets/index.js'
 import { Client } from '../client/client.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { RequestUri } from '../request/request-uri.js'
+import { Branding, buildBrandingCss, buildBrandingData } from './branding.js'
 import { declareBrowserGlobalVar, sendWebApp } from './send-web-app.js'
 
 export type AuthorizationResultAuthorize = {
@@ -24,7 +25,7 @@ export type AuthorizationResultAuthorize = {
   }
 }
 
-function buildBackendData(data: AuthorizationResultAuthorize) {
+function buildAuthorizeData(data: AuthorizationResultAuthorize) {
   return {
     csrfCookie: `csrf-${data.authorize.uri}`,
     requestUri: data.authorize.uri,
@@ -40,13 +41,18 @@ export async function sendAuthorizePage(
   req: IncomingMessage,
   res: ServerResponse,
   data: AuthorizationResultAuthorize,
+  branding?: Branding,
 ): Promise<void> {
   return sendWebApp(req, res, {
     scripts: [
-      declareBrowserGlobalVar('__backendData', buildBackendData(data)),
+      declareBrowserGlobalVar('__brandingData', buildBrandingData(branding)),
+      declareBrowserGlobalVar('__authorizeData', buildAuthorizeData(data)),
       await getAsset('main.js'),
     ],
-    styles: [await getAsset('main.css')],
+    styles: [
+      await getAsset('main.css'),
+      Html.dangerouslyCreate([buildBrandingCss(branding)]),
+    ],
     title: 'Authorize',
     body: html`<div id="root"></div>`,
   })

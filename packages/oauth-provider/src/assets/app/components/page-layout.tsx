@@ -1,6 +1,6 @@
 import { HTMLAttributes } from 'react'
 
-export function Layout({
+export function PageLayout({
   title,
   subTitle,
   children,
@@ -16,7 +16,7 @@ export function Layout({
       {...props}
     >
       <div className="w-1/2 hidden p-4 md:grid content-center justify-items-end text-right bg-slate-100 dark:bg-transparent dark:border-r border-slate-200 dark:border-slate-700">
-        <h1 className="text-2xl mt-4 font-semibold mb-4 text-blue-600">
+        <h1 className="text-2xl mt-4 font-semibold mb-4 text-primary">
           {title}
         </h1>
         <p className="min-h-16">{subTitle}</p>

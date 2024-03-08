@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
 
-import type { BackendData } from '../backend-data'
+import type { AuthorizeData } from '../backend-data'
 import { cookies } from '../cookies'
 import { Account, Session } from '../types'
 
-import { GrantAccept } from './grant-accept'
-import { Layout } from './layout'
-import { LoginForm } from './login-form'
-import { SessionSelector } from './session-selector'
+import { AcceptPage } from './accept-page'
+import { PageLayout } from './page-layout'
+import { LoginPage } from './login-page'
+import { SessionSelectorPage } from './session-selector-page'
 
-export function Authorize({
+export function AuthorizePage({
   requestUri,
   clientId,
   clientMetadata,
@@ -17,7 +17,7 @@ export function Authorize({
   consentRequired: initialConsentRequired,
   loginHint: initialLoginHint,
   sessions: initialSessions,
-}: Exclude<BackendData, { error: string }>) {
+}: AuthorizeData) {
   const csrfToken = useMemo(() => cookies[csrfCookie], [csrfCookie])
   const [isDone, setIsDone] = useState(false)
   const [loginHint, setLoginHint] = useState(initialLoginHint)
@@ -113,13 +113,15 @@ export function Authorize({
 
   if (isDone) {
     // TODO
-    return <Layout title="Login complete">You are being redirected</Layout>
+    return (
+      <PageLayout title="Login complete">You are being redirected</PageLayout>
+    )
   }
 
   if (selectedSession) {
     if (selectedSession.loginRequired === false) {
       return (
-        <GrantAccept
+        <AcceptPage
           onBack={() => setSub(null)}
           onAccept={() => authorizeAccept(selectedSession.account)}
           onReject={() => authorizeReject()}
@@ -130,7 +132,7 @@ export function Authorize({
       )
     } else {
       return (
-        <LoginForm
+        <LoginPage
           username={selectedSession.account.preferred_username}
           usernameReadonly={true}
           onLogin={performLogin}
@@ -142,7 +144,7 @@ export function Authorize({
 
   if (loginHint) {
     return (
-      <LoginForm
+      <LoginPage
         username={loginHint}
         onLogin={performLogin}
         onBack={() => setLoginHint(undefined)}
@@ -151,7 +153,7 @@ export function Authorize({
   }
 
   return (
-    <SessionSelector
+    <SessionSelectorPage
       sessions={sessions}
       onLogin={performLogin}
       onSession={({ account }) =>

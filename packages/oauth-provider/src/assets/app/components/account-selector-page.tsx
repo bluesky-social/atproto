@@ -1,7 +1,7 @@
 import { Account } from '../types'
-import { Layout } from './layout'
+import { PageLayout } from './page-layout'
 
-export function AccountList({
+export function AccountSelectorPage({
   accounts,
   onAccount,
   another = undefined,
@@ -14,7 +14,10 @@ export function AccountList({
   onBack?: () => void
 }) {
   return (
-    <Layout title="Sign in as..." subTitle="Select from an existing account">
+    <PageLayout
+      title="Sign in as..."
+      subTitle="Select from an existing account"
+    >
       <div className="max-w-lg w-full" {...props}>
         <p className="font-medium p-4">Sign in as...</p>
         <ul>
@@ -60,13 +63,13 @@ export function AccountList({
             <button
               type="button"
               onClick={() => onBack()}
-              className="bg-transparent font-light text-blue-600 rounded-md py-2"
+              className="bg-transparent font-light text-primary rounded-md py-2"
             >
               Back
             </button>
           </div>
         )}
       </div>
-    </Layout>
+    </PageLayout>
   )
 }

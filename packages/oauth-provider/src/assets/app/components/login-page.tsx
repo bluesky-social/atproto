@@ -1,8 +1,8 @@
 import { FormHTMLAttributes } from 'react'
 
-import { Layout } from './layout'
+import { PageLayout } from './page-layout'
 
-export function LoginForm({
+export function LoginPage({
   onLogin,
   onBack = undefined,
   username = '',
@@ -37,7 +37,7 @@ export function LoginForm({
   }
 
   return (
-    <Layout title="Sign in" subTitle="Enter your username and password">
+    <PageLayout title="Sign in" subTitle="Enter your username and password">
       <form {...props} className="max-w-lg w-full m-4" onSubmit={onSubmit}>
         <fieldset className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
           <div className="relative p-1 flex flex-wrap items-center justify-stretch">
@@ -77,7 +77,7 @@ export function LoginForm({
                 id="remember"
                 name="remember"
                 type="checkbox"
-                className="text-blue-600"
+                className="text-primary"
               />
             </span>
 
@@ -93,7 +93,7 @@ export function LoginForm({
         <div className="m-4 flex items-center justify-between">
           <button
             type="submit"
-            className="bg-transparent text-blue-600 rounded-md py-2 font-semibold order-last"
+            className="bg-transparent text-primary rounded-md py-2 font-semibold order-last"
           >
             Next
           </button>
@@ -102,13 +102,13 @@ export function LoginForm({
             <button
               type="button"
               onClick={onBack}
-              className="bg-transparent font-light text-blue-600 rounded-md py-2"
+              className="bg-transparent font-light text-primary rounded-md py-2"
             >
               Back
             </button>
           )}
         </div>
       </form>
-    </Layout>
+    </PageLayout>
   )
 }

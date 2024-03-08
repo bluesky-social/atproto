@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
 import { Session } from '../types'
-import { AccountList } from './account-list'
-import { LoginForm } from './login-form'
+import { AccountSelectorPage } from './account-selector-page'
+import { LoginPage } from './login-page'
 
-export function SessionSelector({
+export function SessionSelectorPage({
   sessions,
   onSession,
   onLogin,
@@ -22,7 +22,7 @@ export function SessionSelector({
   const [showLogin, setShowLogin] = useState(sessions.length === 0)
 
   return showLogin ? (
-    <LoginForm
+    <LoginPage
       onLogin={onLogin}
       onBack={
         sessions.length > 0
@@ -33,7 +33,7 @@ export function SessionSelector({
       }
     />
   ) : (
-    <AccountList
+    <AccountSelectorPage
       accounts={sessions.map((s) => s.account)}
       onAccount={(a) => {
         const session = sessions.find((s) => s.account.sub === a.sub)

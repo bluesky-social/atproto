@@ -115,6 +115,7 @@ import {
 } from './token/types.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 import { dateToEpoch, dateToRelativeSeconds } from './util/date.js'
+import { Branding } from './output/branding.js'
 
 export type OAuthProviderStore = Partial<
   ClientStore &
@@ -854,10 +855,12 @@ export class OAuthProvider extends OAuthVerifier {
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
   >({
+    branding,
     onError = process.env['NODE_ENV'] === 'development'
       ? (req, res, err): void => console.error('OAuthProvider error:', err)
       : undefined,
   }: {
+    branding?: Branding
     onError?: (req: Req, res: Res, err: unknown) => void
   }): Handler<T, Req, Res> {
     const sessionManager = new SessionManager(this.sessionStore)
@@ -1128,7 +1131,7 @@ export class OAuthProvider extends OAuthVerifier {
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return await sendAuthorizePage(req, res, data)
+            return await sendAuthorizePage(req, res, data, branding)
           }
           default: {
             // Should never happen
@@ -1139,7 +1142,7 @@ export class OAuthProvider extends OAuthVerifier {
         await onError?.(req, res, err)
 
         if (!res.headersSent) {
-          await sendErrorPage(req, res, err)
+          await sendErrorPage(req, res, err, branding)
         }
       }
     })
@@ -1235,7 +1238,7 @@ export class OAuthProvider extends OAuthVerifier {
         await onError?.(req, res, err)
 
         if (!res.headersSent) {
-          await sendErrorPage(req, res, err)
+          await sendErrorPage(req, res, err, branding)
         }
       }
     })
@@ -1287,7 +1290,7 @@ export class OAuthProvider extends OAuthVerifier {
         await onError?.(req, res, err)
 
         if (!res.headersSent) {
-          await sendErrorPage(req, res, err)
+          await sendErrorPage(req, res, err, branding)
         }
       }
     })
