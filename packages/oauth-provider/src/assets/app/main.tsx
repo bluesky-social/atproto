@@ -2,29 +2,29 @@ import './main.css'
 
 import { createRoot } from 'react-dom/client'
 
-import { App } from './app'
-import { backendData } from './backend-data'
-
-const url = new URL(window.location.href)
+import { authorizeData, errorData } from './backend-data'
+import { AuthorizePage } from './components/authorize-page'
+import { ErrorPage } from './components/error-page'
 
 // When the user is logging in, make sure the page URL contains the
 // "request_uri" in case the user refreshes the page.
-if (
-  url.pathname === '/oauth/authorize' &&
-  'clientId' in backendData &&
-  'requestUri' in backendData
-) {
-  if (
-    !url.searchParams.has('client_id') &&
-    !url.searchParams.has('request_uri')
-  ) {
-    url.search = ''
-    url.searchParams.set('client_id', backendData.clientId)
-    url.searchParams.set('request_uri', backendData.requestUri)
-    window.history.replaceState(history.state, '', url.pathname + url.search)
-  }
+const url = new URL(window.location.href)
+if (authorizeData && url.pathname === '/oauth/authorize') {
+  url.search = ''
+  url.searchParams.set('client_id', authorizeData.clientId)
+  url.searchParams.set('request_uri', authorizeData.requestUri)
+  window.history.replaceState(history.state, '', url.pathname + url.search)
 }
+
+// TODO: inject brandingData (from backend-data.ts) into the page (logo & co)
 
 const container = document.getElementById('root')!
 const root = createRoot(container)
-root.render(<App {...backendData} />)
+
+if (authorizeData) {
+  root.render(<AuthorizePage {...authorizeData} />)
+} else if (errorData) {
+  root.render(<ErrorPage {...errorData} />)
+} else {
+  throw new Error('No data found')
+}
