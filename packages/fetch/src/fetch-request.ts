@@ -24,7 +24,6 @@ export function forbiddenDomainNameRequestTransform(
   forbiddenDomainNames: Iterable<string>,
 ): RequestTranformer {
   const forbiddenDomainNameSet = new Set<string>(forbiddenDomainNames)
-  if (forbiddenDomainNameSet.size === 0) return (request) => request
 
   return async (request) => {
     const { hostname } = new URL(request.url)

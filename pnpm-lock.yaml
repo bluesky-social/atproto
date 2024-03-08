@@ -483,9 +483,6 @@ importers:
       '@atproto/transformer':
         specifier: workspace:*
         version: link:../transformer
-      http-errors:
-        specifier: ^2.0.0
-        version: 2.0.0
       ipaddr.js:
         specifier: ^2.1.0
         version: 2.1.0
@@ -493,9 +490,6 @@ importers:
         specifier: ^2.6.2
         version: 2.6.2
     devDependencies:
-      '@types/http-errors':
-        specifier: ^2.0.4
-        version: 2.0.4
       typescript:
         specifier: ^5.3.3
         version: 5.4.4

@@ -6,11 +6,16 @@ import {
 } from '@atproto/fetch'
 import { compose } from '@atproto/transformer'
 
-import { ssrfSafeHostname } from './ssrf.js'
+import { ssrfFetchWrap } from './ssrf.js'
 
 export type SafeFetchWrapOptions = NonNullable<
   Parameters<typeof safeFetchWrap>[0]
 >
+
+/**
+ * Wrap a fetch function with safety checks so that it can be safely used
+ * with user provided input (URL).
+ */
 export const safeFetchWrap = ({
   fetch = globalThis.fetch as Fetch,
   responseMaxSize = 512 * 1024, // 512kB
@@ -44,7 +49,7 @@ export const safeFetchWrap = ({
      * input, we need to make sure that the request is not vulnerable to SSRF
      * attacks.
      */
-    ssrfProtection ? ssrfSafeFetchWrap({ fetch }) : fetch,
+    ssrfProtection ? ssrfFetchWrap({ fetch }) : fetch,
 
     /**
      * Since we will be fetching user owned data, we need to make sure that an
@@ -52,33 +57,3 @@ export const safeFetchWrap = ({
      */
     fetchMaxSizeProcessor(responseMaxSize),
   )
-
-export type SsrfSafeFetchWrapOptions = NonNullable<
-  Parameters<typeof ssrfSafeFetchWrap>[0]
->
-export const ssrfSafeFetchWrap = ({
-  fetch = globalThis.fetch as Fetch,
-} = {}): Fetch => {
-  const ssrfSafeFetch: Fetch = async (request) => {
-    const { hostname } = new URL(request.url)
-
-    // Make sure the hostname is a valid IP address
-    const ip = await ssrfSafeHostname(hostname)
-    if (ip) {
-      // Normally we would replace the hostname with the IP address and set the
-      // Host header to the original hostname. However, since we are using
-      // fetch() we can't set the Host header.
-    }
-
-    if (request.redirect === 'follow') {
-      // TODO: actually implement by calling ssrfSafeFetch recursively
-      throw new Error(
-        'Request redirect must be "error" or "manual" when SSRF is enabled',
-      )
-    }
-
-    return fetch(request)
-  }
-
-  return ssrfSafeFetch
-}
