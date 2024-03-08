@@ -6,7 +6,6 @@ import * as recordPushEvent from './record_push_event'
 import * as blobPushEvent from './blob_push_event'
 import * as label from './label'
 import * as communicationTemplate from './communication_template'
-import * as blobDivertEvent from './blob_divert_event'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -14,8 +13,7 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   repoPushEvent.PartialDB &
   recordPushEvent.PartialDB &
   blobPushEvent.PartialDB &
-  communicationTemplate.PartialDB &
-  blobDivertEvent.PartialDB
+  communicationTemplate.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

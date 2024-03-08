@@ -10,7 +10,6 @@ import { CID } from 'multiformats/cid'
 
 import Database from '../db'
 import { retryHttp } from '../util'
-import { dbLogger } from '../logger'
 import { BlobReportServiceConfig } from '../config'
 
 export class BlobDiverter {

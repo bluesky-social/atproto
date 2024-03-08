@@ -2,10 +2,7 @@ import { Generated } from 'kysely'
 
 export const eventTableName = 'blob_push_event'
 
-export type BlobPushEventType =
-  | 'pds_takedown'
-  | 'appview_takedown'
-  | 'blob_divert'
+export type BlobPushEventType = 'pds_takedown' | 'appview_takedown'
 
 export interface BlobPushEvent {
   id: Generated<number>

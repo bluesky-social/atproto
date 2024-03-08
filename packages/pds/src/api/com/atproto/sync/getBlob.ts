@@ -11,7 +11,6 @@ export default function (server: Server, ctx: AppContext) {
       if (!ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
         const available = await ctx.accountManager.isRepoAvailable(params.did)
         if (!available) {
-          console.log('!available blob not found')
           throw new InvalidRequestError('Blob not found')
         }
       }
@@ -21,16 +20,13 @@ export default function (server: Server, ctx: AppContext) {
           return await store.repo.blob.getBlob(cid)
         } catch (err) {
           if (err instanceof BlobNotFoundError) {
-            console.log('actorStore! blob not found')
             throw new InvalidRequestError('Blob not found')
           } else {
-            console.log('actorStore! outside blob not found', err)
             throw err
           }
         }
       })
       if (!found) {
-        console.log('!found blob not found')
         throw new InvalidRequestError('Blob not found')
       }
       res.setHeader('content-length', found.size)

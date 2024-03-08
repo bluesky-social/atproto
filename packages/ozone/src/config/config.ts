@@ -48,11 +48,11 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
   }
 
-  const blobReportServiceCfg =
-    env.blobReportServiceUrl && env.blobReportServiceAuthToken
+  const blobDivertServiceCfg =
+    env.blobDivertServiceUrl && env.blobDivertServiceAuthToken
       ? {
-          url: env.blobReportServiceUrl,
-          authToken: env.blobReportServiceAuthToken,
+          url: env.blobDivertServiceUrl,
+          authToken: env.blobDivertServiceAuthToken,
         }
       : undefined
   const accessCfg: OzoneConfig['access'] = {
@@ -68,7 +68,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     pds: pdsCfg,
     cdn: cdnCfg,
     identity: identityCfg,
-    blobReportService: blobReportServiceCfg,
+    blobDivertService: blobDivertServiceCfg,
     access: accessCfg,
   }
 }
@@ -80,7 +80,7 @@ export type OzoneConfig = {
   pds: PdsConfig | null
   cdn: CdnConfig
   identity: IdentityConfig
-  blobReportService?: BlobReportServiceConfig
+  blobDivertService?: BlobReportServiceConfig
   access: AccessConfig
 }
 
