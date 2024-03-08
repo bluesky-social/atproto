@@ -7,14 +7,9 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.graph.getListMutes({
     auth: ctx.authVerifier.access,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(
-        bskyAppView.url,
-        'app.bsky.graph.getListMutes',
-        params,
-        await ctx.appviewAuthHeaders(requester, req),
-      )
+      return pipethrough(ctx, req, requester)
     },
   })
 }

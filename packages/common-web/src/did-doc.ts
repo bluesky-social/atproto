@@ -81,7 +81,7 @@ export const getNotifEndpoint = (doc: DidDocument): string | undefined => {
 
 export const getServiceEndpoint = (
   doc: DidDocument,
-  opts: { id: string; type: string },
+  opts: { id: string; type?: string },
 ) => {
   const did = getDid(doc)
   let services = doc.service
@@ -94,7 +94,7 @@ export const getServiceEndpoint = (
     (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
   )
   if (!found) return undefined
-  if (found.type !== opts.type) {
+  if (opts.type && found.type !== opts.type) {
     return undefined
   }
   if (typeof found.serviceEndpoint !== 'string') {

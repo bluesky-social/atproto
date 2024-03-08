@@ -10,6 +10,7 @@ export const readEnv = (): OzoneEnvironment => {
     serverDid: envStr('OZONE_SERVER_DID'),
     appviewUrl: envStr('OZONE_APPVIEW_URL'),
     appviewDid: envStr('OZONE_APPVIEW_DID'),
+    appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
     pdsUrl: envStr('OZONE_PDS_URL'),
     pdsDid: envStr('OZONE_PDS_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
@@ -23,8 +24,6 @@ export const readEnv = (): OzoneEnvironment => {
     moderatorDids: envList('OZONE_MODERATOR_DIDS'),
     triageDids: envList('OZONE_TRIAGE_DIDS'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
-    moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
-    triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
     blobDivertServiceUrl: envStr('OZONE_BLOB_DIVERT_SERVICE_URL'),
     blobDivertServiceAuthToken: envStr('OZONE_BLOB_DIVERT_SERVICE_AUTH_TOKEN'),
@@ -40,6 +39,7 @@ export type OzoneEnvironment = {
   serverDid?: string
   appviewUrl?: string
   appviewDid?: string
+  appviewPushEvents?: boolean
   pdsUrl?: string
   pdsDid?: string
   dbPostgresUrl?: string
@@ -53,8 +53,6 @@ export type OzoneEnvironment = {
   moderatorDids: string[]
   triageDids: string[]
   adminPassword?: string
-  moderatorPassword?: string
-  triagePassword?: string
   signingKeyHex?: string
   blobDivertServiceUrl?: string
   blobDivertServiceAuthToken?: string

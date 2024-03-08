@@ -1,23 +1,13 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
+import { pipethroughProcedure } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
-  const { moderationAgent } = ctx
-  if (!moderationAgent) return
   server.com.atproto.admin.updateCommunicationTemplate({
-    auth: ctx.authVerifier.role,
-    handler: async ({ req, input }) => {
-      const { data: result } =
-        await moderationAgent.com.atproto.admin.updateCommunicationTemplate(
-          input.body,
-          authPassthru(req, true),
-        )
-
-      return {
-        encoding: 'application/json',
-        body: result,
-      }
+    auth: ctx.authVerifier.access,
+    handler: async ({ req, input, auth }) => {
+      const requester = auth.credentials.did
+      return pipethroughProcedure(ctx, req, input.body, requester)
     },
   })
 }

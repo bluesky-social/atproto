@@ -1,18 +1,13 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { pipethroughProcedure } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
-  const { appViewAgent } = ctx
-  if (!appViewAgent) return
   server.app.bsky.notification.updateSeen({
     auth: ctx.authVerifier.access,
     handler: async ({ input, auth, req }) => {
       const requester = auth.credentials.did
-
-      await appViewAgent.api.app.bsky.notification.updateSeen(input.body, {
-        ...(await ctx.appviewAuthHeaders(requester, req)),
-        encoding: 'application/json',
-      })
+      await pipethroughProcedure(ctx, req, input.body, requester)
     },
   })
 }

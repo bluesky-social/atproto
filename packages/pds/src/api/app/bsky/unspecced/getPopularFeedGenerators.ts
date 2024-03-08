@@ -8,14 +8,9 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(
-        bskyAppView.url,
-        'app.bsky.unspecced.getPopularFeedGenerators',
-        params,
-        await ctx.appviewAuthHeaders(requester, req),
-      )
+      return pipethrough(ctx, req, requester)
     },
   })
 }

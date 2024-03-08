@@ -1,4 +1,10 @@
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+  TestOzone,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import {
@@ -9,15 +15,19 @@ import { forSnapshot } from './_util'
 
 describe('admin get record view', () => {
   let network: TestNetwork
+  let ozone: TestOzone
   let agent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_admin_get_record',
     })
-    agent = network.pds.getClient()
+    ozone = network.ozone
+    agent = ozone.getClient()
     sc = network.getSeedClient()
+    modClient = ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -46,7 +56,7 @@ describe('admin get record view', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
-    await sc.emitModerationEvent({
+    await modClient.emitModerationEvent({
       event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.repo.strongRef',
@@ -59,7 +69,7 @@ describe('admin get record view', () => {
   it('gets a record by uri, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -70,7 +80,7 @@ describe('admin get record view', () => {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -84,7 +94,7 @@ describe('admin get record view', () => {
           'badrkey',
         ).toString(),
       },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     await expect(promise).rejects.toThrow('Record not found')
   })
@@ -95,7 +105,7 @@ describe('admin get record view', () => {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][1].ref.cidStr, // Mismatching cid
       },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: await ozone.modHeaders() },
     )
     await expect(promise).rejects.toThrow('Record not found')
   })

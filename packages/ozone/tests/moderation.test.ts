@@ -4,12 +4,9 @@ import {
   RecordRef,
   SeedClient,
   basicSeed,
+  ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent, {
-  ComAtprotoAdminEmitModerationEvent,
-  ComAtprotoAdminQueryModerationStatuses,
-  ComAtprotoModerationCreateReport,
-} from '@atproto/api'
+import AtpAgent, { ComAtprotoAdminEmitModerationEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import {
@@ -19,7 +16,6 @@ import {
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
   ModEventLabel,
-  ModEventTakedown,
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../src/lexicon/types/com/atproto/admin/defs'
@@ -31,16 +27,6 @@ import {
   UNSPECCED_TAKEDOWN_LABEL,
 } from '../src/mod-service/types'
 
-type BaseCreateReportParams =
-  | { account: string }
-  | { content: { uri: string; cid: string } }
-type CreateReportParams = BaseCreateReportParams & {
-  author: string
-} & Omit<ComAtprotoModerationCreateReport.InputSchema, 'subject'>
-
-type TakedownParams = BaseCreateReportParams &
-  Omit<ComAtprotoAdminEmitModerationEvent.InputSchema, 'subject'>
-
 describe('moderation', () => {
   let network: TestNetwork
   let ozone: TestOzone
@@ -49,102 +35,18 @@ describe('moderation', () => {
   let bskyAgent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
 
-  const createReport = async (params: CreateReportParams) => {
-    const { author, ...rest } = params
-    return agent.api.com.atproto.moderation.createReport(
-      {
-        // Set default type to spam
-        reasonType: REASONSPAM,
-        ...rest,
-        subject:
-          'account' in params
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: params.account,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: params.content.uri,
-                cid: params.content.cid,
-              },
-      },
-      {
-        headers: await network.serviceHeaders(
-          author,
-          network.ozone.ctx.cfg.service.did,
-        ),
-        encoding: 'application/json',
-      },
-    )
-  }
+  const repoSubject = (did: string) => ({
+    $type: 'com.atproto.admin.defs#repoRef',
+    did,
+  })
 
-  const performTakedown = async ({
-    durationInHours,
-    ...rest
-  }: TakedownParams & Pick<ModEventTakedown, 'durationInHours'>) =>
-    agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
-          durationInHours,
-        },
-        subject:
-          'account' in rest
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: rest.account,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: rest.content.uri,
-                cid: rest.content.cid,
-              },
-        createdBy: 'did:example:admin',
-        ...rest,
-      },
-      {
-        encoding: 'application/json',
-        headers: ozone.adminAuthHeaders(),
-      },
-    )
-
-  const performReverseTakedown = async (params: TakedownParams) =>
-    agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-        },
-        subject:
-          'account' in params
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: params.account,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: params.content.uri,
-                cid: params.content.cid,
-              },
-        createdBy: 'did:example:admin',
-        ...params,
-      },
-      {
-        encoding: 'application/json',
-        headers: ozone.adminAuthHeaders(),
-      },
-    )
-
-  const getStatuses = async (
-    params: ComAtprotoAdminQueryModerationStatuses.QueryParams,
-  ) => {
-    const { data } = await agent.api.com.atproto.admin.queryModerationStatuses(
-      params,
-      { headers: ozone.adminAuthHeaders() },
-    )
-
-    return data
-  }
+  const recordSubject = (ref: RecordRef) => ({
+    $type: 'com.atproto.repo.strongRef',
+    uri: ref.uriStr,
+    cid: ref.cidStr,
+  })
 
   const getLabel = async (uri: string, val: string, neg = false) => {
     return ozone.ctx.db.db
@@ -170,6 +72,7 @@ describe('moderation', () => {
     bskyAgent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -180,25 +83,25 @@ describe('moderation', () => {
 
   describe('reporting', () => {
     it('creates reports of a repo.', async () => {
-      const { data: reportA } = await createReport({
+      const reportA = await sc.createReport({
         reasonType: REASONSPAM,
-        account: sc.dids.bob,
-        author: sc.dids.alice,
+        subject: repoSubject(sc.dids.bob),
+        reportedBy: sc.dids.alice,
       })
-      const { data: reportB } = await createReport({
+      const reportB = await sc.createReport({
         reasonType: REASONOTHER,
         reason: 'impersonation',
-        account: sc.dids.bob,
-        author: sc.dids.carol,
+        subject: repoSubject(sc.dids.bob),
+        reportedBy: sc.dids.carol,
       })
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
     it("allows reporting a repo that doesn't exist.", async () => {
-      const promise = createReport({
+      const promise = sc.createReport({
         reasonType: REASONSPAM,
-        account: 'did:plc:unknown',
-        author: sc.dids.alice,
+        subject: repoSubject('did:plc:unknown'),
+        reportedBy: sc.dids.alice,
       })
       await expect(promise).resolves.toBeDefined()
     })
@@ -206,24 +109,16 @@ describe('moderation', () => {
     it('creates reports of a record.', async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
-      const { data: reportA } = await createReport({
-        author: sc.dids.alice,
+      const reportA = await sc.createReport({
+        reportedBy: sc.dids.alice,
         reasonType: REASONSPAM,
-        content: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postA.uriStr,
-          cid: postA.cidStr,
-        },
+        subject: recordSubject(postA),
       })
-      const { data: reportB } = await createReport({
+      const reportB = await sc.createReport({
         reasonType: REASONOTHER,
         reason: 'defamation',
-        content: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postB.uriStr,
-          cid: postB.cidStr,
-        },
-        author: sc.dids.carol,
+        subject: recordSubject(postB),
+        reportedBy: sc.dids.carol,
       })
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
@@ -234,26 +129,26 @@ describe('moderation', () => {
       const postUriBad = new AtUri(postA.uriStr)
       postUriBad.rkey = 'badrkey'
 
-      const promiseA = createReport({
+      const promiseA = sc.createReport({
         reasonType: REASONSPAM,
-        content: {
+        subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: postUriBad.toString(),
           cid: postA.cidStr,
         },
-        author: sc.dids.alice,
+        reportedBy: sc.dids.alice,
       })
       await expect(promiseA).resolves.toBeDefined()
 
-      const promiseB = createReport({
+      const promiseB = sc.createReport({
         reasonType: REASONOTHER,
         reason: 'defamation',
-        content: {
+        subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: postB.uri.toString(),
           cid: postA.cidStr, // bad cid
         },
-        author: sc.dids.carol,
+        reportedBy: sc.dids.carol,
       })
       await expect(promiseB).resolves.toBeDefined()
     })
@@ -264,29 +159,27 @@ describe('moderation', () => {
       const post = sc.posts[sc.dids.bob][1].ref
 
       await Promise.all([
-        createReport({
+        sc.createReport({
           reasonType: REASONSPAM,
-          account: sc.dids.bob,
-          author: sc.dids.alice,
+          subject: repoSubject(sc.dids.bob),
+          reportedBy: sc.dids.alice,
         }),
-        createReport({
+        sc.createReport({
           reasonType: REASONOTHER,
           reason: 'defamation',
-          content: {
-            uri: post.uri.toString(),
-            cid: post.cid.toString(),
-          },
-          author: sc.dids.carol,
+          subject: recordSubject(post),
+          reportedBy: sc.dids.carol,
         }),
       ])
 
-      await performTakedown({
-        account: sc.dids.bob,
+      await modClient.performTakedown({
+        subject: repoSubject(sc.dids.bob),
       })
 
-      const moderationStatusOnBobsAccount = await getStatuses({
-        subject: sc.dids.bob,
-      })
+      const moderationStatusOnBobsAccount =
+        await modClient.queryModerationStatuses({
+          subject: sc.dids.bob,
+        })
 
       // Validate that subject status is set to review closed and takendown flag is on
       expect(moderationStatusOnBobsAccount.subjectStatuses[0]).toMatchObject({
@@ -299,8 +192,8 @@ describe('moderation', () => {
       })
 
       // Cleanup
-      await performReverseTakedown({
-        account: sc.dids.bob,
+      await modClient.performReverseTakedown({
+        subject: repoSubject(sc.dids.bob),
       })
     })
 
@@ -311,7 +204,7 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await modClient.emitModerationEvent(
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventEscalate',
@@ -320,13 +213,10 @@ describe('moderation', () => {
           subject: alicesPostSubject,
           createdBy: 'did:example:admin',
         },
-        {
-          encoding: 'application/json',
-          headers: ozone.adminAuthHeaders('triage'),
-        },
+        'triage',
       )
 
-      const alicesPostStatus = await getStatuses({
+      const alicesPostStatus = await modClient.queryModerationStatuses({
         subject: alicesPostRef.uri.toString(),
       })
 
@@ -344,7 +234,7 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await modClient.emitModerationEvent(
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventComment',
@@ -354,13 +244,10 @@ describe('moderation', () => {
           subject: alicesPostSubject,
           createdBy: 'did:example:admin',
         },
-        {
-          encoding: 'application/json',
-          headers: ozone.adminAuthHeaders('triage'),
-        },
+        'triage',
       )
 
-      const alicesPostStatus = await getStatuses({
+      const alicesPostStatus = await modClient.queryModerationStatuses({
         subject: alicesPostRef.uri.toString(),
       })
 
@@ -383,17 +270,11 @@ describe('moderation', () => {
           },
           createdBy: 'did:example:admin',
         }
-        return agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event,
-            ...baseAction,
-            ...overwrites,
-          },
-          {
-            encoding: 'application/json',
-            headers: ozone.adminAuthHeaders(),
-          },
-        )
+        return modClient.emitModerationEvent({
+          event,
+          ...baseAction,
+          ...overwrites,
+        })
       }
       // Validate that subject status is marked as escalated
       await emitModEvent({
@@ -407,9 +288,10 @@ describe('moderation', () => {
       await emitModEvent({
         $type: 'com.atproto.admin.defs#modEventEscalate',
       })
-      const alicesPostStatusAfterEscalation = await getStatuses({
-        subject: alicesPostRef.uriStr,
-      })
+      const alicesPostStatusAfterEscalation =
+        await modClient.queryModerationStatuses({
+          subject: alicesPostRef.uriStr,
+        })
       expect(
         alicesPostStatusAfterEscalation.subjectStatuses[0].reviewState,
       ).toEqual(REVIEWESCALATED)
@@ -425,9 +307,10 @@ describe('moderation', () => {
         $type: 'com.atproto.admin.defs#modEventTakedown',
       })
 
-      const alicesPostStatusAfterTakedown = await getStatuses({
-        subject: alicesPostRef.uriStr,
-      })
+      const alicesPostStatusAfterTakedown =
+        await modClient.queryModerationStatuses({
+          subject: alicesPostRef.uriStr,
+        })
       expect(alicesPostStatusAfterTakedown.subjectStatuses[0]).toMatchObject({
         reviewState: REVIEWCLOSED,
         takendown: true,
@@ -436,9 +319,10 @@ describe('moderation', () => {
       await emitModEvent({
         $type: 'com.atproto.admin.defs#modEventReverseTakedown',
       })
-      const alicesPostStatusAfterRevert = await getStatuses({
-        subject: alicesPostRef.uriStr,
-      })
+      const alicesPostStatusAfterRevert =
+        await modClient.queryModerationStatuses({
+          subject: alicesPostRef.uriStr,
+        })
       // Validate that after reverting, the status of the subject is reverted to the last status changing event
       expect(alicesPostStatusAfterRevert.subjectStatuses[0]).toMatchObject({
         reviewState: REVIEWCLOSED,
@@ -598,7 +482,7 @@ describe('moderation', () => {
     })
 
     it('does not allow triage moderators to label.', async () => {
-      const attemptLabel = agent.api.com.atproto.admin.emitModerationEvent(
+      const attemptLabel = modClient.emitModerationEvent(
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventLabel',
@@ -612,10 +496,7 @@ describe('moderation', () => {
             did: sc.dids.bob,
           },
         },
-        {
-          encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('triage'),
-        },
+        'triage',
       )
       await expect(attemptLabel).rejects.toThrow(
         'Must be a full moderator to label content',
@@ -623,29 +504,29 @@ describe('moderation', () => {
     })
 
     it('does not allow take down event on takendown post or reverse takedown on available post.', async () => {
-      await performTakedown({
-        account: sc.dids.bob,
+      await modClient.performTakedown({
+        subject: repoSubject(sc.dids.bob),
       })
       await expect(
-        performTakedown({
-          account: sc.dids.bob,
+        modClient.performTakedown({
+          subject: repoSubject(sc.dids.bob),
         }),
       ).rejects.toThrow('Subject is already taken down')
 
       // Cleanup
-      await performReverseTakedown({
-        account: sc.dids.bob,
+      await modClient.performReverseTakedown({
+        subject: repoSubject(sc.dids.bob),
       })
       await expect(
-        performReverseTakedown({
-          account: sc.dids.bob,
+        modClient.performReverseTakedown({
+          subject: repoSubject(sc.dids.bob),
         }),
       ).rejects.toThrow('Subject is not taken down')
     })
 
     it('fans out repo takedowns', async () => {
-      await performTakedown({
-        account: sc.dids.bob,
+      await modClient.performTakedown({
+        subject: repoSubject(sc.dids.bob),
       })
       await ozone.processAll()
 
@@ -672,7 +553,9 @@ describe('moderation', () => {
       expect(takedownLabel1).toBeDefined()
 
       // cleanup
-      await performReverseTakedown({ account: sc.dids.bob })
+      await modClient.performReverseTakedown({
+        subject: repoSubject(sc.dids.bob),
+      })
       await ozone.processAll()
 
       const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
@@ -699,11 +582,10 @@ describe('moderation', () => {
     })
 
     it('fans out record takedowns', async () => {
-      const post = sc.posts[sc.dids.bob][0]
-      const uri = post.ref.uriStr
-      const cid = post.ref.cidStr
-      await performTakedown({
-        content: { uri, cid },
+      const post = sc.posts[sc.dids.bob][0].ref
+      const uri = post.uriStr
+      await modClient.performTakedown({
+        subject: recordSubject(post),
       })
       await ozone.processAll()
 
@@ -723,7 +605,7 @@ describe('moderation', () => {
       expect(takedownLabel1).toBeDefined()
 
       // cleanup
-      await performReverseTakedown({ content: { uri, cid } })
+      await modClient.performReverseTakedown({ subject: recordSubject(post) })
       await ozone.processAll()
 
       const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
@@ -742,7 +624,7 @@ describe('moderation', () => {
     })
 
     it('allows full moderators to takedown.', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await modClient.emitModerationEvent(
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventTakedown',
@@ -753,10 +635,7 @@ describe('moderation', () => {
             did: sc.dids.bob,
           },
         },
-        {
-          encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('moderator'),
-        },
+        'moderator',
       )
       // cleanup
       await reverse({
@@ -768,47 +647,42 @@ describe('moderation', () => {
     })
 
     it('does not allow non-full moderators to takedown.', async () => {
-      const attemptTakedownTriage =
-        agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: {
-              $type: 'com.atproto.admin.defs#modEventTakedown',
-            },
-            createdBy: 'did:example:moderator',
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.bob,
-            },
+      const attemptTakedownTriage = modClient.emitModerationEvent(
+        {
+          event: {
+            $type: 'com.atproto.admin.defs#modEventTakedown',
           },
-          {
-            encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('triage'),
+          createdBy: 'did:example:moderator',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
           },
-        )
+        },
+        'triage',
+      )
       await expect(attemptTakedownTriage).rejects.toThrow(
         'Must be a full moderator to take this type of action',
       )
     })
 
     it('automatically reverses actions marked with duration', async () => {
-      await createReport({
+      await sc.createReport({
         reasonType: REASONSPAM,
-        account: sc.dids.bob,
-        author: sc.dids.alice,
+        subject: repoSubject(sc.dids.bob),
+        reportedBy: sc.dids.alice,
       })
-      const { data: action } = await performTakedown({
-        account: sc.dids.bob,
+      const action = await modClient.performTakedown({
+        subject: repoSubject(sc.dids.bob),
         // Use negative value to set the expiry time in the past so that the action is automatically reversed
         // right away without having to wait n number of hours for a successful assertion
         durationInHours: -1,
       })
       await ozone.processAll()
 
-      const { data: statusesAfterTakedown } =
-        await agent.api.com.atproto.admin.queryModerationStatuses(
-          { subject: sc.dids.bob },
-          { headers: network.ozone.adminAuthHeaders('moderator') },
-        )
+      const statusesAfterTakedown = await modClient.queryModerationStatuses(
+        { subject: sc.dids.bob },
+        'moderator',
+      )
 
       expect(statusesAfterTakedown.subjectStatuses[0]).toMatchObject({
         takendown: true,
@@ -822,14 +696,11 @@ describe('moderation', () => {
       await reverser.findAndRevertDueActions()
       await ozone.processAll()
 
-      const [{ data: eventList }, { data: statuses }] = await Promise.all([
-        agent.api.com.atproto.admin.queryModerationEvents(
+      const [eventList, statuses] = await Promise.all([
+        modClient.queryModerationEvents({ subject: sc.dids.bob }, 'moderator'),
+        modClient.queryModerationStatuses(
           { subject: sc.dids.bob },
-          { headers: network.ozone.adminAuthHeaders('moderator') },
-        ),
-        agent.api.com.atproto.admin.queryModerationStatuses(
-          { subject: sc.dids.bob },
-          { headers: network.ozone.adminAuthHeaders('moderator') },
+          'moderator',
         ),
       ])
 
@@ -873,22 +744,16 @@ describe('moderation', () => {
       },
     ) {
       const { createLabelVals, negateLabelVals } = opts
-      const result = await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
-            createLabelVals,
-            negateLabelVals,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-          ...opts,
+      const result = await modClient.emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventLabel',
+          createLabelVals,
+          negateLabelVals,
         },
-        {
-          encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+        ...opts,
+      })
       return result.data
     }
 
@@ -897,26 +762,20 @@ describe('moderation', () => {
         subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
       },
     ) {
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: {
-            $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-          ...opts,
+      await modClient.emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
         },
-        {
-          encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+        ...opts,
+      })
     }
 
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: network.ozone.adminAuthHeaders() },
+        { headers: await network.ozone.modHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -925,7 +784,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: network.ozone.adminAuthHeaders() },
+        { headers: await network.ozone.modHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -951,18 +810,15 @@ describe('moderation', () => {
       await fetch(imageUri)
       const cached = await fetch(imageUri)
       expect(cached.headers.get('x-cache')).toEqual('hit')
-      await performTakedown({
-        content: {
-          uri: post.ref.uriStr,
-          cid: post.ref.cidStr,
-        },
+      await modClient.performTakedown({
+        subject: recordSubject(post.ref),
         subjectBlobCids: [blob.image.ref.toString()],
       })
       await ozone.processAll()
     })
 
     it('sets blobCids in moderation status', async () => {
-      const { subjectStatuses } = await getStatuses({
+      const { subjectStatuses } = await modClient.queryModerationStatuses({
         subject: post.ref.uriStr,
       })
 
@@ -1020,11 +876,8 @@ describe('moderation', () => {
     })
 
     it('restores blob when action is reversed.', async () => {
-      await performReverseTakedown({
-        content: {
-          uri: post.ref.uriStr,
-          cid: post.ref.cidStr,
-        },
+      await modClient.performReverseTakedown({
+        subject: recordSubject(post.ref),
         subjectBlobCids: [blob.image.ref.toString()],
       })
 

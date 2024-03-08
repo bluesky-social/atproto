@@ -1,4 +1,4 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -6,12 +6,8 @@ import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
-    auth: ctx.authVerifier.role,
-    handler: async ({ input, auth }) => {
-      if (!auth.credentials.admin) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
-
+    auth: ctx.authVerifier.adminToken,
+    handler: async ({ input }) => {
       const { did } = input.body
       const handle = await normalizeAndValidateHandle({
         ctx,

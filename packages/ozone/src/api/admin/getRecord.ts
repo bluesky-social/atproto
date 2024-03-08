@@ -6,7 +6,7 @@ import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth }) => {
       const db = ctx.db
 

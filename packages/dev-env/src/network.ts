@@ -75,6 +75,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       appviewUrl: bsky.url,
       appviewDid: bsky.ctx.cfg.serverDid,
+      appviewPushEvents: true,
       pdsUrl: pds.url,
       pdsDid: pds.ctx.cfg.service.did,
       ...params.ozone,
@@ -105,6 +106,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.pds.processAll()
     await this.processFullSubscription(timeout)
     await this.bsky.sub.background.processAll()
+    await this.ozone.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

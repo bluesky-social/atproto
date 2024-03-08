@@ -74,7 +74,7 @@ export class AppContext {
         })
       : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
-      appview: cfg.appview,
+      appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
     const modService = ModerationService.creator(
@@ -99,8 +99,6 @@ export class AppContext {
       moderators: cfg.access.moderators,
       triage: cfg.access.triage,
       adminPassword: secrets.adminPassword,
-      moderatorPassword: secrets.moderatorPassword,
-      triagePassword: secrets.triagePassword,
     })
 
     return new AppContext(

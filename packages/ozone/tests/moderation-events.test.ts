@@ -1,11 +1,13 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
+import { ComAtprotoAdminDefs } from '@atproto/api'
 import Mail from 'nodemailer/lib/mailer'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, {
-  ComAtprotoAdminDefs,
-  ComAtprotoAdminEmitModerationEvent,
-} from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
   REASONAPPEAL,
@@ -15,23 +17,8 @@ import {
 
 describe('moderation-events', () => {
   let network: TestNetwork
-  let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
-
-  const emitModerationEvent = async (
-    eventData: ComAtprotoAdminEmitModerationEvent.InputSchema,
-  ) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
-      encoding: 'application/json',
-      headers: network.ozone.adminAuthHeaders('moderator'),
-    })
-  }
-
-  const queryModerationEvents = (eventQuery) =>
-    agent.api.com.atproto.admin.queryModerationEvents(eventQuery, {
-      headers: network.ozone.adminAuthHeaders('moderator'),
-    })
+  let modClient: ModeratorClient
 
   const seedEvents = async () => {
     const bobsAccount = {
@@ -54,25 +41,19 @@ describe('moderation-events', () => {
     }
 
     for (let i = 0; i < 4; i++) {
-      await emitModerationEvent({
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
-          reportType: i % 2 ? REASONSPAM : REASONMISLEADING,
-          comment: 'X',
-        },
+      await sc.createReport({
+        reasonType: i % 2 ? REASONSPAM : REASONMISLEADING,
+        reason: 'X',
         //   Report bob's account by alice and vice versa
         subject: i % 2 ? bobsAccount : alicesAccount,
-        createdBy: i % 2 ? sc.dids.alice : sc.dids.bob,
+        reportedBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
-      await emitModerationEvent({
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
-          reportType: REASONSPAM,
-          comment: 'X',
-        },
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'X',
         //   Report bob's post by alice and vice versa
         subject: i % 2 ? bobsPost : alicesPost,
-        createdBy: i % 2 ? sc.dids.alice : sc.dids.bob,
+        reportedBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
     }
   }
@@ -81,9 +62,8 @@ describe('moderation-events', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation_events',
     })
-    agent = network.ozone.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
     await seedEvents()
@@ -96,16 +76,16 @@ describe('moderation-events', () => {
   describe('query events', () => {
     it('returns all events for record or repo', async () => {
       const [bobsEvents, alicesPostEvents] = await Promise.all([
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           subject: sc.dids.bob,
         }),
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           subject: sc.posts[sc.dids.alice][0].ref.uriStr,
         }),
       ])
 
-      expect(forSnapshot(bobsEvents.data.events)).toMatchSnapshot()
-      expect(forSnapshot(alicesPostEvents.data.events)).toMatchSnapshot()
+      expect(forSnapshot(bobsEvents.events)).toMatchSnapshot()
+      expect(forSnapshot(alicesPostEvents.events)).toMatchSnapshot()
     })
 
     it('filters events by types', async () => {
@@ -114,66 +94,64 @@ describe('moderation-events', () => {
         did: sc.dids.alice,
       }
       await Promise.all([
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           event: {
             $type: 'com.atproto.admin.defs#modEventComment',
             comment: 'X',
           },
           subject: alicesAccount,
-          createdBy: 'did:plc:moderator',
         }),
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           event: {
             $type: 'com.atproto.admin.defs#modEventEscalate',
             comment: 'X',
           },
           subject: alicesAccount,
-          createdBy: 'did:plc:moderator',
         }),
       ])
       const [allEvents, reportEvents] = await Promise.all([
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           subject: sc.dids.alice,
         }),
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           subject: sc.dids.alice,
           types: ['com.atproto.admin.defs#modEventReport'],
         }),
       ])
 
-      expect(allEvents.data.events.length).toBeGreaterThan(
-        reportEvents.data.events.length,
+      expect(allEvents.events.length).toBeGreaterThan(
+        reportEvents.events.length,
       )
       expect(
-        [...new Set(reportEvents.data.events.map((e) => e.event.$type))].length,
+        [...new Set(reportEvents.events.map((e) => e.event.$type))].length,
       ).toEqual(1)
 
       expect(
-        [...new Set(allEvents.data.events.map((e) => e.event.$type))].length,
+        [...new Set(allEvents.events.map((e) => e.event.$type))].length,
       ).toEqual(4)
     })
 
     it('returns events for all content by user', async () => {
       const [forAccount, forPost] = await Promise.all([
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           subject: sc.dids.bob,
           includeAllUserRecords: true,
         }),
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           subject: sc.posts[sc.dids.bob][0].ref.uriStr,
           includeAllUserRecords: true,
         }),
       ])
 
-      expect(forAccount.data.events.length).toEqual(forPost.data.events.length)
+      expect(forAccount.events.length).toEqual(forPost.events.length)
       // Save events are returned from both requests
-      expect(forPost.data.events.map(({ id }) => id).sort()).toEqual(
-        forAccount.data.events.map(({ id }) => id).sort(),
+      expect(forPost.events.map(({ id }) => id).sort()).toEqual(
+        forAccount.events.map(({ id }) => id).sort(),
       )
     })
 
     it('returns paginated list of events with cursor', async () => {
-      const allEvents = await queryModerationEvents({
+      const allEvents = await modClient.queryModerationEvents({
         subject: sc.dids.bob,
         includeAllUserRecords: true,
       })
@@ -186,15 +164,15 @@ describe('moderation-events', () => {
         let count = 0
         do {
           // get 1 event at a time and check we get all events
-          const { data } = await queryModerationEvents({
+          const res = await modClient.queryModerationEvents({
             limit: 1,
             subject: sc.dids.bob,
             includeAllUserRecords: true,
             cursor: defaultCursor,
             sortDirection,
           })
-          events.push(...data.events)
-          defaultCursor = data.cursor
+          events.push(...res.events)
+          defaultCursor = res.cursor
           count++
           // The count is a circuit breaker to prevent infinite loop in case of failing test
         } while (defaultCursor && count < 10)
@@ -205,9 +183,9 @@ describe('moderation-events', () => {
       const defaultEvents = await getPaginatedEvents()
       const reversedEvents = await getPaginatedEvents('asc')
 
-      expect(allEvents.data.events.length).toEqual(6)
-      expect(defaultEvents.length).toEqual(allEvents.data.events.length)
-      expect(reversedEvents.length).toEqual(allEvents.data.events.length)
+      expect(allEvents.events.length).toEqual(6)
+      expect(defaultEvents.length).toEqual(allEvents.events.length)
+      expect(reversedEvents.length).toEqual(allEvents.events.length)
       // First event in the reversed list is the last item in the default list
       expect(reversedEvents[0].id).toEqual(
         defaultEvents[defaultEvents.length - 1].id,
@@ -216,40 +194,40 @@ describe('moderation-events', () => {
 
     it('returns report events matching reportType filters', async () => {
       const [spamEvents, misleadingEvents] = await Promise.all([
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           reportTypes: [REASONSPAM],
         }),
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           reportTypes: [REASONMISLEADING, REASONAPPEAL],
         }),
       ])
 
-      expect(misleadingEvents.data.events.length).toEqual(2)
-      expect(spamEvents.data.events.length).toEqual(6)
+      expect(misleadingEvents.events.length).toEqual(2)
+      expect(spamEvents.events.length).toEqual(6)
     })
 
     it('returns events matching keyword in comment', async () => {
       const [eventsWithX, eventsWithTest, eventsWithComment] =
         await Promise.all([
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             comment: 'X',
           }),
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             comment: 'test',
           }),
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             hasComment: true,
           }),
         ])
 
-      expect(eventsWithX.data.events.length).toEqual(10)
-      expect(eventsWithTest.data.events.length).toEqual(0)
-      expect(eventsWithComment.data.events.length).toEqual(10)
+      expect(eventsWithX.events.length).toEqual(10)
+      expect(eventsWithTest.events.length).toEqual(0)
+      expect(eventsWithComment.events.length).toEqual(10)
     })
 
     it('returns events matching filter params for labels', async () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           event: {
             $type: 'com.atproto.admin.defs#modEventLabel',
             comment: 'X',
@@ -261,9 +239,8 @@ describe('moderation-events', () => {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.alice,
           },
-          createdBy: sc.dids.bob,
         }),
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           event: {
             $type: 'com.atproto.admin.defs#modEventLabel',
             comment: 'X',
@@ -275,36 +252,31 @@ describe('moderation-events', () => {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.bob,
           },
-          createdBy: sc.dids.alice,
         }),
       ])
       const [withTwoLabels, withoutTwoLabels, withOneLabel, withoutOneLabel] =
         await Promise.all([
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             addedLabels: ['L1', 'L3'],
           }),
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             removedLabels: ['L1', 'L2'],
           }),
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             addedLabels: ['L1'],
           }),
-          queryModerationEvents({
+          modClient.queryModerationEvents({
             removedLabels: ['L2'],
           }),
         ])
 
       // Verify that when querying for events where 2 different labels were added
       // events where all of the labels from the list was added are returned
-      expect(withTwoLabels.data.events.length).toEqual(0)
-      expect(negatedLabelEvent.data.id).toEqual(
-        withoutTwoLabels.data.events[0].id,
-      )
+      expect(withTwoLabels.events.length).toEqual(0)
+      expect(negatedLabelEvent.id).toEqual(withoutTwoLabels.events[0].id)
 
-      expect(createdLabelEvent.data.id).toEqual(withOneLabel.data.events[0].id)
-      expect(negatedLabelEvent.data.id).toEqual(
-        withoutOneLabel.data.events[0].id,
-      )
+      expect(createdLabelEvent.id).toEqual(withOneLabel.events[0].id)
+      expect(negatedLabelEvent.id).toEqual(withoutOneLabel.events[0].id)
     })
     it('returns events matching filter params for tags', async () => {
       const tagEvent = async ({
@@ -314,7 +286,7 @@ describe('moderation-events', () => {
         add: string[]
         remove: string[]
       }) =>
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           event: {
             $type: 'com.atproto.admin.defs#modEventTag',
             comment: 'X',
@@ -325,43 +297,35 @@ describe('moderation-events', () => {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.carol,
           },
-          createdBy: sc.dids.bob,
         })
       const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
       const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
       const [addFinder, addAndRemoveFinder, _removeFinder] = await Promise.all([
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           addedTags: ['L1'],
         }),
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           addedTags: ['L3'],
           removedTags: ['L2'],
         }),
-        queryModerationEvents({
+        modClient.queryModerationEvents({
           removedTags: ['L2'],
         }),
       ])
 
-      expect(addFinder.data.events.length).toEqual(1)
-      expect(addEvent.data.id).toEqual(addFinder.data.events[0].id)
+      expect(addFinder.events.length).toEqual(1)
+      expect(addEvent.id).toEqual(addFinder.events[0].id)
 
-      expect(addAndRemoveEvent.data.id).toEqual(
-        addAndRemoveFinder.data.events[0].id,
-      )
-      expect(addAndRemoveEvent.data.id).toEqual(
-        addAndRemoveFinder.data.events[0].id,
-      )
-      expect(addAndRemoveEvent.data.event.add).toEqual(['L3'])
-      expect(addAndRemoveEvent.data.event.remove).toEqual(['L2'])
+      expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
+      expect(addAndRemoveEvent.id).toEqual(addAndRemoveFinder.events[0].id)
+      expect(addAndRemoveEvent.event.add).toEqual(['L3'])
+      expect(addAndRemoveEvent.event.remove).toEqual(['L2'])
     })
   })
 
   describe('get event', () => {
     it('gets an event by specific id', async () => {
-      const { data } = await pdsAgent.api.com.atproto.admin.getModerationEvent(
-        { id: 1 },
-        { headers: network.ozone.adminAuthHeaders('moderator') },
-      )
+      const data = await modClient.getEvent(1)
       expect(forSnapshot(data)).toMatchSnapshot()
     })
   })
@@ -370,7 +334,7 @@ describe('moderation-events', () => {
     it('are tracked on takedown event', async () => {
       const post = sc.posts[sc.dids.carol][0]
       assert(post.images.length > 1)
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventTakedown',
         },
@@ -380,18 +344,13 @@ describe('moderation-events', () => {
           cid: post.ref.cidStr,
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
-        createdBy: sc.dids.alice,
       })
-      const { data: result } =
-        await pdsAgent.api.com.atproto.admin.queryModerationEvents(
-          {
-            subject: post.ref.uriStr,
-            types: ['com.atproto.admin.defs#modEventTakedown'],
-          },
-          { headers: network.ozone.adminAuthHeaders('moderator') },
-        )
+      const result = await modClient.queryModerationEvents({
+        subject: post.ref.uriStr,
+        types: ['com.atproto.admin.defs#modEventTakedown'],
+      })
       expect(result.events[0]).toMatchObject({
-        createdBy: sc.dids.alice,
+        createdBy: network.ozone.moderatorAccnt.did,
         event: {
           $type: 'com.atproto.admin.defs#modEventTakedown',
         },
@@ -401,7 +360,7 @@ describe('moderation-events', () => {
 
     it("are tracked on reverse-takedown event even if they aren't specified", async () => {
       const post = sc.posts[sc.dids.carol][0]
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReverseTakedown',
         },
@@ -410,15 +369,12 @@ describe('moderation-events', () => {
           uri: post.ref.uriStr,
           cid: post.ref.cidStr,
         },
-        createdBy: sc.dids.alice,
       })
-      const { data: result } =
-        await pdsAgent.api.com.atproto.admin.queryModerationEvents(
-          { subject: post.ref.uriStr },
-          { headers: network.ozone.adminAuthHeaders('moderator') },
-        )
+      const result = await modClient.queryModerationEvents({
+        subject: post.ref.uriStr,
+      })
       expect(result.events[0]).toMatchObject({
-        createdBy: sc.dids.alice,
+        createdBy: network.ozone.moderatorAccnt.did,
         event: {
           $type: 'com.atproto.admin.defs#modEventReverseTakedown',
         },
@@ -452,7 +408,7 @@ describe('moderation-events', () => {
 
     it('sends email via pds.', async () => {
       const mail = await getMailFrom(
-        emitModerationEvent({
+        modClient.emitModerationEvent({
           event: {
             $type: 'com.atproto.admin.defs#modEventEmail',
             comment: 'Reaching out to Alice',
@@ -463,7 +419,6 @@ describe('moderation-events', () => {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.alice,
           },
-          createdBy: sc.dids.bob,
         }),
       )
       expect(mail).toEqual({

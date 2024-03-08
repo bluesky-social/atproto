@@ -4,7 +4,7 @@ import { getReviewState } from '../moderation/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.queryModerationStatuses({
-    auth: ctx.authVerifier.modOrRole,
+    auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       const {
         subject,

@@ -455,7 +455,8 @@ export class ModerationService {
     const takedownRef = `BSKY-${
       isSuspend ? 'SUSPEND' : 'TAKEDOWN'
     }-${takedownId}`
-    const values = TAKEDOWNS.map((eventType) => ({
+
+    const values = this.eventPusher.takedowns.map((eventType) => ({
       eventType,
       subjectDid: subject.did,
       takedownRef,
@@ -516,7 +517,7 @@ export class ModerationService {
   async takedownRecord(subject: RecordSubject, takedownId: number) {
     this.db.assertTransaction()
     const takedownRef = `BSKY-TAKEDOWN-${takedownId}`
-    const values = TAKEDOWNS.map((eventType) => ({
+    const values = this.eventPusher.takedowns.map((eventType) => ({
       eventType,
       subjectDid: subject.did,
       subjectUri: subject.uri,
@@ -555,7 +556,7 @@ export class ModerationService {
 
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
-      for (const eventType of TAKEDOWNS) {
+      for (const eventType of this.eventPusher.takedowns) {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,
