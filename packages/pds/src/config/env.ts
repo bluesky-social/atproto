@@ -11,6 +11,7 @@ export const readEnv = (): ServerEnvironment => {
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
+    devMode: envBool('PDS_DEV_MODE'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -96,8 +97,6 @@ export const readEnv = (): ServerEnvironment => {
     // secrets
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
-    moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
-    triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -118,6 +117,7 @@ export type ServerEnvironment = {
   termsOfServiceUrl?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
+  devMode?: boolean
 
   // database
   dataDirectory?: string
@@ -201,8 +201,6 @@ export type ServerEnvironment = {
   // secrets
   jwtSecret?: string
   adminPassword?: string
-  moderatorPassword?: string
-  triagePassword?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string

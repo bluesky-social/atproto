@@ -8,11 +8,12 @@ import {
 import { forSnapshot } from '../_util'
 import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
-// @TODO skipping during appview v2 buildout, as appview frontends no longer contains moderation endpoints
-describe.skip('proxies admin requests', () => {
+describe('proxies admin requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+
+  let moderator: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -35,6 +36,15 @@ describe.skip('proxies admin requests', () => {
       inviteCode: invite.code,
       addModLabels: network.bsky,
     })
+    const modAccount = await sc.createAccount('moderator', {
+      handle: 'testmod.test',
+      email: 'testmod@test.com',
+      password: 'testmod-pass',
+      inviteCode: invite.code,
+    })
+    moderator = modAccount.did
+    network.ozone.addModeratorDid(moderator)
+
     await network.processAll()
   })
 
@@ -112,7 +122,7 @@ describe.skip('proxies admin requests', () => {
           reason: 'Y',
         },
         {
-          headers: network.pds.adminAuthHeaders(),
+          headers: sc.getHeaders(moderator),
           encoding: 'application/json',
         },
       )
@@ -129,7 +139,7 @@ describe.skip('proxies admin requests', () => {
           reason: 'Y',
         },
         {
-          headers: network.pds.adminAuthHeaders(),
+          headers: sc.getHeaders(moderator),
           encoding: 'application/json',
         },
       )
@@ -142,14 +152,15 @@ describe.skip('proxies admin requests', () => {
         {
           subject: sc.posts[sc.dids.bob][1].ref.uriStr,
         },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: sc.getHeaders(moderator) },
       )
     expect(forSnapshot(result.events)).toMatchSnapshot()
   })
+
   it('fetches repo details.', async () => {
     const { data: result } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.eve },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: sc.getHeaders(moderator) },
     )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
@@ -158,7 +169,7 @@ describe.skip('proxies admin requests', () => {
     const post = sc.posts[sc.dids.bob][1]
     const { data: result } = await agent.api.com.atproto.admin.getRecord(
       { uri: post.ref.uriStr },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: sc.getHeaders(moderator) },
     )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
@@ -167,7 +178,7 @@ describe.skip('proxies admin requests', () => {
     const { data: result } =
       await agent.api.com.atproto.admin.getModerationEvent(
         { id: 2 },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: sc.getHeaders(moderator) },
       )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
@@ -176,7 +187,7 @@ describe.skip('proxies admin requests', () => {
     const { data: result } =
       await agent.api.com.atproto.admin.queryModerationEvents(
         { subject: sc.dids.bob },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: sc.getHeaders(moderator) },
       )
     expect(forSnapshot(result.events)).toMatchSnapshot()
   })
@@ -184,7 +195,7 @@ describe.skip('proxies admin requests', () => {
   it('searches repos.', async () => {
     const { data: result } = await agent.api.com.atproto.admin.searchRepos(
       { term: 'alice' },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: sc.getHeaders(moderator) },
     )
     expect(forSnapshot(result.repos)).toMatchSnapshot()
   })
@@ -192,12 +203,12 @@ describe.skip('proxies admin requests', () => {
   it('passes through errors.', async () => {
     const tryGetRepo = agent.api.com.atproto.admin.getRepo(
       { did: 'did:does:not:exist' },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: sc.getHeaders(moderator) },
     )
     await expect(tryGetRepo).rejects.toThrow('Repo not found')
     const tryGetRecord = agent.api.com.atproto.admin.getRecord(
       { uri: 'at://did:does:not:exist/bad.collection.name/badrkey' },
-      { headers: network.pds.adminAuthHeaders() },
+      { headers: sc.getHeaders(moderator) },
     )
     await expect(tryGetRecord).rejects.toThrow('Record not found')
   })
@@ -217,7 +228,7 @@ describe.skip('proxies admin requests', () => {
         negateLabelVals: ['cats'],
       },
       {
-        headers: network.pds.adminAuthHeaders(),
+        headers: sc.getHeaders(moderator),
         encoding: 'application/json',
       },
     )
@@ -230,7 +241,7 @@ describe.skip('proxies admin requests', () => {
       },
     )
     await expect(tryGetProfileAppview).rejects.toThrow(
-      'Account has been taken down',
+      'Account has been suspended',
     )
     // reverse action
     await agent.api.com.atproto.admin.emitModerationEvent(
@@ -246,7 +257,7 @@ describe.skip('proxies admin requests', () => {
         reason: 'X',
       },
       {
-        headers: network.pds.adminAuthHeaders(),
+        headers: sc.getHeaders(moderator),
         encoding: 'application/json',
       },
     )
@@ -280,7 +291,7 @@ describe.skip('proxies admin requests', () => {
         negateLabelVals: ['cats'],
       },
       {
-        headers: network.pds.adminAuthHeaders(),
+        headers: sc.getHeaders(moderator),
         encoding: 'application/json',
       },
     )
@@ -304,7 +315,7 @@ describe.skip('proxies admin requests', () => {
         reason: 'X',
       },
       {
-        headers: network.pds.adminAuthHeaders(),
+        headers: sc.getHeaders(moderator),
         encoding: 'application/json',
       },
     )

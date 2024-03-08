@@ -249,27 +249,5 @@ describe('handles', () => {
       handle: 'bob-alt.test',
     })
     await expect(attempt2).rejects.toThrow('Authentication Required')
-    const attempt3 = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob-alt.test',
-      },
-      {
-        headers: network.pds.adminAuthHeaders('moderator'),
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt3).rejects.toThrow('Insufficient privileges')
-    const attempt4 = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob-alt.test',
-      },
-      {
-        headers: network.pds.adminAuthHeaders('triage'),
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt4).rejects.toThrow('Insufficient privileges')
   })
 })

@@ -71,3 +71,71 @@ export function isSelfLabel(v: unknown): v is SelfLabel {
 export function validateSelfLabel(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.label.defs#selfLabel', v)
 }
+
+/** Declares a label value and its expected interpertations and behaviors. */
+export interface LabelValueDefinition {
+  /** The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+). */
+  identifier: string
+  /** How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing. */
+  severity: 'inform' | 'alert' | 'none' | (string & {})
+  /** What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing. */
+  blurs: 'content' | 'media' | 'none' | (string & {})
+  locales: LabelValueDefinitionStrings[]
+  [k: string]: unknown
+}
+
+export function isLabelValueDefinition(v: unknown): v is LabelValueDefinition {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.label.defs#labelValueDefinition'
+  )
+}
+
+export function validateLabelValueDefinition(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.label.defs#labelValueDefinition', v)
+}
+
+/** Strings which describe the label in the UI, localized into a specific language. */
+export interface LabelValueDefinitionStrings {
+  /** The code of the language these strings are written in. */
+  lang: string
+  /** A short human-readable name for the label. */
+  name: string
+  /** A longer description of what the label means and why it might be applied. */
+  description: string
+  [k: string]: unknown
+}
+
+export function isLabelValueDefinitionStrings(
+  v: unknown,
+): v is LabelValueDefinitionStrings {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.label.defs#labelValueDefinitionStrings'
+  )
+}
+
+export function validateLabelValueDefinitionStrings(
+  v: unknown,
+): ValidationResult {
+  return lexicons.validate(
+    'com.atproto.label.defs#labelValueDefinitionStrings',
+    v,
+  )
+}
+
+export type LabelValue =
+  | '!hide'
+  | '!no-promote'
+  | '!warn'
+  | '!no-unauthenticated'
+  | 'dmca-violation'
+  | 'doxxing'
+  | 'porn'
+  | 'sexual'
+  | 'nudity'
+  | 'nsfl'
+  | 'gore'
+  | (string & {})

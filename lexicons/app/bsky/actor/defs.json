@@ -67,12 +67,24 @@
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
+      }
+    },
+    "profileAssociated": {
+      "type": "object",
+      "properties": {
+        "lists": { "type": "integer" },
+        "feedgens": { "type": "integer" },
+        "labeler": { "type": "boolean" }
       }
     },
     "viewerState": {
@@ -122,10 +134,15 @@
       "type": "object",
       "required": ["label", "visibility"],
       "properties": {
+        "labelerDid": {
+          "type": "string",
+          "description": "Which labeler does this preference apply to? If undefined, applies globally.",
+          "format": "did"
+        },
         "label": { "type": "string" },
         "visibility": {
           "type": "string",
-          "knownValues": ["show", "warn", "hide"]
+          "knownValues": ["ignore", "show", "warn", "hide"]
         }
       }
     },
@@ -176,7 +193,8 @@
         },
         "hideRepliesByUnfollowed": {
           "type": "boolean",
-          "description": "Hide replies in the feed if they are not by followed users."
+          "description": "Hide replies in the feed if they are not by followed users.",
+          "default": true
         },
         "hideRepliesByLikeCount": {
           "type": "integer",
@@ -267,6 +285,29 @@
           "type": "array",
           "items": { "type": "string", "format": "at-uri" },
           "description": "A list of URIs of posts the account owner has hidden."
+        }
+      }
+    },
+    "modsPref": {
+      "type": "object",
+      "required": ["mods"],
+      "properties": {
+        "mods": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#modPrefItem"
+          }
+        }
+      }
+    },
+    "modPrefItem": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
         }
       }
     }

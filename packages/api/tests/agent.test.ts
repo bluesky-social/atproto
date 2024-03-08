@@ -8,6 +8,7 @@ import {
 } from '..'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
+import { createHeaderEchoServer } from './util/echo-server'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -477,6 +478,25 @@ describe('agent', () => {
       expect(events[0]).toEqual('create-failed')
       expect(sessions.length).toEqual(1)
       expect(sessions[0]).toEqual(undefined)
+    })
+  })
+
+  describe('configureLabelersHeader', () => {
+    it('adds the labelers header as expected', async () => {
+      const server = await createHeaderEchoServer(15991)
+      const agent = new AtpAgent({ service: 'http://localhost:15991' })
+
+      agent.configureLabelersHeader(['did:plc:test1'])
+      const res1 = await agent.com.atproto.server.describeServer()
+      expect(res1.data['atproto-labelers']).toEqual('did:plc:test1')
+
+      agent.configureLabelersHeader(['did:plc:test1', 'did:plc:test2'])
+      const res2 = await agent.com.atproto.server.describeServer()
+      expect(res2.data['atproto-labelers']).toEqual(
+        'did:plc:test1,did:plc:test2',
+      )
+
+      await new Promise((r) => server.close(r))
     })
   })
 })
