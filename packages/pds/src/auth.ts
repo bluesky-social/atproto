@@ -6,6 +6,12 @@ import { oauthLogger } from './logger'
 export const createRouter = (ctx: AppContext) => {
   return combine([
     ctx.oauthProvider?.httpHandler({
+      // TODO: This must come from config
+      branding: {
+        colors: {
+          primary: '#0085ff',
+        },
+      },
       // Log oauth provider errors using our own logger
       onError: (req, res, err) => {
         oauthLogger.error({ err }, 'oauth-provider error')
