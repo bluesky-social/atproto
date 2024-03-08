@@ -6,7 +6,7 @@ import { BlobNotFoundError } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.authVerifier.optionalAccessOrRole,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, res, auth }) => {
       if (!ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
         const available = await ctx.accountManager.isRepoAvailable(params.did)

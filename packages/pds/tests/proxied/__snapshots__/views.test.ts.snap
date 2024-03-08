@@ -2,6 +2,11 @@
 
 exports[`proxies view requests actor.getProfile 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "hi im bob label_me",
   "did": "user(0)",
@@ -25,6 +30,11 @@ exports[`proxies view requests actor.getProfiles 1`] = `
 Object {
   "profiles": Array [
     Object {
+      "associated": Object {
+        "feedgens": 1,
+        "labeler": false,
+        "lists": 1,
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "description": "its me!",
       "did": "user(0)",
@@ -58,6 +68,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "feedgens": 0,
+        "labeler": false,
+        "lists": 0,
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(2)",

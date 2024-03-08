@@ -2,7 +2,6 @@ import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/emitModerationEvent'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
@@ -423,53 +422,6 @@ export class SeedClient<
     delete foundList.items[subject]
   }
 
-  async emitModerationEvent(opts: {
-    event: TakeActionInput['event']
-    subject: TakeActionInput['subject']
-    reason?: string
-    createdBy?: string
-    meta?: TakeActionInput['meta']
-  }) {
-    const {
-      event,
-      subject,
-      reason = 'X',
-      createdBy = 'did:example:admin',
-    } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
-      { event, subject, createdBy, reason },
-      {
-        encoding: 'application/json',
-        headers: this.adminAuthHeaders(),
-      },
-    )
-    return result.data
-  }
-
-  async reverseModerationAction(opts: {
-    id: number
-    subject: TakeActionInput['subject']
-    reason?: string
-    createdBy?: string
-  }) {
-    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        subject,
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-          comment: reason,
-        },
-        createdBy,
-      },
-      {
-        encoding: 'application/json',
-        headers: this.adminAuthHeaders(),
-      },
-    )
-    return result.data
-  }
-
   async createReport(opts: {
     reasonType: CreateReportInput['reasonType']
     subject: CreateReportInput['subject']
@@ -485,10 +437,6 @@ export class SeedClient<
       },
     )
     return result.data
-  }
-
-  adminAuthHeaders() {
-    return this.network.pds.adminAuthHeaders()
   }
 
   getHeaders(did: string) {

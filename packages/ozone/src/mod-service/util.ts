@@ -1,13 +1,13 @@
-import * as ui8 from 'uint8arrays'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { LabelRow } from '../db/schema/label'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
 
-export type SignedLabel = Label & { sig: string }
+export type SignedLabel = Label & { sig: Uint8Array }
 
 export const formatLabel = (row: LabelRow): Label => {
-  return {
+  return noUndefinedVals({
+    ver: 1,
     src: row.src,
     uri: row.uri,
     cid: row.cid === '' ? undefined : row.cid,
@@ -15,7 +15,24 @@ export const formatLabel = (row: LabelRow): Label => {
     neg: row.neg,
     cts: row.cts,
     exp: row.exp ?? undefined,
-    sig: row.sig ?? undefined,
+    sig: row.sig ? new Uint8Array(row.sig) : undefined,
+  }) as Label
+}
+
+export const formatLabelRow = (
+  label: Label,
+  signingKey?: string,
+): Omit<LabelRow, 'id'> => {
+  return {
+    src: label.src,
+    uri: label.uri,
+    cid: label.cid ?? '',
+    val: label.val,
+    neg: !!label.neg,
+    cts: label.cts,
+    exp: label.exp ?? null,
+    sig: label.sig ? Buffer.from(label.sig) : null,
+    signingKey: signingKey ?? null,
   }
 }
 
@@ -23,8 +40,9 @@ export const signLabel = async (
   label: Label,
   signingKey: Keypair,
 ): Promise<SignedLabel> => {
-  const { src, uri, cid, val, neg, cts, exp } = label
+  const { ver, src, uri, cid, val, neg, cts, exp } = label
   const reformatted = noUndefinedVals({
+    ver: ver ?? 1,
     src,
     uri,
     cid,
@@ -35,9 +53,9 @@ export const signLabel = async (
   }) as Label
 
   const bytes = cborEncode(reformatted)
-  const sigBytes = await signingKey.sign(bytes)
+  const sig = await signingKey.sign(bytes)
   return {
     ...reformatted,
-    sig: ui8.toString(sigBytes, 'base64'),
+    sig,
   }
 }

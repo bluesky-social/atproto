@@ -48,6 +48,10 @@ import {
 import { Label } from '../hydration/label'
 import { FeedItem, Post, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
+import {
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 
 export class Views {
@@ -98,6 +102,11 @@ export class Views {
       followersCount: profileAggs?.followers,
       followsCount: profileAggs?.follows,
       postsCount: profileAggs?.posts,
+      associated: {
+        lists: profileAggs?.lists,
+        feedgens: profileAggs?.feeds,
+        labeler: actor?.isLabeler,
+      },
     }
   }
 
@@ -256,6 +265,54 @@ export class Views {
     return record.labels.values.map(({ val }) => {
       return { src, uri, cid, val, cts, neg: false }
     })
+  }
+
+  labeler(did: string, state: HydrationState): LabelerView | undefined {
+    const labeler = state.labelers?.get(did)
+    if (!labeler) return
+    const creator = this.profile(did, state)
+    if (!creator) return
+    const viewer = state.labelerViewers?.get(did)
+    const aggs = state.labelerAggs?.get(did)
+
+    const uri = AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
+    const labels = [
+      ...(state.labels?.get(uri) ?? []),
+      ...this.selfLabels({
+        uri,
+        cid: labeler.cid.toString(),
+        record: labeler.record,
+      }),
+    ]
+
+    return {
+      uri,
+      cid: labeler.cid.toString(),
+      creator,
+      likeCount: aggs?.likes,
+      viewer: viewer
+        ? {
+            like: viewer.like,
+          }
+        : undefined,
+      indexedAt: labeler.sortedAt.toISOString(),
+      labels,
+    }
+  }
+
+  labelerDetailed(
+    did: string,
+    state: HydrationState,
+  ): LabelerViewDetailed | undefined {
+    const baseView = this.labeler(did, state)
+    if (!baseView) return
+    const record = state.labelers?.get(did)
+    if (!record) return
+
+    return {
+      ...baseView,
+      policies: record.record.policies,
+    }
   }
 
   // Feed
@@ -728,6 +785,11 @@ export class Views {
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
       return this.recordEmbedWrapper(view, withTypeTag)
+    } else if (parsedUri.collection === ids.AppBskyLabelerService) {
+      const view = this.labeler(parsedUri.hostname, state)
+      if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.labeler.defs#labelerView'
+      return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
   }
@@ -771,7 +833,8 @@ export class Views {
     }
     const rootUriStr: string = post?.record.reply?.root.uri ?? uri
     const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
-    if (!gate || !state.viewer) {
+    const viewer = state.ctx?.viewer
+    if (!gate || !viewer) {
       return undefined
     }
     const rootPost = state.posts?.get(rootUriStr)?.record
@@ -780,7 +843,7 @@ export class Views {
       canReply,
       allowFollowing,
       allowListUris = [],
-    } = parseThreadGate(state.viewer, ownerDid, rootPost ?? null, gate)
+    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
     if (canReply) {
       return false
     }

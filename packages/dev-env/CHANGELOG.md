@@ -1,5 +1,49 @@
 # @atproto/dev-env
 
+## 0.2.37
+
+### Patch Changes
+
+- Updated dependencies [[`192223f12`](https://github.com/bluesky-social/atproto/commit/192223f127c0b226287df1ecfcd953636db08655)]:
+  - @atproto/ozone@0.0.16
+  - @atproto/bsky@0.0.37
+  - @atproto/api@0.10.5
+  - @atproto/pds@0.4.5
+
+## 0.2.36
+
+### Patch Changes
+
+- Updated dependencies [[`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f), [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f), [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f)]:
+  - @atproto/api@0.10.4
+  - @atproto/bsky@0.0.36
+  - @atproto/ozone@0.0.15
+  - @atproto/pds@0.4.4
+
+## 0.2.35
+
+### Patch Changes
+
+- Updated dependencies [[`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed), [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed), [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed), [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed)]:
+  - @atproto/api@0.10.3
+  - @atproto/bsky@0.0.35
+  - @atproto/ozone@0.0.14
+  - @atproto/pds@0.4.3
+
+## 0.2.34
+
+### Patch Changes
+
+- Updated dependencies [[`0c815b964`](https://github.com/bluesky-social/atproto/commit/0c815b964c030aa0f277c40bf9786f130dc320f4), [`61b3d2525`](https://github.com/bluesky-social/atproto/commit/61b3d25253353db2da1336004f94e7dc5adb0410), [`43531905c`](https://github.com/bluesky-social/atproto/commit/43531905ce1aec6d36d9be5943782811ecca6e6d), [`61b3d2525`](https://github.com/bluesky-social/atproto/commit/61b3d25253353db2da1336004f94e7dc5adb0410)]:
+  - @atproto/syntax@0.2.0
+  - @atproto/api@0.10.2
+  - @atproto/bsky@0.0.34
+  - @atproto/bsync@0.0.1
+  - @atproto/lexicon@0.3.2
+  - @atproto/ozone@0.0.13
+  - @atproto/pds@0.4.2
+  - @atproto/xrpc-server@0.4.3
+
 ## 0.2.33
 
 ### Patch Changes

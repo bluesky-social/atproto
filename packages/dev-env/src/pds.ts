@@ -8,12 +8,7 @@ import { createSecretKeyObject } from '@atproto/pds/src/auth-verifier'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import {
-  ADMIN_PASSWORD,
-  JWT_SECRET,
-  MOD_PASSWORD,
-  TRIAGE_PASSWORD,
-} from './const'
+import { ADMIN_PASSWORD, JWT_SECRET } from './const'
 
 export class TestPds {
   constructor(
@@ -35,13 +30,12 @@ export class TestPds {
     await fs.mkdir(dataDirectory, { recursive: true })
 
     const env: pds.ServerEnvironment = {
+      devMode: true,
       port,
       dataDirectory: dataDirectory,
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,
-      moderatorPassword: MOD_PASSWORD,
-      triagePassword: TRIAGE_PASSWORD,
       jwtSecret: JWT_SECRET,
       serviceHandleDomains: ['.test'],
       bskyAppViewUrl: 'https://appview.invalid',
@@ -68,25 +62,24 @@ export class TestPds {
   }
 
   getClient(): AtpAgent {
-    return new AtpAgent({ service: `http://localhost:${this.port}` })
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelersHeader([])
+    return agent
   }
 
-  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
-    const password =
-      role === 'triage'
-        ? TRIAGE_PASSWORD
-        : role === 'moderator'
-        ? MOD_PASSWORD
-        : ADMIN_PASSWORD
+  adminAuth(): string {
     return (
       'Basic ' +
-      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
+      ui8.toString(
+        ui8.fromString(`admin:${ADMIN_PASSWORD}`, 'utf8'),
+        'base64pad',
+      )
     )
   }
 
-  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
+  adminAuthHeaders() {
     return {
-      authorization: this.adminAuth(role),
+      authorization: this.adminAuth(),
     }
   }
 

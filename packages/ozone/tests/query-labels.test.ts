@@ -1,10 +1,15 @@
-import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
+import { DisconnectError, Subscription } from '@atproto/xrpc-server'
+import { ids, lexicons } from '../src/lexicon/lexicons'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { cborEncode } from '@atproto/common'
 import { ModerationService } from '../src/mod-service'
+import {
+  OutputSchema as LabelMessage,
+  isLabels,
+} from '../src/lexicon/types/com/atproto/label/subscribeLabels'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
@@ -136,9 +141,8 @@ describe('ozone query labels', () => {
       if (!sig) {
         throw new Error('Missing signature')
       }
-      const sigBytes = ui8.fromString(sig, 'base64')
       const encodedLabel = cborEncode(rest)
-      const isValid = await verifySignature(signingKey, encodedLabel, sigBytes)
+      const isValid = await verifySignature(signingKey, encodedLabel, sig)
       expect(isValid).toBe(true)
     }
   })
@@ -153,11 +157,12 @@ describe('ozone query labels', () => {
     ctx.devOverride({
       modService: ModerationService.creator(
         newSigningKey,
+        ctx.cfg,
         modSrvc.backgroundQueue,
+        ctx.idResolver,
         modSrvc.eventPusher,
         modSrvc.appviewAgent,
-        modSrvc.appviewAuth,
-        modSrvc.serverDid,
+        ctx.serviceAuthHeaders,
       ),
     })
 
@@ -169,12 +174,11 @@ describe('ozone query labels', () => {
       if (!sig) {
         throw new Error('Missing signature')
       }
-      const sigBytes = ui8.fromString(sig, 'base64')
       const encodedLabel = cborEncode(rest)
       const isValid = await verifySignature(
         newSigningKey.did(),
         encodedLabel,
-        sigBytes,
+        sig,
       )
       expect(isValid).toBe(true)
     }
@@ -188,6 +192,45 @@ describe('ozone query labels', () => {
 
     ctx.devOverride({
       modService: origModServiceFn,
+    })
+  })
+
+  describe('subscribeLabels', () => {
+    it('streams all labels from initial cursor.', async () => {
+      const ac = new AbortController()
+      let doneTimer: NodeJS.Timeout
+      const resetDoneTimer = () => {
+        clearTimeout(doneTimer)
+        doneTimer = setTimeout(() => ac.abort(new DisconnectError()), 100)
+      }
+      const sub = new Subscription({
+        signal: ac.signal,
+        service: agent.service.origin.replace('http://', 'ws://'),
+        method: ids.ComAtprotoLabelSubscribeLabels,
+        getParams() {
+          return { cursor: 0 }
+        },
+        validate(obj) {
+          return lexicons.assertValidXrpcMessage<LabelMessage>(
+            ids.ComAtprotoLabelSubscribeLabels,
+            obj,
+          )
+        },
+      })
+      const streamedLabels: Label[] = []
+      for await (const message of sub) {
+        resetDoneTimer()
+        if (isLabels(message)) {
+          for (const label of message.labels) {
+            // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
+            streamedLabels.push({
+              ...label,
+              sig: label.sig ? new Uint8Array(label.sig) : undefined,
+            })
+          }
+        }
+      }
+      expect(streamedLabels).toEqual(labels)
     })
   })
 })

@@ -8,6 +8,11 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import {
+  LabelerView,
+  isLabelerView,
+  isLabelerViewDetailed,
+} from '../src/lexicon/types/app/bsky/labeler/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -189,4 +194,20 @@ export const stripViewerFromThread = <T>(thread: T): T => {
     thread.replies = thread.replies.map(stripViewerFromThread)
   }
   return thread
+}
+
+// @NOTE mutates
+export const stripViewerFromLabeler = (
+  serviceUnknown: unknown,
+): LabelerView => {
+  if (
+    serviceUnknown?.['$type'] &&
+    !isLabelerView(serviceUnknown) &&
+    !isLabelerViewDetailed(serviceUnknown)
+  ) {
+    throw new Error('Expected mod service view')
+  }
+  const labeler = serviceUnknown as LabelerView
+  labeler.creator = stripViewer(labeler.creator)
+  return stripViewer(labeler)
 }
