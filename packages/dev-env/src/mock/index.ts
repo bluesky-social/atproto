@@ -385,6 +385,8 @@ export async function generateMockSetup(env: TestNetwork) {
               identifier: 'rude',
               blurs: 'content',
               severity: 'alert',
+              defaultSetting: 'warn',
+              adultOnly: true,
               locales: [
                 {
                   lang: 'en',
@@ -397,6 +399,7 @@ export async function generateMockSetup(env: TestNetwork) {
               identifier: 'spam',
               blurs: 'content',
               severity: 'inform',
+              defaultSetting: 'hide',
               locales: [
                 {
                   lang: 'en',
@@ -410,6 +413,7 @@ export async function generateMockSetup(env: TestNetwork) {
               identifier: 'spider',
               blurs: 'media',
               severity: 'alert',
+              defaultSetting: 'warn',
               locales: [
                 {
                   lang: 'en',
@@ -422,6 +426,7 @@ export async function generateMockSetup(env: TestNetwork) {
               identifier: 'cool',
               blurs: 'none',
               severity: 'inform',
+              defaultSetting: 'warn',
               locales: [
                 {
                   lang: 'en',
@@ -434,6 +439,7 @@ export async function generateMockSetup(env: TestNetwork) {
               identifier: 'curate',
               blurs: 'none',
               severity: 'none',
+              defaultSetting: 'warn',
               locales: [
                 {
                   lang: 'en',
