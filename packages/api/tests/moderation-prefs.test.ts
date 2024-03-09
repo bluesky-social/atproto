@@ -28,7 +28,7 @@ describe('agent', () => {
       preferences: [
         {
           $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nsfw',
+          label: 'porn',
           visibility: 'show',
         },
         {
@@ -38,12 +38,12 @@ describe('agent', () => {
         },
         {
           $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'suggestive',
+          label: 'sexual',
           visibility: 'show',
         },
         {
           $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'gore',
+          label: 'graphic-media',
           visibility: 'show',
         },
       ],
@@ -60,7 +60,7 @@ describe('agent', () => {
           porn: 'ignore',
           nudity: 'ignore',
           sexual: 'ignore',
-          gore: 'ignore',
+          'graphic-media': 'ignore',
         },
         labelers: [],
         hiddenPosts: [],
