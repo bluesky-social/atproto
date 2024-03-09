@@ -10,6 +10,7 @@ export const createRouter = (ctx: AppContext) => {
       branding: {
         colors: {
           primary: '#0085ff',
+          column: '#f0f2f5',
         },
       },
       // Log oauth provider errors using our own logger
