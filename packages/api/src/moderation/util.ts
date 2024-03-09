@@ -58,7 +58,6 @@ export function interpretLabelValueDefinition(
     behaviors.account.profileView = alertOrInform
     behaviors.account.avatar = 'blur'
     behaviors.account.banner = 'blur'
-    behaviors.account.contentMedia = 'blur'
     // target=profile, blurs=media
     behaviors.profile.profileList = alertOrInform
     behaviors.profile.profileView = alertOrInform
