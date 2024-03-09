@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { Html, html } from '@atproto/html'
+import { cssCode, html } from '@atproto/html'
 
 import { Account } from '../account/account.js'
 import { getAsset } from '../assets/index.js'
@@ -49,10 +49,7 @@ export async function sendAuthorizePage(
       declareBrowserGlobalVar('__authorizeData', buildAuthorizeData(data)),
       await getAsset('main.js'),
     ],
-    styles: [
-      await getAsset('main.css'),
-      Html.dangerouslyCreate([buildBrandingCss(branding)]),
-    ],
+    styles: [await getAsset('main.css'), cssCode(buildBrandingCss(branding))],
     title: 'Authorize',
     body: html`<div id="root"></div>`,
   })
