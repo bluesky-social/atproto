@@ -1,4 +1,4 @@
-import { RichText } from '../src/'
+import { RichText, mock, moderatePost } from '../src/'
 
 import { hasMutedWord } from '../src/moderation/mutewords'
 
@@ -602,51 +602,90 @@ describe(`hasMutedWord`, () => {
     })
   })
 
-  // TODO
-  describe.skip(`doesn't mute own post`, () => {
+  describe(`doesn't mute own post`, () => {
     it(`does mute if it isn't own post`, () => {
-      const rt = new RichText({
-        text: `Mute words!`,
-      })
-
-      const match = hasMutedWord({
-        mutedWords: [{ value: 'words', targets: ['content'] }],
-        text: rt.text,
-        facets: rt.facets,
-        outlineTags: [],
-      })
-
-      expect(match).toBe(true)
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:alice.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [{ value: 'words', targets: ['content'] }],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+      expect(res.causes[0].type).toBe('mute-word')
     })
 
     it(`doesn't mute own post when muted word is in text`, () => {
-      const rt = new RichText({
-        text: `Mute words!`,
-      })
-
-      const match = hasMutedWord({
-        mutedWords: [{ value: 'words', targets: ['content'] }],
-        text: rt.text,
-        facets: rt.facets,
-        outlineTags: [],
-      })
-
-      expect(match).toBe(false)
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:bob.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [{ value: 'words', targets: ['content'] }],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+      expect(res.causes.length).toBe(0)
     })
 
     it(`doesn't mute own post when muted word is in tags`, () => {
       const rt = new RichText({
         text: `Mute #words!`,
       })
-
-      const match = hasMutedWord({
-        mutedWords: [{ value: 'words', targets: ['tags'] }],
-        text: rt.text,
-        facets: rt.facets,
-        outlineTags: [],
-      })
-
-      expect(match).toBe(false)
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: rt.text,
+            facets: rt.facets,
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:bob.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [{ value: 'words', targets: ['tags'] }],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+      expect(res.causes.length).toBe(0)
     })
   })
 })
