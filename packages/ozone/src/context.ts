@@ -26,6 +26,7 @@ export type AppContextOptions = {
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
   signingKey: Keypair
+  signingKeyId: number
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
@@ -105,6 +106,7 @@ export class AppContext {
         appviewAgent,
         pdsAgent,
         signingKey,
+        signingKeyId,
         idResolver,
         backgroundQueue,
         sequencer,
@@ -149,6 +151,10 @@ export class AppContext {
 
   get signingKey(): Keypair {
     return this.opts.signingKey
+  }
+
+  get signingKeyId(): number {
+    return this.opts.signingKeyId
   }
 
   get plcClient(): plc.Client {
