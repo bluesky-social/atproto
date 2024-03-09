@@ -851,7 +851,6 @@ async function updateFeedPreferences(
 function adjustLegacyContentLabelPref(
   pref: AppBskyActorDefs.ContentLabelPref,
 ): AppBskyActorDefs.ContentLabelPref {
-  let label = pref.label
   let visibility = pref.visibility
 
   // adjust legacy values
@@ -859,15 +858,7 @@ function adjustLegacyContentLabelPref(
     visibility = 'ignore'
   }
 
-  // adjust legacy labels
-  if (label === 'nsfw') {
-    label = 'porn'
-  }
-  if (label === 'suggestive') {
-    label = 'sexual'
-  }
-
-  return { ...pref, label, visibility }
+  return { ...pref, visibility }
 }
 
 /**
