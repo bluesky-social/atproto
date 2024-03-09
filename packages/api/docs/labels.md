@@ -82,7 +82,7 @@ The kind of UI behavior used when a warning must be applied.
   <td>undefined</td>
 </tr>
 <tr>
-  <td>gore</td>
+  <td>graphic-media</td>
   <td>✅</td>
   <td>adult</td>
   <td>undefined</td>
