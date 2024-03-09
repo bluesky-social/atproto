@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { Html, html } from '@atproto/html'
+import { cssCode, html } from '@atproto/html'
 
 import { getAsset } from '../assets/index.js'
 import { Branding, buildBrandingCss, buildBrandingData } from './branding.js'
@@ -20,10 +20,7 @@ export async function sendErrorPage(
       declareBrowserGlobalVar('__errorData', buildErrorPayload(err)),
       await getAsset('main.js'),
     ],
-    styles: [
-      await getAsset('main.css'),
-      Html.dangerouslyCreate([buildBrandingCss(branding)]),
-    ],
+    styles: [await getAsset('main.css'), cssCode(buildBrandingCss(branding))],
     title: 'Error',
     body: html`<div id="root"></div>`,
   })

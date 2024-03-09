@@ -1,6 +1,6 @@
 import { encode } from './encode.js'
 import { Html } from './html.js'
-import { javascriptEscaper, jsonEscaper } from './util.js'
+import { cssEscaper, javascriptEscaper, jsonEscaper } from './util.js'
 
 type NestedArray<V> = V | readonly NestedArray<V>[]
 
@@ -14,9 +14,17 @@ export const javascriptCode = (code: string) =>
 
 /**
  * Escapes a value to use as an JSON variable definition inside a `<script>` tag.
+ *
+ * @see {@link https://redux.js.org/usage/server-rendering#security-considerations}
  */
 export const jsonCode = (value: unknown) =>
   Html.dangerouslyCreate(jsonEscaper(value))
+
+/**
+ * Escapes a value to use as an CSS variable definition inside a `<style>` tag.
+ */
+export const cssCode = (code: string) =>
+  Html.dangerouslyCreate(cssEscaper(code))
 
 export function html(
   htmlFragment: TemplateStringsArray,

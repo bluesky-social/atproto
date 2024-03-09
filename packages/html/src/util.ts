@@ -14,17 +14,17 @@ export function* stringReplacer(
   yield source.slice(previousIndex)
 }
 
-/**
- * "</script>" can only appear in javascript strings, so we can safely escape
- * the "<" without breaking the javascript.
- */
 export function* javascriptEscaper(code: string) {
+  // "</script>" can only appear in javascript strings, so we can safely escape
+  // the "<" without breaking the javascript.
   yield* stringReplacer(code, '</script>', '\\u003c/script>')
 }
 
-/**
- * @see {@link https://redux.js.org/usage/server-rendering#security-considerations}
- */
 export function* jsonEscaper(value: unknown) {
+  // https://redux.js.org/usage/server-rendering#security-considerations
   yield* stringReplacer(JSON.stringify(value), '<', '\\u003c')
+}
+
+export function* cssEscaper(css: string) {
+  yield* stringReplacer(css, '</style>', '\\u003c/style>')
 }

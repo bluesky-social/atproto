@@ -3,8 +3,8 @@ import './main.css'
 import { createRoot } from 'react-dom/client'
 
 import { authorizeData, errorData } from './backend-data'
-import { AuthorizePage } from './components/authorize-page'
-import { ErrorPage } from './components/error-page'
+import { App } from './app'
+import { ErrorPage } from './pages/error-page'
 
 // When the user is logging in, make sure the page URL contains the
 // "request_uri" in case the user refreshes the page.
@@ -22,7 +22,7 @@ const container = document.getElementById('root')!
 const root = createRoot(container)
 
 if (authorizeData) {
-  root.render(<AuthorizePage {...authorizeData} />)
+  root.render(<App {...authorizeData} />)
 } else if (errorData) {
   root.render(<ErrorPage {...errorData} />)
 } else {
