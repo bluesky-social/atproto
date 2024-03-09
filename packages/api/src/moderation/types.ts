@@ -136,6 +136,8 @@ export interface ModerationPrefs {
   adultContentEnabled: boolean
   labels: Record<string, LabelPreference>
   labelers: ModerationPrefsLabeler[]
+  mutedWords: AppBskyActorDefs.MutedWord[]
+  hiddenPosts: string[]
 }
 
 export interface ModerationOpts {

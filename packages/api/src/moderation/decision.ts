@@ -8,7 +8,6 @@ import {
   LabelPreference,
   ModerationCause,
   ModerationOpts,
-  InterpretedLabelValueDefinition,
   LabelTarget,
   ModerationBehavior,
   CUSTOM_LABEL_VALUE_RE,

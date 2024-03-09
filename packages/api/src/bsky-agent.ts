@@ -330,13 +330,13 @@ export class BskyAgent extends AtpAgent {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS },
         labelers: [],
+        mutedWords: [],
+        hiddenPosts: [],
       },
       birthDate: undefined,
       interests: {
         tags: [],
       },
-      mutedWords: [],
-      hiddenPosts: [],
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -407,14 +407,14 @@ export class BskyAgent extends AtpAgent {
       ) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
-        prefs.mutedWords = v.items
+        prefs.moderationPrefs.mutedWords = v.items
       } else if (
         AppBskyActorDefs.isHiddenPostsPref(pref) &&
         AppBskyActorDefs.validateHiddenPostsPref(pref).success
       ) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
-        prefs.hiddenPosts = v.items
+        prefs.moderationPrefs.hiddenPosts = v.items
       }
     }
 

@@ -53,7 +53,6 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
-      hiddenPosts: [],
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
@@ -64,6 +63,8 @@ describe('agent', () => {
           gore: 'ignore',
         },
         labelers: [],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -75,7 +76,6 @@ describe('agent', () => {
           hideReposts: false,
         },
       },
-      mutedWords: [],
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
         sort: 'oldest',
@@ -96,7 +96,6 @@ describe('agent', () => {
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
-      hiddenPosts: [],
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
@@ -107,6 +106,8 @@ describe('agent', () => {
             labels: {},
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -118,7 +119,6 @@ describe('agent', () => {
           hideQuotePosts: false,
         },
       },
-      mutedWords: [],
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
@@ -130,12 +130,13 @@ describe('agent', () => {
     expect(agent.labelersHeader).toStrictEqual([])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
-      hiddenPosts: [],
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         labelers: [],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -147,7 +148,6 @@ describe('agent', () => {
           hideQuotePosts: false,
         },
       },
-      mutedWords: [],
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
@@ -172,7 +172,6 @@ describe('agent', () => {
 
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
-      hiddenPosts: [],
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
@@ -186,6 +185,8 @@ describe('agent', () => {
             },
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       birthDate: undefined,
       feedViewPrefs: {
@@ -197,7 +198,6 @@ describe('agent', () => {
           hideQuotePosts: false,
         },
       },
-      mutedWords: [],
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
