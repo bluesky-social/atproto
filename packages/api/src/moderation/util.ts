@@ -47,10 +47,8 @@ export function interpretLabelValueDefinition(
     behaviors.account.contentList = 'blur'
     behaviors.account.contentView = def.adultOnly ? 'blur' : alertOrInform
     // target=profile, blurs=content
-    behaviors.account.profileView = alertOrInform
-    behaviors.profile.avatar = 'blur'
-    behaviors.profile.banner = 'blur'
-    behaviors.profile.displayName = 'blur'
+    behaviors.profile.profileList = alertOrInform
+    behaviors.profile.profileView = alertOrInform
     // target=content, blurs=content
     behaviors.content.contentList = 'blur'
     behaviors.content.contentView = def.adultOnly ? 'blur' : alertOrInform
@@ -62,6 +60,7 @@ export function interpretLabelValueDefinition(
     behaviors.account.banner = 'blur'
     behaviors.account.contentMedia = 'blur'
     // target=profile, blurs=media
+    behaviors.profile.profileList = alertOrInform
     behaviors.profile.profileView = alertOrInform
     behaviors.profile.avatar = 'blur'
     behaviors.profile.banner = 'blur'
@@ -74,6 +73,7 @@ export function interpretLabelValueDefinition(
     behaviors.account.contentList = alertOrInform
     behaviors.account.contentView = alertOrInform
     // target=profile, blurs=none
+    behaviors.profile.profileList = alertOrInform
     behaviors.profile.profileView = alertOrInform
     // target=content, blurs=none
     behaviors.content.contentList = alertOrInform

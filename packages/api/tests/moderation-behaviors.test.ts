@@ -129,11 +129,9 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { profile: ['!hide'] },
     behaviors: {
-      profileList: ['filter'],
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       displayName: ['blur', 'noOverride'],
-      contentList: ['filter'],
     },
   },
   "Imperative label ('!hide') on post": {
@@ -155,7 +153,6 @@ const SCENARIOS: SuiteScenarios = {
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       displayName: ['blur', 'noOverride'],
-      contentList: ['filter'],
     },
   },
   "Imperative label ('!hide') on author account": {
@@ -354,10 +351,8 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { profile: ['porn'] },
     behaviors: {
-      profileList: ['filter'],
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
   },
   "Blur-media label ('porn') on post (hide)": {
@@ -378,7 +373,6 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
   },
   "Blur-media label ('porn') on author account (hide)": {
@@ -498,10 +492,10 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { profile: ['porn'] },
     behaviors: {
-      profileList: ['filter'],
+      profileList: [],
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
-      contentList: ['filter'],
+      contentList: [],
     },
   },
   'Adult-only label on post when adult content is disabled': {
@@ -522,7 +516,7 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
-      contentList: ['filter'],
+      contentList: [],
     },
   },
   'Adult-only label on author account when adult content is disabled': {
@@ -793,12 +787,12 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { account: ['!warn'], profile: ['!hide'] },
     behaviors: {
-      profileList: ['filter', 'blur'],
+      profileList: ['blur'],
       profileView: ['blur'],
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       displayName: ['blur', 'noOverride'],
-      contentList: ['filter', 'blur'],
+      contentList: ['blur'],
       contentView: ['blur'],
     },
   },

@@ -354,7 +354,7 @@ describe('Moderation', () => {
       modOpts,
     )
 
-    expect(res.ui('profileList')).toBeModerationResult(['filter'])
+    expect(res.ui('profileList')).toBeModerationResult([])
     expect(res.ui('profileView')).toBeModerationResult([])
     expect(res.ui('avatar')).toBeModerationResult([])
     expect(res.ui('banner')).toBeModerationResult([])
@@ -512,7 +512,7 @@ describe('Moderation', () => {
       modOpts,
     )
 
-    expect(res1.ui('profileList')).toBeModerationResult(['filter'])
+    expect(res1.ui('profileList')).toBeModerationResult([])
     expect(res1.ui('profileView')).toBeModerationResult([])
     expect(res1.ui('avatar')).toBeModerationResult([])
     expect(res1.ui('banner')).toBeModerationResult([])
@@ -637,7 +637,7 @@ describe('Moderation', () => {
       modOpts,
     )
 
-    expect(res.ui('profileList')).toBeModerationResult(['filter'])
+    expect(res.ui('profileList')).toBeModerationResult([])
     expect(res.ui('profileView')).toBeModerationResult([])
     expect(res.ui('avatar')).toBeModerationResult([])
     expect(res.ui('banner')).toBeModerationResult([])
