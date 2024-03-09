@@ -155,6 +155,16 @@ export class ModerationDecision {
     }
   }
 
+  addMutedWord(mutedWord: boolean) {
+    if (mutedWord) {
+      this.causes.push({
+        type: 'mute-word',
+        source: { type: 'user' },
+        priority: 6,
+      })
+    }
+  }
+
   addBlocking(blocking: string | undefined) {
     if (blocking) {
       this.causes.push({

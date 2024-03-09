@@ -125,6 +125,7 @@ export type ModerationCause =
       priority: 1 | 2 | 5 | 7 | 8
     }
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
+  | { type: 'mute-word'; source: ModerationCauseSource; priority: 6 }
   | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
 
 export interface ModerationPrefsLabeler {
