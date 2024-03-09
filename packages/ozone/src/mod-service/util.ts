@@ -21,7 +21,7 @@ export const formatLabel = (row: LabelRow): Label => {
 
 export const formatLabelRow = (
   label: Label,
-  signingKey?: string,
+  signingKeyId?: number,
 ): Omit<LabelRow, 'id'> => {
   return {
     src: label.src,
@@ -32,7 +32,7 @@ export const formatLabelRow = (
     cts: label.cts,
     exp: label.exp ?? null,
     sig: label.sig ? Buffer.from(label.sig) : null,
-    signingKey: signingKey ?? null,
+    signingKeyId: signingKeyId ?? null,
   }
 }
 

@@ -12,7 +12,7 @@ export interface Label {
   cts: string
   exp: string | null
   sig: Buffer | null
-  signingKey: string | null
+  signingKeyId: number | null
 }
 
 export type LabelRow = Selectable<Label>

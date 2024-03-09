@@ -1,6 +1,27 @@
 import { AxiosError } from 'axios'
 import { XRPCError, ResponseType } from '@atproto/xrpc'
 import { RetryOptions, retry } from '@atproto/common'
+import Database from './db'
+
+export const getSigningKeyId = async (
+  db: Database,
+  signingKey: string,
+): Promise<number> => {
+  const selectRes = await db.db
+    .selectFrom('signing_key')
+    .selectAll()
+    .where('key', '=', signingKey)
+    .executeTakeFirst()
+  if (selectRes) {
+    return selectRes.id
+  }
+  const insertRes = await db.db
+    .insertInto('signing_key')
+    .values({ key: signingKey })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+  return insertRes.id
+}
 
 export async function retryHttp<T>(
   fn: () => Promise<T>,

@@ -27,7 +27,6 @@ import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 import { formatLabel, signLabel } from './util'
 import { LabelRow } from '../db/schema/label'
-import { BackgroundQueue } from '../background'
 import { dbLogger } from '../logger'
 import { httpLogger } from '../logger'
 
@@ -41,7 +40,7 @@ export class ModerationViews {
   constructor(
     private db: Database,
     private signingKey: Keypair,
-    private backgroundQueue: BackgroundQueue,
+    private signingKeyId: number,
     private appviewAgent: AtpAgent,
     private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
@@ -421,23 +420,20 @@ export class ModerationViews {
   }
 
   async formatLabelAndEnsureSig(row: LabelRow) {
-    const signingKey = this.signingKey.did()
     const formatted = formatLabel(row)
-    if (!!row.sig && row.signingKey === signingKey) {
+    if (!!row.sig && row.signingKeyId === this.signingKeyId) {
       return formatted
     }
     const signed = await signLabel(formatted, this.signingKey)
-    this.backgroundQueue.add(async (db) => {
-      try {
-        await db.db
-          .updateTable('label')
-          .set({ sig: Buffer.from(signed.sig), signingKey })
-          .where('id', '=', row.id)
-          .execute()
-      } catch (err) {
-        dbLogger.error({ err, label: row }, 'failed to update resigned label')
-      }
-    })
+    try {
+      await this.db.db
+        .updateTable('label')
+        .set({ sig: Buffer.from(signed.sig), signingKeyId: this.signingKeyId })
+        .where('id', '=', row.id)
+        .execute()
+    } catch (err) {
+      dbLogger.error({ err, label: row }, 'failed to update resigned label')
+    }
     return signed
   }
 

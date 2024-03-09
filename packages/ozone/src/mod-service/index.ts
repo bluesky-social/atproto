@@ -58,6 +58,7 @@ export class ModerationService {
   constructor(
     public db: Database,
     public signingKey: Keypair,
+    public signingKeyId: number,
     public cfg: OzoneConfig,
     public backgroundQueue: BackgroundQueue,
     public idResolver: IdResolver,
@@ -69,6 +70,7 @@ export class ModerationService {
 
   static creator(
     signingKey: Keypair,
+    signingKeyId: number,
     cfg: OzoneConfig,
     backgroundQueue: BackgroundQueue,
     idResolver: IdResolver,
@@ -81,6 +83,7 @@ export class ModerationService {
       new ModerationService(
         db,
         signingKey,
+        signingKeyId,
         cfg,
         backgroundQueue,
         idResolver,
@@ -94,7 +97,7 @@ export class ModerationService {
   views = new ModerationViews(
     this.db,
     this.signingKey,
-    this.backgroundQueue,
+    this.signingKeyId,
     this.appviewAgent,
     () => this.createAuthHeaders(this.cfg.appview.did),
   )
@@ -902,8 +905,7 @@ export class ModerationService {
     const signedLabels = await Promise.all(
       labels.map((l) => signLabel(l, this.signingKey)),
     )
-    const signingKey = this.signingKey.did()
-    const dbVals = signedLabels.map((l) => formatLabelRow(l, signingKey))
+    const dbVals = signedLabels.map((l) => formatLabelRow(l, this.signingKeyId))
     const { ref } = this.db.db.dynamic
     await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
