@@ -92,7 +92,6 @@ const TESTS: Scenario[] = [
       avatar: ['blur'],
       banner: ['blur'],
       contentList: ['filter'],
-      contentMedia: ['blur'],
     },
     profile: {
       profileList: ['alert'],
@@ -114,7 +113,6 @@ const TESTS: Scenario[] = [
       avatar: ['blur'],
       banner: ['blur'],
       contentList: ['filter'],
-      contentMedia: ['blur'],
     },
     profile: {
       profileList: ['inform'],
@@ -135,7 +133,6 @@ const TESTS: Scenario[] = [
       avatar: ['blur'],
       banner: ['blur'],
       contentList: ['filter'],
-      contentMedia: ['blur'],
     },
     profile: {
       avatar: ['blur'],
