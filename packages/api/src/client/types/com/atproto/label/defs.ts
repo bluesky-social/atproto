@@ -22,6 +22,8 @@ export interface Label {
   neg?: boolean
   /** Timestamp when this label was created. */
   cts: string
+  /** Timestamp at which this label expires (no longer applies). */
+  exp?: string
   /** Signature of dag-cbor encoded label. */
   sig?: Uint8Array
   [k: string]: unknown
