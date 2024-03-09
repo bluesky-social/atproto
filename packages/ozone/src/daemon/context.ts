@@ -8,6 +8,7 @@ import { EventReverser } from './event-reverser'
 import { ModerationService, ModerationServiceCreator } from '../mod-service'
 import { BackgroundQueue } from '../background'
 import { IdResolver } from '@atproto/identity'
+import { getSigningKeyId } from '../util'
 
 export type DaemonContextOptions = {
   db: Database
@@ -31,6 +32,7 @@ export class DaemonContext {
       schema: cfg.db.postgresSchema,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+    const signingKeyId = await getSigningKeyId(db, signingKey.did())
 
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string) =>
@@ -51,13 +53,14 @@ export class DaemonContext {
     })
 
     const modService = ModerationService.creator(
+      signingKey,
+      signingKeyId,
       cfg,
       backgroundQueue,
       idResolver,
       eventPusher,
       appviewAgent,
       createAuthHeaders,
-      cfg.service.did,
     )
 
     const eventReverser = new EventReverser(db, modService)

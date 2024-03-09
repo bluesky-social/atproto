@@ -2202,6 +2202,10 @@ export const schemaDict = {
           'Metadata tag on an atproto resource (eg, repo or record).',
         required: ['src', 'uri', 'val', 'cts'],
         properties: {
+          ver: {
+            type: 'integer',
+            description: 'The AT Protocol version of the label object.',
+          },
           src: {
             type: 'string',
             format: 'did',
@@ -2234,6 +2238,10 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'Timestamp when this label was created.',
+          },
+          sig: {
+            type: 'bytes',
+            description: 'Signature of dag-cbor encoded label.',
           },
         },
       },

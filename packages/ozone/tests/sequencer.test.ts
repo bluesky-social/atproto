@@ -33,11 +33,13 @@ describe('sequencer', () => {
   }
 
   const evtToDbRow = (e: LabelsEvt) => {
-    const label = e.labels[0]
+    const { ver: _, ...label } = e.labels[0]
     return {
       id: e.seq,
       ...label,
       cid: label.cid ? label.cid : '',
+      sig: label.sig ? Buffer.from(label.sig) : null,
+      signingKeyId: network.ozone.ctx.signingKeyId,
     }
   }
 

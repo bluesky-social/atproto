@@ -10,6 +10,8 @@ export interface Label {
   val: string
   neg: boolean
   cts: string
+  sig: Buffer | null
+  signingKeyId: number | null
 }
 
 export type LabelRow = Selectable<Label>
