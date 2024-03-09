@@ -38,14 +38,10 @@ const TESTS: Scenario[] = [
       contentView: ['alert'],
     },
     profile: {
-      profileList: ['filter'],
-      avatar: ['blur'],
-      banner: ['blur'],
-      displayName: ['blur'],
-      contentList: ['filter'],
+      profileList: ['alert'],
+      profileView: ['alert'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter', 'blur'],
       contentView: ['alert'],
     },
@@ -60,14 +56,10 @@ const TESTS: Scenario[] = [
       contentView: ['inform'],
     },
     profile: {
-      profileList: ['filter'],
-      avatar: ['blur'],
-      banner: ['blur'],
-      displayName: ['blur'],
-      contentList: ['filter'],
+      profileList: ['inform'],
+      profileView: ['inform'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter', 'blur'],
       contentView: ['inform'],
     },
@@ -82,14 +74,10 @@ const TESTS: Scenario[] = [
       contentView: [],
     },
     profile: {
-      profileList: ['filter'],
-      avatar: ['blur'],
-      banner: ['blur'],
-      displayName: ['blur'],
-      contentList: ['filter'],
+      profileList: [],
+      profileView: [],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter', 'blur'],
       contentView: [],
     },
@@ -107,14 +95,12 @@ const TESTS: Scenario[] = [
       contentMedia: ['blur'],
     },
     profile: {
-      profileList: ['filter'],
+      profileList: ['alert'],
       profileView: ['alert'],
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter'],
       contentMedia: ['blur'],
     },
@@ -131,14 +117,12 @@ const TESTS: Scenario[] = [
       contentMedia: ['blur'],
     },
     profile: {
-      profileList: ['filter'],
+      profileList: ['inform'],
       profileView: ['inform'],
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter'],
       contentMedia: ['blur'],
     },
@@ -154,13 +138,10 @@ const TESTS: Scenario[] = [
       contentMedia: ['blur'],
     },
     profile: {
-      profileList: ['filter'],
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter'],
       contentMedia: ['blur'],
     },
@@ -176,12 +157,10 @@ const TESTS: Scenario[] = [
       contentView: ['alert'],
     },
     profile: {
-      profileList: ['filter'],
+      profileList: ['alert'],
       profileView: ['alert'],
-      contentList: ['filter'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter', 'alert'],
       contentView: ['alert'],
     },
@@ -196,12 +175,10 @@ const TESTS: Scenario[] = [
       contentView: ['inform'],
     },
     profile: {
-      profileList: ['filter'],
+      profileList: ['inform'],
       profileView: ['inform'],
-      contentList: ['filter'],
     },
     post: {
-      profileList: ['filter'],
       contentList: ['filter', 'inform'],
       contentView: ['inform'],
     },
@@ -213,12 +190,8 @@ const TESTS: Scenario[] = [
       profileList: ['filter'],
       contentList: ['filter'],
     },
-    profile: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
+    profile: {},
     post: {
-      profileList: ['filter'],
       contentList: ['filter'],
     },
   },
@@ -300,27 +273,27 @@ describe('Moderation: custom labels', () => {
           }),
           modOpts(blurs, severity),
         )
-        expect(res.ui('profileList')).toBeModerationResult(
-          expected.profileList || [],
-        )
-        expect(res.ui('profileView')).toBeModerationResult(
-          expected.profileView || [],
-        )
-        expect(res.ui('avatar')).toBeModerationResult(expected.avatar || [])
-        expect(res.ui('banner')).toBeModerationResult(expected.banner || [])
-        expect(res.ui('displayName')).toBeModerationResult(
-          expected.displayName || [],
-        )
-        expect(res.ui('contentList')).toBeModerationResult(
-          expected.contentList || [],
-        )
-        expect(res.ui('contentView')).toBeModerationResult(
-          expected.contentView || [],
-        )
-        expect(res.ui('contentMedia')).toBeModerationResult(
-          expected.contentMedia || [],
-        )
       }
+      expect(res.ui('profileList')).toBeModerationResult(
+        expected.profileList || [],
+      )
+      expect(res.ui('profileView')).toBeModerationResult(
+        expected.profileView || [],
+      )
+      expect(res.ui('avatar')).toBeModerationResult(expected.avatar || [])
+      expect(res.ui('banner')).toBeModerationResult(expected.banner || [])
+      expect(res.ui('displayName')).toBeModerationResult(
+        expected.displayName || [],
+      )
+      expect(res.ui('contentList')).toBeModerationResult(
+        expected.contentList || [],
+      )
+      expect(res.ui('contentView')).toBeModerationResult(
+        expected.contentView || [],
+      )
+      expect(res.ui('contentMedia')).toBeModerationResult(
+        expected.contentMedia || [],
+      )
     },
   )
 })

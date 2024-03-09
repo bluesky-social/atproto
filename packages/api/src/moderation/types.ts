@@ -119,6 +119,7 @@ export type ModerationCause =
       source: ModerationCauseSource
       label: Label
       labelDef: InterpretedLabelValueDefinition
+      target: LabelTarget
       setting: LabelPreference
       behavior: ModerationBehavior
       noOverride: boolean

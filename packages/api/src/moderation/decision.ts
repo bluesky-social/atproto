@@ -113,7 +113,14 @@ export class ModerationDecision {
           ui.informs.push(cause)
         }
       } else if (cause.type === 'label') {
-        if (context === 'profileList' || context === 'contentList') {
+        if (context === 'profileList' && cause.target === 'account') {
+          if (cause.setting === 'hide') {
+            ui.filters.push(cause)
+          }
+        } else if (
+          context === 'contentList' &&
+          (cause.target === 'account' || cause.target === 'content')
+        ) {
           if (cause.setting === 'hide') {
             ui.filters.push(cause)
           }
@@ -298,6 +305,7 @@ export class ModerationDecision {
           : { type: 'labeler', did: labeler.did },
       label,
       labelDef,
+      target,
       setting: labelPref,
       behavior: labelDef.behaviors[target] || NOOP_BEHAVIOR,
       noOverride,
