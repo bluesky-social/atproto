@@ -10,6 +10,7 @@ import {
   OutputSchema as LabelMessage,
   isLabels,
 } from '../src/lexicon/types/com/atproto/label/subscribeLabels'
+import { getSigningKeyId } from '../src/util'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
@@ -154,9 +155,11 @@ describe('ozone query labels', () => {
 
     const modSrvc = ctx.modService(ctx.db)
     const newSigningKey = await Secp256k1Keypair.create()
+    const newSigningKeyId = await getSigningKeyId(ctx.db, newSigningKey.did())
     ctx.devOverride({
       modService: ModerationService.creator(
         newSigningKey,
+        newSigningKeyId,
         ctx.cfg,
         modSrvc.backgroundQueue,
         ctx.idResolver,
@@ -186,7 +189,7 @@ describe('ozone query labels', () => {
     await network.ozone.processAll()
 
     const fromDb = await ctx.db.db.selectFrom('label').selectAll().execute()
-    expect(fromDb.every((row) => row.signingKey === newSigningKey.did())).toBe(
+    expect(fromDb.every((row) => row.signingKeyId === newSigningKeyId)).toBe(
       true,
     )
 

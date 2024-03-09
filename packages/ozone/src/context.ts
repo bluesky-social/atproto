@@ -16,6 +16,7 @@ import {
 } from './communication-service/template'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
+import { getSigningKeyId } from './util'
 
 export type AppContextOptions = {
   db: Database
@@ -48,6 +49,7 @@ export class AppContext {
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+    const signingKeyId = await getSigningKeyId(db, signingKey.did())
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const pdsAgent = cfg.pds
       ? new AtpAgent({ service: cfg.pds.url })
@@ -72,6 +74,7 @@ export class AppContext {
 
     const modService = ModerationService.creator(
       signingKey,
+      signingKeyId,
       cfg,
       backgroundQueue,
       idResolver,
@@ -195,5 +198,4 @@ export class AppContext {
     }
   }
 }
-
 export default AppContext

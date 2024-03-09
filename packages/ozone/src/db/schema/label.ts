@@ -11,7 +11,7 @@ export interface Label {
   neg: boolean
   cts: string
   sig: Buffer | null
-  signingKey: string | null
+  signingKeyId: number | null
 }
 
 export type LabelRow = Selectable<Label>

@@ -40,6 +40,7 @@ export class ModerationViews {
   constructor(
     private db: Database,
     private signingKey: Keypair,
+    private signingKeyId: number,
     private appviewAgent: AtpAgent,
     private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
@@ -419,16 +420,15 @@ export class ModerationViews {
   }
 
   async formatLabelAndEnsureSig(row: LabelRow) {
-    const signingKey = this.signingKey.did()
     const formatted = formatLabel(row)
-    if (!!row.sig && row.signingKey === signingKey) {
+    if (!!row.sig && row.signingKeyId === this.signingKeyId) {
       return formatted
     }
     const signed = await signLabel(formatted, this.signingKey)
     try {
       await this.db.db
         .updateTable('label')
-        .set({ sig: Buffer.from(signed.sig), signingKey })
+        .set({ sig: Buffer.from(signed.sig), signingKeyId: this.signingKeyId })
         .where('id', '=', row.id)
         .execute()
     } catch (err) {
