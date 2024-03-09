@@ -2,6 +2,7 @@ import { AppBskyGraphDefs } from '../client/index'
 import {
   BLOCK_BEHAVIOR,
   MUTE_BEHAVIOR,
+  MUTEWORD_BEHAVIOR,
   HIDE_BEHAVIOR,
   NOOP_BEHAVIOR,
   Label,
@@ -99,6 +100,17 @@ export class ModerationDecision {
         } else if (MUTE_BEHAVIOR[context] === 'alert') {
           ui.alerts.push(cause)
         } else if (MUTE_BEHAVIOR[context] === 'inform') {
+          ui.informs.push(cause)
+        }
+      } else if (cause.type === 'mute-word') {
+        if (context === 'contentList') {
+          ui.filters.push(cause)
+        }
+        if (MUTEWORD_BEHAVIOR[context] === 'blur') {
+          ui.blurs.push(cause)
+        } else if (MUTEWORD_BEHAVIOR[context] === 'alert') {
+          ui.alerts.push(cause)
+        } else if (MUTEWORD_BEHAVIOR[context] === 'inform') {
           ui.informs.push(cause)
         }
       } else if (cause.type === 'hidden') {

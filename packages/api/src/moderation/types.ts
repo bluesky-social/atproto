@@ -39,6 +39,10 @@ export const MUTE_BEHAVIOR: ModerationBehavior = {
   contentList: 'blur',
   contentView: 'inform',
 }
+export const MUTEWORD_BEHAVIOR: ModerationBehavior = {
+  contentList: 'blur',
+  contentView: 'blur',
+}
 export const HIDE_BEHAVIOR: ModerationBehavior = {
   contentList: 'blur',
   contentView: 'blur',
