@@ -43,7 +43,7 @@ export class DaemonContext {
       })
 
     const eventPusher = new EventPusher(db, createAuthHeaders, {
-      appview: cfg.appview,
+      appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
 

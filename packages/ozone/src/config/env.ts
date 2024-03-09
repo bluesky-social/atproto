@@ -10,6 +10,7 @@ export const readEnv = (): OzoneEnvironment => {
     serverDid: envStr('OZONE_SERVER_DID'),
     appviewUrl: envStr('OZONE_APPVIEW_URL'),
     appviewDid: envStr('OZONE_APPVIEW_DID'),
+    appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
     pdsUrl: envStr('OZONE_PDS_URL'),
     pdsDid: envStr('OZONE_PDS_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
@@ -36,6 +37,7 @@ export type OzoneEnvironment = {
   serverDid?: string
   appviewUrl?: string
   appviewDid?: string
+  appviewPushEvents?: boolean
   pdsUrl?: string
   pdsDid?: string
   dbPostgresUrl?: string
