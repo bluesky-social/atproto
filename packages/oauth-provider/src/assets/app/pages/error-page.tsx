@@ -1,18 +1,31 @@
 import type { ErrorData } from '../backend-data'
 
-import { PageLayout } from './page-layout'
+import { PageLayout } from '../components/page-layout'
 
-export function ErrorPage({ error, error_description }: ErrorData) {
+export type ErrorPageProps = ErrorData
+
+export function ErrorPage({
+  error: _code,
+  error_description: message,
+}: ErrorPageProps) {
   return (
-    <PageLayout title="An error occurred">
+    <PageLayout
+      column={
+        <>
+          <h1 className="text-2xl mt-4 font-semibold mb-4 text-primary">
+            An error occurred
+          </h1>
+        </>
+      }
+    >
       <div
-        className="bg-red-100 border-t-4 border-red-500 rounded-b text-red-900 px-4 py-3 shadow-md"
+        className="border-t-4 border-error rounded-b text-error px-4 py-3 shadow-md bg-white dark:bg-slate-800"
         role="alert"
       >
         <div className="flex">
           <div className="py-1">
             <svg
-              className="fill-current h-6 w-6 text-red-500 mr-4"
+              className="fill-current h-6 w-6 text-error mr-4"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
             >
@@ -21,7 +34,7 @@ export function ErrorPage({ error, error_description }: ErrorData) {
           </div>
           <div>
             <p className="font-bold">Sorry, something went wrong.</p>
-            <p className="text-sm">{error_description}</p>
+            <p className="text-sm">{message}</p>
           </div>
         </div>
       </div>

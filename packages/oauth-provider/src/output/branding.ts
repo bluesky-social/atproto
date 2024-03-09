@@ -1,11 +1,12 @@
-const DEFAULT_COLORS = {
-  primary: parseColor('#6231af')!,
-}
-export type BrandingColors = Record<keyof typeof DEFAULT_COLORS, string>
+// Matches colors defined in tailwind.config.js
+const colorNames = ['primary', 'column', 'error'] as const
+type ColorName = typeof colorNames[number]
+const isColorName = (name: string): name is ColorName =>
+  (colorNames as readonly string[]).includes(name)
 
 export type Branding = {
   logo?: string
-  colors?: Partial<BrandingColors>
+  colors?: { [_ in ColorName]?: string }
 }
 
 export function buildBrandingData({ logo }: Branding = {}) {
@@ -14,35 +15,35 @@ export function buildBrandingData({ logo }: Branding = {}) {
   }
 }
 
-const DEFAULT_COLOR_ENTRIES = Object.entries(DEFAULT_COLORS)
-export function buildBrandingCss({ colors = {} }: Branding = {}) {
-  const vars = DEFAULT_COLOR_ENTRIES.map(([name, value]) => {
-    const color = Object.hasOwn(colors, name) ? colors[name] : undefined
-    const { r, g, b } = (color && parseColor(color)) || value
+export function buildBrandingCss(branding?: Branding) {
+  if (!branding?.colors) return ''
+
+  const vars = Object.entries(branding.colors)
+    .filter((e) => isColorName(e[0]))
+    .map(([name, value]) => [name, parseColor(value)] as const)
+    .filter((e): e is [ColorName, ParsedColor] => e[1] != null)
     // alpha not supported by tailwind (it does not work that way)
-    return `--color-${name}: ${r} ${g} ${b};`
-  })
+    .map(([name, { r, g, b }]) => `--color-${name}: ${r} ${g} ${b};`)
+
   return `:root { ${vars.join(' ')} }`
 }
 
-function parseColor(
-  color: string,
-): undefined | { r: number; g: number; b: number; a?: number } {
+type ParsedColor = { r: number; g: number; b: number; a?: number }
+function parseColor(color: string): undefined | ParsedColor {
   if (color.startsWith('#')) {
     if (color.length === 4 || color.length === 5) {
       const [r, g, b, a] = color
         .slice(1)
         .split('')
-        .map((c) => parseInt(`${c}${c}`, 16))
+        .map((c) => parseInt(c + c, 16))
       return { r, g, b, a }
     }
 
     if (color.length === 7 || color.length === 9) {
-      const r = parseInt(color.substr(1, 2), 16)
-      const g = parseInt(color.substr(3, 2), 16)
-      const b = parseInt(color.substr(5, 2), 16)
-      const a =
-        color.length === 9 ? parseInt(color.substr(7, 2), 16) : undefined
+      const r = parseInt(color.slice(1, 3), 16)
+      const g = parseInt(color.slice(3, 5), 16)
+      const b = parseInt(color.slice(5, 7), 16)
+      const a = color.length > 8 ? parseInt(color.slice(7, 9), 16) : undefined
       return { r, g, b, a }
     }
 
