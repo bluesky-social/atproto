@@ -114,6 +114,4 @@ export interface BskyPreferences {
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
-  mutedWords: AppBskyActorDefs.MutedWord[]
-  hiddenPosts: string[]
 }
