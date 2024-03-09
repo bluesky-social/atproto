@@ -91,12 +91,8 @@ export class ModerationService {
       )
   }
 
-  views = new ModerationViews(
-    this.db,
-    this.signingKey,
-    this.backgroundQueue,
-    this.appviewAgent,
-    () => this.createAuthHeaders(this.cfg.appview.did),
+  views = new ModerationViews(this.db, this.signingKey, this.appviewAgent, () =>
+    this.createAuthHeaders(this.cfg.appview.did),
   )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
