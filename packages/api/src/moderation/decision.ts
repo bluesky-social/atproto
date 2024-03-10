@@ -32,16 +32,23 @@ export class ModerationDecision {
   static merge(
     ...decisions: (ModerationDecision | undefined)[]
   ): ModerationDecision {
-    const firmDecisions: ModerationDecision[] = decisions.filter(
+    const decisionsFiltered: ModerationDecision[] = decisions.filter(
       (v) => !!v,
     ) as ModerationDecision[]
     const decision = new ModerationDecision()
-    if (firmDecisions[0]) {
-      decision.did = firmDecisions[0].did
-      decision.isMe = firmDecisions[0].isMe
+    if (decisionsFiltered[0]) {
+      decision.did = decisionsFiltered[0].did
+      decision.isMe = decisionsFiltered[0].isMe
     }
-    decision.causes = firmDecisions.flatMap((d) => d.causes)
+    decision.causes = decisionsFiltered.flatMap((d) => d.causes)
     return decision
+  }
+
+  downgrade() {
+    for (const cause of this.causes) {
+      cause.downgraded = true
+    }
+    return this
   }
 
   get blocked() {
@@ -83,46 +90,54 @@ export class ModerationDecision {
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (BLOCK_BEHAVIOR[context] === 'blur') {
-          ui.noOverride = true
-          ui.blurs.push(cause)
-        } else if (BLOCK_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (BLOCK_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (BLOCK_BEHAVIOR[context] === 'blur') {
+            ui.noOverride = true
+            ui.blurs.push(cause)
+          } else if (BLOCK_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (BLOCK_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'muted') {
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (MUTE_BEHAVIOR[context] === 'blur') {
-          ui.blurs.push(cause)
-        } else if (MUTE_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (MUTE_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (MUTE_BEHAVIOR[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (MUTE_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (MUTE_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'mute-word') {
         if (context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (MUTEWORD_BEHAVIOR[context] === 'blur') {
-          ui.blurs.push(cause)
-        } else if (MUTEWORD_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (MUTEWORD_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (MUTEWORD_BEHAVIOR[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (MUTEWORD_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (MUTEWORD_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'hidden') {
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (HIDE_BEHAVIOR[context] === 'blur') {
-          ui.blurs.push(cause)
-        } else if (HIDE_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (HIDE_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (HIDE_BEHAVIOR[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (HIDE_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (HIDE_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'label') {
         if (context === 'profileList' && cause.target === 'account') {
@@ -137,15 +152,17 @@ export class ModerationDecision {
             ui.filters.push(cause)
           }
         }
-        if (cause.behavior[context] === 'blur') {
-          ui.blurs.push(cause)
-          if (cause.noOverride) {
-            ui.noOverride = true
+        if (!cause.downgraded) {
+          if (cause.behavior[context] === 'blur') {
+            ui.blurs.push(cause)
+            if (cause.noOverride) {
+              ui.noOverride = true
+            }
+          } else if (cause.behavior[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (cause.behavior[context] === 'inform') {
+            ui.informs.push(cause)
           }
-        } else if (cause.behavior[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (cause.behavior[context] === 'inform') {
-          ui.informs.push(cause)
         }
       }
     }

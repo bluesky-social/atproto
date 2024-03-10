@@ -1,5 +1,7 @@
 import { ModerationDecision } from '../decision'
 import { ModerationSubjectNotification, ModerationOpts } from '../types'
+import { decideAccount } from './account'
+import { decideProfile } from './profile'
 
 export function decideNotification(
   subject: ModerationSubjectNotification,
@@ -15,5 +17,9 @@ export function decideNotification(
     }
   }
 
-  return acc
+  return ModerationDecision.merge(
+    acc,
+    decideAccount(subject.author, opts),
+    decideProfile(subject.author, opts),
+  )
 }
