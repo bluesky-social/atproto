@@ -5,7 +5,6 @@ export default {
     extend: {
       colors: {
         primary: 'rgb(var(--color-primary) / <alpha-value>)',
-        column: 'rgb(var(--color-column) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
       },
     },

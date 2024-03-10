@@ -74,9 +74,10 @@ export function AcceptForm({
             onClick={() => onBack()}
             className="bg-transparent font-light text-primary rounded-md py-2"
           >
-            Select another account
+            Back
           </button>
         )}
+
         <div className="flex-auto"></div>
 
         <button
