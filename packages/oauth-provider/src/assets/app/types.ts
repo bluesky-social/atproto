@@ -52,3 +52,9 @@ export type Session = {
   consentRequired: boolean
   initiallySelected: boolean
 }
+
+export type SignInInfo = {
+  remembered: boolean
+  authenticatedAt: string
+  authorizedClients: readonly string[]
+}
