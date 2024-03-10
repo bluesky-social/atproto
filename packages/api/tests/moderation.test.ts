@@ -650,4 +650,51 @@ describe('Moderation', () => {
     expect(res.ui('contentView')).toBeModerationResult(['blur', 'noOverride'])
     expect(res.ui('contentMedia')).toBeModerationResult([])
   })
+
+  it('Adult content disabled forces the preference to hide', () => {
+    const modOpts = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: false,
+        labels: { porn: 'ignore' },
+        labelers: [
+          {
+            did: 'did:web:labeler.test',
+            labels: {},
+          },
+        ],
+      },
+      labelDefs: {},
+    }
+    const res = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'porn',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      modOpts,
+    )
+
+    expect(res.ui('profileList')).toBeModerationResult([])
+    expect(res.ui('profileView')).toBeModerationResult([])
+    expect(res.ui('avatar')).toBeModerationResult([])
+    expect(res.ui('banner')).toBeModerationResult([])
+    expect(res.ui('displayName')).toBeModerationResult([])
+    expect(res.ui('contentList')).toBeModerationResult(['filter'])
+    expect(res.ui('contentView')).toBeModerationResult([])
+    expect(res.ui('contentMedia')).toBeModerationResult(['blur', 'noOverride'])
+  })
 })
