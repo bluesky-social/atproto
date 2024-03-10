@@ -115,9 +115,24 @@ export type ModerationCauseSource =
   | { type: 'labeler'; did: string }
 
 export type ModerationCause =
-  | { type: 'blocking'; source: ModerationCauseSource; priority: 3 }
-  | { type: 'blocked-by'; source: ModerationCauseSource; priority: 4 }
-  | { type: 'block-other'; source: ModerationCauseSource; priority: 4 }
+  | {
+      type: 'blocking'
+      source: ModerationCauseSource
+      priority: 3
+      downgraded?: boolean
+    }
+  | {
+      type: 'blocked-by'
+      source: ModerationCauseSource
+      priority: 4
+      downgraded?: boolean
+    }
+  | {
+      type: 'block-other'
+      source: ModerationCauseSource
+      priority: 4
+      downgraded?: boolean
+    }
   | {
       type: 'label'
       source: ModerationCauseSource
@@ -128,10 +143,26 @@ export type ModerationCause =
       behavior: ModerationBehavior
       noOverride: boolean
       priority: 1 | 2 | 5 | 7 | 8
+      downgraded?: boolean
     }
-  | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
-  | { type: 'mute-word'; source: ModerationCauseSource; priority: 6 }
-  | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
+  | {
+      type: 'muted'
+      source: ModerationCauseSource
+      priority: 6
+      downgraded?: boolean
+    }
+  | {
+      type: 'mute-word'
+      source: ModerationCauseSource
+      priority: 6
+      downgraded?: boolean
+    }
+  | {
+      type: 'hidden'
+      source: ModerationCauseSource
+      priority: 6
+      downgraded?: boolean
+    }
 
 export interface ModerationPrefsLabeler {
   did: string

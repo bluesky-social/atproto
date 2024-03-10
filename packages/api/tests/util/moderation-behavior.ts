@@ -260,6 +260,8 @@ export class ModerationBehaviorSuiteRunner {
             labels: {},
           },
         ],
+        mutedWords: [],
+        hiddenPosts: [],
       },
     }
   }

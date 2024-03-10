@@ -9,6 +9,8 @@ import {
 } from '../../client'
 import { ModerationSubjectPost, ModerationOpts } from '../types'
 import { hasMutedWord } from '../mutewords'
+import { decideAccount } from './account'
+import { decideProfile } from './profile'
 
 export function decidePost(
   subject: ModerationSubjectPost,
@@ -28,7 +30,45 @@ export function decidePost(
     acc.addMutedWord(checkMutedWords(subject, opts.prefs.mutedWords))
   }
 
-  return acc
+  let embedAcc
+  if (subject.embed) {
+    if (AppBskyEmbedRecord.isViewRecord(subject.embed.record)) {
+      // quote post
+      embedAcc = decideQuotedPost(subject.embed.record, opts)
+    } else if (
+      AppBskyEmbedRecordWithMedia.isView(subject.embed) &&
+      AppBskyEmbedRecord.isViewRecord(subject.embed.record.record)
+    ) {
+      // quoted post with media
+      embedAcc = decideQuotedPost(subject.embed.record.record, opts)
+    }
+  }
+
+  return ModerationDecision.merge(
+    acc,
+    embedAcc?.downgrade(),
+    decideAccount(subject.author, opts),
+    decideProfile(subject.author, opts),
+  )
+}
+
+function decideQuotedPost(
+  subject: AppBskyEmbedRecord.ViewRecord,
+  opts: ModerationOpts,
+) {
+  const acc = new ModerationDecision()
+  acc.setDid(subject.author.did)
+  acc.setIsMe(subject.author.did === opts.userDid)
+  if (subject.labels?.length) {
+    for (const label of subject.labels) {
+      acc.addLabel('content', label, opts)
+    }
+  }
+  return ModerationDecision.merge(
+    acc,
+    decideAccount(subject.author, opts),
+    decideProfile(subject.author, opts),
+  )
 }
 
 function checkHiddenPost(
