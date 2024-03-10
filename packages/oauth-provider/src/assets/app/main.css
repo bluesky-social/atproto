@@ -6,7 +6,6 @@
 @layer base {
   :root {
     --color-primary: 255 115 179;
-    --color-column: 189 255 253;
     --color-error: 255 0 0;
   }
 }

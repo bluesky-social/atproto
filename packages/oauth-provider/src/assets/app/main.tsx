@@ -2,9 +2,10 @@ import './main.css'
 
 import { createRoot } from 'react-dom/client'
 
-import { authorizeData, errorData } from './backend-data'
+import { authorizeData, brandingData, errorData } from './backend-data'
 import { App } from './app'
-import { ErrorPage } from './pages/error-page'
+import { PageLayout } from './components/page-layout'
+import { ErrorCard } from './components/error-card'
 
 // When the user is logging in, make sure the page URL contains the
 // "request_uri" in case the user refreshes the page.
@@ -16,15 +17,17 @@ if (authorizeData && url.pathname === '/oauth/authorize') {
   window.history.replaceState(history.state, '', url.pathname + url.search)
 }
 
-// TODO: inject brandingData (from backend-data.ts) into the page (logo & co)
-
 const container = document.getElementById('root')!
 const root = createRoot(container)
 
 if (authorizeData) {
-  root.render(<App {...authorizeData} />)
+  root.render(<App authorizeData={authorizeData} brandingData={brandingData} />)
 } else if (errorData) {
-  root.render(<ErrorPage {...errorData} />)
+  root.render(
+    <PageLayout title="An error occurred">
+      <ErrorCard {...errorData} className="max-w-lg w-full" />
+    </PageLayout>,
+  )
 } else {
   throw new Error('No data found')
 }

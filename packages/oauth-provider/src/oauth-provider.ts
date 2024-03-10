@@ -1158,7 +1158,7 @@ export class OAuthProvider extends OAuthVerifier {
       }),
     })
 
-    router.post('/oauth/authorize/login', async function (req, res) {
+    router.post('/oauth/authorize/sign-in', async function (req, res) {
       validateFetchMode(req, res, ['same-origin'])
       validateSameOrigin(req, res, issuerOrigin)
 
