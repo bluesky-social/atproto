@@ -402,7 +402,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'spam',
               blurs: 'content',
-              severity: 'info',
+              severity: 'inform',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -417,7 +417,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'impersonation',
               blurs: 'none',
-              severity: 'info',
+              severity: 'inform',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -432,7 +432,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'scam',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -447,7 +447,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'intolerant',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
@@ -462,7 +462,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'self-harm',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
@@ -477,7 +477,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'security',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -492,7 +492,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'misleading',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
@@ -507,7 +507,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'threat',
               blurs: 'content',
-              severity: 'info',
+              severity: 'inform',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -521,9 +521,9 @@ export async function generateMockSetup(env: TestNetwork) {
             },
             {
               identifier: 'unsafe-link',
-              blurs: '',
-              severity: '',
-              defaultSetting: '',
+              blurs: 'content',
+              severity: 'alert',
+              defaultSetting: 'hide',
               adultOnly: false,
               locales: [
                 {
@@ -537,7 +537,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'illegal',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -552,7 +552,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'misinformation',
               blurs: 'content',
-              severity: 'info',
+              severity: 'inform',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
@@ -567,7 +567,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'rude',
               blurs: 'content',
-              severity: 'info',
+              severity: 'inform',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -582,7 +582,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'extremist',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -597,7 +597,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'harassment',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -612,7 +612,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'sensitive',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
@@ -627,7 +627,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'engagement-farming',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -642,7 +642,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'inauthentic',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'hide',
               adultOnly: false,
               locales: [
@@ -657,7 +657,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'upsetting',
               blurs: 'content',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
@@ -687,7 +687,7 @@ export async function generateMockSetup(env: TestNetwork) {
             {
               identifier: 'gore',
               blurs: 'media',
-              severity: 'warn',
+              severity: 'alert',
               defaultSetting: 'warn',
               adultOnly: false,
               locales: [
