@@ -175,7 +175,7 @@ describe('agent', () => {
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
-        labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore' },
+        labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore', nsfw: 'ignore' },
         labelers: [
           {
             did: 'did:plc:other',
@@ -203,5 +203,98 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+  })
+
+  it(`updates label pref`, async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    await agent.createAccount({
+      handle: 'user8.test',
+      email: 'user8@test.com',
+      password: 'password',
+    })
+
+    await agent.addLabeler('did:plc:other')
+    await agent.setContentLabelPref('porn', 'ignore')
+    await agent.setContentLabelPref('porn', 'ignore', 'did:plc:other')
+    await agent.setContentLabelPref('porn', 'hide')
+    await agent.setContentLabelPref('porn', 'hide', 'did:plc:other')
+
+    const { moderationPrefs } = await agent.getPreferences()
+    const labeler = moderationPrefs.labelers.find(
+      (l) => l.did === 'did:plc:other',
+    )
+
+    expect(moderationPrefs.labels.porn).toEqual('hide')
+    expect(labeler?.labels?.porn).toEqual('hide')
+  })
+
+  it(`keeps 'graphic-media' in sync with 'gore'`, async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    await agent.createAccount({
+      handle: 'user9.test',
+      email: 'user9@test.com',
+      password: 'password',
+    })
+
+    await agent.setContentLabelPref('gore', 'ignore')
+    await agent.setContentLabelPref('graphic-media', 'hide')
+    const a = await agent.getPreferences()
+
+    expect(a.moderationPrefs.labels.gore).toEqual('hide')
+    expect(a.moderationPrefs.labels['graphic-media']).toEqual('hide')
+
+    await agent.setContentLabelPref('graphic-media', 'warn')
+    const b = await agent.getPreferences()
+
+    expect(b.moderationPrefs.labels.gore).toEqual('warn')
+    expect(b.moderationPrefs.labels['graphic-media']).toEqual('warn')
+  })
+
+  it(`keeps 'porn' in sync with 'nsfw'`, async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    await agent.createAccount({
+      handle: 'user10.test',
+      email: 'user10@test.com',
+      password: 'password',
+    })
+
+    await agent.setContentLabelPref('nsfw', 'ignore')
+    await agent.setContentLabelPref('porn', 'hide')
+    const a = await agent.getPreferences()
+
+    expect(a.moderationPrefs.labels.nsfw).toEqual('hide')
+    expect(a.moderationPrefs.labels.porn).toEqual('hide')
+
+    await agent.setContentLabelPref('porn', 'warn')
+    const b = await agent.getPreferences()
+
+    expect(b.moderationPrefs.labels.nsfw).toEqual('warn')
+    expect(b.moderationPrefs.labels.porn).toEqual('warn')
+  })
+
+  it(`keeps 'sexual' in sync with 'suggestive'`, async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    await agent.createAccount({
+      handle: 'user11.test',
+      email: 'user11@test.com',
+      password: 'password',
+    })
+
+    await agent.setContentLabelPref('sexual', 'ignore')
+    await agent.setContentLabelPref('suggestive', 'hide')
+    const a = await agent.getPreferences()
+
+    expect(a.moderationPrefs.labels.sexual).toEqual('hide')
+    expect(a.moderationPrefs.labels.suggestive).toEqual('hide')
+
+    await agent.setContentLabelPref('suggestive', 'warn')
+    const b = await agent.getPreferences()
+
+    expect(b.moderationPrefs.labels.sexual).toEqual('warn')
+    expect(b.moderationPrefs.labels.suggestive).toEqual('warn')
   })
 })

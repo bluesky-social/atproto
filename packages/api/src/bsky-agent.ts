@@ -510,6 +510,8 @@ export class BskyAgent extends AtpAgent {
           pref.label === key &&
           pref.labelerDid === labelerDid,
       )
+      let syncedLabelPref
+
       if (labelPref) {
         labelPref.visibility = value
       } else {
@@ -520,6 +522,44 @@ export class BskyAgent extends AtpAgent {
           visibility: value,
         }
       }
+
+      if (AppBskyActorDefs.isContentLabelPref(labelPref)) {
+        // is global
+        if (!labelPref.labelerDid) {
+          const syncronizedPrefLabel = {
+            gore: 'graphic-media',
+            'graphic-media': 'gore',
+            nsfw: 'porn',
+            porn: 'nsfw',
+            sexual: 'suggestive',
+            suggestive: 'sexual',
+          }[labelPref.label]
+
+          if (syncronizedPrefLabel) {
+            syncedLabelPref = prefs.findLast(
+              (pref) =>
+                AppBskyActorDefs.isContentLabelPref(pref) &&
+                AppBskyActorDefs.validateContentLabelPref(pref).success &&
+                pref.label === syncronizedPrefLabel &&
+                pref.labelerDid === undefined,
+            )
+
+            if (syncedLabelPref) {
+              if (AppBskyActorDefs.isContentLabelPref(syncedLabelPref)) {
+                syncedLabelPref.visibility = value
+              }
+            } else {
+              syncedLabelPref = {
+                $type: 'app.bsky.actor.defs#contentLabelPref',
+                label: syncronizedPrefLabel,
+                labelerDid: undefined,
+                visibility: value,
+              }
+            }
+          }
+        }
+      }
+
       return prefs
         .filter(
           (pref) =>
@@ -527,6 +567,7 @@ export class BskyAgent extends AtpAgent {
             !(pref.label === key && pref.labelerDid === labelerDid),
         )
         .concat([labelPref])
+        .concat(syncedLabelPref ? [syncedLabelPref] : [])
     })
   }
 
