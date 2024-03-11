@@ -1123,6 +1123,7 @@ describe('agent', () => {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
+            nsfw: 'ignore',
             porn: 'ignore',
           },
           labelers: [
@@ -1167,6 +1168,7 @@ describe('agent', () => {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
+            nsfw: 'ignore',
             porn: 'ignore',
           },
           labelers: [
@@ -1207,6 +1209,7 @@ describe('agent', () => {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
+            nsfw: 'ignore',
             porn: 'ignore',
           },
           labelers: [
@@ -1247,6 +1250,7 @@ describe('agent', () => {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
+            nsfw: 'ignore',
             porn: 'ignore',
           },
           labelers: [
@@ -1298,6 +1302,7 @@ describe('agent', () => {
           adultContentEnabled: false,
           labels: {
             ...DEFAULT_LABEL_SETTINGS,
+            nsfw: 'ignore',
             porn: 'ignore',
           },
           labelers: [
@@ -1338,6 +1343,11 @@ describe('agent', () => {
           {
             $type: 'app.bsky.actor.defs#contentLabelPref',
             label: 'porn',
+            visibility: 'ignore',
+          },
+          {
+            $type: 'app.bsky.actor.defs#contentLabelPref',
+            label: 'nsfw',
             visibility: 'ignore',
           },
           {
