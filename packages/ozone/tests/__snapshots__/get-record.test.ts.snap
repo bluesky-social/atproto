@@ -11,9 +11,13 @@ Object {
       "cid": "cids(0)",
       "cts": "1970-01-01T00:00:00.000Z",
       "neg": false,
+      "sig": Object {
+        "$bytes": "sig(0)",
+      },
       "src": "user(2)",
       "uri": "record(0)",
       "val": "!unspecced-takedown",
+      "ver": 1,
     },
     Object {
       "cid": "cids(0)",
@@ -108,9 +112,13 @@ Object {
       "cid": "cids(0)",
       "cts": "1970-01-01T00:00:00.000Z",
       "neg": false,
+      "sig": Object {
+        "$bytes": "sig(0)",
+      },
       "src": "user(2)",
       "uri": "record(0)",
       "val": "!unspecced-takedown",
+      "ver": 1,
     },
     Object {
       "cid": "cids(0)",

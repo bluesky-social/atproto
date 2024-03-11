@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import AtpAgent from '@atproto/api'
 import { Database } from '../db'
@@ -46,6 +47,7 @@ import { LabelChannel } from '../db/schema/label'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
+import { formatLabel, formatLabelRow, signLabel } from './util'
 import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
@@ -55,45 +57,49 @@ export type ModerationServiceCreator = (db: Database) => ModerationService
 export class ModerationService {
   constructor(
     public db: Database,
+    public signingKey: Keypair,
+    public signingKeyId: number,
     public cfg: OzoneConfig,
     public backgroundQueue: BackgroundQueue,
     public idResolver: IdResolver,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
     private createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
-    public serverDid: string,
     public imgInvalidator?: ImageInvalidator,
-    public cdnPaths?: string[],
   ) {}
 
   static creator(
+    signingKey: Keypair,
+    signingKeyId: number,
     cfg: OzoneConfig,
     backgroundQueue: BackgroundQueue,
     idResolver: IdResolver,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
-    serverDid: string,
     imgInvalidator?: ImageInvalidator,
-    cdnPaths?: string[],
   ) {
     return (db: Database) =>
       new ModerationService(
         db,
+        signingKey,
+        signingKeyId,
         cfg,
         backgroundQueue,
         idResolver,
         eventPusher,
         appviewAgent,
         createAuthHeaders,
-        serverDid,
         imgInvalidator,
-        cdnPaths,
       )
   }
 
-  views = new ModerationViews(this.db, this.appviewAgent, () =>
-    this.createAuthHeaders(this.cfg.appview.did),
+  views = new ModerationViews(
+    this.db,
+    this.signingKey,
+    this.signingKeyId,
+    this.appviewAgent,
+    () => this.createAuthHeaders(this.cfg.appview.did),
   )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
@@ -597,7 +603,7 @@ export class ModerationService {
           if (this.imgInvalidator) {
             await Promise.allSettled(
               (subject.blobCids ?? []).map((cid) => {
-                const paths = (this.cdnPaths ?? []).map((path) =>
+                const paths = (this.cfg.cdn.paths ?? []).map((path) =>
                   path.replace('%s', subject.did).replace('%s', cid),
                 )
                 return this.imgInvalidator
@@ -876,7 +882,7 @@ export class ModerationService {
   ): Promise<Label[]> {
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
-      src: this.serverDid,
+      src: this.cfg.service.did,
       uri,
       cid: cid ?? undefined,
       val,
@@ -884,7 +890,7 @@ export class ModerationService {
       cts: new Date().toISOString(),
     }))
     const toNegate = negate.map((val) => ({
-      src: this.serverDid,
+      src: this.cfg.service.did,
       uri,
       cid: cid ?? undefined,
       val,
@@ -892,21 +898,19 @@ export class ModerationService {
       cts: new Date().toISOString(),
     }))
     const formatted = [...toCreate, ...toNegate]
-    await this.createLabels(formatted)
-    return formatted
+    return this.createLabels(formatted)
   }
 
-  async createLabels(labels: Label[]) {
-    if (labels.length < 1) return
-    const dbVals = labels.map((l) => ({
-      ...l,
-      cid: l.cid ?? '',
-      neg: !!l.neg,
-    }))
+  async createLabels(labels: Label[]): Promise<Label[]> {
+    if (labels.length < 1) return []
+    const signedLabels = await Promise.all(
+      labels.map((l) => signLabel(l, this.signingKey)),
+    )
+    const dbVals = signedLabels.map((l) => formatLabelRow(l, this.signingKeyId))
     const { ref } = this.db.db.dynamic
     await sql`notify ${ref(LabelChannel)}`.execute(this.db.db)
     const excluded = (col: string) => ref(`excluded.${col}`)
-    await this.db.db
+    const res = await this.db.db
       .insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
@@ -916,7 +920,9 @@ export class ModerationService {
           cts: sql`${excluded('cts')}`,
         }),
       )
+      .returningAll()
       .execute()
+    return res.map((row) => formatLabel(row))
   }
 
   async sendEmail(opts: {

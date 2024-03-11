@@ -1,24 +1,26 @@
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
+import { Selectable } from 'kysely'
+import { PoolClient } from 'pg'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 import { LabelChannel, Label as LabelTable } from '../db/schema/label'
-import { Selectable } from 'kysely'
-import { formatLabel } from '../mod-service/util'
-import { PoolClient } from 'pg'
+import { ModerationService } from '../mod-service'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 type LabelRow = Selectable<LabelTable>
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
+  db: Database
   destroyed = false
   pollPromise: Promise<void> | undefined
   queued = false
   conn: PoolClient | undefined
 
-  constructor(public db: Database, public lastSeen = 0) {
+  constructor(public modSrvc: ModerationService, public lastSeen = 0) {
     super()
+    this.db = modSrvc.db
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
   }
@@ -89,13 +91,12 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return []
     }
 
-    const evts: LabelsEvt[] = []
-    for (const row of rows) {
-      evts.push({
-        seq: row.id,
-        labels: [formatLabel(row)],
-      })
-    }
+    const evts: LabelsEvt[] = await Promise.all(
+      rows.map(async (row) => {
+        const formatted = await this.modSrvc.views.formatLabelAndEnsureSig(row)
+        return { seq: row.id, labels: [formatted] }
+      }),
+    )
 
     return evts
   }

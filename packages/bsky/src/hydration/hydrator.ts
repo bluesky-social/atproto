@@ -45,9 +45,10 @@ import {
   FeedItem,
   ItemRef,
 } from './feed'
+import { ParsedLabelers } from '../util'
 
 export type HydrateCtx = {
-  labelers: string[]
+  labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
 }

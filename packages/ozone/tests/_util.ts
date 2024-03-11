@@ -16,6 +16,7 @@ export const forSnapshot = (obj: unknown) => {
   const collections = { [kTake]: 'collection' }
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
+  const sigs = { [kTake]: 'sig' }
   const unknown = { [kTake]: 'unknown' }
   const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
   return mapLeafValues(toWalk, (item) => {
@@ -60,6 +61,10 @@ export const forSnapshot = (obj: unknown) => {
       if (!match) return str
       const [, did, cid] = match
       return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+    }
+    // decent check for 64-byte base64 encoded signatures
+    if (str.length === 86 && !str.includes(' ')) {
+      return take(sigs, str)
     }
     let isCid: boolean
     try {

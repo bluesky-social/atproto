@@ -10,6 +10,7 @@ import {
 } from './util'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
+import { ParsedLabelers } from '../util'
 
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
@@ -40,11 +41,14 @@ export class LabelHydrator {
 
   async getLabelsForSubjects(
     subjects: string[],
-    issuers: string[],
+    labelers: ParsedLabelers,
   ): Promise<Labels> {
-    if (!subjects.length || !issuers.length)
+    if (!subjects.length || !labelers.dids.length)
       return new HydrationMap<SubjectLabels>()
-    const res = await this.dataplane.getLabels({ subjects, issuers })
+    const res = await this.dataplane.getLabels({
+      subjects,
+      issuers: labelers.dids,
+    })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined
       if (!label || label.neg) return acc
@@ -57,7 +61,11 @@ export class LabelHydrator {
         acc.set(label.uri, entry)
       }
       entry.labels.push(label)
-      if (TAKEDOWN_LABELS.includes(label.val) && !label.neg) {
+      if (
+        TAKEDOWN_LABELS.includes(label.val) &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+      ) {
         entry.isTakendown = true
       }
       return acc

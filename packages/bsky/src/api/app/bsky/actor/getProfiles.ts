@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { resHeaders } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req, res }) => {
+    handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { viewer, labelers }
@@ -23,11 +23,14 @@ export default function (server: Server, ctx: AppContext) {
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers,
+        }),
       }
     },
   })

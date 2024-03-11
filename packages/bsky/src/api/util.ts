@@ -1,9 +1,24 @@
-import express from 'express'
+import { ParsedLabelers, formatLabelerHeader } from '../util'
 
-export const setRepoRev = (res: express.Response, rev: string | null) => {
-  if (rev !== null) {
-    res.setHeader('Atproto-Repo-Rev', rev)
+export const ATPROTO_CONTENT_LABELERS = 'Atproto-Content-Labelers'
+export const ATPROTO_REPO_REV = 'Atproto-Repo-Rev'
+
+type ResHeaderOpts = {
+  labelers: ParsedLabelers
+  repoRev: string | null
+}
+
+export const resHeaders = (
+  opts: Partial<ResHeaderOpts>,
+): Record<string, string> => {
+  const headers = {}
+  if (opts.labelers) {
+    headers[ATPROTO_CONTENT_LABELERS] = formatLabelerHeader(opts.labelers)
   }
+  if (opts.repoRev) {
+    headers[ATPROTO_REPO_REV] = opts.repoRev
+  }
+  return headers
 }
 
 export const clearlyBadCursor = (cursor?: string) => {

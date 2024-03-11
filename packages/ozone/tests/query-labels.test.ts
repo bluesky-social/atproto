@@ -3,10 +3,14 @@ import { TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { ids, lexicons } from '../src/lexicon/lexicons'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
+import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
+import { cborEncode } from '@atproto/common'
+import { ModerationService } from '../src/mod-service'
 import {
   OutputSchema as LabelMessage,
   isLabels,
 } from '../src/lexicon/types/com/atproto/label/subscribeLabels'
+import { getSigningKeyId } from '../src/util'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
@@ -21,7 +25,7 @@ describe('ozone query labels', () => {
 
     agent = network.ozone.getClient()
 
-    labels = [
+    const toCreate = [
       {
         src: 'did:example:labeler',
         uri: 'did:example:blah',
@@ -67,7 +71,7 @@ describe('ozone query labels', () => {
     ]
 
     const modService = network.ozone.ctx.modService(network.ozone.ctx.db)
-    await modService.createLabels(labels)
+    labels = await modService.createLabels(toCreate)
   })
 
   afterAll(async () => {
@@ -128,6 +132,72 @@ describe('ozone query labels', () => {
     )
   })
 
+  it('returns validly signed labels', async () => {
+    const res = await agent.api.com.atproto.label.queryLabels({
+      uriPatterns: ['*'],
+    })
+    const signingKey = network.ozone.ctx.signingKey.did()
+    for (const label of res.data.labels) {
+      const { sig, ...rest } = label
+      if (!sig) {
+        throw new Error('Missing signature')
+      }
+      const encodedLabel = cborEncode(rest)
+      const isValid = await verifySignature(signingKey, encodedLabel, sig)
+      expect(isValid).toBe(true)
+    }
+  })
+
+  it('resigns labels if the signingKey changes', async () => {
+    // mock changing the signing key for the service
+    const ctx = network.ozone.ctx
+    const origModServiceFn = ctx.modService
+
+    const modSrvc = ctx.modService(ctx.db)
+    const newSigningKey = await Secp256k1Keypair.create()
+    const newSigningKeyId = await getSigningKeyId(ctx.db, newSigningKey.did())
+    ctx.devOverride({
+      modService: ModerationService.creator(
+        newSigningKey,
+        newSigningKeyId,
+        ctx.cfg,
+        modSrvc.backgroundQueue,
+        ctx.idResolver,
+        modSrvc.eventPusher,
+        modSrvc.appviewAgent,
+        ctx.serviceAuthHeaders,
+      ),
+    })
+
+    const res = await agent.api.com.atproto.label.queryLabels({
+      uriPatterns: ['*'],
+    })
+    for (const label of res.data.labels) {
+      const { sig, ...rest } = label
+      if (!sig) {
+        throw new Error('Missing signature')
+      }
+      const encodedLabel = cborEncode(rest)
+      const isValid = await verifySignature(
+        newSigningKey.did(),
+        encodedLabel,
+        sig,
+      )
+      expect(isValid).toBe(true)
+    }
+
+    await network.ozone.processAll()
+
+    const fromDb = await ctx.db.db.selectFrom('label').selectAll().execute()
+    expect(fromDb.every((row) => row.signingKeyId === newSigningKeyId)).toBe(
+      true,
+    )
+
+    ctx.devOverride({
+      modService: origModServiceFn,
+    })
+  })
+
   describe('subscribeLabels', () => {
     it('streams all labels from initial cursor.', async () => {
       const ac = new AbortController()
@@ -154,7 +224,13 @@ describe('ozone query labels', () => {
       for await (const message of sub) {
         resetDoneTimer()
         if (isLabels(message)) {
-          streamedLabels.push(...message.labels)
+          for (const label of message.labels) {
+            // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
+            streamedLabels.push({
+              ...label,
+              sig: label.sig ? new Uint8Array(label.sig) : undefined,
+            })
+          }
         }
       }
       expect(streamedLabels).toEqual(labels)
