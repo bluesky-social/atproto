@@ -514,7 +514,7 @@ export class BskyAgent extends AtpAgent {
           pref.label === key &&
           pref.labelerDid === labelerDid,
       )
-      let legacyLabelPref
+      let legacyLabelPref: AppBskyActorDefs.ContentLabelPref | undefined
 
       if (labelPref) {
         labelPref.visibility = value
@@ -544,7 +544,7 @@ export class BskyAgent extends AtpAgent {
                 AppBskyActorDefs.validateContentLabelPref(pref).success &&
                 pref.label === legacyLabelValue &&
                 pref.labelerDid === undefined,
-            )
+            ) as AppBskyActorDefs.ContentLabelPref | undefined
 
             if (legacyLabelPref) {
               legacyLabelPref.visibility = value
@@ -926,10 +926,10 @@ function remapLegacyLabels(
     suggestive: 'sexual',
   }
 
-  for (const labelValue in _labels) {
-    const newLabelValue = legacyToNewMap[labelValue]!
-    if (newLabelValue) {
-      _labels[newLabelValue] = _labels[labelValue]
+  for (const labelName in _labels) {
+    const newLabelName = legacyToNewMap[labelName]!
+    if (newLabelName) {
+      _labels[newLabelName] = _labels[labelName]
     }
   }
 
