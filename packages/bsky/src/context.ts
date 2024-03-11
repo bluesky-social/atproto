@@ -9,9 +9,13 @@ import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
-import { dedupeStrs } from '@atproto/common'
 import { BsyncClient } from './bsync'
 import { CourierClient } from './courier'
+import {
+  ParsedLabelers,
+  defaultLabelerHeader,
+  parseLabelerHeader,
+} from './util'
 
 export class AppContext {
   constructor(
@@ -82,15 +86,10 @@ export class AppContext {
     })
   }
 
-  reqLabelers(req: express.Request): string[] {
-    const val = req.header('atproto-labelers')
-    if (!val) return this.cfg.labelsFromIssuerDids
-    return dedupeStrs(
-      val
-        .split(',')
-        .map((did) => did.trim())
-        .slice(0, 10),
-    )
+  reqLabelers(req: express.Request): ParsedLabelers {
+    const val = req.header('atproto-accept-labelers')
+    if (!val) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    return parseLabelerHeader(val)
   }
 }
 
