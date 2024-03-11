@@ -567,6 +567,16 @@ export class BskyAgent extends AtpAgent {
             !(pref.label === key && pref.labelerDid === labelerDid),
         )
         .concat([labelPref])
+        .filter((pref) => {
+          if (!legacyLabelPref) return true
+          return (
+            !AppBskyActorDefs.isContentLabelPref(pref) ||
+            !(
+              pref.label === legacyLabelPref.label &&
+              pref.labelerDid === undefined
+            )
+          )
+        })
         .concat(legacyLabelPref ? [legacyLabelPref] : [])
     })
   }

@@ -295,6 +295,25 @@ describe('agent', () => {
     expect(b.moderationPrefs.labels.suggestive).toEqual('warn')
   })
 
+  it(`double-write for legacy: filters out existing old label pref if double-written`, async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    await agent.createAccount({
+      handle: 'user12.test',
+      email: 'user12@test.com',
+      password: 'password',
+    })
+
+    await agent.setContentLabelPref('nsfw', 'hide')
+    await agent.setContentLabelPref('porn', 'hide')
+    const a = await agent.app.bsky.actor.getPreferences({})
+
+    const nsfwSettings = a.data.preferences.filter(
+      (pref) => pref.label === 'nsfw',
+    )
+    expect(nsfwSettings.length).toEqual(1)
+  })
+
   it(`remaps old values to new on read`, async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 
