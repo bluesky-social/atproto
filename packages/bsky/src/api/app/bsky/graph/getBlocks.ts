@@ -11,7 +11,7 @@ import {
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers }),
       }
     },
   })

@@ -2,6 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getSuggestedFeeds({
@@ -31,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
           feeds: feedViews,
           cursor: parseString(suggestedRes.cursor),
         },
+        headers: resHeaders({ labelers }),
       }
     },
   })

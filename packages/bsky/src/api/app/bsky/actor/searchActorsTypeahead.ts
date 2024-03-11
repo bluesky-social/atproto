@@ -14,6 +14,7 @@ import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActorsTypeahead = createPipeline(
@@ -35,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers }),
       }
     },
   })

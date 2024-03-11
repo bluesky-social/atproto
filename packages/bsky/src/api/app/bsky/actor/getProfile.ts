@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { resHeaders } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ auth, params, req, res }) => {
+    handler: async ({ auth, params, req }) => {
       const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
@@ -26,11 +26,14 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers,
+        }),
       }
     },
   })

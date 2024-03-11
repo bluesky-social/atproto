@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { clearlyBadCursor, setRepoRev } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, req, res }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
@@ -31,11 +31,11 @@ export default function (server: Server, ctx: AppContext) {
       const result = await getTimeline({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers, repoRev }),
       }
     },
   })

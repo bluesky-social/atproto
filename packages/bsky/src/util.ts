@@ -31,3 +31,10 @@ export const defaultLabelerHeader = (dids: string[]): ParsedLabelers => {
     redact: new Set(dids),
   }
 }
+
+export const formatLabelerHeader = (parsed: ParsedLabelers): string => {
+  const parts = parsed.dids.map((did) =>
+    parsed.redact.has(did) ? `${did};redact` : did,
+  )
+  return parts.join(',')
+}
