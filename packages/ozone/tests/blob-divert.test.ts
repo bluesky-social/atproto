@@ -18,8 +18,8 @@ describe('blob divert', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_blob_divert_test',
       ozone: {
-        blobDivertServiceUrl: `https://blob-report.com`,
-        blobDivertServiceAuthToken: 'test-auth-token',
+        blobDivertUrl: `https://blob-report.com`,
+        blobDivertAdminPassword: 'test-auth-token',
       },
     })
     agent = network.pds.getClient()
