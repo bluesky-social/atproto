@@ -106,8 +106,11 @@ describe('label hydration', () => {
     expect(res.data.labels?.length).toBe(1)
     expect(res.data.labels?.[0].src).toBe(labelerDid)
     expect(res.data.labels?.[0].val).toBe('misleading')
+
     expect(res.headers['atproto-content-labelers']).toEqual(
-      `${labelerDid};redact`,
+      network.bsky.ctx.cfg.labelsFromIssuerDids
+        .map((did) => `${did};redact`)
+        .join(','),
     )
   })
 })
