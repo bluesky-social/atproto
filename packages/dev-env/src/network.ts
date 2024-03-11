@@ -53,7 +53,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       redisHost,
       modServiceDid: ozoneDid,
-      labelsFromIssuerDids: [ozoneDid],
+      labelsFromIssuerDids: [ozoneDid, 'did:example:labeler'], // this did is also used as the labeler in seeds
       ...params.bsky,
     })
 
