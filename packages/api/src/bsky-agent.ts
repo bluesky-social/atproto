@@ -432,6 +432,10 @@ export class BskyAgent extends AtpAgent {
       }
     }
 
+    prefs.moderationPrefs.labels = remapLegacyLabels(
+      prefs.moderationPrefs.labels,
+    )
+
     // automatically configure the client
     this.configureLabelersHeader(prefsArrayToLabelerDids(res.data.preferences))
 
@@ -510,6 +514,8 @@ export class BskyAgent extends AtpAgent {
           pref.label === key &&
           pref.labelerDid === labelerDid,
       )
+      let legacyLabelPref: AppBskyActorDefs.ContentLabelPref | undefined
+
       if (labelPref) {
         labelPref.visibility = value
       } else {
@@ -520,6 +526,40 @@ export class BskyAgent extends AtpAgent {
           visibility: value,
         }
       }
+
+      if (AppBskyActorDefs.isContentLabelPref(labelPref)) {
+        // is global
+        if (!labelPref.labelerDid) {
+          const legacyLabelValue = {
+            'graphic-media': 'gore',
+            porn: 'nsfw',
+            sexual: 'suggestive',
+          }[labelPref.label]
+
+          // if it's a legacy label, double-write the legacy label
+          if (legacyLabelValue) {
+            legacyLabelPref = prefs.findLast(
+              (pref) =>
+                AppBskyActorDefs.isContentLabelPref(pref) &&
+                AppBskyActorDefs.validateContentLabelPref(pref).success &&
+                pref.label === legacyLabelValue &&
+                pref.labelerDid === undefined,
+            ) as AppBskyActorDefs.ContentLabelPref | undefined
+
+            if (legacyLabelPref) {
+              legacyLabelPref.visibility = value
+            } else {
+              legacyLabelPref = {
+                $type: 'app.bsky.actor.defs#contentLabelPref',
+                label: legacyLabelValue,
+                labelerDid: undefined,
+                visibility: value,
+              }
+            }
+          }
+        }
+      }
+
       return prefs
         .filter(
           (pref) =>
@@ -527,6 +567,17 @@ export class BskyAgent extends AtpAgent {
             !(pref.label === key && pref.labelerDid === labelerDid),
         )
         .concat([labelPref])
+        .filter((pref) => {
+          if (!legacyLabelPref) return true
+          return (
+            !AppBskyActorDefs.isContentLabelPref(pref) ||
+            !(
+              pref.label === legacyLabelPref.label &&
+              pref.labelerDid === undefined
+            )
+          )
+        })
+        .concat(legacyLabelPref ? [legacyLabelPref] : [])
     })
   }
 
@@ -859,6 +910,30 @@ function adjustLegacyContentLabelPref(
   }
 
   return { ...pref, visibility }
+}
+
+/**
+ * Re-maps legacy labels to new labels on READ. Does not save these changes to
+ * the user's preferences.
+ */
+function remapLegacyLabels(
+  labels: BskyPreferences['moderationPrefs']['labels'],
+) {
+  const _labels = { ...labels }
+  const legacyToNewMap: Record<string, string | undefined> = {
+    gore: 'graphic-media',
+    nsfw: 'porn',
+    suggestive: 'sexual',
+  }
+
+  for (const labelName in _labels) {
+    const newLabelName = legacyToNewMap[labelName]!
+    if (newLabelName) {
+      _labels[newLabelName] = _labels[labelName]
+    }
+  }
+
+  return _labels
 }
 
 /**
