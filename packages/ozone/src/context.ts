@@ -17,6 +17,7 @@ import {
 import { BlobDiverter } from './daemon/blob-diverter'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
+import { getSigningKeyId } from './util'
 
 export type AppContextOptions = {
   db: Database
@@ -27,6 +28,7 @@ export type AppContextOptions = {
   pdsAgent: AtpAgent | undefined
   blobDiverter?: BlobDiverter
   signingKey: Keypair
+  signingKeyId: number
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
@@ -50,6 +52,7 @@ export class AppContext {
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+    const signingKeyId = await getSigningKeyId(db, signingKey.did())
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const pdsAgent = cfg.pds
       ? new AtpAgent({ service: cfg.pds.url })
@@ -78,20 +81,20 @@ export class AppContext {
       pds: cfg.pds ?? undefined,
     })
     const modService = ModerationService.creator(
+      signingKey,
+      signingKeyId,
       cfg,
       backgroundQueue,
       idResolver,
       eventPusher,
       appviewAgent,
       createAuthHeaders,
-      cfg.service.did,
       overrides?.imgInvalidator,
-      cfg.cdn.paths,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
 
-    const sequencer = new Sequencer(db)
+    const sequencer = new Sequencer(modService(db))
 
     const authVerifier = new AuthVerifier(idResolver, {
       serviceDid: cfg.service.did,
@@ -110,6 +113,7 @@ export class AppContext {
         appviewAgent,
         pdsAgent,
         signingKey,
+        signingKeyId,
         idResolver,
         backgroundQueue,
         sequencer,
@@ -161,6 +165,10 @@ export class AppContext {
     return this.opts.signingKey
   }
 
+  get signingKeyId(): number {
+    return this.opts.signingKeyId
+  }
+
   get plcClient(): plc.Client {
     return new plc.Client(this.cfg.identity.plcUrl)
   }
@@ -200,6 +208,12 @@ export class AppContext {
   async appviewAuth() {
     return this.serviceAuthHeaders(this.cfg.appview.did)
   }
-}
 
+  devOverride(overrides: Partial<AppContextOptions>) {
+    this.opts = {
+      ...this.opts,
+      ...overrides,
+    }
+  }
+}
 export default AppContext
