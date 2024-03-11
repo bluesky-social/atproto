@@ -54,7 +54,10 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed([skeleton.did], params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed([skeleton.did], {
+    ...params.hydrateCtx,
+    includeTakedowns: true,
+  })
 }
 
 const presentation = (input: {

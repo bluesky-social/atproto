@@ -61,7 +61,9 @@ export class Views {
   // ------------
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    return !!state.actors?.get(did)?.takedownRef
+    if (state.actors?.get(did)?.takedownRef) return true
+    if (state.labels?.get(did)?.isTakendown) return true
+    return false
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
