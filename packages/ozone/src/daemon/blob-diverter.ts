@@ -10,17 +10,17 @@ import { CID } from 'multiformats/cid'
 
 import Database from '../db'
 import { retryHttp } from '../util'
-import { BlobReportServiceConfig } from '../config'
+import { BlobDivertConfig } from '../config'
 
 export class BlobDiverter {
-  serviceConfig: BlobReportServiceConfig
+  serviceConfig: BlobDivertConfig
   idResolver: IdResolver
 
   constructor(
     public db: Database,
     services: {
       idResolver: IdResolver
-      serviceConfig: BlobReportServiceConfig
+      serviceConfig: BlobDivertConfig
     },
   ) {
     this.serviceConfig = services.serviceConfig
@@ -69,7 +69,7 @@ export class BlobDiverter {
       method: 'POST',
       data: imageStream,
       headers: {
-        Authorization: this.serviceConfig.authToken,
+        Authorization: basicAuth('admin', this.serviceConfig.adminPassword),
         'Content-Type': contentType,
       },
     })
@@ -143,4 +143,8 @@ export class BlobDiverter {
 
     return true
   }
+}
+
+const basicAuth = (username: string, password: string) => {
+  return 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64')
 }

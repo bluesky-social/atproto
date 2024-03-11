@@ -70,10 +70,10 @@ export class AppContext {
       })
 
     const backgroundQueue = new BackgroundQueue(db)
-    const blobDiverter = cfg.blobDivertService
+    const blobDiverter = cfg.blobDivert
       ? new BlobDiverter(db, {
           idResolver,
-          serviceConfig: cfg.blobDivertService,
+          serviceConfig: cfg.blobDivert,
         })
       : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
