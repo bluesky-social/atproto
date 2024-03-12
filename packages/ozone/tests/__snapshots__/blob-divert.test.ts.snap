@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`blob divert sends blobs to configured divert service and marks divert date 1`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "user(0)",
+  "event": Object {
+    "$type": "com.atproto.admin.defs#modEventDivert",
+    "comment": "Diverting for test",
+  },
+  "id": 1,
+  "subject": Object {
+    "$type": "com.atproto.repo.strongRef",
+    "cid": "cids(0)",
+    "uri": "record(0)",
+  },
+  "subjectBlobCids": Array [
+    "cids(1)",
+    "cids(2)",
+  ],
+}
+`;

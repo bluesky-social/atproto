@@ -92,6 +92,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventMute',
               'lex:com.atproto.admin.defs#modEventEmail',
               'lex:com.atproto.admin.defs#modEventResolveAppeal',
+              'lex:com.atproto.admin.defs#modEventDivert',
             ],
           },
           subject: {
@@ -150,6 +151,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventMute',
               'lex:com.atproto.admin.defs#modEventEmail',
               'lex:com.atproto.admin.defs#modEventResolveAppeal',
+              'lex:com.atproto.admin.defs#modEventDivert',
             ],
           },
           subject: {
@@ -937,6 +939,16 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      modEventDivert: {
+        type: 'object',
+        description:
+          "Divert a record's blobs to a 3rd party service for further scanning/tagging",
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },
@@ -6310,6 +6322,13 @@ export const schemaDict = {
             type: 'integer',
             minimum: 0,
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#generatorViewerState',
@@ -7614,6 +7633,13 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.graph.defs#listViewerState',
@@ -7663,6 +7689,13 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
           viewer: {
             type: 'ref',

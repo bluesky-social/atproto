@@ -6,6 +6,8 @@ import { RepoPushEventType } from '../db/schema/repo_push_event'
 import { retryHttp } from '../util'
 import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
+import { BlobPushEvent } from '../db/schema/blob_push_event'
+import { Insertable, Selectable } from 'kysely'
 
 type EventSubject = InputSchema['subject']
 
@@ -285,20 +287,53 @@ export class EventPusher {
         subject,
         evt.takedownRef,
       )
-      await dbTxn.db
-        .updateTable('blob_push_event')
-        .set(
-          succeeded
-            ? { confirmedAt: new Date() }
-            : {
-                lastAttempted: new Date(),
-                attempts: (evt.attempts ?? 0) + 1,
-              },
-        )
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('subjectBlobCid', '=', evt.subjectBlobCid)
-        .where('eventType', '=', evt.eventType)
-        .execute()
+      await this.markBlobEventAttempt(dbTxn, evt, succeeded)
     })
+  }
+
+  async markBlobEventAttempt(
+    dbTxn: Database,
+    event: Selectable<BlobPushEvent>,
+    succeeded: boolean,
+  ) {
+    await dbTxn.db
+      .updateTable('blob_push_event')
+      .set(
+        succeeded
+          ? { confirmedAt: new Date() }
+          : {
+              lastAttempted: new Date(),
+              attempts: (event.attempts ?? 0) + 1,
+            },
+      )
+      .where('subjectDid', '=', event.subjectDid)
+      .where('subjectBlobCid', '=', event.subjectBlobCid)
+      .where('eventType', '=', event.eventType)
+      .execute()
+  }
+
+  async logBlobPushEvent(
+    blobValues: Insertable<BlobPushEvent>[],
+    takedownRef?: string | null,
+  ) {
+    return this.db.db
+      .insertInto('blob_push_event')
+      .values(blobValues)
+      .onConflict((oc) =>
+        oc.columns(['subjectDid', 'subjectBlobCid', 'eventType']).doUpdateSet({
+          takedownRef,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        }),
+      )
+      .returning([
+        'id',
+        'subjectDid',
+        'subjectUri',
+        'subjectBlobCid',
+        'eventType',
+      ])
+      .execute()
   }
 }

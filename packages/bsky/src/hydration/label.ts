@@ -50,8 +50,9 @@ export class LabelHydrator {
       issuers: labelers.dids,
     })
     return res.labels.reduce((acc, cur) => {
-      const label = parseJsonBytes(cur) as Label | undefined
-      if (!label || label.neg) return acc
+      const parsed = parseJsonBytes(cur) as Label | undefined
+      if (!parsed || parsed.neg) return acc
+      const { sig: _, ...label } = parsed
       let entry = acc.get(label.uri)
       if (!entry) {
         entry = {

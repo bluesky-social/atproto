@@ -225,6 +225,7 @@ export class Views {
       return undefined
     }
     const listViewer = state.listViewers?.get(uri)
+    const labels = state.labels?.get(uri) ?? []
     const creator = new AtUri(uri).hostname
     return {
       uri,
@@ -239,6 +240,7 @@ export class Views {
           )
         : undefined,
       indexedAt: list.sortedAt.toISOString(),
+      labels,
       viewer: listViewer
         ? {
             muted: !!listViewer.viewerMuted,
@@ -349,6 +351,7 @@ export class Views {
     if (!creator) return
     const viewer = state.feedgenViewers?.get(uri)
     const aggs = state.feedgenAggs?.get(uri)
+    const labels = state.labels?.get(uri) ?? []
 
     return {
       uri,
@@ -366,6 +369,7 @@ export class Views {
           )
         : undefined,
       likeCount: aggs?.likes,
+      labels,
       viewer: viewer
         ? {
             like: viewer.like,

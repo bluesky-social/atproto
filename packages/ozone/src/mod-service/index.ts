@@ -566,27 +566,17 @@ export class ModerationService {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,
-            subjectDid: subject.did,
-            subjectBlobCid: cid.toString(),
             takedownRef,
+            subjectDid: subject.did,
+            subjectUri: subject.uri || null,
+            subjectBlobCid: cid.toString(),
           })
         }
       }
-      const blobEvts = await this.db.db
-        .insertInto('blob_push_event')
-        .values(blobValues)
-        .onConflict((oc) =>
-          oc
-            .columns(['subjectDid', 'subjectBlobCid', 'eventType'])
-            .doUpdateSet({
-              takedownRef,
-              confirmedAt: null,
-              attempts: 0,
-              lastAttempted: null,
-            }),
-        )
-        .returning(['id', 'subjectDid', 'subjectBlobCid', 'eventType'])
-        .execute()
+      const blobEvts = await this.eventPusher.logBlobPushEvent(
+        blobValues,
+        takedownRef,
+      )
 
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {

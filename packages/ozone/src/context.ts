@@ -14,6 +14,7 @@ import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { BlobDiverter } from './daemon/blob-diverter'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
 import { getSigningKeyId } from './util'
@@ -25,6 +26,7 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
+  blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
   idResolver: IdResolver
@@ -56,6 +58,10 @@ export class AppContext {
       ? new AtpAgent({ service: cfg.pds.url })
       : undefined
 
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
@@ -64,15 +70,16 @@ export class AppContext {
       })
 
     const backgroundQueue = new BackgroundQueue(db)
+    const blobDiverter = cfg.blobDivert
+      ? new BlobDiverter(db, {
+          idResolver,
+          serviceConfig: cfg.blobDivert,
+        })
+      : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
-
-    const idResolver = new IdResolver({
-      plcUrl: cfg.identity.plcUrl,
-    })
-
     const modService = ModerationService.creator(
       signingKey,
       signingKeyId,
@@ -111,6 +118,7 @@ export class AppContext {
         backgroundQueue,
         sequencer,
         authVerifier,
+        blobDiverter,
         ...(overrides ?? {}),
       },
       secrets,
@@ -135,6 +143,10 @@ export class AppContext {
 
   get modService(): ModerationServiceCreator {
     return this.opts.modService
+  }
+
+  get blobDiverter(): BlobDiverter | undefined {
+    return this.opts.blobDiverter
   }
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
