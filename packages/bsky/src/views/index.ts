@@ -225,7 +225,7 @@ export class Views {
       return undefined
     }
     const listViewer = state.listViewers?.get(uri)
-    const labels = state.labels?.get(uri) ?? []
+    const labels = state.labels?.get(uri)?.labels ?? []
     const creator = new AtUri(uri).hostname
     return {
       uri,
@@ -351,7 +351,7 @@ export class Views {
     if (!creator) return
     const viewer = state.feedgenViewers?.get(uri)
     const aggs = state.feedgenAggs?.get(uri)
-    const labels = state.labels?.get(uri) ?? []
+    const labels = state.labels?.get(uri)?.labels ?? []
 
     return {
       uri,
