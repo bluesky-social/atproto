@@ -37,10 +37,17 @@ export function SignInView({
   const accounts = useMemo(() => sessions.map((s) => s.account), [sessions])
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
-  // Automatically accept
   useEffect(() => {
+    // Automatically accept
     if (session && !session.loginRequired && !session.consentRequired) {
       onAccept(session.account)
+    }
+
+    // Make sure the "back" action shows the account picker instead of the
+    // sign-in form (since the account was added to the list of current
+    // sessions).
+    if (session) {
+      setShowSignInForm(false)
     }
   }, [session])
 
