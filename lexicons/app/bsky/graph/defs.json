@@ -11,6 +11,10 @@
         "name": { "type": "string", "maxLength": 64, "minLength": 1 },
         "purpose": { "type": "ref", "ref": "#listPurpose" },
         "avatar": { "type": "string" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "viewer": { "type": "ref", "ref": "#listViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
@@ -34,6 +38,10 @@
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
         "avatar": { "type": "string" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "viewer": { "type": "ref", "ref": "#listViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }

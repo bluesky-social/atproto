@@ -5,6 +5,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
@@ -14,6 +15,7 @@ export interface ListViewBasic {
   name: string
   purpose: ListPurpose
   avatar?: string
+  labels?: ComAtprotoLabelDefs.Label[]
   viewer?: ListViewerState
   indexedAt?: string
   [k: string]: unknown
@@ -40,6 +42,7 @@ export interface ListView {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
+  labels?: ComAtprotoLabelDefs.Label[]
   viewer?: ListViewerState
   indexedAt: string
   [k: string]: unknown
