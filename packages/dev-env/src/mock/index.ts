@@ -378,25 +378,23 @@ export async function generateMockSetup(env: TestNetwork) {
             'nudity',
             'sexual-figurative',
             'graphic-media',
-            'gore',
-            'upsetting',
-            'sensitive',
             'self-harm',
-            'intolerant',
+            'sensitive',
             'extremist',
-            'rude',
+            'intolerant',
             'threat',
-            'harassment',
-            'spam',
-            'engagement-farming',
-            'impersonation',
-            'inauthentic',
-            'scam',
+            'rude',
+            'illicit',
             'security',
-            'misleading',
-            'misinformation',
             'unsafe-link',
-            'illegal',
+            'impersonation',
+            'misinformation',
+            'scam',
+            'engagement-farming',
+            'spam',
+            'rumor',
+            'misleading',
+            'inauthentic',
           ],
           labelValueDefinitions: [
             {
@@ -410,7 +408,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Spam',
                   description:
-                    'Activity that is unsolicited, repetitive, or irrelevant, and intrusive to users. Inclusive of replies, mentions, follows, likes, and notifications that are used in a spammy manner.',
+                    'Unwanted, repeated, or unrelated actions that bother users.',
                 },
               ],
             },
@@ -425,7 +423,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Impersonation',
                   description:
-                    'Attempting to deceive users by mimicking the identity of another person, brand, or entity without authorization. This includes using similar usernames, profile pictures, and posting content that falsely represents the impersonated party.',
+                    'Pretending to be someone else without permission.',
                 },
               ],
             },
@@ -439,8 +437,7 @@ export async function generateMockSetup(env: TestNetwork) {
                 {
                   lang: 'en',
                   name: 'Scam',
-                  description:
-                    'Engaging in deceptive practices aimed at defrauding or misleading users, such as fraudulent offers, phishing attempts, or false claims to solicit personal information or financial gain. This includes fake giveaways, investment scams, and counterfeit sales',
+                  description: 'Scams, phishing & fraud.',
                 },
               ],
             },
@@ -454,8 +451,7 @@ export async function generateMockSetup(env: TestNetwork) {
                 {
                   lang: 'en',
                   name: 'Intolerance',
-                  description:
-                    'Includes hateful, intolerant, or discriminatory views against individuals or groups based on gender, race, religion or other protected characteristics.',
+                  description: 'Discrimination against protected groups.',
                 },
               ],
             },
@@ -470,7 +466,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Self-Harm',
                   description:
-                    'Depicts or promotes self-injurious behavior, including cutting, self-mutilation, or suicide attempts. This includes graphic imagery, discussions that glorify or encourage self-harm, and potentially triggering narratives related to self-injury.',
+                    'Promotes self-harm, including graphic images, glorifying discussions, or triggering stories.',
                 },
               ],
             },
@@ -485,7 +481,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Security Concerns',
                   description:
-                    "Potentially harmful to users' online safety, including malware distribution, phishing attempts, or signs of a compromised account. This encompasses links to possible malicious software, deceptive practices aimed at stealing personal information, and unusual account behavior indicating unauthorized access.",
+                    'May be unsafe and could harm your device, steal your info, or get your account hacked.',
                 },
               ],
             },
@@ -500,7 +496,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Misleading',
                   description:
-                    'Presents false information that misleads users, including manipulated media, text hacks, link misdirects, fake websites, or fraudulent claims. ',
+                    'Altered images/videos, deceptive links, or false statements.',
                 },
               ],
             },
@@ -515,7 +511,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Threats',
                   description:
-                    'Intentions of violence or harm towards individuals or groups, including direct threats, incitement of violence, or advocating for physical or psychological harm. This includes specific threats of violence, encouragement of dangerous activities, and any communication intended to intimidate or coerce',
+                    'Promotes violence or harm towards others, including threats, incitement, or advocacy of harm.',
                 },
               ],
             },
@@ -530,12 +526,12 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Unsafe link',
                   description:
-                    'URLs that may lead to harmful websites, including those hosting malware, phishing schemes, or content that violates community guidelines. This includes links that may compromise user security, privacy, or expose them to deceptive or inappropriate content.',
+                    'Links to harmful sites with malware, phishing, or violating content that risk security and privacy.',
                 },
               ],
             },
             {
-              identifier: 'illegal',
+              identifier: 'illicit',
               blurs: 'content',
               severity: 'alert',
               defaultSetting: 'hide',
@@ -543,9 +539,9 @@ export async function generateMockSetup(env: TestNetwork) {
               locales: [
                 {
                   lang: 'en',
-                  name: 'Illegal',
+                  name: 'Illicit',
                   description:
-                    'Promotion, sale, or facilitation of goods, services, or activities that violate laws, including but not limited to unauthorized drugs, weapons sales, human trafficking, or promoting dangerous illegal acts. This encompasses any content that encourages or aids in the commission of unlawful behavior',
+                    'Promoting or selling potentially illicit goods, services, or activities.',
                 },
               ],
             },
@@ -560,7 +556,22 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Misinformation',
                   description:
-                    'Inaccurate or misleading, including unverified claims, facts that have been proven false, and conspiracy theories without credible support. This includes information that could lead to public confusion, health risks, or undermine public trust on important matters, such as elections. ',
+                    'Spreading false or misleading info, including unverified claims and harmful conspiracy theories.',
+                },
+              ],
+            },
+            {
+              identifier: 'rumor',
+              blurs: 'content',
+              severity: 'inform',
+              defaultSetting: 'warn',
+              adultOnly: false,
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Rumor',
+                  description:
+                    'Approach with caution, as these claims lack evidence from credible sources.',
                 },
               ],
             },
@@ -575,7 +586,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Rude',
                   description:
-                    'May not violate specific community standards but is characterized by discourtesy or impoliteness, including crude language, disrespectful comments, or aggressive tones. This includes interactions that are unnecessarily harsh, confrontational, or lacking in constructive purpose.',
+                    'Rude or impolite, including crude language and disrespectful comments, without constructive purpose.',
                 },
               ],
             },
@@ -590,22 +601,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Extremist',
                   description:
-                    'Promotion, support, or advocacy of radical ideologies that advocate for violence, hate, or discrimination against individuals or groups.',
-                },
-              ],
-            },
-            {
-              identifier: 'harassment',
-              blurs: 'content',
-              severity: 'alert',
-              defaultSetting: 'hide',
-              adultOnly: false,
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Harassment',
-                  description:
-                    'Targeted, aggressive behavior intended to intimidate, bully, or demean individuals or groups. This includes persistent unwanted contact, threats, derogatory comments, and the sharing of personal information without consent.',
+                    'Radical views advocating violence, hate, or discrimination against individuals or groups.',
                 },
               ],
             },
@@ -620,7 +616,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Sensitive',
                   description:
-                    'Could be distressing or triggering to some users, including depictions or discussions of substance abuse, eating disorders, and other mental health issues. It aims to caution viewers about potentially difficult subjects that may affect their well-being or evoke strong emotional responses.',
+                    'May be upsetting, covering topics like substance abuse or mental health issues, cautioning sensitive viewers.',
                 },
               ],
             },
@@ -635,7 +631,7 @@ export async function generateMockSetup(env: TestNetwork) {
                   lang: 'en',
                   name: 'Engagement Farming',
                   description:
-                    'Pattern of content and/or bulk interactions which seems insincere and with the purpose of building a large following. Inclusive of follow, post, mention and like behaviours, along with accounts that churn these activities to gain attention or disrupt the user experience.  ',
+                    'Insincere content or bulk actions aimed at gaining followers, including frequent follows, posts, and likes.',
                 },
               ],
             },
@@ -649,23 +645,7 @@ export async function generateMockSetup(env: TestNetwork) {
                 {
                   lang: 'en',
                   name: 'Inauthentic Account',
-                  description:
-                    'Account is not what it appears. Might be a bot pretending to be a human, or a human misleadingly pretending to be a different demographic or identity group.',
-                },
-              ],
-            },
-            {
-              identifier: 'upsetting',
-              blurs: 'content',
-              severity: 'alert',
-              defaultSetting: 'warn',
-              adultOnly: false,
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Upsetting',
-                  description:
-                    'Could cause cause emotional distress or discomfort to viewers. This includes intense emotional confrontations, discussions of traumatic events, or any material that could be considered distressing or deeply troubling.',
+                  description: 'Bot or a person pretending to be someone else.',
                 },
               ],
             },
@@ -673,29 +653,14 @@ export async function generateMockSetup(env: TestNetwork) {
               identifier: 'sexual-figurative',
               blurs: 'media',
               severity: 'none',
-              defaultSetting: 'ignore',
+              defaultSetting: 'show',
               adultOnly: true,
               locales: [
                 {
                   lang: 'en',
                   name: 'Sexually Suggestive (Cartoon)',
                   description:
-                    'Drawn, painted or digital art that is explicitly sexual or employs suggestive elements to evoke sexual themes, through provocative posts, partially concealed nudity to suggest sexual content. ',
-                },
-              ],
-            },
-            {
-              identifier: 'gore',
-              blurs: 'media',
-              severity: 'alert',
-              defaultSetting: 'warn',
-              adultOnly: false,
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Graphic Imagery (Gore)',
-                  description:
-                    'Graphically depicts violence, injuries, or bodily harm, which may be shocking or disturbing to viewers. This includes scenes of accidents, surgical procedures, or explicit violence in both real-life and fictional contexts.',
+                    'Art with explicit or suggestive sexual themes, including provocative imagery or partial nudity.',
                 },
               ],
             },
