@@ -15,17 +15,17 @@ const defaultService = (
 ): { url: string; did: string } | null => {
   const nsid = path.replace('/xrpc/', '')
   switch (nsid) {
-    case ids.ComAtprotoAdminCreateCommunicationTemplate:
-    case ids.ComAtprotoAdminDeleteCommunicationTemplate:
-    case ids.ComAtprotoAdminEmitModerationEvent:
-    case ids.ComAtprotoAdminGetModerationEvent:
-    case ids.ComAtprotoAdminGetRecord:
-    case ids.ComAtprotoAdminGetRepo:
-    case ids.ComAtprotoAdminListCommunicationTemplates:
-    case ids.ComAtprotoAdminQueryModerationEvents:
-    case ids.ComAtprotoAdminQueryModerationStatuses:
-    case ids.ComAtprotoAdminSearchRepos:
-    case ids.ComAtprotoAdminUpdateCommunicationTemplate:
+    case ids.ToolsOzoneCommunicationCreateTemplate:
+    case ids.ToolsOzoneCommunicationDeleteTemplate:
+    case ids.ToolsOzoneCommunicationUpdateTemplate:
+    case ids.ToolsOzoneCommunicationListTemplates:
+    case ids.ToolsOzoneModerationEmitEvent:
+    case ids.ToolsOzoneModerationGetEvent:
+    case ids.ToolsOzoneModerationGetRecord:
+    case ids.ToolsOzoneModerationGetRepo:
+    case ids.ToolsOzoneModerationQueryEvents:
+    case ids.ToolsOzoneModerationQueryStatuses:
+    case ids.ToolsOzoneModerationSearchRepos:
       return ctx.cfg.modService
     case ids.ComAtprotoModerationCreateReport:
       return ctx.cfg.reportService

@@ -4,13 +4,11 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { BlobDiverter } from '../src/daemon'
 import { forSnapshot } from './_util'
 
 describe('blob divert', () => {
   let network: TestNetwork
-  let agent: AtpAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 
@@ -22,7 +20,6 @@ describe('blob divert', () => {
         blobDivertAdminPassword: 'test-auth-token',
       },
     })
-    agent = network.pds.getClient()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
@@ -48,11 +45,11 @@ describe('blob divert', () => {
   })
 
   const emitDivertEvent = async () =>
-    modClient.emitModerationEvent(
+    modClient.emitEvent(
       {
         subject: getSubject(),
         event: {
-          $type: 'com.atproto.admin.defs#modEventDivert',
+          $type: 'tools.ozone.moderation.defs#modEventDivert',
           comment: 'Diverting for test',
         },
         createdBy: sc.dids.alice,
@@ -81,7 +78,7 @@ describe('blob divert', () => {
     expect(reportServiceRequest).toHaveBeenCalled()
     expect(forSnapshot(divertEvent)).toMatchSnapshot()
 
-    const { subjectStatuses } = await modClient.queryModerationStatuses({
+    const { subjectStatuses } = await modClient.queryStatuses({
       subject: getSubject().uri,
     })
 

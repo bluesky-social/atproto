@@ -18,9 +18,8 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
-  RepoRef,
-  RepoBlobRef,
-} from '../lexicon/types/com/atproto/admin/defs'
+} from '../lexicon/types/tools/ozone/moderation/defs'
+import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
@@ -253,7 +252,7 @@ export class ModerationService {
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
-      .where('action', '=', 'com.atproto.admin.defs#modEventReport')
+      .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
@@ -376,12 +375,12 @@ export class ModerationService {
     // Means the subject was suspended and needs to be unsuspended
     if (subject.reverseSuspend) {
       builder = builder
-        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .where('action', '=', 'tools.ozone.moderation.defs#modEventTakedown')
         .where('durationInHours', 'is not', null)
     }
     if (subject.reverseMute) {
       builder = builder
-        .where('action', '=', 'com.atproto.admin.defs#modEventMute')
+        .where('action', '=', 'tools.ozone.moderation.defs#modEventMute')
         .where('durationInHours', 'is not', null)
     }
 
@@ -428,13 +427,13 @@ export class ModerationService {
     subject,
   }: ReversibleModerationEvent): Promise<ModerationEventRow> {
     const isRevertingTakedown =
-      action === 'com.atproto.admin.defs#modEventTakedown'
+      action === 'tools.ozone.moderation.defs#modEventTakedown'
     this.db.assertTransaction()
     const { event } = await this.logEvent({
       event: {
         $type: isRevertingTakedown
-          ? 'com.atproto.admin.defs#modEventReverseTakedown'
-          : 'com.atproto.admin.defs#modEventUnmute',
+          ? 'tools.ozone.moderation.defs#modEventReverseTakedown'
+          : 'tools.ozone.moderation.defs#modEventUnmute',
         comment: comment ?? undefined,
       },
       createdAt,
@@ -694,7 +693,7 @@ export class ModerationService {
 
     const result = await this.logEvent({
       event: {
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: reasonType,
         comment: reason,
       },

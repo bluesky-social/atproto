@@ -31,8 +31,8 @@ describe('admin repo search view', () => {
   })
 
   beforeAll(async () => {
-    await modClient.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids['cara-wiegand69.test'],
@@ -41,7 +41,7 @@ describe('admin repo search view', () => {
   })
 
   it('gives relevant results', async () => {
-    const result = await agent.api.com.atproto.admin.searchRepos(
+    const result = await agent.api.tools.ozone.moderation.searchRepos(
       { term: 'car' },
       { headers },
     )
@@ -71,7 +71,7 @@ describe('admin repo search view', () => {
 
   it('finds repo by did', async () => {
     const term = sc.dids['cara-wiegand69.test']
-    const res = await agent.api.com.atproto.admin.searchRepos(
+    const res = await agent.api.tools.ozone.moderation.searchRepos(
       { term },
       { headers },
     )
@@ -83,7 +83,7 @@ describe('admin repo search view', () => {
   it('paginates with term', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.com.atproto.admin.searchRepos(
+      const res = await agent.api.tools.ozone.moderation.searchRepos(
         { term: 'p', cursor, limit: 3 },
         { headers },
       )
@@ -95,7 +95,7 @@ describe('admin repo search view', () => {
       expect(res.repos.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.com.atproto.admin.searchRepos(
+    const full = await agent.api.tools.ozone.moderation.searchRepos(
       { term: 'p' },
       { headers },
     )
@@ -107,7 +107,7 @@ describe('admin repo search view', () => {
   it('paginates without term', async () => {
     const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.com.atproto.admin.searchRepos(
+      const res = await agent.api.tools.ozone.moderation.searchRepos(
         { cursor, limit: 3 },
         { headers },
       )
@@ -119,7 +119,7 @@ describe('admin repo search view', () => {
       expect(res.repos.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.com.atproto.admin.searchRepos(
+    const full = await agent.api.tools.ozone.moderation.searchRepos(
       { limit: 15 },
       { headers },
     )

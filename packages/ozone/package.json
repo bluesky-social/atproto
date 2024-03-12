@@ -20,7 +20,7 @@
   },
   "bin": "dist/bin.js",
   "scripts": {
-    "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
+    "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/ozone",

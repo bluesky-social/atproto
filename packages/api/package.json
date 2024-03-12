@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.10.5",
+  "version": "0.11.0-next",
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [
@@ -20,7 +20,7 @@
     "types": "dist/index.d.ts"
   },
   "scripts": {
-    "codegen": "pnpm docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
+    "codegen": "pnpm docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "docgen": "node ./scripts/generate-docs.mjs",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
