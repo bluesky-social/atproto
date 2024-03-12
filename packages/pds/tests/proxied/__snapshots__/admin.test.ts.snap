@@ -123,7 +123,7 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
-        "reviewState": "com.atproto.admin.defs#reviewClosed",
+        "reviewState": "tools.ozone.moderation.defs#reviewClosed",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",
           "did": "user(0)",
@@ -212,7 +212,7 @@ Object {
       "id": 4,
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
-      "reviewState": "com.atproto.admin.defs#reviewClosed",
+      "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
         "cid": "cids(0)",
@@ -270,7 +270,7 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
-        "reviewState": "com.atproto.admin.defs#reviewClosed",
+        "reviewState": "tools.ozone.moderation.defs#reviewClosed",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",
           "did": "user(0)",
