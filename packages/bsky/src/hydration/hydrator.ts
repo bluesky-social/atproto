@@ -305,7 +305,7 @@ export class Hydrator {
     ] = await Promise.all([
       this.feed.getPostAggregates(refs),
       ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
-      this.label.getLabelsForSubjects(allPostUris, ctx.labelers.dids),
+      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
       this.hydrateLists([...nestedListUris, ...gateListUris], ctx),
@@ -501,7 +501,7 @@ export class Hydrator {
         this.feed.getLikes(likeUris), // reason: like
         this.feed.getReposts(repostUris), // reason: repost
         this.graph.getFollows(followUris), // reason: follow
-        this.label.getLabelsForSubjects(uris, ctx.labelers.dids),
+        this.label.getLabelsForSubjects(uris, ctx.labelers),
         this.hydrateProfiles(uris.map(didFromUri), ctx),
       ])
     actionTakedownLabels(postUris, posts, labels)
