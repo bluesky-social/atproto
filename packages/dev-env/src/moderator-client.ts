@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/emitModerationEvent'
-import { QueryParams as QueryStatusesParams } from '@atproto/api/src/client/types/com/atproto/admin/queryModerationStatuses'
-import { QueryParams as QueryEventsParams } from '@atproto/api/src/client/types/com/atproto/admin/queryModerationEvents'
+import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/tools/ozone/moderation/emitEvent'
+import { QueryParams as QueryStatusesParams } from '@atproto/api/src/client/types/tools/ozone/moderation/queryStatuses'
+import { QueryParams as QueryEventsParams } from '@atproto/api/src/client/types/tools/ozone/moderation/queryEvents'
 import { TestOzone } from './ozone'
 
 type ModLevel = 'admin' | 'moderator' | 'triage'
@@ -13,7 +13,7 @@ export class ModeratorClient {
   }
 
   async getEvent(id: number, role?: ModLevel) {
-    const result = await this.agent.api.com.atproto.admin.getModerationEvent(
+    const result = await this.agent.api.tools.ozone.moderation.getEvent(
       { id },
       {
         headers: await this.ozone.modHeaders(role),
@@ -22,16 +22,8 @@ export class ModeratorClient {
     return result.data
   }
 
-  async queryModerationStatuses(input: QueryStatusesParams, role?: ModLevel) {
-    const result =
-      await this.agent.api.com.atproto.admin.queryModerationStatuses(input, {
-        headers: await this.ozone.modHeaders(role),
-      })
-    return result.data
-  }
-
-  async queryModerationEvents(input: QueryEventsParams, role?: ModLevel) {
-    const result = await this.agent.api.com.atproto.admin.queryModerationEvents(
+  async queryStatuses(input: QueryStatusesParams, role?: ModLevel) {
+    const result = await this.agent.api.tools.ozone.moderation.queryStatuses(
       input,
       {
         headers: await this.ozone.modHeaders(role),
@@ -40,7 +32,17 @@ export class ModeratorClient {
     return result.data
   }
 
-  async emitModerationEvent(
+  async queryEvents(input: QueryEventsParams, role?: ModLevel) {
+    const result = await this.agent.api.tools.ozone.moderation.queryEvents(
+      input,
+      {
+        headers: await this.ozone.modHeaders(role),
+      },
+    )
+    return result.data
+  }
+
+  async emitEvent(
     opts: {
       event: TakeActionInput['event']
       subject: TakeActionInput['subject']
@@ -58,7 +60,7 @@ export class ModeratorClient {
       reason = 'X',
       createdBy = 'did:example:admin',
     } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
+    const result = await this.agent.api.tools.ozone.moderation.emitEvent(
       { event, subject, subjectBlobCids, createdBy, reason },
       {
         encoding: 'application/json',
@@ -68,7 +70,7 @@ export class ModeratorClient {
     return result.data
   }
 
-  async reverseModerationAction(
+  async reverseAction(
     opts: {
       id: number
       subject: TakeActionInput['subject']
@@ -78,11 +80,11 @@ export class ModeratorClient {
     role?: ModLevel,
   ) {
     const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
+    const result = await this.agent.api.tools.ozone.moderation.emitEvent(
       {
         subject,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
           comment: reason,
         },
         createdBy,
@@ -105,10 +107,10 @@ export class ModeratorClient {
     role?: ModLevel,
   ) {
     const { durationInHours, ...rest } = opts
-    return this.emitModerationEvent(
+    return this.emitEvent(
       {
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
           durationInHours,
         },
         ...rest,
@@ -125,10 +127,10 @@ export class ModeratorClient {
     },
     role?: ModLevel,
   ) {
-    return this.emitModerationEvent(
+    return this.emitEvent(
       {
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         ...opts,
       },

@@ -37,32 +37,30 @@ describe('moderation-status-tags', () => {
         subject: bobsAccount,
         reportedBy: sc.dids.alice,
       })
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTag',
+          $type: 'tools.ozone.moderation.defs#modEventTag',
           add: ['interaction-churn'],
           remove: [],
         },
       })
-      const statusAfterInteractionTag = await modClient.queryModerationStatuses(
-        {
-          subject: bobsAccount.did,
-        },
-      )
+      const statusAfterInteractionTag = await modClient.queryStatuses({
+        subject: bobsAccount.did,
+      })
       expect(statusAfterInteractionTag.subjectStatuses[0].tags).toContain(
         'interaction-churn',
       )
 
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTag',
+          $type: 'tools.ozone.moderation.defs#modEventTag',
           remove: ['interaction-churn'],
           add: ['follow-churn'],
         },
       })
-      const statusAfterFollowTag = await modClient.queryModerationStatuses({
+      const statusAfterFollowTag = await modClient.queryStatuses({
         subject: bobsAccount.did,
       })
 

@@ -697,7 +697,7 @@ export class ModerationService {
 
     const result = await this.logEvent({
       event: {
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: reasonType,
         comment: reason,
       },

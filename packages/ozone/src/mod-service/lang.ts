@@ -25,7 +25,7 @@ export class ModerationLangService {
         })
         await this.moderationService.logEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventTag',
+            $type: 'tools.ozone.moderation.defs#modEventTag',
             add: recordLangs
               ? recordLangs.map((lang) => `lang:${lang}`)
               : ['lang:und'],

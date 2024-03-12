@@ -6,7 +6,7 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent, { ComAtprotoAdminEmitModerationEvent } from '@atproto/api'
+import AtpAgent, { ToolsOzoneModerationEmitEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import {
@@ -18,7 +18,7 @@ import {
   ModEventLabel,
   REVIEWCLOSED,
   REVIEWESCALATED,
-} from '../src/lexicon/types/com/atproto/admin/defs'
+} from '../src/lexicon/types/tools/ozone/moderation/defs'
 import { EventReverser } from '../src'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
 import { ImageInvalidator } from '../src/image-invalidator'
@@ -176,10 +176,9 @@ describe('moderation', () => {
         subject: repoSubject(sc.dids.bob),
       })
 
-      const moderationStatusOnBobsAccount =
-        await modClient.queryModerationStatuses({
-          subject: sc.dids.bob,
-        })
+      const moderationStatusOnBobsAccount = await modClient.queryStatuses({
+        subject: sc.dids.bob,
+      })
 
       // Validate that subject status is set to review closed and takendown flag is on
       expect(moderationStatusOnBobsAccount.subjectStatuses[0]).toMatchObject({
@@ -204,10 +203,10 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      await modClient.emitModerationEvent(
+      await modClient.emitEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventEscalate',
+            $type: 'tools.ozone.moderation.defs#modEventEscalate',
             comment: 'Y',
           },
           subject: alicesPostSubject,
@@ -216,7 +215,7 @@ describe('moderation', () => {
         'triage',
       )
 
-      const alicesPostStatus = await modClient.queryModerationStatuses({
+      const alicesPostStatus = await modClient.queryStatuses({
         subject: alicesPostRef.uri.toString(),
       })
 
@@ -234,10 +233,10 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      await modClient.emitModerationEvent(
+      await modClient.emitEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventComment',
+            $type: 'tools.ozone.moderation.defs#modEventComment',
             sticky: true,
             comment: 'This is a persistent note',
           },
@@ -247,7 +246,7 @@ describe('moderation', () => {
         'triage',
       )
 
-      const alicesPostStatus = await modClient.queryModerationStatuses({
+      const alicesPostStatus = await modClient.queryStatuses({
         subject: alicesPostRef.uri.toString(),
       })
 
@@ -259,8 +258,8 @@ describe('moderation', () => {
     it('reverses status when revert event is triggered.', async () => {
       const alicesPostRef = sc.posts[sc.dids.alice][0].ref
       const emitModEvent = async (
-        event: ComAtprotoAdminEmitModerationEvent.InputSchema['event'],
-        overwrites: Partial<ComAtprotoAdminEmitModerationEvent.InputSchema> = {},
+        event: ToolsOzoneModerationEmitEvent.InputSchema['event'],
+        overwrites: Partial<ToolsOzoneModerationEmitEvent.InputSchema> = {},
       ) => {
         const baseAction = {
           subject: {
@@ -270,7 +269,7 @@ describe('moderation', () => {
           },
           createdBy: 'did:example:admin',
         }
-        return modClient.emitModerationEvent({
+        return modClient.emitEvent({
           event,
           ...baseAction,
           ...overwrites,
@@ -278,20 +277,19 @@ describe('moderation', () => {
       }
       // Validate that subject status is marked as escalated
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: REASONSPAM,
       })
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventReport',
+        $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType: REASONMISLEADING,
       })
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventEscalate',
+        $type: 'tools.ozone.moderation.defs#modEventEscalate',
       })
-      const alicesPostStatusAfterEscalation =
-        await modClient.queryModerationStatuses({
-          subject: alicesPostRef.uriStr,
-        })
+      const alicesPostStatusAfterEscalation = await modClient.queryStatuses({
+        subject: alicesPostRef.uriStr,
+      })
       expect(
         alicesPostStatusAfterEscalation.subjectStatuses[0].reviewState,
       ).toEqual(REVIEWESCALATED)
@@ -299,30 +297,28 @@ describe('moderation', () => {
       // Validate that subject status is marked as takendown
 
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventLabel',
+        $type: 'tools.ozone.moderation.defs#modEventLabel',
         createLabelVals: ['nsfw'],
         negateLabelVals: [],
       })
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventTakedown',
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
       })
 
-      const alicesPostStatusAfterTakedown =
-        await modClient.queryModerationStatuses({
-          subject: alicesPostRef.uriStr,
-        })
+      const alicesPostStatusAfterTakedown = await modClient.queryStatuses({
+        subject: alicesPostRef.uriStr,
+      })
       expect(alicesPostStatusAfterTakedown.subjectStatuses[0]).toMatchObject({
         reviewState: REVIEWCLOSED,
         takendown: true,
       })
 
       await emitModEvent({
-        $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
       })
-      const alicesPostStatusAfterRevert =
-        await modClient.queryModerationStatuses({
-          subject: alicesPostRef.uriStr,
-        })
+      const alicesPostStatusAfterRevert = await modClient.queryStatuses({
+        subject: alicesPostRef.uriStr,
+      })
       // Validate that after reverting, the status of the subject is reverted to the last status changing event
       expect(alicesPostStatusAfterRevert.subjectStatuses[0]).toMatchObject({
         reviewState: REVIEWCLOSED,
@@ -482,10 +478,10 @@ describe('moderation', () => {
     })
 
     it('does not allow triage moderators to label.', async () => {
-      const attemptLabel = modClient.emitModerationEvent(
+      const attemptLabel = modClient.emitEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
             negateLabelVals: ['a'],
             createLabelVals: ['b', 'c'],
           },
@@ -624,10 +620,10 @@ describe('moderation', () => {
     })
 
     it('allows full moderators to takedown.', async () => {
-      await modClient.emitModerationEvent(
+      await modClient.emitEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventTakedown',
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
           },
           createdBy: 'did:example:moderator',
           subject: {
@@ -647,10 +643,10 @@ describe('moderation', () => {
     })
 
     it('does not allow non-full moderators to takedown.', async () => {
-      const attemptTakedownTriage = modClient.emitModerationEvent(
+      const attemptTakedownTriage = modClient.emitEvent(
         {
           event: {
-            $type: 'com.atproto.admin.defs#modEventTakedown',
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
           },
           createdBy: 'did:example:moderator',
           subject: {
@@ -679,7 +675,7 @@ describe('moderation', () => {
       })
       await ozone.processAll()
 
-      const statusesAfterTakedown = await modClient.queryModerationStatuses(
+      const statusesAfterTakedown = await modClient.queryStatuses(
         { subject: sc.dids.bob },
         'moderator',
       )
@@ -697,11 +693,8 @@ describe('moderation', () => {
       await ozone.processAll()
 
       const [eventList, statuses] = await Promise.all([
-        modClient.queryModerationEvents({ subject: sc.dids.bob }, 'moderator'),
-        modClient.queryModerationStatuses(
-          { subject: sc.dids.bob },
-          'moderator',
-        ),
+        modClient.queryEvents({ subject: sc.dids.bob }, 'moderator'),
+        modClient.queryStatuses({ subject: sc.dids.bob }, 'moderator'),
       ])
 
       expect(statuses.subjectStatuses[0]).toMatchObject({
@@ -713,7 +706,7 @@ describe('moderation', () => {
       expect(eventList.events[0]).toMatchObject({
         createdBy: action.createdBy,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
           comment:
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
@@ -737,16 +730,16 @@ describe('moderation', () => {
     })
 
     async function emitLabelEvent(
-      opts: Partial<ComAtprotoAdminEmitModerationEvent.InputSchema> & {
-        subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
+      opts: Partial<ToolsOzoneModerationEmitEvent.InputSchema> & {
+        subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
         createLabelVals: ModEventLabel['createLabelVals']
         negateLabelVals: ModEventLabel['negateLabelVals']
       },
     ) {
       const { createLabelVals, negateLabelVals } = opts
-      const result = await modClient.emitModerationEvent({
+      const result = await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventLabel',
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
           createLabelVals,
           negateLabelVals,
         },
@@ -758,13 +751,13 @@ describe('moderation', () => {
     }
 
     async function reverse(
-      opts: Partial<ComAtprotoAdminEmitModerationEvent.InputSchema> & {
-        subject: ComAtprotoAdminEmitModerationEvent.InputSchema['subject']
+      opts: Partial<ToolsOzoneModerationEmitEvent.InputSchema> & {
+        subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
       },
     ) {
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         createdBy: 'did:example:admin',
         reason: 'Y',
@@ -773,7 +766,7 @@ describe('moderation', () => {
     }
 
     async function getRecordLabels(uri: string) {
-      const result = await agent.api.com.atproto.admin.getRecord(
+      const result = await agent.api.tools.ozone.moderation.getRecord(
         { uri },
         { headers: await network.ozone.modHeaders() },
       )
@@ -782,7 +775,7 @@ describe('moderation', () => {
     }
 
     async function getRepoLabels(did: string) {
-      const result = await agent.api.com.atproto.admin.getRepo(
+      const result = await agent.api.tools.ozone.moderation.getRepo(
         { did },
         { headers: await network.ozone.modHeaders() },
       )
@@ -818,7 +811,7 @@ describe('moderation', () => {
     })
 
     it('sets blobCids in moderation status', async () => {
-      const { subjectStatuses } = await modClient.queryModerationStatuses({
+      const { subjectStatuses } = await modClient.queryStatuses({
         subject: post.ref.uriStr,
       })
 

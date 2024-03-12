@@ -6,8 +6,8 @@ import {
   ModeratorClient,
 } from '@atproto/dev-env'
 import {
-  ComAtprotoAdminDefs,
-  ComAtprotoAdminQueryModerationStatuses,
+  ToolsOzoneModerationDefs,
+  ToolsOzoneModerationQueryStatuses,
 } from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
@@ -17,7 +17,7 @@ import {
 import {
   REVIEWOPEN,
   REVIEWNONE,
-} from '../src/lexicon/types/com/atproto/admin/defs'
+} from '../src/lexicon/types/tools/ozone/moderation/defs'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
@@ -79,19 +79,19 @@ describe('moderation-statuses', () => {
 
   describe('query statuses', () => {
     it('returns statuses for subjects that received moderation events', async () => {
-      const response = await modClient.queryModerationStatuses({})
+      const response = await modClient.queryStatuses({})
 
       expect(forSnapshot(response.subjectStatuses)).toMatchSnapshot()
     })
 
     it('returns statuses filtered by subject language', async () => {
-      const klingonQueue = await modClient.queryModerationStatuses({
+      const klingonQueue = await modClient.queryStatuses({
         tags: ['lang:i'],
       })
 
       expect(forSnapshot(klingonQueue.subjectStatuses)).toMatchSnapshot()
 
-      const nonKlingonQueue = await modClient.queryModerationStatuses({
+      const nonKlingonQueue = await modClient.queryStatuses({
         excludeTags: ['lang:i'],
       })
 
@@ -104,13 +104,13 @@ describe('moderation-statuses', () => {
     it('returns paginated statuses', async () => {
       // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
-        params: ComAtprotoAdminQueryModerationStatuses.QueryParams,
+        params: ToolsOzoneModerationQueryStatuses.QueryParams,
       ) => {
         let cursor: string | undefined = ''
-        const statuses: ComAtprotoAdminDefs.SubjectStatusView[] = []
+        const statuses: ToolsOzoneModerationDefs.SubjectStatusView[] = []
         let count = 0
         do {
-          const results = await modClient.queryModerationStatuses({
+          const results = await modClient.queryStatuses({
             limit: 1,
             cursor,
             ...params,
@@ -128,10 +128,10 @@ describe('moderation-statuses', () => {
       expect(list[0].id).toEqual(7)
       expect(list[list.length - 1].id).toEqual(1)
 
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         subject: list[1].subject,
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
           comment: 'X',
         },
       })
@@ -160,7 +160,7 @@ describe('moderation-statuses', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       }
       const getBobsAccountStatus = async () => {
-        const data = await modClient.queryModerationStatuses({
+        const data = await modClient.queryStatuses({
           subject: bobsAccount.did,
         })
 
@@ -170,20 +170,20 @@ describe('moderation-statuses', () => {
       const bobsAccountStatusBeforeTag = await getBobsAccountStatus()
 
       await Promise.all([
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           subject: bobsAccount,
           event: {
-            $type: 'com.atproto.admin.defs#modEventTag',
+            $type: 'tools.ozone.moderation.defs#modEventTag',
             add: ['newTag'],
             remove: [],
             comment: 'X',
           },
           createdBy: sc.dids.alice,
         }),
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           subject: bobsAccount,
           event: {
-            $type: 'com.atproto.admin.defs#modEventComment',
+            $type: 'tools.ozone.moderation.defs#modEventComment',
             comment: 'X',
           },
           createdBy: sc.dids.alice,
@@ -197,7 +197,7 @@ describe('moderation-statuses', () => {
 
       // Since alice's post didn't have a reviewState it is set to reviewNone on first non-impactful event
       const getAlicesPostStatus = async () => {
-        const data = await modClient.queryModerationStatuses({
+        const data = await modClient.queryStatuses({
           subject: alicesPost.uri,
         })
 
@@ -207,10 +207,10 @@ describe('moderation-statuses', () => {
       const alicesPostStatusBeforeTag = await getAlicesPostStatus()
       expect(alicesPostStatusBeforeTag).toBeUndefined()
 
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         subject: alicesPost,
         event: {
-          $type: 'com.atproto.admin.defs#modEventComment',
+          $type: 'tools.ozone.moderation.defs#modEventComment',
           comment: 'X',
         },
         createdBy: sc.dids.alice,
@@ -218,10 +218,10 @@ describe('moderation-statuses', () => {
       const alicesPostStatusAfterTag = await getAlicesPostStatus()
       expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWNONE)
 
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         subject: alicesPost,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONMISLEADING,
           comment: 'X',
         },
@@ -236,9 +236,9 @@ describe('moderation-statuses', () => {
     it('are tracked on takendown subject', async () => {
       const post = sc.posts[sc.dids.carol][0]
       assert(post.images.length > 1)
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -248,7 +248,7 @@ describe('moderation-statuses', () => {
         subjectBlobCids: [post.images[0].image.ref.toString()],
         createdBy: sc.dids.alice,
       })
-      const result = await modClient.queryModerationStatuses({
+      const result = await modClient.queryStatuses({
         subject: post.ref.uriStr,
       })
       expect(result.subjectStatuses.length).toBe(1)
@@ -260,9 +260,9 @@ describe('moderation-statuses', () => {
 
     it('are tracked on reverse-takendown subject based on previous status', async () => {
       const post = sc.posts[sc.dids.carol][0]
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -270,7 +270,7 @@ describe('moderation-statuses', () => {
           cid: post.ref.cidStr,
         },
       })
-      const result = await modClient.queryModerationStatuses({
+      const result = await modClient.queryStatuses({
         subject: post.ref.uriStr,
       })
       expect(result.subjectStatuses.length).toBe(1)

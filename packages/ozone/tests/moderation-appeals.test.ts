@@ -4,17 +4,17 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import { ComAtprotoAdminDefs } from '@atproto/api'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   REASONMISLEADING,
   REASONSPAM,
+  REASONAPPEAL,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWOPEN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { REASONAPPEAL } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { REVIEWESCALATED } from '../src/lexicon/types/com/atproto/admin/defs'
+  REVIEWESCALATED,
+} from '@atproto/api/src/client/types/tools/ozone/moderation/defs'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork
@@ -39,8 +39,8 @@ describe('moderation-appeals', () => {
     subject: string,
     status: string,
     appealed: boolean | undefined,
-  ): Promise<ComAtprotoAdminDefs.SubjectStatusView | undefined> => {
-    const res = await modClient.queryModerationStatuses({
+  ): Promise<ToolsOzoneModerationDefs.SubjectStatusView | undefined> => {
+    const res = await modClient.queryStatuses({
       subject,
     })
     expect(res.subjectStatuses[0]?.reviewState).toEqual(status)
@@ -66,9 +66,9 @@ describe('moderation-appeals', () => {
 
     it('only changes subject status if original author of the content or a moderator is appealing', async () => {
       // Create a report by alice
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONMISLEADING,
         },
         subject: getBobsPostSubject(),
@@ -90,9 +90,9 @@ describe('moderation-appeals', () => {
       await assertBobsPostStatus(REVIEWOPEN, undefined)
 
       // Emit report event as moderator
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
@@ -132,18 +132,18 @@ describe('moderation-appeals', () => {
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventResolveAppeal',
+          $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
         },
         subject: getBobsPostSubject(),
       })
 
       const previousStatus = await assertBobsPostStatus(REVIEWESCALATED, false)
 
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
@@ -165,26 +165,26 @@ describe('moderation-appeals', () => {
     })
     it('appeal status is maintained while review state changes based on incoming events', async () => {
       // Bob reports alice's post
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONMISLEADING,
         },
         subject: getAlicesPostSubject(),
       })
 
       // Moderator acknowledges the report, assume a label was applied too
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subject: getAlicesPostSubject(),
       })
 
       // Alice appeals the report
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONAPPEAL,
         },
         subject: getAlicesPostSubject(),
@@ -197,9 +197,9 @@ describe('moderation-appeals', () => {
       )
 
       // Bob reports it again
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
+          $type: 'tools.ozone.moderation.defs#modEventReport',
           reportType: REASONSPAM,
         },
         subject: getAlicesPostSubject(),
@@ -213,9 +213,9 @@ describe('moderation-appeals', () => {
       )
 
       // Emit an escalation event
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventEscalate',
+          $type: 'tools.ozone.moderation.defs#modEventEscalate',
         },
         subject: getAlicesPostSubject(),
       })
@@ -227,9 +227,9 @@ describe('moderation-appeals', () => {
       )
 
       // Emit an acknowledge event
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subject: getAlicesPostSubject(),
       })
@@ -238,9 +238,9 @@ describe('moderation-appeals', () => {
       await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, true)
 
       // Emit a resolveAppeal event
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventResolveAppeal',
+          $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
           comment: 'lgtm',
         },
         subject: getAlicesPostSubject(),

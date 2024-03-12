@@ -6,7 +6,7 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import { ComAtprotoAdminDefs } from '@atproto/api'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import Mail from 'nodemailer/lib/mailer'
 import { forSnapshot } from './_util'
 import {
@@ -76,10 +76,10 @@ describe('moderation-events', () => {
   describe('query events', () => {
     it('returns all events for record or repo', async () => {
       const [bobsEvents, alicesPostEvents] = await Promise.all([
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           subject: sc.dids.bob,
         }),
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           subject: sc.posts[sc.dids.alice][0].ref.uriStr,
         }),
       ])
@@ -94,28 +94,28 @@ describe('moderation-events', () => {
         did: sc.dids.alice,
       }
       await Promise.all([
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventComment',
+            $type: 'tools.ozone.moderation.defs#modEventComment',
             comment: 'X',
           },
           subject: alicesAccount,
         }),
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventEscalate',
+            $type: 'tools.ozone.moderation.defs#modEventEscalate',
             comment: 'X',
           },
           subject: alicesAccount,
         }),
       ])
       const [allEvents, reportEvents] = await Promise.all([
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           subject: sc.dids.alice,
         }),
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           subject: sc.dids.alice,
-          types: ['com.atproto.admin.defs#modEventReport'],
+          types: ['tools.ozone.moderation.defs#modEventReport'],
         }),
       ])
 
@@ -133,11 +133,11 @@ describe('moderation-events', () => {
 
     it('returns events for all content by user', async () => {
       const [forAccount, forPost] = await Promise.all([
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           subject: sc.dids.bob,
           includeAllUserRecords: true,
         }),
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           subject: sc.posts[sc.dids.bob][0].ref.uriStr,
           includeAllUserRecords: true,
         }),
@@ -151,7 +151,7 @@ describe('moderation-events', () => {
     })
 
     it('returns paginated list of events with cursor', async () => {
-      const allEvents = await modClient.queryModerationEvents({
+      const allEvents = await modClient.queryEvents({
         subject: sc.dids.bob,
         includeAllUserRecords: true,
       })
@@ -160,11 +160,11 @@ describe('moderation-events', () => {
         sortDirection: 'asc' | 'desc' = 'desc',
       ) => {
         let defaultCursor: undefined | string = undefined
-        const events: ComAtprotoAdminDefs.ModEventView[] = []
+        const events: ToolsOzoneModerationDefs.ModEventView[] = []
         let count = 0
         do {
           // get 1 event at a time and check we get all events
-          const res = await modClient.queryModerationEvents({
+          const res = await modClient.queryEvents({
             limit: 1,
             subject: sc.dids.bob,
             includeAllUserRecords: true,
@@ -194,10 +194,10 @@ describe('moderation-events', () => {
 
     it('returns report events matching reportType filters', async () => {
       const [spamEvents, misleadingEvents] = await Promise.all([
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           reportTypes: [REASONSPAM],
         }),
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           reportTypes: [REASONMISLEADING, REASONAPPEAL],
         }),
       ])
@@ -209,13 +209,13 @@ describe('moderation-events', () => {
     it('returns events matching keyword in comment', async () => {
       const [eventsWithX, eventsWithTest, eventsWithComment] =
         await Promise.all([
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             comment: 'X',
           }),
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             comment: 'test',
           }),
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             hasComment: true,
           }),
         ])
@@ -227,9 +227,9 @@ describe('moderation-events', () => {
 
     it('returns events matching filter params for labels', async () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
             comment: 'X',
             negateLabelVals: ['L1', 'L2'],
             createLabelVals: [],
@@ -240,9 +240,9 @@ describe('moderation-events', () => {
             did: sc.dids.alice,
           },
         }),
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
+            $type: 'tools.ozone.moderation.defs#modEventLabel',
             comment: 'X',
             createLabelVals: ['L1', 'L2'],
             negateLabelVals: [],
@@ -256,16 +256,16 @@ describe('moderation-events', () => {
       ])
       const [withTwoLabels, withoutTwoLabels, withOneLabel, withoutOneLabel] =
         await Promise.all([
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             addedLabels: ['L1', 'L3'],
           }),
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             removedLabels: ['L1', 'L2'],
           }),
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             addedLabels: ['L1'],
           }),
-          modClient.queryModerationEvents({
+          modClient.queryEvents({
             removedLabels: ['L2'],
           }),
         ])
@@ -286,9 +286,9 @@ describe('moderation-events', () => {
         add: string[]
         remove: string[]
       }) =>
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventTag',
+            $type: 'tools.ozone.moderation.defs#modEventTag',
             comment: 'X',
             add,
             remove,
@@ -301,14 +301,14 @@ describe('moderation-events', () => {
       const addEvent = await tagEvent({ add: ['L1', 'L2'], remove: [] })
       const addAndRemoveEvent = await tagEvent({ add: ['L3'], remove: ['L2'] })
       const [addFinder, addAndRemoveFinder, _removeFinder] = await Promise.all([
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           addedTags: ['L1'],
         }),
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           addedTags: ['L3'],
           removedTags: ['L2'],
         }),
-        modClient.queryModerationEvents({
+        modClient.queryEvents({
           removedTags: ['L2'],
         }),
       ])
@@ -334,9 +334,9 @@ describe('moderation-events', () => {
     it('are tracked on takedown event', async () => {
       const post = sc.posts[sc.dids.carol][0]
       assert(post.images.length > 1)
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -345,14 +345,14 @@ describe('moderation-events', () => {
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })
-      const result = await modClient.queryModerationEvents({
+      const result = await modClient.queryEvents({
         subject: post.ref.uriStr,
-        types: ['com.atproto.admin.defs#modEventTakedown'],
+        types: ['tools.ozone.moderation.defs#modEventTakedown'],
       })
       expect(result.events[0]).toMatchObject({
         createdBy: network.ozone.moderatorAccnt.did,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })
@@ -360,9 +360,9 @@ describe('moderation-events', () => {
 
     it("are tracked on reverse-takedown event even if they aren't specified", async () => {
       const post = sc.posts[sc.dids.carol][0]
-      await modClient.emitModerationEvent({
+      await modClient.emitEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -370,13 +370,13 @@ describe('moderation-events', () => {
           cid: post.ref.cidStr,
         },
       })
-      const result = await modClient.queryModerationEvents({
+      const result = await modClient.queryEvents({
         subject: post.ref.uriStr,
       })
       expect(result.events[0]).toMatchObject({
         createdBy: network.ozone.moderatorAccnt.did,
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         subjectBlobCids: [post.images[0].image.ref.toString()],
       })
@@ -408,9 +408,9 @@ describe('moderation-events', () => {
 
     it('sends email via pds.', async () => {
       const mail = await getMailFrom(
-        modClient.emitModerationEvent({
+        modClient.emitEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventEmail',
+            $type: 'tools.ozone.moderation.defs#modEventEmail',
             comment: 'Reaching out to Alice',
             subjectLine: 'Hello',
             content: 'Hey Alice, how are you?',
