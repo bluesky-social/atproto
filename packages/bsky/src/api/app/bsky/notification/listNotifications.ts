@@ -14,7 +14,7 @@ import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { Notification } from '../../../../proto/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -33,6 +33,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers }),
       }
     },
   })

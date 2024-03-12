@@ -40,11 +40,17 @@ describe('label hydration', () => {
   it('hydrates labels based on a supplied labeler header', async () => {
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
-      { headers: { ...sc.getHeaders(bob), 'atproto-labelers': alice } },
+      {
+        headers: {
+          ...sc.getHeaders(bob),
+          'atproto-accept-labelers': `${alice};redact`,
+        },
+      },
     )
     expect(res.data.labels?.length).toBe(1)
     expect(res.data.labels?.[0].src).toBe(alice)
     expect(res.data.labels?.[0].val).toBe('spam')
+    expect(res.headers['atproto-content-labelers']).toEqual(`${alice};redact`)
   })
 
   it('hydrates labels based on multiple a supplied labelers', async () => {
@@ -53,7 +59,7 @@ describe('label hydration', () => {
       {
         headers: {
           ...sc.getHeaders(bob),
-          'atproto-labelers': `${alice},${bob}, ${labelerDid}`,
+          'atproto-accept-labelers': `${alice},${bob};redact, ${labelerDid}`,
         },
       },
     )
@@ -65,6 +71,10 @@ describe('label hydration', () => {
     expect(res.data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
       'misleading',
     )
+    const labelerHeaderDids = res.headers['atproto-content-labelers'].split(',')
+    expect(labelerHeaderDids.sort()).toEqual(
+      [alice, `${bob};redact`, labelerDid].sort(),
+    )
   })
 
   it('defaults to service labels when no labeler header is provided', async () => {
@@ -75,6 +85,9 @@ describe('label hydration', () => {
     expect(res.data.labels?.length).toBe(1)
     expect(res.data.labels?.[0].src).toBe(labelerDid)
     expect(res.data.labels?.[0].val).toBe('misleading')
+    expect(res.headers['atproto-content-labelers']).toEqual(
+      `${labelerDid};redact`,
+    )
   })
 
   it('hydrates labels onto list views.', async () => {

@@ -3,7 +3,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, setRepoRev } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getActorLikes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req, res }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = { labelers, viewer }
@@ -33,11 +33,14 @@ export default function (server: Server, ctx: AppContext) {
       const result = await getActorLikes({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers,
+        }),
       }
     },
   })

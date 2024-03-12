@@ -6,7 +6,7 @@ import {
   OutputSchema,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -37,16 +37,21 @@ export default function (server: Server, ctx: AppContext) {
         result = await getPostThread({ ...params, hydrateCtx }, ctx)
       } catch (err) {
         const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-        setRepoRev(res, repoRev)
+        if (repoRev) {
+          res.setHeader(ATPROTO_REPO_REV, repoRev)
+        }
         throw err
       }
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers,
+        }),
       }
     },
   })

@@ -28,6 +28,7 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -47,16 +48,19 @@ export default function (server: Server, ctx: AppContext) {
         'accept-language': req.headers['accept-language'],
       })
       // @NOTE feed cursors should not be affected by appview swap
-      const { timerSkele, timerHydr, resHeaders, ...result } = await getFeed(
-        { ...params, hydrateCtx, headers },
-        ctx,
-      )
+      const {
+        timerSkele,
+        timerHydr,
+        resHeaders: feedResHeaders,
+        ...result
+      } = await getFeed({ ...params, hydrateCtx, headers }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
         headers: {
-          ...(resHeaders ?? {}),
+          ...(feedResHeaders ?? {}),
+          ...resHeaders({ labelers }),
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }

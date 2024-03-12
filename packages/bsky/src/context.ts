@@ -9,9 +9,14 @@ import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
-import { dedupeStrs } from '@atproto/common'
 import { BsyncClient } from './bsync'
 import { CourierClient } from './courier'
+import {
+  ParsedLabelers,
+  defaultLabelerHeader,
+  parseLabelerHeader,
+} from './util'
+import { httpLogger as log } from './logger'
 
 export class AppContext {
   constructor(
@@ -82,15 +87,17 @@ export class AppContext {
     })
   }
 
-  reqLabelers(req: express.Request): string[] {
-    const val = req.header('atproto-labelers')
-    if (!val) return this.cfg.labelsFromIssuerDids
-    return dedupeStrs(
-      val
-        .split(',')
-        .map((did) => did.trim())
-        .slice(0, 10),
-    )
+  reqLabelers(req: express.Request): ParsedLabelers {
+    const val = req.header('atproto-accept-labelers')
+    let parsed: ParsedLabelers | null
+    try {
+      parsed = parseLabelerHeader(val)
+    } catch (err) {
+      parsed = null
+      log.info({ err, val }, 'failed to parse labeler header')
+    }
+    if (!parsed) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    return parsed
   }
 }
 

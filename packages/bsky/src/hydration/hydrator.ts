@@ -45,9 +45,10 @@ import {
   FeedItem,
   ItemRef,
 } from './feed'
+import { ParsedLabelers } from '../util'
 
 export type HydrateCtx = {
-  labelers: string[]
+  labelers: ParsedLabelers
   viewer: string | null
 }
 
@@ -136,7 +137,10 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, includeTakedowns),
-      this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
+      this.label.getLabelsForSubjects(
+        labelSubjectsForDid(dids),
+        ctx.labelers.dids,
+      ),
       this.hydrateProfileViewers(dids, ctx),
     ])
     return mergeStates(profileViewersState ?? {}, {
@@ -298,7 +302,7 @@ export class Hydrator {
     ] = await Promise.all([
       this.feed.getPostAggregates(refs),
       ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
-      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
+      this.label.getLabelsForSubjects(allPostUris, ctx.labelers.dids),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx, includeTakedowns),
       this.hydrateLists([...nestedListUris, ...gateListUris], ctx),
@@ -494,7 +498,7 @@ export class Hydrator {
         this.feed.getLikes(likeUris), // reason: like
         this.feed.getReposts(repostUris), // reason: repost
         this.graph.getFollows(followUris), // reason: follow
-        this.label.getLabelsForSubjects(uris, ctx.labelers),
+        this.label.getLabelsForSubjects(uris, ctx.labelers.dids),
         this.hydrateProfiles(uris.map(didFromUri), ctx),
       ])
     return mergeStates(profileState, {
