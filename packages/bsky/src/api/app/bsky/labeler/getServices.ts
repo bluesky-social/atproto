@@ -1,6 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.labeler.getServices({
@@ -38,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           views,
         },
+        headers: resHeaders({ labelers }),
       }
     },
   })

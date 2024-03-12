@@ -17,7 +17,7 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFollowers = createPipeline(
@@ -29,18 +29,16 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollowers({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = { labelers, viewer, includeTakedowns }
 
-      const result = await getFollowers(
-        { ...params, hydrateCtx, canViewTakedowns },
-        ctx,
-      )
+      const result = await getFollowers({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers }),
       }
     },
   })
@@ -84,7 +82,6 @@ const hydration = async (
   const profileState = await ctx.hydrator.hydrateProfiles(
     dids,
     params.hydrateCtx,
-    params.canViewTakedowns,
   )
   return mergeStates(followState, profileState)
 }
@@ -111,13 +108,16 @@ const presentation = (
     ctx.views.actorIsTakendown(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
-  if (!subject || (!params.canViewTakedowns && isTakendown(subjectDid))) {
+  if (
+    !subject ||
+    (!params.hydrateCtx.includeTakedowns && isTakendown(subjectDid))
+  ) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
   const followers = mapDefined(followUris, (followUri) => {
     const followerDid = didFromUri(followUri)
-    if (!params.canViewTakedowns && isTakendown(followerDid)) {
+    if (!params.hydrateCtx.includeTakedowns && isTakendown(followerDid)) {
       return
     }
     return ctx.views.profile(didFromUri(followUri), hydration)
@@ -133,7 +133,6 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
-  canViewTakedowns: boolean
 }
 
 type SkeletonState = {

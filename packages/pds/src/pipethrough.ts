@@ -95,10 +95,10 @@ export const parseProxyHeader = async (
   return { did, serviceUrl }
 }
 
-const HEADERS_TO_FORWARD = [
+const REQ_HEADERS_TO_FORWARD = [
   'accept-language',
   'content-type',
-  'atproto-labelers',
+  'atproto-accept-labelers',
 ]
 
 export const createUrlAndHeaders = async (
@@ -122,7 +122,7 @@ export const createUrlAndHeaders = async (
     ? (await ctx.serviceAuthHeaders(requester, aud)).headers
     : {}
   // forward select headers to upstream services
-  for (const header of HEADERS_TO_FORWARD) {
+  for (const header of REQ_HEADERS_TO_FORWARD) {
     const val = req.headers[header]
     if (val) {
       headers[header] = val
@@ -152,13 +152,22 @@ export const doProxy = async (url: URL, reqInit: RequestInit) => {
     )
   }
   const encoding = res.headers.get('content-type') ?? 'application/json'
-  const repoRevHeader = res.headers.get('atproto-repo-rev')
-  const contentLanguage = res.headers.get('content-language')
-  const resHeaders = noUndefinedVals({
-    ['atproto-repo-rev']: repoRevHeader ?? undefined,
-    ['content-language']: contentLanguage ?? undefined,
-  })
+  const resHeaders = makeResHeaders(res)
   return { encoding, buffer, headers: resHeaders }
+}
+
+const RES_HEADERS_TO_FORWARD = [
+  'atproto-repo-rev',
+  'content-language',
+  'atproto-content-labelers',
+]
+
+const makeResHeaders = (res: Response): Record<string, string> => {
+  const headers = RES_HEADERS_TO_FORWARD.reduce((acc, cur) => {
+    acc[cur] = res.headers.get(cur) ?? undefined
+    return acc
+  }, {} as Record<string, string | undefined>)
+  return noUndefinedVals(headers)
 }
 
 const isSafeUrl = (url: URL) => {

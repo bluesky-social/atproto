@@ -4859,6 +4859,13 @@ export const schemaDict = {
             type: 'integer',
             minimum: 0,
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#generatorViewerState',
@@ -6163,6 +6170,13 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.graph.defs#listViewerState',
@@ -6212,6 +6226,13 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
           viewer: {
             type: 'ref',

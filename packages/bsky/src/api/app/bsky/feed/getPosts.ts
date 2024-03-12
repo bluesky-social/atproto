@@ -10,6 +10,7 @@ import {
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { creatorFromUri } from '../../../../views/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -25,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers }),
       }
     },
   })

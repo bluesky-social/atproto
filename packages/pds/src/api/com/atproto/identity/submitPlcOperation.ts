@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { httpLogger as log } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.submitPlcOperation({
@@ -15,7 +16,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid operation')
       }
 
-      if (!op.rotationKeys.includes(ctx.plcRotationKey.did())) {
+      const rotationKey =
+        ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
+      if (!op.rotationKeys.includes(rotationKey)) {
         throw new InvalidRequestError(
           "Rotation keys do not include server's rotation key",
         )
@@ -43,6 +46,15 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.plcClient.sendOperation(requester, op)
+      await ctx.sequencer.sequenceIdentityEvt(requester)
+      try {
+        await ctx.idResolver.did.resolve(requester, true)
+      } catch (err) {
+        log.error(
+          { err, did: requester },
+          'failed to refresh did after plc update',
+        )
+      }
     },
   })
 }

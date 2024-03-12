@@ -16,7 +16,7 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
@@ -31,6 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers }),
       }
     },
   })

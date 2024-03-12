@@ -8,6 +8,7 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
@@ -63,6 +64,7 @@ export default function (server: Server, ctx: AppContext) {
           isOnline: true,
           isValid: true,
         },
+        headers: resHeaders({ labelers }),
       }
     },
   })
