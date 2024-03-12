@@ -16,6 +16,7 @@ import {
   defaultLabelerHeader,
   parseLabelerHeader,
 } from './util'
+import { httpLogger as log } from './logger'
 
 export class AppContext {
   constructor(
@@ -88,8 +89,15 @@ export class AppContext {
 
   reqLabelers(req: express.Request): ParsedLabelers {
     const val = req.header('atproto-accept-labelers')
-    if (!val) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
-    return parseLabelerHeader(val)
+    let parsed: ParsedLabelers | null
+    try {
+      parsed = parseLabelerHeader(val)
+    } catch (err) {
+      parsed = null
+      log.info({ err, val }, 'failed to parse labeler header')
+    }
+    if (!parsed) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    return parsed
   }
 }
 

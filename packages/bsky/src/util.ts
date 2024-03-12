@@ -1,21 +1,25 @@
+import { parseList } from 'structured-headers'
+
 export type ParsedLabelers = {
   dids: string[]
   redact: Set<string>
 }
 
-export const parseLabelerHeader = (header: string): ParsedLabelers => {
-  const labelers = header.split(',').map((part) => part.trim())
+export const parseLabelerHeader = (
+  header: string | undefined,
+): ParsedLabelers | null => {
+  if (!header) return null
   const labelerDids = new Set<string>()
   const redactDids = new Set<string>()
-  for (const labeler of labelers) {
-    if (labeler.length === 0) {
-      continue
+  const parsed = parseList(header)
+  for (const item of parsed) {
+    const did = item[0].toString()
+    if (!did) {
+      return null
     }
-    const parts = labeler.split(';')
-    const did = parts[0].trim()
     labelerDids.add(did)
-    const rest = parts.slice(1).map((part) => part.trim())
-    if (rest.includes('redact')) {
+    const redact = item[1].get('redact')?.valueOf()
+    if (redact === true) {
       redactDids.add(did)
     }
   }
