@@ -93,7 +93,7 @@ moderatePost(post, {
 })
 ```
 
-To gather the label definitions (`labelDefs`) see the *Labelers* section below.
+To gather the label definitions (`labelDefs`) see the _Labelers_ section below.
 
 ## Labelers
 
@@ -101,7 +101,7 @@ Labelers are services that provide moderation labels. Your application will typi
 
 ```typescript
 BskyAgent.configure({
-  appLabelers: ['did:web:my-labeler.com']
+  appLabelers: ['did:web:my-labeler.com'],
 })
 ```
 
@@ -144,7 +144,7 @@ The label value definition are custom labels which only apply to that labeler. Y
 Here is how to do this:
 
 ```typescript
-import {BskyAgent} from '@atproto/api'
+import { BskyAgent } from '@atproto/api'
 
 const agent = new BskyAgent()
 // assume `agent` is a signed in session
@@ -154,7 +154,7 @@ const labelDefs = await agent.getLabelDefinitions(prefs)
 moderatePost(post, {
   userDid: agent.session.did,
   prefs: prefs.moderationPrefs,
-  labelDefs
+  labelDefs,
 })
 ```
 
@@ -169,7 +169,7 @@ import {
   moderateNotification,
   moderateFeedGen,
   moderateUserList,
-  moderateLabeler
+  moderateLabeler,
 } from '@atproto/api'
 ```
 
@@ -250,9 +250,11 @@ for (const inform of mod.ui('contentList').informs) {
 Any Labeler is capable of receiving moderation reports. As a result, you need to specify which labeler should receive the report. You do this with the `Atproto-Proxy` header:
 
 ```typescript
-agent.withProxy('atproto_labeler', 'did:web:my-labeler.com').createModerationReport({
-  reasonType: 'com.atproto.moderation.defs#reasonViolation',
-  reason: 'They were being such a jerk to me!',
-  subject: {did: 'did:web:bob.com'}
-})
+agent
+  .withProxy('atproto_labeler', 'did:web:my-labeler.com')
+  .createModerationReport({
+    reasonType: 'com.atproto.moderation.defs#reasonViolation',
+    reason: 'They were being such a jerk to me!',
+    subject: { did: 'did:web:bob.com' },
+  })
 ```
