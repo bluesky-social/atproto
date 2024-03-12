@@ -201,11 +201,15 @@ const fetchLabelsForSubjects = async (
     .selectAll()
     .execute()
   const labelMap = res.reduce((acc, cur) => {
+    const { src, uri, cid, val, neg, cts } = cur
     acc[cur.uri] ??= []
     acc[cur.uri].push({
-      ...cur,
-      cid: cur.cid === '' ? undefined : cur.cid,
-      neg: cur.neg,
+      src,
+      uri,
+      cid: cid === '' ? undefined : cid,
+      val,
+      neg: neg,
+      cts,
     })
     return acc
   }, {} as Record<string, Label[]>)
