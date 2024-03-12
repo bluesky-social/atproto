@@ -7,7 +7,7 @@ type ReqCtx = {
   req: express.Request
 }
 
-type AdminTokenOutput = {
+export type AdminTokenOutput = {
   credentials: {
     type: 'admin_token'
     isAdmin: true
@@ -16,7 +16,7 @@ type AdminTokenOutput = {
   }
 }
 
-type ModeratorOutput = {
+export type ModeratorOutput = {
   credentials: {
     type: 'moderator'
     aud: string

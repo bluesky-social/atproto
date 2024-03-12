@@ -25,6 +25,8 @@ export const readEnv = (): OzoneEnvironment => {
     triageDids: envList('OZONE_TRIAGE_DIDS'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
+    blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
+    blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
   }
 }
 
@@ -52,4 +54,6 @@ export type OzoneEnvironment = {
   triageDids: string[]
   adminPassword?: string
   signingKeyHex?: string
+  blobDivertUrl?: string
+  blobDivertAdminPassword?: string
 }
