@@ -68,7 +68,7 @@ export type AtpAgentFetchHandler = (
  */
 export interface AtpAgentGlobalOpts {
   fetch?: AtpAgentFetchHandler
-  modAuthorities?: string[]
+  appLabelers?: string[]
 }
 
 /**

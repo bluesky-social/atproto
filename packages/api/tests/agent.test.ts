@@ -482,24 +482,27 @@ describe('agent', () => {
     })
   })
 
-  describe('Mod authorities header', () => {
-    it('adds the authorities header as expected', async () => {
+  describe('App labelers header', () => {
+    it('adds the labelers header as expected', async () => {
       const server = await createHeaderEchoServer(15991)
       const agent = new AtpAgent({ service: 'http://localhost:15991' })
       const agent2 = new AtpAgent({ service: 'http://localhost:15991' })
 
       const res1 = await agent.com.atproto.server.describeServer()
-      expect(res1.data['atproto-mod-authorities']).toEqual(BSKY_LABELER_DID)
+      expect(res1.data['atproto-accept-labelers']).toEqual(
+        `${BSKY_LABELER_DID};redact`,
+      )
 
-      AtpAgent.configure({ modAuthorities: ['did:plc:test1', 'did:plc:test2'] })
+      AtpAgent.configure({ appLabelers: ['did:plc:test1', 'did:plc:test2'] })
       const res2 = await agent.com.atproto.server.describeServer()
-      expect(res2.data['atproto-mod-authorities']).toEqual(
-        'did:plc:test1,did:plc:test2',
+      expect(res2.data['atproto-accept-labelers']).toEqual(
+        'did:plc:test1;redact, did:plc:test2;redact',
       )
       const res3 = await agent2.com.atproto.server.describeServer()
-      expect(res3.data['atproto-mod-authorities']).toEqual(
-        'did:plc:test1,did:plc:test2',
+      expect(res3.data['atproto-accept-labelers']).toEqual(
+        'did:plc:test1;redact, did:plc:test2;redact',
       )
+      AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
 
       await new Promise((r) => server.close(r))
     })
@@ -512,12 +515,14 @@ describe('agent', () => {
 
       agent.configureLabelersHeader(['did:plc:test1'])
       const res1 = await agent.com.atproto.server.describeServer()
-      expect(res1.data['atproto-labelers']).toEqual('did:plc:test1')
+      expect(res1.data['atproto-accept-labelers']).toEqual(
+        `${BSKY_LABELER_DID};redact, did:plc:test1`,
+      )
 
       agent.configureLabelersHeader(['did:plc:test1', 'did:plc:test2'])
       const res2 = await agent.com.atproto.server.describeServer()
-      expect(res2.data['atproto-labelers']).toEqual(
-        'did:plc:test1,did:plc:test2',
+      expect(res2.data['atproto-accept-labelers']).toEqual(
+        `${BSKY_LABELER_DID};redact, did:plc:test1, did:plc:test2`,
       )
 
       await new Promise((r) => server.close(r))

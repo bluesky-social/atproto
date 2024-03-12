@@ -53,9 +53,9 @@ export class AtpAgent {
   static fetch: AtpAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
-   * The moderation authorities to be used across all requests
+   * The labelers to be used across all requests with the takedown capability
    */
-  static modAuthoritiesHeader: string[] = [BSKY_LABELER_DID]
+  static appLabelers: string[] = [BSKY_LABELER_DID]
 
   /**
    * Configures the API globally.
@@ -64,8 +64,8 @@ export class AtpAgent {
     if (opts.fetch) {
       AtpAgent.fetch = opts.fetch
     }
-    if (opts.modAuthorities) {
-      AtpAgent.modAuthoritiesHeader = opts.modAuthorities
+    if (opts.appLabelers) {
+      AtpAgent.appLabelers = opts.appLabelers
     }
   }
 
@@ -224,23 +224,13 @@ export class AtpAgent {
         authorization: `Bearer ${this.session.accessJwt}`,
       }
     }
-    if (AtpAgent.modAuthoritiesHeader.length) {
-      reqHeaders = {
-        ...reqHeaders,
-        'atproto-mod-authorities': AtpAgent.modAuthoritiesHeader
-          .filter((str) => str.startsWith('did:'))
-          .slice(0, MAX_MOD_AUTHORITIES)
-          .join(','),
-      }
-    }
-    if (this.labelersHeader.length) {
-      reqHeaders = {
-        ...reqHeaders,
-        'atproto-labelers': this.labelersHeader
-          .filter((str) => str.startsWith('did:'))
-          .slice(0, MAX_LABELERS)
-          .join(','),
-      }
+    reqHeaders = {
+      ...reqHeaders,
+      'atproto-accept-labelers': AtpAgent.appLabelers
+        .map((str) => `${str};redact`)
+        .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
+        .slice(0, MAX_LABELERS)
+        .join(', '),
     }
     return reqHeaders
   }
