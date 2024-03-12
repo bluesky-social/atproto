@@ -136,6 +136,17 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
+import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
+import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
+import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
+import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
+import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
+import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
+import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/getRepo'
+import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
+import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
+import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 
 export const COM_ATPROTO_ADMIN = {
   DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
@@ -155,6 +166,12 @@ export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
 }
+export const TOOLS_OZONE_MODERATION = {
+  DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
+  DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
+  DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
+  DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
 
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)
@@ -164,11 +181,13 @@ export class Server {
   xrpc: XrpcServer
   com: ComNS
   app: AppNS
+  tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.tools = new ToolsNS(this)
   }
 }
 
@@ -1753,6 +1772,165 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsNS {
+  _server: Server
+  ozone: ToolsOzoneNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.ozone = new ToolsOzoneNS(server)
+  }
+}
+
+export class ToolsOzoneNS {
+  _server: Server
+  communication: ToolsOzoneCommunicationNS
+  moderation: ToolsOzoneModerationNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.communication = new ToolsOzoneCommunicationNS(server)
+    this.moderation = new ToolsOzoneModerationNS(server)
+  }
+}
+
+export class ToolsOzoneCommunicationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationCreateTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationCreateTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.createTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationDeleteTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationDeleteTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.deleteTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listTemplates<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationListTemplates.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationListTemplates.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.listTemplates' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateTemplate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneCommunicationUpdateTemplate.Handler<ExtractAuth<AV>>,
+      ToolsOzoneCommunicationUpdateTemplate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  emitEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationEmitEvent.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationEmitEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.emitEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetEvent.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRecord<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRecord.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRecord.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationGetRepo.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationGetRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryEvents<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationQueryEvents.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationQueryEvents.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.queryEvents' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  queryStatuses<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationQueryStatuses.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationQueryStatuses.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.queryStatuses' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneModerationSearchRepos.Handler<ExtractAuth<AV>>,
+      ToolsOzoneModerationSearchRepos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
