@@ -1,5 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 import { Account } from '../types'
+import { clsx } from '../lib/clsx'
 
 export type AccountPickerProps = {
   accounts: readonly Account[]
@@ -10,7 +11,7 @@ export type AccountPickerProps = {
 
   onBack?: () => void
   backLabel?: ReactNode
-} & HTMLAttributes<HTMLDivElement>
+}
 
 export function AccountPicker({
   accounts,
@@ -19,16 +20,21 @@ export function AccountPicker({
   otherLabel = 'Other account',
   onBack,
   backLabel,
-  ...props
-}: AccountPickerProps) {
+
+  className,
+  ...attrs
+}: AccountPickerProps & HTMLAttributes<HTMLDivElement>) {
   return (
-    <div {...props}>
+    <div {...attrs} className={clsx('flex flex-col', className)}>
       <p className="font-medium p-4">Sign in as...</p>
       <ul>
         {accounts.map((account) => {
-          const identifier =
-            account.preferred_username || account.email || account.sub
-          const name = account.name || identifier
+          const [name, identifier] = [
+            account.name,
+            account.preferred_username,
+            account.email,
+            account.sub,
+          ].filter(Boolean) as [string, string?]
 
           return (
             <li
@@ -36,22 +42,20 @@ export function AccountPicker({
               className="cursor-pointer flex items-center justify-between p-4 -mb-px border-t border-b hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:hover:bg-slate-900"
               onClick={() => onAccount(account)}
             >
-              <div className="flex items-center justify-start">
+              <div className="pr-2 flex items-center justify-start max-w-full overflow-hidden">
                 {account.picture && (
                   <img
                     crossOrigin="anonymous"
                     src={account.picture}
-                    alt={account.name}
+                    alt={name}
                     className="w-6 h-6 rounded-full"
                   />
                 )}
                 <span className="min-w-0 flex-auto truncate">
                   <span className="font-semibold">{name}</span>
-                  {identifier && identifier !== name && (
+                  {identifier && (
                     <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
-                      {account.preferred_username ||
-                        account.email ||
-                        account.sub}
+                      {identifier}
                     </span>
                   )}
                 </span>
@@ -72,8 +76,10 @@ export function AccountPicker({
         )}
       </ul>
 
+      <div className="flex-auto" />
+
       {onBack && (
-        <div className="m-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => onBack()}

@@ -1,18 +1,19 @@
 import { HtmlHTMLAttributes } from 'react'
 import type { ErrorData } from '../backend-data'
 
-export type ErrorCardProps = ErrorData
+export type ErrorCardProps = Partial<ErrorData>
 
 export function ErrorCard({
   error: _code,
   error_description: message,
-  ...props
-}: ErrorCardProps & HtmlHTMLAttributes<HTMLDivElement>) {
+  ...attrs
+}: Partial<ErrorCardProps> &
+  Omit<HtmlHTMLAttributes<HTMLDivElement>, keyof ErrorCardProps>) {
   return (
     <div
       className="border-t-4 border-error rounded-b text-error px-4 py-3 shadow-md bg-white dark:bg-slate-800"
       role="alert"
-      {...props}
+      {...attrs}
     >
       <div className="flex">
         <div className="py-1">
@@ -26,7 +27,7 @@ export function ErrorCard({
         </div>
         <div>
           <p className="font-bold">Sorry, something went wrong.</p>
-          <p className="text-sm">{message}</p>
+          {message && <p className="text-sm">{message}</p>}
         </div>
       </div>
     </div>
