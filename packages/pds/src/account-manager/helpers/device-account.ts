@@ -71,7 +71,7 @@ export function toAccount(
     aud: audience,
     email: row.email || undefined,
     email_verified: row.email ? row.emailConfirmedAt != null : undefined,
-    preferred_username: row.handle || undefined,
+    preferred_username: row.handle ? `@${row.handle}` : undefined,
   }
 }
 

@@ -1,4 +1,10 @@
-import { useState, type FormHTMLAttributes, ReactNode } from 'react'
+import {
+  ReactNode,
+  useCallback,
+  useState,
+  type FormHTMLAttributes,
+} from 'react'
+import { clsx } from '../lib/clsx'
 
 export type SignInFormOutput = {
   username: string
@@ -7,7 +13,7 @@ export type SignInFormOutput = {
 }
 
 export type SignInFormProps = {
-  onSubmit: (credentials: SignInFormOutput) => void
+  onSubmit: (credentials: SignInFormOutput) => void | Promise<void>
   onCancel?: () => void
   submitLabel?: ReactNode
   cancelLabel?: ReactNode
@@ -19,39 +25,56 @@ export type SignInFormProps = {
 export function SignInForm({
   onSubmit,
   onCancel = undefined,
-  submitLabel = 'Sign in',
+  submitLabel = 'Continue',
   cancelLabel = 'Cancel',
   username = '',
   usernameReadonly = false,
   remember = false,
-  ...props
+
+  className,
+  ...attrs
 }: SignInFormProps &
   Omit<FormHTMLAttributes<HTMLFormElement>, keyof SignInFormProps>) {
   const [focused, setFocused] = useState(false)
-  const onFocus = () => setFocused(true)
-  const onBlur = () => setFocused(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleFormSubmit = (
-    event: React.SyntheticEvent<
-      HTMLFormElement & {
-        username: HTMLInputElement
-        password: HTMLInputElement
-        remember: HTMLInputElement
-      },
-      SubmitEvent
-    >,
-  ) => {
-    event.preventDefault()
-    onSubmit({
-      username: event.currentTarget.username.value,
-      password: event.currentTarget.password.value,
-      remember: event.currentTarget.remember.checked,
-    })
-  }
+  const doSubmit = useCallback(
+    async (
+      event: React.SyntheticEvent<
+        HTMLFormElement & {
+          username: HTMLInputElement
+          password: HTMLInputElement
+          remember: HTMLInputElement
+        },
+        SubmitEvent
+      >,
+    ) => {
+      event.preventDefault()
+      setLoading(true)
+      try {
+        await onSubmit({
+          username: event.currentTarget.username.value,
+          password: event.currentTarget.password.value,
+          remember: event.currentTarget.remember.checked,
+        })
+      } finally {
+        setLoading(false)
+      }
+    },
+    [onSubmit, setLoading],
+  )
 
   return (
-    <form {...props} onSubmit={handleFormSubmit}>
-      <fieldset className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
+    <form
+      {...attrs}
+      className={clsx('flex flex-col', className)}
+      onSubmit={doSubmit}
+    >
+      <p className="font-medium p-4">Sign in</p>
+      <fieldset
+        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
+        disabled={loading}
+      >
         <div className="relative p-1 flex flex-wrap items-center justify-stretch">
           <span className="w-8 text-center text-base leading-[1.6]">@</span>
           <input
@@ -74,8 +97,8 @@ export function SignInForm({
           <input
             name="password"
             type="password"
-            onFocus={onFocus}
-            onBlur={onBlur}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="Password"
             aria-label="Password"
@@ -135,10 +158,13 @@ export function SignInForm({
         </div>
       </fieldset>
 
-      <div className="m-4 flex items-center justify-between">
+      <div className="flex-auto" />
+
+      <div className="mt-4 flex items-center justify-between">
         <button
           type="submit"
-          className="bg-transparent text-primary rounded-md py-2 font-semibold order-last"
+          className="order-last bg-primary text-white py-2 px-4 rounded-full font-semibold"
+          disabled={loading}
         >
           {submitLabel}
         </button>

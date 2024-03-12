@@ -46,15 +46,17 @@ export type Account = {
   updated_at?: number
 }
 
-export type Session = {
-  account: Account
-  loginRequired: boolean
-  consentRequired: boolean
-  initiallySelected: boolean
-}
-
-export type SignInInfo = {
+export type Info = {
   remembered: boolean
   authenticatedAt: string
   authorizedClients: readonly string[]
+}
+
+export type Session = {
+  account: Account
+  info: Info
+
+  selected: boolean
+  loginRequired: boolean
+  consentRequired: boolean
 }

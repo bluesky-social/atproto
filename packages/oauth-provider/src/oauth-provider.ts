@@ -16,7 +16,7 @@ import {
   writeJson,
 } from '@atproto/http-util'
 import { Jwks, Jwt, Keyset, jwtSchema } from '@atproto/jwk'
-import { JWTHeaderParameters, ResolvedKey, decodeJwt } from 'jose'
+import { JWTHeaderParameters, ResolvedKey } from 'jose'
 import { z } from 'zod'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
@@ -30,6 +30,7 @@ import {
   asAccountStore,
 } from './account/account-store.js'
 import { Account } from './account/account.js'
+import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -56,7 +57,7 @@ import {
 } from './metadata/build-metadata.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Userinfo } from './oidc/userinfo.js'
-import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
+import { Branding } from './output/branding.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
@@ -115,7 +116,6 @@ import {
 } from './token/types.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 import { dateToEpoch, dateToRelativeSeconds } from './util/date.js'
-import { Branding } from './output/branding.js'
 
 export type OAuthProviderStore = Partial<
   ClientStore &
@@ -250,25 +250,6 @@ export class OAuthProvider extends OAuthVerifier {
     )
 
     return Math.floor(authAge) > Math.floor(maxAge)
-  }
-
-  protected consentRequired(
-    client: Client,
-    clientAuth: ClientAuth,
-    parameters: AuthorizationParameters,
-    info: DeviceAccountInfo,
-  ) {
-    // Every client must have been granted consent at least once
-    if (!info.authorizedClients.includes(client.id)) return true
-
-    // Allow listed clients can skip consent event without credentials
-    // TODO: make this configurable
-    if (client.id === 'bsky.app') return false
-
-    // Unauthenticated clients must always go through consent
-    if (clientAuth.method === 'none') return true
-
-    return false
   }
 
   protected async authenticateClient(
@@ -490,48 +471,33 @@ export class OAuthProvider extends OAuthVerifier {
       info: DeviceAccountInfo
 
       ssoAllowed: boolean
-      initiallySelected: boolean
+      selected: boolean
       loginRequired: boolean
       consentRequired: boolean
     }[]
   > {
     const accounts = await this.accountManager.list(deviceId)
 
-    const idTokenSub =
-      parameters.id_token_hint != null
-        ? // token already validated by RequestManager.validate()
-          decodeJwt(parameters.id_token_hint).sub || null
-        : null
+    return accounts.map(({ account, info }) => ({
+      account,
+      info,
 
-    const hasHint = Boolean(parameters.id_token_hint || parameters.login_hint)
-    const hintSub = // Only take the hint into account if they match each other
-      parameters.login_hint && idTokenSub
-        ? parameters.login_hint === idTokenSub
-          ? idTokenSub
-          : null
-        : parameters.login_hint || idTokenSub || null
+      selected:
+        parameters.prompt !== 'select_account' &&
+        parameters.login_hint === account.sub,
+      loginRequired:
+        parameters.prompt === 'login' ||
+        this.loginRequired(client, parameters, info),
+      consentRequired:
+        parameters.prompt === 'login' ||
+        parameters.prompt === 'consent' ||
+        !info.authorizedClients.includes(client.id),
 
-    return accounts.map(({ account, info }) => {
-      const consentRequired = this.consentRequired(
-        client,
-        clientAuth,
-        parameters,
-        info,
-      )
-      const loginRequired = this.loginRequired(client, parameters, info)
-      const matchesHint = hintSub != null && hintSub === account.sub
-
-      return {
-        account,
-        info,
-
-        ssoAllowed: parameters.prompt === 'none' && (!hasHint || matchesHint),
-        loginRequired: parameters.prompt === 'login' || loginRequired,
-        consentRequired: parameters.prompt === 'consent' || consentRequired,
-        initiallySelected:
-          parameters.prompt !== 'select_account' && matchesHint,
-      }
-    })
+      ssoAllowed:
+        parameters.prompt === 'none' &&
+        (parameters.login_hint === account.sub ||
+          parameters.login_hint == null),
+    }))
   }
 
   protected async login(

@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'node:http'
 
 import { cssCode, html } from '@atproto/html'
 
+import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { getAsset } from '../assets/index.js'
 import { Client } from '../client/client.js'
@@ -18,9 +19,11 @@ export type AuthorizationResultAuthorize = {
     uri: RequestUri
     sessions: readonly {
       account: Account
+      info: DeviceAccountInfo
+
+      selected: boolean
       loginRequired: boolean
       consentRequired: boolean
-      initiallySelected: boolean
     }[]
   }
 }
@@ -32,7 +35,9 @@ function buildAuthorizeData(data: AuthorizationResultAuthorize) {
     clientId: data.client.id,
     clientMetadata: data.client.metadata,
     loginHint: data.parameters.login_hint,
-    consentRequired: data.parameters.prompt === 'consent',
+    newSessionsRequireConsent:
+      data.parameters.prompt === 'login' ||
+      data.parameters.prompt === 'consent',
     sessions: data.authorize.sessions,
   }
 }
