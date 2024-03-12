@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
-import { ComAtprotoAdminDefs } from '@atproto/api'
+import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { ModSubject } from './subject'
 
 export type ModerationEventRow = Selectable<ModerationEvent>
@@ -22,15 +22,15 @@ export type ModerationSubjectStatusRowWithHandle =
   ModerationSubjectStatusRow & { handle: string | null }
 
 export type ModEventType =
-  | ComAtprotoAdminDefs.ModEventTakedown
-  | ComAtprotoAdminDefs.ModEventAcknowledge
-  | ComAtprotoAdminDefs.ModEventEscalate
-  | ComAtprotoAdminDefs.ModEventComment
-  | ComAtprotoAdminDefs.ModEventLabel
-  | ComAtprotoAdminDefs.ModEventReport
-  | ComAtprotoAdminDefs.ModEventMute
-  | ComAtprotoAdminDefs.ModEventReverseTakedown
-  | ComAtprotoAdminDefs.ModEventTag
+  | ToolsOzoneModerationDefs.ModEventTakedown
+  | ToolsOzoneModerationDefs.ModEventAcknowledge
+  | ToolsOzoneModerationDefs.ModEventEscalate
+  | ToolsOzoneModerationDefs.ModEventComment
+  | ToolsOzoneModerationDefs.ModEventLabel
+  | ToolsOzoneModerationDefs.ModEventReport
+  | ToolsOzoneModerationDefs.ModEventMute
+  | ToolsOzoneModerationDefs.ModEventReverseTakedown
+  | ToolsOzoneModerationDefs.ModEventTag
 
 export const UNSPECCED_TAKEDOWN_LABEL = '!unspecced-takedown'
 

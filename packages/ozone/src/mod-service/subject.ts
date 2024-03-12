@@ -1,6 +1,6 @@
 import { AtUri } from '@atproto/syntax'
 import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
-import { InputSchema as ActionInput } from '../lexicon/types/com/atproto/admin/emitModerationEvent'
+import { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { RepoRef } from '../lexicon/types/com/atproto/admin/defs'

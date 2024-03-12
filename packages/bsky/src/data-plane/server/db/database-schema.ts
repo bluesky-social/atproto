@@ -25,7 +25,6 @@ import * as record from './tables/record'
 import * as notification from './tables/notification'
 import * as notificationPushToken from './tables/notification-push-token'
 import * as didCache from './tables/did-cache'
-import * as moderation from './tables/moderation'
 import * as label from './tables/label'
 import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
@@ -61,7 +60,6 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   notification.PartialDB &
   notificationPushToken.PartialDB &
   didCache.PartialDB &
-  moderation.PartialDB &
   label.PartialDB &
   algo.PartialDB &
   viewParam.PartialDB &
