@@ -68,7 +68,7 @@ describe('db', () => {
         .executeTakeFirst()
 
       expect(row).toMatchObject({
-        eventType: 'takedown',
+        eventType: 'pds_takedown',
         subjectDid: 'x',
       })
     })
