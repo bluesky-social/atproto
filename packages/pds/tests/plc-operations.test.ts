@@ -223,4 +223,16 @@ describe('plc operations', () => {
     const didData = await ctx.plcClient.getDocumentData(alice)
     expect(didData.rotationKeys).toEqual([sampleKey, ctx.plcRotationKey.did()])
   })
+
+  it('emits an identity event after a valid operation', async () => {
+    const lastEvt = await ctx.sequencer.db.db
+      .selectFrom('repo_seq')
+      .selectAll()
+      .orderBy('repo_seq.seq', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    assert(lastEvt)
+    expect(lastEvt.did).toBe(alice)
+    expect(lastEvt.eventType).toBe('identity')
+  })
 })
