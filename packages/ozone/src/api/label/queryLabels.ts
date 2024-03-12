@@ -2,7 +2,6 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { sql } from 'kysely'
-import { formatLabel } from '../../mod-service/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ params }) => {
@@ -44,7 +43,10 @@ export default function (server: Server, ctx: AppContext) {
 
     const res = await builder.execute()
 
-    const labels = res.map((l) => formatLabel(l))
+    const modSrvc = ctx.modService(ctx.db)
+    const labels = await Promise.all(
+      res.map((l) => modSrvc.views.formatLabelAndEnsureSig(l)),
+    )
     const resCursor = res.at(-1)?.id.toString(10)
 
     return {
