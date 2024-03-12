@@ -152,7 +152,7 @@ describe('label hydration', () => {
         val: opts.val,
         cts: new Date().toISOString(),
         neg: false,
-        src: opts.src ?? 'did:example:labeler',
+        src: opts.src ?? labelerDid,
       })
       .execute()
   }
