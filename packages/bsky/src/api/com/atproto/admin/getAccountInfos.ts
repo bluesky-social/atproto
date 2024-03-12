@@ -8,16 +8,16 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth }) => {
       const { dids } = params
-      const { canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
 
       const actors = await ctx.hydrator.actor.getActors(dids, true)
 
       const infos = mapDefined(dids, (did) => {
         const info = actors.get(did)
         if (!info) return
-        if (info.takedownRef && !canViewTakedowns) return
+        if (info.takedownRef && !includeTakedowns) return
         const profileRecord =
-          !info.profileTakedownRef || canViewTakedowns
+          !info.profileTakedownRef || includeTakedowns
             ? info.profile
             : undefined
         return {

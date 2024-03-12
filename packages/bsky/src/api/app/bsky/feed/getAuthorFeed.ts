@@ -28,14 +28,11 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = { labelers, viewer, includeTakedowns }
 
-      const result = await getAuthorFeed(
-        { ...params, hydrateCtx, includeTakedowns: canViewTakedowns },
-        ctx,
-      )
+      const result = await getAuthorFeed({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
@@ -69,7 +66,7 @@ export const skeleton = async (inputs: {
   }
   const actors = await ctx.hydrator.actor.getActors(
     [did],
-    params.includeTakedowns,
+    params.hydrateCtx.includeTakedowns,
   )
   const actor = actors.get(did)
   if (!actor) {
@@ -103,11 +100,7 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(
-      skeleton.items,
-      params.hydrateCtx,
-      params.includeTakedowns,
-    ),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
   return mergeStates(feedPostState, profileViewerState)
@@ -163,7 +156,6 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
-  includeTakedowns: boolean
 }
 
 type Skeleton = {

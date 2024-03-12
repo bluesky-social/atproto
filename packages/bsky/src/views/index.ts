@@ -61,7 +61,9 @@ export class Views {
   // ------------
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    return !!state.actors?.get(did)?.takedownRef
+    if (state.actors?.get(did)?.takedownRef) return true
+    if (state.labels?.get(did)?.isTakendown) return true
+    return false
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -134,8 +136,8 @@ export class Views {
       'self',
     ).toString()
     const labels = [
-      ...(state.labels?.get(did) ?? []),
-      ...(state.labels?.get(profileUri) ?? []),
+      ...(state.labels?.get(did)?.labels ?? []),
+      ...(state.labels?.get(profileUri)?.labels ?? []),
       ...this.selfLabels({
         uri: profileUri,
         cid: actor.profileCid?.toString(),
@@ -223,7 +225,7 @@ export class Views {
       return undefined
     }
     const listViewer = state.listViewers?.get(uri)
-    const labels = state.labels?.get(uri) ?? []
+    const labels = state.labels?.get(uri)?.labels ?? []
     const creator = new AtUri(uri).hostname
     return {
       uri,
@@ -279,7 +281,7 @@ export class Views {
 
     const uri = AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
     const labels = [
-      ...(state.labels?.get(uri) ?? []),
+      ...(state.labels?.get(uri)?.labels ?? []),
       ...this.selfLabels({
         uri,
         cid: labeler.cid.toString(),
@@ -349,7 +351,7 @@ export class Views {
     if (!creator) return
     const viewer = state.feedgenViewers?.get(uri)
     const aggs = state.feedgenAggs?.get(uri)
-    const labels = state.labels?.get(uri) ?? []
+    const labels = state.labels?.get(uri)?.labels ?? []
 
     return {
       uri,
@@ -406,7 +408,7 @@ export class Views {
       parsedUri.rkey,
     ).toString()
     const labels = [
-      ...(state.labels?.get(uri) ?? []),
+      ...(state.labels?.get(uri)?.labels ?? []),
       ...this.selfLabels({
         uri,
         cid: post.cid,
@@ -884,7 +886,7 @@ export class Views {
       recordInfo = state.follows?.get(notif.uri)
     }
     if (!recordInfo) return
-    const labels = state.labels?.get(notif.uri) ?? []
+    const labels = state.labels?.get(notif.uri)?.labels ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
       cid: recordInfo.cid,

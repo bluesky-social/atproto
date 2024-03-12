@@ -10,10 +10,16 @@ import {
 } from './util'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
+import { ParsedLabelers } from '../util'
 
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
-export type Labels = HydrationMap<Label[]>
+export type SubjectLabels = {
+  isTakendown: boolean
+  labels: Label[]
+}
+
+export type Labels = HydrationMap<SubjectLabels>
 
 export type LabelerAgg = {
   likes: number
@@ -35,22 +41,36 @@ export class LabelHydrator {
 
   async getLabelsForSubjects(
     subjects: string[],
-    issuers: string[],
+    labelers: ParsedLabelers,
   ): Promise<Labels> {
-    if (!subjects.length || !issuers.length) return new HydrationMap<Label[]>()
-    const res = await this.dataplane.getLabels({ subjects, issuers })
+    if (!subjects.length || !labelers.dids.length)
+      return new HydrationMap<SubjectLabels>()
+    const res = await this.dataplane.getLabels({
+      subjects,
+      issuers: labelers.dids,
+    })
     return res.labels.reduce((acc, cur) => {
       const parsed = parseJsonBytes(cur) as Label | undefined
       if (!parsed || parsed.neg) return acc
       const { sig: _, ...label } = parsed
-      const entry = acc.get(label.uri)
-      if (entry) {
-        entry.push(label)
-      } else {
-        acc.set(label.uri, [label])
+      let entry = acc.get(label.uri)
+      if (!entry) {
+        entry = {
+          isTakendown: false,
+          labels: [],
+        }
+        acc.set(label.uri, entry)
+      }
+      entry.labels.push(label)
+      if (
+        TAKEDOWN_LABELS.includes(label.val) &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+      ) {
+        entry.isTakendown = true
       }
       return acc
-    }, new HydrationMap<Label[]>())
+    }, new HydrationMap<SubjectLabels>())
   }
 
   async getLabelers(
@@ -98,3 +118,5 @@ export class LabelHydrator {
 const labelerDidToUri = (did: string): string => {
   return AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
 }
+
+const TAKEDOWN_LABELS = ['!takedown', '!suspend']

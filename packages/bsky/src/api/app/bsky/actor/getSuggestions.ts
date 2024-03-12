@@ -66,11 +66,7 @@ const hydration = async (input: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(
-    skeleton.dids,
-    params.hydrateCtx,
-    true,
-  )
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (input: {
