@@ -256,6 +256,18 @@ export class AppContext {
           // always use up-to-date token data from the token store.
           accessTokenType: AccessTokenType.id,
 
+          onAuthorizationRequest: (parameters, { client, clientAuth }) => {
+            // ATPROTO extension: if the client is not "trustable", force the
+            // user to consent to the request. We do this to avoid
+            // unauthenticated clients from being able to silently
+            // re-authenticate users.
+
+            // TODO: make allow listed client ids configurable
+            if (clientAuth.method === 'none' && client.id !== 'bsky.app') {
+              parameters.prompt ||= 'consent'
+            }
+          },
+
           onTokenResponse: (tokenResponse, { account }) => {
             // ATPROTO extension: add the sub claim to the token response to allow
             // clients to resolve the PDS url (audience) using the did resolution

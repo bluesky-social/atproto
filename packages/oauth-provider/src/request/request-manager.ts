@@ -207,7 +207,8 @@ export class RequestManager {
       )
     }
 
-    // TODO Validate parameters agains client metadata !!!!
+    // TODO Validate parameters against **all** client metadata (are some checks
+    // missing?) !!!
 
     if (!parameters.scope) {
       parameters = { ...parameters, scope: client.metadata.scope }
@@ -232,7 +233,7 @@ export class RequestManager {
         ) {
           if (!scopes?.includes(scope)) {
             throw new InvalidRequestError(
-              `essential ${claim} claim requires "${scope}" scope`,
+              `Essential ${claim} claim requires "${scope}" scope`,
             )
           }
         }
@@ -242,15 +243,26 @@ export class RequestManager {
     // Make "expensive" checks after the "cheaper" checks
 
     if (parameters.id_token_hint != null) {
-      await this.signer.verify(parameters.id_token_hint, {
+      const { payload } = await this.signer.verify(parameters.id_token_hint, {
         // these are meant to be outdated when used as a hint
         clockTolerance: Infinity,
       })
+
+      if (!payload.sub) {
+        throw new InvalidRequestError(`Unexpected empty id_token_hint "sub"`)
+      } else if (parameters.login_hint == null) {
+        parameters = { ...parameters, login_hint: payload.sub }
+      } else if (parameters.login_hint !== payload.sub) {
+        throw new InvalidRequestError(
+          'login_hint does not match "sub" of id_token_hint',
+        )
+      }
     }
 
     await this.hooks.onAuthorizationRequest?.call(
       null,
-      parameters, // can be modified by the hook (already a cloned value)
+      // allow hooks to alter the parameters, without altering the (readonly) input
+      (parameters = structuredClone(parameters)),
       { client, clientAuth },
     )
 

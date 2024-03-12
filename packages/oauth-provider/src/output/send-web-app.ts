@@ -81,7 +81,7 @@ export async function sendWebApp(
 export function declareBrowserGlobalVar(name: string, data: unknown) {
   const nameJson = jsonCode(name)
   const dataJson = jsonCode(data)
-  return html`window[${nameJson}]=${dataJson};`
+  return html`window[${nameJson}]=${dataJson};document.currentScript.remove();`
 }
 
 function scriptToHtml(a: Html | Asset) {

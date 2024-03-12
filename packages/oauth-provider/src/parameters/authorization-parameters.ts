@@ -117,7 +117,7 @@ export const authorizationParametersSchema = z.object({
   // Not supported by this library (yet?)
   // registration: clientMetadataSchema.optional(),
 
-  login_hint: z.string().optional(),
+  login_hint: z.string().min(1).optional(),
 
   ui_locales: z
     .string()

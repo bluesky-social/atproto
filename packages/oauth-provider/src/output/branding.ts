@@ -5,12 +5,14 @@ const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)
 
 export type Branding = {
+  name?: string
   logo?: string
   colors?: { [_ in ColorName]?: string }
 }
 
-export function buildBrandingData({ logo }: Branding = {}) {
+export function buildBrandingData({ name, logo }: Branding = {}) {
   return {
+    name,
     logo,
   }
 }

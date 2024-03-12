@@ -1,13 +1,22 @@
 import { type HTMLAttributes } from 'react'
+import { clsx } from '../lib/clsx'
 import { Account, ClientMetadata } from '../types'
+import { ClientIdentifier } from './client-identifier'
+import { ClientName } from './client-name'
+import { AccountIdentifier } from './account-identifier'
 
 export type AcceptFormProps = {
   account: Account
   clientId: string
   clientMetadata: ClientMetadata
   onAccept: () => void
+  acceptLabel?: string
+
   onReject: () => void
+  rejectLabel?: string
+
   onBack?: () => void
+  backLabel?: string
 }
 
 export function AcceptForm({
@@ -15,17 +24,16 @@ export function AcceptForm({
   clientId,
   clientMetadata,
   onAccept,
+  acceptLabel = 'Accept',
   onReject,
+  rejectLabel = 'Deny access',
   onBack,
-  ...props
+  backLabel = 'Back',
+
+  ...attrs
 }: AcceptFormProps & HTMLAttributes<HTMLDivElement>) {
-  const clientName =
-    clientMetadata.client_name || clientMetadata.client_uri || clientId
-
-  const accountName = account.preferred_username || account.email || account.sub
-
   return (
-    <div {...props}>
+    <div {...attrs} className={clsx('flex flex-col', attrs.className)}>
       {clientMetadata.logo_uri && (
         <div className="flex items-center justify-center mb-4">
           <img
@@ -37,44 +45,51 @@ export function AcceptForm({
         </div>
       )}
 
-      <h1 className="text-2xl font-semibold text-center text-primary">
-        {clientName}
-      </h1>
+      <ClientName
+        clientId={clientId}
+        clientMetadata={clientMetadata}
+        as="h1"
+        className="text-2xl font-semibold text-center text-primary"
+      />
 
       <p className="mt-4">
-        <b>{clientId}</b> is asking for permission to access your{' '}
-        <b>{accountName}</b> account.
+        <ClientIdentifier clientId={clientId} clientMetadata={clientMetadata} />{' '}
+        is asking for permission to access your{' '}
+        <AccountIdentifier account={account} /> account.
       </p>
 
       <p className="mt-4">
-        By clicking Accept, you allow this application to access your
-        information in accordance to its{' '}
+        By clicking <b>{acceptLabel}</b>, you allow this application to access
+        your information in accordance to its{' '}
         <a
           href={clientMetadata.tos_uri}
           rel="nofollow noopener"
           target="_blank"
+          className="text-primary underline"
         >
           terms of service
         </a>
         .
       </p>
 
-      <div className="m-4 flex items-center justify-between">
+      <div className="flex-auto" />
+
+      <div className="mt-4 flex flex-wrap items-center justify-between">
         <button
           type="button"
           onClick={onAccept}
-          className="bg-transparent text-primary rounded-md ml-2 py-2 font-semibold order-last"
+          className="order-last bg-primary text-white py-2 px-4 rounded-full font-semibold"
         >
-          Accept
+          {acceptLabel}
         </button>
 
         {onBack && (
           <button
             type="button"
             onClick={() => onBack()}
-            className="bg-transparent font-light text-primary rounded-md py-2"
+            className="mr-2 bg-transparent text-primary rounded-md py-2"
           >
-            Back
+            {backLabel}
           </button>
         )}
 
@@ -83,9 +98,9 @@ export function AcceptForm({
         <button
           type="button"
           onClick={onReject}
-          className="bg-transparent font-light text-primary rounded-md ml-2 py-2"
+          className="mr-2 bg-transparent text-primary rounded-md py-2"
         >
-          Deny access
+          {rejectLabel}
         </button>
       </div>
     </div>

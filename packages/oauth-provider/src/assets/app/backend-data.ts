@@ -1,6 +1,7 @@
 import type { ClientMetadata, Session } from './types'
 
 export type BrandingData = {
+  name?: string
   logo?: string
 }
 
@@ -15,15 +16,19 @@ export type AuthorizeData = {
   requestUri: string
   csrfCookie: string
   sessions: Session[]
-  consentRequired: boolean
+  newSessionsRequireConsent: boolean
   loginHint?: string
+}
+
+const readBackendData = <T>(key: string): T | undefined => {
+  const value = window[key] as T | undefined
+  delete window[key] // Prevent accidental usage / potential leaks to dependencies
+  return value
 }
 
 // These values are injected by the backend when it builds the
 // page HTML.
 
-export const brandingData = window['__brandingData'] as BrandingData | undefined
-export const errorData = window['__errorData'] as ErrorData | undefined
-export const authorizeData = window['__authorizeData'] as
-  | AuthorizeData
-  | undefined
+export const brandingData = readBackendData<BrandingData>('__brandingData')
+export const errorData = readBackendData<ErrorData>('__errorData')
+export const authorizeData = readBackendData<AuthorizeData>('__authorizeData')

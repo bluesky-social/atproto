@@ -8,8 +8,10 @@ export const createRouter = (ctx: AppContext) => {
     ctx.oauthProvider?.httpHandler({
       // TODO: This must come from config
       branding: {
+        name: 'My PDS',
+        logo: 'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
         colors: {
-          primary: '#0085ff',
+          primary: '#ffcb1e', // #0085ff
         },
       },
       // Log oauth provider errors using our own logger
