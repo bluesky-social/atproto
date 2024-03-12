@@ -7976,6 +7976,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventMute',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
+              'lex:tools.ozone.moderation.defs#modEventDivert',
             ],
           },
           subject: {
@@ -8034,6 +8035,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventMute',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
+              'lex:tools.ozone.moderation.defs#modEventDivert',
             ],
           },
           subject: {
@@ -8317,6 +8319,16 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
+          },
+        },
+      },
+      modEventDivert: {
+        type: 'object',
+        description:
+          "Divert a record's blobs to a 3rd party service for further scanning/tagging",
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },

@@ -24,6 +24,7 @@ export interface ModEventView {
     | ModEventMute
     | ModEventEmail
     | ModEventResolveAppeal
+    | ModEventDivert
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
@@ -62,6 +63,7 @@ export interface ModEventViewDetail {
     | ModEventMute
     | ModEventEmail
     | ModEventResolveAppeal
+    | ModEventDivert
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -365,6 +367,24 @@ export function isModEventEmail(v: unknown): v is ModEventEmail {
 
 export function validateModEventEmail(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventEmail', v)
+}
+
+/** Divert a record's blobs to a 3rd party service for further scanning/tagging */
+export interface ModEventDivert {
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventDivert(v: unknown): v is ModEventDivert {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventDivert'
+  )
+}
+
+export function validateModEventDivert(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.moderation.defs#modEventDivert', v)
 }
 
 /** Add/Remove a tag on a subject */
