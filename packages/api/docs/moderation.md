@@ -245,3 +245,14 @@ for (const inform of mod.ui('contentList').informs) {
 }
 ```
 
+## Sending moderation reports
+
+Any Labeler is capable of receiving moderation reports. As a result, you need to specify which labeler should receive the report. You do this with the `Atproto-Proxy` header:
+
+```typescript
+agent.withProxy('atproto_labeler', 'did:web:my-labeler.com').createModerationReport({
+  reasonType: 'com.atproto.moderation.defs#reasonViolation',
+  reason: 'They were being such a jerk to me!',
+  subject: {did: 'did:web:bob.com'}
+})
+```

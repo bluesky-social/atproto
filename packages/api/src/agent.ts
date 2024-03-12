@@ -17,6 +17,7 @@ import {
   AtpAgentGlobalOpts,
   AtpPersistSessionHandler,
   AtpAgentOpts,
+  AtprotoServiceType,
 } from './types'
 import { BSKY_LABELER_DID } from './const'
 
@@ -33,15 +34,12 @@ export class AtpAgent {
   api: AtpServiceClient
   session?: AtpSessionData
   labelersHeader: string[] = []
+  proxyHeader: string | undefined
+  pdsUrl: URL | undefined // The PDS URL, driven by the did doc. May be undefined.
 
-  /**
-   * The PDS URL, driven by the did doc. May be undefined.
-   */
-  pdsUrl: URL | undefined
-
-  private _baseClient: AtpBaseClient
-  private _persistSession?: AtpPersistSessionHandler
-  private _refreshSessionPromise: Promise<void> | undefined
+  protected _baseClient: AtpBaseClient
+  protected _persistSession?: AtpPersistSessionHandler
+  protected _refreshSessionPromise: Promise<void> | undefined
 
   get com() {
     return this.api.com
@@ -80,6 +78,27 @@ export class AtpAgent {
     this.api = this._baseClient.service(opts.service)
   }
 
+  clone() {
+    const inst = new AtpAgent({
+      service: this.service,
+    })
+    this.copyInto(inst)
+    return inst
+  }
+
+  copyInto(inst: AtpAgent) {
+    inst.session = this.session
+    inst.labelersHeader = this.labelersHeader
+    inst.proxyHeader = this.proxyHeader
+    inst.pdsUrl = this.pdsUrl
+  }
+
+  withProxy(serviceType: AtprotoServiceType, did: string) {
+    const inst = this.clone()
+    inst.configureProxyHeader(serviceType, did)
+    return inst
+  }
+
   /**
    * Is there any active session?
    */
@@ -102,6 +121,15 @@ export class AtpAgent {
    */
   configureLabelersHeader(labelerDids: string[]) {
     this.labelersHeader = labelerDids
+  }
+
+  /**
+   * Configures the atproto-proxy header to be applied on requests
+   */
+  configureProxyHeader(serviceType: AtprotoServiceType, did: string) {
+    if (did.startsWith('did:')) {
+      this.proxyHeader = `${did}#${serviceType}`
+    }
   }
 
   /**
@@ -222,6 +250,12 @@ export class AtpAgent {
       reqHeaders = {
         ...reqHeaders,
         authorization: `Bearer ${this.session.accessJwt}`,
+      }
+    }
+    if (this.proxyHeader) {
+      reqHeaders = {
+        ...reqHeaders,
+        'atproto-proxy': this.proxyHeader,
       }
     }
     reqHeaders = {

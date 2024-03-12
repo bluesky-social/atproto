@@ -33,6 +33,13 @@ describe('agent', () => {
     }
   }
 
+  it('clones correctly', () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+    const agent2 = agent.clone()
+    expect(agent2 instanceof BskyAgent).toBeTruthy()
+    expect(agent.service).toEqual(agent2.service)
+  })
+
   it('upsertProfile correctly creates and updates profiles.', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
 

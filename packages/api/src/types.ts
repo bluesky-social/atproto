@@ -2,6 +2,11 @@ import { AppBskyActorDefs } from './client'
 import { ModerationPrefs } from './moderation/types'
 
 /**
+ * Supported proxy targets
+ */
+export type AtprotoServiceType = 'atproto_labeler'
+
+/**
  * Used by the PersistSessionHandler to indicate what change occurred
  */
 export type AtpSessionEvent =

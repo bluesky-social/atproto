@@ -44,6 +44,14 @@ declare global {
 }
 
 export class BskyAgent extends AtpAgent {
+  clone() {
+    const inst = new BskyAgent({
+      service: this.service,
+    })
+    this.copyInto(inst)
+    return inst
+  }
+
   get app() {
     return this.api.app
   }
