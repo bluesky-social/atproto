@@ -40,8 +40,9 @@ export class LabelHydrator {
     if (!subjects.length || !issuers.length) return new HydrationMap<Label[]>()
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
-      const label = parseJsonBytes(cur) as Label | undefined
-      if (!label || label.neg) return acc
+      const parsed = parseJsonBytes(cur) as Label | undefined
+      if (!parsed || parsed.neg) return acc
+      const { sig: _, ...label } = parsed
       const entry = acc.get(label.uri)
       if (entry) {
         entry.push(label)
