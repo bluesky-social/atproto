@@ -194,11 +194,12 @@ export class Hydrator {
     uris: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [lists, listViewers] = await Promise.all([
+    const [lists, listViewers, labels] = await Promise.all([
       this.graph.getLists(uris),
       ctx.viewer ? this.graph.getListViewerStates(uris, ctx.viewer) : undefined,
+      this.label.getLabelsForSubjects(uris, ctx.labelers),
     ])
-    return { lists, listViewers, ctx }
+    return { lists, listViewers, labels, ctx }
   }
 
   // app.bsky.graph.defs#listItemView
@@ -430,7 +431,7 @@ export class Hydrator {
     uris: string[], // @TODO any way to get refs here?
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [feedgens, feedgenAggs, feedgenViewers, profileState] =
+    const [feedgens, feedgenAggs, feedgenViewers, profileState, labels] =
       await Promise.all([
         this.feed.getFeedGens(uris),
         this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
@@ -438,11 +439,13 @@ export class Hydrator {
           ? this.feed.getFeedGenViewerStates(uris, ctx.viewer)
           : undefined,
         this.hydrateProfiles(uris.map(didFromUri), ctx),
+        this.label.getLabelsForSubjects(uris, ctx.labelers),
       ])
     return mergeStates(profileState, {
       feedgens,
       feedgenAggs,
       feedgenViewers,
+      labels,
       ctx,
     })
   }

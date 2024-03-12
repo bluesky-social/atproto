@@ -22,35 +22,14 @@ describe('label hydration', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     labelerDid = network.bsky.ctx.cfg.labelsFromIssuerDids[0]
-    await network.bsky.db.db
-      .insertInto('label')
-      .values([
-        {
-          src: alice,
-          uri: carol,
-          cid: '',
-          val: 'spam',
-          neg: false,
-          cts: new Date().toISOString(),
-        },
-        {
-          src: bob,
-          uri: carol,
-          cid: '',
-          val: 'impersonation',
-          neg: false,
-          cts: new Date().toISOString(),
-        },
-        {
-          src: labelerDid,
-          uri: carol,
-          cid: '',
-          val: 'misleading',
-          neg: false,
-          cts: new Date().toISOString(),
-        },
-      ])
-      .execute()
+    await createLabel({ src: alice, uri: carol, cid: '', val: 'spam' })
+    await createLabel({ src: bob, uri: carol, cid: '', val: 'impersonation' })
+    await createLabel({
+      src: labelerDid,
+      uri: carol,
+      cid: '',
+      val: 'misleading',
+    })
     await network.processAll()
   })
 
@@ -97,4 +76,68 @@ describe('label hydration', () => {
     expect(res.data.labels?.[0].src).toBe(labelerDid)
     expect(res.data.labels?.[0].val).toBe('misleading')
   })
+
+  it('hydrates labels onto list views.', async () => {
+    const list = await pdsAgent.api.app.bsky.graph.list.create(
+      { repo: alice },
+      {
+        name: "alice's modlist",
+        purpose: 'app.bsky.graph.defs#modlist',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    await network.processAll()
+    await createLabel({ uri: list.uri, cid: list.cid, val: 'spam' })
+    const res = await pdsAgent.api.app.bsky.graph.getList(
+      { list: list.uri },
+      { headers: sc.getHeaders(alice) },
+    )
+    const [label, ...others] = res.data.list.labels ?? []
+    expect(label?.src).toBe(labelerDid)
+    expect(label?.val).toBe('spam')
+    expect(others.length).toBe(0)
+  })
+
+  it('hydrates labels onto feed generator views.', async () => {
+    const feedgen = await pdsAgent.api.app.bsky.feed.generator.create(
+      { repo: alice },
+      {
+        displayName: "alice's feedgen",
+        did: alice,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    await network.processAll()
+    await createLabel({ uri: feedgen.uri, cid: feedgen.cid, val: 'spam' })
+    const res = await pdsAgent.api.app.bsky.feed.getFeedGenerators(
+      { feeds: [feedgen.uri] },
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(res.data.feeds.length).toBe(1)
+    const [label, ...others] = res.data.feeds[0].labels ?? []
+    expect(label?.src).toBe(labelerDid)
+    expect(label?.val).toBe('spam')
+    expect(others.length).toBe(0)
+  })
+
+  const createLabel = async (opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+  }) => {
+    await network.bsky.db.db
+      .insertInto('label')
+      .values({
+        uri: opts.uri,
+        cid: opts.cid,
+        val: opts.val,
+        cts: new Date().toISOString(),
+        neg: false,
+        src: opts.src ?? 'did:example:labeler',
+      })
+      .execute()
+  }
 })
