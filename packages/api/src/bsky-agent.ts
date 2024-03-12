@@ -4,6 +4,7 @@ import {
   AppBskyFeedPost,
   AppBskyActorProfile,
   AppBskyActorDefs,
+  AppBskyLabelerDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
 import {
@@ -12,9 +13,14 @@ import {
   BskyThreadViewPreference,
   BskyInterestsPreference,
 } from './types'
-import { LabelPreference } from './moderation/types'
+import {
+  InterpretedLabelValueDefinition,
+  LabelPreference,
+  ModerationPrefs,
+} from './moderation/types'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 import { sanitizeMutedWordValue } from './util'
+import { interpretLabelValueDefinitions } from './moderation'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -101,6 +107,37 @@ export class BskyAgent extends AtpAgent {
 
   getLabelers: typeof this.api.app.bsky.labeler.getServices = (params, opts) =>
     this.api.app.bsky.labeler.getServices(params, opts)
+
+  async getLabelDefinitions(
+    prefs: BskyPreferences | ModerationPrefs | string[],
+  ): Promise<Record<string, InterpretedLabelValueDefinition[]>> {
+    // collect the labeler dids
+    let dids: string[] = BskyAgent.appLabelers
+    if (isBskyPrefs(prefs)) {
+      dids = dids.concat(prefs.moderationPrefs.labelers.map((l) => l.did))
+    } else if (isModPrefs(prefs)) {
+      dids = dids.concat(prefs.labelers.map((l) => l.did))
+    } else {
+      dids = dids.concat(prefs)
+    }
+
+    // fetch their definitions
+    const labelers = await this.getLabelers({
+      dids,
+      detailed: true,
+    })
+
+    // assemble a map of labeler dids to the interpretted label value definitions
+    const labelDefs = {}
+    if (labelers.data) {
+      for (const labeler of labelers.data
+        .views as AppBskyLabelerDefs.LabelerViewDetailed[]) {
+        labelDefs[labeler.creator.did] = interpretLabelValueDefinitions(labeler)
+      }
+    }
+
+    return labelDefs
+  }
 
   async post(
     record: Partial<AppBskyFeedPost.Record> &
@@ -984,4 +1021,17 @@ async function updateHiddenPost(
       .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
       .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
   })
+}
+
+function isBskyPrefs(v: any): v is BskyPreferences {
+  return (
+    v &&
+    typeof v === 'object' &&
+    'moderationPrefs' in v &&
+    isModPrefs(v.moderationPrefs)
+  )
+}
+
+function isModPrefs(v: any): v is ModerationPrefs {
+  return v && typeof v === 'object' && 'labelers' in v
 }
