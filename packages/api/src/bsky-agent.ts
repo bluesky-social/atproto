@@ -374,7 +374,7 @@ export class BskyAgent extends AtpAgent {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS },
-        labelers: [],
+        labelers: BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
         mutedWords: [],
         hiddenPosts: [],
       },
@@ -404,10 +404,14 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.validateLabelersPref(pref).success
       ) {
         // labelers preferences
-        prefs.moderationPrefs.labelers = pref.labelers.map((labeler) => ({
-          ...labeler,
-          labels: {},
-        }))
+        prefs.moderationPrefs.labelers = BskyAgent.appLabelers
+          .map((did) => ({ did, labels: {} }))
+          .concat(
+            pref.labelers.map((labeler) => ({
+              ...labeler,
+              labels: {},
+            })),
+          )
       } else if (
         AppBskyActorDefs.isSavedFeedsPref(pref) &&
         AppBskyActorDefs.validateSavedFeedsPref(pref).success
