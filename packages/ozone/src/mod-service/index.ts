@@ -506,10 +506,18 @@ export class ModerationService {
       })
       .returning('id')
       .execute()
-    const existingLabels = await this.views.labelRows(subject.did)
-    const existingVals = existingLabels.map((row) => row.val)
+
+    const existingTakedownLabels = await this.db.db
+      .selectFrom('label')
+      .where('label.uri', '=', subject.did)
+      .where('label.val', 'in', [TAKEDOWN_LABEL, SUSPEND_LABEL])
+      .where('neg', '=', false)
+      .selectAll()
+      .execute()
+
+    const takedownVals = existingTakedownLabels.map((row) => row.val)
     await this.formatAndCreateLabels(subject.did, null, {
-      negate: existingVals,
+      negate: takedownVals,
     })
 
     this.db.onCommit(() => {

@@ -408,17 +408,13 @@ export class ModerationViews {
     })
   }
 
-  async labelRows(subject: string, includeNeg?: boolean): Promise<LabelRow[]> {
-    return this.db.db
+  async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
+    const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', '=', subject)
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
-  }
-
-  async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
-    const res = await this.labelRows(subject, includeNeg)
     return Promise.all(res.map((l) => this.formatLabelAndEnsureSig(l)))
   }
 

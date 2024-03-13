@@ -22,7 +22,7 @@ import {
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
 import { EventReverser } from '../src'
 import { ImageInvalidator } from '../src/image-invalidator'
-import { TAKEDOWN_LABEL, SUSPEND_LABEL } from '../src/mod-service'
+import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('moderation', () => {
   let network: TestNetwork
