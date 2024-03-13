@@ -926,9 +926,6 @@ importers:
       '@atproto/fetch-node':
         specifier: workspace:*
         version: link:../fetch-node
-      '@atproto/http-util':
-        specifier: workspace:*
-        version: link:../http-util
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity

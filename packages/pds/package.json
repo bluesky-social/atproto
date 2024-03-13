@@ -35,7 +35,6 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/fetch": "workspace:*",
     "@atproto/fetch-node": "workspace:*",
-    "@atproto/http-util": "workspace:*",
     "@atproto/identity": "workspace:^",
     "@atproto/jwk": "workspace:^",
     "@atproto/jwk-node": "workspace:^",
