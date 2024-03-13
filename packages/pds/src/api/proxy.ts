@@ -107,20 +107,27 @@ export const resultPassthru = <T>(result: { headers: Headers; data: T }) => {
 export function authPassthru(
   req: express.Request,
   withEncoding?: false,
-): { headers: { authorization: string }; encoding: undefined } | undefined
+): { headers: Record<string, string>; encoding: undefined } | undefined
 
 export function authPassthru(
   req: express.Request,
   withEncoding: true,
-):
-  | { headers: { authorization: string }; encoding: 'application/json' }
-  | undefined
+): { headers: Record<string, string>; encoding: 'application/json' } | undefined
 
 export function authPassthru(req: express.Request, withEncoding?: boolean) {
+  const headers: Record<string, string> = {}
   if (req.headers.authorization) {
-    return {
-      headers: { authorization: req.headers.authorization },
-      encoding: withEncoding ? 'application/json' : undefined,
+    headers.authorization = req.headers.authorization
+    if (typeof req.headers['atproto-proxy'] === 'string') {
+      headers['atproto-proxy'] = req.headers['atproto-proxy']
     }
+  }
+  if (typeof req.headers['atproto-accept-labelers'] === 'string') {
+    headers['atproto-accept-labelers'] = req.headers['atproto-accept-labelers']
+  }
+  if (!Object.keys(headers).length) return
+  return {
+    headers,
+    encoding: withEncoding ? 'application/json' : undefined,
   }
 }
