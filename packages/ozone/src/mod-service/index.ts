@@ -29,8 +29,6 @@ import {
   ModerationEventRow,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
-  UNSPECCED_TAKEDOWN_BLOBS_LABEL,
-  UNSPECCED_TAKEDOWN_LABEL,
 } from './types'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
@@ -480,8 +478,10 @@ export class ModerationService {
       )
       .returning('id')
       .execute()
+
+    const takedownLabel = isSuspend ? SUSPEND_LABEL : TAKEDOWN_LABEL
     await this.formatAndCreateLabels(subject.did, null, {
-      create: [UNSPECCED_TAKEDOWN_LABEL],
+      create: [takedownLabel],
     })
 
     this.db.onCommit(() => {
@@ -506,8 +506,18 @@ export class ModerationService {
       })
       .returning('id')
       .execute()
+
+    const existingTakedownLabels = await this.db.db
+      .selectFrom('label')
+      .where('label.uri', '=', subject.did)
+      .where('label.val', 'in', [TAKEDOWN_LABEL, SUSPEND_LABEL])
+      .where('neg', '=', false)
+      .selectAll()
+      .execute()
+
+    const takedownVals = existingTakedownLabels.map((row) => row.val)
     await this.formatAndCreateLabels(subject.did, null, {
-      negate: [UNSPECCED_TAKEDOWN_LABEL],
+      negate: takedownVals,
     })
 
     this.db.onCommit(() => {
@@ -521,44 +531,12 @@ export class ModerationService {
 
   async takedownRecord(subject: RecordSubject, takedownId: number) {
     this.db.assertTransaction()
-    const takedownRef = `BSKY-TAKEDOWN-${takedownId}`
-    const values = this.eventPusher.takedowns.map((eventType) => ({
-      eventType,
-      subjectDid: subject.did,
-      subjectUri: subject.uri,
-      subjectCid: subject.cid,
-      takedownRef,
-    }))
-    const blobCids = subject.blobCids
-    const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]
-    if (blobCids && blobCids.length > 0) {
-      labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
-    }
-    const recordEvts = await this.db.db
-      .insertInto('record_push_event')
-      .values(values)
-      .onConflict((oc) =>
-        oc.columns(['subjectUri', 'eventType']).doUpdateSet({
-          takedownRef,
-          confirmedAt: null,
-          attempts: 0,
-          lastAttempted: null,
-        }),
-      )
-      .returning('id')
-      .execute()
     await this.formatAndCreateLabels(subject.uri, subject.cid, {
-      create: labels,
+      create: [TAKEDOWN_LABEL],
     })
 
-    this.db.onCommit(() => {
-      this.backgroundQueue.add(async () => {
-        await Promise.all(
-          recordEvts.map((evt) => this.eventPusher.attemptRecordEvent(evt.id)),
-        )
-      })
-    })
-
+    const takedownRef = `BSKY-TAKEDOWN-${takedownId}`
+    const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
       for (const eventType of this.eventPusher.takedowns) {
@@ -613,37 +591,11 @@ export class ModerationService {
 
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
-    const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]
-    const blobCids = subject.blobCids
-    if (blobCids && blobCids.length > 0) {
-      labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
-    }
-    const recordEvts = await this.db.db
-      .updateTable('record_push_event')
-      .where('eventType', 'in', TAKEDOWNS)
-      .where('subjectDid', '=', subject.did)
-      .where('subjectUri', '=', subject.uri)
-      .set({
-        takedownRef: null,
-        confirmedAt: null,
-        attempts: 0,
-        lastAttempted: null,
-      })
-      .returning('id')
-      .execute()
     await this.formatAndCreateLabels(subject.uri, subject.cid, {
-      negate: labels,
-    }),
-      this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          await Promise.all(
-            recordEvts.map((evt) =>
-              this.eventPusher.attemptRecordEvent(evt.id),
-            ),
-          )
-        })
-      })
+      negate: [TAKEDOWN_LABEL],
+    })
 
+    const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobEvts = await this.db.db
         .updateTable('blob_push_event')
@@ -962,6 +914,9 @@ const isSafeUrl = (url: URL) => {
 }
 
 const TAKEDOWNS = ['pds_takedown' as const, 'appview_takedown' as const]
+
+export const TAKEDOWN_LABEL = '!takedown'
+export const SUSPEND_LABEL = '!suspend'
 
 export type TakedownSubjects = {
   did: string
