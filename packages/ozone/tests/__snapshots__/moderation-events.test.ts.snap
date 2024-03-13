@@ -152,7 +152,7 @@ Array [
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventTag",
       "add": Array [
-        "lang:und",
+        "lang:en",
       ],
       "remove": Array [],
     },
