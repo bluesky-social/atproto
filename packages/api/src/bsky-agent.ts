@@ -1,5 +1,5 @@
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import {TID} from '@atproto/common-web'
+import { TID } from '@atproto/common-web'
 import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,

@@ -1422,7 +1422,9 @@ describe('agent', () => {
           })
 
           const { moderationPrefs } = await agent.getPreferences()
-          const word = moderationPrefs.mutedWords.find((m) => m.value === 'word')
+          const word = moderationPrefs.mutedWords.find(
+            (m) => m.value === 'word',
+          )
 
           expect(word!.id).toBeTruthy()
           expect(word!.targets).toEqual(['content'])
@@ -1441,31 +1443,41 @@ describe('agent', () => {
         it('multi-hash ##, inserts #', async () => {
           await agent.addMutedWord({ value: '##', targets: [] })
           const { moderationPrefs } = await agent.getPreferences()
-          expect(moderationPrefs.mutedWords.find((m) => m.value === '#')).toBeTruthy()
+          expect(
+            moderationPrefs.mutedWords.find((m) => m.value === '#'),
+          ).toBeTruthy()
         })
 
         it('multi-hash ##hashtag, inserts #hashtag', async () => {
           await agent.addMutedWord({ value: '##hashtag', targets: [] })
           const { moderationPrefs } = await agent.getPreferences()
-          expect(moderationPrefs.mutedWords.find((w) => w.value === '#hashtag')).toBeTruthy()
+          expect(
+            moderationPrefs.mutedWords.find((w) => w.value === '#hashtag'),
+          ).toBeTruthy()
         })
 
         it('hash emoji #️⃣, inserts #️⃣', async () => {
           await agent.addMutedWord({ value: '#️⃣', targets: [] })
           const { moderationPrefs } = await agent.getPreferences()
-          expect(moderationPrefs.mutedWords.find((m) => m.value === '#️⃣')).toBeTruthy()
+          expect(
+            moderationPrefs.mutedWords.find((m) => m.value === '#️⃣'),
+          ).toBeTruthy()
         })
 
         it('hash emoji w/leading hash ##️⃣, inserts #️⃣', async () => {
           await agent.addMutedWord({ value: '##️⃣', targets: [] })
           const { moderationPrefs } = await agent.getPreferences()
-          expect(moderationPrefs.mutedWords.find((m) => m.value === '#️⃣')).toBeTruthy()
+          expect(
+            moderationPrefs.mutedWords.find((m) => m.value === '#️⃣'),
+          ).toBeTruthy()
         })
 
         it('hash emoji with double leading hash ###️⃣, inserts ##️⃣', async () => {
           await agent.addMutedWord({ value: '###️⃣', targets: [] })
           const { moderationPrefs } = await agent.getPreferences()
-          expect(moderationPrefs.mutedWords.find((m) => m.value === '##️⃣')).toBeTruthy()
+          expect(
+            moderationPrefs.mutedWords.find((m) => m.value === '##️⃣'),
+          ).toBeTruthy()
         })
 
         describe(`invalid characters`, () => {
@@ -1488,7 +1500,9 @@ describe('agent', () => {
             })
             const { moderationPrefs } = await agent.getPreferences()
             expect(
-              moderationPrefs.mutedWords.find((m) => m.value === 'test value with newline'),
+              moderationPrefs.mutedWords.find(
+                (m) => m.value === 'test value with newline',
+              ),
             ).toBeTruthy()
           })
 
@@ -1499,7 +1513,9 @@ describe('agent', () => {
             })
             const { moderationPrefs } = await agent.getPreferences()
             expect(
-              moderationPrefs.mutedWords.find((m) => m.value === 'test value with newline'),
+              moderationPrefs.mutedWords.find(
+                (m) => m.value === 'test value with newline',
+              ),
             ).toBeTruthy()
           })
 
@@ -1512,7 +1528,9 @@ describe('agent', () => {
           it(`' trim ', inserts 'trim'`, async () => {
             await agent.addMutedWord({ value: ' trim ', targets: [] })
             const { moderationPrefs } = await agent.getPreferences()
-            expect(moderationPrefs.mutedWords.find((m) => m.value === 'trim')).toBeTruthy()
+            expect(
+              moderationPrefs.mutedWords.find((m) => m.value === 'trim'),
+            ).toBeTruthy()
           })
         })
       })
@@ -1561,7 +1579,9 @@ describe('agent', () => {
           })
 
           const a = await agent.getPreferences()
-          const word = a.moderationPrefs.mutedWords.find((m) => m.value === 'value')
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'value',
+          )
 
           await agent.updateMutedWord({
             ...word!,
@@ -1569,7 +1589,9 @@ describe('agent', () => {
           })
 
           const b = await agent.getPreferences()
-          const updatedWord = b.moderationPrefs.mutedWords.find((m) => m.id === word!.id)
+          const updatedWord = b.moderationPrefs.mutedWords.find(
+            (m) => m.id === word!.id,
+          )
 
           expect(updatedWord!.value).toEqual('new value')
           expect(updatedWord).toHaveProperty('targets', ['content'])
@@ -1582,7 +1604,9 @@ describe('agent', () => {
           })
 
           const a = await agent.getPreferences()
-          const word = a.moderationPrefs.mutedWords.find((m) => m.value === 'word')
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'word',
+          )
 
           await agent.updateMutedWord({
             ...word!,
@@ -1591,10 +1615,9 @@ describe('agent', () => {
 
           const b = await agent.getPreferences()
 
-          expect(b.moderationPrefs.mutedWords.find((m) => m.id === word!.id)).toHaveProperty(
-            'targets',
-            ['content'],
-          )
+          expect(
+            b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
+          ).toHaveProperty('targets', ['content'])
         })
 
         it('updates actors', async () => {
@@ -1605,7 +1628,9 @@ describe('agent', () => {
           })
 
           const a = await agent.getPreferences()
-          const word = a.moderationPrefs.mutedWords.find((m) => m.value === 'value')
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'value',
+          )
 
           await agent.updateMutedWord({
             ...word!,
@@ -1614,10 +1639,9 @@ describe('agent', () => {
 
           const b = await agent.getPreferences()
 
-          expect(b.moderationPrefs.mutedWords.find((m) => m.id === word!.id)).toHaveProperty(
-            'actors',
-            ['did:plc:fake2'],
-          )
+          expect(
+            b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
+          ).toHaveProperty('actors', ['did:plc:fake2'])
         })
 
         it('updates expiresAt', async () => {
@@ -1630,7 +1654,9 @@ describe('agent', () => {
           })
 
           const a = await agent.getPreferences()
-          const word = a.moderationPrefs.mutedWords.find((m) => m.value === 'value')
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'value',
+          )
 
           await agent.updateMutedWord({
             ...word!,
@@ -1639,10 +1665,9 @@ describe('agent', () => {
 
           const b = await agent.getPreferences()
 
-          expect(b.moderationPrefs.mutedWords.find((m) => m.id === word!.id)).toHaveProperty(
-            'expiresAt',
-            expiresAt2,
-          )
+          expect(
+            b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
+          ).toHaveProperty('expiresAt', expiresAt2)
         })
       })
 
@@ -1650,25 +1675,33 @@ describe('agent', () => {
         it('removes word', async () => {
           await agent.addMutedWord({ value: 'word', targets: ['tag'] })
           const a = await agent.getPreferences()
-          const word = a.moderationPrefs.mutedWords.find((m) => m.value === 'word')
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'word',
+          )
 
           await agent.removeMutedWord(word!)
 
           const b = await agent.getPreferences()
 
-          expect(b.moderationPrefs.mutedWords.find((m) => m.id === word!.id)).toBeFalsy()
+          expect(
+            b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
+          ).toBeFalsy()
         })
 
         it(`word doesn't exist, no action`, async () => {
           await agent.addMutedWord({ value: 'word', targets: ['tag'] })
           const a = await agent.getPreferences()
-          const word = a.moderationPrefs.mutedWords.find((m) => m.value === 'word')
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'word',
+          )
 
           await agent.removeMutedWord({ value: 'another', targets: [] })
 
           const b = await agent.getPreferences()
 
-          expect(b.moderationPrefs.mutedWords.find((m) => m.id === word!.id)).toBeTruthy()
+          expect(
+            b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
+          ).toBeTruthy()
         })
       })
 
@@ -1767,7 +1800,9 @@ describe('agent', () => {
 
           {
             const { moderationPrefs } = await agent.getPreferences()
-            const word = moderationPrefs.mutedWords.find((w) => w.value === 'word')
+            const word = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word',
+            )
             expect(word).toBeTruthy()
             expect(word!.id).toBeFalsy()
           }
@@ -1776,8 +1811,12 @@ describe('agent', () => {
 
           {
             const { moderationPrefs } = await agent.getPreferences()
-            const word = moderationPrefs.mutedWords.find((w) => w.value === 'word')
-            const word2 = moderationPrefs.mutedWords.find((w) => w.value === 'word2')
+            const word = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word',
+            )
+            const word2 = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word2',
+            )
 
             expect(word!.id).toBeTruthy()
             expect(word2!.id).toBeTruthy()
@@ -1800,8 +1839,12 @@ describe('agent', () => {
 
           {
             const { moderationPrefs } = await agent.getPreferences()
-            const word = moderationPrefs.mutedWords.find((w) => w.value === 'word')
-            const word2 = moderationPrefs.mutedWords.find((w) => w.value === 'word2')
+            const word = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word',
+            )
+            const word2 = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word2',
+            )
 
             expect(moderationPrefs.mutedWords.length).toEqual(2)
             expect(word!.id).toBeTruthy()
@@ -1826,8 +1869,12 @@ describe('agent', () => {
 
           {
             const { moderationPrefs } = await agent.getPreferences()
-            const word = moderationPrefs.mutedWords.find((w) => w.value === 'word')
-            const word2 = moderationPrefs.mutedWords.find((w) => w.value === 'word2')
+            const word = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word',
+            )
+            const word2 = moderationPrefs.mutedWords.find(
+              (w) => w.value === 'word2',
+            )
 
             expect(moderationPrefs.mutedWords.length).toEqual(1)
             expect(word).toBeFalsy()
