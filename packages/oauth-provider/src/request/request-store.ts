@@ -17,6 +17,10 @@ export type FoundRequestResult = {
 
 export interface RequestStore {
   createRequest(id: RequestId, data: RequestData): Awaitable<void>
+  /**
+   * Note that expired requests **can** be returned to yield a different error
+   * message than if the request was not found.
+   */
   readRequest(id: RequestId): Awaitable<RequestData | null>
   updateRequest(id: RequestId, data: UpdateRequestData): Awaitable<void>
   deleteRequest(id: RequestId): void | Awaitable<void>

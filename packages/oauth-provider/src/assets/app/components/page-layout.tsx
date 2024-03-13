@@ -1,18 +1,19 @@
 import { HTMLAttributes, PropsWithChildren, ReactNode } from 'react'
 import { clsx } from '../lib/clsx'
 
-export type PageLayoutProps = PropsWithChildren<{
+export type PageLayoutProps = {
   title?: ReactNode
   subtitle?: ReactNode
-}>
+}
 
 export function PageLayout({
   children,
   title,
   subtitle,
   ...attrs
-}: PageLayoutProps &
-  Omit<HTMLAttributes<HTMLDivElement>, keyof PageLayoutProps>) {
+}: PropsWithChildren<
+  PageLayoutProps & Omit<HTMLAttributes<HTMLDivElement>, keyof PageLayoutProps>
+>) {
   return (
     <div
       {...attrs}
