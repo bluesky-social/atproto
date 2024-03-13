@@ -9,6 +9,7 @@ export const readEnv = (): ServerEnvironment => {
     version: envStr('PDS_VERSION'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
@@ -115,6 +116,7 @@ export type ServerEnvironment = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  contactEmailAddress?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
   devMode?: boolean
