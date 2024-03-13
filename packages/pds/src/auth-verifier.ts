@@ -1,4 +1,6 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+
+import { getVerificationMaterial } from '@atproto/common'
 import { OAuthError, OAuthVerifier } from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
@@ -12,9 +14,9 @@ import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
+
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
-import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
@@ -96,7 +98,6 @@ type ValidatedRefreshBearer = ValidatedBearer & {
 }
 
 export type AuthVerifierOpts = {
-  oauthVerifier: OAuthVerifier
   publicUrl: string
   jwtKey: KeyObject
   adminPass: string
@@ -108,7 +109,6 @@ export type AuthVerifierOpts = {
 }
 
 export class AuthVerifier {
-  private _oauthVerifier: OAuthVerifier
   private _publicUrl: string
   private _jwtKey: KeyObject
   private _adminPass: string
@@ -117,9 +117,9 @@ export class AuthVerifier {
   constructor(
     public accountManager: AccountManager,
     public idResolver: IdResolver,
+    public oauthVerifier: OAuthVerifier,
     opts: AuthVerifierOpts,
   ) {
-    this._oauthVerifier = opts.oauthVerifier
     this._publicUrl = opts.publicUrl
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
@@ -129,7 +129,7 @@ export class AuthVerifier {
   // verifiers (arrow fns to preserve scope)
 
   access = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
@@ -137,7 +137,7 @@ export class AuthVerifier {
   }
 
   accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     const result = await this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
@@ -159,12 +159,12 @@ export class AuthVerifier {
   }
 
   accessNotAppPassword = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     return this.validateAccessToken(ctx.req, [AuthScope.Access])
   }
 
   accessDeactived = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
@@ -173,7 +173,7 @@ export class AuthVerifier {
   }
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     const { did, scope, token, tokenId, audience } =
       await this.validateRefreshToken(ctx.req)
 
@@ -190,7 +190,7 @@ export class AuthVerifier {
   }
 
   refreshExpired = async (ctx: ReqCtx): Promise<RefreshOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     const { did, scope, token, tokenId, audience } =
       await this.validateRefreshToken(ctx.req, { clockTolerance: Infinity })
 
@@ -207,7 +207,7 @@ export class AuthVerifier {
   }
 
   adminToken = async (ctx: ReqCtx): Promise<AdminTokenOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     const parsed = parseBasicAuth(ctx.req.headers.authorization || '')
     if (!parsed) {
       throw new AuthRequiredError()
@@ -222,7 +222,7 @@ export class AuthVerifier {
   optionalAccessOrAdminToken = async (
     ctx: ReqCtx,
   ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
-    await this.setAuthHeaders(ctx)
+    this.setAuthHeaders(ctx)
     if (isAccessToken(ctx.req)) {
       return await this.access(ctx)
     } else if (isBasicToken(ctx.req)) {
@@ -233,7 +233,7 @@ export class AuthVerifier {
   }
 
   userDidAuth = async (reqCtx: ReqCtx): Promise<UserDidOutput> => {
-    await this.setAuthHeaders(reqCtx)
+    this.setAuthHeaders(reqCtx)
     const payload = await this.verifyServiceJwt(reqCtx, {
       aud: this.dids.entryway ?? this.dids.pds,
       iss: null,
@@ -250,7 +250,7 @@ export class AuthVerifier {
   userDidAuthOptional = async (
     reqCtx: ReqCtx,
   ): Promise<UserDidOutput | NullOutput> => {
-    await this.setAuthHeaders(reqCtx)
+    this.setAuthHeaders(reqCtx)
     if (isBearerToken(reqCtx.req)) {
       return await this.userDidAuth(reqCtx)
     } else {
@@ -259,7 +259,7 @@ export class AuthVerifier {
   }
 
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
-    await this.setAuthHeaders(reqCtx)
+    this.setAuthHeaders(reqCtx)
     if (!this.dids.modService) {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
     }
@@ -288,7 +288,7 @@ export class AuthVerifier {
   moderator = async (
     reqCtx: ReqCtx,
   ): Promise<AdminTokenOutput | ModServiceOutput> => {
-    await this.setAuthHeaders(reqCtx)
+    this.setAuthHeaders(reqCtx)
     if (isBearerToken(reqCtx.req)) {
       return this.modService(reqCtx)
     } else {
@@ -394,7 +394,7 @@ export class AuthVerifier {
 
     try {
       const url = new URL(req.originalUrl || req.url, this._publicUrl)
-      const result = await this._oauthVerifier.authenticateHttpRequest(
+      const result = await this.oauthVerifier.authenticateHttpRequest(
         req.method,
         url,
         req.headers,
@@ -519,24 +519,19 @@ export class AuthVerifier {
     }
   }
 
-  protected async setAuthHeaders(ctx: ReqCtx) {
+  protected setAuthHeaders({ req, res }: ReqCtx) {
     // Prevent caching (on proxies) of auth dependent responses
-    ctx.res?.setHeader('Cache-Control', 'private')
+    res?.setHeader('Cache-Control', 'private')
 
     // Make sure that browsers do not return cached responses when the auth header changes
-    ctx.res?.appendHeader('Vary', 'Authorization')
+    res?.appendHeader('Vary', 'Authorization')
 
-    /**
-     * Return next DPoP nonce in response headers for DPoP bound tokens.
-     * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#section-8.2}
-     */
-    const authHeader = ctx.req.headers.authorization
-    if (authHeader?.startsWith('DPoP')) {
-      const dpopNonce = this._oauthVerifier.nextDpopNonce()
+    // https://datatracker.ietf.org/doc/html/rfc9449#section-8.2
+    if (req.headers.authorization?.startsWith('DPoP')) {
+      const dpopNonce = this.oauthVerifier.nextDpopNonce()
       if (dpopNonce) {
-        const name = 'DPoP-Nonce'
-        ctx.res?.setHeader(name, dpopNonce)
-        ctx.res?.appendHeader('Access-Control-Expose-Headers', name)
+        res?.setHeader('DPoP-Nonce', dpopNonce)
+        res?.appendHeader('Access-Control-Expose-Headers', 'DPoP-Nonce')
       }
     }
   }
