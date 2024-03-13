@@ -1,5 +1,16 @@
 # @atproto/ozone
 
+## 0.1.0
+
+### Minor Changes
+
+- [`971d3e4c2`](https://github.com/bluesky-social/atproto/commit/971d3e4c26ecfda746e83d458391715752ea7064) Thanks [@devinivy](https://github.com/devinivy)! - Resign labels on overwrite, omit neg:false on labels
+
+### Patch Changes
+
+- Updated dependencies [[`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5)]:
+  - @atproto/api@0.11.1
+
 ## 0.0.17
 
 ### Patch Changes
