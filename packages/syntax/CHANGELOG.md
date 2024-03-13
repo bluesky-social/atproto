@@ -1,5 +1,12 @@
 # @atproto/syntax
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,28 @@
 # @atproto/api
 
+## 0.11.0
+
+### Minor Changes
+
+- [#2302](https://github.com/bluesky-social/atproto/pull/2302) [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0) Thanks [@dholms](https://github.com/dholms)! - - Breaking changes
+  - Redesigned the `moderate*` APIs which now output a `ModerationUI` object.
+  - `agent.getPreferences()` output object `BskyPreferences` has been modified.
+  - Moved Ozone routes from `com.atproto.admin` to `tools.ozone` namespace.
+  - Additions
+    - Added support for labeler configuration in `Agent.configure()` and `agent.configureLabelerHeader()`.
+    - Added `agent.addLabeler()` and `agent.removeLabeler()` preference methods.
+    - Muted words and hidden posts are now handled in the `moderate*` APIs.
+    - Added `agent.getLabelers()` and `agent.getLabelDefinitions()`.
+    - Added `agent.configureProxyHeader()` and `withProxy()` methods to support remote service proxying behaviors.
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/xrpc@0.4.3
+
 ## 0.10.5
 
 ### Patch Changes
