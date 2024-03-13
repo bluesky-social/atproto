@@ -782,6 +782,12 @@ export async function generateMockSetup(env: TestNetwork) {
       src: res.data.did,
     })
     await createLabel(env.bsky.db, {
+      uri: `at://${alice.did}/app.bsky.feed.generator/alice-favs`,
+      cid: '',
+      val: 'cool',
+      src: res.data.did,
+    })
+    await createLabel(env.bsky.db, {
       uri: bob.did,
       cid: '',
       val: 'cool',
