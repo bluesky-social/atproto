@@ -34,9 +34,7 @@ export function AuthorizeView({
   if (view === 'welcome') {
     return (
       <WelcomeView
-        title={brandingData?.name}
-        logo={brandingData?.logo}
-        links={brandingData?.links}
+        {...brandingData}
         onSignIn={showSignIn}
         onSignUp={undefined}
         onCancel={doReject}

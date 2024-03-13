@@ -568,11 +568,16 @@ export class AccountManager
   }
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
-    // Take the opportunity to clean up expired requests.
-    // TODO: Do this less often?
-    await authorizationRequest.deleteExpired(this.db)
+    try {
+      return authorizationRequest.get(this.db, id)
+    } finally {
+      // Take the opportunity to clean up expired requests. Do this after we got
+      // the current (potentially expired) request data to allow the provider to
+      // handle expired requests.
 
-    return authorizationRequest.get(this.db, id)
+      // TODO: Do this less often?
+      await authorizationRequest.deleteOldExpired(this.db)
+    }
   }
 
   async updateRequest(id: RequestId, data: UpdateRequestData): Promise<void> {

@@ -12,11 +12,11 @@ export function App({ authorizeData, brandingData, errorData }: AppProps) {
   if (authorizeData) {
     return (
       <AuthorizeView
-        authorizeData={authorizeData}
         brandingData={brandingData}
+        authorizeData={authorizeData}
       />
     )
   } else {
-    return <ErrorView error_description="Invalid app state" {...errorData} />
+    return <ErrorView brandingData={brandingData} errorData={errorData} />
   }
 }
