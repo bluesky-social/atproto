@@ -230,12 +230,17 @@ describe('agent', () => {
         password: 'password',
       })
 
+      const DEFAULT_LABELERS = BskyAgent.appLabelers.map((did) => ({
+        did,
+        labels: {},
+      }))
+
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -264,7 +269,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: true,
           labels: DEFAULT_LABEL_SETTINGS,
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -293,7 +298,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -322,7 +327,7 @@ describe('agent', () => {
         moderationPrefs: {
           adultContentEnabled: false,
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -355,7 +360,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -391,7 +396,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -427,7 +432,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -463,7 +468,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -499,7 +504,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -535,7 +540,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -577,7 +582,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -613,7 +618,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -649,7 +654,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -685,7 +690,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -721,7 +726,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -757,7 +762,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -800,7 +805,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -843,7 +848,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -886,7 +891,7 @@ describe('agent', () => {
             misinfo: 'hide',
             spam: 'ignore',
           },
-          labelers: [],
+          labelers: DEFAULT_LABELERS,
           mutedWords: [],
           hiddenPosts: [],
         },
@@ -1045,6 +1050,7 @@ describe('agent', () => {
             porn: 'warn',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1089,6 +1095,7 @@ describe('agent', () => {
             porn: 'warn',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1134,6 +1141,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1179,6 +1187,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1220,6 +1229,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1261,6 +1271,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},
@@ -1313,6 +1324,7 @@ describe('agent', () => {
             porn: 'ignore',
           },
           labelers: [
+            ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
             {
               did: 'did:plc:first-labeler',
               labels: {},

@@ -62,7 +62,9 @@ describe('agent', () => {
           sexual: 'ignore',
           'graphic-media': 'ignore',
         },
-        labelers: [],
+        labelers: [
+          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+        ],
         hiddenPosts: [],
         mutedWords: [],
       },
@@ -101,6 +103,7 @@ describe('agent', () => {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
         labelers: [
+          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
           {
             did: 'did:plc:other',
             labels: {},
@@ -134,7 +137,9 @@ describe('agent', () => {
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
-        labelers: [],
+        labelers: [
+          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+        ],
         hiddenPosts: [],
         mutedWords: [],
       },
@@ -177,6 +182,7 @@ describe('agent', () => {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore', nsfw: 'ignore' },
         labelers: [
+          ...BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
           {
             did: 'did:plc:other',
             labels: {
