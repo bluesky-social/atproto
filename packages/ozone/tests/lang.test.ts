@@ -33,7 +33,7 @@ describe('moderation status language tagging', () => {
   })
 
   const getStatus = async (subject: string) => {
-    const { subjectStatuses } = await modClient.queryModerationStatuses({
+    const { subjectStatuses } = await modClient.queryStatuses({
       subject,
     })
 
