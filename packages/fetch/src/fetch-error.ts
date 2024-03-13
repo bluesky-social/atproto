@@ -1,5 +1,11 @@
 import { Transformer } from '@atproto/transformer'
 
+export type FetchErrorOptions = {
+  cause?: unknown
+  request?: Request
+  response?: Response
+}
+
 export class FetchError extends Error {
   public readonly request?: Request
   public readonly response?: Response
@@ -7,26 +13,24 @@ export class FetchError extends Error {
   constructor(
     public readonly statusCode: number,
     message?: string,
-    {
-      cause = undefined as unknown,
-      request = undefined as undefined | Request,
-      response = undefined as undefined | Response,
-    } = {},
+    { cause, request, response }: FetchErrorOptions = {},
   ) {
     super(message, { cause })
     this.request = request
     this.response = response
   }
 
-  static from(err: unknown) {
+  static async from(err: unknown) {
     const cause = extractCause(err)
     return new FetchError(...extractInfo(cause), { cause })
   }
 }
 
-export const fetchFailureHandler: Transformer<unknown, never> = (
+export const fetchFailureHandler: Transformer<unknown, never> = async (
   err: unknown,
-) => Promise.reject(FetchError.from(err))
+) => {
+  throw await FetchError.from(err)
+}
 
 function extractCause(err: unknown): unknown {
   // Unwrap the Network error from undici (i.e. Node's internal fetch() implementation)

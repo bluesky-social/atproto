@@ -1,18 +1,65 @@
 import { Transformer, compose } from '@atproto/transformer'
 import { z } from 'zod'
 
-import { FetchError } from './fetch-error.js'
+import { FetchError, FetchErrorOptions } from './fetch-error.js'
 import { overrideResponseBody } from './utils.js'
 
 export type ResponseTranformer = Transformer<Response>
 
+async function extractResponseMessage(response: Response): Promise<string> {
+  try {
+    const contentType = response.headers
+      .get('content-type')
+      ?.split(';')[0]
+      .trim()
+    if (contentType && response.body && !response.bodyUsed) {
+      if (contentType === 'text/plain') {
+        return response.clone().text()
+      } else if (/^application\/(?:[^+]+\+)?json$/i.test(contentType)) {
+        const json = await response.clone().json()
+        if (typeof json?.error_description === 'string') {
+          return json.error_description
+        } else if (typeof json?.error === 'string') {
+          return json.error
+        } else if (typeof json?.message === 'string') {
+          return json.message
+        }
+      }
+    }
+  } catch {
+    // noop
+  }
+  return response.statusText
+}
+
+export class FetchResponseError extends FetchError {
+  constructor(
+    statusCode: number,
+    message?: string,
+    public readonly body?: Blob,
+    options?: FetchErrorOptions,
+  ) {
+    super(statusCode, message, options)
+  }
+
+  static async from(response: Response) {
+    const message = await extractResponseMessage(response)
+    const body: undefined | Blob =
+      response.body && !response.bodyUsed
+        ? await response.clone().blob()
+        : undefined
+
+    return new FetchResponseError(response.status, message, body, {
+      response,
+    })
+  }
+}
+
 export function fetchOkProcessor(): ResponseTranformer {
   return async (response) => {
-    if (!response.ok) {
-      throw new FetchError(response.status, response.statusText, { response })
-    }
+    if (response.ok) return response
 
-    return response
+    throw await FetchResponseError.from(response)
   }
 }
 

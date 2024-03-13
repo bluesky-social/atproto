@@ -46,10 +46,12 @@ export const create = async (
     .execute()
 }
 
-export const deleteExpired = async (db: AccountDb) => {
+export const deleteOldExpired = async (db: AccountDb, delay = 600e3) => {
+  // We allow some delay for the expiration time so that expired requests
+  // can still be returned to the OauthProvider library for error handling.
   await db.db
     .deleteFrom('authorization_request')
-    .where('expiresAt', '<', toDateISO(new Date()))
+    .where('expiresAt', '<', toDateISO(new Date(Date.now() - delay)))
     .execute()
 }
 

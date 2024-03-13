@@ -5,6 +5,7 @@ import {
   type FormHTMLAttributes,
 } from 'react'
 import { clsx } from '../lib/clsx'
+import { ErrorCard } from './error-card'
 
 export type SignInFormOutput = {
   username: string
@@ -37,6 +38,7 @@ export function SignInForm({
   Omit<FormHTMLAttributes<HTMLFormElement>, keyof SignInFormProps>) {
   const [focused, setFocused] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const doSubmit = useCallback(
     async (
@@ -51,17 +53,20 @@ export function SignInForm({
     ) => {
       event.preventDefault()
       setLoading(true)
+      setErrorMessage(null)
       try {
         await onSubmit({
           username: event.currentTarget.username.value,
           password: event.currentTarget.password.value,
           remember: event.currentTarget.remember.checked,
         })
+      } catch (err) {
+        setErrorMessage(parseErrorMessage(err))
       } finally {
         setLoading(false)
       }
     },
-    [onSubmit, setLoading],
+    [onSubmit, setErrorMessage, setLoading],
   )
 
   return (
@@ -72,7 +77,7 @@ export function SignInForm({
     >
       <p className="font-medium p-4">Sign in</p>
       <fieldset
-        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
+        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100 shadow-md"
         disabled={loading}
       >
         <div className="relative p-1 flex flex-wrap items-center justify-stretch">
@@ -87,6 +92,7 @@ export function SignInForm({
             defaultValue={username}
             readOnly={usernameReadonly}
             disabled={usernameReadonly}
+            onChange={() => setErrorMessage(null)}
           />
         </div>
 
@@ -99,6 +105,7 @@ export function SignInForm({
             type="password"
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
+            onChange={() => setErrorMessage(null)}
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
             placeholder="Password"
             aria-label="Password"
@@ -146,6 +153,7 @@ export function SignInForm({
               type="checkbox"
               className="text-primary"
               defaultChecked={remember}
+              onChange={() => setErrorMessage(null)}
             />
           </span>
 
@@ -157,6 +165,8 @@ export function SignInForm({
           </label>
         </div>
       </fieldset>
+
+      {errorMessage && <ErrorCard className="mt-2" message={errorMessage} />}
 
       <div className="flex-auto" />
 
@@ -181,4 +191,14 @@ export function SignInForm({
       </div>
     </form>
   )
+}
+
+function parseErrorMessage(err: unknown): string {
+  switch ((err as any)?.message) {
+    case 'Invalid credentials':
+      return 'Invalid username or password'
+    default:
+      console.error(err)
+      return 'An unknown error occurred'
+  }
 }

@@ -1,3 +1,9 @@
+import {
+  fetchFailureHandler,
+  fetchJsonProcessor,
+  fetchOkProcessor,
+} from '@atproto/fetch'
+
 import { SignInFormOutput } from '../components/sign-in-form'
 import { Account, Info, Session } from '../types'
 
@@ -10,7 +16,7 @@ export class Api {
   ) {}
 
   async signIn(credentials: SignInFormOutput): Promise<Session> {
-    const r = await fetch('/oauth/authorize/sign-in', {
+    const { body } = await fetch('/oauth/authorize/sign-in', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       mode: 'same-origin',
@@ -21,24 +27,17 @@ export class Api {
         credentials,
       }),
     })
-    const json = await r.json()
-
-    // TODO: better error handling
-    if (!r.ok) throw new Error(json.error || 'Error', { cause: json })
-
-    const { account, info } = json as {
-      account: Account
-      info: Info
-    }
+      .then(fetchOkProcessor(), fetchFailureHandler)
+      .then(fetchJsonProcessor<{ account: Account; info: Info }>())
 
     return {
-      account,
-      info,
+      account: body.account,
+      info: body.info,
 
       selected: true,
       consentRequired:
         this.newSessionsRequireConsent ||
-        !info.authorizedClients.includes(this.clientId),
+        !body.info.authorizedClients.includes(this.clientId),
       loginRequired: false,
     }
   }

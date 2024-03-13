@@ -278,7 +278,7 @@ export class RequestManager {
 
     const data = await this.store.readRequest(id)
     if (!data) {
-      throw new InvalidRequestError('Invalid request_uri')
+      throw new InvalidRequestError('Unknown request_uri')
     }
 
     const updates: UpdateRequestData = {}

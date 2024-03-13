@@ -1,17 +1,27 @@
-import { ErrorCard, ErrorCardProps } from '../components/error-card'
-import { PageLayout } from '../components/page-layout'
+import { BrandingData, ErrorData } from '../backend-data'
+import { ErrorCard } from '../components/error-card'
+import { WelcomeLayout } from '../components/welcome-layout'
 
-export type ErrorViewProps = ErrorCardProps & {
-  title?: string
+export type ErrorViewProps = {
+  brandingData?: BrandingData
+  errorData?: ErrorData
 }
 
-export function ErrorView({
-  title = 'An error occurred',
-  ...props
-}: ErrorViewProps) {
+export function ErrorView({ errorData, brandingData }: ErrorViewProps) {
   return (
-    <PageLayout title={title}>
-      <ErrorCard className="max-w-lg w-full" {...props} />
-    </PageLayout>
+    <WelcomeLayout {...brandingData}>
+      <ErrorCard message={getUserFriendlyMessage(errorData)} />
+    </WelcomeLayout>
   )
+}
+
+function getUserFriendlyMessage(errorData?: ErrorData) {
+  const desc = errorData?.error_description
+  switch (desc) {
+    case 'Unknown request_uri': // Request was removed from database
+    case 'This request has expired':
+      return 'This sign-in session has expired'
+    default:
+      return desc || 'An unknown error occurred'
+  }
 }
