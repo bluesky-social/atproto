@@ -5,7 +5,7 @@ import {
   REASONSPAM,
   REASONOTHER,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { TestNetwork } from '../index'
+import { EXAMPLE_LABELER, TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
@@ -818,7 +818,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: opts.src ?? 'did:example:labeler',
+      src: opts.src ?? EXAMPLE_LABELER,
     })
     .execute()
 }
