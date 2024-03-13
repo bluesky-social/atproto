@@ -267,7 +267,7 @@ export class Views {
         ? normalizeDatetimeAlways(record.createdAt)
         : new Date(0).toISOString()
     return record.labels.values.map(({ val }) => {
-      return { src, uri, cid, val, cts, neg: false }
+      return { src, uri, cid, val, cts }
     })
   }
 

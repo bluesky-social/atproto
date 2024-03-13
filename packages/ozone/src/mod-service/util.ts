@@ -12,7 +12,7 @@ export const formatLabel = (row: LabelRow): Label => {
     uri: row.uri,
     cid: row.cid === '' ? undefined : row.cid,
     val: row.val,
-    neg: row.neg,
+    neg: row.neg === true ? true : undefined,
     cts: row.cts,
     exp: row.exp ?? undefined,
     sig: row.sig ? new Uint8Array(row.sig) : undefined,

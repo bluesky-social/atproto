@@ -1,4 +1,5 @@
 import * as ui8 from 'uint8arrays'
+import { noUndefinedVals } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
@@ -17,10 +18,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
 
     const labels = res.map((l) => {
-      const formatted = {
+      const formatted = noUndefinedVals({
         ...l,
         cid: l.cid === '' ? undefined : l.cid,
-      }
+        neg: l.neg === true ? true : undefined,
+      })
       return ui8.fromString(JSON.stringify(formatted), 'utf8')
     })
     return { labels }
