@@ -1,7 +1,12 @@
+import lande from 'lande'
+
 import { ModerationService } from '.'
 import { ModSubject } from './subject'
 import { ModerationSubjectStatusRow } from './types'
 import { langLogger as log } from '../logger'
+import { code3ToCode2 } from './lang-data'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../lexicon/lexicons'
 
 export class ModerationLangService {
   constructor(private moderationService: ModerationService) {}
@@ -40,6 +45,27 @@ export class ModerationLangService {
     }
   }
 
+  getTextFromRecord(
+    uri: string,
+    recordValue?: Record<string, unknown>,
+  ): string | undefined {
+    const atUri = new AtUri(uri)
+    let text: string | undefined
+    if (
+      [ids.AppBskyGraphList, ids.AppBskyFeedGenerator].includes(
+        atUri.collection,
+      )
+    ) {
+      text = (recordValue?.description || recordValue?.name) as string
+    }
+
+    if (!text && recordValue?.text) {
+      text = recordValue.text as string
+    }
+
+    return text?.trim()
+  }
+
   async getRecordLang({
     subject,
   }: {
@@ -70,10 +96,17 @@ export class ModerationLangService {
       ])
       const record = recordByUri.get(subject.uri)
       const recordLang = record?.value.langs as string[] | null
+      const recordText = this.getTextFromRecord(subject.uri, record?.value)
       if (recordLang?.length) {
         recordLang
           .map((lang) => lang.split('-')[0])
           .forEach((lang) => langs.add(lang))
+      } else if (recordText) {
+        const detectedLanguages = lande(recordText)
+        if (detectedLanguages.length) {
+          const langCode = code3ToCode2(detectedLanguages[0][0])
+          if (langCode) langs.add(langCode)
+        }
       }
     }
 

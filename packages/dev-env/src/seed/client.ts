@@ -4,6 +4,7 @@ import AtpAgent from '@atproto/api'
 import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
+import { Record as ListRecord } from '@atproto/api/src/client/types/app/bsky/graph/list'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
 import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
 import { AtUri } from '@atproto/syntax'
@@ -379,7 +380,12 @@ export class SeedClient<
     return repost
   }
 
-  async createList(by: string, name: string, purpose: 'mod' | 'curate') {
+  async createList(
+    by: string,
+    name: string,
+    purpose: 'mod' | 'curate',
+    overrides: Partial<ListRecord>,
+  ) {
     const res = await this.agent.api.app.bsky.graph.list.create(
       { repo: by },
       {
@@ -389,6 +395,7 @@ export class SeedClient<
             ? 'app.bsky.graph.defs#modlist'
             : 'app.bsky.graph.defs#curatelist',
         createdAt: new Date().toISOString(),
+        ...(overrides || {}),
       },
       this.getHeaders(by),
     )
