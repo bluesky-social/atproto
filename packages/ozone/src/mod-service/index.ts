@@ -907,6 +907,9 @@ export class ModerationService {
           id: sql`${excluded('id')}`,
           neg: sql`${excluded('neg')}`,
           cts: sql`${excluded('cts')}`,
+          exp: sql`${excluded('exp')}`,
+          sig: sql`${excluded('sig')}`,
+          signingKeyId: sql`${excluded('signingKeyId')}`,
         }),
       )
       .returningAll()
