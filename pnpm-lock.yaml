@@ -739,7 +739,7 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       rollup:
-        specifier: ^4.10.0
+        specifier: ^4.13.0
         version: 4.14.1
       rollup-plugin-postcss:
         specifier: ^4.0.2
