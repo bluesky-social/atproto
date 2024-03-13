@@ -4,25 +4,18 @@ import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
-import { Fetch } from '@atproto/fetch'
-import { safeFetchWrap } from '@atproto/fetch-node'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { NodeKeyset } from '@atproto/jwk-node'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { BlobStore } from '@atproto/repo'
-import {
-  AccessTokenType,
-  DpopNonce,
-  OAuthVerifier,
-  OAuthProvider,
-  ReplayStore,
-} from '@atproto/oauth-provider'
+import { OAuthVerifier } from '@atproto/oauth-provider'
 import { OAuthReplayStoreRedis } from '@atproto/oauth-provider-replay-redis'
 import { OAuthReplayStoreMemory } from '@atproto/oauth-provider-replay-memory'
 
 import { ServerConfig, ServerSecrets } from './config'
+import { AuthProvider } from './auth-provider'
 import {
   AuthVerifier,
   createPublicKeyObject,
@@ -39,14 +32,11 @@ import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
-import { OauthClientStore } from './oauth/oauth-client-store'
-import { fetchLogger } from './logger'
 
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
   localViewer: LocalViewerCreator
-  safeFetch: Fetch
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqliteCache
@@ -61,7 +51,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
-  oauthProvider?: OAuthProvider
+  authProvider?: AuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -86,7 +76,7 @@ export class AppContext {
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
-  public oauthProvider?: OAuthProvider
+  public authProvider?: AuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -109,7 +99,7 @@ export class AppContext {
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
-    this.oauthProvider = opts.oauthProvider
+    this.authProvider = opts.authProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -215,94 +205,41 @@ export class AppContext {
         '-----END PRIVATE KEY-----\n',
     })
 
-    // OAuthVerifier is capable of generating its own dpop nonce secret. Using a
-    // pre-generated nonce is particularly useful to avoid invalid_nonce errors
-    // when the server restarts or when more tha one instance are running. This
-    // can also reduce the number of invalid_nonce errors when the PDS and
-    // entryway are using the same dpop nonce secret.
-    const dpopNonce = new DpopNonce(Buffer.from(secrets.dpopSecret, 'hex'))
-
-    const replayStore: ReplayStore = redisScratch
-      ? new OAuthReplayStoreRedis(redisScratch)
-      : new OAuthReplayStoreMemory()
-
-    // A Fetch function that protects against SSRF attacks, large responses &
-    // known bad domains. This function can safely be used to fetch user
-    // provided URLs.
-    const safeFetch: Fetch = safeFetchWrap({
-      ...cfg.safeFetch,
-      fetch: async (request) => {
-        fetchLogger.info({ method: request.method, uri: request.url }, 'fetch')
-        return globalThis.fetch(request)
-      },
-    })
-
-    const oauthProvider = cfg.oauth.enableProvider
-      ? new OAuthProvider({
-          issuer: cfg.oauth.issuer,
+    const authProvider = cfg.oauth.provider
+      ? new AuthProvider(
+          accountManager,
           keyset,
-          dpopNonce,
-
-          accountStore: accountManager,
-          requestStore: accountManager,
-          sessionStore: accountManager,
-          tokenStore: accountManager,
-          replayStore,
-          clientStore: new OauthClientStore({ fetch: safeFetch }),
-
-          // If the PDS is both an authorization server & resource server (no
-          // entryway), there is no need to use JWTs as access tokens. Instead,
-          // the PDS can use tokenId as access tokens. This allows the PDS to
-          // always use up-to-date token data from the token store.
-          accessTokenType: AccessTokenType.id,
-
-          onAuthorizationRequest: (parameters, { client, clientAuth }) => {
-            // ATPROTO extension: if the client is not "trustable", force the
-            // user to consent to the request. We do this to avoid
-            // unauthenticated clients from being able to silently
-            // re-authenticate users.
-
-            // TODO: make allow listed client ids configurable
-            if (clientAuth.method === 'none' && client.id !== 'bsky.app') {
-              parameters.prompt ||= 'consent'
-            }
-          },
-
-          onTokenResponse: (tokenResponse, { account }) => {
-            // ATPROTO extension: add the sub claim to the token response to allow
-            // clients to resolve the PDS url (audience) using the did resolution
-            // mechanism.
-            tokenResponse['sub'] = account.sub
-          },
-        })
+          redisScratch,
+          secrets.dpopSecret,
+          cfg.oauth.issuer,
+          cfg.oauth.provider.branding,
+          cfg.oauth.provider.disableSsrf,
+        )
       : undefined
 
-    /**
-     * Using the oauthProvider as oauthVerifier allows clients to use the
-     * same nonce when authenticating and making requests, avoiding
-     * un-necessary "invalid_nonce" errors. It also allows the use of
-     * AccessTokenType.id as access token type.
-     */
-    const oauthVerifier: OAuthVerifier =
-      oauthProvider ??
-      new OAuthVerifier({
-        issuer: cfg.oauth.issuer,
-        keyset,
-        dpopNonce,
-        replayStore,
-      })
-
-    const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      publicUrl: cfg.service.publicUrl,
-      oauthVerifier,
-      jwtKey,
-      adminPass: secrets.adminPassword,
-      dids: {
-        pds: cfg.service.did,
-        entryway: cfg.entryway?.did,
-        modService: cfg.modService?.did,
+    const authVerifier = new AuthVerifier(
+      accountManager,
+      idResolver,
+      authProvider ?? // OAuthProvider is an OAuthVerifier so let's use it
+        new OAuthVerifier({
+          issuer: cfg.oauth.issuer,
+          keyset,
+          dpopSecret: secrets.dpopSecret,
+          replayStore: redisScratch
+            ? new OAuthReplayStoreRedis(redisScratch)
+            : new OAuthReplayStoreMemory(),
+        }),
+      {
+        publicUrl: cfg.service.publicUrl,
+        jwtKey,
+        adminPass: secrets.adminPassword,
+        dids: {
+          pds: cfg.service.did,
+          entryway: cfg.entryway?.did,
+          modService: cfg.modService?.did,
+        },
       },
-    })
+    )
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
@@ -330,7 +267,6 @@ export class AppContext {
       actorStore,
       blobstore,
       localViewer,
-      safeFetch,
       mailer,
       moderationMailer,
       didCache,
@@ -346,7 +282,7 @@ export class AppContext {
       reportingAgent,
       entrywayAgent,
       authVerifier,
-      oauthProvider,
+      authProvider,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),

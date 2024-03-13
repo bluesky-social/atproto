@@ -235,30 +235,39 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
-        enableProvider: false,
         issuer: entrywayCfg.url,
+        provider: false,
       }
     : {
-        enableProvider: true,
         issuer: serviceCfg.publicUrl,
-      }
+        provider: {
+          disableSsrf: env.oauthDisableSsrf ?? false,
 
-  const safeFetchCfg: ServerConfig['safeFetch'] = {
-    allowHttp: env.fetchDisableSafeties ? true : false,
-    forbiddenDomainNames: [
-      'google.com',
-      'example.com',
-      'example.org',
-      'example.net',
-      'bsky.social',
-      'bsky.network',
-      'googleusercontent.com',
-    ],
-    responseMaxSize: env.fetchDisableSafeties
-      ? Infinity
-      : (env.fetchResponseMaxSizeKb ?? 512) * 1024, // defaults to 512kB
-    ssrfProtection: env.fetchDisableSafeties ? false : true,
-  }
+          branding: {
+            name: env.oauthProviderName ?? 'Personal PDS',
+            logo: env.oauthProviderLogo,
+            colors: {
+              primary: env.oauthProviderPrimaryColor,
+              error: env.oauthProviderErrorColor,
+            },
+            links: [
+              {
+                name: 'Home',
+                href: env.oauthProviderHomeLink,
+                rel: 'home',
+              },
+              {
+                name: 'Terms of Service',
+                href: env.oauthProviderTosLink,
+                rel: 'terms-of-service',
+              },
+            ].filter(
+              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
+                f.href != null,
+            ),
+          },
+        },
+      }
 
   return {
     service: serviceCfg,
@@ -278,7 +287,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     oauth: oauthCfg,
-    safeFetch: safeFetchCfg,
   }
 }
 
@@ -300,7 +308,6 @@ export type ServerConfig = {
   rateLimits: RateLimitsConfig
   crawlers: string[]
   oauth: OAuthConfig
-  safeFetch: SafeFetchConfig
 }
 
 export type ServiceConfig = {
@@ -368,14 +375,24 @@ export type EntrywayConfig = {
 
 export type OAuthConfig = {
   issuer: string
-  enableProvider: boolean
-}
-
-export type SafeFetchConfig = {
-  allowHttp: boolean
-  ssrfProtection: boolean
-  responseMaxSize: number
-  forbiddenDomainNames: string[]
+  provider:
+    | false
+    | {
+        disableSsrf: boolean
+        branding: {
+          name: string
+          logo?: string
+          colors?: {
+            primary?: string
+            error?: string
+          }
+          links?: Array<{
+            name: string
+            href: string
+            rel?: string
+          }>
+        }
+      }
 }
 
 export type InvitesConfig =

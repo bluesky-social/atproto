@@ -108,8 +108,13 @@ export const readEnv = (): ServerEnvironment => {
     ),
 
     // oauth
-    fetchDisableSafeties: envBool('PDS_FETCH_DISABLE_SAFETIES'),
-    fetchResponseMaxSizeKb: envInt('PDS_FETCH_RESPONSE_MAX_SIZE_KB'),
+    oauthDisableSsrf: envBool('PDS_DISABLE_SSRF'),
+    oauthProviderName: envStr('PDS_OAUTH_PROVIDER_NAME'),
+    oauthProviderLogo: envStr('PDS_OAUTH_PROVIDER_LOGO'),
+    oauthProviderPrimaryColor: envStr('PDS_OAUTH_PROVIDER_PRIMARY_COLOR'),
+    oauthProviderErrorColor: envStr('PDS_OAUTH_PROVIDER_ERROR_COLOR'),
+    oauthProviderHomeLink: envStr('PDS_OAUTH_PROVIDER_HOME_LINK'),
+    oauthProviderTosLink: envStr('PDS_OAUTH_PROVIDER_TOS_LINK'),
   }
 }
 
@@ -214,7 +219,12 @@ export type ServerEnvironment = {
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
 
-  // fetch
-  fetchDisableSafeties?: boolean
-  fetchResponseMaxSizeKb?: number
+  // oauth
+  oauthDisableSsrf?: boolean
+  oauthProviderName?: string
+  oauthProviderLogo?: string
+  oauthProviderPrimaryColor?: string
+  oauthProviderErrorColor?: string
+  oauthProviderHomeLink?: string
+  oauthProviderTosLink?: string
 }

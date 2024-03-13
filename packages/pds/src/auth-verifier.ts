@@ -1,4 +1,6 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+
+import { getVerificationMaterial } from '@atproto/common'
 import { OAuthError, OAuthVerifier } from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
@@ -12,9 +14,9 @@ import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
+
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
-import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
@@ -96,7 +98,6 @@ type ValidatedRefreshBearer = ValidatedBearer & {
 }
 
 export type AuthVerifierOpts = {
-  oauthVerifier: OAuthVerifier
   publicUrl: string
   jwtKey: KeyObject
   adminPass: string
@@ -108,7 +109,6 @@ export type AuthVerifierOpts = {
 }
 
 export class AuthVerifier {
-  private _oauthVerifier: OAuthVerifier
   private _publicUrl: string
   private _jwtKey: KeyObject
   private _adminPass: string
@@ -117,9 +117,9 @@ export class AuthVerifier {
   constructor(
     public accountManager: AccountManager,
     public idResolver: IdResolver,
+    public oauthVerifier: OAuthVerifier,
     opts: AuthVerifierOpts,
   ) {
-    this._oauthVerifier = opts.oauthVerifier
     this._publicUrl = opts.publicUrl
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
@@ -394,7 +394,7 @@ export class AuthVerifier {
 
     try {
       const url = new URL(req.originalUrl || req.url, this._publicUrl)
-      const result = await this._oauthVerifier.authenticateHttpRequest(
+      const result = await this.oauthVerifier.authenticateHttpRequest(
         req.method,
         url,
         req.headers,
@@ -532,7 +532,7 @@ export class AuthVerifier {
      */
     const authHeader = ctx.req.headers.authorization
     if (authHeader?.startsWith('DPoP')) {
-      const dpopNonce = this._oauthVerifier.nextDpopNonce()
+      const dpopNonce = this.oauthVerifier.nextDpopNonce()
       if (dpopNonce) {
         const name = 'DPoP-Nonce'
         ctx.res?.setHeader(name, dpopNonce)
