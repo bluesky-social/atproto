@@ -855,6 +855,17 @@ export const schemaDict = {
               "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
             knownValues: ['content', 'media', 'none'],
           },
+          defaultSetting: {
+            type: 'string',
+            description: 'The default setting for this label.',
+            knownValues: ['ignore', 'warn', 'hide'],
+            default: 'warn',
+          },
+          adultOnly: {
+            type: 'boolean',
+            description:
+              'Does the user need to have adult content enabled in order to configure this label?',
+          },
           locales: {
             type: 'array',
             items: {
@@ -3958,20 +3969,20 @@ export const schemaDict = {
           },
         },
       },
-      modsPref: {
+      labelersPref: {
         type: 'object',
-        required: ['mods'],
+        required: ['labelers'],
         properties: {
-          mods: {
+          labelers: {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#modPrefItem',
+              ref: 'lex:app.bsky.actor.defs#labelerPrefItem',
             },
           },
         },
       },
-      modPrefItem: {
+      labelerPrefItem: {
         type: 'object',
         required: ['did'],
         properties: {

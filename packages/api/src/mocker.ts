@@ -13,16 +13,19 @@ const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 export const mock = {
   post({
     text,
+    facets,
     reply,
     embed,
   }: {
     text: string
+    facets?: AppBskyFeedPost.Record['facets']
     reply?: AppBskyFeedPost.ReplyRef
     embed?: AppBskyFeedPost.Record['embed']
   }): AppBskyFeedPost.Record {
     return {
       $type: 'app.bsky.feed.post',
       text,
+      facets,
       reply,
       embed,
       langs: ['en'],
@@ -50,6 +53,7 @@ export const mock = {
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyFeedDefs.PostView {
     return {
+      $type: 'app.bsky.feed.defs#postView',
       uri: `at://${author.did}/app.bsky.feed.post/fake`,
       cid: FAKE_CID,
       author,

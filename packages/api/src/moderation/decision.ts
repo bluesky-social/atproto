@@ -2,13 +2,13 @@ import { AppBskyGraphDefs } from '../client/index'
 import {
   BLOCK_BEHAVIOR,
   MUTE_BEHAVIOR,
+  MUTEWORD_BEHAVIOR,
   HIDE_BEHAVIOR,
   NOOP_BEHAVIOR,
   Label,
   LabelPreference,
   ModerationCause,
   ModerationOpts,
-  InterprettedLabelValueDefinition,
   LabelTarget,
   ModerationBehavior,
   CUSTOM_LABEL_VALUE_RE,
@@ -32,16 +32,23 @@ export class ModerationDecision {
   static merge(
     ...decisions: (ModerationDecision | undefined)[]
   ): ModerationDecision {
-    const firmDecisions: ModerationDecision[] = decisions.filter(
+    const decisionsFiltered: ModerationDecision[] = decisions.filter(
       (v) => !!v,
     ) as ModerationDecision[]
     const decision = new ModerationDecision()
-    if (firmDecisions[0]) {
-      decision.did = firmDecisions[0].did
-      decision.isMe = firmDecisions[0].isMe
+    if (decisionsFiltered[0]) {
+      decision.did = decisionsFiltered[0].did
+      decision.isMe = decisionsFiltered[0].isMe
     }
-    decision.causes = firmDecisions.flatMap((d) => d.causes)
+    decision.causes = decisionsFiltered.flatMap((d) => d.causes)
     return decision
+  }
+
+  downgrade() {
+    for (const cause of this.causes) {
+      cause.downgraded = true
+    }
+    return this
   }
 
   get blocked() {
@@ -83,51 +90,79 @@ export class ModerationDecision {
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (BLOCK_BEHAVIOR[context] === 'blur') {
-          ui.noOverride = true
-          ui.blurs.push(cause)
-        } else if (BLOCK_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (BLOCK_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (BLOCK_BEHAVIOR[context] === 'blur') {
+            ui.noOverride = true
+            ui.blurs.push(cause)
+          } else if (BLOCK_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (BLOCK_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'muted') {
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (MUTE_BEHAVIOR[context] === 'blur') {
-          ui.blurs.push(cause)
-        } else if (MUTE_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (MUTE_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (MUTE_BEHAVIOR[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (MUTE_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (MUTE_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
+        }
+      } else if (cause.type === 'mute-word') {
+        if (context === 'contentList') {
+          ui.filters.push(cause)
+        }
+        if (!cause.downgraded) {
+          if (MUTEWORD_BEHAVIOR[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (MUTEWORD_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (MUTEWORD_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'hidden') {
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
-        if (HIDE_BEHAVIOR[context] === 'blur') {
-          ui.blurs.push(cause)
-        } else if (HIDE_BEHAVIOR[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (HIDE_BEHAVIOR[context] === 'inform') {
-          ui.informs.push(cause)
+        if (!cause.downgraded) {
+          if (HIDE_BEHAVIOR[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (HIDE_BEHAVIOR[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (HIDE_BEHAVIOR[context] === 'inform') {
+            ui.informs.push(cause)
+          }
         }
       } else if (cause.type === 'label') {
-        if (context === 'profileList' || context === 'contentList') {
+        if (context === 'profileList' && cause.target === 'account') {
+          if (cause.setting === 'hide') {
+            ui.filters.push(cause)
+          }
+        } else if (
+          context === 'contentList' &&
+          (cause.target === 'account' || cause.target === 'content')
+        ) {
           if (cause.setting === 'hide') {
             ui.filters.push(cause)
           }
         }
-        if (cause.behavior[context] === 'blur') {
-          ui.blurs.push(cause)
-          if (cause.noOverride) {
-            ui.noOverride = true
+        if (!cause.downgraded) {
+          if (cause.behavior[context] === 'blur') {
+            ui.blurs.push(cause)
+            if (cause.noOverride) {
+              ui.noOverride = true
+            }
+          } else if (cause.behavior[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (cause.behavior[context] === 'inform') {
+            ui.informs.push(cause)
           }
-        } else if (cause.behavior[context] === 'alert') {
-          ui.alerts.push(cause)
-        } else if (cause.behavior[context] === 'inform') {
-          ui.informs.push(cause)
         }
       }
     }
@@ -150,6 +185,16 @@ export class ModerationDecision {
     if (hidden) {
       this.causes.push({
         type: 'hidden',
+        source: { type: 'user' },
+        priority: 6,
+      })
+    }
+  }
+
+  addMutedWord(mutedWord: boolean) {
+    if (mutedWord) {
+      this.causes.push({
+        type: 'mute-word',
         source: { type: 'user' },
         priority: 6,
       })
@@ -214,7 +259,7 @@ export class ModerationDecision {
     const isSelf = label.src === this.did
     const labeler = isSelf
       ? undefined
-      : opts.prefs.mods.find((s) => s.did === label.src)
+      : opts.prefs.labelers.find((s) => s.did === label.src)
 
     if (!isSelf && !labeler) {
       return // skip labelers not configured by the user
@@ -224,7 +269,7 @@ export class ModerationDecision {
     }
 
     // establish the label preference for interpretation
-    let labelPref: LabelPreference = 'ignore'
+    let labelPref: LabelPreference = labelDef.defaultSetting || 'ignore'
     if (!labelDef.configurable) {
       labelPref = labelDef.defaultSetting || 'hide'
     } else if (
@@ -289,6 +334,7 @@ export class ModerationDecision {
           : { type: 'labeler', did: labeler.did },
       label,
       labelDef,
+      target,
       setting: labelPref,
       behavior: labelDef.behaviors[target] || NOOP_BEHAVIOR,
       noOverride,

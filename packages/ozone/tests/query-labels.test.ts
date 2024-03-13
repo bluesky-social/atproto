@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { ids, lexicons } from '../src/lexicon/lexicons'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
@@ -27,42 +27,42 @@ describe('ozone query labels', () => {
 
     const toCreate = [
       {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: 'did:example:blah',
         val: 'spam',
         neg: false,
         cts: new Date().toISOString(),
       },
       {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: 'did:example:blah',
         val: 'impersonation',
         neg: false,
         cts: new Date().toISOString(),
       },
       {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde',
         val: 'spam',
         neg: false,
         cts: new Date().toISOString(),
       },
       {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg',
         val: 'spam',
         neg: false,
         cts: new Date().toISOString(),
       },
       {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: 'at://did:example:blah/app.bsky.actor.profile/self',
         val: 'spam',
         neg: false,
         cts: new Date().toISOString(),
       },
       {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: 'did:example:thing',
         val: 'spam',
         neg: false,

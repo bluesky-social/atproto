@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import axios from 'axios'
 
 describe('label hydration', () => {
   let network: TestNetwork
@@ -38,13 +39,12 @@ describe('label hydration', () => {
   })
 
   it('hydrates labels based on a supplied labeler header', async () => {
+    AtpAgent.configure({ appLabelers: [alice] })
+    pdsAgent.configureLabelersHeader([])
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
       {
-        headers: {
-          ...sc.getHeaders(bob),
-          'atproto-accept-labelers': `${alice};redact`,
-        },
+        headers: sc.getHeaders(bob),
       },
     )
     expect(res.data.labels?.length).toBe(1)
@@ -54,13 +54,13 @@ describe('label hydration', () => {
   })
 
   it('hydrates labels based on multiple a supplied labelers', async () => {
+    AtpAgent.configure({ appLabelers: [bob] })
+    pdsAgent.configureLabelersHeader([alice, labelerDid])
+
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
       {
-        headers: {
-          ...sc.getHeaders(bob),
-          'atproto-accept-labelers': `${alice},${bob};redact, ${labelerDid}`,
-        },
+        headers: sc.getHeaders(bob),
       },
     )
     expect(res.data.labels?.length).toBe(3)
@@ -78,8 +78,8 @@ describe('label hydration', () => {
   })
 
   it('defaults to service labels when no labeler header is provided', async () => {
-    const res = await pdsAgent.api.app.bsky.actor.getProfile(
-      { actor: carol },
+    const res = await axios.get(
+      `${network.pds.url}/xrpc/app.bsky.actor.getProfile?actor=${carol}`,
       { headers: sc.getHeaders(bob) },
     )
     expect(res.data.labels?.length).toBe(1)
@@ -94,6 +94,9 @@ describe('label hydration', () => {
   })
 
   it('hydrates labels onto list views.', async () => {
+    AtpAgent.configure({ appLabelers: [labelerDid] })
+    pdsAgent.configureLabelersHeader([])
+
     const list = await pdsAgent.api.app.bsky.graph.list.create(
       { repo: alice },
       {
