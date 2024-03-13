@@ -16,7 +16,7 @@ Object {
       },
       "src": "user(2)",
       "uri": "record(0)",
-      "val": "!unspecced-takedown",
+      "val": "!takedown",
       "ver": 1,
     },
     Object {
@@ -117,7 +117,7 @@ Object {
       },
       "src": "user(2)",
       "uri": "record(0)",
-      "val": "!unspecced-takedown",
+      "val": "!takedown",
       "ver": 1,
     },
     Object {
