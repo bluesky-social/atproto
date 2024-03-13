@@ -38,8 +38,8 @@ describe('admin get repo view', () => {
   })
 
   beforeAll(async () => {
-    await modClient.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -62,8 +62,8 @@ describe('admin get repo view', () => {
         did: sc.dids.alice,
       },
     })
-    await modClient.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -72,7 +72,7 @@ describe('admin get repo view', () => {
   })
 
   it('gets a repo by did, even when taken down.', async () => {
-    const result = await agent.api.com.atproto.admin.getRepo(
+    const result = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.alice },
       { headers: await ozone.modHeaders() },
     )
@@ -80,15 +80,15 @@ describe('admin get repo view', () => {
   })
 
   it('does not include account emails for triage mods.', async () => {
-    const { data: admin } = await agent.api.com.atproto.admin.getRepo(
+    const { data: admin } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.bob },
       { headers: await ozone.modHeaders() },
     )
-    const { data: moderator } = await agent.api.com.atproto.admin.getRepo(
+    const { data: moderator } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.bob },
       { headers: await ozone.modHeaders('moderator') },
     )
-    const { data: triage } = await agent.api.com.atproto.admin.getRepo(
+    const { data: triage } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.bob },
       { headers: await ozone.modHeaders('triage') },
     )
@@ -100,7 +100,7 @@ describe('admin get repo view', () => {
 
   it('includes emailConfirmedAt timestamp', async () => {
     const { data: beforeEmailVerification } =
-      await agent.api.com.atproto.admin.getRepo(
+      await agent.api.tools.ozone.moderation.getRepo(
         { did: sc.dids.bob },
         { headers: await ozone.modHeaders() },
       )
@@ -122,7 +122,7 @@ describe('admin get repo view', () => {
       },
     )
     const { data: afterEmailVerification } =
-      await agent.api.com.atproto.admin.getRepo(
+      await agent.api.tools.ozone.moderation.getRepo(
         { did: sc.dids.bob },
         { headers: await ozone.modHeaders() },
       )
@@ -134,7 +134,7 @@ describe('admin get repo view', () => {
   })
 
   it('fails when repo does not exist.', async () => {
-    const promise = agent.api.com.atproto.admin.getRepo(
+    const promise = agent.api.tools.ozone.moderation.getRepo(
       { did: 'did:plc:doesnotexist' },
       { headers: await ozone.modHeaders() },
     )

@@ -39,6 +39,10 @@ export const MUTE_BEHAVIOR: ModerationBehavior = {
   contentList: 'blur',
   contentView: 'inform',
 }
+export const MUTEWORD_BEHAVIOR: ModerationBehavior = {
+  contentList: 'blur',
+  contentView: 'blur',
+}
 export const HIDE_BEHAVIOR: ModerationBehavior = {
   contentList: 'blur',
   contentView: 'blur',
@@ -58,9 +62,9 @@ export type LabelValueDefinitionFlag =
   | 'unauthed'
   | 'no-self'
 
-export interface InterprettedLabelValueDefinition
+export interface InterpretedLabelValueDefinition
   extends ComAtprotoLabelDefs.LabelValueDefinition {
-  // identifier: string
+  definedBy?: string | undefined // did of labeler or undefined for global
   configurable: boolean
   defaultSetting: LabelPreference // type narrowing
   flags: LabelValueDefinitionFlag[]
@@ -73,7 +77,7 @@ export interface InterprettedLabelValueDefinition
 
 export type LabelDefinitionMap = Record<
   KnownLabelValue,
-  InterprettedLabelValueDefinition
+  InterpretedLabelValueDefinition
 >
 
 // subjects
@@ -111,23 +115,56 @@ export type ModerationCauseSource =
   | { type: 'labeler'; did: string }
 
 export type ModerationCause =
-  | { type: 'blocking'; source: ModerationCauseSource; priority: 3 }
-  | { type: 'blocked-by'; source: ModerationCauseSource; priority: 4 }
-  | { type: 'block-other'; source: ModerationCauseSource; priority: 4 }
+  | {
+      type: 'blocking'
+      source: ModerationCauseSource
+      priority: 3
+      downgraded?: boolean
+    }
+  | {
+      type: 'blocked-by'
+      source: ModerationCauseSource
+      priority: 4
+      downgraded?: boolean
+    }
+  | {
+      type: 'block-other'
+      source: ModerationCauseSource
+      priority: 4
+      downgraded?: boolean
+    }
   | {
       type: 'label'
       source: ModerationCauseSource
       label: Label
-      labelDef: InterprettedLabelValueDefinition
+      labelDef: InterpretedLabelValueDefinition
+      target: LabelTarget
       setting: LabelPreference
       behavior: ModerationBehavior
       noOverride: boolean
       priority: 1 | 2 | 5 | 7 | 8
+      downgraded?: boolean
     }
-  | { type: 'muted'; source: ModerationCauseSource; priority: 6 }
-  | { type: 'hidden'; source: ModerationCauseSource; priority: 6 }
+  | {
+      type: 'muted'
+      source: ModerationCauseSource
+      priority: 6
+      downgraded?: boolean
+    }
+  | {
+      type: 'mute-word'
+      source: ModerationCauseSource
+      priority: 6
+      downgraded?: boolean
+    }
+  | {
+      type: 'hidden'
+      source: ModerationCauseSource
+      priority: 6
+      downgraded?: boolean
+    }
 
-export interface ModerationPrefsModerator {
+export interface ModerationPrefsLabeler {
   did: string
   labels: Record<string, LabelPreference>
 }
@@ -135,7 +172,9 @@ export interface ModerationPrefsModerator {
 export interface ModerationPrefs {
   adultContentEnabled: boolean
   labels: Record<string, LabelPreference>
-  mods: ModerationPrefsModerator[]
+  labelers: ModerationPrefsLabeler[]
+  mutedWords: AppBskyActorDefs.MutedWord[]
+  hiddenPosts: string[]
 }
 
 export interface ModerationOpts {
@@ -144,5 +183,5 @@ export interface ModerationOpts {
   /**
    * Map of labeler did -> custom definitions
    */
-  labelDefs?: Record<string, InterprettedLabelValueDefinition[]>
+  labelDefs?: Record<string, InterpretedLabelValueDefinition[]>
 }

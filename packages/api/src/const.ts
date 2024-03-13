@@ -1,1 +1,1 @@
-export const BSKY_MODSERVICE_DID = 'did:plc:ar7c4by46qjdydhdevvrndac'
+export const BSKY_LABELER_DID = 'did:plc:ar7c4by46qjdydhdevvrndac'

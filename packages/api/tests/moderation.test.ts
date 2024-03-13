@@ -29,7 +29,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'hide',
           },
-          mods: [],
+          labelers: [],
         },
       },
     )
@@ -61,7 +61,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'ignore',
           },
-          mods: [],
+          labelers: [],
         },
       },
     )
@@ -95,7 +95,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'hide',
           },
-          mods: [],
+          labelers: [],
         },
       },
     )
@@ -137,7 +137,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'ignore',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:web:labeler.test',
               labels: { porn: 'ignore' },
@@ -182,7 +182,7 @@ describe('Moderation', () => {
         prefs: {
           adultContentEnabled: true,
           labels: {},
-          mods: [
+          labelers: [
             {
               did: 'did:web:labeler.test',
               labels: {},
@@ -232,7 +232,7 @@ describe('Moderation', () => {
           labels: {
             porn: 'hide',
           },
-          mods: [
+          labelers: [
             {
               did: 'did:web:labeler.test',
               labels: {},
@@ -253,7 +253,7 @@ describe('Moderation', () => {
       prefs: {
         adultContentEnabled: true,
         labels: { porn: 'warn' },
-        mods: [
+        labelers: [
           {
             did: 'did:web:labeler.test',
             labels: { porn: 'warn' },
@@ -262,13 +262,15 @@ describe('Moderation', () => {
       },
       labelDefs: {
         'did:web:labeler.test': [
-          interpretLabelValueDefinition({
-            identifier: 'porn',
-            blurs: 'none',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'porn',
+              blurs: 'none',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
         ],
       },
     }
@@ -309,7 +311,7 @@ describe('Moderation', () => {
       prefs: {
         adultContentEnabled: true,
         labels: {},
-        mods: [
+        labelers: [
           {
             did: 'did:web:labeler.test',
             labels: {},
@@ -318,13 +320,15 @@ describe('Moderation', () => {
       },
       labelDefs: {
         'did:web:labeler.test': [
-          interpretLabelValueDefinition({
-            identifier: '!hide',
-            blurs: 'none',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
+          interpretLabelValueDefinition(
+            {
+              identifier: '!hide',
+              blurs: 'none',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
         ],
       },
     }
@@ -350,7 +354,7 @@ describe('Moderation', () => {
       modOpts,
     )
 
-    expect(res.ui('profileList')).toBeModerationResult(['filter'])
+    expect(res.ui('profileList')).toBeModerationResult([])
     expect(res.ui('profileView')).toBeModerationResult([])
     expect(res.ui('avatar')).toBeModerationResult([])
     expect(res.ui('banner')).toBeModerationResult([])
@@ -370,7 +374,7 @@ describe('Moderation', () => {
       prefs: {
         adultContentEnabled: true,
         labels: {},
-        mods: [
+        labelers: [
           {
             did: 'did:web:labeler.test',
             labels: { BadLabel: 'hide', 'bad/label': 'hide' },
@@ -379,20 +383,24 @@ describe('Moderation', () => {
       },
       labelDefs: {
         'did:web:labeler.test': [
-          interpretLabelValueDefinition({
-            identifier: 'BadLabel',
-            blurs: 'content',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
-          interpretLabelValueDefinition({
-            identifier: 'bad/label',
-            blurs: 'content',
-            severity: 'inform',
-            defaultSetting: 'warn',
-            locales: [],
-          }),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'BadLabel',
+              blurs: 'content',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'bad/label',
+              blurs: 'content',
+              severity: 'inform',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
         ],
       },
     }
@@ -432,5 +440,261 @@ describe('Moderation', () => {
     expect(res.ui('contentList')).toBeModerationResult([])
     expect(res.ui('contentView')).toBeModerationResult([])
     expect(res.ui('contentMedia')).toBeModerationResult([])
+  })
+
+  it('Custom labels can set the default setting', () => {
+    const modOpts = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: true,
+        labels: {},
+        labelers: [
+          {
+            did: 'did:web:labeler.test',
+            labels: {},
+          },
+        ],
+      },
+      labelDefs: {
+        'did:web:labeler.test': [
+          interpretLabelValueDefinition(
+            {
+              identifier: 'default-hide',
+              blurs: 'content',
+              severity: 'inform',
+              defaultSetting: 'hide',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'default-warn',
+              blurs: 'content',
+              severity: 'inform',
+              defaultSetting: 'warn',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
+          interpretLabelValueDefinition(
+            {
+              identifier: 'default-ignore',
+              blurs: 'content',
+              severity: 'inform',
+              defaultSetting: 'ignore',
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
+        ],
+      },
+    }
+    const res1 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'default-hide',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      modOpts,
+    )
+
+    expect(res1.ui('profileList')).toBeModerationResult([])
+    expect(res1.ui('profileView')).toBeModerationResult([])
+    expect(res1.ui('avatar')).toBeModerationResult([])
+    expect(res1.ui('banner')).toBeModerationResult([])
+    expect(res1.ui('displayName')).toBeModerationResult([])
+    expect(res1.ui('contentList')).toBeModerationResult(['filter', 'blur'])
+    expect(res1.ui('contentView')).toBeModerationResult(['inform'])
+    expect(res1.ui('contentMedia')).toBeModerationResult([])
+
+    const res2 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'default-warn',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      modOpts,
+    )
+
+    expect(res2.ui('profileList')).toBeModerationResult([])
+    expect(res2.ui('profileView')).toBeModerationResult([])
+    expect(res2.ui('avatar')).toBeModerationResult([])
+    expect(res2.ui('banner')).toBeModerationResult([])
+    expect(res2.ui('displayName')).toBeModerationResult([])
+    expect(res2.ui('contentList')).toBeModerationResult(['blur'])
+    expect(res2.ui('contentView')).toBeModerationResult(['inform'])
+    expect(res2.ui('contentMedia')).toBeModerationResult([])
+
+    const res3 = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'default-ignore',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      modOpts,
+    )
+
+    expect(res3.ui('profileList')).toBeModerationResult([])
+    expect(res3.ui('profileView')).toBeModerationResult([])
+    expect(res3.ui('avatar')).toBeModerationResult([])
+    expect(res3.ui('banner')).toBeModerationResult([])
+    expect(res3.ui('displayName')).toBeModerationResult([])
+    expect(res3.ui('contentList')).toBeModerationResult([])
+    expect(res3.ui('contentView')).toBeModerationResult([])
+    expect(res3.ui('contentMedia')).toBeModerationResult([])
+  })
+
+  it('Custom labels can require adult content to be enabled', () => {
+    const modOpts = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: false,
+        labels: { adult: 'ignore' },
+        labelers: [
+          {
+            did: 'did:web:labeler.test',
+            labels: {
+              adult: 'ignore',
+            },
+          },
+        ],
+      },
+      labelDefs: {
+        'did:web:labeler.test': [
+          interpretLabelValueDefinition(
+            {
+              identifier: 'adult',
+              blurs: 'content',
+              severity: 'inform',
+              defaultSetting: 'hide',
+              adultOnly: true,
+              locales: [],
+            },
+            'did:web:labeler.test',
+          ),
+        ],
+      },
+    }
+    const res = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'adult',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      modOpts,
+    )
+
+    expect(res.ui('profileList')).toBeModerationResult([])
+    expect(res.ui('profileView')).toBeModerationResult([])
+    expect(res.ui('avatar')).toBeModerationResult([])
+    expect(res.ui('banner')).toBeModerationResult([])
+    expect(res.ui('displayName')).toBeModerationResult([])
+    expect(res.ui('contentList')).toBeModerationResult([
+      'filter',
+      'blur',
+      'noOverride',
+    ])
+    expect(res.ui('contentView')).toBeModerationResult(['blur', 'noOverride'])
+    expect(res.ui('contentMedia')).toBeModerationResult([])
+  })
+
+  it('Adult content disabled forces the preference to hide', () => {
+    const modOpts = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: false,
+        labels: { porn: 'ignore' },
+        labelers: [
+          {
+            did: 'did:web:labeler.test',
+            labels: {},
+          },
+        ],
+      },
+      labelDefs: {},
+    }
+    const res = moderatePost(
+      mock.postView({
+        record: {
+          text: 'Hello',
+          createdAt: new Date().toISOString(),
+        },
+        author: mock.profileViewBasic({
+          handle: 'bob.test',
+          displayName: 'Bob',
+        }),
+        labels: [
+          {
+            src: 'did:web:labeler.test',
+            uri: 'at://did:web:bob.test/app.bsky.post/fake',
+            val: 'porn',
+            cts: new Date().toISOString(),
+          },
+        ],
+      }),
+      modOpts,
+    )
+
+    expect(res.ui('profileList')).toBeModerationResult([])
+    expect(res.ui('profileView')).toBeModerationResult([])
+    expect(res.ui('avatar')).toBeModerationResult([])
+    expect(res.ui('banner')).toBeModerationResult([])
+    expect(res.ui('displayName')).toBeModerationResult([])
+    expect(res.ui('contentList')).toBeModerationResult(['filter'])
+    expect(res.ui('contentView')).toBeModerationResult([])
+    expect(res.ui('contentMedia')).toBeModerationResult(['blur', 'noOverride'])
   })
 })

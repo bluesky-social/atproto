@@ -56,8 +56,8 @@ describe('admin get record view', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
-    await modClient.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
@@ -67,7 +67,7 @@ describe('admin get record view', () => {
   })
 
   it('gets a record by uri, even when taken down.', async () => {
-    const result = await agent.api.com.atproto.admin.getRecord(
+    const result = await agent.api.tools.ozone.moderation.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: await ozone.modHeaders() },
     )
@@ -75,7 +75,7 @@ describe('admin get record view', () => {
   })
 
   it('gets a record by uri and cid.', async () => {
-    const result = await agent.api.com.atproto.admin.getRecord(
+    const result = await agent.api.tools.ozone.moderation.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
@@ -86,7 +86,7 @@ describe('admin get record view', () => {
   })
 
   it('fails when record does not exist.', async () => {
-    const promise = agent.api.com.atproto.admin.getRecord(
+    const promise = agent.api.tools.ozone.moderation.getRecord(
       {
         uri: AtUri.make(
           sc.dids.alice,
@@ -100,7 +100,7 @@ describe('admin get record view', () => {
   })
 
   it('fails when record cid does not exist.', async () => {
-    const promise = agent.api.com.atproto.admin.getRecord(
+    const promise = agent.api.tools.ozone.moderation.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][1].ref.cidStr, // Mismatching cid

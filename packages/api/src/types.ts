@@ -2,6 +2,11 @@ import { AppBskyActorDefs } from './client'
 import { ModerationPrefs } from './moderation/types'
 
 /**
+ * Supported proxy targets
+ */
+export type AtprotoServiceType = 'atproto_labeler'
+
+/**
  * Used by the PersistSessionHandler to indicate what change occurred
  */
 export type AtpSessionEvent =
@@ -67,7 +72,8 @@ export type AtpAgentFetchHandler = (
  * AtpAgent global config opts
  */
 export interface AtpAgentGlobalOpts {
-  fetch: AtpAgentFetchHandler
+  fetch?: AtpAgentFetchHandler
+  appLabelers?: string[]
 }
 
 /**
@@ -113,6 +119,4 @@ export interface BskyPreferences {
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
-  mutedWords: AppBskyActorDefs.MutedWord[]
-  hiddenPosts: string[]
 }

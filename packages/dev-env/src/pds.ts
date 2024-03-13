@@ -8,7 +8,7 @@ import { createSecretKeyObject } from '@atproto/pds/src/auth-verifier'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import { ADMIN_PASSWORD, JWT_SECRET } from './const'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const'
 
 export class TestPds {
   constructor(
@@ -63,7 +63,7 @@ export class TestPds {
 
   getClient(): AtpAgent {
     const agent = new AtpAgent({ service: this.url })
-    agent.configureLabelersHeader([])
+    agent.configureLabelersHeader([EXAMPLE_LABELER])
     return agent
   }
 

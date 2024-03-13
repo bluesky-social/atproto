@@ -4,7 +4,12 @@ import {
   AppBskyLabelerDefs,
   ComAtprotoLabelDefs,
 } from '../client'
-import { InterprettedLabelValueDefinition, ModerationBehavior } from './types'
+import {
+  InterpretedLabelValueDefinition,
+  ModerationBehavior,
+  LabelPreference,
+  LabelValueDefinitionFlag,
+} from './types'
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {
   return Boolean(embed && AppBskyEmbedRecord.isView(embed))
@@ -18,7 +23,8 @@ export function isQuotedPostWithMedia(
 
 export function interpretLabelValueDefinition(
   def: ComAtprotoLabelDefs.LabelValueDefinition,
-): InterprettedLabelValueDefinition {
+  definedBy: string | undefined,
+): InterpretedLabelValueDefinition {
   const behaviors: {
     account: ModerationBehavior
     profile: ModerationBehavior
@@ -39,23 +45,21 @@ export function interpretLabelValueDefinition(
     behaviors.account.profileList = alertOrInform
     behaviors.account.profileView = alertOrInform
     behaviors.account.contentList = 'blur'
-    behaviors.account.contentView = alertOrInform
+    behaviors.account.contentView = def.adultOnly ? 'blur' : alertOrInform
     // target=profile, blurs=content
-    behaviors.account.profileView = alertOrInform
-    behaviors.profile.avatar = 'blur'
-    behaviors.profile.banner = 'blur'
-    behaviors.profile.displayName = 'blur'
+    behaviors.profile.profileList = alertOrInform
+    behaviors.profile.profileView = alertOrInform
     // target=content, blurs=content
     behaviors.content.contentList = 'blur'
-    behaviors.content.contentView = alertOrInform
+    behaviors.content.contentView = def.adultOnly ? 'blur' : alertOrInform
   } else if (def.blurs === 'media') {
     // target=account, blurs=media
     behaviors.account.profileList = alertOrInform
     behaviors.account.profileView = alertOrInform
     behaviors.account.avatar = 'blur'
     behaviors.account.banner = 'blur'
-    behaviors.account.contentMedia = 'blur'
     // target=profile, blurs=media
+    behaviors.profile.profileList = alertOrInform
     behaviors.profile.profileView = alertOrInform
     behaviors.profile.avatar = 'blur'
     behaviors.profile.banner = 'blur'
@@ -68,29 +72,42 @@ export function interpretLabelValueDefinition(
     behaviors.account.contentList = alertOrInform
     behaviors.account.contentView = alertOrInform
     // target=profile, blurs=none
+    behaviors.profile.profileList = alertOrInform
     behaviors.profile.profileView = alertOrInform
     // target=content, blurs=none
     behaviors.content.contentList = alertOrInform
     behaviors.content.contentView = alertOrInform
   }
 
+  let defaultSetting: LabelPreference = 'warn'
+  if (def.defaultSetting === 'hide' || def.defaultSetting === 'ignore') {
+    defaultSetting = def.defaultSetting as LabelPreference
+  }
+
+  const flags: LabelValueDefinitionFlag[] = ['no-self']
+  if (def.adultOnly) {
+    flags.push('adult')
+  }
+
   return {
     ...def,
+    definedBy,
     configurable: true,
-    defaultSetting: 'warn',
-    flags: ['no-self'],
+    defaultSetting,
+    flags,
     behaviors,
   }
 }
 
 export function interpretLabelValueDefinitions(
-  modserviceView: AppBskyLabelerDefs.LabelerViewDetailed,
-): InterprettedLabelValueDefinition[] {
-  return (modserviceView.policies?.labelValueDefinitions || [])
+  labelerView: AppBskyLabelerDefs.LabelerViewDetailed,
+): InterpretedLabelValueDefinition[] {
+  return (labelerView.policies?.labelValueDefinitions || [])
     .filter(
       (labelValDef) =>
-        ComAtprotoLabelDefs.isLabelValueDefinition(labelValDef) &&
         ComAtprotoLabelDefs.validateLabelValueDefinition(labelValDef).success,
     )
-    .map((labelValDef) => interpretLabelValueDefinition(labelValDef))
+    .map((labelValDef) =>
+      interpretLabelValueDefinition(labelValDef, labelerView.creator.did),
+    )
 }

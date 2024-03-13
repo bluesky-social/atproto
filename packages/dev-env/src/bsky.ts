@@ -5,7 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
-import { ADMIN_PASSWORD } from './const'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
 import { BackgroundQueue } from '@atproto/bsky/src/data-plane/server/background'
 
 export class TestBsky {
@@ -62,7 +62,7 @@ export class TestBsky {
       bsyncHttpVersion: '1.1',
       courierUrl: 'https://fake.example',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
-      labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
+      labelsFromIssuerDids: [EXAMPLE_LABELER],
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
     })
@@ -104,7 +104,7 @@ export class TestBsky {
 
   getClient() {
     const agent = new AtpAgent({ service: this.url })
-    agent.configureLabelersHeader([])
+    agent.configureLabelersHeader([EXAMPLE_LABELER])
     return agent
   }
 

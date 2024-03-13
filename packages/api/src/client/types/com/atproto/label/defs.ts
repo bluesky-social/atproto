@@ -86,6 +86,10 @@ export interface LabelValueDefinition {
   severity: 'inform' | 'alert' | 'none' | (string & {})
   /** What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing. */
   blurs: 'content' | 'media' | 'none' | (string & {})
+  /** The default setting for this label. */
+  defaultSetting: 'ignore' | 'warn' | 'hide' | (string & {})
+  /** Does the user need to have adult content enabled in order to configure this label? */
+  adultOnly?: boolean
   locales: LabelValueDefinitionStrings[]
   [k: string]: unknown
 }
