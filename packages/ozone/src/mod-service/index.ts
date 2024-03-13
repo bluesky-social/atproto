@@ -827,7 +827,6 @@ export class ModerationService {
       uri,
       cid: cid ?? undefined,
       val,
-      neg: false,
       cts: new Date().toISOString(),
     }))
     const toNegate = negate.map((val) => ({

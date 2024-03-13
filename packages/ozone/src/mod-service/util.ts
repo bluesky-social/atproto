@@ -47,7 +47,7 @@ export const signLabel = async (
     uri,
     cid,
     val,
-    neg,
+    neg: neg === true ? true : undefined,
     cts,
     exp,
   }) as Label
