@@ -41,6 +41,7 @@
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "@atproto/dev-env": "workspace:^",
-    "common-tags": "^1.8.2"
+    "common-tags": "^1.8.2",
+    "get-port": "^6.1.2"
   }
 }

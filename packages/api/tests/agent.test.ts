@@ -1,4 +1,5 @@
 import assert from 'assert'
+import getPort from 'get-port'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpAgent,
@@ -28,7 +29,7 @@ describe('agent', () => {
   })
 
   it('clones correctly', () => {
-    const persistSession = (evt: AtpSessionEvent, sess?: AtpSessionData) => {}
+    const persistSession = (_evt: AtpSessionEvent, _sess?: AtpSessionData) => {}
     const agent = new AtpAgent({ service: network.pds.url, persistSession })
     const agent2 = agent.clone()
     expect(agent2 instanceof AtpAgent).toBeTruthy()
@@ -492,9 +493,10 @@ describe('agent', () => {
 
   describe('App labelers header', () => {
     it('adds the labelers header as expected', async () => {
-      const server = await createHeaderEchoServer(15991)
-      const agent = new AtpAgent({ service: 'http://localhost:15991' })
-      const agent2 = new AtpAgent({ service: 'http://localhost:15991' })
+      const port = await getPort()
+      const server = await createHeaderEchoServer(port)
+      const agent = new AtpAgent({ service: `http://localhost:${port}` })
+      const agent2 = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
       expect(res1.data['atproto-accept-labelers']).toEqual(
@@ -518,8 +520,9 @@ describe('agent', () => {
 
   describe('configureLabelersHeader', () => {
     it('adds the labelers header as expected', async () => {
-      const server = await createHeaderEchoServer(15991)
-      const agent = new AtpAgent({ service: 'http://localhost:15991' })
+      const port = await getPort()
+      const server = await createHeaderEchoServer(port)
+      const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       agent.configureLabelersHeader(['did:plc:test1'])
       const res1 = await agent.com.atproto.server.describeServer()
@@ -539,8 +542,9 @@ describe('agent', () => {
 
   describe('configureProxyHeader', () => {
     it('adds the proxy header as expected', async () => {
-      const server = await createHeaderEchoServer(15992)
-      const agent = new AtpAgent({ service: 'http://localhost:15992' })
+      const port = await getPort()
+      const server = await createHeaderEchoServer(port)
+      const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
       const res1 = await agent.com.atproto.server.describeServer()
       expect(res1.data['atproto-proxy']).toBeFalsy()
