@@ -8,12 +8,18 @@ export type Branding = {
   name?: string
   logo?: string
   colors?: { [_ in ColorName]?: string }
+  links?: Array<{
+    name: string
+    href: string
+    rel?: string
+  }>
 }
 
-export function buildBrandingData({ name, logo }: Branding = {}) {
+export function buildBrandingData({ name, logo, links }: Branding = {}) {
   return {
     name,
     logo,
+    links,
   }
 }
 
@@ -21,7 +27,7 @@ export function buildBrandingCss(branding?: Branding) {
   if (!branding?.colors) return ''
 
   const vars = Object.entries(branding.colors)
-    .filter((e) => isColorName(e[0]))
+    .filter((e) => isColorName(e[0]) && e[1] != null)
     .map(([name, value]) => [name, parseColor(value)] as const)
     .filter((e): e is [ColorName, ParsedColor] => e[1] != null)
     // alpha not supported by tailwind (it does not work that way)

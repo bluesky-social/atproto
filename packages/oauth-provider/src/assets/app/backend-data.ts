@@ -3,6 +3,11 @@ import type { ClientMetadata, Session } from './types'
 export type BrandingData = {
   name?: string
   logo?: string
+  links?: Array<{
+    name: string
+    href: string
+    rel?: string
+  }>
 }
 
 export type ErrorData = {

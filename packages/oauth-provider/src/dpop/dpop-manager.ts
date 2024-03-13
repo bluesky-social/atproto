@@ -9,22 +9,28 @@ import { DpopNonce } from './dpop-nonce.js'
 export { DpopNonce }
 export type DpopManagerOptions = {
   /**
-   * Set this to `false` to disable the use of DPoP nonces. Set this to a secret
-   * Uint8Array to use a predictable seed for all nonces (typically useful when
-   * multiple instances are running). Leave undefined to generate a random seed
-   * at startup.
+   * Set this to `false` to disable the use of nonces in DPoP proofs. Set this
+   * to a secret Uint8Array or hex encoded string to use a predictable seed for
+   * all nonces (typically useful when multiple instances are running). Leave
+   * undefined to generate a random seed at startup.
    */
-  dpopNonce?: false | Uint8Array | DpopNonce
+  dpopSecret?: false | string | Uint8Array | DpopNonce
 }
 
 export class DpopManager {
   protected readonly dpopNonce?: DpopNonce
 
-  constructor({ dpopNonce = new DpopNonce() }: DpopManagerOptions = {}) {
+  constructor({ dpopSecret }: DpopManagerOptions = {}) {
     this.dpopNonce =
-      dpopNonce instanceof Uint8Array
-        ? new DpopNonce(dpopNonce)
-        : dpopNonce || undefined
+      dpopSecret === false
+        ? undefined
+        : typeof dpopSecret === 'string'
+        ? new DpopNonce(Buffer.from(dpopSecret, 'hex'))
+        : dpopSecret instanceof Uint8Array
+        ? new DpopNonce(dpopSecret)
+        : dpopSecret instanceof DpopNonce
+        ? dpopSecret
+        : new DpopNonce()
   }
 
   nextNonce(): string | undefined {

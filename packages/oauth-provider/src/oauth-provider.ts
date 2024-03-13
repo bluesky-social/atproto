@@ -126,7 +126,7 @@ export type OAuthProviderStore = Partial<
     ReplayStore
 >
 
-export { Keyset, type CustomMetadata, type Handler }
+export { Keyset, type Branding, type CustomMetadata, type Handler }
 export type OAuthProviderOptions = OAuthVerifierOptions & {
   /**
    * Maximum age a device/account session can be before requiring
