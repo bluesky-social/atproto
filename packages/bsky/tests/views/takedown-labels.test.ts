@@ -58,6 +58,7 @@ describe('bsky takedown labels', () => {
       neg: false,
       cts,
     }))
+    AtpAgent.configure({ appLabelers: [src] })
 
     await network.bsky.db.db.insertInto('label').values(labels).execute()
   })
@@ -123,12 +124,10 @@ describe('bsky takedown labels', () => {
   })
 
   it('only applies if the relevant labeler is configured', async () => {
-    const res = await agent.api.app.bsky.actor.getProfile(
-      {
-        actor: sc.dids.carol,
-      },
-      { headers: { 'atproto-accept-labelers': 'did:web:example.com' } },
-    )
+    AtpAgent.configure({ appLabelers: ['did:web:example.com'] })
+    const res = await agent.api.app.bsky.actor.getProfile({
+      actor: sc.dids.carol,
+    })
     expect(res.data.did).toEqual(sc.dids.carol)
   })
 })
