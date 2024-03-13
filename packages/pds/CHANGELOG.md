@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.7
+
+### Patch Changes
+
+- [`971d3e4c2`](https://github.com/bluesky-social/atproto/commit/971d3e4c26ecfda746e83d458391715752ea7064) Thanks [@devinivy](https://github.com/devinivy)! - PDS operators may configure a public contact email
+
+- Updated dependencies [[`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5)]:
+  - @atproto/api@0.11.1
+
 ## 0.4.6
 
 ### Patch Changes

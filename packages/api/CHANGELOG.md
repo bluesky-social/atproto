@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.11.1
+
+### Patch Changes
+
+- [#2312](https://github.com/bluesky-social/atproto/pull/2312) [`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5) Thanks [@pfrazee](https://github.com/pfrazee)! - Fixed an issue that would cause agent clones to drop the PDS URI config.
+
 ## 0.11.0
 
 ### Minor Changes
