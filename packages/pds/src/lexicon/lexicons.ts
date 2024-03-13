@@ -2420,6 +2420,11 @@ export const schemaDict = {
                 description: 'URLs of service policy documents.',
                 ref: 'lex:com.atproto.server.describeServer#links',
               },
+              contact: {
+                type: 'ref',
+                description: 'Contact information',
+                ref: 'lex:com.atproto.server.describeServer#contact',
+              },
               did: {
                 type: 'string',
                 format: 'did',
@@ -2435,6 +2440,14 @@ export const schemaDict = {
             type: 'string',
           },
           termsOfService: {
+            type: 'string',
+          },
+        },
+      },
+      contact: {
+        type: 'object',
+        properties: {
+          email: {
             type: 'string',
           },
         },
