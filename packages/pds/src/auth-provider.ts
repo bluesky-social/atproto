@@ -1,20 +1,32 @@
+import { LRUCache } from 'lru-cache'
 import { safeFetchWrap } from '@atproto/fetch-node'
 import {
   AccessTokenType,
+  Account,
+  AccountInfo,
+  AccountStore,
   Branding,
+  DeviceId,
   Keyset,
+  LoginCredentials,
   OAuthProvider,
 } from '@atproto/oauth-provider'
+import { OAuthReplayStoreMemory } from '@atproto/oauth-provider-replay-memory'
+import { OAuthReplayStoreRedis } from '@atproto/oauth-provider-replay-redis'
+
+import { Redis } from 'ioredis'
 import { AccountManager } from './account-manager'
 import { fetchLogger, oauthLogger } from './logger'
 import { OauthClientStore } from './oauth/oauth-client-store'
-import { Redis } from 'ioredis'
-import { OAuthReplayStoreRedis } from '@atproto/oauth-provider-replay-redis'
-import { OAuthReplayStoreMemory } from '@atproto/oauth-provider-replay-memory'
+import { ActorStore } from './actor-store'
+import { LocalViewerCreator } from './read-after-write'
+import { ProfileViewBasic } from './lexicon/types/app/bsky/actor/defs'
 
 export class AuthProvider extends OAuthProvider {
   constructor(
     accountManager: AccountManager,
+    actorStore: ActorStore,
+    localViewerCreator: LocalViewerCreator,
     keyset: Keyset,
     redis: Redis | undefined,
     dpopSecret: false | string | Uint8Array,
@@ -27,7 +39,16 @@ export class AuthProvider extends OAuthProvider {
       keyset,
       dpopSecret,
 
-      accountStore: accountManager,
+      // Even though the accountManager implements the AccountStore interface,
+      // the accounts it returns do not contain any profile information (display
+      // name, avatar, etc). This is due to the fact that the account manager
+      // does not have access to the account's repos. The DetailedAccountStore
+      // is a wrapper around the accountManager that enriches the accounts with
+      // profile information using the account's repos through the actorStore.
+      accountStore: new DetailedAccountStore(
+        accountManager,
+        new ActorProfileStoreCached(actorStore, localViewerCreator),
+      ),
       requestStore: accountManager,
       sessionStore: accountManager,
       tokenStore: accountManager,
@@ -91,5 +112,123 @@ export class AuthProvider extends OAuthProvider {
         oauthLogger.error({ err }, 'oauth-provider error')
       },
     })
+  }
+}
+
+/**
+ * This class wraps an AccountStore in order to enrich the accounts it returns
+ * with profile information through the ActorStore.
+ */
+class DetailedAccountStore implements AccountStore {
+  constructor(
+    private store: AccountStore,
+    private actorProfileStore: ActorProfileStore,
+  ) {}
+
+  private async enrichAccount(account: Account): Promise<Account> {
+    if (!account.picture || !account.name) {
+      const profile = await this.actorProfileStore.get(account.sub)
+      if (profile) {
+        return {
+          ...account,
+          picture: account.picture || profile.avatar,
+          name: account.name || profile.displayName,
+        }
+      }
+    }
+
+    return account
+  }
+
+  async authenticateAccount(
+    credentials: LoginCredentials,
+    deviceId: DeviceId | null,
+  ): Promise<Account | null> {
+    const account = await this.store.authenticateAccount(credentials, deviceId)
+    if (!account) return null
+    return this.enrichAccount(account)
+  }
+
+  async addAuthorizedClient(
+    deviceId: DeviceId,
+    sub: string,
+    clientId: string,
+  ): Promise<void> {
+    return this.store.addAuthorizedClient(deviceId, sub, clientId)
+  }
+
+  async getDeviceAccount(
+    deviceId: DeviceId,
+    sub: string,
+  ): Promise<AccountInfo | null> {
+    const accountInfo = await this.store.getDeviceAccount(deviceId, sub)
+    if (!accountInfo) return null
+    const account = await this.enrichAccount(accountInfo.account)
+    return { ...accountInfo, account }
+  }
+
+  async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
+    const accountInfos = await this.store.listDeviceAccounts(deviceId)
+
+    return Promise.all(
+      accountInfos.map(async (accountInfo) => ({
+        ...accountInfo,
+        account: await this.enrichAccount(accountInfo.account),
+      })),
+    )
+  }
+
+  async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+    return this.store.removeDeviceAccount(deviceId, sub)
+  }
+}
+
+/**
+ * Utility class to fetch profile information for a given DID.
+ */
+class ActorProfileStore {
+  constructor(
+    private actorStore: ActorStore,
+    private localViewerCreator: LocalViewerCreator,
+  ) {}
+
+  public async get(did: string): Promise<ProfileViewBasic | null> {
+    return this.actorStore.read(did, async (store) => {
+      const localViewer = this.localViewerCreator(store)
+      return localViewer.getProfileBasic()
+    })
+  }
+}
+
+/**
+ * Drop-in replacement for ActorProfileStore that caches the results of the
+ * get method.
+ */
+class ActorProfileStoreCached
+  extends ActorProfileStore
+  implements ActorProfileStore
+{
+  cache = new LRUCache<string, ProfileViewBasic | 'nullValue'>({
+    ttl: 10 * 60e3, // 10 minutes
+    max: 1000,
+    allowStale: true,
+    updateAgeOnGet: false,
+    updateAgeOnHas: false,
+    allowStaleOnFetchAbort: true,
+    allowStaleOnFetchRejection: true,
+    ignoreFetchAbort: true,
+    noDeleteOnStaleGet: true,
+    noDeleteOnFetchRejection: true,
+    fetchMethod: async (did) => (await super.get(did)) ?? 'nullValue',
+  })
+
+  public async get(did: string): Promise<ProfileViewBasic | null> {
+    const cached = await this.cache.fetch(did)
+    if (cached != null) return cached === 'nullValue' ? null : cached
+
+    // Should never happen when using the fetchMethod option
+    const result = await super.get(did)
+    this.cache.set(did, result ?? 'nullValue')
+    return result
   }
 }

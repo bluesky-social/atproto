@@ -471,15 +471,6 @@ export class AccountManager
 
   // AccountStore
 
-  private async enrichAccount(account: Account): Promise<Account> {
-    // TODO: get profile data from api.app.bsky.actor.getProfile somehow
-
-    // account.picture ||= profile.avatar
-    // account.name ||= profile.displayName
-
-    return account
-  }
-
   async authenticateAccount(
     { username: identifier, password, remember = false }: LoginCredentials,
     deviceId: DeviceId | null,
@@ -496,8 +487,7 @@ export class AccountManager
         )
       }
 
-      const account = await deviceAccount.toAccount(user, this.serviceDid)
-      return this.enrichAccount(account)
+      return await deviceAccount.toAccount(user, this.serviceDid)
     } catch (err) {
       if (err instanceof AuthRequiredError) return null
       throw err
@@ -528,33 +518,11 @@ export class AccountManager
     deviceId: DeviceId,
     sub: string,
   ): Promise<AccountInfo | null> {
-    const accountInfo = await deviceAccount.get(
-      this.db,
-      deviceId,
-      sub,
-      this.serviceDid,
-    )
-
-    if (!accountInfo) return null
-
-    return {
-      ...accountInfo,
-      account: await this.enrichAccount(accountInfo.account),
-    }
+    return deviceAccount.get(this.db, deviceId, sub, this.serviceDid)
   }
 
   async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
-    const accountInfos = await deviceAccount.listRemembered(
-      this.db,
-      deviceId,
-      this.serviceDid,
-    )
-    return Promise.all(
-      accountInfos.map(async (accountInfo) => ({
-        ...accountInfo,
-        account: await this.enrichAccount(accountInfo.account),
-      })),
-    )
+    return deviceAccount.listRemembered(this.db, deviceId, this.serviceDid)
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
