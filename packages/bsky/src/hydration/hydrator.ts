@@ -547,15 +547,17 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [labelers, labelerAggs, labelerViewers, profileState] =
+    const [labelers, labelerAggs, labelerViewers, profileState, labels] =
       await Promise.all([
-        this.label.getLabelers(dids),
+        this.label.getLabelers(dids, ctx.includeTakedowns),
         this.label.getLabelerAggregates(dids),
         ctx.viewer
           ? this.label.getLabelerViewerStates(dids, ctx.viewer)
           : undefined,
         this.hydrateProfiles(dids.map(didFromUri), ctx),
+        this.label.getLabelsForSubjects(dids, ctx.labelers),
       ])
+    actionTakedownLabels(dids, labelers, labels)
     return mergeStates(profileState, {
       labelers,
       labelerAggs,
