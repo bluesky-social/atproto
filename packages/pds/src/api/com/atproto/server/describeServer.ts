@@ -7,6 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     const inviteCodeRequired = ctx.cfg.invites.required
     const privacyPolicy = ctx.cfg.service.privacyPolicyUrl
     const termsOfService = ctx.cfg.service.termsOfServiceUrl
+    const contactEmailAddress = ctx.cfg.service.contactEmailAddress
 
     return {
       encoding: 'application/json',
@@ -15,6 +16,9 @@ export default function (server: Server, ctx: AppContext) {
         availableUserDomains,
         inviteCodeRequired,
         links: { privacyPolicy, termsOfService },
+        contact: {
+          email: contactEmailAddress,
+        },
       },
     }
   })
