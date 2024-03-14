@@ -24,7 +24,7 @@ export class Labels extends HydrationMap<SubjectLabels> implements Merges {
   static key(label: Label) {
     return `${label.src}::${label.val}`
   }
-  merge<T extends HydrationMap<SubjectLabels>>(map: T): this {
+  merge(map: Labels): this {
     map.forEach((theirs, key) => {
       if (!theirs) return
       const mine = this.get(key)

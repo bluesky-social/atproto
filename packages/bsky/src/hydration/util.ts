@@ -6,7 +6,7 @@ import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
-  merge<T extends this>(map: T): this {
+  merge(map: HydrationMap<T>): this {
     map.forEach((val, key) => {
       this.set(key, val)
     })
