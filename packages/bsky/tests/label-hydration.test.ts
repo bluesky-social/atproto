@@ -93,6 +93,19 @@ describe('label hydration', () => {
     )
   })
 
+  it('hydrates labels without duplication', async () => {
+    AtpAgent.configure({ appLabelers: [alice] })
+    pdsAgent.configureLabelersHeader([])
+    const res = await pdsAgent.api.app.bsky.actor.getProfiles(
+      { actors: [carol, carol] },
+      { headers: sc.getHeaders(bob) },
+    )
+    const { labels = [] } = res.data.profiles[0]
+    expect(labels.map((l) => ({ val: l.val, src: l.src }))).toEqual([
+      { src: alice, val: 'spam' },
+    ])
+  })
+
   it('hydrates labels onto list views.', async () => {
     AtpAgent.configure({ appLabelers: [labelerDid] })
     pdsAgent.configureLabelersHeader([])
