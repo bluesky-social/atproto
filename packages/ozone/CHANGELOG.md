@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.1
+
+### Patch Changes
+
+- [`b95c3955d`](https://github.com/bluesky-social/atproto/commit/b95c3955d0b8263a44a3d2a46b35b1831d9e504a) Thanks [@devinivy](https://github.com/devinivy)! - Second pass on no false negs in labels
+
+- Updated dependencies []:
+  - @atproto/api@0.11.1
+
 ## 0.1.0
 
 ### Minor Changes
