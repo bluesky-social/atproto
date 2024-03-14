@@ -139,6 +139,7 @@ describe('bsky views with mutes from mute lists', () => {
     await sc.addToList(alice, bob, listRef)
     await sc.addToList(alice, carol, listRef)
     await sc.addToList(alice, dan, listRef)
+    await network.processAll()
     const res = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
       { headers: await network.serviceHeaders(alice) },
