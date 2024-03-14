@@ -191,56 +191,6 @@ export class AppContext {
     )
     await accountManager.migrateOrThrow()
 
-    const jwtKey = cfg.entryway
-      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
-      : jwtSecretKey
-
-    const keyset = await NodeKeyset.fromImportables({
-      // @TODO: load keys from config
-      ['kid-1']:
-        '-----BEGIN PRIVATE KEY-----\n' +
-        'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg4D4H8/CFAVuKMgQD\n' +
-        'BIK9m53AEUrCxQKrgtMNSTNV9A2hRANCAARAwyllCZOflLEQM0MaYujz7ITxqczZ\n' +
-        '6Vxhj4urrdXUN3MEliQcc14ImTWHt7h7+xbxIXETLj0kTzctAxSbtwZf\n' +
-        '-----END PRIVATE KEY-----\n',
-    })
-
-    const authProvider = cfg.oauth.provider
-      ? new AuthProvider(
-          accountManager,
-          keyset,
-          redisScratch,
-          secrets.dpopSecret,
-          cfg.oauth.issuer,
-          cfg.oauth.provider.branding,
-          cfg.oauth.provider.disableSsrf,
-        )
-      : undefined
-
-    const authVerifier = new AuthVerifier(
-      accountManager,
-      idResolver,
-      authProvider ?? // OAuthProvider is an OAuthVerifier so let's use it
-        new OAuthVerifier({
-          issuer: cfg.oauth.issuer,
-          keyset,
-          dpopSecret: secrets.dpopSecret,
-          replayStore: redisScratch
-            ? new OAuthReplayStoreRedis(redisScratch)
-            : new OAuthReplayStoreMemory(),
-        }),
-      {
-        publicUrl: cfg.service.publicUrl,
-        jwtKey,
-        adminPass: secrets.adminPassword,
-        dids: {
-          pds: cfg.service.did,
-          entryway: cfg.entryway?.did,
-          modService: cfg.modService?.did,
-        },
-      },
-    )
-
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
@@ -262,6 +212,61 @@ export class AppContext {
       appviewDid: cfg.bskyAppView?.did,
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
+
+    const keyset = await NodeKeyset.fromImportables({
+      // @TODO: load keys from config
+      ['kid-1']:
+        '-----BEGIN PRIVATE KEY-----\n' +
+        'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg4D4H8/CFAVuKMgQD\n' +
+        'BIK9m53AEUrCxQKrgtMNSTNV9A2hRANCAARAwyllCZOflLEQM0MaYujz7ITxqczZ\n' +
+        '6Vxhj4urrdXUN3MEliQcc14ImTWHt7h7+xbxIXETLj0kTzctAxSbtwZf\n' +
+        '-----END PRIVATE KEY-----\n',
+    })
+
+    const authProvider = cfg.oauth.provider
+      ? new AuthProvider(
+          accountManager,
+          actorStore,
+          localViewer,
+          keyset,
+          redisScratch,
+          secrets.dpopSecret,
+          cfg.oauth.issuer,
+          cfg.oauth.provider.branding,
+          cfg.oauth.provider.disableSsrf,
+        )
+      : undefined
+
+    const oauthVerifier: OAuthVerifier =
+      authProvider ?? // OAuthProvider is an OAuthVerifier so let's use it
+      new OAuthVerifier({
+        issuer: cfg.oauth.issuer,
+        keyset,
+        dpopSecret: secrets.dpopSecret,
+        replayStore: redisScratch
+          ? new OAuthReplayStoreRedis(redisScratch)
+          : new OAuthReplayStoreMemory(),
+      })
+
+    const jwtKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : jwtSecretKey
+
+    const authVerifier = new AuthVerifier(
+      accountManager,
+      idResolver,
+      oauthVerifier,
+      {
+        publicUrl: cfg.service.publicUrl,
+        jwtKey,
+        adminPass: secrets.adminPassword,
+        dids: {
+          pds: cfg.service.did,
+          entryway: cfg.entryway?.did,
+          modService: cfg.modService?.did,
+        },
+      },
+    )
 
     return new AppContext({
       actorStore,
