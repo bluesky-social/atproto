@@ -36,7 +36,7 @@ export function PageLayout({
         )}
       </div>
 
-      <div className="flex items-stretch md:items-center w-full justify-center p-6 md:justify-start md:p-12">
+      <div className="flex items-stretch md:items-center w-full justify-center px-6 md:justify-start md:px-12">
         {children}
       </div>
     </div>

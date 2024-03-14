@@ -43,7 +43,7 @@ export function WelcomeView({
 
       {onCancel && (
         <button
-          className="m-1 w-40 max-w-full bg-transparent text-primary py-2 px-4 rounded-full truncate"
+          className="m-1 w-40 max-w-full bg-transparent text-primary py-2 px-4 rounded-full truncate font-light"
           onClick={onCancel}
         >
           {cancelLabel}
