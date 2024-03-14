@@ -46,9 +46,8 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
           const headers = err.headers
-          const keypair = await ctx.actorStore.keypair(requester)
           const local = await ctx.actorStore.read(requester, (store) => {
-            const localViewer = ctx.localViewer(store, keypair)
+            const localViewer = ctx.localViewer(store)
             return readAfterWriteNotFound(
               ctx,
               localViewer,

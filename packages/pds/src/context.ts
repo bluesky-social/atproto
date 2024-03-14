@@ -23,16 +23,13 @@ import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { ActorStore, ActorStoreReader } from './actor-store'
-import { LocalViewer } from './read-after-write/viewer'
+import { ActorStore } from './actor-store'
+import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
-  localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqliteCache
@@ -55,10 +52,7 @@ export type AppContextOptions = {
 export class AppContext {
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
-  public localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
   public didCache: DidSqliteCache
