@@ -2,8 +2,10 @@ import {
   ReactNode,
   useCallback,
   useState,
-  type FormHTMLAttributes,
+  FormHTMLAttributes,
+  SyntheticEvent,
 } from 'react'
+
 import { clsx } from '../lib/clsx'
 import { ErrorCard } from './error-card'
 
@@ -14,23 +16,61 @@ export type SignInFormOutput = {
 }
 
 export type SignInFormProps = {
+  title?: ReactNode
+
   onSubmit: (credentials: SignInFormOutput) => void | Promise<void>
-  onCancel?: () => void
   submitLabel?: ReactNode
+  submitAria?: string
+
+  onCancel?: () => void
   cancelLabel?: ReactNode
+  cancelAria?: string
+
   username?: string
   usernameReadonly?: boolean
+  usernamePlaceholder?: string
+  usernameAria?: string
+
+  passwordPlaceholder?: string
+  passwordAria?: string
+  passwordWarning?: ReactNode
+
   remember?: boolean
+  rememberAria?: string
+  rememberLabel?: ReactNode
 }
 
 export function SignInForm({
+  title = 'Sign in',
+
   onSubmit,
+  submitAria = 'Next',
+  submitLabel = submitAria,
+
   onCancel = undefined,
-  submitLabel = 'Continue',
-  cancelLabel = 'Cancel',
-  username = '',
+  cancelAria = 'Cancel',
+  cancelLabel = cancelAria,
+
+  username: defaultUsername = '',
   usernameReadonly = false,
-  remember = false,
+  usernamePlaceholder = 'Username or email address',
+  usernameAria = usernamePlaceholder,
+
+  passwordPlaceholder = 'Password',
+  passwordAria = passwordPlaceholder,
+  passwordWarning = (
+    <>
+      <p className="font-bold">Warning</p>
+      <p className="text-sm">
+        Please verify the domain name of the website before entering your
+        password. Never enter your password on a domain you do not trust.
+      </p>
+    </>
+  ),
+
+  remember: defaultRemember = false,
+  rememberAria = 'Remember this account on this device',
+  rememberLabel = rememberAria,
 
   className,
   ...attrs
@@ -40,9 +80,14 @@ export function SignInForm({
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const [hasUsername, setHasUsername] = useState(!!defaultUsername)
+  const [hasPassword, setHasPassword] = useState(false)
+
+  const canSubmit = hasUsername && hasPassword
+
   const doSubmit = useCallback(
     async (
-      event: React.SyntheticEvent<
+      event: SyntheticEvent<
         HTMLFormElement & {
           username: HTMLInputElement
           password: HTMLInputElement
@@ -52,14 +97,19 @@ export function SignInForm({
       >,
     ) => {
       event.preventDefault()
+
+      const credentials = {
+        username: event.currentTarget.username.value,
+        password: event.currentTarget.password.value,
+        remember: event.currentTarget.remember.checked,
+      }
+
+      if (!credentials.username || !credentials.password) return
+
       setLoading(true)
       setErrorMessage(null)
       try {
-        await onSubmit({
-          username: event.currentTarget.username.value,
-          password: event.currentTarget.password.value,
-          remember: event.currentTarget.remember.checked,
-        })
+        await onSubmit(credentials)
       } catch (err) {
         setErrorMessage(parseErrorMessage(err))
       } finally {
@@ -75,9 +125,9 @@ export function SignInForm({
       className={clsx('flex flex-col', className)}
       onSubmit={doSubmit}
     >
-      <p className="font-medium p-4">Sign in</p>
+      <p className="font-medium p-4">{title}</p>
       <fieldset
-        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100 shadow-md"
+        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
         disabled={loading}
       >
         <div className="relative p-1 flex flex-wrap items-center justify-stretch">
@@ -85,14 +135,23 @@ export function SignInForm({
           <input
             name="username"
             type="text"
+            onChange={(e) => {
+              setHasUsername(!!e.target.value)
+              setErrorMessage(null)
+            }}
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
-            placeholder="Username or email address"
-            aria-label="Username or email address"
+            placeholder={usernamePlaceholder}
+            aria-label={usernameAria}
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="username"
+            spellCheck="false"
+            dir="auto"
+            enterKeyHint="next"
             required
-            defaultValue={username}
+            defaultValue={defaultUsername}
             readOnly={usernameReadonly}
             disabled={usernameReadonly}
-            onChange={() => setErrorMessage(null)}
           />
         </div>
 
@@ -103,56 +162,65 @@ export function SignInForm({
           <input
             name="password"
             type="password"
+            onChange={(e) => {
+              setHasPassword(!!e.target.value)
+              setErrorMessage(null)
+            }}
             onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onChange={() => setErrorMessage(null)}
+            onBlur={() => setTimeout(setFocused, 100, false)}
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder="Password"
-            aria-label="Password"
+            placeholder={passwordPlaceholder}
+            aria-label={passwordAria}
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="password"
+            dir="auto"
+            enterKeyHint="done"
+            spellCheck="false"
             required
           />
         </div>
 
-        <hr
-          className="border-slate-200 dark:border-slate-700 transition-all"
-          style={{ borderTopWidth: focused ? '1px' : '0px' }}
-        />
-
-        <div
-          className="bg-slate-100 dark:bg-slate-800 overflow-hidden transition-all"
-          style={{ display: 'grid', gridTemplateRows: focused ? '1fr' : '0fr' }}
-        >
-          <div className="flex items-center justify-start overflow-hidden">
-            <div className="py-1 px-2">
-              <svg
-                className="fill-current h-4 w-4 text-error"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
-              </svg>
+        {passwordWarning && (
+          <>
+            <hr
+              className="border-slate-200 dark:border-slate-700 transition-all"
+              style={{ borderTopWidth: focused ? '1px' : '0px' }}
+            />
+            <div
+              className="bg-slate-100 dark:bg-slate-800 overflow-hidden transition-all"
+              style={{
+                display: 'grid',
+                gridTemplateRows: focused ? '1fr' : '0fr',
+              }}
+            >
+              <div className="flex items-center justify-start overflow-hidden">
+                <div className="py-1 px-2">
+                  <svg
+                    className="fill-current h-4 w-4 text-error"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
+                  </svg>
+                </div>
+                <div className="py-2 px-4">{passwordWarning}</div>
+              </div>
             </div>
-            <div className="py-2 px-4">
-              <p className="font-bold">Warning</p>
-              <p className="text-sm">
-                Please verify the domain name of the website before entering
-                your password. Never enter your password on a domain you do not
-                trust.
-              </p>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
         <hr className="border-slate-200 dark:border-slate-700" />
 
         <div className="relative p-1 flex flex-wrap items-center justify-stretch">
           <span className="w-8 flex items-center justify-center">
             <input
+              className="text-primary"
               id="remember"
               name="remember"
               type="checkbox"
-              className="text-primary"
-              defaultChecked={remember}
+              defaultChecked={defaultRemember}
+              aria-label={rememberAria}
               onChange={() => setErrorMessage(null)}
             />
           </span>
@@ -161,7 +229,7 @@ export function SignInForm({
             htmlFor="remember"
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6]"
           >
-            Remember this account on this device
+            {rememberLabel}
           </label>
         </div>
       </fieldset>
@@ -170,20 +238,26 @@ export function SignInForm({
 
       <div className="flex-auto" />
 
-      <div className="mt-4 flex items-center justify-between">
-        <button
-          type="submit"
-          className="order-last bg-primary text-white py-2 px-4 rounded-full font-semibold"
-          disabled={loading}
-        >
-          {submitLabel}
-        </button>
+      <div className="p-4 flex flex-wrap items-center justify-between">
+        {canSubmit && (
+          <button
+            className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
+            type="submit"
+            role="Button"
+            aria-label={submitAria}
+            disabled={loading}
+          >
+            {submitLabel}
+          </button>
+        )}
 
         {onCancel && (
           <button
+            className="py-2 bg-transparent text-primary rounded-md font-light"
             type="button"
+            role="Button"
+            aria-label={cancelAria}
             onClick={onCancel}
-            className="bg-transparent font-light text-primary rounded-md py-2"
           >
             {cancelLabel}
           </button>
