@@ -28,6 +28,7 @@ import {
   LabelerViewerStates,
   Labelers,
   Labels,
+  SubjectLabels,
 } from './label'
 import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
 import {
@@ -572,14 +573,16 @@ export class Hydrator {
 
   // hydrate labels, checking for existence of & takedowns on relevant labelers
   async hydrateLabels(subjects: string[], ctx: HydrateCtx): Promise<Labels> {
-    const nonServiceLabelers = subjects.filter(
+    if (subjects.length === 0) return new HydrationMap<SubjectLabels>()
+    const labelers = ctx.labelers.dids
+    const nonServiceLabelers = labelers.filter(
       (did) => !this.serviceLabelers.includes(did),
     )
     const labelerActors = await this.actor.getActors(
       nonServiceLabelers,
       ctx.includeTakedowns,
     )
-    const availableDids = subjects.filter(
+    const availableDids = labelers.filter(
       (did) => this.serviceLabelers.includes(did) || labelerActors.has(did),
     )
     const availableLabelers = {
