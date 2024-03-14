@@ -29,7 +29,13 @@ import {
   Labelers,
   Labels,
 } from './label'
-import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
+import {
+  HydrationMap,
+  Merges,
+  RecordInfo,
+  didFromUri,
+  urisByCollection,
+} from './util'
 import {
   FeedGenAggs,
   FeedGens,
@@ -770,10 +776,7 @@ export const mergeStates = (
   }
 }
 
-const mergeMaps = <T>(
-  mapA?: HydrationMap<T>,
-  mapB?: HydrationMap<T>,
-): HydrationMap<T> | undefined => {
+const mergeMaps = <M extends Merges>(mapA?: M, mapB?: M): M | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
   return mapA.merge(mapB)
