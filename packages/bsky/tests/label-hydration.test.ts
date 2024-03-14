@@ -111,16 +111,7 @@ describe('label hydration', () => {
   it('does not hydrate labels from takendown labeler', async () => {
     AtpAgent.configure({ appLabelers: [alice, sc.dids.dan] })
     pdsAgent.configureLabelersHeader([])
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: { $type: 'com.atproto.admin.defs#repoRef', did: alice },
-        takedown: { applied: true },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({ did: alice })
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
       { headers: sc.getHeaders(bob) },
@@ -130,16 +121,7 @@ describe('label hydration', () => {
     expect(res.headers['atproto-content-labelers']).toEqual(
       `${sc.dids.dan};redact`, // does not include alice
     )
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: { $type: 'com.atproto.admin.defs#repoRef', did: alice },
-        takedown: { applied: false },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({ did: alice })
   })
 
   it('hydrates labels onto list views.', async () => {
