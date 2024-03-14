@@ -17,11 +17,8 @@ export default function (server: Server, ctx: AppContext) {
       const { feed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-
-      const hydration = await ctx.hydrator.hydrateFeedGens([feed], {
-        viewer,
-        labelers,
-      })
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydration = await ctx.hydrator.hydrateFeedGens([feed], hydrateCtx)
       const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')
@@ -64,7 +61,7 @@ export default function (server: Server, ctx: AppContext) {
           isOnline: true,
           isValid: true,
         },
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
