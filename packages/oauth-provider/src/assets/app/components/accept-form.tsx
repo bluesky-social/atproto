@@ -74,11 +74,11 @@ export function AcceptForm({
 
       <div className="flex-auto" />
 
-      <div className="mt-4 flex flex-wrap items-center justify-between">
+      <div className="p-4 flex flex-wrap items-center justify-between">
         <button
           type="button"
           onClick={onAccept}
-          className="order-last bg-primary text-white py-2 px-4 rounded-full font-semibold"
+          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
         >
           {acceptLabel}
         </button>
@@ -87,7 +87,7 @@ export function AcceptForm({
           <button
             type="button"
             onClick={() => onBack()}
-            className="mr-2 bg-transparent text-primary rounded-md py-2"
+            className="mr-2 py-2 bg-transparent text-primary rounded-md font-light"
           >
             {backLabel}
           </button>
@@ -98,7 +98,7 @@ export function AcceptForm({
         <button
           type="button"
           onClick={onReject}
-          className="mr-2 bg-transparent text-primary rounded-md py-2"
+          className="mr-2 py-2 bg-transparent text-primary rounded-md font-light"
         >
           {rejectLabel}
         </button>
