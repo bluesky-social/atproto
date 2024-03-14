@@ -673,9 +673,6 @@ importers:
       jose:
         specifier: ^5.2.0
         version: 5.2.4
-      lru-cache:
-        specifier: ^10.2.0
-        version: 10.2.0
       oidc-token-hash:
         specifier: ^5.0.3
         version: 5.0.3
