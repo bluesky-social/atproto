@@ -37,7 +37,6 @@
     "cookie": "^0.6.0",
     "jose": "^5.2.0",
     "keygrip": "^1.1.0",
-    "lru-cache": "^10.2.0",
     "oidc-token-hash": "^5.0.3",
     "tslib": "^2.6.2",
     "zod": "^3.22.4"
