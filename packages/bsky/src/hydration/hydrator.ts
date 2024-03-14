@@ -619,8 +619,10 @@ export class Hydrator {
         undefined
       )
     } else if (collection === ids.AppBskyLabelerService) {
+      if (parsed.rkey !== 'self') return
+      const did = parsed.hostname
       return (
-        (await this.label.getLabelers([uri], includeTakedowns)).get(uri) ??
+        (await this.label.getLabelers([did], includeTakedowns)).get(did) ??
         undefined
       )
     } else if (collection === ids.AppBskyActorProfile) {
