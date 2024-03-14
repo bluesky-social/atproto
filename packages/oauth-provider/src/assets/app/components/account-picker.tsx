@@ -4,22 +4,32 @@ import { clsx } from '../lib/clsx'
 
 export type AccountPickerProps = {
   accounts: readonly Account[]
+
   onAccount: (account: Account) => void
+  accountAria?: (account: Account) => string
 
   onOther?: () => void
   otherLabel?: ReactNode
+  otherAria?: string
 
   onBack?: () => void
   backLabel?: ReactNode
+  backAria?: string
 }
 
 export function AccountPicker({
   accounts,
+
   onAccount,
+  accountAria = (a) => `Sign in as ${a.name}`,
+
   onOther = undefined,
   otherLabel = 'Other account',
+  otherAria = 'Login to account that is not listed',
+
   onBack,
   backLabel,
+  backAria,
 
   className,
   ...attrs
@@ -27,63 +37,67 @@ export function AccountPicker({
   return (
     <div {...attrs} className={clsx('flex flex-col', className)}>
       <p className="font-medium p-4">Sign in as...</p>
-      <ul>
-        {accounts.map((account) => {
-          const [name, identifier] = [
-            account.name,
-            account.preferred_username,
-            account.email,
-            account.sub,
-          ].filter(Boolean) as [string, string?]
 
-          return (
-            <li
-              key={account.sub}
-              className="cursor-pointer flex items-center justify-between p-4 -mb-px border-t border-b hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:hover:bg-slate-900"
-              onClick={() => onAccount(account)}
-            >
-              <div className="pr-2 flex items-center justify-start max-w-full overflow-hidden">
-                {account.picture && (
-                  <img
-                    crossOrigin="anonymous"
-                    src={account.picture}
-                    alt={name}
-                    className="w-6 h-6 rounded-full"
-                  />
-                )}
-                <span className="min-w-0 flex-auto truncate">
-                  <span className="font-semibold">{name}</span>
-                  {identifier && (
-                    <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
-                      {identifier}
-                    </span>
-                  )}
-                </span>
-              </div>
-              <span className="scale-x-75">&gt;</span>
-            </li>
-          )
-        })}
-        {onOther && (
-          <li
-            className="cursor-pointer flex items-center justify-between p-4 -mb-px border-t border-b hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:hover:bg-slate-900"
-            onClick={onOther}
+      {accounts.map((account) => {
+        const [name, identifier] = [
+          account.name,
+          account.preferred_username,
+          account.email,
+          account.sub,
+        ].filter(Boolean) as [string, string?]
+
+        return (
+          <button
+            key={account.sub}
+            className="cursor-pointer text-start flex items-center justify-between py-2 px-6 border-t border-b -mb-px hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:hover:bg-slate-900"
+            onClick={() => onAccount(account)}
+            role="button"
+            aria-label={accountAria(account)}
           >
-            <span className="min-w-0 flex-auto truncate">{otherLabel}</span>
+            <div className="pr-2 flex items-center justify-start max-w-full overflow-hidden">
+              {account.picture && (
+                <img
+                  crossOrigin="anonymous"
+                  src={account.picture}
+                  alt={name}
+                  className="w-8 h-8 mr-2 rounded-full"
+                />
+              )}
+              <div className="min-w-0 my-2 flex-auto truncate">
+                <span className="font-semibold">{name}</span>
+                {identifier && (
+                  <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
+                    {identifier}
+                  </span>
+                )}
+              </div>
+            </div>
+            <span className="scale-x-50 font-semibold text-xl">&gt;</span>
+          </button>
+        )
+      })}
+      {onOther && (
+        <button
+          className="cursor-pointer text-start flex items-center justify-between py-2 px-6 border-t border-b hover:bg-slate-100 border-slate-200 dark:border-slate-700 dark:hover:bg-slate-900"
+          onClick={onOther}
+          aria-label={otherAria}
+          role="button"
+        >
+          <div className="min-w-0 my-2 flex-auto truncate">{otherLabel}</div>
 
-            <span className="scale-x-75">&gt;</span>
-          </li>
-        )}
-      </ul>
+          <span className="scale-x-50 font-semibold text-xl">&gt;</span>
+        </button>
+      )}
 
       <div className="flex-auto" />
 
       {onBack && (
-        <div className="mt-4 flex items-center justify-between">
+        <div className="p-4 flex flex-wrap items-center justify-between">
           <button
             type="button"
             onClick={() => onBack()}
-            className="bg-transparent font-light text-primary rounded-md py-2"
+            className="py-2 bg-transparent text-primary rounded-md font-light"
+            aria-label={backAria}
           >
             {backLabel}
           </button>
