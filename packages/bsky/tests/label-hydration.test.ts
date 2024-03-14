@@ -126,7 +126,7 @@ describe('label hydration', () => {
       { headers: sc.getHeaders(bob) },
     )
     const { labels = [] } = res.data
-    expect(labels.map((l) => ({ val: l.val, src: l.src }))).toEqual([])
+    expect(labels).toEqual([])
     expect(res.headers['atproto-content-labelers']).toEqual(
       `${sc.dids.dan};redact`, // does not include alice
     )
