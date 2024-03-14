@@ -654,6 +654,7 @@ export class Hydrator {
   }
 
   async createContext(vals: HydrateCtxVals) {
+    // ensures we're only apply labelers that exist and are not taken down
     const labelers = vals.labelers.dids
     const nonServiceLabelers = labelers.filter(
       (did) => !this.serviceLabelers.has(did),
