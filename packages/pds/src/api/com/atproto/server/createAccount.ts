@@ -22,6 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.userDidAuthOptional,
     handler: async ({ input, auth, req }) => {
       const requester = auth.credentials?.iss ?? null
+      console.log({ requester }, auth.credentials, ctx.entrywayAgent)
       const {
         did,
         handle,

@@ -56,7 +56,7 @@ export class TestOzone {
       version: '0.0.0',
       port,
       didPlcUrl: config.plcUrl,
-      publicUrl: 'https://ozone.public.url',
+      publicUrl: url,
       serverDid,
       signingKeyHex,
       ...config,
@@ -152,6 +152,8 @@ export class TestOzone {
 export const createOzoneDid = async (
   plcUrl: string,
   keypair: Keypair,
+  labelerUrl?: string,
+  pdsUrl?: string,
 ): Promise<string> => {
   const plcClient = new plc.Client(plcUrl)
   const plcOp = await plc.signOperation(
@@ -165,8 +167,16 @@ export const createOzoneDid = async (
       services: {
         atproto_labeler: {
           type: 'AtprotoLabeler',
-          endpoint: 'https://ozone.public.url',
+          endpoint: labelerUrl || 'https://ozone.public.url',
         },
+        ...(pdsUrl
+          ? {
+              atproto_pds: {
+                type: 'AtprotoPds',
+                endpoint: pdsUrl,
+              },
+            }
+          : {}),
       },
       prev: null,
     },

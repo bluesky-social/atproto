@@ -43,7 +43,12 @@ export class TestNetwork extends TestNetworkNoAppView {
     const ozonePort = params.ozone?.port ?? (await getPort())
 
     const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
-    const ozoneDid = await createOzoneDid(plc.url, ozoneKey)
+    const ozoneDid = await createOzoneDid(
+      plc.url,
+      ozoneKey,
+      `http://localhost:${ozonePort}`,
+      `http://localhost:${pdsPort}`,
+    )
 
     const bsky = await TestBsky.create({
       port: bskyPort,
