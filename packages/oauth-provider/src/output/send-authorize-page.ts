@@ -9,7 +9,7 @@ import { Client } from '../client/client.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { RequestUri } from '../request/request-uri.js'
 import { Branding, buildBrandingCss, buildBrandingData } from './branding.js'
-import { declareBrowserGlobalVar, sendWebApp } from './send-web-app.js'
+import { declareBrowserGlobalVar, sendWebPage } from './send-web-page.js'
 
 export type AuthorizationResultAuthorize = {
   issuer: string
@@ -48,7 +48,7 @@ export async function sendAuthorizePage(
   data: AuthorizationResultAuthorize,
   branding?: Branding,
 ): Promise<void> {
-  return sendWebApp(req, res, {
+  return sendWebPage(req, res, {
     scripts: [
       declareBrowserGlobalVar('__brandingData', buildBrandingData(branding)),
       declareBrowserGlobalVar('__authorizeData', buildAuthorizeData(data)),
