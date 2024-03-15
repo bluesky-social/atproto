@@ -13,6 +13,7 @@ import { generate as hash } from 'oidc-token-hash'
 import { Account } from '../account/account.js'
 import { Client } from '../client/client.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { AuthorizationDetails } from '../parameters/authorization-details.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { claimRequested } from '../parameters/claims-requested.js'
@@ -117,7 +118,9 @@ export class Signer {
     // This can happen when a client is using password_grant. If a client is
     // using password_grant, it should not set "require_auth_time" to true.
     if (client.metadata.require_auth_time && extra.auth_time == null) {
-      throw new InvalidRequestError('Missing required "auth_time" parameter')
+      throw new InvalidClientMetadataError(
+        '"require_auth_time" metadata is not compatible with "password_grant" flow',
+      )
     }
 
     return this.sign(
