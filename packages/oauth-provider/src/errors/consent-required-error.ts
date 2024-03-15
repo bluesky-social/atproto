@@ -1,7 +1,12 @@
-import { OAuthError } from './oauth-error.js'
+import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
+import { AccessDeniedError } from './access-denied-error.js'
 
-export class ConsentRequiredError extends OAuthError {
-  constructor(error_description = 'User consent required', cause?: unknown) {
-    super('consent_required', error_description, 401, cause)
+export class ConsentRequiredError extends AccessDeniedError {
+  constructor(
+    parameters: AuthorizationParameters,
+    error_description = 'User consent required',
+    cause?: unknown,
+  ) {
+    super(parameters, error_description, 'consent_required', cause)
   }
 }

@@ -1,12 +1,12 @@
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { AccessDeniedError } from './access-denied-error.js'
 
-export class LoginRequiredError extends AccessDeniedError {
+export class InvalidParametersError extends AccessDeniedError {
   constructor(
     parameters: AuthorizationParameters,
-    error_description = 'Login is required',
+    error_description: string,
     cause?: unknown,
   ) {
-    super(parameters, error_description, 'login_required', cause)
+    super(parameters, error_description, 'invalid_request', cause)
   }
 }

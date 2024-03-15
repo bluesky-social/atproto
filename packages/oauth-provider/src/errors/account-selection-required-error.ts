@@ -1,10 +1,12 @@
-import { OAuthError } from './oauth-error.js'
+import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
+import { AccessDeniedError } from './access-denied-error.js'
 
-export class AccountSelectionRequiredError extends OAuthError {
+export class AccountSelectionRequiredError extends AccessDeniedError {
   constructor(
+    parameters: AuthorizationParameters,
     error_description = 'Account selection required',
     cause?: unknown,
   ) {
-    super('account_selection_required', error_description, 401, cause)
+    super(parameters, error_description, 'account_selection_required', cause)
   }
 }
