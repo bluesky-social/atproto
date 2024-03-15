@@ -53,7 +53,17 @@ import {
 } from './feed'
 import { ParsedLabelers } from '../util'
 
-export type HydrateCtx = {
+export class HydrateCtx {
+  labelers = this.vals.labelers
+  viewer = this.vals.viewer
+  includeTakedowns = this.vals.includeTakedowns
+  constructor(private vals: HydrateCtxVals) {}
+  copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
+    return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
+  }
+}
+
+export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
@@ -97,12 +107,17 @@ export class Hydrator {
   feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
+  serviceLabelers: Set<string>
 
-  constructor(public dataplane: DataPlaneClient) {
+  constructor(
+    public dataplane: DataPlaneClient,
+    serviceLabelers: string[] = [],
+  ) {
     this.actor = new ActorHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
+    this.serviceLabelers = new Set(serviceLabelers)
   }
 
   // app.bsky.actor.defs#profileView
@@ -555,13 +570,14 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const [labelers, labelerAggs, labelerViewers, profileState] =
       await Promise.all([
-        this.label.getLabelers(dids),
+        this.label.getLabelers(dids, ctx.includeTakedowns),
         this.label.getLabelerAggregates(dids),
         ctx.viewer
           ? this.label.getLabelerViewerStates(dids, ctx.viewer)
           : undefined,
-        this.hydrateProfiles(dids.map(didFromUri), ctx),
+        this.hydrateProfiles(dids, ctx),
       ])
+    actionTakedownLabels(dids, labelers, profileState.labels ?? new Labels())
     return mergeStates(profileState, {
       labelers,
       labelerAggs,
@@ -638,6 +654,30 @@ export class Hydrator {
         takedownRef: actor.profileTakedownRef,
       }
     }
+  }
+
+  async createContext(vals: HydrateCtxVals) {
+    // ensures we're only apply labelers that exist and are not taken down
+    const labelers = vals.labelers.dids
+    const nonServiceLabelers = labelers.filter(
+      (did) => !this.serviceLabelers.has(did),
+    )
+    const labelerActors = await this.actor.getActors(
+      nonServiceLabelers,
+      vals.includeTakedowns,
+    )
+    const availableDids = labelers.filter(
+      (did) => this.serviceLabelers.has(did) || !!labelerActors.get(did),
+    )
+    const availableLabelers = {
+      dids: availableDids,
+      redact: vals.labelers.redact,
+    }
+    return new HydrateCtx({
+      labelers: availableLabelers,
+      viewer: vals.viewer,
+      includeTakedowns: vals.includeTakedowns,
+    })
   }
 }
 
