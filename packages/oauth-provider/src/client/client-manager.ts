@@ -81,10 +81,13 @@ export class ClientManager {
       for (const grantType of metadata.grant_types) {
         switch (grantType) {
           case 'authorization_code':
-          case 'password':
           case 'refresh_token':
           case 'implicit': // Required by OIDC (for id_token)
             continue
+          case 'password':
+            throw new InvalidClientMetadataError(
+              `Grant type "${grantType}" is not allowed`,
+            )
           default:
             throw new InvalidClientMetadataError(
               `Grant type "${grantType}" is not supported`,

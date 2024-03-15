@@ -106,7 +106,6 @@ import {
   CodeGrantRequest,
   Introspect,
   IntrospectionResponse,
-  PasswordGrantRequest,
   RefreshGrantRequest,
   Revoke,
   TokenRequest,
@@ -644,15 +643,6 @@ export class OAuthProvider extends OAuthVerifier {
       return this.refreshTokenGrant(client, clientAuth, input, dpopJkt)
     }
 
-    if (input.grant_type === 'password') {
-      // @ts-expect-error: THIS REQUIRES RATE LIMITING BEFORE IT CAN BE ENABLED
-      if (!(this.allow_password_grant !== true)) {
-        throw new InvalidRequestError('Password grant not allowed')
-      }
-
-      return this.passwordGrant(client, clientAuth, input, dpopJkt)
-    }
-
     throw new InvalidRequestError(
       // @ts-expect-error: fool proof
       `Grant type "${input.grant_type}" not supported`,
@@ -705,38 +695,6 @@ export class OAuthProvider extends OAuthVerifier {
     dpopJkt: null | string,
   ): Promise<TokenResponse> {
     return this.tokenManager.refresh(client, clientAuth, input, dpopJkt)
-  }
-
-  async passwordGrant(
-    client: Client,
-    clientAuth: ClientAuth,
-    input: PasswordGrantRequest,
-    dpopJkt: null | string,
-  ): Promise<TokenResponse> {
-    const parameters = await this.requestManager.validate(
-      client,
-      clientAuth,
-      {
-        scope: input.scope,
-        response_type: input.scope?.includes('openid')
-          ? 'id_token token'
-          : 'token',
-      },
-      dpopJkt,
-      false,
-    )
-
-    const account = await this.accountManager.login(input, null)
-
-    return this.tokenManager.create(
-      client,
-      clientAuth,
-      account,
-      null,
-      parameters,
-      input,
-      dpopJkt,
-    )
   }
 
   /**
