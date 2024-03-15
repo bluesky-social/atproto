@@ -8,7 +8,11 @@ import { getAsset } from '../assets/index.js'
 import { Client } from '../client/client.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { RequestUri } from '../request/request-uri.js'
-import { Branding, buildBrandingCss, buildBrandingData } from './branding.js'
+import {
+  Customization,
+  buildCustomizationCss,
+  buildCustomizationData,
+} from './customization.js'
 import { declareBrowserGlobalVar, sendWebPage } from './send-web-page.js'
 
 export type AuthorizationResultAuthorize = {
@@ -46,15 +50,21 @@ export async function sendAuthorizePage(
   req: IncomingMessage,
   res: ServerResponse,
   data: AuthorizationResultAuthorize,
-  branding?: Branding,
+  customization?: Customization,
 ): Promise<void> {
   return sendWebPage(req, res, {
     scripts: [
-      declareBrowserGlobalVar('__brandingData', buildBrandingData(branding)),
+      declareBrowserGlobalVar(
+        '__customizationData',
+        buildCustomizationData(customization),
+      ),
       declareBrowserGlobalVar('__authorizeData', buildAuthorizeData(data)),
       await getAsset('main.js'),
     ],
-    styles: [await getAsset('main.css'), cssCode(buildBrandingCss(branding))],
+    styles: [
+      await getAsset('main.css'),
+      cssCode(buildCustomizationCss(customization)),
+    ],
     title: 'Authorize',
     body: html`<div id="root"></div>`,
   })

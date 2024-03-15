@@ -232,7 +232,7 @@ export class AppContext {
           redisScratch,
           secrets.dpopSecret,
           cfg.oauth.issuer,
-          cfg.oauth.provider.branding,
+          cfg.oauth.provider.customization,
           cfg.oauth.provider.disableSsrf,
         )
       : undefined

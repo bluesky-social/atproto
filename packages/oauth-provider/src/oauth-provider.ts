@@ -57,11 +57,11 @@ import {
 } from './metadata/build-metadata.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Userinfo } from './oidc/userinfo.js'
-import { Branding } from './output/branding.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
 } from './output/build-error-payload.js'
+import { Customization } from './output/customization.js'
 import {
   AuthorizationResultAuthorize,
   sendAuthorizePage,
@@ -125,7 +125,7 @@ export type OAuthProviderStore = Partial<
     ReplayStore
 >
 
-export { Keyset, type Branding, type CustomMetadata, type Handler }
+export { Keyset, type CustomMetadata, type Customization, type Handler }
 export type OAuthProviderOptions = OAuthVerifierOptions & {
   /**
    * Maximum age a device/account session can be before requiring
@@ -815,12 +815,12 @@ export class OAuthProvider extends OAuthVerifier {
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
   >({
-    branding,
+    customization,
     onError = process.env['NODE_ENV'] === 'development'
       ? (req, res, err): void => console.error('OAuthProvider error:', err)
       : undefined,
   }: {
-    branding?: Branding
+    customization?: Customization
     onError?: (req: Req, res: Res, err: unknown) => void
   }): Handler<T, Req, Res> {
     const sessionManager = new SessionManager(this.sessionStore)
@@ -1091,7 +1091,7 @@ export class OAuthProvider extends OAuthVerifier {
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return await sendAuthorizePage(req, res, data, branding)
+            return await sendAuthorizePage(req, res, data, customization)
           }
           default: {
             // Should never happen
@@ -1102,7 +1102,7 @@ export class OAuthProvider extends OAuthVerifier {
         await onError?.(req, res, err)
 
         if (!res.headersSent) {
-          await sendErrorPage(req, res, err, branding)
+          await sendErrorPage(req, res, err, customization)
         }
       }
     })
@@ -1194,7 +1194,7 @@ export class OAuthProvider extends OAuthVerifier {
         await onError?.(req, res, err)
 
         if (!res.headersSent) {
-          await sendErrorPage(req, res, err, branding)
+          await sendErrorPage(req, res, err, customization)
         }
       }
     })
@@ -1246,7 +1246,7 @@ export class OAuthProvider extends OAuthVerifier {
         await onError?.(req, res, err)
 
         if (!res.headersSent) {
-          await sendErrorPage(req, res, err, branding)
+          await sendErrorPage(req, res, err, customization)
         }
       }
     })
