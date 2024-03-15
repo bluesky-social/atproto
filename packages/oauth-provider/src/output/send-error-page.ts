@@ -5,7 +5,7 @@ import { cssCode, html } from '@atproto/html'
 import { getAsset } from '../assets/index.js'
 import { Branding, buildBrandingCss, buildBrandingData } from './branding.js'
 import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
-import { declareBrowserGlobalVar, sendWebApp } from './send-web-app.js'
+import { declareBrowserGlobalVar, sendWebPage } from './send-web-page.js'
 
 export async function sendErrorPage(
   req: IncomingMessage,
@@ -13,7 +13,7 @@ export async function sendErrorPage(
   err: unknown,
   branding?: Branding,
 ): Promise<void> {
-  return sendWebApp(req, res, {
+  return sendWebPage(req, res, {
     status: buildErrorStatus(err),
     scripts: [
       declareBrowserGlobalVar('__brandingData', buildBrandingData(branding)),
