@@ -15,12 +15,11 @@ import {
   UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
-import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
-import { UnauthorizedDpopError } from '../errors/unauthorized-dpop-error.js'
 import { UnauthorizedClientError } from '../errors/unauthorized-client-error.js'
+import { UnauthorizedDpopError } from '../errors/unauthorized-dpop-error.js'
 import { AuthorizationDetails } from '../parameters/authorization-details.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { isCode } from '../request/code.js'
@@ -231,7 +230,7 @@ export class TokenManager {
       const tokenInfo = await this.store.findTokenByCode(code)
       if (tokenInfo) {
         await this.store.deleteToken(tokenInfo.id)
-        throw new AccessDeniedError(`Code replayed`)
+        throw new InvalidRequestError(`Code replayed`)
       }
     }
 
@@ -316,19 +315,19 @@ export class TokenManager {
     tokenInfo: TokenInfo,
   ) {
     if (tokenInfo.data.clientId !== client.id) {
-      throw new AccessDeniedError(`Token was not issued to this client`)
+      throw new InvalidRequestError(`Token was not issued to this client`)
     }
 
     if (tokenInfo.info?.authorizedClients.includes(client.id) === false) {
-      throw new AccessDeniedError(`Client no longer trusted by user`)
+      throw new InvalidRequestError(`Client no longer trusted by user`)
     }
 
     if (tokenInfo.data.clientAuth.method !== clientAuth.method) {
-      throw new AccessDeniedError(`Client authentication method mismatch`)
+      throw new InvalidRequestError(`Client authentication method mismatch`)
     }
 
     if (!(await client.validateClientAuth(tokenInfo.data.clientAuth))) {
-      throw new AccessDeniedError(`Client authentication mismatch`)
+      throw new InvalidRequestError(`Client authentication mismatch`)
     }
   }
 
@@ -342,7 +341,7 @@ export class TokenManager {
       input.refresh_token,
     )
     if (!tokenInfo?.currentRefreshToken) {
-      throw new AccessDeniedError(`Invalid refresh token`)
+      throw new InvalidRequestError(`Invalid refresh token`)
     }
 
     const { account, info, data } = tokenInfo
@@ -350,7 +349,7 @@ export class TokenManager {
 
     try {
       if (tokenInfo.currentRefreshToken !== input.refresh_token) {
-        throw new AccessDeniedError(`refresh token replayed`)
+        throw new InvalidRequestError(`refresh token replayed`)
       }
 
       await this.validateAccess(client, clientAuth, tokenInfo)
@@ -369,11 +368,13 @@ export class TokenManager {
           ? UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
           : AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
       if (lastActivity.getTime() + inactivityTimeout < Date.now()) {
-        throw new AccessDeniedError(`Refresh token exceeded inactivity timeout`)
+        throw new InvalidRequestError(
+          `Refresh token exceeded inactivity timeout`,
+        )
       }
 
       if (data.createdAt.getTime() + TOTAL_REFRESH_LIFETIME < Date.now()) {
-        throw new AccessDeniedError(`Refresh token expired`)
+        throw new InvalidRequestError(`Refresh token expired`)
       }
 
       const authorization_details =
@@ -455,8 +456,9 @@ export class TokenManager {
 
       return tokenResponse
     } catch (err) {
-      if (err instanceof AccessDeniedError) {
-        // Consider the refresh token might be compromised
+      if (err instanceof InvalidRequestError) {
+        // Consider the refresh token might be compromised if sanity checks
+        // failed.
         await this.store.deleteToken(tokenInfo.id)
       }
       throw err
