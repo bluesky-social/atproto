@@ -2,8 +2,7 @@ import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { UnauthorizedError } from '../errors/unauthorized-error.js'
 import { Sub } from '../oidc/sub.js'
-import { LoginCredentials, AccountStore, AccountInfo } from './account-store.js'
-import { Account } from './account.js'
+import { AccountInfo, AccountStore, LoginCredentials } from './account-store.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 
@@ -13,7 +12,7 @@ export class AccountManager {
   public async login(
     credentials: LoginCredentials,
     deviceId: DeviceId,
-  ): Promise<Account> {
+  ): Promise<AccountInfo> {
     const start = Date.now()
     try {
       const result = await this.store.authenticateAccount(credentials, deviceId)

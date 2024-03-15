@@ -473,21 +473,14 @@ export class AccountManager
 
   async authenticateAccount(
     { username: identifier, password, remember = false }: LoginCredentials,
-    deviceId: DeviceId | null,
-  ): Promise<Account | null> {
+    deviceId: DeviceId,
+  ): Promise<AccountInfo | null> {
     try {
       const { user } = await this.login({ identifier, password }, false)
 
-      if (deviceId) {
-        await deviceAccount.createOrUpdate(
-          this.db,
-          deviceId,
-          user.did,
-          remember,
-        )
-      }
+      await deviceAccount.createOrUpdate(this.db, deviceId, user.did, remember)
 
-      return await deviceAccount.toAccount(user, this.serviceDid)
+      return deviceAccount.get(this.db, deviceId, user.did, this.serviceDid)
     } catch (err) {
       if (err instanceof AuthRequiredError) return null
       throw err

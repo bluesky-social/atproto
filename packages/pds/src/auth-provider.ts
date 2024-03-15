@@ -125,28 +125,31 @@ class DetailedAccountStore implements AccountStore {
     private actorProfileStore: ActorProfileStore,
   ) {}
 
-  private async enrichAccount(account: Account): Promise<Account> {
+  private async enrichAccountInfo(
+    accountInfo: AccountInfo,
+  ): Promise<AccountInfo> {
+    const { account } = accountInfo
     if (!account.picture || !account.name) {
       const profile = await this.actorProfileStore.get(account.sub)
       if (profile) {
-        return {
-          ...account,
-          picture: account.picture || profile.avatar,
-          name: account.name || profile.displayName,
-        }
+        account.picture ||= profile.avatar
+        account.name ||= profile.displayName
       }
     }
 
-    return account
+    return accountInfo
   }
 
   async authenticateAccount(
     credentials: LoginCredentials,
-    deviceId: DeviceId | null,
-  ): Promise<Account | null> {
-    const account = await this.store.authenticateAccount(credentials, deviceId)
-    if (!account) return null
-    return this.enrichAccount(account)
+    deviceId: DeviceId,
+  ): Promise<AccountInfo | null> {
+    const accountInfo = await this.store.authenticateAccount(
+      credentials,
+      deviceId,
+    )
+    if (!accountInfo) return null
+    return this.enrichAccountInfo(accountInfo)
   }
 
   async addAuthorizedClient(
@@ -163,18 +166,15 @@ class DetailedAccountStore implements AccountStore {
   ): Promise<AccountInfo | null> {
     const accountInfo = await this.store.getDeviceAccount(deviceId, sub)
     if (!accountInfo) return null
-    const account = await this.enrichAccount(accountInfo.account)
-    return { ...accountInfo, account }
+    return this.enrichAccountInfo(accountInfo)
   }
 
   async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
     const accountInfos = await this.store.listDeviceAccounts(deviceId)
-
     return Promise.all(
-      accountInfos.map(async (accountInfo) => ({
-        ...accountInfo,
-        account: await this.enrichAccount(accountInfo.account),
-      })),
+      accountInfos.map(async (accountInfo) =>
+        this.enrichAccountInfo(accountInfo),
+      ),
     )
   }
 

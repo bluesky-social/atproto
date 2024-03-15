@@ -34,7 +34,7 @@ export interface AccountStore {
   authenticateAccount(
     credentials: LoginCredentials,
     deviceId: DeviceId,
-  ): Awaitable<Account | null>
+  ): Awaitable<AccountInfo | null>
 
   addAuthorizedClient(
     deviceId: DeviceId,
