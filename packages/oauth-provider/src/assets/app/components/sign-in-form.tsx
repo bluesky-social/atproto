@@ -18,7 +18,7 @@ export type SignInFormOutput = {
 export type SignInFormProps = {
   title?: ReactNode
 
-  onSubmit: (credentials: SignInFormOutput) => void | Promise<void>
+  onSubmit: (credentials: SignInFormOutput) => void | PromiseLike<void>
   submitLabel?: ReactNode
   submitAria?: string
 
