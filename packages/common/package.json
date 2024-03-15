@@ -29,7 +29,6 @@
     "cbor-x": "^1.5.1",
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.9.0",
-    "pino": "^8.15.0",
-    "zod": "3.21.4"
+    "pino": "^8.15.0"
   }
 }
