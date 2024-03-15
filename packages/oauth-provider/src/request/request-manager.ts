@@ -1,8 +1,8 @@
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
-import { Client } from '../client/client.js'
 import { ClientId } from '../client/client-id.js'
+import { Client } from '../client/client.js'
 import {
   AUTHORIZATION_INACTIVITY_TIMEOUT,
   PAR_EXPIRES_IN,
@@ -10,7 +10,9 @@ import {
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { UnknownRequestError } from '../oauth-errors.js'
 import { OIDC_SCOPE_CLAIMS } from '../oidc/claims.js'
 import { Sub } from '../oidc/sub.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
@@ -120,14 +122,16 @@ export class RequestManager {
     if (parameters.authorization_details) {
       const cAuthDetailsTypes = client.metadata.authorization_details_types
       if (!cAuthDetailsTypes) {
-        throw new InvalidRequestError(
+        throw new InvalidParametersError(
+          parameters,
           'Client does not support authorization_details',
         )
       }
 
       for (const detail of parameters.authorization_details) {
         if (!cAuthDetailsTypes?.includes(detail.type)) {
-          throw new InvalidRequestError(
+          throw new InvalidParametersError(
+            parameters,
             `Unsupported authorization_details type "${detail.type}"`,
           )
         }
@@ -141,14 +145,20 @@ export class RequestManager {
         matchRedirectUri(uri, redirect_uri),
       )
     ) {
-      throw new InvalidRequestError(`Invalid redirect_uri ${redirect_uri}`)
+      throw new InvalidParametersError(
+        parameters,
+        `Invalid redirect_uri ${redirect_uri}`,
+      )
     }
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-10
     if (!parameters.dpop_jkt) {
       if (dpopJkt) parameters = { ...parameters, dpop_jkt: dpopJkt }
     } else if (parameters.dpop_jkt !== dpopJkt) {
-      throw new InvalidRequestError('DPoP header and dpop_jkt do not match')
+      throw new InvalidParametersError(
+        parameters,
+        'DPoP header and dpop_jkt do not match',
+      )
     }
 
     if (
@@ -156,27 +166,32 @@ export class RequestManager {
       'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
     ) {
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
-        throw new InvalidRequestError(
+        throw new InvalidParametersError(
+          parameters,
           'The DPoP proof must be signed with a different key than the client assertion',
         )
       }
     }
 
     if (!client.metadata.response_types.includes(parameters.response_type)) {
-      throw new InvalidRequestError(
+      throw new InvalidParametersError(
+        parameters,
         `Unsupported response_type "${parameters.response_type}"`,
+        'unsupported_response_type',
       )
     }
 
     if (pkceRequired && responseTypes.includes('token')) {
-      throw new InvalidRequestError(
-        `${parameters.response_type} is not compatible with PKCE`,
+      throw new InvalidParametersError(
+        parameters,
+        `Response type "${parameters.response_type}" is incompatible with PKCE`,
+        'unsupported_response_type',
       )
     }
 
     // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
     if (pkceRequired && !parameters.code_challenge) {
-      throw new InvalidRequestError('code_challenge is required')
+      throw new InvalidParametersError(parameters, 'code_challenge is required')
     }
 
     if (
@@ -184,25 +199,31 @@ export class RequestManager {
       clientAuth.method === 'none' &&
       (parameters.code_challenge_method ?? 'plain') === 'plain'
     ) {
-      throw new InvalidRequestError(
+      throw new InvalidParametersError(
+        parameters,
         'code_challenge_method=plain requires client authentication',
       )
     }
 
     // https://datatracker.ietf.org/doc/html/rfc7636#section-4.3
     if (parameters.code_challenge_method && !parameters.code_challenge) {
-      throw new InvalidRequestError(
+      throw new InvalidParametersError(
+        parameters,
         'code_challenge_method requires code_challenge',
       )
     }
 
     // https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
     if (responseTypes.includes('id_token') && !parameters.nonce) {
-      throw new InvalidRequestError('openid scope requires a nonce')
+      throw new InvalidParametersError(
+        parameters,
+        'openid scope requires a nonce',
+      )
     }
 
     if (responseTypes.includes('id_token') && !scopes?.includes('openid')) {
-      throw new InvalidRequestError(
+      throw new InvalidParametersError(
+        parameters,
         'id_token response_type requires openid scope',
       )
     }
@@ -218,7 +239,8 @@ export class RequestManager {
       const cScopes = client.metadata.scope?.split(' ')
       for (const scope of scopes) {
         if (!cScopes?.includes(scope)) {
-          throw new InvalidRequestError(
+          throw new InvalidParametersError(
+            parameters,
             `Scope "${scope}" is not registered for this client`,
           )
         }
@@ -232,7 +254,8 @@ export class RequestManager {
           parameters?.claims?.userinfo?.[claim]?.essential === true
         ) {
           if (!scopes?.includes(scope)) {
-            throw new InvalidRequestError(
+            throw new InvalidParametersError(
+              parameters,
               `Essential ${claim} claim requires "${scope}" scope`,
             )
           }
@@ -249,11 +272,15 @@ export class RequestManager {
       })
 
       if (!payload.sub) {
-        throw new InvalidRequestError(`Unexpected empty id_token_hint "sub"`)
+        throw new InvalidParametersError(
+          parameters,
+          `Unexpected empty id_token_hint "sub"`,
+        )
       } else if (parameters.login_hint == null) {
         parameters = { ...parameters, login_hint: payload.sub }
       } else if (parameters.login_hint !== payload.sub) {
-        throw new InvalidRequestError(
+        throw new InvalidParametersError(
+          parameters,
           'login_hint does not match "sub" of id_token_hint',
         )
       }
@@ -277,9 +304,7 @@ export class RequestManager {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
-    if (!data) {
-      throw new InvalidRequestError('Unknown request_uri')
-    }
+    if (!data) throw new UnknownRequestError(uri)
 
     const updates: UpdateRequestData = {}
 
@@ -287,11 +312,14 @@ export class RequestManager {
       if (data.sub || data.code) {
         // If an account was linked to the request, the next step is to exchange
         // the code for a token.
-        throw new InvalidRequestError('This request was already authorized')
+        throw new AccessDeniedError(
+          data.parameters,
+          'This request was already authorized',
+        )
       }
 
       if (data.expiresAt < new Date()) {
-        throw new InvalidRequestError('This request has expired')
+        throw new AccessDeniedError(data.parameters, 'This request has expired')
       } else {
         updates.expiresAt = new Date(
           Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT,
@@ -299,7 +327,8 @@ export class RequestManager {
       }
 
       if (data.clientId !== clientId) {
-        throw new InvalidRequestError(
+        throw new AccessDeniedError(
+          data.parameters,
           'This request was initiated for another client',
         )
       }
@@ -307,7 +336,8 @@ export class RequestManager {
       if (!data.deviceId) {
         updates.deviceId = deviceId
       } else if (data.deviceId !== deviceId) {
-        throw new InvalidRequestError(
+        throw new AccessDeniedError(
+          data.parameters,
           'This request was initiated from another device',
         )
       }
@@ -337,25 +367,31 @@ export class RequestManager {
     info: DeviceAccountInfo,
   ): Promise<{ code?: Code; id_token?: string }> {
     const id = decodeRequestUri(uri)
-    try {
-      const data = await this.store.readRequest(id)
-      if (!data) {
-        throw new AccessDeniedError('This request was not initiated')
-      }
 
+    const data = await this.store.readRequest(id)
+    if (!data) throw new UnknownRequestError(uri)
+
+    try {
       if (data.expiresAt < new Date()) {
-        throw new AccessDeniedError('This request has expired')
+        throw new AccessDeniedError(data.parameters, 'This request has expired')
       }
       if (!data.deviceId) {
-        throw new AccessDeniedError('This request was not initiated')
+        throw new AccessDeniedError(
+          data.parameters,
+          'This request was not initiated',
+        )
       }
       if (data.deviceId !== deviceId) {
         throw new AccessDeniedError(
+          data.parameters,
           'This request was initiated from another device',
         )
       }
       if (data.sub || data.code) {
-        throw new AccessDeniedError('This request was already authorized')
+        throw new AccessDeniedError(
+          data.parameters,
+          'This request was already authorized',
+        )
       }
 
       const responseType = data.parameters.response_type.split(' ')

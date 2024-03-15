@@ -45,9 +45,9 @@ import { DeviceId } from './device/device-id.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
+import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
-import { OAuthError } from './errors/oauth-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import {
@@ -289,20 +289,25 @@ export class OAuthProvider extends OAuthVerifier {
       }
   > {
     const result = await client.decodeRequestObject(input.request)
+    const payload = authorizationParametersSchema.parse(result.payload)
 
     if (!result.payload.jti) {
-      throw new InvalidRequestError('Request object must contain a jti claim')
+      throw new InvalidParametersError(
+        payload,
+        'Request object must contain a jti claim',
+      )
     }
 
     if (!(await this.replayManager.uniqueJar(result.payload.jti, client.id))) {
-      throw new InvalidRequestError('Request object jti is not unique')
+      throw new InvalidParametersError(
+        payload,
+        'Request object jti is not unique',
+      )
     }
-
-    const payload = authorizationParametersSchema.parse(result.payload)
 
     if ('protectedHeader' in result) {
       if (!result.protectedHeader.kid) {
-        throw new InvalidRequestError('Missing "kid" in header')
+        throw new InvalidParametersError(payload, 'Missing "kid" in header')
       }
 
       return {
@@ -402,6 +407,17 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
+  private async deleteRequest(
+    uri: RequestUri,
+    parameters: AuthorizationParameters,
+  ) {
+    try {
+      await this.requestManager.delete(uri)
+    } catch (err) {
+      throw AccessDeniedError.from(parameters, err)
+    }
+  }
+
   protected async authorize(
     deviceId: DeviceId,
     input: AuthorizationRequestQuery,
@@ -423,12 +439,20 @@ export class OAuthProvider extends OAuthVerifier {
 
         if (parameters.prompt === 'none') {
           const ssoSessions = sessions.filter((s) => s.ssoAllowed)
-          if (ssoSessions.length > 1) throw new AccountSelectionRequiredError()
-          if (ssoSessions.length < 1) throw new LoginRequiredError()
+          if (ssoSessions.length > 1) {
+            throw new AccountSelectionRequiredError(parameters)
+          }
+          if (ssoSessions.length < 1) {
+            throw new LoginRequiredError(parameters)
+          }
 
           const ssoSession = ssoSessions[0]!
-          if (ssoSession.consentRequired) throw new ConsentRequiredError()
-          if (ssoSession.loginRequired) throw new LoginRequiredError()
+          if (ssoSession.loginRequired) {
+            throw new LoginRequiredError(parameters)
+          }
+          if (ssoSession.consentRequired) {
+            throw new ConsentRequiredError(parameters)
+          }
 
           const redirect = await this.requestManager.setAuthorized(
             client,
@@ -443,17 +467,20 @@ export class OAuthProvider extends OAuthVerifier {
 
         return { issuer, client, parameters, authorize: { uri, sessions } }
       } catch (err) {
-        await this.requestManager.delete(uri)
+        await this.deleteRequest(uri, parameters)
 
-        if (err instanceof OAuthError) {
-          return { issuer, client, parameters, redirect: err.toJSON() }
-        }
-
-        throw err
+        // Transform into an AccessDeniedError to allow redirecting the user
+        // to the client with the error details.
+        throw AccessDeniedError.from(parameters, err)
       }
     } catch (err) {
-      if (err instanceof OAuthError && 'redirect_uri' in input) {
-        return { issuer, client, parameters: input, redirect: err.toJSON() }
+      if (err instanceof AccessDeniedError) {
+        return {
+          issuer,
+          client,
+          parameters: err.parameters,
+          redirect: err.toJSON(),
+        }
       }
 
       throw err
@@ -515,47 +542,51 @@ export class OAuthProvider extends OAuthVerifier {
     clientId: ClientId,
     sub: string,
   ): Promise<AuthorizationResultRedirect> {
-    const { account, info } = await this.accountManager.get(deviceId, sub)
-
     const { issuer } = this
-    const { parameters } = await this.requestManager.get(
-      uri,
-      clientId,
-      deviceId,
-    )
-
     const client = await this.clientManager.getClient(clientId)
 
-    // The user is trying to authorize without a fresh login
-    if (this.loginRequired(client, parameters, info)) {
-      throw new LoginRequiredError('Account authentication required.')
-    }
-
     try {
-      const redirect = await this.requestManager.setAuthorized(
-        client,
+      const { parameters } = await this.requestManager.get(
         uri,
+        clientId,
         deviceId,
-        account,
-        info,
       )
 
       try {
+        const { account, info } = await this.accountManager.get(deviceId, sub)
+
+        // The user is trying to authorize without a fresh login
+        if (this.loginRequired(client, parameters, info)) {
+          throw new LoginRequiredError(
+            parameters,
+            'Account authentication required.',
+          )
+        }
+
+        const redirect = await this.requestManager.setAuthorized(
+          client,
+          uri,
+          deviceId,
+          account,
+          info,
+        )
+
         await this.accountManager.addAuthorizedClient(
           deviceId,
           account.sub,
           client.id,
         )
-      } catch (err) {
-        await this.requestManager.delete(uri)
-        throw err
-      }
 
-      return { issuer, client, parameters, redirect }
-    } catch (err) {
-      if (err instanceof OAuthError) {
-        const redirect = buildErrorPayload(err)
         return { issuer, client, parameters, redirect }
+      } catch (err) {
+        await this.deleteRequest(uri, parameters)
+
+        throw AccessDeniedError.from(parameters, err)
+      }
+    } catch (err) {
+      if (err instanceof AccessDeniedError) {
+        const { parameters } = err
+        return { issuer, client, parameters, redirect: err.toJSON() }
       }
 
       throw err
@@ -567,22 +598,28 @@ export class OAuthProvider extends OAuthVerifier {
     uri: RequestUri,
     clientId: ClientId,
   ): Promise<AuthorizationResultRedirect> {
-    const { parameters } = await this.requestManager.get(
-      uri,
-      clientId,
-      deviceId,
-    )
+    try {
+      const { parameters } = await this.requestManager.get(
+        uri,
+        clientId,
+        deviceId,
+      )
 
-    await this.requestManager.delete(uri)
+      await this.deleteRequest(uri, parameters)
 
-    return {
-      issuer: this.issuer,
-      client: await this.clientManager.getClient(clientId),
-      parameters,
-      redirect: {
-        error: 'access_denied',
-        error_description: 'Access denied',
-      },
+      // Trigger redirect (see catch block)
+      throw new AccessDeniedError(parameters, 'Access denied')
+    } catch (err) {
+      if (err instanceof AccessDeniedError) {
+        return {
+          issuer: this.issuer,
+          client: await this.clientManager.getClient(clientId),
+          parameters: err.parameters,
+          redirect: err.toJSON(),
+        }
+      }
+
+      throw err
     }
   }
 
@@ -637,9 +674,10 @@ export class OAuthProvider extends OAuthVerifier {
 
       const { account, info } = await this.accountManager.get(deviceId, sub)
 
-      // User revoked consent while client was asking for a token
+      // User revoked consent while client was asking for a token (or store
+      // failed to persist the consent)
       if (!info.authorizedClients.includes(client.id)) {
-        throw new AccessDeniedError('Client not trusted anymore')
+        throw new AccessDeniedError(parameters, 'Client not trusted anymore')
       }
 
       return await this.tokenManager.create(
