@@ -49,7 +49,7 @@ export function useApi(
   )
 
   const doSignIn = useCallback(
-    async (credentials: SignInFormOutput): Promise<string> => {
+    async (credentials: SignInFormOutput): Promise<void> => {
       const session = await api.signIn(credentials)
       const { sub } = session.account
 
@@ -59,8 +59,6 @@ export function useApi(
           (s) => (s === session || !s.selected ? s : { ...s, selected: false }),
         )
       })
-
-      return sub
     },
     [api, performRedirect, clientId, setSessions],
   )
