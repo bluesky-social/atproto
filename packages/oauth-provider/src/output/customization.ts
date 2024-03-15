@@ -4,7 +4,7 @@ type ColorName = typeof colorNames[number]
 const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)
 
-export type Branding = {
+export type Customization = {
   name?: string
   logo?: string
   colors?: { [_ in ColorName]?: string }
@@ -15,7 +15,11 @@ export type Branding = {
   }>
 }
 
-export function buildBrandingData({ name, logo, links }: Branding = {}) {
+export function buildCustomizationData({
+  name,
+  logo,
+  links,
+}: Customization = {}) {
   return {
     name,
     logo,
@@ -23,10 +27,10 @@ export function buildBrandingData({ name, logo, links }: Branding = {}) {
   }
 }
 
-export function buildBrandingCss(branding?: Branding) {
-  if (!branding?.colors) return ''
+export function buildCustomizationCss(customization?: Customization) {
+  if (!customization?.colors) return ''
 
-  const vars = Object.entries(branding.colors)
+  const vars = Object.entries(customization.colors)
     .filter((e) => isColorName(e[0]) && e[1] != null)
     .map(([name, value]) => [name, parseColor(value)] as const)
     .filter((e): e is [ColorName, ParsedColor] => e[1] != null)
