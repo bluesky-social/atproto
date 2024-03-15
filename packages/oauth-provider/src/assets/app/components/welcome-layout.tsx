@@ -1,7 +1,13 @@
 import { PropsWithChildren } from 'react'
-import { BrandingData } from '../backend-data'
 
-export type WelcomeLayoutProps = BrandingData & {
+export type WelcomeLayoutProps = {
+  name?: string
+  logo?: string
+  links?: Array<{
+    name: string
+    href: string
+    rel?: string
+  }>
   logoAlt?: string
 }
 

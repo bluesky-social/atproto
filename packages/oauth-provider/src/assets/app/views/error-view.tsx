@@ -1,15 +1,15 @@
-import { BrandingData, ErrorData } from '../backend-data'
+import { CustomizationData, ErrorData } from '../backend-data'
 import { ErrorCard } from '../components/error-card'
 import { WelcomeLayout } from '../components/welcome-layout'
 
 export type ErrorViewProps = {
-  brandingData?: BrandingData
+  customizationData?: CustomizationData
   errorData?: ErrorData
 }
 
-export function ErrorView({ errorData, brandingData }: ErrorViewProps) {
+export function ErrorView({ errorData, customizationData }: ErrorViewProps) {
   return (
-    <WelcomeLayout {...brandingData}>
+    <WelcomeLayout {...customizationData}>
       <ErrorCard message={getUserFriendlyMessage(errorData)} />
     </WelcomeLayout>
   )
