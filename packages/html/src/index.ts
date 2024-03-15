@@ -28,7 +28,7 @@ export const cssCode = (code: string) =>
 
 export function html(
   htmlFragment: TemplateStringsArray,
-  ...values: readonly NestedArray<string | Html>[]
+  ...values: readonly NestedArray<null | undefined | false | string | Html>[]
 ): Html {
   const fragments: Iterable<string> = combineTemplateStringsFragments(
     htmlFragment,
@@ -39,24 +39,27 @@ export function html(
 
 function* combineTemplateStringsFragments(
   htmlFragment: TemplateStringsArray,
-  values: readonly NestedArray<string | Html>[],
+  values: readonly NestedArray<null | undefined | false | string | Html>[],
 ): Generator<string, void, undefined> {
   for (let i = 0; i < htmlFragment.length; i++) {
     yield htmlFragment[i]!
     if (i < values.length) {
-      yield* valueToFragment(values[i]!)
+      const value = values[i]
+      if (value != null && value !== false) {
+        yield* valueToFragment(value)
+      }
     }
   }
 }
 
 function* valueToFragment(
-  value: NestedArray<string | Html>,
+  value: NestedArray<null | undefined | false | string | Html>,
 ): Generator<string, void, undefined> {
   if (typeof value === 'string') {
     yield encode(value)
   } else if (value instanceof Html) {
     yield* value.fragments
-  } else {
+  } else if (value != null && value !== false) {
     for (const v of value) {
       yield* valueToFragment(v)
     }
