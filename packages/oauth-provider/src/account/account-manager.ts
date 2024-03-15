@@ -2,6 +2,7 @@ import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { UnauthorizedError } from '../errors/unauthorized-error.js'
 import { Sub } from '../oidc/sub.js'
+import { constantTime } from '../util/time.js'
 import { AccountInfo, AccountStore, LoginCredentials } from './account-store.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
@@ -9,39 +10,23 @@ const TIMING_ATTACK_MITIGATION_DELAY = 400
 export class AccountManager {
   constructor(protected readonly store: AccountStore) {}
 
-  public async login(
+  public async signIn(
     credentials: LoginCredentials,
     deviceId: DeviceId,
   ): Promise<AccountInfo> {
-    const start = Date.now()
-    try {
+    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
       const result = await this.store.authenticateAccount(credentials, deviceId)
-      if (!result) throw new UnauthorizedError('Invalid credentials', {})
-      return result
-    } finally {
-      // Mitigate timing attacks
-      const delta = Date.now() - start
-      if (delta < TIMING_ATTACK_MITIGATION_DELAY) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, TIMING_ATTACK_MITIGATION_DELAY - delta),
-        )
-      } else {
-        // Make sure we wait a multiple of TIMING_ATTACK_MITIGATION_DELAY
-        await new Promise((resolve) =>
-          setTimeout(
-            resolve,
-            TIMING_ATTACK_MITIGATION_DELAY *
-              Math.ceil(delta / TIMING_ATTACK_MITIGATION_DELAY),
-          ),
-        )
-      }
-    }
+      if (result) return result
+
+      throw new UnauthorizedError('Invalid credentials', {})
+    })
   }
 
   public async get(deviceId: DeviceId, sub: Sub): Promise<AccountInfo> {
     const result = await this.store.getDeviceAccount(deviceId, sub)
-    if (!result) throw new UnauthorizedError(`Account not found`, {})
-    return result
+    if (result) return result
+
+    throw new UnauthorizedError(`Account not found`, {})
   }
 
   public async addAuthorizedClient(
