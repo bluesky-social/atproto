@@ -11,6 +11,7 @@ export const entityClaimsSchema = z.enum([
 
   // OIDC
   'nonce',
+  'acr',
 
   // OpenID: "profile" scope
   'name',
@@ -46,10 +47,11 @@ export const claimsEntityTypeSchema = z.enum(['userinfo', 'id_token'])
 
 export type ClaimsEntityType = z.infer<typeof claimsEntityTypeSchema>
 
+const claimValueSchema = z.union([z.string(), z.number(), z.boolean()])
 export const claimsParameterMemberSchema = z.object({
   essential: z.boolean().optional(),
-  value: z.string().optional(),
-  values: z.array(z.string()).optional(),
+  value: claimValueSchema.optional(),
+  values: z.array(claimValueSchema).optional(),
 })
 
 export type ClaimsParameterMember = z.infer<typeof claimsParameterMemberSchema>
