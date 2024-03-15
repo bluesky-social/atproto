@@ -150,12 +150,7 @@ export class Signer {
         auth_time:
           client.metadata.require_auth_time ||
           (extra.auth_time != null && params.max_age != null) ||
-          claimRequested(
-            params,
-            'id_token',
-            'auth_time',
-            extra.auth_time != null,
-          )
+          claimRequested(params, 'id_token', 'auth_time', extra.auth_time)
             ? dateToEpoch(extra.auth_time!)
             : undefined,
       }),
