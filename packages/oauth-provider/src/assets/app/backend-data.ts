@@ -1,6 +1,6 @@
 import type { ClientMetadata, Session } from './types'
 
-export type BrandingData = {
+export type CustomizationData = {
   name?: string
   logo?: string
   links?: Array<{
@@ -34,6 +34,8 @@ const readBackendData = <T>(key: string): T | undefined => {
 // These values are injected by the backend when it builds the
 // page HTML.
 
-export const brandingData = readBackendData<BrandingData>('__brandingData')
+export const customizationData = readBackendData<CustomizationData>(
+  '__customizationData',
+)
 export const errorData = readBackendData<ErrorData>('__errorData')
 export const authorizeData = readBackendData<AuthorizeData>('__authorizeData')

@@ -1,22 +1,28 @@
-import type { AuthorizeData, BrandingData, ErrorData } from './backend-data'
+import type {
+  AuthorizeData,
+  CustomizationData,
+  ErrorData,
+} from './backend-data'
 import { AuthorizeView } from './views/authorize-view'
 import { ErrorView } from './views/error-view'
 
 export type AppProps = {
   authorizeData?: AuthorizeData
-  brandingData?: BrandingData
+  customizationData?: CustomizationData
   errorData?: ErrorData
 }
 
-export function App({ authorizeData, brandingData, errorData }: AppProps) {
-  if (authorizeData) {
+export function App({ authorizeData, customizationData, errorData }: AppProps) {
+  if (authorizeData && !errorData) {
     return (
       <AuthorizeView
-        brandingData={brandingData}
+        customizationData={customizationData}
         authorizeData={authorizeData}
       />
     )
   } else {
-    return <ErrorView brandingData={brandingData} errorData={errorData} />
+    return (
+      <ErrorView customizationData={customizationData} errorData={errorData} />
+    )
   }
 }

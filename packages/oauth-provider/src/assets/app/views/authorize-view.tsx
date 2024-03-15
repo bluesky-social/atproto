@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import type { AuthorizeData, BrandingData } from '../backend-data'
+import type { AuthorizeData, CustomizationData } from '../backend-data'
 import { PageLayout } from '../components/page-layout'
 import { useBoundDispatch } from '../hooks/use-bound-dispatch'
 import { useApi } from '../hooks/use-api'
@@ -9,12 +9,12 @@ import { WelcomeView } from './welcome-view'
 
 export type AuthorizeViewProps = {
   authorizeData: AuthorizeData
-  brandingData?: BrandingData
+  customizationData?: CustomizationData
 }
 
 export function AuthorizeView({
   authorizeData,
-  brandingData,
+  customizationData,
 }: AuthorizeViewProps) {
   const forceSignIn = authorizeData?.loginHint != null
 
@@ -34,7 +34,9 @@ export function AuthorizeView({
   if (view === 'welcome') {
     return (
       <WelcomeView
-        {...brandingData}
+        name={customizationData?.name}
+        logo={customizationData?.logo}
+        links={customizationData?.links}
         onSignIn={showSignIn}
         onSignUp={undefined}
         onCancel={doReject}

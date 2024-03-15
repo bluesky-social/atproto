@@ -243,7 +243,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         provider: {
           disableSsrf: env.oauthDisableSsrf ?? false,
 
-          branding: {
+          customization: {
             name: env.oauthProviderName ?? 'Personal PDS',
             logo: env.oauthProviderLogo,
             colors: {
@@ -379,7 +379,7 @@ export type OAuthConfig = {
     | false
     | {
         disableSsrf: boolean
-        branding: {
+        customization: {
           name: string
           logo?: string
           colors?: {

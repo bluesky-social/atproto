@@ -2,10 +2,9 @@ import { LRUCache } from 'lru-cache'
 import { safeFetchWrap } from '@atproto/fetch-node'
 import {
   AccessTokenType,
-  Account,
   AccountInfo,
   AccountStore,
-  Branding,
+  Customization,
   DeviceId,
   Keyset,
   LoginCredentials,
@@ -31,7 +30,7 @@ export class AuthProvider extends OAuthProvider {
     redis: Redis | undefined,
     dpopSecret: false | string | Uint8Array,
     issuer: string,
-    private branding?: Branding,
+    private customization?: Customization,
     disableSsrf = false,
   ) {
     super({
@@ -105,7 +104,7 @@ export class AuthProvider extends OAuthProvider {
 
   createRouter() {
     return this.httpHandler({
-      branding: this.branding,
+      customization: this.customization,
 
       // Log oauth provider errors using our own logger
       onError: (req, res, err) => {
