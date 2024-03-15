@@ -170,6 +170,7 @@ export class Client {
     }
 
     // @ts-expect-error Ensure to keep Client.AUTH_METHODS_SUPPORTED in sync
+    // with the implementation of this function.
     if (Client.AUTH_METHODS_SUPPORTED.includes(method)) {
       throw new Error(
         `verifyCredentials() should implement all of ${[
