@@ -81,7 +81,6 @@ export function buildMetadata(
       //
       'authorization_code',
       'refresh_token',
-      'password',
     ],
     code_challenge_methods_supported: [
       // https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#pkce-code-challenge-method

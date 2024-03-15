@@ -33,7 +33,7 @@ export type AccountInfo = {
 export interface AccountStore {
   authenticateAccount(
     credentials: LoginCredentials,
-    deviceId: DeviceId | null,
+    deviceId: DeviceId,
   ): Awaitable<Account | null>
 
   addAuthorizedClient(

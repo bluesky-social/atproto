@@ -12,7 +12,7 @@ export class AccountManager {
 
   public async login(
     credentials: LoginCredentials,
-    deviceId: DeviceId | null,
+    deviceId: DeviceId,
   ): Promise<Account> {
     const start = Date.now()
     try {

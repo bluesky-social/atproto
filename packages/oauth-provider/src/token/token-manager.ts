@@ -42,11 +42,7 @@ import {
 } from './token-id.js'
 import { TokenInfo, TokenStore } from './token-store.js'
 import { TokenType } from './token-type.js'
-import {
-  CodeGrantRequest,
-  PasswordGrantRequest,
-  RefreshGrantRequest,
-} from './types.js'
+import { CodeGrantRequest, RefreshGrantRequest } from './types.js'
 import {
   VerifyTokenClaimsOptions,
   VerifyTokenClaimsResult,
@@ -129,7 +125,7 @@ export class TokenManager {
     account: Account,
     device: null | { id: DeviceId; info: DeviceAccountInfo },
     parameters: AuthorizationParameters,
-    input: CodeGrantRequest | PasswordGrantRequest,
+    input: CodeGrantRequest,
     dpopJkt: null | string,
   ): Promise<TokenResponse> {
     if (client.metadata.dpop_bound_access_tokens && !dpopJkt) {
@@ -183,10 +179,8 @@ export class TokenManager {
         }
 
         break
-      case 'password':
-        break
+
       default:
-        // @ts-expect-error: fool proofing
         throw new Error(`Unsupported grant type "${input.grant_type}"`)
     }
 
