@@ -1,6 +1,6 @@
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
-import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { UnauthorizedError } from '../errors/unauthorized-error.js'
 import { Sub } from '../oidc/sub.js'
 import { LoginCredentials, AccountStore, AccountInfo } from './account-store.js'
 import { Account } from './account.js'
@@ -17,7 +17,7 @@ export class AccountManager {
     const start = Date.now()
     try {
       const result = await this.store.authenticateAccount(credentials, deviceId)
-      if (!result) throw new InvalidRequestError('Invalid credentials')
+      if (!result) throw new UnauthorizedError('Invalid credentials', {})
       return result
     } finally {
       // Mitigate timing attacks
@@ -41,7 +41,7 @@ export class AccountManager {
 
   public async get(deviceId: DeviceId, sub: Sub): Promise<AccountInfo> {
     const result = await this.store.getDeviceAccount(deviceId, sub)
-    if (!result) throw new InvalidRequestError(`Account not found`)
+    if (!result) throw new UnauthorizedError(`Account not found`, {})
     return result
   }
 
