@@ -531,8 +531,7 @@ export class OAuthProvider extends OAuthVerifier {
     uri: RequestUri,
     credentials: LoginCredentials,
   ): Promise<AccountInfo> {
-    const account = await this.accountManager.login(credentials, deviceId)
-    return this.accountManager.get(deviceId, account.sub)
+    return this.accountManager.login(credentials, deviceId)
   }
 
   protected async acceptRequest(
