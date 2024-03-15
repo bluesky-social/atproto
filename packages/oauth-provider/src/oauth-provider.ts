@@ -526,12 +526,11 @@ export class OAuthProvider extends OAuthVerifier {
     }))
   }
 
-  protected async login(
+  protected async signIn(
     deviceId: DeviceId,
-    uri: RequestUri,
     credentials: LoginCredentials,
   ): Promise<AccountInfo> {
-    return this.accountManager.login(credentials, deviceId)
+    return this.accountManager.signIn(credentials, deviceId)
   }
 
   protected async acceptRequest(
@@ -1108,7 +1107,7 @@ export class OAuthProvider extends OAuthVerifier {
       }
     })
 
-    const loginPayloadSchema = z.object({
+    const signInPayloadSchema = z.object({
       csrf_token: z.string(),
       request_uri: requestUriSchema,
       // client_id: clientIdSchema,
@@ -1123,7 +1122,7 @@ export class OAuthProvider extends OAuthVerifier {
       validateFetchMode(req, res, ['same-origin'])
       validateSameOrigin(req, res, issuerOrigin)
 
-      const input = await validateRequestPayload(req, loginPayloadSchema)
+      const input = await validateRequestPayload(req, signInPayloadSchema)
 
       validateReferer(req, res, {
         origin: issuerOrigin,
@@ -1138,11 +1137,7 @@ export class OAuthProvider extends OAuthVerifier {
 
       const { deviceId } = await sessionManager.load(req, res)
 
-      const { account, info } = await server.login(
-        deviceId,
-        input.request_uri,
-        input.credentials,
-      )
+      const { account, info } = await server.signIn(deviceId, input.credentials)
 
       // Prevent fixation attacks
       await sessionManager.rotate(req, res, deviceId)
