@@ -37,22 +37,9 @@ export const refreshGrantRequestSchema = z.intersection(
 
 export type RefreshGrantRequest = z.infer<typeof refreshGrantRequestSchema>
 
-export const passwordGrantRequestSchema = z.intersection(
-  clientIdentificationSchema,
-  z.object({
-    grant_type: z.literal('password'),
-    username: z.string(),
-    password: z.string(),
-    scope: z.string().optional(),
-  }),
-)
-
-export type PasswordGrantRequest = z.infer<typeof passwordGrantRequestSchema>
-
 export const tokenRequestSchema = z.union([
   codeGrantRequestSchema,
   refreshGrantRequestSchema,
-  passwordGrantRequestSchema,
 ])
 
 export type TokenRequest = z.infer<typeof tokenRequestSchema>
