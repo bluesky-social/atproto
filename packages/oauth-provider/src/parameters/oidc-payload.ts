@@ -14,7 +14,7 @@ export function oidcPayload(params: AuthorizationParameters, account: Account) {
         const value = allowed ? account[claim] : undefined
         // Should not throw as RequestManager should have already checked
         // that all the essential claims are available.
-        if (claimRequested(params, 'id_token', claim, value !== undefined)) {
+        if (claimRequested(params, 'id_token', claim, value)) {
           payload[claim] = value as any // All good as long as the account props match the claims
         }
       }
