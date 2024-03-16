@@ -152,7 +152,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
-        "lang:und",
+        "lang:en",
       ],
       "remove": Array [],
     },
