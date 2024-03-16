@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.11.2
+
+### Patch Changes
+
+- [#2328](https://github.com/bluesky-social/atproto/pull/2328) [`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove unecessary escapes from regex, which was causing a minification error when bundled in React Native.
+
 ## 0.11.1
 
 ### Patch Changes
