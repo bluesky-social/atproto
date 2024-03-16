@@ -283,10 +283,15 @@ export type MutedWordTarget = 'content' | 'tag' | (string & {})
 
 /** A word that the account owner has muted. */
 export interface MutedWord {
+  id?: string
   /** The muted word itself. */
   value: string
   /** The intended targets of the muted word. */
   targets: MutedWordTarget[]
+  /** The accounts for which this muted word applies. */
+  actors?: string[]
+  /** The date and time at which the muted word will expire and no longer be applied. */
+  expiresAt?: string
   [k: string]: unknown
 }
 

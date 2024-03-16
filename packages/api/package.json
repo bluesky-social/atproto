@@ -39,8 +39,8 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@atproto/lex-cli": "workspace:^",
     "@atproto/dev-env": "workspace:^",
+    "@atproto/lex-cli": "workspace:^",
     "common-tags": "^1.8.2",
     "get-port": "^6.1.2"
   }
