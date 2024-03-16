@@ -3,9 +3,7 @@ import { AppBskyActorDefs, AppBskyRichtextFacet } from '../client'
 const REGEX = {
   LEADING_TRAILING_PUNCTUATION: /(?:^\p{P}+|\p{P}+$)/gu,
   ESCAPE: /[[\]{}()*+?.\\^$|\s]/g,
-  // @TODO tidy this
-  // eslint-disable-next-line no-useless-escape
-  SEPARATORS: /[\/\-\–\—\(\)\[\]\_]+/g,
+  SEPARATORS: /[/\-–—()[\]_]+/g,
   WORD_BOUNDARY: /[\s\n\t\r\f\v]+?/g,
 }
 
