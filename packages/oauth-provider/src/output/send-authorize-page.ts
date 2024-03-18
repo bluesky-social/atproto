@@ -52,7 +52,7 @@ export async function sendAuthorizePage(
   data: AuthorizationResultAuthorize,
   customization?: Customization,
 ): Promise<void> {
-  return sendWebPage(req, res, {
+  return sendWebPage(res, {
     scripts: [
       declareBrowserGlobalVar(
         '__customizationData',
@@ -65,6 +65,9 @@ export async function sendAuthorizePage(
       await getAsset('main.css'),
       cssCode(buildCustomizationCss(customization)),
     ],
+    head: customization?.links?.map((l) => {
+      return html`<link rel="${l.rel}" href="${l.href}" title="${l.title}" />`
+    }),
     title: 'Authorize',
     body: html`<div id="root"></div>`,
   })
