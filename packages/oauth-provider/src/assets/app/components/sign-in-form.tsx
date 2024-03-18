@@ -1,9 +1,9 @@
 import {
+  FormHTMLAttributes,
   ReactNode,
+  SyntheticEvent,
   useCallback,
   useState,
-  FormHTMLAttributes,
-  SyntheticEvent,
 } from 'react'
 
 import { clsx } from '../lib/clsx'
@@ -12,7 +12,7 @@ import { ErrorCard } from './error-card'
 export type SignInFormOutput = {
   username: string
   password: string
-  remember: boolean
+  remember?: boolean
 }
 
 export type SignInFormProps = {
@@ -26,18 +26,25 @@ export type SignInFormProps = {
   cancelLabel?: ReactNode
   cancelAria?: string
 
-  username?: string
+  usernameDefault?: string
   usernameReadonly?: boolean
+  usernameLabel?: string
   usernamePlaceholder?: string
   usernameAria?: string
+  usernamePattern?: string
+  usernameTitle?: string
 
+  passwordLabel?: string
   passwordPlaceholder?: string
-  passwordAria?: string
   passwordWarning?: ReactNode
+  passwordAria?: string
+  passwordPattern?: string
+  passwordTitle?: string
 
-  remember?: boolean
+  rememberVisible?: boolean
+  rememberDefault?: boolean
+  rememberLabel?: string
   rememberAria?: string
-  rememberLabel?: ReactNode
 }
 
 export function SignInForm({
@@ -51,13 +58,19 @@ export function SignInForm({
   cancelAria = 'Cancel',
   cancelLabel = cancelAria,
 
-  username: defaultUsername = '',
+  usernameDefault = '',
   usernameReadonly = false,
-  usernamePlaceholder = 'Username or email address',
-  usernameAria = usernamePlaceholder,
+  usernameLabel = 'Username',
+  usernameAria = usernameLabel,
+  usernamePlaceholder = usernameLabel,
+  usernamePattern,
+  usernameTitle = 'Username must not be empty',
 
-  passwordPlaceholder = 'Password',
-  passwordAria = passwordPlaceholder,
+  passwordLabel = 'Password',
+  passwordAria = passwordLabel,
+  passwordPlaceholder = passwordLabel,
+  passwordPattern,
+  passwordTitle = 'Password must not be empty',
   passwordWarning = (
     <>
       <p className="font-bold">Warning</p>
@@ -68,22 +81,21 @@ export function SignInForm({
     </>
   ),
 
-  remember: defaultRemember = false,
-  rememberAria = 'Remember this account on this device',
-  rememberLabel = rememberAria,
+  rememberVisible = true,
+  rememberDefault = false,
+  rememberLabel = 'Remember this account on this device',
+  rememberAria = rememberLabel,
 
   className,
   ...attrs
 }: SignInFormProps &
-  Omit<FormHTMLAttributes<HTMLFormElement>, keyof SignInFormProps>) {
+  Omit<
+    FormHTMLAttributes<HTMLFormElement>,
+    keyof SignInFormProps | 'children'
+  >) {
   const [focused, setFocused] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const [hasUsername, setHasUsername] = useState(!!defaultUsername)
-  const [hasPassword, setHasPassword] = useState(false)
-
-  const canSubmit = hasUsername && hasPassword
 
   const doSubmit = useCallback(
     async (
@@ -91,7 +103,7 @@ export function SignInForm({
         HTMLFormElement & {
           username: HTMLInputElement
           password: HTMLInputElement
-          remember: HTMLInputElement
+          remember?: HTMLInputElement
         },
         SubmitEvent
       >,
@@ -101,10 +113,8 @@ export function SignInForm({
       const credentials = {
         username: event.currentTarget.username.value,
         password: event.currentTarget.password.value,
-        remember: event.currentTarget.remember.checked,
+        remember: event.currentTarget.remember?.checked,
       }
-
-      if (!credentials.username || !credentials.password) return
 
       setLoading(true)
       setErrorMessage(null)
@@ -135,10 +145,7 @@ export function SignInForm({
           <input
             name="username"
             type="text"
-            onChange={(e) => {
-              setHasUsername(!!e.target.value)
-              setErrorMessage(null)
-            }}
+            onChange={() => setErrorMessage(null)}
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
             placeholder={usernamePlaceholder}
             aria-label={usernameAria}
@@ -149,9 +156,11 @@ export function SignInForm({
             dir="auto"
             enterKeyHint="next"
             required
-            defaultValue={defaultUsername}
+            defaultValue={usernameDefault}
             readOnly={usernameReadonly}
             disabled={usernameReadonly}
+            pattern={usernamePattern}
+            title={usernameTitle}
           />
         </div>
 
@@ -162,10 +171,7 @@ export function SignInForm({
           <input
             name="password"
             type="password"
-            onChange={(e) => {
-              setHasPassword(!!e.target.value)
-              setErrorMessage(null)
-            }}
+            onChange={() => setErrorMessage(null)}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(setFocused, 100, false)}
             className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
@@ -173,11 +179,13 @@ export function SignInForm({
             aria-label={passwordAria}
             autoCapitalize="none"
             autoCorrect="off"
-            autoComplete="password"
+            autoComplete="current-password"
             dir="auto"
             enterKeyHint="done"
             spellCheck="false"
             required
+            pattern={passwordPattern}
+            title={passwordTitle}
           />
         </div>
 
@@ -210,46 +218,48 @@ export function SignInForm({
           </>
         )}
 
-        <hr className="border-slate-200 dark:border-slate-700" />
+        {rememberVisible && (
+          <>
+            <hr className="border-slate-200 dark:border-slate-700" />
 
-        <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-          <span className="w-8 flex items-center justify-center">
-            <input
-              className="text-primary"
-              id="remember"
-              name="remember"
-              type="checkbox"
-              defaultChecked={defaultRemember}
-              aria-label={rememberAria}
-              onChange={() => setErrorMessage(null)}
-            />
-          </span>
+            <div className="relative p-1 flex flex-wrap items-center justify-stretch">
+              <span className="w-8 flex items-center justify-center">
+                <input
+                  className="text-primary"
+                  id="remember"
+                  name="remember"
+                  type="checkbox"
+                  defaultChecked={rememberDefault}
+                  aria-label={rememberAria}
+                  onChange={() => setErrorMessage(null)}
+                />
+              </span>
 
-          <label
-            htmlFor="remember"
-            className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6]"
-          >
-            {rememberLabel}
-          </label>
-        </div>
+              <label
+                htmlFor="remember"
+                className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6]"
+              >
+                {rememberLabel}
+              </label>
+            </div>
+          </>
+        )}
       </fieldset>
 
-      {errorMessage && <ErrorCard className="mt-2" message={errorMessage} />}
+      {errorMessage && <ErrorCard className="mt-4" message={errorMessage} />}
 
       <div className="flex-auto" />
 
-      <div className="p-4 flex flex-wrap items-center justify-between">
-        {canSubmit && (
-          <button
-            className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
-            type="submit"
-            role="Button"
-            aria-label={submitAria}
-            disabled={loading}
-          >
-            {submitLabel}
-          </button>
-        )}
+      <div className="p-4 flex flex-wrap items-center justify-start">
+        <button
+          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
+          type="submit"
+          role="Button"
+          aria-label={submitAria}
+          disabled={loading}
+        >
+          {submitLabel}
+        </button>
 
         {onCancel && (
           <button
@@ -262,17 +272,19 @@ export function SignInForm({
             {cancelLabel}
           </button>
         )}
+
+        <div className="flex-auto" />
       </div>
     </form>
   )
 }
 
 function parseErrorMessage(err: unknown): string {
+  console.error('Sign-in failed:', err)
   switch ((err as any)?.message) {
     case 'Invalid credentials':
       return 'Invalid username or password'
     default:
-      console.error(err)
       return 'An unknown error occurred'
   }
 }

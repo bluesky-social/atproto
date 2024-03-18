@@ -1,7 +1,7 @@
-import { WelcomeLayout, WelcomeLayoutProps } from '../components/welcome-layout'
+import { LayoutWelcome, LayoutWelcomeProps } from '../components/layout-welcome'
 import { clsx } from '../lib/clsx'
 
-export type WelcomeViewParams = WelcomeLayoutProps & {
+export type WelcomeViewParams = LayoutWelcomeProps & {
   onSignIn?: () => void
   signInLabel?: string
 
@@ -23,7 +23,7 @@ export function WelcomeView({
   ...props
 }: WelcomeViewParams) {
   return (
-    <WelcomeLayout {...props}>
+    <LayoutWelcome {...props}>
       {onSignUp && (
         <button
           className={clsx(
@@ -39,8 +39,8 @@ export function WelcomeView({
       {onSignIn && (
         <button
           className={clsx(
-            'm-1 w-60 max-w-full text-black py-2 px-4 rounded-full truncate',
-            onSignUp ? 'bg-slate-200' : 'bg-primary',
+            'm-1 w-60 max-w-full py-2 px-4 rounded-full truncate',
+            onSignUp ? 'bg-slate-100 dark:bg-slate-700' : 'bg-primary',
           )}
           onClick={onSignIn}
         >
@@ -56,6 +56,6 @@ export function WelcomeView({
           {cancelLabel}
         </button>
       )}
-    </WelcomeLayout>
+    </LayoutWelcome>
   )
 }
