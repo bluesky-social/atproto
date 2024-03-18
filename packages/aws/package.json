@@ -1,6 +1,6 @@
 {
   "name": "@atproto/aws",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Shared AWS cloud API helpers for atproto services",
   "keywords": [
