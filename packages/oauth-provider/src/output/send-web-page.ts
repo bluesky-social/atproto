@@ -4,7 +4,10 @@ import { ServerResponse } from 'node:http'
 import { html, Html, jsonCode } from '@atproto/html'
 import { writeHtml } from '@atproto/http-util'
 
-import { Asset } from '../assets/asset.js'
+export type AssetRef = {
+  url: string
+  sha256: string
+}
 
 export type WebPageOptions = {
   lang?: string
@@ -12,8 +15,8 @@ export type WebPageOptions = {
   meta?: Record<string, Html | string>
   head?: Html | Html[]
   title?: string
-  scripts?: (Html | Asset)[]
-  styles?: (Html | Asset)[]
+  scripts?: (Html | AssetRef)[]
+  styles?: (Html | AssetRef)[]
   body: Html | Html[]
 }
 
@@ -56,14 +59,14 @@ export function declareBrowserGlobalVar(name: string, data: unknown) {
   return html`window[${nameJson}]=${dataJson};document.currentScript.remove();`
 }
 
-function scriptToHtml(script: Html | Asset) {
+function scriptToHtml(script: Html | AssetRef) {
   return script instanceof Html
     ? // prettier-ignore
       html`<script>${script}</script>` // hash validity requires no space around the content
     : html`<script type="module" src="${script.url}?${script.sha256}"></script>`
 }
 
-function styleToHtml(style: Html | Asset) {
+function styleToHtml(style: Html | AssetRef) {
   return style instanceof Html
     ? // prettier-ignore
       html`<style>${style}</style>` // hash validity requires no space around the content
@@ -108,7 +111,7 @@ export function sendWebPage(
   writeHtml(res, webPage.toString(), status)
 }
 
-function assetToHash(asset: Html | Asset): string {
+function assetToHash(asset: Html | AssetRef): string {
   return asset instanceof Html
     ? createHash('sha256').update(asset.toString()).digest('base64')
     : asset.sha256
