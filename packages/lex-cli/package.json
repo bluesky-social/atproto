@@ -16,20 +16,15 @@
   "bin": {
     "lex": "dist/index.js"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/src/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/lex-cli"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
-    "chalk": "^5.1.1",
+    "chalk": "^4.1.2",
     "commander": "^9.4.0",
     "ts-morph": "^16.0.0",
     "yesno": "^0.4.0",

@@ -13,16 +13,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/crypto"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest ",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/crypto"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@noble/curves": "^1.1.0",
@@ -30,6 +25,7 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "@atproto/common": "workspace:^"
+    "@atproto/common": "workspace:^",
+    "jest": "^28.1.2"
   }
 }

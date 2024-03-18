@@ -65,7 +65,7 @@ expect.extend({
     expected: ModerationTestSuiteResultFlag[] | undefined,
     context: string = '',
     stringifiedResult: string | undefined = undefined,
-    ignoreCause = false,
+    _ignoreCause = false,
   ) {
     const fail = (msg: string) => ({
       pass: false,

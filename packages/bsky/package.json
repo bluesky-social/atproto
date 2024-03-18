@@ -13,17 +13,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/bsky",
+    "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
@@ -65,7 +60,6 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@atproto/xrpc": "workspace:^",
@@ -79,6 +73,7 @@
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
     "axios": "^0.27.2",
-    "http2-express-bridge": "^1.0.7"
+    "jest": "^28.1.2",
+    "ts-node": "^10.8.2"
   }
 }

@@ -3,10 +3,12 @@ import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { BackgroundQueue } from '@atproto/bsky'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
-import { BackgroundQueue } from '@atproto/bsky/src/data-plane/server/background'
+
+export * from '@atproto/bsky'
 
 export class TestBsky {
   constructor(

@@ -14,17 +14,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/identity"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "test:log": "cat test.log | pino-pretty",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/identity"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
@@ -36,6 +31,7 @@
     "@did-plc/server": "^0.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "get-port": "^6.1.2"
+    "get-port": "^6.1.2",
+    "jest": "^28.1.2"
   }
 }

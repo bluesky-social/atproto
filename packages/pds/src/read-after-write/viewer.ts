@@ -13,7 +13,12 @@ import {
   ProfileView,
   ProfileViewDetailed,
 } from '../lexicon/types/app/bsky/actor/defs'
-import { FeedViewPost, PostView } from '../lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  GeneratorView,
+  PostView,
+} from '../lexicon/types/app/bsky/feed/defs'
+import { ListView } from '../lexicon/types/app/bsky/graph/defs'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -26,6 +31,7 @@ import {
   Main as EmbedRecord,
   isMain as isEmbedRecord,
   View as EmbedRecordView,
+  ViewRecord,
 } from '../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
@@ -225,7 +231,9 @@ export class LocalViewer {
     }
   }
 
-  async formatRecordEmbedInternal(embed: EmbedRecord) {
+  private async formatRecordEmbedInternal(
+    embed: EmbedRecord,
+  ): Promise<null | ViewRecord | GeneratorView | ListView> {
     if (!this.appViewAgent || !this.appviewDid) {
       return null
     }

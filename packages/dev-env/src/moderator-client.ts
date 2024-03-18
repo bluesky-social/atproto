@@ -1,9 +1,13 @@
-import AtpAgent from '@atproto/api'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/tools/ozone/moderation/emitEvent'
-import { QueryParams as QueryStatusesParams } from '@atproto/api/src/client/types/tools/ozone/moderation/queryStatuses'
-import { QueryParams as QueryEventsParams } from '@atproto/api/src/client/types/tools/ozone/moderation/queryEvents'
+import AtpAgent, {
+  ToolsOzoneModerationEmitEvent as EmitModerationEvent,
+  ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  ToolsOzoneModerationQueryEvents as QueryModerationEvents,
+} from '@atproto/api'
 import { TestOzone } from './ozone'
 
+type TakeActionInput = EmitModerationEvent.InputSchema
+type QueryStatusesParams = QueryModerationStatuses.QueryParams
+type QueryEventsParams = QueryModerationEvents.QueryParams
 type ModLevel = 'admin' | 'moderator' | 'triage'
 
 export class ModeratorClient {

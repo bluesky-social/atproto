@@ -59,8 +59,9 @@ export class MaxSizeChecker extends Transform {
   _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
     this.totalSize += chunk.length
     if (this.totalSize > this.maxSize) {
-      return this.destroy(this.createError())
+      cb(this.createError())
+    } else {
+      cb(null, chunk)
     }
-    return cb(null, chunk)
   }
 }

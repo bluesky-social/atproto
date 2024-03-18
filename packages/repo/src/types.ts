@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { def as commonDef } from '@atproto/common-web'
 import { schema as common } from '@atproto/common'
 import { CID } from 'multiformats'
-import * as car from '@ipld/car/api'
 import BlockMap from './block-map'
 import { RepoRecord } from '@atproto/lexicon'
 import CidSet from './cid-set'
@@ -174,4 +173,7 @@ export type VerifiedRepo = {
   commit: CommitData
 }
 
-export type CarBlock = car.Block
+export type CarBlock = {
+  cid: CID
+  bytes: Uint8Array
+}

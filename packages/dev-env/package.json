@@ -12,16 +12,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/dev-env"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/dev-env",
+    "build": "tsc --build tsconfig.build.json",
     "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js"
   },
   "dependencies": {
@@ -39,15 +34,10 @@
     "@did-plc/lib": "^0.0.1",
     "@did-plc/server": "^0.0.1",
     "axios": "^0.27.2",
-    "better-sqlite3": "^9.4.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "get-port": "^6.1.2",
     "multiformats": "^9.9.0",
-    "sharp": "^0.32.6",
     "uint8arrays": "3.0.0"
-  },
-  "devDependencies": {
-    "ts-node": "^10.8.1"
   }
 }

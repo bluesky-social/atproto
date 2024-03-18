@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
-import * as pdsRepo from '@atproto/pds/src/repo/prepare'
+import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import AtpAgent, {
@@ -489,12 +489,12 @@ describe('indexing', () => {
       // const { db: pdsDb, services: pdsServices } = network.pds.ctx
       // Create a good and a bad post record
       const writes = await Promise.all([
-        pdsRepo.prepareCreate({
+        repoPrepare.prepareCreate({
           did: sc.dids.alice,
           collection: ids.AppBskyFeedPost,
           record: { text: 'valid', createdAt: new Date().toISOString() },
         }),
-        pdsRepo.prepareCreate({
+        repoPrepare.prepareCreate({
           did: sc.dids.alice,
           collection: ids.AppBskyFeedPost,
           record: { text: 0 },

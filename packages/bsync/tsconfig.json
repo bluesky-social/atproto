@@ -1,14 +1,7 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "emitDeclarationOnly": true
-  },
-  "module": "nodenext",
-  "include": ["./src", "__tests__/**/**.ts"],
+  "include": [],
   "references": [
-    { "path": "../common/tsconfig.build.json" },
-    { "path": "../common-web/tsconfig.build.json" }
+    { "path": "./tsconfig.build.json" },
+    { "path": "./tsconfig.tests.json" }
   ]
 }

@@ -1,8 +1,6 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 
 describe('pds views with blocking from block lists', () => {
   let network: TestNetwork
@@ -165,13 +163,17 @@ describe('pds views with blocking from block lists', () => {
       { actor: carol },
       { headers: await network.serviceHeaders(dan) },
     )
-    await expect(attempt1).rejects.toThrow(BlockedActorError)
+    await expect(attempt1).rejects.toMatchObject({
+      error: 'BlockedActor',
+    })
 
     const attempt2 = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: dan },
       { headers: await network.serviceHeaders(carol) },
     )
-    await expect(attempt2).rejects.toThrow(BlockedByActorError)
+    await expect(attempt2).rejects.toMatchObject({
+      error: 'BlockedByActor',
+    })
   })
 
   it('strips blocked users out of getTimeline', async () => {

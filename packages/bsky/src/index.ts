@@ -29,6 +29,7 @@ export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
+export { BackgroundQueue } from './data-plane/server/background'
 
 export class BskyAppView {
   public ctx: AppContext

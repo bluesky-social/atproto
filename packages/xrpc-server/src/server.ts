@@ -1,5 +1,10 @@
 import { Readable } from 'stream'
 import express, {
+  Application,
+  Express,
+  Router,
+  Request,
+  Response,
   ErrorRequestHandler,
   NextFunction,
   RequestHandler,
@@ -37,7 +42,6 @@ import {
   isShared,
   RateLimitExceededError,
   HandlerPipeThrough,
-  handlerPipeThrough,
 } from './types'
 import {
   decodeQueryParams,
@@ -53,8 +57,8 @@ export function createServer(lexicons?: LexiconDoc[], options?: Options) {
 }
 
 export class Server {
-  router = express()
-  routes = express.Router()
+  router: Express = express()
+  routes: Router = express.Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
@@ -70,7 +74,7 @@ export class Server {
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
-    this.router.once('mount', (app: express.Application) => {
+    this.router.once('mount', (app: Application) => {
       this.enableStreamingOnListen(app)
     })
     this.options = opts ?? {}
@@ -179,11 +183,7 @@ export class Server {
     )
   }
 
-  async catchall(
-    req: express.Request,
-    _res: express.Response,
-    next: NextFunction,
-  ) {
+  async catchall(req: Request, _res: Response, next: NextFunction) {
     const def = this.lex.getDef(req.params.methodId)
     if (!def) {
       return next(new MethodNotImplementedError())
@@ -213,7 +213,7 @@ export class Server {
     const routeOpts = {
       blobLimit: routeCfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
     }
-    const validateReqInput = (req: express.Request) =>
+    const validateReqInput = (req: Request) =>
       validateInput(nsid, def, req, routeOpts, this.lex)
     const validateResOutput =
       this.options.validateResponse === false
@@ -390,7 +390,7 @@ export class Server {
     )
   }
 
-  private enableStreamingOnListen(app: express.Application) {
+  private enableStreamingOnListen(app: Application) {
     const _listen = app.listen
     app.listen = (...args) => {
       // @ts-ignore the args spread

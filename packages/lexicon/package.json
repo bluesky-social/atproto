@@ -13,16 +13,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/lexicon"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/lexicon"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
@@ -30,5 +25,8 @@
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.9.0",
     "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "jest": "^28.1.2"
   }
 }

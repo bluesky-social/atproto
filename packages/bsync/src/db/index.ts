@@ -34,41 +34,43 @@ export class Database {
     if (instances) {
       this.db = instances.db
       this.pool = instances.pool
-      return
-    }
+    } else {
+      // else create a pool & connect
+      const { schema, url } = opts
+      const pool =
+        opts.pool ??
+        new PgPool({
+          connectionString: url,
+          max: opts.poolSize,
+          maxUses: opts.poolMaxUses,
+          idleTimeoutMillis: opts.poolIdleTimeoutMs,
+        })
 
-    // else create a pool & connect
-    const { schema, url } = opts
-    const pool =
-      opts.pool ??
-      new PgPool({
-        connectionString: url,
-        max: opts.poolSize,
-        maxUses: opts.poolMaxUses,
-        idleTimeoutMillis: opts.poolIdleTimeoutMs,
+      // Select count(*) and other pg bigints as js integer
+      pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
+
+      // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
+      if (schema && !/^[a-z_]+$/i.test(schema)) {
+        throw new Error(
+          `Postgres schema must only contain [A-Za-z_]: ${schema}`,
+        )
+      }
+
+      pool.on('error', onPoolError)
+      pool.on('connect', (client) => {
+        client.on('error', onClientError)
+        if (schema) {
+          // Shared objects such as extensions will go in the public schema
+          client.query(`SET search_path TO "${schema}",public;`)
+        }
       })
 
-    // Select count(*) and other pg bigints as js integer
-    pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
-
-    // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
-    if (schema && !/^[a-z_]+$/i.test(schema)) {
-      throw new Error(`Postgres schema must only contain [A-Za-z_]: ${schema}`)
+      this.pool = pool
+      this.db = new Kysely<DatabaseSchemaType>({
+        dialect: new PostgresDialect({ pool }),
+      })
     }
 
-    pool.on('error', onPoolError)
-    pool.on('connect', (client) => {
-      client.on('error', onClientError)
-      if (schema) {
-        // Shared objects such as extensions will go in the public schema
-        client.query(`SET search_path TO "${schema}",public;`)
-      }
-    })
-
-    this.pool = pool
-    this.db = new Kysely<DatabaseSchemaType>({
-      dialect: new PostgresDialect({ pool }),
-    })
     this.migrator = new Migrator({
       db: this.db,
       migrationTableSchema: opts.schema,
@@ -165,7 +167,7 @@ const onClientError = (err: Error) => dbLogger.error({ err }, 'db client error')
 // -------
 
 class LeakyTxPlugin implements KyselyPlugin {
-  private txOver: boolean
+  private txOver = false
 
   endTx() {
     this.txOver = true
