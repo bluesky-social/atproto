@@ -11,6 +11,12 @@ export type FieldDefinition = {
   title?: string
 }
 
+export type ExtraFieldDefinition = FieldDefinition & {
+  type: 'text' | 'password' | 'date' | 'captcha'
+  required?: boolean
+  [_: string]: unknown
+}
+
 export type Customization = {
   name?: string
   logo?: string
@@ -28,6 +34,16 @@ export type Customization = {
       remember?: FieldDefinition
     }
   }
+
+  signUp?:
+    | false
+    | {
+        fields?: {
+          username?: FieldDefinition
+          password?: FieldDefinition
+        }
+        extraFields?: Record<string, ExtraFieldDefinition>
+      }
 }
 
 export function buildCustomizationData({
@@ -35,12 +51,14 @@ export function buildCustomizationData({
   logo,
   links,
   signIn,
+  signUp = false,
 }: Customization = {}) {
   return {
     name,
     logo,
     links,
     signIn,
+    signUp: signUp || undefined,
   }
 }
 

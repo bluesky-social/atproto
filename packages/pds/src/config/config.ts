@@ -280,10 +280,51 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
               fields: {
                 username: {
                   label: 'Email address or handle',
-                  pattern: '.{3,}',
-                  title: 'Must be at least 3 characters long',
                 },
                 password: {},
+              },
+            },
+            signUp: {
+              fields: {
+                username: {
+                  label: 'Email address',
+                  placeholder: 'Enter your email address',
+                  pattern:
+                    '[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}',
+                  title: 'An email address to identify your account.',
+                },
+                password: {
+                  placeholder: 'Choose your password',
+                  pattern:
+                    // '(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^0-9a-zA-Z]).{8,}'
+                    '.{8,}',
+                  title:
+                    // 'A strong password containing at least one uppercase, one lowercase, one number, and one special character, and at least 8 characters long.'
+                    'A strong password containing at least 8 characters.',
+                },
+              },
+              extraFields: {
+                handle: {
+                  label: 'Enter your user handle',
+                  placeholder: 'e.g. alice',
+                  type: 'text' as const,
+                  pattern: '[a-z0-9-]{3,20}',
+                },
+                birthdate: {
+                  label: 'Birth date',
+                  type: 'date' as const,
+                  required: true,
+                },
+                inviteCode: {
+                  label: 'Invite Code',
+                  type: 'text' as const,
+                  required: invitesCfg.required,
+                },
+                captcha: {
+                  label: 'Are you human?',
+                  type: 'captcha' as const,
+                  required: true,
+                },
               },
             },
           },

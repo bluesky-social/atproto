@@ -12,6 +12,12 @@ export type SignInCredentials = {
   remember?: boolean
 }
 
+export type SignUpData = {
+  username: string
+  password: string
+  extra?: Record<string, string>
+}
+
 export function useApi(
   {
     clientId,
@@ -68,6 +74,14 @@ export function useApi(
     [api, performRedirect, clientId, setSessions],
   )
 
+  const doSignUp = useCallback(
+    (data: SignUpData) => {
+      //
+      console.error('SIGNUPPP', data, api)
+    },
+    [api],
+  )
+
   const doAccept = useCallback(
     async (account: Account) => {
       performRedirect(await api.accept(account))
@@ -84,6 +98,7 @@ export function useApi(
     setSession,
 
     doSignIn,
+    doSignUp,
     doAccept,
     doReject,
   }

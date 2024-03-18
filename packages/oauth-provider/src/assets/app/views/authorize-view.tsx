@@ -6,6 +6,7 @@ import { useApi } from '../hooks/use-api'
 import { useBoundDispatch } from '../hooks/use-bound-dispatch'
 import { AcceptView } from './accept-view'
 import { SignInView } from './sign-in-view'
+import { SignUpView } from './sign-up-view'
 import { WelcomeView } from './welcome-view'
 
 export type AuthorizeViewProps = {
@@ -19,19 +20,18 @@ export function AuthorizeView({
 }: AuthorizeViewProps) {
   const forceSignIn = authorizeData?.loginHint != null
 
-  const [view, setView] = useState<'welcome' | 'sign-in' | 'accept' | 'done'>(
-    forceSignIn ? 'sign-in' : 'welcome',
-  )
+  const [view, setView] = useState<
+    'welcome' | 'sign-in' | 'sign-up' | 'accept' | 'done'
+  >(forceSignIn ? 'sign-in' : 'welcome')
 
   const showDone = useBoundDispatch(setView, 'done')
   const showSignIn = useBoundDispatch(setView, 'sign-in')
+  const showSignUp = useBoundDispatch(setView, 'sign-up')
   const showAccept = useBoundDispatch(setView, 'accept')
   const showWelcome = useBoundDispatch(setView, 'welcome')
 
-  const { sessions, setSession, doAccept, doReject, doSignIn } = useApi(
-    authorizeData,
-    { onRedirected: showDone },
-  )
+  const { sessions, setSession, doAccept, doReject, doSignIn, doSignUp } =
+    useApi(authorizeData, { onRedirected: showDone })
 
   const session = sessions.find((s) => s.selected && !s.loginRequired)
   useEffect(() => {
@@ -48,8 +48,20 @@ export function AuthorizeView({
         logo={customizationData?.logo}
         links={customizationData?.links}
         onSignIn={showSignIn}
-        onSignUp={undefined}
+        onSignUp={showSignUp}
         onCancel={doReject}
+      />
+    )
+  }
+
+  if (view === 'sign-up') {
+    return (
+      <SignUpView
+        links={customizationData?.links}
+        fields={customizationData?.signUp?.fields}
+        extraFields={customizationData?.signUp?.extraFields}
+        onSignUp={doSignUp}
+        onBack={showWelcome}
       />
     )
   }
