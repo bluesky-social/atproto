@@ -26,11 +26,13 @@ export const jsonCode = (value: unknown) =>
 export const cssCode = (code: string) =>
   Html.dangerouslyCreate(cssEscaper(code))
 
+export type HtmlVariable = Html | string | number | null | undefined
+
 export function html(
   htmlFragment: TemplateStringsArray,
-  ...values: readonly NestedArray<null | undefined | false | string | Html>[]
+  ...values: readonly NestedArray<HtmlVariable>[]
 ): Html {
-  const fragments: Iterable<string> = combineTemplateStringsFragments(
+  const fragments: Iterable<Html | string> = combineTemplateStringsFragments(
     htmlFragment,
     values,
   )
@@ -39,27 +41,29 @@ export function html(
 
 function* combineTemplateStringsFragments(
   htmlFragment: TemplateStringsArray,
-  values: readonly NestedArray<null | undefined | false | string | Html>[],
-): Generator<string, void, undefined> {
+  values: readonly NestedArray<HtmlVariable>[],
+): Generator<string | Html, void, undefined> {
   for (let i = 0; i < htmlFragment.length; i++) {
     yield htmlFragment[i]!
     if (i < values.length) {
       const value = values[i]
-      if (value != null && value !== false) {
-        yield* valueToFragment(value)
-      }
+      yield* valueToFragment(value)
     }
   }
 }
 
 function* valueToFragment(
-  value: NestedArray<null | undefined | false | string | Html>,
-): Generator<string, void, undefined> {
-  if (typeof value === 'string') {
+  value: NestedArray<HtmlVariable>,
+): Generator<string | Html, void, undefined> {
+  if (value == null) {
+    return
+  } else if (typeof value === 'number') {
+    yield String(value)
+  } else if (typeof value === 'string') {
     yield encode(value)
   } else if (value instanceof Html) {
-    yield* value.fragments
-  } else if (value != null && value !== false) {
+    yield value
+  } else if (Array.isArray(value)) {
     for (const v of value) {
       yield* valueToFragment(v)
     }

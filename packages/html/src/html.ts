@@ -1,3 +1,5 @@
+import { isString } from './util'
+
 const symbol = Symbol('Html.dangerouslyCreate')
 
 /**
@@ -5,53 +7,40 @@ const symbol = Symbol('Html.dangerouslyCreate')
  * or used as fragments to build a larger HTML document.
  */
 export class Html {
-  #fragments: Iterable<string>
+  #fragments: Iterable<Html | string>
 
-  private constructor(fragments: Iterable<string>, guard: symbol) {
+  private constructor(fragments: Iterable<Html | string>, guard: symbol) {
     if (guard !== symbol) {
       // Force developers to use `Html.dangerouslyCreate` to create an Html
       // instance, to make it clear that the content needs to be trusted.
       throw new TypeError(
-        'Use Html.dangerouslyCreate to create an Html instance',
+        'Use Html.dangerouslyCreate() to create an Html instance',
       )
     }
 
     this.#fragments = fragments
   }
 
-  /**
-   * Returns the HTML fragments as an array of strings. If the fragments are
-   * not already an array, they are lazily consumed into an array.
-   */
-  get fragments(): readonly string[] {
-    if (!Array.isArray(this.#fragments)) {
-      const array = Array.from(this.#fragments)
-      this.#fragments = array
-      return array
-    }
-
-    return this.#fragments
-  }
-
   toString(): string {
-    const { fragments } = this
-
-    // Lazily join the fragments when they are used, to avoid unnecessary
-    // intermediate strings when concatenating multiple Html as fragments.
-    if (fragments.length > 1) {
-      const string = fragments.join('')
-      this.#fragments = [string]
-      return string
+    // Lazily compute & join the fragments when they are used, to avoid
+    // unnecessary intermediate strings when concatenating multiple Html as
+    // fragments.
+    if (
+      !Array.isArray(this.#fragments) ||
+      this.#fragments.length > 1 ||
+      !this.#fragments.every(isString)
+    ) {
+      // Will call `toString` recursively, as well as generating iterator
+      // results.
+      const fragment = Array.from(this.#fragments, String).join('')
+      this.#fragments = [fragment] // Cache result for future calls
+      return fragment
     }
 
-    return fragments.join('')
+    return this.#fragments.join('')
   }
 
-  toBuffer(): Buffer {
-    return Buffer.from(this.toString(), 'utf8')
-  }
-
-  static dangerouslyCreate(fragments: Iterable<string>): Html {
+  static dangerouslyCreate(fragments: Iterable<Html | string>): Html {
     return new Html(fragments, symbol)
   }
 }
