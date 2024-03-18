@@ -1,13 +1,29 @@
 import type { ClientMetadata, Session } from './types'
 
+export type FieldDefinition = {
+  label?: string
+  placeholder?: string
+  pattern?: string
+  title?: string
+}
+
+export type LinkDefinition = {
+  title: string
+  href: string
+  rel?: string
+}
+
 export type CustomizationData = {
   name?: string
   logo?: string
-  links?: Array<{
-    name: string
-    href: string
-    rel?: string
-  }>
+  links?: LinkDefinition[]
+  signIn?: {
+    fields?: {
+      username?: FieldDefinition
+      password?: FieldDefinition
+      remember?: FieldDefinition
+    }
+  }
 }
 
 export type ErrorData = {

@@ -4,26 +4,43 @@ type ColorName = typeof colorNames[number]
 const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)
 
+export type FieldDefinition = {
+  label?: string
+  placeholder?: string
+  pattern?: string
+  title?: string
+}
+
 export type Customization = {
   name?: string
   logo?: string
   colors?: { [_ in ColorName]?: string }
   links?: Array<{
-    name: string
+    title: string
     href: string
     rel?: string
   }>
+
+  signIn?: {
+    fields?: {
+      username?: FieldDefinition
+      password?: FieldDefinition
+      remember?: FieldDefinition
+    }
+  }
 }
 
 export function buildCustomizationData({
   name,
   logo,
   links,
+  signIn,
 }: Customization = {}) {
   return {
     name,
     logo,
     links,
+    signIn,
   }
 }
 

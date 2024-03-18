@@ -13,7 +13,7 @@ export function ErrorCard({
   className,
   ...attrs
 }: Partial<ErrorCardProps> &
-  Omit<HtmlHTMLAttributes<HTMLDivElement>, keyof ErrorCardProps>) {
+  Omit<HtmlHTMLAttributes<HTMLDivElement>, keyof ErrorCardProps | 'children'>) {
   return (
     <div
       {...attrs}

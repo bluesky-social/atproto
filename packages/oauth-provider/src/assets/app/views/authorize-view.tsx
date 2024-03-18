@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 
 import type { AuthorizeData, CustomizationData } from '../backend-data'
-import { PageLayout } from '../components/page-layout'
-import { useBoundDispatch } from '../hooks/use-bound-dispatch'
+import { LayoutTitlePage } from '../components/layout-title-page'
 import { useApi } from '../hooks/use-api'
+import { useBoundDispatch } from '../hooks/use-bound-dispatch'
+import { AcceptView } from './accept-view'
 import { SignInView } from './sign-in-view'
 import { WelcomeView } from './welcome-view'
-import { AcceptView } from './accept-view'
 
 export type AuthorizeViewProps = {
   authorizeData: AuthorizeData
@@ -57,6 +57,7 @@ export function AuthorizeView({
   if (view === 'sign-in') {
     return (
       <SignInView
+        fields={customizationData?.signIn?.fields}
         loginHint={authorizeData.loginHint}
         sessions={sessions}
         setSession={setSession}
@@ -74,12 +75,17 @@ export function AuthorizeView({
         clientMetadata={authorizeData.clientMetadata}
         onAccept={() => doAccept(session.account)}
         onReject={doReject}
-        onBack={() => setSession(null)}
+        onBack={() => {
+          setSession(null)
+          setView(sessions.length ? 'sign-in' : 'welcome')
+        }}
       />
     )
   }
 
   return (
-    <PageLayout title="Login complete">You are being redirected...</PageLayout>
+    <LayoutTitlePage title="Login complete">
+      You are being redirected...
+    </LayoutTitlePage>
   )
 }
