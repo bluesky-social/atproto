@@ -28,3 +28,7 @@ export function* jsonEscaper(value: unknown) {
 export function* cssEscaper(css: string) {
   yield* stringReplacer(css, '</style>', '\\u003c/style>')
 }
+
+export function isString(value: unknown): value is string {
+  return typeof value === 'string'
+}
