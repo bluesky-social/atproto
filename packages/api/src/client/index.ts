@@ -147,6 +147,9 @@ import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
+import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
+import * as AppBskyLabelerService from './types/app/bsky/labeler/service'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -300,6 +303,9 @@ export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
+export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
+export * as AppBskyLabelerService from './types/app/bsky/labeler/service'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -364,39 +370,39 @@ export class AtpServiceClient {
 
 export class ComNS {
   _service: AtpServiceClient
-  atproto: ComAtprotoNS
+  atproto: AtprotoNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.atproto = new ComAtprotoNS(service)
+    this.atproto = new AtprotoNS(service)
   }
 }
 
-export class ComAtprotoNS {
+export class AtprotoNS {
   _service: AtpServiceClient
-  admin: ComAtprotoAdminNS
-  identity: ComAtprotoIdentityNS
-  label: ComAtprotoLabelNS
-  moderation: ComAtprotoModerationNS
-  repo: ComAtprotoRepoNS
-  server: ComAtprotoServerNS
-  sync: ComAtprotoSyncNS
-  temp: ComAtprotoTempNS
+  admin: AdminNS
+  identity: IdentityNS
+  label: LabelNS
+  moderation: ModerationNS
+  repo: RepoNS
+  server: ServerNS
+  sync: SyncNS
+  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.admin = new ComAtprotoAdminNS(service)
-    this.identity = new ComAtprotoIdentityNS(service)
-    this.label = new ComAtprotoLabelNS(service)
-    this.moderation = new ComAtprotoModerationNS(service)
-    this.repo = new ComAtprotoRepoNS(service)
-    this.server = new ComAtprotoServerNS(service)
-    this.sync = new ComAtprotoSyncNS(service)
-    this.temp = new ComAtprotoTempNS(service)
+    this.admin = new AdminNS(service)
+    this.identity = new IdentityNS(service)
+    this.label = new LabelNS(service)
+    this.moderation = new ModerationNS(service)
+    this.repo = new RepoNS(service)
+    this.server = new ServerNS(service)
+    this.sync = new SyncNS(service)
+    this.temp = new TempNS(service)
   }
 }
 
-export class ComAtprotoAdminNS {
+export class AdminNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -682,7 +688,7 @@ export class ComAtprotoAdminNS {
   }
 }
 
-export class ComAtprotoIdentityNS {
+export class IdentityNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -739,7 +745,7 @@ export class ComAtprotoIdentityNS {
   }
 }
 
-export class ComAtprotoLabelNS {
+export class LabelNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -758,7 +764,7 @@ export class ComAtprotoLabelNS {
   }
 }
 
-export class ComAtprotoModerationNS {
+export class ModerationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -777,7 +783,7 @@ export class ComAtprotoModerationNS {
   }
 }
 
-export class ComAtprotoRepoNS {
+export class RepoNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -873,7 +879,7 @@ export class ComAtprotoRepoNS {
   }
 }
 
-export class ComAtprotoServerNS {
+export class ServerNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1145,7 +1151,7 @@ export class ComAtprotoServerNS {
   }
 }
 
-export class ComAtprotoSyncNS {
+export class SyncNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1274,7 +1280,7 @@ export class ComAtprotoSyncNS {
   }
 }
 
-export class ComAtprotoTempNS {
+export class TempNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1350,37 +1356,39 @@ export class ComAtprotoTempNS {
 
 export class AppNS {
   _service: AtpServiceClient
-  bsky: AppBskyNS
+  bsky: BskyNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.bsky = new AppBskyNS(service)
+    this.bsky = new BskyNS(service)
   }
 }
 
-export class AppBskyNS {
+export class BskyNS {
   _service: AtpServiceClient
-  actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
-  feed: AppBskyFeedNS
-  graph: AppBskyGraphNS
-  notification: AppBskyNotificationNS
-  richtext: AppBskyRichtextNS
-  unspecced: AppBskyUnspeccedNS
+  actor: ActorNS
+  embed: EmbedNS
+  feed: FeedNS
+  graph: GraphNS
+  labeler: LabelerNS
+  notification: NotificationNS
+  richtext: RichtextNS
+  unspecced: UnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.actor = new AppBskyActorNS(service)
-    this.embed = new AppBskyEmbedNS(service)
-    this.feed = new AppBskyFeedNS(service)
-    this.graph = new AppBskyGraphNS(service)
-    this.notification = new AppBskyNotificationNS(service)
-    this.richtext = new AppBskyRichtextNS(service)
-    this.unspecced = new AppBskyUnspeccedNS(service)
+    this.actor = new ActorNS(service)
+    this.embed = new EmbedNS(service)
+    this.feed = new FeedNS(service)
+    this.graph = new GraphNS(service)
+    this.labeler = new LabelerNS(service)
+    this.notification = new NotificationNS(service)
+    this.richtext = new RichtextNS(service)
+    this.unspecced = new UnspeccedNS(service)
   }
 }
 
-export class AppBskyActorNS {
+export class ActorNS {
   _service: AtpServiceClient
   profile: ProfileRecord
 
@@ -1528,7 +1536,7 @@ export class ProfileRecord {
   }
 }
 
-export class AppBskyEmbedNS {
+export class EmbedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1536,7 +1544,7 @@ export class AppBskyEmbedNS {
   }
 }
 
-export class AppBskyFeedNS {
+export class FeedNS {
   _service: AtpServiceClient
   generator: GeneratorRecord
   like: LikeRecord
@@ -2039,7 +2047,7 @@ export class ThreadgateRecord {
   }
 }
 
-export class AppBskyGraphNS {
+export class GraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
@@ -2525,7 +2533,98 @@ export class ListitemRecord {
   }
 }
 
-export class AppBskyNotificationNS {
+export class LabelerNS {
+  _service: AtpServiceClient
+  service: ServiceRecord
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.service = new ServiceRecord(service)
+  }
+
+  getServices(
+    params?: AppBskyLabelerGetServices.QueryParams,
+    opts?: AppBskyLabelerGetServices.CallOptions,
+  ): Promise<AppBskyLabelerGetServices.Response> {
+    return this._service.xrpc
+      .call('app.bsky.labeler.getServices', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyLabelerGetServices.toKnownErr(e)
+      })
+  }
+}
+
+export class ServiceRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyLabelerService.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.labeler.service',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyLabelerService.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.labeler.service',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyLabelerService.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.labeler.service'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection: 'app.bsky.labeler.service',
+        rkey: 'self',
+        ...params,
+        record,
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.labeler.service', ...params },
+      { headers },
+    )
+  }
+}
+
+export class NotificationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2577,7 +2676,7 @@ export class AppBskyNotificationNS {
   }
 }
 
-export class AppBskyRichtextNS {
+export class RichtextNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2585,7 +2684,7 @@ export class AppBskyRichtextNS {
   }
 }
 
-export class AppBskyUnspeccedNS {
+export class UnspeccedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
