@@ -7,6 +7,12 @@ export type FieldDefinition = {
   title?: string
 }
 
+export type ExtraFieldDefinition = FieldDefinition & {
+  type: 'text' | 'password' | 'date' | 'captcha'
+  required?: boolean
+  [_: string]: unknown
+}
+
 export type LinkDefinition = {
   title: string
   href: string
@@ -23,6 +29,14 @@ export type CustomizationData = {
       password?: FieldDefinition
       remember?: FieldDefinition
     }
+  }
+  signUp?: {
+    fields?: {
+      username?: FieldDefinition
+      password?: FieldDefinition
+      remember?: FieldDefinition
+    }
+    extraFields?: Record<string, ExtraFieldDefinition>
   }
 }
 
