@@ -6,6 +6,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE ozones's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/ozone ./packages/ozone
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws

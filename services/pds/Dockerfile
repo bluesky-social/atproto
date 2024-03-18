@@ -8,6 +8,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/pds ./packages/pds
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws

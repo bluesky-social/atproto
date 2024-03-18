@@ -6,6 +6,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web

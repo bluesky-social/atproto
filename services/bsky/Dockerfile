@@ -6,6 +6,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/bsky ./packages/bsky
 COPY ./packages/api ./packages/api
 COPY ./packages/common ./packages/common
