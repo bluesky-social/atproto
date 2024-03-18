@@ -14,6 +14,10 @@
           "maxLength": 640
         },
         "avatar": { "type": "string" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -38,6 +42,10 @@
           "maxLength": 2560
         },
         "avatar": { "type": "string" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {

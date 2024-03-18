@@ -3622,6 +3622,10 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
@@ -3659,6 +3663,10 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
           indexedAt: {
             type: 'string',
