@@ -1,25 +1,24 @@
-import { HTMLAttributes, PropsWithChildren, ReactNode } from 'react'
+import { HTMLAttributes, ReactNode } from 'react'
 import { clsx } from '../lib/clsx'
 
-export type PageLayoutProps = {
+export type LayoutTitlePageProps = {
   title?: ReactNode
   subtitle?: ReactNode
 }
 
-export function PageLayout({
+export function LayoutTitlePage({
   children,
   title,
   subtitle,
   ...attrs
-}: PropsWithChildren<
-  PageLayoutProps & Omit<HTMLAttributes<HTMLDivElement>, keyof PageLayoutProps>
->) {
+}: LayoutTitlePageProps &
+  Omit<HTMLAttributes<HTMLDivElement>, keyof LayoutTitlePageProps>) {
   return (
     <div
       {...attrs}
       className={clsx(
         attrs.className,
-        'flex justify-center items-stretch min-h-screen bg-white text-black dark:bg-black dark:text-white',
+        'flex justify-center items-stretch min-h-screen bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
       )}
     >
       <div className="w-1/2 hidden p-4 md:grid content-center justify-items-end text-right dark:bg-transparent dark:border-r bg-slate-100 dark:bg-slate-800 dark:border-slate-700">

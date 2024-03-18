@@ -1,6 +1,7 @@
 import path from 'node:path'
 import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
+import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -252,19 +253,39 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
             },
             links: [
               {
-                name: 'Home',
+                title: 'Home',
                 href: env.oauthProviderHomeLink,
-                rel: 'home',
+                rel: 'bookmark',
               },
               {
-                name: 'Terms of Service',
+                title: 'Terms of Service',
                 href: env.oauthProviderTosLink,
                 rel: 'terms-of-service',
+              },
+              {
+                title: 'Privacy Policy',
+                href: env.oauthProviderPrivacyPolicyLink,
+                rel: 'privacy-policy',
+              },
+              {
+                title: 'Support',
+                href: env.oauthProviderSupportLink,
+                rel: 'help',
               },
             ].filter(
               (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
                 f.href != null,
             ),
+            signIn: {
+              fields: {
+                username: {
+                  label: 'Email address or handle',
+                  pattern: '.{3,}',
+                  title: 'Must be at least 3 characters long',
+                },
+                password: {},
+              },
+            },
           },
         },
       }
@@ -379,19 +400,7 @@ export type OAuthConfig = {
     | false
     | {
         disableSsrf: boolean
-        customization: {
-          name: string
-          logo?: string
-          colors?: {
-            primary?: string
-            error?: string
-          }
-          links?: Array<{
-            name: string
-            href: string
-            rel?: string
-          }>
-        }
+        customization: Customization
       }
 }
 

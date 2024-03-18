@@ -115,6 +115,8 @@ export const readEnv = (): ServerEnvironment => {
     oauthProviderErrorColor: envStr('PDS_OAUTH_PROVIDER_ERROR_COLOR'),
     oauthProviderHomeLink: envStr('PDS_OAUTH_PROVIDER_HOME_LINK'),
     oauthProviderTosLink: envStr('PDS_OAUTH_PROVIDER_TOS_LINK'),
+    oauthProviderPrivacyPolicyLink: envStr('PDS_OAUTH_PROVIDER_POLICY_LINK'),
+    oauthProviderSupportLink: envStr('PDS_OAUTH_PROVIDER_SUPPORT_LINK'),
   }
 }
 
@@ -227,4 +229,6 @@ export type ServerEnvironment = {
   oauthProviderErrorColor?: string
   oauthProviderHomeLink?: string
   oauthProviderTosLink?: string
+  oauthProviderPrivacyPolicyLink?: string
+  oauthProviderSupportLink?: string
 }
