@@ -1,12 +1,12 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { html } from '@atproto/html'
-import { writeBuffer } from '@atproto/http-util'
+import { html, javascriptCode } from '@atproto/html'
 
 import { Client } from '../client/client.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { Code } from '../request/code.js'
 import { TokenType } from '../token/token-type.js'
+import { sendWebPage } from './send-web-page.js'
 
 export type AuthorizationResponseParameters = {
   // Will be added from AuthorizationResultRedirect['issuer']
@@ -110,21 +110,15 @@ async function writeFormPost(
   // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
   res.setHeader('Set-Cookie', `bfCacheBypass=foo; max-age=1; SameSite=Lax`)
 
-  const payload = html`
-    <html>
-      <body>
-        <form method="post" action="${uri}">
-          ${entries.map(([key, value]) => [
-            html`<input type="hidden" name="${key}" value="${value}" />`,
-          ])}
-          <input type="submit" value="Continue" />
-        </form>
-        <script>
-          document.forms[0].submit()
-        </script>
-      </body>
-    </html>
-  `
-
-  return writeBuffer(res, payload.toBuffer())
+  return sendWebPage(res, {
+    body: html`
+      <form method="post" action="${uri}">
+        ${entries.map(([key, value]) => [
+          html`<input type="hidden" name="${key}" value="${value}" />`,
+        ])}
+        <input type="submit" value="Continue" />
+      </form>
+    `,
+    scripts: [javascriptCode('document.forms[0].submit();')],
+  })
 }
