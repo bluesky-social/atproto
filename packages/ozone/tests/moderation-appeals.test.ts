@@ -5,7 +5,6 @@ import {
   ModeratorClient,
 } from '@atproto/dev-env'
 import {
-  ComAtprotoAdminDefs,
   ComAtprotoModerationDefs,
   ToolsOzoneModerationDefs,
 } from '@atproto/api'
@@ -73,7 +72,7 @@ describe('moderation-appeals', () => {
         subject: getBobsPostSubject(),
       })
 
-      await assertBobsPostStatus(ComAtprotoAdminDefs.REVIEWOPEN, undefined)
+      await assertBobsPostStatus(ToolsOzoneModerationDefs.REVIEWOPEN, undefined)
 
       // Create a report as normal user with appeal type
       expect(
@@ -86,7 +85,7 @@ describe('moderation-appeals', () => {
       ).rejects.toThrow('You cannot appeal this report')
 
       // Verify that the appeal status did not change
-      await assertBobsPostStatus(ComAtprotoAdminDefs.REVIEWOPEN, undefined)
+      await assertBobsPostStatus(ToolsOzoneModerationDefs.REVIEWOPEN, undefined)
 
       // Emit report event as moderator
       await modClient.emitEvent({
@@ -112,7 +111,7 @@ describe('moderation-appeals', () => {
       // Verify that the appeal status on carol's post is undefined
       await assertSubjectStatus(
         getCarolPostSubject().uri,
-        ComAtprotoAdminDefs.REVIEWOPEN,
+        ToolsOzoneModerationDefs.REVIEWOPEN,
         undefined,
       )
 
@@ -236,7 +235,7 @@ describe('moderation-appeals', () => {
       // Assert that status moved on to reviewClosed while appealed status is still true
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        ComAtprotoAdminDefs.REVIEWCLOSED,
+        ToolsOzoneModerationDefs.REVIEWCLOSED,
         true,
       )
 
@@ -252,7 +251,7 @@ describe('moderation-appeals', () => {
       // Assert that status stayed the same while appealed status is still true
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        ComAtprotoAdminDefs.REVIEWCLOSED,
+        ToolsOzoneModerationDefs.REVIEWCLOSED,
         false,
       )
     })

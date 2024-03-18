@@ -31,6 +31,8 @@ describe('Moderation', () => {
             porn: 'hide',
           },
           labelers: [],
+          hiddenPosts: [],
+          mutedWords: [],
         },
       },
     )
@@ -63,6 +65,8 @@ describe('Moderation', () => {
             porn: 'ignore',
           },
           labelers: [],
+          hiddenPosts: [],
+          mutedWords: [],
         },
       },
     )
@@ -97,6 +101,8 @@ describe('Moderation', () => {
             porn: 'hide',
           },
           labelers: [],
+          hiddenPosts: [],
+          mutedWords: [],
         },
       },
     )
@@ -144,6 +150,8 @@ describe('Moderation', () => {
               labels: { porn: 'ignore' },
             },
           ],
+          hiddenPosts: [],
+          mutedWords: [],
         },
       },
     )
@@ -189,6 +197,8 @@ describe('Moderation', () => {
               labels: {},
             },
           ],
+          hiddenPosts: [],
+          mutedWords: [],
         },
       },
     )
@@ -239,6 +249,8 @@ describe('Moderation', () => {
               labels: {},
             },
           ],
+          hiddenPosts: [],
+          mutedWords: [],
         },
       },
     )
@@ -260,6 +272,8 @@ describe('Moderation', () => {
             labels: { porn: 'warn' },
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       labelDefs: {
         'did:web:labeler.test': [
@@ -269,6 +283,7 @@ describe('Moderation', () => {
               blurs: 'none',
               severity: 'inform',
               locales: [],
+              defaultSetting: 'warn',
             },
             'did:web:labeler.test',
           ),
@@ -307,7 +322,7 @@ describe('Moderation', () => {
   })
 
   it('Doesnt allow custom behaviors to override imperative labels', () => {
-    const modOpts = {
+    const modOpts: ModerationOpts = {
       userDid: 'did:web:alice.test',
       prefs: {
         adultContentEnabled: true,
@@ -318,6 +333,8 @@ describe('Moderation', () => {
             labels: {},
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       labelDefs: {
         'did:web:labeler.test': [
@@ -327,6 +344,7 @@ describe('Moderation', () => {
               blurs: 'none',
               severity: 'inform',
               locales: [],
+              defaultSetting: 'warn',
             },
             'did:web:labeler.test',
           ),
@@ -381,6 +399,8 @@ describe('Moderation', () => {
             labels: { BadLabel: 'hide', 'bad/label': 'hide' },
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       labelDefs: {
         'did:web:labeler.test': [
@@ -390,6 +410,7 @@ describe('Moderation', () => {
               blurs: 'content',
               severity: 'inform',
               locales: [],
+              defaultSetting: 'warn',
             },
             'did:web:labeler.test',
           ),
@@ -399,6 +420,7 @@ describe('Moderation', () => {
               blurs: 'content',
               severity: 'inform',
               locales: [],
+              defaultSetting: 'warn',
             },
             'did:web:labeler.test',
           ),
@@ -444,7 +466,7 @@ describe('Moderation', () => {
   })
 
   it('Custom labels can set the default setting', () => {
-    const modOpts = {
+    const modOpts: ModerationOpts = {
       userDid: 'did:web:alice.test',
       prefs: {
         adultContentEnabled: true,
@@ -455,6 +477,8 @@ describe('Moderation', () => {
             labels: {},
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       labelDefs: {
         'did:web:labeler.test': [
@@ -586,7 +610,7 @@ describe('Moderation', () => {
   })
 
   it('Custom labels can require adult content to be enabled', () => {
-    const modOpts = {
+    const modOpts: ModerationOpts = {
       userDid: 'did:web:alice.test',
       prefs: {
         adultContentEnabled: false,
@@ -599,6 +623,8 @@ describe('Moderation', () => {
             },
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       labelDefs: {
         'did:web:labeler.test': [
@@ -653,7 +679,7 @@ describe('Moderation', () => {
   })
 
   it('Adult content disabled forces the preference to hide', () => {
-    const modOpts = {
+    const modOpts: ModerationOpts = {
       userDid: 'did:web:alice.test',
       prefs: {
         adultContentEnabled: false,
@@ -664,6 +690,8 @@ describe('Moderation', () => {
             labels: {},
           },
         ],
+        hiddenPosts: [],
+        mutedWords: [],
       },
       labelDefs: {},
     }
