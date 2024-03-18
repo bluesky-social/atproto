@@ -1,6 +1,6 @@
 import { CustomizationData, ErrorData } from '../backend-data'
 import { ErrorCard } from '../components/error-card'
-import { WelcomeLayout } from '../components/welcome-layout'
+import { LayoutWelcome } from '../components/layout-welcome'
 
 export type ErrorViewProps = {
   customizationData?: CustomizationData
@@ -9,9 +9,9 @@ export type ErrorViewProps = {
 
 export function ErrorView({ errorData, customizationData }: ErrorViewProps) {
   return (
-    <WelcomeLayout {...customizationData}>
+    <LayoutWelcome {...customizationData}>
       <ErrorCard message={getUserFriendlyMessage(errorData)} />
-    </WelcomeLayout>
+    </LayoutWelcome>
   )
 }
 

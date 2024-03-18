@@ -1,11 +1,16 @@
 import { useCallback, useMemo, useState } from 'react'
 
 import { AuthorizeData } from '../backend-data'
-import { SignInFormOutput } from '../components/sign-in-form'
 import { Api } from '../lib/api'
+import { upsert } from '../lib/util'
 import { Account, Session } from '../types'
 import { useCsrfToken } from './use-csrf-token'
-import { upsert } from '../lib/util'
+
+export type SignInCredentials = {
+  username: string
+  password: string
+  remember?: boolean
+}
 
 export function useApi(
   {
@@ -49,7 +54,7 @@ export function useApi(
   )
 
   const doSignIn = useCallback(
-    async (credentials: SignInFormOutput): Promise<void> => {
+    async (credentials: SignInCredentials): Promise<void> => {
       const session = await api.signIn(credentials)
       const { sub } = session.account
 

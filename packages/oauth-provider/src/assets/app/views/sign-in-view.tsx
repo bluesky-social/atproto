@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { FieldDefinition } from '../backend-data'
 import { AccountPicker } from '../components/account-picker'
-import { PageLayout } from '../components/page-layout'
+import { LayoutTitlePage } from '../components/layout-title-page'
 import { SignInForm, SignInFormOutput } from '../components/sign-in-form'
 import { Session } from '../types'
 
@@ -9,6 +10,12 @@ export type SignInViewProps = {
   sessions: readonly Session[]
   setSession: (sub: string | null) => void
   loginHint?: string
+
+  fields?: {
+    username?: FieldDefinition
+    password?: FieldDefinition
+    remember?: FieldDefinition
+  }
 
   onSignIn: (credentials: SignInFormOutput) => void | PromiseLike<void>
   onBack?: () => void
@@ -18,6 +25,7 @@ export function SignInView({
   loginHint,
   sessions,
   setSession,
+  fields,
 
   onSignIn,
   onBack,
@@ -39,63 +47,111 @@ export function SignInView({
     if (!session.loginRequired) return null
 
     return (
-      <PageLayout title="Sign in" subtitle="Confirm your password to continue">
+      <LayoutTitlePage
+        title="Sign in"
+        subtitle="Confirm your password to continue"
+      >
         <SignInForm
           className="max-w-lg w-full"
-          remember={true}
-          username={session.account.preferred_username}
-          usernameReadonly={true}
           onSubmit={onSignIn}
           onCancel={clearSession}
           cancelLabel="Back" // to account picker
+          usernameDefault={session.account.preferred_username}
+          usernameReadonly={true}
+          usernameLabel={fields?.username?.label}
+          usernamePlaceholder={fields?.username?.placeholder}
+          usernamePattern={fields?.username?.pattern}
+          usernameTitle={fields?.username?.title}
+          passwordLabel={fields?.password?.label}
+          passwordPlaceholder={fields?.password?.placeholder}
+          passwordPattern={fields?.password?.pattern}
+          passwordTitle={fields?.password?.title}
+          rememberDefault={true}
+          rememberLabel={fields?.remember?.label}
         />
-      </PageLayout>
+      </LayoutTitlePage>
     )
   }
 
   if (loginHint) {
     return (
-      <PageLayout title="Sign in" subtitle="Enter your password">
+      <LayoutTitlePage title="Sign in" subtitle="Enter your password">
         <SignInForm
           className="max-w-lg w-full"
-          username={loginHint}
-          usernameReadonly={true}
           onSubmit={onSignIn}
           onCancel={onBack}
           cancelLabel="Back"
+          usernameDefault={loginHint}
+          usernameReadonly={true}
+          usernameLabel={fields?.username?.label}
+          usernamePlaceholder={fields?.username?.placeholder}
+          usernamePattern={fields?.username?.pattern}
+          usernameTitle={fields?.username?.title}
+          passwordLabel={fields?.password?.label}
+          passwordPlaceholder={fields?.password?.placeholder}
+          passwordPattern={fields?.password?.pattern}
+          passwordTitle={fields?.password?.title}
+          rememberLabel={fields?.remember?.label}
         />
-      </PageLayout>
+      </LayoutTitlePage>
     )
   }
 
   if (sessions.length === 0) {
     return (
-      <PageLayout title="Sign in" subtitle="Enter your username and password">
+      <LayoutTitlePage
+        title="Sign in"
+        subtitle="Enter your username and password"
+      >
         <SignInForm
           className="max-w-lg w-full"
           onSubmit={onSignIn}
           onCancel={onBack}
           cancelLabel="Back"
+          usernameLabel={fields?.username?.label}
+          usernamePlaceholder={fields?.username?.placeholder}
+          usernamePattern={fields?.username?.pattern}
+          usernameTitle={fields?.username?.title}
+          passwordLabel={fields?.password?.label}
+          passwordPlaceholder={fields?.password?.placeholder}
+          passwordPattern={fields?.password?.pattern}
+          passwordTitle={fields?.password?.title}
+          rememberLabel={fields?.remember?.label}
         />
-      </PageLayout>
+      </LayoutTitlePage>
     )
   }
 
   if (showSignInForm) {
     return (
-      <PageLayout title="Sign in" subtitle="Enter your username and password">
+      <LayoutTitlePage
+        title="Sign in"
+        subtitle="Enter your username and password"
+      >
         <SignInForm
           className="max-w-lg w-full"
           onSubmit={onSignIn}
           onCancel={() => setShowSignInForm(false)}
           cancelLabel="Back" // to account picker
+          usernameLabel={fields?.username?.label}
+          usernamePlaceholder={fields?.username?.placeholder}
+          usernamePattern={fields?.username?.pattern}
+          usernameTitle={fields?.username?.title}
+          passwordLabel={fields?.password?.label}
+          passwordPlaceholder={fields?.password?.placeholder}
+          passwordPattern={fields?.password?.pattern}
+          passwordTitle={fields?.password?.title}
+          rememberLabel={fields?.remember?.label}
         />
-      </PageLayout>
+      </LayoutTitlePage>
     )
   }
 
   return (
-    <PageLayout title="Sign in as..." subtitle="Select an account to continue.">
+    <LayoutTitlePage
+      title="Sign in as..."
+      subtitle="Select an account to continue."
+    >
       <AccountPicker
         className="max-w-lg w-full"
         accounts={accounts}
@@ -104,6 +160,6 @@ export function SignInView({
         onBack={onBack}
         backLabel="Back" // to previous view
       />
-    </PageLayout>
+    </LayoutTitlePage>
   )
 }

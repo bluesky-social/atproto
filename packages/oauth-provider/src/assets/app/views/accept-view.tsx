@@ -1,5 +1,5 @@
 import { AcceptForm } from '../components/accept-form'
-import { PageLayout } from '../components/page-layout'
+import { LayoutTitlePage } from '../components/layout-title-page'
 import { ClientMetadata, Session } from '../types'
 
 export type AcceptViewProps = {
@@ -22,7 +22,7 @@ export function AcceptView({
 }: AcceptViewProps) {
   const { account } = session
   return (
-    <PageLayout
+    <LayoutTitlePage
       title="Authorize"
       subtitle={
         <>
@@ -41,6 +41,6 @@ export function AcceptView({
         onAccept={onAccept}
         onReject={onReject}
       />
-    </PageLayout>
+    </LayoutTitlePage>
   )
 }

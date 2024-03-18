@@ -1,25 +1,25 @@
 import { PropsWithChildren } from 'react'
 
-export type WelcomeLayoutProps = {
+export type LayoutWelcomeProps = {
   name?: string
   logo?: string
   links?: Array<{
-    name: string
+    title: string
     href: string
     rel?: string
   }>
   logoAlt?: string
 }
 
-export function WelcomeLayout({
+export function LayoutWelcome({
   name,
   logo,
   logoAlt = name || 'Logo',
   links,
   children,
-}: PropsWithChildren<WelcomeLayoutProps>) {
+}: PropsWithChildren<LayoutWelcomeProps>) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center flex-col bg-white text-black dark:bg-black dark:text-white">
+    <div className="min-h-screen w-full flex items-center justify-center flex-col bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       <div className="w-full max-w-screen-sm overflow-hidden flex-grow flex flex-col items-center justify-center">
         {logo && (
           <img
@@ -39,7 +39,7 @@ export function WelcomeLayout({
       </div>
 
       {links != null && links.length > 0 && (
-        <nav className="w-full max-w-screen-sm overflow-hidden mt-4 border-t border-t-slate-200 flex flex-wrap justify-center">
+        <nav className="w-full max-w-screen-sm overflow-hidden mt-4 border-t border-t-slate-200 dark:border-t-slate-700 flex flex-wrap justify-center">
           {links.map((link) => (
             <a
               key={link.href}
@@ -48,7 +48,7 @@ export function WelcomeLayout({
               target="_blank"
               className="m-2 md:m-4 text-xs md:text-sm text-primary hover:underline"
             >
-              {link.name}
+              {link.title}
             </a>
           ))}
         </nav>
