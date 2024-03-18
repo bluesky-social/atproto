@@ -44,7 +44,6 @@
     "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
-    "pino": "^8.15.0",
     "pino-http": "^8.2.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"
