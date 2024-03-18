@@ -17,7 +17,7 @@ export async function sendErrorPage(
   err: unknown,
   customization?: Customization,
 ): Promise<void> {
-  return sendWebPage(req, res, {
+  return sendWebPage(res, {
     status: buildErrorStatus(err),
     scripts: [
       declareBrowserGlobalVar(

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { IncomingMessage, ServerResponse } from 'node:http'
+import { ServerResponse } from 'node:http'
 
 import { html, Html, jsonCode } from '@atproto/html'
 import { writeHtml } from '@atproto/http-util'
@@ -10,11 +10,11 @@ export type WebPageOptions = {
   lang?: string
   base?: URL
   meta?: Record<string, Html | string>
-  head?: Html
-  title: string
+  head?: Html | Html[]
+  title?: string
   scripts?: (Html | Asset)[]
   styles?: (Html | Asset)[]
-  body: Html
+  body: Html | Html[]
 }
 
 export function buildWebPage({
@@ -36,11 +36,11 @@ export function buildWebPage({
     <html lang="${lang}">
       <head>
         <meta charset="UTF-8" />
+        ${title && html`<title>${title}</title>`}
         ${base && html`<base href="${base.href}" />`}
         ${Object.entries(meta).map(([name, content]) => {
           return html`<meta name="${name}" content="${content}" />`
         })}
-        <title>${title}</title>
         ${head} ${styles?.map(styleToHtml)}
       </head>
       <body>
@@ -71,7 +71,6 @@ function styleToHtml(style: Html | Asset) {
 }
 
 export function sendWebPage(
-  req: IncomingMessage,
   res: ServerResponse,
   { status = 200, ...options }: WebPageOptions & { status?: number },
 ): void {
