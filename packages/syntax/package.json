@@ -26,9 +26,6 @@
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/syntax"
   },
-  "dependencies": {
-    "@atproto/common-web": "workspace:^"
-  },
   "browser": {
     "dns/promises": false
   }

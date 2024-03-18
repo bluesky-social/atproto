@@ -34,14 +34,11 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "multiformats": "^9.9.0",
-    "tlds": "^1.234.0",
-    "typed-emitter": "^2.1.0",
-    "zod": "^3.21.4"
+    "tlds": "^1.234.0"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "@atproto/dev-env": "workspace:^",
-    "common-tags": "^1.8.2",
     "get-port": "^6.1.2"
   }
 }

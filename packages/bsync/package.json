@@ -34,12 +34,10 @@
     "@atproto/syntax": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
-    "@connectrpc/connect-express": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "http-terminator": "^3.2.0",
     "kysely": "^0.22.0",
     "pg": "^8.10.0",
-    "pino": "^8.15.0",
     "pino-http": "^8.2.1",
     "typed-emitter": "^2.1.0"
   },

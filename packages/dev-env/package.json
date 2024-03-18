@@ -40,7 +40,6 @@
     "@did-plc/server": "^0.0.1",
     "axios": "^0.27.2",
     "better-sqlite3": "^9.4.0",
-    "chalk": "^5.0.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "get-port": "^6.1.2",
