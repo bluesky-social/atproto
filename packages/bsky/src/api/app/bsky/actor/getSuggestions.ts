@@ -11,6 +11,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
@@ -24,12 +25,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { viewer, labelers }
+      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
       const result = await getSuggestions({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -64,11 +66,7 @@ const hydration = async (input: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(
-    skeleton.dids,
-    params.hydrateCtx,
-    true,
-  )
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (input: {

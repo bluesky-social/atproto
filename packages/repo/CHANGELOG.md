@@ -1,5 +1,17 @@
 # @atproto/repo
 
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+  - @atproto/identity@0.3.3
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/crypto@0.3.0
+
 ## 0.3.8
 
 ### Patch Changes

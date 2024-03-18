@@ -1,5 +1,40 @@
 # @atproto/api
 
+## 0.11.2
+
+### Patch Changes
+
+- [#2328](https://github.com/bluesky-social/atproto/pull/2328) [`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove unecessary escapes from regex, which was causing a minification error when bundled in React Native.
+
+## 0.11.1
+
+### Patch Changes
+
+- [#2312](https://github.com/bluesky-social/atproto/pull/2312) [`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5) Thanks [@pfrazee](https://github.com/pfrazee)! - Fixed an issue that would cause agent clones to drop the PDS URI config.
+
+## 0.11.0
+
+### Minor Changes
+
+- [#2302](https://github.com/bluesky-social/atproto/pull/2302) [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0) Thanks [@dholms](https://github.com/dholms)! - - Breaking changes
+  - Redesigned the `moderate*` APIs which now output a `ModerationUI` object.
+  - `agent.getPreferences()` output object `BskyPreferences` has been modified.
+  - Moved Ozone routes from `com.atproto.admin` to `tools.ozone` namespace.
+  - Additions
+    - Added support for labeler configuration in `Agent.configure()` and `agent.configureLabelerHeader()`.
+    - Added `agent.addLabeler()` and `agent.removeLabeler()` preference methods.
+    - Muted words and hidden posts are now handled in the `moderate*` APIs.
+    - Added `agent.getLabelers()` and `agent.getLabelDefinitions()`.
+    - Added `agent.configureProxyHeader()` and `withProxy()` methods to support remote service proxying behaviors.
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/xrpc@0.4.3
+
 ## 0.10.5
 
 ### Patch Changes

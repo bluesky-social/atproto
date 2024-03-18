@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, setRepoRev } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -23,19 +23,19 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getListFeed({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req, res }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
       const result = await getListFeed({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers, repoRev }),
       }
     },
   })

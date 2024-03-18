@@ -1,6 +1,11 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  EXAMPLE_LABELER,
+} from '@atproto/dev-env'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { Database } from '../../src'
@@ -258,7 +263,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler',
+      src: EXAMPLE_LABELER,
     })
     .execute()
 }

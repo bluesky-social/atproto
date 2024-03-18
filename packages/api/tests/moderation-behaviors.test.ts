@@ -129,11 +129,9 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { profile: ['!hide'] },
     behaviors: {
-      profileList: ['filter'],
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       displayName: ['blur', 'noOverride'],
-      contentList: ['filter'],
     },
   },
   "Imperative label ('!hide') on post": {
@@ -155,7 +153,6 @@ const SCENARIOS: SuiteScenarios = {
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       displayName: ['blur', 'noOverride'],
-      contentList: ['filter'],
     },
   },
   "Imperative label ('!hide') on author account": {
@@ -169,55 +166,6 @@ const SCENARIOS: SuiteScenarios = {
       displayName: ['blur', 'noOverride'],
       contentList: ['filter', 'blur', 'noOverride'],
       contentView: ['blur', 'noOverride'],
-    },
-  },
-
-  "Imperative label ('!no-promote') on account": {
-    cfg: 'none',
-    subject: 'profile',
-    author: 'alice',
-    labels: { account: ['!no-promote'] },
-    behaviors: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on profile": {
-    cfg: 'none',
-    subject: 'profile',
-    author: 'alice',
-    labels: { profile: ['!no-promote'] },
-    behaviors: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on post": {
-    cfg: 'none',
-    subject: 'post',
-    author: 'alice',
-    labels: { post: ['!no-promote'] },
-    behaviors: {
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on author profile": {
-    cfg: 'none',
-    subject: 'post',
-    author: 'alice',
-    labels: { profile: ['!no-promote'] },
-    behaviors: {
-      profileList: ['filter'],
-      contentList: ['filter'],
-    },
-  },
-  "Imperative label ('!no-promote') on author account": {
-    cfg: 'none',
-    subject: 'post',
-    author: 'alice',
-    labels: { account: ['!no-promote'] },
-    behaviors: {
-      contentList: ['filter'],
     },
   },
 
@@ -403,10 +351,8 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { profile: ['porn'] },
     behaviors: {
-      profileList: ['filter'],
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
   },
   "Blur-media label ('porn') on post (hide)": {
@@ -427,7 +373,6 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {
       avatar: ['blur'],
       banner: ['blur'],
-      contentList: ['filter'],
     },
   },
   "Blur-media label ('porn') on author account (hide)": {
@@ -547,10 +492,10 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { profile: ['porn'] },
     behaviors: {
-      profileList: ['filter'],
+      profileList: [],
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
-      contentList: ['filter'],
+      contentList: [],
     },
   },
   'Adult-only label on post when adult content is disabled': {
@@ -571,7 +516,7 @@ const SCENARIOS: SuiteScenarios = {
     behaviors: {
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
-      contentList: ['filter'],
+      contentList: [],
     },
   },
   'Adult-only label on author account when adult content is disabled': {
@@ -842,12 +787,12 @@ const SCENARIOS: SuiteScenarios = {
     author: 'alice',
     labels: { account: ['!warn'], profile: ['!hide'] },
     behaviors: {
-      profileList: ['filter', 'blur'],
+      profileList: ['blur'],
       profileView: ['blur'],
       avatar: ['blur', 'noOverride'],
       banner: ['blur', 'noOverride'],
       displayName: ['blur', 'noOverride'],
-      contentList: ['filter', 'blur'],
+      contentList: ['blur'],
       contentView: ['blur'],
     },
   },

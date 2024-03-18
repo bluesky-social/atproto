@@ -61,7 +61,9 @@ export class Views {
   // ------------
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    return !!state.actors?.get(did)?.takedownRef
+    if (state.actors?.get(did)?.takedownRef) return true
+    if (state.labels?.get(did)?.isTakendown) return true
+    return false
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -134,8 +136,8 @@ export class Views {
       'self',
     ).toString()
     const labels = [
-      ...(state.labels?.get(did) ?? []),
-      ...(state.labels?.get(profileUri) ?? []),
+      ...(state.labels?.getBySubject(did) ?? []),
+      ...(state.labels?.getBySubject(profileUri) ?? []),
       ...this.selfLabels({
         uri: profileUri,
         cid: actor.profileCid?.toString(),
@@ -223,6 +225,7 @@ export class Views {
       return undefined
     }
     const listViewer = state.listViewers?.get(uri)
+    const labels = state.labels?.getBySubject(uri) ?? []
     const creator = new AtUri(uri).hostname
     return {
       uri,
@@ -237,6 +240,7 @@ export class Views {
           )
         : undefined,
       indexedAt: list.sortedAt.toISOString(),
+      labels,
       viewer: listViewer
         ? {
             muted: !!listViewer.viewerMuted,
@@ -263,7 +267,7 @@ export class Views {
         ? normalizeDatetimeAlways(record.createdAt)
         : new Date(0).toISOString()
     return record.labels.values.map(({ val }) => {
-      return { src, uri, cid, val, cts, neg: false }
+      return { src, uri, cid, val, cts }
     })
   }
 
@@ -277,7 +281,7 @@ export class Views {
 
     const uri = AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
     const labels = [
-      ...(state.labels?.get(uri) ?? []),
+      ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
         uri,
         cid: labeler.cid.toString(),
@@ -347,6 +351,7 @@ export class Views {
     if (!creator) return
     const viewer = state.feedgenViewers?.get(uri)
     const aggs = state.feedgenAggs?.get(uri)
+    const labels = state.labels?.getBySubject(uri) ?? []
 
     return {
       uri,
@@ -364,6 +369,7 @@ export class Views {
           )
         : undefined,
       likeCount: aggs?.likes,
+      labels,
       viewer: viewer
         ? {
             like: viewer.like,
@@ -402,7 +408,7 @@ export class Views {
       parsedUri.rkey,
     ).toString()
     const labels = [
-      ...(state.labels?.get(uri) ?? []),
+      ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
         uri,
         cid: post.cid,
@@ -880,7 +886,7 @@ export class Views {
       recordInfo = state.follows?.get(notif.uri)
     }
     if (!recordInfo) return
-    const labels = state.labels?.get(notif.uri) ?? []
+    const labels = state.labels?.getBySubject(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
       cid: recordInfo.cid,

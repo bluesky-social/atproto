@@ -1,5 +1,37 @@
 # @atproto/pds
 
+## 0.4.8
+
+### Patch Changes
+
+- Updated dependencies [[`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca)]:
+  - @atproto/api@0.11.2
+
+## 0.4.7
+
+### Patch Changes
+
+- [`971d3e4c2`](https://github.com/bluesky-social/atproto/commit/971d3e4c26ecfda746e83d458391715752ea7064) Thanks [@devinivy](https://github.com/devinivy)! - PDS operators may configure a public contact email
+
+- Updated dependencies [[`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5)]:
+  - @atproto/api@0.11.1
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0), [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/identity@0.3.3
+  - @atproto/api@0.11.0
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/repo@0.3.9
+  - @atproto/syntax@0.2.1
+  - @atproto/aws@0.1.9
+  - @atproto/crypto@0.3.0
+  - @atproto/xrpc-server@0.4.4
+  - @atproto/xrpc@0.4.3
+
 ## 0.4.5
 
 ### Patch Changes

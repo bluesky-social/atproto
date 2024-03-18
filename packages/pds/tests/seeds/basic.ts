@@ -1,4 +1,4 @@
-import { SeedClient, TestBsky } from '@atproto/dev-env'
+import { EXAMPLE_LABELER, SeedClient, TestBsky } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import usersSeed from './users'
 
@@ -165,7 +165,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler',
+      src: EXAMPLE_LABELER,
     })
     .execute()
 }

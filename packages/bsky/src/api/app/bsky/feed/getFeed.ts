@@ -28,6 +28,7 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -41,22 +42,25 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
       })
       // @NOTE feed cursors should not be affected by appview swap
-      const { timerSkele, timerHydr, resHeaders, ...result } = await getFeed(
-        { ...params, hydrateCtx, headers },
-        ctx,
-      )
+      const {
+        timerSkele,
+        timerHydr,
+        resHeaders: feedResHeaders,
+        ...result
+      } = await getFeed({ ...params, hydrateCtx, headers }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
         headers: {
-          ...(resHeaders ?? {}),
+          ...(feedResHeaders ?? {}),
+          ...resHeaders({ labelers: hydrateCtx.labelers }),
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }

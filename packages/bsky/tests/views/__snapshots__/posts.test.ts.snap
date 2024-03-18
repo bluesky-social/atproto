@@ -12,7 +12,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -20,7 +19,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-b",
@@ -37,7 +35,6 @@ Array [
       Object {
         "cid": "cids(0)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(0)",
         "val": "self-label",
@@ -72,7 +69,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -80,7 +76,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-b",
@@ -420,7 +415,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -428,7 +422,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-b",

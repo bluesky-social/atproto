@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { resHeaders } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -15,22 +15,26 @@ export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ auth, params, req, res }) => {
-      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+    handler: async ({ auth, params, req }) => {
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
 
-      const result = await getProfile(
-        { ...params, hydrateCtx, canViewTakedowns },
-        ctx,
-      )
+      const result = await getProfile({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers: hydrateCtx.labelers,
+        }),
       }
     },
   })
@@ -56,8 +60,7 @@ const hydration = async (input: {
   const { ctx, params, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
-    params.hydrateCtx,
-    true,
+    params.hydrateCtx.copy({ includeTakedowns: true }),
   )
 }
 
@@ -72,7 +75,7 @@ const presentation = (input: {
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
   } else if (
-    !params.canViewTakedowns &&
+    !params.hydrateCtx.includeTakedowns &&
     ctx.views.actorIsTakendown(skeleton.did, hydration)
   ) {
     throw new InvalidRequestError(
@@ -90,7 +93,6 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
-  canViewTakedowns: boolean
 }
 
 type SkeletonState = { did: string }

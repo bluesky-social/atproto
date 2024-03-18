@@ -1,20 +1,20 @@
 import { Server } from '../lexicon'
 import AppContext from '../context'
-import createReport from './moderation/createReport'
-import emitModerationEvent from './admin/emitModerationEvent'
-import searchRepos from './admin/searchRepos'
-import adminGetRecord from './admin/getRecord'
-import getRepo from './admin/getRepo'
-import queryModerationStatuses from './admin/queryModerationStatuses'
-import queryModerationEvents from './admin/queryModerationEvents'
-import getModerationEvent from './admin/getModerationEvent'
+import createReport from './report/createReport'
+import emitEvent from './moderation/emitEvent'
+import searchRepos from './moderation/searchRepos'
+import adminGetRecord from './moderation/getRecord'
+import getRepo from './moderation/getRepo'
+import queryStatuses from './moderation/queryStatuses'
+import queryEvents from './moderation/queryEvents'
+import getEvent from './moderation/getEvent'
 import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
-import fetchLabels from './temp/fetchLabels'
-import createCommunicationTemplate from './admin/createCommunicationTemplate'
-import updateCommunicationTemplate from './admin/updateCommunicationTemplate'
-import deleteCommunicationTemplate from './admin/deleteCommunicationTemplate'
-import listCommunicationTemplates from './admin/listCommunicationTemplates'
+import fetchLabels from './label/fetchLabels'
+import createTemplate from './communication/createTemplate'
+import updateTemplate from './communication/updateTemplate'
+import deleteTemplate from './communication/deleteTemplate'
+import listTemplates from './communication/listTemplates'
 import proxied from './proxied'
 
 export * as health from './health'
@@ -23,20 +23,20 @@ export * as wellKnown from './well-known'
 
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
-  emitModerationEvent(server, ctx)
+  emitEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   getRepo(server, ctx)
-  getModerationEvent(server, ctx)
-  queryModerationEvents(server, ctx)
-  queryModerationStatuses(server, ctx)
+  getEvent(server, ctx)
+  queryEvents(server, ctx)
+  queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
-  listCommunicationTemplates(server, ctx)
-  createCommunicationTemplate(server, ctx)
-  updateCommunicationTemplate(server, ctx)
-  deleteCommunicationTemplate(server, ctx)
+  listTemplates(server, ctx)
+  createTemplate(server, ctx)
+  updateTemplate(server, ctx)
+  deleteTemplate(server, ctx)
   proxied(server, ctx)
   return server
 }

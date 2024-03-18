@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { parseString } from '../../../../hydration/util'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { viewer, labelers }
+      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
 
       if (clearlyBadCursor(params.cursor)) {
         return {
@@ -53,6 +53,7 @@ export default function (server: Server, ctx: AppContext) {
           feeds: feedViews,
           cursor,
         },
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

@@ -11,10 +11,13 @@ Object {
   "labels": Array [
     Object {
       "cts": "1970-01-01T00:00:00.000Z",
-      "neg": false,
+      "sig": Object {
+        "$bytes": "sig(0)",
+      },
       "src": "user(2)",
       "uri": "user(0)",
-      "val": "!unspecced-takedown",
+      "val": "!takedown",
+      "ver": 1,
     },
   ],
   "moderation": Object {
@@ -24,7 +27,7 @@ Object {
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
-      "reviewState": "com.atproto.admin.defs#reviewClosed",
+      "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(0)",

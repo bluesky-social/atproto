@@ -82,6 +82,10 @@ export class SeedClient<
     string,
     Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
   >
+  feedgens: Record<
+    string,
+    Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
+  >
   dids: Record<string, string>
 
   constructor(public network: Network, public agent: AtpAgent) {
@@ -94,6 +98,7 @@ export class SeedClient<
     this.replies = {}
     this.reposts = {}
     this.lists = {}
+    this.feedgens = {}
     this.dids = {}
   }
 
@@ -403,6 +408,25 @@ export class SeedClient<
     this.lists[by] ??= {}
     const ref = new RecordRef(res.uri, res.cid)
     this.lists[by][ref.uriStr] = {
+      ref: ref,
+      items: {},
+    }
+    return ref
+  }
+
+  async createFeedGen(by: string, feedDid: string, name: string) {
+    const res = await this.agent.api.app.bsky.feed.generator.create(
+      { repo: by },
+      {
+        did: feedDid,
+        displayName: name,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    this.feedgens[by] ??= {}
+    const ref = new RecordRef(res.uri, res.cid)
+    this.feedgens[by][ref.uriStr] = {
       ref: ref,
       items: {},
     }

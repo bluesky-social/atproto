@@ -26,6 +26,7 @@ describe('account', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account',
       pds: {
+        contactEmailAddress: 'abuse@example.com',
         termsOfServiceUrl: 'https://example.com/tos',
         privacyPolicyUrl: 'https://example.com/privacy-policy',
       },
@@ -60,6 +61,7 @@ describe('account', () => {
       'https://example.com/privacy-policy',
     )
     expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
+    expect(res.data.contact?.email).toBe('abuse@example.com')
   })
 
   it('fails on invalid handles', async () => {

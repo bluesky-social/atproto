@@ -8,6 +8,8 @@ import { CID } from 'multiformats/cid'
 
 /** Metadata tag on an atproto resource (eg, repo or record). */
 export interface Label {
+  /** The AT Protocol version of the label object. */
+  ver?: number
   /** DID of the actor who created this label. */
   src: string
   /** AT URI of the record, repository (account), or other resource that this label applies to. */
@@ -20,6 +22,10 @@ export interface Label {
   neg?: boolean
   /** Timestamp when this label was created. */
   cts: string
+  /** Timestamp at which this label expires (no longer applies). */
+  exp?: string
+  /** Signature of dag-cbor encoded label. */
+  sig?: Uint8Array
   [k: string]: unknown
 }
 
@@ -80,6 +86,10 @@ export interface LabelValueDefinition {
   severity: 'inform' | 'alert' | 'none' | (string & {})
   /** What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing. */
   blurs: 'content' | 'media' | 'none' | (string & {})
+  /** The default setting for this label. */
+  defaultSetting: 'ignore' | 'warn' | 'hide' | (string & {})
+  /** Does the user need to have adult content enabled in order to configure this label? */
+  adultOnly?: boolean
   locales: LabelValueDefinitionStrings[]
   [k: string]: unknown
 }

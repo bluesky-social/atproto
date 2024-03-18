@@ -1,5 +1,45 @@
 # @atproto/ozone
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca)]:
+  - @atproto/api@0.11.2
+
+## 0.1.1
+
+### Patch Changes
+
+- [`b95c3955d`](https://github.com/bluesky-social/atproto/commit/b95c3955d0b8263a44a3d2a46b35b1831d9e504a) Thanks [@devinivy](https://github.com/devinivy)! - Second pass on no false negs in labels
+
+- Updated dependencies []:
+  - @atproto/api@0.11.1
+
+## 0.1.0
+
+### Minor Changes
+
+- [`971d3e4c2`](https://github.com/bluesky-social/atproto/commit/971d3e4c26ecfda746e83d458391715752ea7064) Thanks [@devinivy](https://github.com/devinivy)! - Resign labels on overwrite, omit neg:false on labels
+
+### Patch Changes
+
+- Updated dependencies [[`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5)]:
+  - @atproto/api@0.11.1
+
+## 0.0.17
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0), [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/identity@0.3.3
+  - @atproto/api@0.11.0
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/crypto@0.3.0
+  - @atproto/xrpc-server@0.4.4
+
 ## 0.0.16
 
 ### Patch Changes

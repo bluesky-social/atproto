@@ -1,4 +1,3 @@
-import { AppBskyActorDefs } from '../client/index'
 import {
   ModerationSubjectProfile,
   ModerationSubjectPost,
@@ -17,6 +16,7 @@ import { ModerationDecision } from './decision'
 
 export { ModerationUI } from './ui'
 export { ModerationDecision } from './decision'
+export { hasMutedWord } from './mutewords'
 export {
   interpretLabelValueDefinition,
   interpretLabelValueDefinitions,
@@ -36,45 +36,26 @@ export function moderatePost(
   subject: ModerationSubjectPost,
   opts: ModerationOpts,
 ): ModerationDecision {
-  return ModerationDecision.merge(
-    decidePost(subject, opts),
-    decideAccount(subject.author, opts),
-    decideProfile(subject.author, opts),
-  )
+  return decidePost(subject, opts)
 }
 
 export function moderateNotification(
   subject: ModerationSubjectNotification,
   opts: ModerationOpts,
 ): ModerationDecision {
-  return ModerationDecision.merge(
-    decideNotification(subject, opts),
-    decideAccount(subject.author, opts),
-    decideProfile(subject.author, opts),
-  )
+  return decideNotification(subject, opts)
 }
 
 export function moderateFeedGenerator(
   subject: ModerationSubjectFeedGenerator,
   opts: ModerationOpts,
 ): ModerationDecision {
-  return ModerationDecision.merge(
-    decideFeedGenerator(subject, opts),
-    decideAccount(subject.creator, opts),
-    decideProfile(subject.creator, opts),
-  )
+  return decideFeedGenerator(subject, opts)
 }
 
 export function moderateUserList(
   subject: ModerationSubjectUserList,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const userList = decideUserList(subject, opts)
-  const account = AppBskyActorDefs.isProfileViewBasic(subject.creator)
-    ? decideAccount(subject.creator, opts)
-    : new ModerationDecision()
-  const profile = AppBskyActorDefs.isProfileViewBasic(subject.creator)
-    ? decideProfile(subject.creator, opts)
-    : new ModerationDecision()
-  return ModerationDecision.merge(userList, account, profile)
+  return decideUserList(subject, opts)
 }

@@ -12,7 +12,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorFeeds = createPipeline(
@@ -26,11 +26,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const result = await getActorFeeds({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

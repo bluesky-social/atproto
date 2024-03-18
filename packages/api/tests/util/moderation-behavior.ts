@@ -254,12 +254,14 @@ export class ModerationBehaviorSuiteRunner {
           this.configurations[scenario.cfg]?.adultContentEnabled,
         ),
         labels: this.configurations[scenario.cfg].settings || {},
-        mods: [
+        labelers: [
           {
             did: 'did:plc:fake-labeler',
             labels: {},
           },
         ],
+        mutedWords: [],
+        hiddenPosts: [],
       },
     }
   }

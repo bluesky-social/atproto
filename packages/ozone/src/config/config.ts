@@ -50,6 +50,13 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
   }
 
+  const blobDivertServiceCfg =
+    env.blobDivertUrl && env.blobDivertAdminPassword
+      ? {
+          url: env.blobDivertUrl,
+          adminPassword: env.blobDivertAdminPassword,
+        }
+      : null
   const accessCfg: OzoneConfig['access'] = {
     admins: env.adminDids,
     moderators: env.moderatorDids,
@@ -63,6 +70,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     pds: pdsCfg,
     cdn: cdnCfg,
     identity: identityCfg,
+    blobDivert: blobDivertServiceCfg,
     access: accessCfg,
   }
 }
@@ -74,6 +82,7 @@ export type OzoneConfig = {
   pds: PdsConfig | null
   cdn: CdnConfig
   identity: IdentityConfig
+  blobDivert: BlobDivertConfig | null
   access: AccessConfig
 }
 
@@ -83,6 +92,11 @@ export type ServiceConfig = {
   did: string
   version?: string
   devMode?: boolean
+}
+
+export type BlobDivertConfig = {
+  url: string
+  adminPassword: string
 }
 
 export type DatabaseConfig = {

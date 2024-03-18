@@ -12,6 +12,7 @@ import {
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedFollowsByActor = createPipeline(
@@ -25,14 +26,15 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const result = await getSuggestedFollowsByActor(
-        { ...params, hydrateCtx },
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
         ctx,
       )
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

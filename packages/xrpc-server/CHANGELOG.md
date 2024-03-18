@@ -1,5 +1,14 @@
 # @atproto/xrpc-server
 
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/crypto@0.3.0
+
 ## 0.4.3
 
 ### Patch Changes

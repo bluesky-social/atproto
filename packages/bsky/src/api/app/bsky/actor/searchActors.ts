@@ -14,6 +14,7 @@ import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActors = createPipeline(
@@ -25,13 +26,18 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { viewer, labelers }
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers,
+        includeTakedowns,
+      })
       const results = await searchActors({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

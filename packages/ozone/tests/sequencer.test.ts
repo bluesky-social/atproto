@@ -1,4 +1,4 @@
-import { TestNetwork } from '@atproto/dev-env'
+import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { readFromGenerator, wait } from '@atproto/common'
 import { LabelsEvt, Sequencer } from '../src/sequencer'
 import Outbox from '../src/sequencer/outbox'
@@ -34,11 +34,15 @@ describe('sequencer', () => {
   }
 
   const evtToDbRow = (e: LabelsEvt) => {
-    const label = e.labels[0]
+    const { ver: _, ...label } = e.labels[0]
     return {
       id: e.seq,
       ...label,
+      neg: !!label.neg,
       cid: label.cid ? label.cid : '',
+      exp: null,
+      sig: label.sig ? Buffer.from(label.sig) : null,
+      signingKeyId: network.ozone.ctx.signingKeyId,
     }
   }
 
@@ -55,7 +59,7 @@ describe('sequencer', () => {
     for (let i = 0; i < count; i++) {
       const did = `did:example:${randomStr(10, 'base32')}`
       const label = {
-        src: 'did:example:labeler',
+        src: EXAMPLE_LABELER,
         uri: did,
         val: 'spam',
         neg: false,

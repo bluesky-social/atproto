@@ -48,8 +48,7 @@ describe('db', () => {
         return await dbTxn.db
           .insertInto('repo_push_event')
           .values({
-            // @ts-expect-error FIXME remove this comment (and fix the TS error)
-            eventType: 'takedown',
+            eventType: 'pds_takedown',
             subjectDid: 'x',
           })
           .returning('subjectDid')
@@ -69,7 +68,7 @@ describe('db', () => {
         .executeTakeFirst()
 
       expect(row).toMatchObject({
-        eventType: 'takedown',
+        eventType: 'pds_takedown',
         subjectDid: 'x',
       })
     })
@@ -79,8 +78,7 @@ describe('db', () => {
         await dbTxn.db
           .insertInto('repo_push_event')
           .values({
-            // @ts-expect-error FIXME remove this comment (and fix the TS error)
-            eventType: 'takedown',
+            eventType: 'pds_takedown',
             subjectDid: 'y',
           })
           .returning('subjectDid')
@@ -126,8 +124,7 @@ describe('db', () => {
         leakedTx = dbTxn
         await dbTxn.db
           .insertInto('repo_push_event')
-          // @ts-expect-error FIXME remove this comment (and fix the TS error)
-          .values({ eventType: 'takedown', subjectDid: 'a' })
+          .values({ eventType: 'pds_takedown', subjectDid: 'a' })
           .execute()
         throw new Error('test tx failed')
       })
@@ -135,8 +132,7 @@ describe('db', () => {
 
       const attempt = leakedTx?.db
         .insertInto('repo_push_event')
-        // @ts-expect-error FIXME remove this comment (and fix the TS error)
-        .values({ eventType: 'takedown', subjectDid: 'b' })
+        .values({ eventType: 'pds_takedown', subjectDid: 'b' })
         .execute()
       await expect(attempt).rejects.toThrow('tx already failed')
 
@@ -160,8 +156,7 @@ describe('db', () => {
             const query = dbTxn.db
               .insertInto('repo_push_event')
               .values({
-                // @ts-expect-error FIXME remove this comment (and fix the TS error)
-                eventType: 'takedown',
+                eventType: 'pds_takedown',
                 subjectDid: name,
               })
               .execute()

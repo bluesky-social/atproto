@@ -11,6 +11,7 @@ import { TestOzone, createOzoneDid } from './ozone'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { EXAMPLE_LABELER } from './const'
 
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
@@ -53,6 +54,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       redisHost,
       modServiceDid: ozoneDid,
+      labelsFromIssuerDids: [ozoneDid, EXAMPLE_LABELER],
       ...params.bsky,
     })
 

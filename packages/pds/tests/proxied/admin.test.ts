@@ -104,56 +104,53 @@ describe('proxies admin requests', () => {
 
   it('takes actions and resolves reports', async () => {
     const post = sc.posts[sc.dids.bob][1]
-    const { data: actionA } =
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.ref.uriStr,
-            cid: post.ref.cidStr,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    const { data: actionA } = await agent.api.tools.ozone.moderation.emitEvent(
+      {
+        event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
         },
-        {
-          headers: sc.getHeaders(moderator),
-          encoding: 'application/json',
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        headers: sc.getHeaders(moderator),
+        encoding: 'application/json',
+      },
+    )
     expect(forSnapshot(actionA)).toMatchSnapshot()
-    const { data: actionB } =
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.bob,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    const { data: actionB } = await agent.api.tools.ozone.moderation.emitEvent(
+      {
+        event: { $type: 'tools.ozone.moderation.defs#modEventAcknowledge' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
         },
-        {
-          headers: sc.getHeaders(moderator),
-          encoding: 'application/json',
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        headers: sc.getHeaders(moderator),
+        encoding: 'application/json',
+      },
+    )
     expect(forSnapshot(actionB)).toMatchSnapshot()
   })
 
   it('fetches moderation events.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.queryModerationEvents(
-        {
-          subject: sc.posts[sc.dids.bob][1].ref.uriStr,
-        },
-        { headers: sc.getHeaders(moderator) },
-      )
+    const { data: result } = await agent.api.tools.ozone.moderation.queryEvents(
+      {
+        subject: sc.posts[sc.dids.bob][1].ref.uriStr,
+      },
+      { headers: sc.getHeaders(moderator) },
+    )
     expect(forSnapshot(result.events)).toMatchSnapshot()
   })
 
   it('fetches repo details.', async () => {
-    const { data: result } = await agent.api.com.atproto.admin.getRepo(
+    const { data: result } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.eve },
       { headers: sc.getHeaders(moderator) },
     )
@@ -162,7 +159,7 @@ describe('proxies admin requests', () => {
 
   it('fetches record details.', async () => {
     const post = sc.posts[sc.dids.bob][1]
-    const { data: result } = await agent.api.com.atproto.admin.getRecord(
+    const { data: result } = await agent.api.tools.ozone.moderation.getRecord(
       { uri: post.ref.uriStr },
       { headers: sc.getHeaders(moderator) },
     )
@@ -170,25 +167,23 @@ describe('proxies admin requests', () => {
   })
 
   it('fetches event details.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.getModerationEvent(
-        { id: 2 },
-        { headers: sc.getHeaders(moderator) },
-      )
+    const { data: result } = await agent.api.tools.ozone.moderation.getEvent(
+      { id: 2 },
+      { headers: sc.getHeaders(moderator) },
+    )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
 
   it('fetches a list of events.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.queryModerationEvents(
-        { subject: sc.dids.bob },
-        { headers: sc.getHeaders(moderator) },
-      )
+    const { data: result } = await agent.api.tools.ozone.moderation.queryEvents(
+      { subject: sc.dids.bob },
+      { headers: sc.getHeaders(moderator) },
+    )
     expect(forSnapshot(result.events)).toMatchSnapshot()
   })
 
   it('searches repos.', async () => {
-    const { data: result } = await agent.api.com.atproto.admin.searchRepos(
+    const { data: result } = await agent.api.tools.ozone.moderation.searchRepos(
       { term: 'alice' },
       { headers: sc.getHeaders(moderator) },
     )
@@ -196,12 +191,12 @@ describe('proxies admin requests', () => {
   })
 
   it('passes through errors.', async () => {
-    const tryGetRepo = agent.api.com.atproto.admin.getRepo(
+    const tryGetRepo = agent.api.tools.ozone.moderation.getRepo(
       { did: 'did:does:not:exist' },
       { headers: sc.getHeaders(moderator) },
     )
     await expect(tryGetRepo).rejects.toThrow('Repo not found')
-    const tryGetRecord = agent.api.com.atproto.admin.getRecord(
+    const tryGetRecord = agent.api.tools.ozone.moderation.getRecord(
       { uri: 'at://did:does:not:exist/bad.collection.name/badrkey' },
       { headers: sc.getHeaders(moderator) },
     )
@@ -210,9 +205,9 @@ describe('proxies admin requests', () => {
 
   it('takesdown and labels repos, and reverts.', async () => {
     // takedown repo
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.moderation.emitEvent(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
@@ -239,14 +234,14 @@ describe('proxies admin requests', () => {
       'Account has been suspended',
     )
     // reverse action
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.moderation.emitEvent(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
         },
         event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
         createdBy: 'did:example:admin',
         reason: 'X',
@@ -272,9 +267,9 @@ describe('proxies admin requests', () => {
   it('takesdown and labels records, and reverts.', async () => {
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.moderation.emitEvent(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: post.ref.uriStr,
@@ -291,23 +286,27 @@ describe('proxies admin requests', () => {
       },
     )
     await network.processAll()
-    // check thread and labels
-    const tryGetPost = agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
-    await expect(tryGetPost).rejects.toMatchObject({
-      error: 'NotFound',
-    })
+
+    // check takedown label has been created
+    const label = await network.ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('val', '=', '!takedown')
+      .where('uri', '=', post.ref.uriStr)
+      .where('cid', '=', post.ref.cidStr)
+      .executeTakeFirst()
+    expect(label).toBeDefined()
+    expect(label?.neg).toBe(false)
+
     // reverse action
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.tools.ozone.moderation.emitEvent(
       {
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: post.ref.uriStr,
           cid: post.ref.cidStr,
         },
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
         createdBy: 'did:example:admin',
         reason: 'X',
       },
@@ -317,15 +316,15 @@ describe('proxies admin requests', () => {
       },
     )
     await network.processAll()
-    // check thread and labels
-    const { data: threadAppview } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      {
-        headers: { ...sc.getHeaders(sc.dids.carol) },
-      },
-    )
-    expect(threadAppview.thread.post).toEqual(
-      expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
-    )
+
+    // check takedown label has been negated
+    const labelNeg = await network.ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('val', '=', '!takedown')
+      .where('uri', '=', post.ref.uriStr)
+      .where('cid', '=', post.ref.cidStr)
+      .executeTakeFirst()
+    expect(labelNeg?.neg).toBe(true)
   })
 })
