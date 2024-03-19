@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
@@ -282,13 +282,29 @@ describe('pds author feed views', () => {
       filter: 'posts_and_author_threads',
     })
 
-    expect(eveFeed.feed.length).toEqual(7)
+    expect(eveFeed.feed.length).toEqual(5)
     expect(
       eveFeed.feed.some(({ post }) => {
-        return (
+        const replyByEve =
           isRecord(post.record) && post.record.reply && post.author.did === eve
-        )
+        return replyByEve
+      }),
+    ).toBeTruthy()
+    // does not include eve's replies to fred, even within her own thread.
+    expect(
+      eveFeed.feed.every(({ post }) => {
+        if (!post || !isRecord(post.record) || !post.record.reply) {
+          return true // not a reply
+        }
+        const replyToEve =
+          getDidFromUri(post.record.reply.root.uri) === eve &&
+          getDidFromUri(post.record.reply.parent.uri) === eve
+        return replyToEve
       }),
     ).toBeTruthy()
   })
 })
+
+function getDidFromUri(uri: string) {
+  return new AtUri(uri).hostname
+}
