@@ -1,9 +1,10 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -292,18 +293,29 @@ describe('pds author feed views', () => {
     ).toBeTruthy()
     // does not include eve's replies to fred, even within her own thread.
     expect(
-      eveFeed.feed.every(({ post }) => {
+      eveFeed.feed.every(({ post, reply }) => {
         if (!post || !isRecord(post.record) || !post.record.reply) {
           return true // not a reply
         }
-        const replyToEve =
-          getDidFromUri(post.record.reply.root.uri) === eve &&
-          getDidFromUri(post.record.reply.parent.uri) === eve
-        return replyToEve
+        const replyToEve = isReplyTo(post.record.reply, eve)
+        const replyToReplyByEve =
+          reply &&
+          isPostView(reply.parent) &&
+          isRecord(reply.parent.record) &&
+          (!reply.parent.record.reply ||
+            isReplyTo(reply.parent.record.reply, eve))
+        return replyToEve && replyToReplyByEve
       }),
     ).toBeTruthy()
   })
 })
+
+function isReplyTo(reply: ReplyRef, did: string) {
+  return (
+    getDidFromUri(reply.root.uri) === did &&
+    getDidFromUri(reply.parent.uri) === did
+  )
+}
 
 function getDidFromUri(uri: string) {
   return new AtUri(uri).hostname

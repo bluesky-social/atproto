@@ -201,7 +201,7 @@ class SelfThreadTracker {
     } else {
       loop.add(uri)
     }
-    // cache through
+    // cache through the result
     const result = this._eligible(uri, loop)
     this.cache.set(uri, result)
     return result
@@ -213,11 +213,11 @@ class SelfThreadTracker {
       return false
     }
     // must be hydratable to be part of self-thread
-    const post = this.hydration?.posts?.get(uri)
+    const post = this.hydration.posts?.get(uri)
     if (!post) {
       return false
     }
-    // root posts (no parent) are trivial case of self thread
+    // root posts (no parent) are trivial case of self-thread
     const parentUri = getParentUri(post)
     if (parentUri === null) {
       return true
