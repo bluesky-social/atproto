@@ -4,9 +4,9 @@ import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify } from 'jose'
 
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { UseDpopNonceError } from '../errors/use-dpop-nonce-error.js'
-import { DpopNonce } from './dpop-nonce.js'
+import { DpopNonce, DpopNonceInput } from './dpop-nonce.js'
 
-export { DpopNonce }
+export { DpopNonce, type DpopNonceInput }
 export type DpopManagerOptions = {
   /**
    * Set this to `false` to disable the use of nonces in DPoP proofs. Set this
@@ -14,23 +14,16 @@ export type DpopManagerOptions = {
    * all nonces (typically useful when multiple instances are running). Leave
    * undefined to generate a random seed at startup.
    */
-  dpopSecret?: false | string | Uint8Array | DpopNonce
+  dpopSecret?: false | DpopNonceInput
+  dpopStep?: number
 }
 
 export class DpopManager {
   protected readonly dpopNonce?: DpopNonce
 
-  constructor({ dpopSecret }: DpopManagerOptions = {}) {
+  constructor({ dpopSecret, dpopStep }: DpopManagerOptions = {}) {
     this.dpopNonce =
-      dpopSecret === false
-        ? undefined
-        : typeof dpopSecret === 'string'
-        ? new DpopNonce(Buffer.from(dpopSecret, 'hex'))
-        : dpopSecret instanceof Uint8Array
-        ? new DpopNonce(dpopSecret)
-        : dpopSecret instanceof DpopNonce
-        ? dpopSecret
-        : new DpopNonce()
+      dpopSecret === false ? undefined : DpopNonce.from(dpopSecret, dpopStep)
   }
 
   nextNonce(): string | undefined {
