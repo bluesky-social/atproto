@@ -15,6 +15,8 @@ function numTo64bits(num: number) {
   return arr
 }
 
+export type DpopNonceInput = string | Uint8Array | DpopNonce
+
 export class DpopNonce {
   #secret: Uint8Array
   #counter: number
@@ -24,8 +26,8 @@ export class DpopNonce {
   #next: string
 
   constructor(
-    protected readonly secret: Uint8Array = randomBytes(32),
-    protected readonly step = DPOP_NONCE_MAX_AGE / 3,
+    protected readonly secret: Uint8Array,
+    protected readonly step: number,
   ) {
     if (secret.length !== 32) throw new TypeError('Expected 32 bytes')
     if (this.step < 0 || this.step > DPOP_NONCE_MAX_AGE / 3) {
@@ -82,5 +84,21 @@ export class DpopNonce {
 
   public check(nonce: string) {
     return this.#next === nonce || this.#now === nonce || this.#prev === nonce
+  }
+
+  static from(
+    input: DpopNonceInput = randomBytes(32),
+    step = DPOP_NONCE_MAX_AGE / 3,
+  ): DpopNonce {
+    if (input instanceof DpopNonce) {
+      return input
+    }
+    if (input instanceof Uint8Array) {
+      return new DpopNonce(input, step)
+    }
+    if (typeof input === 'string') {
+      return new DpopNonce(Buffer.from(input, 'hex'), step)
+    }
+    return new DpopNonce(input, step)
   }
 }
