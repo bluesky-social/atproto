@@ -13,6 +13,7 @@ export interface ProfileViewBasic {
   handle: string
   displayName?: string
   avatar?: string
+  associated?: ProfileAssociated
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
@@ -36,6 +37,7 @@ export interface ProfileView {
   displayName?: string
   description?: string
   avatar?: string
+  associated?: ProfileAssociated
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]

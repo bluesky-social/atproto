@@ -135,6 +135,15 @@ describe('labeler service views', () => {
     )
   })
 
+  it('renders profile as labeler in non-detailed profile views', async () => {
+    const { data: res } = await agent.api.app.bsky.actor.searchActors(
+      { q: sc.accounts[alice].handle },
+      { headers: await network.serviceHeaders(bob) },
+    )
+    expect(res.actors.length).toBe(1)
+    expect(res.actors[0].associated?.labeler).toBe(true)
+  })
+
   it('blocked by labeler takedown', async () => {
     await network.bsky.ctx.dataplane.takedownActor({ did: alice })
     const res = await agent.api.app.bsky.labeler.getServices(
