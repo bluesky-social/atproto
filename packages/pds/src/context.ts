@@ -224,17 +224,17 @@ export class AppContext {
     })
 
     const authProvider = cfg.oauth.provider
-      ? new AuthProvider(
+      ? new AuthProvider({
+          issuer: cfg.oauth.issuer,
+          keyset,
           accountManager,
           actorStore,
           localViewer,
-          keyset,
-          redisScratch,
-          secrets.dpopSecret,
-          cfg.oauth.issuer,
-          cfg.oauth.provider.customization,
-          cfg.oauth.provider.disableSsrf,
-        )
+          redis: redisScratch,
+          dpopSecret: secrets.dpopSecret,
+          customization: cfg.oauth.provider.customization,
+          disableSsrf: cfg.oauth.provider.disableSsrf,
+        })
       : undefined
 
     const oauthVerifier: OAuthVerifier =

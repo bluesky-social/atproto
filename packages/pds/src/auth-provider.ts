@@ -6,6 +6,7 @@ import {
   AccountStore,
   Customization,
   DeviceId,
+  DpopManagerOptions,
   Keyset,
   LoginCredentials,
   OAuthProvider,
@@ -21,18 +22,32 @@ import { ActorStore } from './actor-store'
 import { LocalViewerCreator } from './read-after-write'
 import { ProfileViewBasic } from './lexicon/types/app/bsky/actor/defs'
 
+export type AuthProviderOptions = {
+  issuer: string
+  keyset: Keyset
+  accountManager: AccountManager
+  actorStore: ActorStore
+  localViewer: LocalViewerCreator
+  redis?: Redis
+  dpopSecret?: DpopManagerOptions['dpopSecret']
+  customization?: Customization
+  disableSsrf?: boolean
+}
+
 export class AuthProvider extends OAuthProvider {
-  constructor(
-    accountManager: AccountManager,
-    actorStore: ActorStore,
-    localViewerCreator: LocalViewerCreator,
-    keyset: Keyset,
-    redis: Redis | undefined,
-    dpopSecret: false | string | Uint8Array,
-    issuer: string,
-    private customization?: Customization,
+  private customization?: Customization
+
+  constructor({
+    accountManager,
+    actorStore,
+    localViewer,
+    keyset,
+    redis,
+    dpopSecret,
+    issuer,
+    customization,
     disableSsrf = false,
-  ) {
+  }: AuthProviderOptions) {
     super({
       issuer,
       keyset,
@@ -46,7 +61,7 @@ export class AuthProvider extends OAuthProvider {
       // profile information using the account's repos through the actorStore.
       accountStore: new DetailedAccountStore(
         accountManager,
-        new ActorProfileStoreCached(actorStore, localViewerCreator),
+        new ActorProfileStoreCached(actorStore, localViewer),
       ),
       requestStore: accountManager,
       sessionStore: accountManager,
@@ -100,6 +115,8 @@ export class AuthProvider extends OAuthProvider {
         tokenResponse['sub'] = account.sub
       },
     })
+
+    this.customization = customization
   }
 
   createRouter() {
@@ -188,12 +205,12 @@ class DetailedAccountStore implements AccountStore {
 class ActorProfileStore {
   constructor(
     private actorStore: ActorStore,
-    private localViewerCreator: LocalViewerCreator,
+    private localViewer: LocalViewerCreator,
   ) {}
 
   public async get(did: string): Promise<ProfileViewBasic | null> {
     return this.actorStore.read(did, async (store) => {
-      const localViewer = this.localViewerCreator(store)
+      const localViewer = this.localViewer(store)
       return localViewer.getProfileBasic()
     })
   }
