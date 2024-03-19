@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.2
+
+### Patch Changes
+
+- [#2344](https://github.com/bluesky-social/atproto/pull/2344) [`abc6f82da`](https://github.com/bluesky-social/atproto/commit/abc6f82da38abef2b1bbe8d9e41a0534a5418c9e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support muting words that contain apostrophes and other punctuation
+
 ## 0.12.1
 
 ### Patch Changes
