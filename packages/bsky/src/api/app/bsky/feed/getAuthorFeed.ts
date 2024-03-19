@@ -15,7 +15,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { Actor } from '../../../../hydration/actor'
-import { FeedItem } from '../../../../hydration/feed'
+import { FeedItem, Post } from '../../../../hydration/feed'
 import { FeedType } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
@@ -77,7 +77,7 @@ export const skeleton = async (inputs: {
     throw new InvalidRequestError('Profile not found')
   }
   if (clearlyBadCursor(params.cursor)) {
-    return { actor, items: [] }
+    return { actor, filter: params.filter, items: [] }
   }
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
@@ -87,6 +87,7 @@ export const skeleton = async (inputs: {
   })
   return {
     actor,
+    filter: params.filter,
     items: res.items.map((item) => ({
       post: { uri: item.uri, cid: item.cid || undefined },
       repost: item.repost
@@ -129,12 +130,19 @@ const noBlocksOrMutedReposts = (inputs: {
       'BlockedByActor',
     )
   }
+  // for posts_and_author_threads, ensure replies are only included if the feed
+  // contains all replies up to the thread root (i.e. a complete self-thread.)
+  const selfThread =
+    skeleton.filter === 'posts_and_author_threads'
+      ? new SelfThreadTracker(skeleton.items, hydration)
+      : undefined
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.originatorBlocked &&
-      !(bam.authorMuted && !bam.originatorMuted)
+      (!bam.authorMuted || bam.originatorMuted) &&
+      (!selfThread || selfThread.eligible(item.post.uri))
     )
   })
   return skeleton
@@ -165,5 +173,60 @@ type Params = QueryParams & {
 type Skeleton = {
   actor: Actor
   items: FeedItem[]
+  filter: QueryParams['filter']
   cursor?: string
+}
+
+class SelfThreadTracker {
+  feedUris = new Set<string>()
+  cache = new Map<string, boolean>()
+
+  constructor(items: FeedItem[], private hydration: HydrationState) {
+    items.forEach((item) => {
+      if (!item.repost) {
+        this.feedUris.add(item.post.uri)
+      }
+    })
+  }
+
+  eligible(uri: string, loop = new Set<string>()) {
+    // if we've already checked this uri, pull from the cache
+    if (this.cache.has(uri)) {
+      return this.cache.get(uri) ?? false
+    }
+    // loop detection
+    if (loop.has(uri)) {
+      this.cache.set(uri, false)
+      return false
+    } else {
+      loop.add(uri)
+    }
+    // cache through the result
+    const result = this._eligible(uri, loop)
+    this.cache.set(uri, result)
+    return result
+  }
+
+  private _eligible(uri: string, loop: Set<string>): boolean {
+    // must be in the feed to be in a self-thread
+    if (!this.feedUris.has(uri)) {
+      return false
+    }
+    // must be hydratable to be part of self-thread
+    const post = this.hydration.posts?.get(uri)
+    if (!post) {
+      return false
+    }
+    // root posts (no parent) are trivial case of self-thread
+    const parentUri = getParentUri(post)
+    if (parentUri === null) {
+      return true
+    }
+    // recurse w/ cache: this post is in a self-thread if its parent is.
+    return this.eligible(parentUri, loop)
+  }
+}
+
+function getParentUri(post: Post) {
+  return post.record.reply?.parent.uri ?? null
 }
