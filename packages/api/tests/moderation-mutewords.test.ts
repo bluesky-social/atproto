@@ -89,6 +89,22 @@ describe(`hasMutedWord`, () => {
       expect(match).toBe(true)
     })
 
+    it(`match: single char with length > 1 ☠︎`, () => {
+      const rt = new RichText({
+        text: `Idk why ☠︎ but maybe`,
+      })
+      rt.detectFacetsWithoutResolution()
+
+      const match = hasMutedWord({
+        mutedWords: [{ value: '☠︎', targets: ['content'] }],
+        text: rt.text,
+        facets: rt.facets,
+        outlineTags: [],
+      })
+
+      expect(match).toBe(true)
+    })
+
     it(`no match: long muted word, short post`, () => {
       const rt = new RichText({
         text: `hey`,
@@ -248,6 +264,57 @@ describe(`hasMutedWord`, () => {
       })
     })
 
+    describe(`apostrophes: Bluesky's`, () => {
+      const rt = new RichText({
+        text: `Yay, Bluesky's mutewords work`,
+      })
+      rt.detectFacetsWithoutResolution()
+
+      it(`match: Bluesky's`, () => {
+        const match = hasMutedWord({
+          mutedWords: [{ value: `Bluesky's`, targets: ['content'] }],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+        })
+
+        expect(match).toBe(true)
+      })
+
+      it(`match: Bluesky`, () => {
+        const match = hasMutedWord({
+          mutedWords: [{ value: 'Bluesky', targets: ['content'] }],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+        })
+
+        expect(match).toBe(true)
+      })
+
+      it(`match: bluesky`, () => {
+        const match = hasMutedWord({
+          mutedWords: [{ value: 'bluesky', targets: ['content'] }],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+        })
+
+        expect(match).toBe(true)
+      })
+
+      it(`match: blueskys`, () => {
+        const match = hasMutedWord({
+          mutedWords: [{ value: 'blueskys', targets: ['content'] }],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+        })
+
+        expect(match).toBe(true)
+      })
+    })
+
     describe(`Why so S@assy?`, () => {
       const rt = new RichText({
         text: `Why so S@assy?`,
@@ -398,6 +465,17 @@ describe(`hasMutedWord`, () => {
         expect(match).toBe(true)
       })
 
+      it(`match: bad`, () => {
+        const match = hasMutedWord({
+          mutedWords: [{ value: `bad`, targets: ['content'] }],
+          text: rt.text,
+          facets: rt.facets,
+          outlineTags: [],
+        })
+
+        expect(match).toBe(true)
+      })
+
       it(`match: super bad`, () => {
         const match = hasMutedWord({
           mutedWords: [{ value: `super bad`, targets: ['content'] }],
@@ -417,7 +495,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(false)
+        expect(match).toBe(true)
       })
     })
 
@@ -474,7 +552,7 @@ describe(`hasMutedWord`, () => {
           outlineTags: [],
         })
 
-        expect(match).toBe(false)
+        expect(match).toBe(true)
       })
     })
 

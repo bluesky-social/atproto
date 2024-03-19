@@ -82,38 +82,16 @@ export function hasMutedWord({
       if (mutedWord === wordTrimmedPunctuation) return true
       if (mutedWord.length > wordTrimmedPunctuation.length) continue
 
-      // handle hyphenated, slash separated words, etc
-      if (REGEX.SEPARATORS.test(wordTrimmedPunctuation)) {
-        // check against full normalized phrase
-        const wordNormalizedSeparators = wordTrimmedPunctuation.replace(
-          REGEX.SEPARATORS,
-          ' ',
-        )
-        const mutedWordNormalizedSeparators = mutedWord.replace(
-          REGEX.SEPARATORS,
-          ' ',
-        )
-        // hyphenated (or other sep) to spaced words
-        if (wordNormalizedSeparators === mutedWordNormalizedSeparators)
-          return true
+      if (/\p{P}+/u.test(wordTrimmedPunctuation)) {
+        const spacedWord = wordTrimmedPunctuation.replace(/\p{P}+/gu, ' ')
+        if (spacedWord === mutedWord) return true
 
-        /* Disabled for now e.g. `super-cool` to `supercool`
-        const wordNormalizedCompressed = wordNormalizedSeparators.replace(
-          REGEX.WORD_BOUNDARY,
-          '',
-        )
-        const mutedWordNormalizedCompressed =
-          mutedWordNormalizedSeparators.replace(/\s+?/g, '')
-        // hyphenated (or other sep) to non-hyphenated contiguous word
-        if (mutedWordNormalizedCompressed === wordNormalizedCompressed)
-          return true
-        */
+        const contiguousWord = spacedWord.replace(/\s/gu, '')
+        if (contiguousWord === mutedWord) return true
 
-        // then individual parts of separated phrases/words
-        const wordParts = wordTrimmedPunctuation.split(REGEX.SEPARATORS)
-        for (const wp of wordParts) {
-          // still retain internal punctuation
-          if (wp === mutedWord) return true
+        const wordParts = wordTrimmedPunctuation.split(/\p{P}+/u)
+        for (const wordPart of wordParts) {
+          if (wordPart === mutedWord) return true
         }
       }
     }
