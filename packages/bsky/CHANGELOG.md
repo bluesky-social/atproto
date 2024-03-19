@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.42
+
+### Patch Changes
+
+- [#2342](https://github.com/bluesky-social/atproto/pull/2342) [`eb7668c07`](https://github.com/bluesky-social/atproto/commit/eb7668c07d44f4b42ea2cc28143c64f4ba3312f5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds the `associated` property to `profile` and `profile-basic` views, bringing them in line with `profile-detailed` views.
+
+- Updated dependencies [[`eb7668c07`](https://github.com/bluesky-social/atproto/commit/eb7668c07d44f4b42ea2cc28143c64f4ba3312f5)]:
+  - @atproto/api@0.12.1
+
 ## 0.0.41
 
 ### Patch Changes
