@@ -130,21 +130,30 @@ const noBlocksOrMutedReposts = (inputs: {
       'BlockedByActor',
     )
   }
-  // for posts_and_author_threads, ensure replies are only included if the feed
-  // contains all replies up to the thread root (i.e. a complete self-thread.)
-  const selfThread =
-    skeleton.filter === 'posts_and_author_threads'
-      ? new SelfThreadTracker(skeleton.items, hydration)
-      : undefined
-  skeleton.items = skeleton.items.filter((item) => {
+
+  const checkBlocksAndMutes = (item: FeedItem) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.originatorBlocked &&
-      (!bam.authorMuted || bam.originatorMuted) &&
-      (!selfThread || selfThread.eligible(item.post.uri))
+      (!bam.authorMuted || bam.originatorMuted) // repost of muted content
     )
-  })
+  }
+
+  if (skeleton.filter === 'posts_and_author_threads') {
+    // ensure replies are only included if the feed contains all
+    // replies up to the thread root (i.e. a complete self-thread.)
+    const selfThread = new SelfThreadTracker(skeleton.items, hydration)
+    skeleton.items = skeleton.items.filter((item) => {
+      return (
+        checkBlocksAndMutes(item) &&
+        (item.repost || selfThread.ok(item.post.uri))
+      )
+    })
+  } else {
+    skeleton.items = skeleton.items.filter(checkBlocksAndMutes)
+  }
+
   return skeleton
 }
 
@@ -189,7 +198,7 @@ class SelfThreadTracker {
     })
   }
 
-  eligible(uri: string, loop = new Set<string>()) {
+  ok(uri: string, loop = new Set<string>()) {
     // if we've already checked this uri, pull from the cache
     if (this.cache.has(uri)) {
       return this.cache.get(uri) ?? false
@@ -202,12 +211,12 @@ class SelfThreadTracker {
       loop.add(uri)
     }
     // cache through the result
-    const result = this._eligible(uri, loop)
+    const result = this._ok(uri, loop)
     this.cache.set(uri, result)
     return result
   }
 
-  private _eligible(uri: string, loop: Set<string>): boolean {
+  private _ok(uri: string, loop: Set<string>): boolean {
     // must be in the feed to be in a self-thread
     if (!this.feedUris.has(uri)) {
       return false
@@ -223,7 +232,7 @@ class SelfThreadTracker {
       return true
     }
     // recurse w/ cache: this post is in a self-thread if its parent is.
-    return this.eligible(parentUri, loop)
+    return this.ok(parentUri, loop)
   }
 }
 

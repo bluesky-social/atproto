@@ -283,7 +283,7 @@ describe('pds author feed views', () => {
       filter: 'posts_and_author_threads',
     })
 
-    expect(eveFeed.feed.length).toEqual(5)
+    expect(eveFeed.feed.length).toEqual(6)
     expect(
       eveFeed.feed.some(({ post }) => {
         const replyByEve =
@@ -305,6 +305,14 @@ describe('pds author feed views', () => {
           (!reply.parent.record.reply ||
             isReplyTo(reply.parent.record.reply, eve))
         return replyToEve && replyToReplyByEve
+      }),
+    ).toBeTruthy()
+    // reposts are preserved
+    expect(
+      eveFeed.feed.some(({ post, reason }) => {
+        const repostOfOther =
+          reason && isRecord(post.record) && post.author.did !== eve
+        return repostOfOther
       }),
     ).toBeTruthy()
   })
