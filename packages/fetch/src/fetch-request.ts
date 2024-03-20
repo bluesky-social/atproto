@@ -20,12 +20,11 @@ export function protocolCheckRequestTransform(
   }
 }
 
-export function forbiddenDomainNameRequestTransform(
-  forbiddenDomainNames: Iterable<string>,
-): RequestTranformer {
-  const forbiddenDomainNameSet = new Set<string>(forbiddenDomainNames)
-
+export function requireHostHeaderTranform(): RequestTranformer {
   return async (request) => {
+    // Note that fetch() will automatically add the Host header from the URL and
+    // discard any Host header manually set in the request.
+
     const { hostname } = new URL(request.url)
 
     // IPv4
@@ -38,8 +37,48 @@ export function forbiddenDomainNameRequestTransform(
       throw new FetchError(400, 'Invalid hostname', { request })
     }
 
-    if (forbiddenDomainNameSet.has(hostname)) {
+    return request
+  }
+}
+
+export const DEFAULT_FORBIDDEN_DOMAIN_NAMES = [
+  'example.com',
+  '*.example.com',
+  'example.org',
+  '*.example.org',
+  'example.net',
+  '*.example.net',
+  'googleusercontent.com',
+  '*.googleusercontent.com',
+]
+
+export function forbiddenDomainNameRequestTransform(
+  denyList: Iterable<string> = DEFAULT_FORBIDDEN_DOMAIN_NAMES,
+): RequestTranformer {
+  const denySet = new Set<string>(denyList)
+
+  // Optimization: if no forbidden domain names are provided, we can skip the
+  // check entirely.
+  if (denySet.size === 0) {
+    return async (request) => request
+  }
+
+  return async (request) => {
+    const { hostname } = new URL(request.url)
+
+    // Full domain name check
+    if (denySet.has(hostname)) {
       throw new FetchError(403, 'Forbidden hostname', { request })
+    }
+
+    // Sub domain name check
+    let curDot = hostname.indexOf('.')
+    while (curDot !== -1) {
+      const subdomain = hostname.slice(curDot + 1)
+      if (denySet.has(`*.${subdomain}`)) {
+        throw new FetchError(403, 'Forbidden hostname', { request })
+      }
+      curDot = hostname.indexOf('.', curDot + 1)
     }
 
     return request
