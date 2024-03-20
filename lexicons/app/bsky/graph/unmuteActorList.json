@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Unmute a list of actors.",
+      "description": "Unmutes the specified list of accounts. Requires auth.",
       "input": {
         "encoding": "application/json",
         "schema": {

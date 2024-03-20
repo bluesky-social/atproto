@@ -19,7 +19,7 @@ describe('proxies view requests', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc, { addModLabels: network.bsky })
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -79,9 +79,8 @@ describe('proxies view requests', () => {
       { did: sc.dids.carol, order: 2 },
       { did: sc.dids.dan, order: 3 },
     ]
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('suggested_follow')
+    await network.bsky.db.db
+      .insertInto('suggested_follow')
       .values(suggestions)
       .execute()
 
@@ -334,7 +333,8 @@ describe('proxies view requests', () => {
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
   })
 
-  it('unspecced.getPopularFeedGenerators', async () => {
+  // @TODO disabled during appview v2 buildout
+  it.skip('unspecced.getPopularFeedGenerators', async () => {
     const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
       {},
       {

@@ -1,31 +1,35 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import {
   LocalViewer,
   handleReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.feed.getActorLikes'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getActorLikes({
-    auth: ctx.authVerifier.accessOrRole,
-    handler: async ({ req, params, auth }) => {
-      const requester =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
+    auth: ctx.authVerifier.access,
+    handler: async ({ req, auth }) => {
+      const requester = auth.credentials.did
+      const res = await pipethrough(ctx, req, requester)
 
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getActorLikes(
-        params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
+      if (!requester) {
+        return res
+      }
+
+      return await handleReadAfterWrite(
+        ctx,
+        METHOD_NSID,
+        requester,
+        res,
+        getAuthorMunge,
       )
-      if (requester) {
-        return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
-      }
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
     },
   })
 }

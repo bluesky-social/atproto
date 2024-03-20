@@ -5,6 +5,7 @@ export type RepoSeqEventType =
   | 'rebase'
   | 'handle'
   | 'migrate'
+  | 'identity'
   | 'tombstone'
 
 export interface RepoSeq {

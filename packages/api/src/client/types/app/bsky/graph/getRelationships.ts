@@ -9,7 +9,9 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
+  /** Primary account requesting relationships for. */
   actor: string
+  /** List of 'other' accounts to be related back to the primary. */
   others?: string[]
 }
 

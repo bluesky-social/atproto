@@ -92,7 +92,6 @@ describe('bsky views with mutes from mute lists', () => {
   })
 
   it('uses a list for mutes', async () => {
-    // @TODO proxy through appview
     await agent.api.app.bsky.graph.muteActorList(
       {
         list: listUri,
@@ -196,7 +195,6 @@ describe('bsky views with mutes from mute lists', () => {
     // unfollow so they _would_ show up in suggestions if not for mute
     await sc.unfollow(dan, carol)
     await network.processAll()
-    await network.bsky.processAll()
 
     const res = await agent.api.app.bsky.actor.getSuggestions(
       {

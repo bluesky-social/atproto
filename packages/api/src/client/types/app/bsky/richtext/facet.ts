@@ -6,6 +6,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
+/** Annotation of a sub-string within rich text. */
 export interface Main {
   index: ByteSlice
   features: (Mention | Link | Tag | { $type: string; [k: string]: unknown })[]
@@ -25,7 +26,7 @@ export function validateMain(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#main', v)
 }
 
-/** A facet feature for actor mentions. */
+/** Facet feature for mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
 export interface Mention {
   did: string
   [k: string]: unknown
@@ -43,7 +44,7 @@ export function validateMention(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#mention', v)
 }
 
-/** A facet feature for links. */
+/** Facet feature for a URL. The text URL may have been simplified or truncated, but the facet reference should be a complete URL. */
 export interface Link {
   uri: string
   [k: string]: unknown
@@ -61,7 +62,7 @@ export function validateLink(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#link', v)
 }
 
-/** A hashtag. */
+/** Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags'). */
 export interface Tag {
   tag: string
   [k: string]: unknown
@@ -77,7 +78,7 @@ export function validateTag(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#tag', v)
 }
 
-/** A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings. */
+/** Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text. NOTE: some languages, like Javascript, use UTF-16 or Unicode codepoints for string slice indexing; in these languages, convert to byte arrays before working with facets. */
 export interface ByteSlice {
   byteStart: number
   byteEnd: number

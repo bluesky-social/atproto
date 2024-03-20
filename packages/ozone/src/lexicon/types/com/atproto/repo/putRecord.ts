@@ -6,22 +6,22 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The handle or DID of the repo. */
+  /** The handle or DID of the repo (aka, current account). */
   repo: string
   /** The NSID of the record collection. */
   collection: string
-  /** The key of the record. */
+  /** The Record Key. */
   rkey: string
-  /** Flag for validating the record. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data. */
   validate: boolean
   /** The record to write. */
   record: {}
-  /** Compare and swap with the previous record by CID. */
+  /** Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation */
   swapRecord?: string | null
   /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
@@ -51,7 +51,7 @@ export interface HandlerError {
   error?: 'InvalidSwap'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

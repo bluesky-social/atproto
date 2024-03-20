@@ -5,11 +5,16 @@ import axios, { AxiosError } from 'axios'
 import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/syntax'
 import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
-import { IdResolver, DidNotFoundError } from '@atproto/identity'
+import { DidNotFoundError } from '@atproto/identity'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
-import { Database } from '../db'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../data-plane'
 
 // Resolve and verify blob from its origin host
 
@@ -31,8 +36,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
         return next(createError(400, 'Invalid cid'))
       }
 
-      const db = ctx.db.getReplica()
-      const verifiedImage = await resolveBlob(did, cid, db, ctx.idResolver)
+      const verifiedImage = await resolveBlob(ctx, did, cid)
 
       // Send chunked response, destroying stream early (before
       // closing chunk) if the bytes don't match the expected cid.
@@ -76,28 +80,35 @@ export const createRouter = (ctx: AppContext): express.Router => {
   return router
 }
 
-export async function resolveBlob(
-  did: string,
-  cid: CID,
-  db: Database,
-  idResolver: IdResolver,
-) {
+export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
   const cidStr = cid.toString()
 
-  const [{ pds }, takedown] = await Promise.all([
-    idResolver.did.resolveAtprotoData(did), // @TODO cache did info
-    db.db
-      .selectFrom('blob_takedown')
-      .select('takedownRef')
-      .where('did', '=', did)
-      .where('cid', '=', cid.toString())
-      .executeTakeFirst(),
+  const [identity, { takenDown }] = await Promise.all([
+    ctx.dataplane.getIdentityByDid({ did }).catch((err) => {
+      if (isDataplaneError(err, Code.NotFound)) {
+        return undefined
+      }
+      throw err
+    }),
+    ctx.dataplane.getBlobTakedown({ did, cid: cid.toString() }),
   ])
-  if (takedown) {
+  const services = identity && unpackIdentityServices(identity.services)
+  const pds =
+    services &&
+    getServiceEndpoint(services, {
+      id: 'atproto_pds',
+      type: 'AtprotoPersonalDataServer',
+    })
+  if (!pds) {
+    throw createError(404, 'Origin not found')
+  }
+  if (takenDown) {
     throw createError(404, 'Blob not found')
   }
 
-  const blobResult = await retryHttp(() => getBlob({ pds, did, cid: cidStr }))
+  const blobResult = await retryHttp(() =>
+    getBlob(ctx, { pds, did, cid: cidStr }),
+  )
   const imageStream: Readable = blobResult.data
   const verifyCid = new VerifyCidTransform(cid)
 
@@ -110,12 +121,40 @@ export async function resolveBlob(
   }
 }
 
-async function getBlob(opts: { pds: string; did: string; cid: string }) {
+async function getBlob(
+  ctx: AppContext,
+  opts: { pds: string; did: string; cid: string },
+) {
   const { pds, did, cid } = opts
   return axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
     params: { did, cid },
     decompress: true,
     responseType: 'stream',
     timeout: 5000, // 5sec of inactivity on the connection
+    headers: getRateLimitBypassHeaders(ctx, pds),
   })
+}
+
+function getRateLimitBypassHeaders(
+  ctx: AppContext,
+  pds: string,
+): { 'x-ratelimit-bypass'?: string } {
+  const {
+    blobRateLimitBypassKey: bypassKey,
+    blobRateLimitBypassHostname: bypassHostname,
+  } = ctx.cfg
+  if (!bypassKey || !bypassHostname) {
+    return {}
+  }
+  const url = new URL(pds)
+  if (bypassHostname.startsWith('.')) {
+    if (url.hostname.endsWith(bypassHostname)) {
+      return { 'x-ratelimit-bypass': bypassKey }
+    }
+  } else {
+    if (url.hostname === bypassHostname) {
+      return { 'x-ratelimit-bypass': bypassKey }
+    }
+  }
+  return {}
 }

@@ -10,11 +10,12 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The handle or DID of the repo. */
+  /** The handle or DID of the repo (aka, current account). */
   repo: string
-  /** Flag for validating the records. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data, for all operations. */
   validate?: boolean
   writes: (Create | Update | Delete)[]
+  /** If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations. */
   swapCommit?: string
   [k: string]: unknown
 }
@@ -43,7 +44,7 @@ export function toKnownErr(e: any) {
   return e
 }
 
-/** Create a new record. */
+/** Operation which creates a new record. */
 export interface Create {
   collection: string
   rkey?: string
@@ -63,7 +64,7 @@ export function validateCreate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#create', v)
 }
 
-/** Update an existing record. */
+/** Operation which updates an existing record. */
 export interface Update {
   collection: string
   rkey: string
@@ -83,7 +84,7 @@ export function validateUpdate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#update', v)
 }
 
-/** Delete an existing record. */
+/** Operation which deletes an existing record. */
 export interface Delete {
   collection: string
   rkey: string

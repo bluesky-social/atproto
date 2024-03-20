@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -22,16 +23,13 @@ import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { ActorStore, ActorStoreReader } from './actor-store'
-import { LocalViewer } from './read-after-write/viewer'
+import { ActorStore } from './actor-store'
+import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
-  localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqliteCache
@@ -42,8 +40,9 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
   crawlers: Crawlers
-  appViewAgent: AtpAgent
-  moderationAgent: AtpAgent
+  appViewAgent?: AtpAgent
+  moderationAgent?: AtpAgent
+  reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -53,10 +52,7 @@ export type AppContextOptions = {
 export class AppContext {
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
-  public localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
   public didCache: DidSqliteCache
@@ -67,8 +63,9 @@ export class AppContext {
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent
-  public moderationAgent: AtpAgent
+  public appViewAgent: AtpAgent | undefined
+  public moderationAgent: AtpAgent | undefined
+  public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
   public plcRotationKey: crypto.Keypair
@@ -90,6 +87,7 @@ export class AppContext {
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.moderationAgent = opts.moderationAgent
+    this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
     this.plcRotationKey = opts.plcRotationKey
@@ -161,9 +159,15 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
-    const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
-    const moderationAgent = new AtpAgent({ service: cfg.modService.url })
-
+    const appViewAgent = cfg.bskyAppView
+      ? new AtpAgent({ service: cfg.bskyAppView.url })
+      : undefined
+    const moderationAgent = cfg.modService
+      ? new AtpAgent({ service: cfg.modService.url })
+      : undefined
+    const reportingAgent = cfg.reportService
+      ? new AtpAgent({ service: cfg.reportService.url })
+      : undefined
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
@@ -184,12 +188,10 @@ export class AppContext {
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
       jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
-      moderatorPass: secrets.moderatorPassword,
-      triagePass: secrets.triagePassword,
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.modService.did,
+        modService: cfg.modService?.did,
       },
     })
 
@@ -211,8 +213,8 @@ export class AppContext {
       accountManager,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
-      appviewDid: cfg.bskyAppView.did,
-      appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
+      appviewDid: cfg.bskyAppView?.did,
+      appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
     return new AppContext({
@@ -231,6 +233,7 @@ export class AppContext {
       crawlers,
       appViewAgent,
       moderationAgent,
+      reportingAgent,
       entrywayAgent,
       authVerifier,
       plcRotationKey,
@@ -240,11 +243,8 @@ export class AppContext {
   }
 
   async appviewAuthHeaders(did: string) {
+    assert(this.cfg.bskyAppView)
     return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
-  }
-
-  async moderationAuthHeaders(did: string) {
-    return this.serviceAuthHeaders(did, this.cfg.modService.did)
   }
 
   async serviceAuthHeaders(did: string, aud: string) {

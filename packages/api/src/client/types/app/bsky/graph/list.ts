@@ -11,6 +11,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface Record {
   purpose: AppBskyGraphDefs.ListPurpose
+  /** Display name for list; can not be empty. */
   name: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]

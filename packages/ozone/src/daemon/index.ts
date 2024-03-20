@@ -3,6 +3,7 @@ import DaemonContext from './context'
 import { AppContextOptions } from '../context'
 
 export { EventPusher } from './event-pusher'
+export { BlobDiverter } from './blob-diverter'
 export { EventReverser } from './event-reverser'
 
 export class OzoneDaemon {

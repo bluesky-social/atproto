@@ -1,3 +1,10 @@
+export const keyBy = <T>(arr: T[], key: string): Record<string, T> => {
+  return arr.reduce((acc, cur) => {
+    acc[cur[key]] = cur
+    return acc
+  }, {} as Record<string, T>)
+}
+
 export const mapDefined = <T, S>(
   arr: T[],
   fn: (obj: T) => S | undefined,

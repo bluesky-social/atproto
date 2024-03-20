@@ -1,4 +1,4 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -6,12 +6,8 @@ import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
-    auth: ctx.authVerifier.role,
-    handler: async ({ input, auth }) => {
-      if (!auth.credentials.admin) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
-
+    auth: ctx.authVerifier.adminToken,
+    handler: async ({ input }) => {
       const { did } = input.body
       const handle = await normalizeAndValidateHandle({
         ctx,
@@ -21,7 +17,10 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const account = await ctx.accountManager.getAccount(handle)
+      const account = await ctx.accountManager.getAccount(handle, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
 
       if (account) {
         if (account.did !== did) {
@@ -46,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
 
       try {
         await ctx.sequencer.sequenceHandleUpdate(did, handle)
+        await ctx.sequencer.sequenceIdentityEvt(did)
       } catch (err) {
         httpLogger.error(
           { err, did, handle },

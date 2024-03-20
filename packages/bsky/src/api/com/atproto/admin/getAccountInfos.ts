@@ -1,33 +1,30 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { Actor } from '../../../../db/tables/actor'
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
-    auth: ctx.authVerifier.roleOrAdminService,
-    handler: async ({ params }) => {
+    auth: ctx.authVerifier.optionalStandardOrRole,
+    handler: async ({ params, auth }) => {
       const { dids } = params
-      const db = ctx.db.getPrimary()
-      const actorService = ctx.services.actor(db)
-      const [actors, profiles] = await Promise.all([
-        actorService.getActors(dids, true),
-        actorService.getProfileRecords(dids, true),
-      ])
-      const actorByDid = actors.reduce((acc, cur) => {
-        return acc.set(cur.did, cur)
-      }, new Map<string, Actor>())
+      const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+
+      const actors = await ctx.hydrator.actor.getActors(dids, true)
 
       const infos = mapDefined(dids, (did) => {
-        const info = actorByDid.get(did)
+        const info = actors.get(did)
         if (!info) return
-        const profile = profiles.get(did)
+        if (info.takedownRef && !includeTakedowns) return
+        const profileRecord =
+          !info.profileTakedownRef || includeTakedowns
+            ? info.profile
+            : undefined
         return {
           did,
           handle: info.handle ?? INVALID_HANDLE,
-          relatedRecords: profile ? [profile] : undefined,
-          indexedAt: info.indexedAt,
+          relatedRecords: profileRecord ? [profileRecord] : undefined,
+          indexedAt: (info.sortedAt ?? new Date(0)).toISOString(),
         }
       })
 

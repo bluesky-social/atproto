@@ -1,7 +1,6 @@
 {
   "lexicon": 1,
   "id": "app.bsky.actor.defs",
-  "description": "A reference to an actor in the network.",
   "defs": {
     "profileViewBasic": {
       "type": "object",
@@ -15,6 +14,10 @@
           "maxLength": 640
         },
         "avatar": { "type": "string" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -39,6 +42,10 @@
           "maxLength": 2560
         },
         "avatar": { "type": "string" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
@@ -68,6 +75,10 @@
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
@@ -76,8 +87,17 @@
         }
       }
     },
+    "profileAssociated": {
+      "type": "object",
+      "properties": {
+        "lists": { "type": "integer" },
+        "feedgens": { "type": "integer" },
+        "labeler": { "type": "boolean" }
+      }
+    },
     "viewerState": {
       "type": "object",
+      "description": "Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests.",
       "properties": {
         "muted": { "type": "boolean" },
         "mutedByList": {
@@ -105,7 +125,9 @@
           "#personalDetailsPref",
           "#feedViewPref",
           "#threadViewPref",
-          "#interestsPref"
+          "#interestsPref",
+          "#mutedWordsPref",
+          "#hiddenPostsPref"
         ]
       }
     },
@@ -120,10 +142,15 @@
       "type": "object",
       "required": ["label", "visibility"],
       "properties": {
+        "labelerDid": {
+          "type": "string",
+          "description": "Which labeler does this preference apply to? If undefined, applies globally.",
+          "format": "did"
+        },
         "label": { "type": "string" },
         "visibility": {
           "type": "string",
-          "knownValues": ["show", "warn", "hide"]
+          "knownValues": ["ignore", "show", "warn", "hide"]
         }
       }
     },
@@ -144,6 +171,9 @@
             "type": "string",
             "format": "at-uri"
           }
+        },
+        "timelineIndex": {
+          "type": "integer"
         }
       }
     },
@@ -171,7 +201,8 @@
         },
         "hideRepliesByUnfollowed": {
           "type": "boolean",
-          "description": "Hide replies in the feed if they are not by followed users."
+          "description": "Hide replies in the feed if they are not by followed users.",
+          "default": true
         },
         "hideRepliesByLikeCount": {
           "type": "integer",
@@ -210,6 +241,81 @@
           "maxLength": 100,
           "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
           "description": "A list of tags which describe the account owner's interests gathered during onboarding."
+        }
+      }
+    },
+    "mutedWordTarget": {
+      "type": "string",
+      "knownValues": ["content", "tag"],
+      "maxLength": 640,
+      "maxGraphemes": 64
+    },
+    "mutedWord": {
+      "type": "object",
+      "description": "A word that the account owner has muted.",
+      "required": ["value", "targets"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The muted word itself.",
+          "maxLength": 10000,
+          "maxGraphemes": 1000
+        },
+        "targets": {
+          "type": "array",
+          "description": "The intended targets of the muted word.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#mutedWordTarget"
+          }
+        }
+      }
+    },
+    "mutedWordsPref": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#mutedWord"
+          },
+          "description": "A list of words the account owner has muted."
+        }
+      }
+    },
+    "hiddenPostsPref": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": { "type": "string", "format": "at-uri" },
+          "description": "A list of URIs of posts the account owner has hidden."
+        }
+      }
+    },
+    "labelersPref": {
+      "type": "object",
+      "required": ["labelers"],
+      "properties": {
+        "labelers": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#labelerPrefItem"
+          }
+        }
+      }
+    },
+    "labelerPrefItem": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
         }
       }
     }

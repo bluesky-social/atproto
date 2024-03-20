@@ -1,13 +1,16 @@
 import assert from 'assert'
+import getPort from 'get-port'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpAgent,
   AtpAgentFetchHandlerResponse,
   AtpSessionEvent,
   AtpSessionData,
+  BSKY_LABELER_DID,
 } from '..'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
+import { createHeaderEchoServer } from './util/echo-server'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -23,6 +26,14 @@ describe('agent', () => {
 
   afterAll(async () => {
     await network.close()
+  })
+
+  it('clones correctly', () => {
+    const persistSession = (_evt: AtpSessionEvent, _sess?: AtpSessionData) => {}
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
+    const agent2 = agent.clone()
+    expect(agent2 instanceof AtpAgent).toBeTruthy()
+    expect(agent.service).toEqual(agent2.service)
   })
 
   it('creates a new session on account creation.', async () => {
@@ -439,6 +450,7 @@ describe('agent', () => {
       expect(originalHandlerCallCount).toEqual(1)
 
       agent.setPersistSessionHandler(newPersistSession)
+      agent.session = undefined
 
       await agent.createAccount({
         handle: 'user8.test',
@@ -476,6 +488,81 @@ describe('agent', () => {
       expect(events[0]).toEqual('create-failed')
       expect(sessions.length).toEqual(1)
       expect(sessions[0]).toEqual(undefined)
+    })
+  })
+
+  describe('App labelers header', () => {
+    it('adds the labelers header as expected', async () => {
+      const port = await getPort()
+      const server = await createHeaderEchoServer(port)
+      const agent = new AtpAgent({ service: `http://localhost:${port}` })
+      const agent2 = new AtpAgent({ service: `http://localhost:${port}` })
+
+      const res1 = await agent.com.atproto.server.describeServer()
+      expect(res1.data['atproto-accept-labelers']).toEqual(
+        `${BSKY_LABELER_DID};redact`,
+      )
+
+      AtpAgent.configure({ appLabelers: ['did:plc:test1', 'did:plc:test2'] })
+      const res2 = await agent.com.atproto.server.describeServer()
+      expect(res2.data['atproto-accept-labelers']).toEqual(
+        'did:plc:test1;redact, did:plc:test2;redact',
+      )
+      const res3 = await agent2.com.atproto.server.describeServer()
+      expect(res3.data['atproto-accept-labelers']).toEqual(
+        'did:plc:test1;redact, did:plc:test2;redact',
+      )
+      AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
+
+      await new Promise((r) => server.close(r))
+    })
+  })
+
+  describe('configureLabelersHeader', () => {
+    it('adds the labelers header as expected', async () => {
+      const port = await getPort()
+      const server = await createHeaderEchoServer(port)
+      const agent = new AtpAgent({ service: `http://localhost:${port}` })
+
+      agent.configureLabelersHeader(['did:plc:test1'])
+      const res1 = await agent.com.atproto.server.describeServer()
+      expect(res1.data['atproto-accept-labelers']).toEqual(
+        `${BSKY_LABELER_DID};redact, did:plc:test1`,
+      )
+
+      agent.configureLabelersHeader(['did:plc:test1', 'did:plc:test2'])
+      const res2 = await agent.com.atproto.server.describeServer()
+      expect(res2.data['atproto-accept-labelers']).toEqual(
+        `${BSKY_LABELER_DID};redact, did:plc:test1, did:plc:test2`,
+      )
+
+      await new Promise((r) => server.close(r))
+    })
+  })
+
+  describe('configureProxyHeader', () => {
+    it('adds the proxy header as expected', async () => {
+      const port = await getPort()
+      const server = await createHeaderEchoServer(port)
+      const agent = new AtpAgent({ service: `http://localhost:${port}` })
+
+      const res1 = await agent.com.atproto.server.describeServer()
+      expect(res1.data['atproto-proxy']).toBeFalsy()
+
+      agent.configureProxyHeader('atproto_labeler', 'did:plc:test1')
+      const res2 = await agent.com.atproto.server.describeServer()
+      expect(res2.data['atproto-proxy']).toEqual(
+        'did:plc:test1#atproto_labeler',
+      )
+
+      const res3 = await agent
+        .withProxy('atproto_labeler', 'did:plc:test2')
+        .com.atproto.server.describeServer()
+      expect(res3.data['atproto-proxy']).toEqual(
+        'did:plc:test2#atproto_labeler',
+      )
+
+      await new Promise((r) => server.close(r))
     })
   })
 })

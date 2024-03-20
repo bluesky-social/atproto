@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List DIDs and root CIDs of hosted repos.",
+      "description": "Enumerates all the DID, rev, and commit CID for all repos hosted by this service. Does not require auth; implemented by PDS and Relay.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -37,7 +37,11 @@
       "required": ["did", "head", "rev"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "head": { "type": "string", "format": "cid" },
+        "head": {
+          "type": "string",
+          "format": "cid",
+          "description": "Current repo commit CID"
+        },
         "rev": { "type": "string" }
       }
     }

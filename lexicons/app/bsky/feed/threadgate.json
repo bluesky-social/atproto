@@ -5,12 +5,16 @@
     "main": {
       "type": "record",
       "key": "tid",
-      "description": "Defines interaction gating rules for a thread. The rkey of the threadgate record should match the rkey of the thread's root post.",
+      "description": "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository..",
       "record": {
         "type": "object",
         "required": ["post", "createdAt"],
         "properties": {
-          "post": { "type": "string", "format": "at-uri" },
+          "post": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference (AT-URI) to the post record."
+          },
           "allow": {
             "type": "array",
             "maxLength": 5,

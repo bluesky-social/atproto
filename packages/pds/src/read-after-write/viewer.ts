@@ -3,7 +3,6 @@ import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import { AtpAgent } from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -13,7 +12,12 @@ import {
   ProfileView,
   ProfileViewDetailed,
 } from '../lexicon/types/app/bsky/actor/defs'
-import { FeedViewPost, PostView } from '../lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  GeneratorView,
+  PostView,
+} from '../lexicon/types/app/bsky/feed/defs'
+import { ListView } from '../lexicon/types/app/bsky/graph/defs'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -26,6 +30,7 @@ import {
   Main as EmbedRecord,
   isMain as isEmbedRecord,
   View as EmbedRecordView,
+  ViewRecord,
 } from '../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
@@ -37,10 +42,11 @@ import { AccountManager } from '../account-manager'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
+export type LocalViewerCreator = (actorStore: ActorStoreReader) => LocalViewer
+
 export class LocalViewer {
   did: string
   actorStore: ActorStoreReader
-  actorKey: Keypair
   accountManager: AccountManager
   pdsHostname: string
   appViewAgent?: AtpAgent
@@ -49,7 +55,6 @@ export class LocalViewer {
 
   constructor(params: {
     actorStore: ActorStoreReader
-    actorKey: Keypair
     accountManager: AccountManager
     pdsHostname: string
     appViewAgent?: AtpAgent
@@ -58,7 +63,6 @@ export class LocalViewer {
   }) {
     this.did = params.actorStore.did
     this.actorStore = params.actorStore
-    this.actorKey = params.actorKey
     this.accountManager = params.accountManager
     this.pdsHostname = params.pdsHostname
     this.appViewAgent = params.appViewAgent
@@ -72,9 +76,9 @@ export class LocalViewer {
     appViewAgent?: AtpAgent
     appviewDid?: string
     appviewCdnUrlPattern?: string
-  }) {
-    return (actorStore: ActorStoreReader, actorKey: Keypair) => {
-      return new LocalViewer({ ...params, actorStore, actorKey })
+  }): LocalViewerCreator {
+    return (actorStore) => {
+      return new LocalViewer({ ...params, actorStore })
     }
   }
 
@@ -89,59 +93,17 @@ export class LocalViewer {
     if (!this.appviewDid) {
       throw new Error('Could not find bsky appview did')
     }
+    const keypair = await this.actorStore.keypair()
+
     return createServiceAuthHeaders({
       iss: did,
       aud: this.appviewDid,
-      keypair: this.actorKey,
+      keypair,
     })
   }
 
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
-    const res = await this.actorStore.db.db
-      .selectFrom('record')
-      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
-      .select([
-        'repo_block.content',
-        'uri',
-        'repo_block.cid',
-        'record.indexedAt',
-      ])
-      .where('record.repoRev', '>', rev)
-      .limit(10)
-      .orderBy('record.repoRev', 'asc')
-      .execute()
-    // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
-    if (res.length > 0) {
-      const sanityCheckRes = await this.actorStore.db.db
-        .selectFrom('record')
-        .selectAll()
-        .where('record.repoRev', '<=', rev)
-        .limit(1)
-        .executeTakeFirst()
-      if (!sanityCheckRes) {
-        return { profile: null, posts: [] }
-      }
-    }
-    return res.reduce(
-      (acc, cur) => {
-        const descript = {
-          uri: new AtUri(cur.uri),
-          cid: CID.parse(cur.cid),
-          indexedAt: cur.indexedAt,
-          record: cborToLexRecord(cur.content),
-        }
-        if (
-          descript.uri.collection === ids.AppBskyActorProfile &&
-          descript.uri.rkey === 'self'
-        ) {
-          acc.profile = descript as RecordDescript<ProfileRecord>
-        } else if (descript.uri.collection === ids.AppBskyFeedPost) {
-          acc.posts.push(descript as RecordDescript<PostRecord>)
-        }
-        return acc
-      },
-      { profile: null, posts: [] } as LocalRecords,
-    )
+    return getRecordsSinceRev(this.actorStore, rev)
   }
 
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
@@ -269,7 +231,9 @@ export class LocalViewer {
     }
   }
 
-  async formatRecordEmbedInternal(embed: EmbedRecord) {
+  private async formatRecordEmbedInternal(
+    embed: EmbedRecord,
+  ): Promise<null | ViewRecord | GeneratorView | ListView> {
     if (!this.appViewAgent || !this.appviewDid) {
       return null
     }
@@ -363,4 +327,51 @@ export class LocalViewer {
         : undefined,
     }
   }
+}
+
+export const getRecordsSinceRev = async (
+  actorStore: ActorStoreReader,
+  rev: string,
+): Promise<LocalRecords> => {
+  const res = await actorStore.db.db
+    .selectFrom('record')
+    .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
+    .select(['repo_block.content', 'uri', 'repo_block.cid', 'record.indexedAt'])
+    .where('record.repoRev', '>', rev)
+    .limit(10)
+    .orderBy('record.repoRev', 'asc')
+    .execute()
+  // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
+  if (res.length > 0) {
+    const sanityCheckRes = await actorStore.db.db
+      .selectFrom('record')
+      .selectAll()
+      .where('record.repoRev', '<=', rev)
+      .limit(1)
+      .executeTakeFirst()
+    if (!sanityCheckRes) {
+      return { count: 0, profile: null, posts: [] }
+    }
+  }
+  return res.reduce(
+    (acc, cur) => {
+      const descript = {
+        uri: new AtUri(cur.uri),
+        cid: CID.parse(cur.cid),
+        indexedAt: cur.indexedAt,
+        record: cborToLexRecord(cur.content),
+      }
+      if (
+        descript.uri.collection === ids.AppBskyActorProfile &&
+        descript.uri.rkey === 'self'
+      ) {
+        acc.profile = descript as RecordDescript<ProfileRecord>
+      } else if (descript.uri.collection === ids.AppBskyFeedPost) {
+        acc.posts.push(descript as RecordDescript<PostRecord>)
+      }
+      acc.count++
+      return acc
+    },
+    { count: 0, profile: null, posts: [] } as LocalRecords,
+  )
 }

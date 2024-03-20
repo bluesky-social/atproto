@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 
 export interface Record {
+  /** DID of the account to be blocked. */
   subject: string
   createdAt: string
   [k: string]: unknown

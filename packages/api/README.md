@@ -178,87 +178,70 @@ console.log(rt3.graphemeLength) // => 1
 
 Applying the moderation system is a challenging task, but we've done our best to simplify it for you. The Moderation API helps handle a wide range of tasks, including:
 
+- Moderator labeling
 - User muting (including mutelists)
 - User blocking
-- Moderator labeling
+- Mutewords
+- Hidden posts
 
-For more information, see the [Moderation Documentation](./docs/moderation.md) or the associated [Labels Reference](./docs/labels.md).
+For more information, see the [Moderation Documentation](./docs/moderation.md).
 
 ```typescript
-import { moderatePost, moderateProfile } from '@atproto/api'
+import { moderatePost } from '@atproto/api'
+
+// First get the user's moderation prefs and their label definitions
+// =
+
+const prefs = await agent.getPreferences()
+const labelDefs = await agent.getLabelDefinitions(prefs)
 
 // We call the appropriate moderation function for the content
 // =
 
-const postMod = moderatePost(postView, getOpts())
-const profileMod = moderateProfile(profileView, getOpts())
+const postMod = moderatePost(postView, {
+  userDid: agent.session.did,
+  moderationPrefs: prefs.moderationPrefs,
+  labelDefs,
+})
 
 // We then use the output to decide how to affect rendering
 // =
 
-if (postMod.content.filter) {
-  // don't render in feeds or similar
-  // in contexts where this is disruptive (eg threads) you should ignore this and instead check blur
+// in feeds
+if (postMod.ui('contentList').filter) {
+  // don't include in feeds
 }
-if (postMod.content.blur) {
-  // render the whole object behind a cover (use postMod.content.cause to explain)
-  if (postMod.content.noOverride) {
+if (postMod.ui('contentList').blur) {
+  // render the whole object behind a cover (use postMod.ui('contentList').blurs to explain)
+  if (postMod.ui('contentList').noOverride) {
     // do not allow the cover the be removed
   }
 }
-if (postMod.content.alert) {
-  // render a warning on the content (use postMod.content.cause to explain)
+if (postMod.ui('contentList').alert || postMod.ui('contentList').inform) {
+  // render warnings on the post
+  // find the warnings in postMod.ui('contentList').alerts and postMod.ui('contentList').informs
 }
-if (postMod.embed.blur) {
-  // render the embedded media behind a cover (use postMod.embed.cause to explain)
-  if (postMod.embed.noOverride) {
+
+// viewed directly
+if (postMod.ui('contentView').filter) {
+  // don't include in feeds
+}
+if (postMod.ui('contentView').blur) {
+  // render the whole object behind a cover (use postMod.ui('contentView').blurs to explain)
+  if (postMod.ui('contentView').noOverride) {
     // do not allow the cover the be removed
   }
 }
-if (postMod.embed.alert) {
-  // render a warning on the embedded media (use postMod.embed.cause to explain)
-}
-if (postMod.avatar.blur) {
-  // render the avatar behind a cover
-}
-if (postMod.avatar.alert) {
-  // render an alert on the avatar
+if (postMod.ui('contentView').alert || postMod.ui('contentView').inform) {
+  // render warnings on the post
+  // find the warnings in postMod.ui('contentView').alerts and postMod.ui('contentView').informs
 }
 
-// The options passed into `apply()` supply the user's preferences
-// =
-
-function getOpts() {
-  return {
-    // the logged-in user's DID
-    userDid: 'did:plc:1234...',
-
-    // is adult content allowed?
-    adultContentEnabled: true,
-
-    // the global label settings (used on self-labels)
-    labels: {
-      porn: 'hide',
-      sexual: 'warn',
-      nudity: 'ignore',
-      // ...
-    },
-
-    // the per-labeler settings
-    labelers: [
-      {
-        labeler: {
-          did: '...',
-          displayName: 'My mod service',
-        },
-        labels: {
-          porn: 'hide',
-          sexual: 'warn',
-          nudity: 'ignore',
-          // ...
-        },
-      },
-    ],
+// post embeds in all contexts
+if (postMod.ui('contentMedia').blur) {
+  // render the whole object behind a cover (use postMod.ui('contentMedia').blurs to explain)
+  if (postMod.ui('contentMedia').noOverride) {
+    // do not allow the cover the be removed
   }
 }
 ```

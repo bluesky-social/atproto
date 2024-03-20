@@ -4,14 +4,19 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates public relationships between one account, and a list of other accounts",
+      "description": "Enumerates public relationships between one account, and a list of other accounts. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": { "type": "string", "format": "at-identifier" },
+          "actor": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Primary account requesting relationships for."
+          },
           "others": {
             "type": "array",
+            "description": "List of 'other' accounts to be related back to the primary.",
             "maxLength": 30,
             "items": {
               "type": "string",

@@ -1,38 +1,36 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getSuggestedFeeds({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth }) => {
-      // @NOTE ignores cursor, doesn't matter for appview swap
+    handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
-      const db = ctx.db.getReplica()
-      const feedService = ctx.services.feed(db)
-      const actorService = ctx.services.actor(db)
-      const feedsRes = await db.db
-        .selectFrom('suggested_feed')
-        .orderBy('suggested_feed.order', 'asc')
-        .selectAll()
-        .execute()
-      const genInfos = await feedService.getFeedGeneratorInfos(
-        feedsRes.map((r) => r.uri),
-        viewer,
-      )
-      const genList = feedsRes.map((r) => genInfos[r.uri]).filter(Boolean)
-      const creators = genList.map((gen) => gen.creator)
-      const profiles = await actorService.views.profilesBasic(creators, viewer)
+      const labelers = ctx.reqLabelers(req)
 
-      const feedViews = mapDefined(genList, (gen) =>
-        feedService.views.formatFeedGeneratorView(gen, profiles),
+      // @NOTE no need to coordinate the cursor for appview swap, as v1 doesn't use the cursor
+      const suggestedRes = await ctx.dataplane.getSuggestedFeeds({
+        actorDid: viewer ?? undefined,
+        limit: params.limit,
+        cursor: params.cursor,
+      })
+      const uris = suggestedRes.uris
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
+      const feedViews = mapDefined(uris, (uri) =>
+        ctx.views.feedGenerator(uri, hydration),
       )
 
       return {
         encoding: 'application/json',
         body: {
           feeds: feedViews,
+          cursor: parseString(suggestedRes.cursor),
         },
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
@@ -8,24 +7,28 @@ import {
   handleReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.feed.getAuthorFeed'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.authVerifier.accessOrRole,
-    handler: async ({ req, params, auth }) => {
-      const requester =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getAuthorFeed(
-        params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
+    auth: ctx.authVerifier.access,
+    handler: async ({ req, auth }) => {
+      const requester = auth.credentials.did
+      const res = await pipethrough(ctx, req, requester)
+      if (!requester) {
+        return res
+      }
+      return await handleReadAfterWrite(
+        ctx,
+        METHOD_NSID,
+        requester,
+        res,
+        getAuthorMunge,
       )
-      if (requester) {
-        return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
-      }
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
     },
   })
 }

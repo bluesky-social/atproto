@@ -36,6 +36,7 @@
     },
     "viewerState": {
       "type": "object",
+      "description": "Metadata about the requesting account's relationship with the subject content. Only has meaningful content for authed requests.",
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
         "like": { "type": "string", "format": "at-uri" },
@@ -136,6 +137,10 @@
         },
         "avatar": { "type": "string" },
         "likeCount": { "type": "integer", "minimum": 0 },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "viewer": { "type": "ref", "ref": "#generatorViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }

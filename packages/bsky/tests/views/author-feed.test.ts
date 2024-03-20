@@ -1,9 +1,10 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
+import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -138,7 +139,7 @@ describe('pds author feed views', () => {
     )
   })
 
-  it('blocked by actor takedown.', async () => {
+  it('non-admins blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
@@ -146,45 +147,26 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: alice,
+    })
 
-    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+    const attemptAsUser = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
     )
-    await expect(attempt).rejects.toThrow('Profile not found')
+    await expect(attemptAsUser).rejects.toThrow('Profile not found')
+
+    const attemptAsAdmin = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: network.bsky.adminAuthHeaders() },
+    )
+    expect(attemptAsAdmin.data.feed.length).toEqual(preBlock.feed.length)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: alice,
+    })
   })
 
   it('blocked by record takedown.', async () => {
@@ -197,49 +179,35 @@ describe('pds author feed views', () => {
 
     const post = preBlock.feed[0].post
 
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uri,
-          cid: post.cid,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: post.uri,
+    })
 
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
-    )
+    const [{ data: postBlockAsUser }, { data: postBlockAsAdmin }] =
+      await Promise.all([
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: await network.serviceHeaders(carol) },
+        ),
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: network.bsky.adminAuthHeaders() },
+        ),
+      ])
 
-    expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
-    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
+    expect(postBlockAsUser.feed.length).toEqual(preBlock.feed.length - 1)
+    expect(postBlockAsUser.feed.map((item) => item.post.uri)).not.toContain(
+      post.uri,
+    )
+    expect(postBlockAsAdmin.feed.length).toEqual(preBlock.feed.length)
+    expect(postBlockAsAdmin.feed.map((item) => item.post.uri)).toContain(
+      post.uri,
+    )
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uri,
-          cid: post.cid,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownRecord({
+      recordUri: post.uri,
+    })
   })
 
   it('can filter by posts_with_media', async () => {
@@ -315,13 +283,40 @@ describe('pds author feed views', () => {
       filter: 'posts_and_author_threads',
     })
 
-    expect(eveFeed.feed.length).toEqual(7)
+    expect(eveFeed.feed.length).toEqual(5)
     expect(
       eveFeed.feed.some(({ post }) => {
-        return (
+        const replyByEve =
           isRecord(post.record) && post.record.reply && post.author.did === eve
-        )
+        return replyByEve
+      }),
+    ).toBeTruthy()
+    // does not include eve's replies to fred, even within her own thread.
+    expect(
+      eveFeed.feed.every(({ post, reply }) => {
+        if (!post || !isRecord(post.record) || !post.record.reply) {
+          return true // not a reply
+        }
+        const replyToEve = isReplyTo(post.record.reply, eve)
+        const replyToReplyByEve =
+          reply &&
+          isPostView(reply.parent) &&
+          isRecord(reply.parent.record) &&
+          (!reply.parent.record.reply ||
+            isReplyTo(reply.parent.record.reply, eve))
+        return replyToEve && replyToReplyByEve
       }),
     ).toBeTruthy()
   })
 })
+
+function isReplyTo(reply: ReplyRef, did: string) {
+  return (
+    getDidFromUri(reply.root.uri) === did &&
+    getDidFromUri(reply.parent.uri) === did
+  )
+}
+
+function getDidFromUri(uri: string) {
+  return new AtUri(uri).hostname
+}

@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
+  /** Reference (AT-URI) to the list record. */
   list: string
   limit?: number
   cursor?: string

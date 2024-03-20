@@ -1,6 +1,6 @@
 # @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
 # see additional reference to this image further down.
-FROM node:18-alpine3.18 as build
+FROM node:20.11-alpine3.18 as build
 
 RUN npm install -g pnpm
 
@@ -8,6 +8,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/pds ./packages/pds
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
@@ -26,9 +27,7 @@ COPY ./services/pds ./services/pds
 # install all deps
 RUN pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
-RUN ATP_BUILD_SHALLOW=true pnpm build > /dev/null
-# update main with publishConfig
-RUN pnpm update-main-to-dist > /dev/null
+RUN pnpm build > /dev/null
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
@@ -37,7 +36,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/pds
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine3.18
+FROM node:20.11-alpine3.18
 
 RUN apk add --update dumb-init
 
@@ -52,6 +51,8 @@ VOLUME /app/data
 EXPOSE 3000
 ENV PDS_PORT=3000
 ENV NODE_ENV=production
+# potential perf issues w/ io_uring on this version of node
+ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node

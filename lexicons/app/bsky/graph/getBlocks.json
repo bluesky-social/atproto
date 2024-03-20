@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of who the actor is blocking.",
+      "description": "Enumerates which accounts the requesting account is currently blocking. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {

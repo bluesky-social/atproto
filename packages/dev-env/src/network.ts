@@ -3,15 +3,15 @@ import * as uint8arrays from 'uint8arrays'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { Client as PlcClient } from '@did-plc/lib'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
-import { TestOzone } from './ozone'
+import { TestOzone, createOzoneDid } from './ozone'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { EXAMPLE_LABELER } from './const'
 
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
@@ -43,29 +43,19 @@ export class TestNetwork extends TestNetworkNoAppView {
     const ozonePort = params.ozone?.port ?? (await getPort())
 
     const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
-    const ozoneDid = await new PlcClient(plc.url).createDid({
-      signingKey: ozoneKey.did(),
-      rotationKeys: [ozoneKey.did()],
-      handle: 'ozone.test',
-      pds: `http://pds.invalid`,
-      signer: ozoneKey,
-    })
+    const ozoneDid = await createOzoneDid(plc.url, ozoneKey)
 
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
       pdsPort,
       repoProvider: `ws://localhost:${pdsPort}`,
-      labelProvider: `http://localhost:${ozonePort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
-      dbPrimaryPostgresUrl: dbPostgresUrl,
+      dbPostgresUrl,
       redisHost,
       modServiceDid: ozoneDid,
+      labelsFromIssuerDids: [ozoneDid, EXAMPLE_LABELER],
       ...params.bsky,
-      indexer: {
-        ...params.bsky?.indexer,
-        moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
-      },
     })
 
     const pds = await TestPds.create({
@@ -87,6 +77,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       appviewUrl: bsky.url,
       appviewDid: bsky.ctx.cfg.serverDid,
+      appviewPushEvents: true,
       pdsUrl: pds.url,
       pdsDid: pds.ctx.cfg.service.did,
       ...params.ozone,
@@ -98,13 +89,12 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async processFullSubscription(timeout = 5000) {
-    const sub = this.bsky.indexer.sub
+    const sub = this.bsky.sub
     const start = Date.now()
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      const partitionState = sub.partitions.get(0)
-      if (partitionState?.cursor >= lastSeq) {
+      if (sub.seenSeq !== null && sub.seenSeq >= lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
         await sub.repoQueue.main.onIdle()
         return
@@ -117,9 +107,8 @@ export class TestNetwork extends TestNetworkNoAppView {
   async processAll(timeout?: number) {
     await this.pds.processAll()
     await this.processFullSubscription(timeout)
-    await this.bsky.processAll()
+    await this.bsky.sub.background.processAll()
     await this.ozone.processAll()
-    await this.bsky.ingester.ctx.labelSubscription?.fetchLabels()
   }
 
   async serviceHeaders(did: string, aud?: string) {

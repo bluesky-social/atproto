@@ -27,15 +27,30 @@ describe('admin auth', () => {
     bskyDid = network.bsky.ctx.cfg.serverDid
 
     modServiceKey = await Secp256k1Keypair.create()
-    const origResolve = network.bsky.ctx.idResolver.did.resolveAtprotoKey
-    network.bsky.ctx.idResolver.did.resolveAtprotoKey = async (
+    const origResolve = network.bsky.dataplane.idResolver.did.resolve
+    network.bsky.dataplane.idResolver.did.resolve = async function (
       did: string,
       forceRefresh?: boolean,
-    ) => {
+    ) {
       if (did === modServiceDid || did === altModDid) {
-        return modServiceKey.did()
+        return {
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3id.org/security/multikey/v1',
+            'https://w3id.org/security/suites/secp256k1-2019/v1',
+          ],
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#atproto`,
+              type: 'Multikey',
+              controller: did,
+              publicKeyMultibase: modServiceKey.did().replace('did:key:', ''),
+            },
+          ],
+        }
       }
-      return origResolve(did, forceRefresh)
+      return origResolve.call(this, did, forceRefresh)
     }
 
     agent = network.bsky.getClient()
@@ -70,9 +85,7 @@ describe('admin auth', () => {
     )
 
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
-      {
-        did: repoSubject.did,
-      },
+      { did: repoSubject.did },
       headers,
     )
     expect(res.data.subject.did).toBe(repoSubject.did)

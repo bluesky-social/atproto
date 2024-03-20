@@ -20,6 +20,15 @@ import { BackgroundQueue } from '../../background'
 import { BlobReader } from './reader'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
+export type BlobMetadata = {
+  tempKey: string
+  size: number
+  cid: CID
+  mimeType: string
+  width: number | null
+  height: number | null
+}
+
 export class BlobTransactor extends BlobReader {
   constructor(
     public db: ActorDb,
@@ -29,10 +38,10 @@ export class BlobTransactor extends BlobReader {
     super(db, blobstore)
   }
 
-  async addUntetheredBlob(
+  async uploadBlobAndGetMetadata(
     userSuggestedMime: string,
     blobStream: stream.Readable,
-  ): Promise<BlobRef> {
+  ): Promise<BlobMetadata> {
     const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
@@ -44,6 +53,27 @@ export class BlobTransactor extends BlobReader {
     const cid = sha256RawToCid(sha256)
     const mimeType = sniffedMime || userSuggestedMime
 
+    return {
+      tempKey,
+      size,
+      cid,
+      mimeType,
+      width: imgInfo?.width ?? null,
+      height: imgInfo?.height ?? null,
+    }
+  }
+
+  async trackUntetheredBlob(metadata: BlobMetadata) {
+    const { tempKey, size, cid, mimeType, width, height } = metadata
+    const found = await this.db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', cid.toString())
+      .executeTakeFirst()
+    if (found?.takedownRef) {
+      throw new InvalidRequestError('Blob has been takendown, cannot re-upload')
+    }
+
     await this.db.db
       .insertInto('blob')
       .values({
@@ -51,8 +81,8 @@ export class BlobTransactor extends BlobReader {
         mimeType,
         size,
         tempKey,
-        width: imgInfo?.width || null,
-        height: imgInfo?.height || null,
+        width,
+        height,
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) =>

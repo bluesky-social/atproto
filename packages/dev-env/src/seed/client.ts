@@ -1,12 +1,12 @@
 import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
-import AtpAgent from '@atproto/api'
-import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/emitModerationEvent'
-import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
-import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
-import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
-import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
+import AtpAgent, {
+  ComAtprotoModerationCreateReport,
+  AppBskyFeedPost,
+  AppBskyRichtextFacet,
+  AppBskyFeedLike,
+  AppBskyGraphFollow,
+} from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { TestNetworkNoAppView } from '../network-no-appview'
@@ -46,7 +46,9 @@ export class RecordRef {
   }
 }
 
-export class SeedClient {
+export class SeedClient<
+  Network extends TestNetworkNoAppView = TestNetworkNoAppView,
+> {
   accounts: Record<
     string,
     {
@@ -80,9 +82,13 @@ export class SeedClient {
     string,
     Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
   >
+  feedgens: Record<
+    string,
+    Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
+  >
   dids: Record<string, string>
 
-  constructor(public network: TestNetworkNoAppView, public agent: AtpAgent) {
+  constructor(public network: Network, public agent: AtpAgent) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
@@ -92,6 +98,7 @@ export class SeedClient {
     this.replies = {}
     this.reposts = {}
     this.lists = {}
+    this.feedgens = {}
     this.dids = {}
   }
 
@@ -185,7 +192,11 @@ export class SeedClient {
     return this.profiles[by]
   }
 
-  async follow(from: string, to: string, overrides?: Partial<FollowRecord>) {
+  async follow(
+    from: string,
+    to: string,
+    overrides?: Partial<AppBskyGraphFollow.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.graph.follow.create(
       { repo: from },
       {
@@ -212,7 +223,11 @@ export class SeedClient {
     delete this.follows[from][to]
   }
 
-  async block(from: string, to: string, overrides?: Partial<FollowRecord>) {
+  async block(
+    from: string,
+    to: string,
+    overrides?: Partial<AppBskyGraphFollow.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.graph.block.create(
       { repo: from },
       {
@@ -242,10 +257,10 @@ export class SeedClient {
   async post(
     by: string,
     text: string,
-    facets?: Facet[],
+    facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
     quote?: RecordRef,
-    overrides?: Partial<PostRecord>,
+    overrides?: Partial<AppBskyFeedPost.Record>,
   ) {
     const imageEmbed = images && {
       $type: 'app.bsky.embed.images',
@@ -309,7 +324,11 @@ export class SeedClient {
     return { image: res.data.blob, alt: filePath }
   }
 
-  async like(by: string, subject: RecordRef, overrides?: Partial<LikeRecord>) {
+  async like(
+    by: string,
+    subject: RecordRef,
+    overrides?: Partial<AppBskyFeedLike.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.feed.like.create(
       { repo: by },
       {
@@ -329,7 +348,7 @@ export class SeedClient {
     root: RecordRef,
     parent: RecordRef,
     text: string,
-    facets?: Facet[],
+    facets?: AppBskyRichtextFacet.Main[],
     images?: ImageRef[],
   ) {
     const embed = images
@@ -395,6 +414,25 @@ export class SeedClient {
     return ref
   }
 
+  async createFeedGen(by: string, feedDid: string, name: string) {
+    const res = await this.agent.api.app.bsky.feed.generator.create(
+      { repo: by },
+      {
+        did: feedDid,
+        displayName: name,
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    this.feedgens[by] ??= {}
+    const ref = new RecordRef(res.uri, res.cid)
+    this.feedgens[by][ref.uriStr] = {
+      ref: ref,
+      items: {},
+    }
+    return ref
+  }
+
   async addToList(by: string, subject: string, list: RecordRef) {
     const res = await this.agent.api.app.bsky.graph.listitem.create(
       { repo: by },
@@ -421,56 +459,9 @@ export class SeedClient {
     delete foundList.items[subject]
   }
 
-  async emitModerationEvent(opts: {
-    event: TakeActionInput['event']
-    subject: TakeActionInput['subject']
-    reason?: string
-    createdBy?: string
-    meta?: TakeActionInput['meta']
-  }) {
-    const {
-      event,
-      subject,
-      reason = 'X',
-      createdBy = 'did:example:admin',
-    } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
-      { event, subject, createdBy, reason },
-      {
-        encoding: 'application/json',
-        headers: this.adminAuthHeaders(),
-      },
-    )
-    return result.data
-  }
-
-  async reverseModerationAction(opts: {
-    id: number
-    subject: TakeActionInput['subject']
-    reason?: string
-    createdBy?: string
-  }) {
-    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        subject,
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-          comment: reason,
-        },
-        createdBy,
-      },
-      {
-        encoding: 'application/json',
-        headers: this.adminAuthHeaders(),
-      },
-    )
-    return result.data
-  }
-
   async createReport(opts: {
-    reasonType: CreateReportInput['reasonType']
-    subject: CreateReportInput['subject']
+    reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
+    subject: ComAtprotoModerationCreateReport.InputSchema['subject']
     reason?: string
     reportedBy: string
   }) {
@@ -483,10 +474,6 @@ export class SeedClient {
       },
     )
     return result.data
-  }
-
-  adminAuthHeaders() {
-    return this.network.pds.adminAuthHeaders()
   }
 
   getHeaders(did: string) {

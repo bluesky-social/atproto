@@ -2,7 +2,7 @@
 
 exports[`pds like views fetches post likes 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "likes": Array [
     Object {
       "actor": Object {
@@ -72,7 +72,7 @@ Object {
 
 exports[`pds like views fetches reply likes 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "likes": Array [
     Object {
       "actor": Object {

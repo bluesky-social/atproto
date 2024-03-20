@@ -1,5 +1,10 @@
 import { Readable } from 'stream'
 import express, {
+  Application,
+  Express,
+  Router,
+  Request,
+  Response,
   ErrorRequestHandler,
   NextFunction,
   RequestHandler,
@@ -36,6 +41,7 @@ import {
   RateLimiterConsume,
   isShared,
   RateLimitExceededError,
+  HandlerPipeThrough,
 } from './types'
 import {
   decodeQueryParams,
@@ -51,8 +57,8 @@ export function createServer(lexicons?: LexiconDoc[], options?: Options) {
 }
 
 export class Server {
-  router = express()
-  routes = express.Router()
+  router: Express = express()
+  routes: Router = express.Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options
@@ -68,7 +74,7 @@ export class Server {
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
-    this.router.once('mount', (app: express.Application) => {
+    this.router.once('mount', (app: Application) => {
       this.enableStreamingOnListen(app)
     })
     this.options = opts ?? {}
@@ -177,11 +183,7 @@ export class Server {
     )
   }
 
-  async catchall(
-    req: express.Request,
-    _res: express.Response,
-    next: NextFunction,
-  ) {
+  async catchall(req: Request, _res: Response, next: NextFunction) {
     const def = this.lex.getDef(req.params.methodId)
     if (!def) {
       return next(new MethodNotImplementedError())
@@ -211,7 +213,7 @@ export class Server {
     const routeOpts = {
       blobLimit: routeCfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
     }
-    const validateReqInput = (req: express.Request) =>
+    const validateReqInput = (req: Request) =>
       validateInput(nsid, def, req, routeOpts, this.lex)
     const validateResOutput =
       this.options.validateResponse === false
@@ -261,6 +263,20 @@ export class Server {
 
         if (isHandlerError(outputUnvalidated)) {
           throw XRPCError.fromError(outputUnvalidated)
+        }
+
+        if (outputUnvalidated && isHandlerPipeThrough(outputUnvalidated)) {
+          // set headers
+          if (outputUnvalidated?.headers) {
+            Object.entries(outputUnvalidated.headers).forEach(([name, val]) => {
+              res.header(name, val)
+            })
+          }
+          res
+            .header('Content-Type', outputUnvalidated.encoding)
+            .status(200)
+            .send(Buffer.from(outputUnvalidated.buffer))
+          return
         }
 
         if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
@@ -374,7 +390,7 @@ export class Server {
     )
   }
 
-  private enableStreamingOnListen(app: express.Application) {
+  private enableStreamingOnListen(app: Application) {
     const _listen = app.listen
     app.listen = (...args) => {
       // @ts-ignore the args spread
@@ -447,6 +463,26 @@ export class Server {
 function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
   return handlerSuccess.safeParse(v).success
 }
+
+function isHandlerPipeThrough(v: HandlerOutput): v is HandlerPipeThrough {
+  if (v === null || typeof v !== 'object') {
+    return false
+  }
+  if (!isString(v['encoding']) || !(v['buffer'] instanceof ArrayBuffer)) {
+    return false
+  }
+  if (v['headers'] !== undefined) {
+    if (v['headers'] === null || typeof v['headers'] !== 'object') {
+      return false
+    }
+    if (!Object.values(v['headers']).every(isString)) {
+      return false
+    }
+  }
+  return true
+}
+
+const isString = (val: unknown): val is string => typeof val === 'string'
 
 const kRequestLocals = Symbol('requestLocals')
 

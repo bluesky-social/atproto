@@ -1,5 +1,4 @@
 # specs
-literal:self
 alpha/beta
 .
 ..
@@ -10,5 +9,7 @@ any+space
 number[3]
 number(3)
 "quote"
-pre:fix
 dHJ1ZQ==
+
+# too long: 'o'.repeat(513)
+ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo

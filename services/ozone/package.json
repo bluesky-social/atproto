@@ -2,6 +2,7 @@
   "name": "ozone-service",
   "private": true,
   "dependencies": {
+    "@atproto/aws": "workspace:^",
     "@atproto/ozone": "workspace:^",
     "dd-trace": "3.13.2"
   }

@@ -3,11 +3,10 @@ import express from 'express'
 import axios, { AxiosError } from 'axios'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
-import { Database } from '../src'
+import { once } from 'events'
 
 describe('server', () => {
   let network: TestNetwork
-  let db: Database
   let alice: string
 
   beforeAll(async () => {
@@ -18,7 +17,6 @@ describe('server', () => {
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-    db = network.bsky.ctx.db.getPrimary()
   })
 
   afterAll(async () => {
@@ -56,7 +54,7 @@ describe('server', () => {
   it('healthcheck succeeds when database is available.', async () => {
     const { data, status } = await axios.get(`${network.bsky.url}/xrpc/_health`)
     expect(status).toEqual(200)
-    expect(data).toEqual({ version: '0.0.0' })
+    expect(data).toEqual({ version: 'unknown' })
   })
 
   // TODO(bsky) check on a different endpoint that accepts json, currently none.
@@ -107,10 +105,9 @@ describe('server', () => {
     expect(res.headers['content-encoding']).toBeUndefined()
   })
 
-  it('healthcheck fails when database is unavailable.', async () => {
-    await network.bsky.ingester.sub.destroy()
-    await network.bsky.indexer.sub.destroy()
-    await db.close()
+  it('healthcheck fails when dataplane is unavailable.', async () => {
+    const { port } = network.bsky.dataplane.server.address() as AddressInfo
+    await network.bsky.dataplane.destroy()
     let error: AxiosError
     try {
       await axios.get(`${network.bsky.url}/xrpc/_health`)
@@ -121,10 +118,14 @@ describe('server', () => {
       } else {
         throw err
       }
+    } finally {
+      // restart dataplane server to allow test suite to cleanup
+      network.bsky.dataplane.server.listen(port)
+      await once(network.bsky.dataplane.server, 'listening')
     }
     expect(error.response?.status).toEqual(503)
     expect(error.response?.data).toEqual({
-      version: '0.0.0',
+      version: 'unknown',
       error: 'Service Unavailable',
     })
   })

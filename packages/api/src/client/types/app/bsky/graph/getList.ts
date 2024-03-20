@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
+  /** Reference (AT-URI) of the list record to hydrate. */
   list: string
   limit?: number
   cursor?: string

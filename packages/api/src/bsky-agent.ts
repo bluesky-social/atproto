@@ -1,22 +1,30 @@
-import { AtUri } from '@atproto/syntax'
+import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,
   AppBskyActorProfile,
   AppBskyActorDefs,
+  AppBskyLabelerDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
 import {
   BskyPreferences,
-  BskyLabelPreference,
   BskyFeedViewPreference,
   BskyThreadViewPreference,
   BskyInterestsPreference,
 } from './types'
+import {
+  InterpretedLabelValueDefinition,
+  LabelPreference,
+  ModerationPrefs,
+} from './moderation/types'
+import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
+import { sanitizeMutedWordValue } from './util'
+import { interpretLabelValueDefinitions } from './moderation'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
-  hideRepliesByUnfollowed: false,
+  hideRepliesByUnfollowed: true,
   hideRepliesByLikeCount: 0,
   hideReposts: false,
   hideQuotePosts: false,
@@ -36,6 +44,14 @@ declare global {
 }
 
 export class BskyAgent extends AtpAgent {
+  clone() {
+    const inst = new BskyAgent({
+      service: this.service,
+    })
+    this.copyInto(inst)
+    return inst
+  }
+
   get app() {
     return this.api.app
   }
@@ -96,6 +112,40 @@ export class BskyAgent extends AtpAgent {
   countUnreadNotifications: typeof this.api.app.bsky.notification.getUnreadCount =
     (params, opts) =>
       this.api.app.bsky.notification.getUnreadCount(params, opts)
+
+  getLabelers: typeof this.api.app.bsky.labeler.getServices = (params, opts) =>
+    this.api.app.bsky.labeler.getServices(params, opts)
+
+  async getLabelDefinitions(
+    prefs: BskyPreferences | ModerationPrefs | string[],
+  ): Promise<Record<string, InterpretedLabelValueDefinition[]>> {
+    // collect the labeler dids
+    let dids: string[] = BskyAgent.appLabelers
+    if (isBskyPrefs(prefs)) {
+      dids = dids.concat(prefs.moderationPrefs.labelers.map((l) => l.did))
+    } else if (isModPrefs(prefs)) {
+      dids = dids.concat(prefs.labelers.map((l) => l.did))
+    } else {
+      dids = dids.concat(prefs)
+    }
+
+    // fetch their definitions
+    const labelers = await this.getLabelers({
+      dids,
+      detailed: true,
+    })
+
+    // assemble a map of labeler dids to the interpretted label value definitions
+    const labelDefs = {}
+    if (labelers.data) {
+      for (const labeler of labelers.data
+        .views as AppBskyLabelerDefs.LabelerViewDetailed[]) {
+        labelDefs[labeler.creator.did] = interpretLabelValueDefinitions(labeler)
+      }
+    }
+
+    return labelDefs
+  }
 
   async post(
     record: Partial<AppBskyFeedPost.Record> &
@@ -321,41 +371,59 @@ export class BskyAgent extends AtpAgent {
         },
       },
       threadViewPrefs: { ...THREAD_VIEW_PREF_DEFAULTS },
-      adultContentEnabled: false,
-      contentLabels: {},
+      moderationPrefs: {
+        adultContentEnabled: false,
+        labels: { ...DEFAULT_LABEL_SETTINGS },
+        labelers: BskyAgent.appLabelers.map((did) => ({ did, labels: {} })),
+        mutedWords: [],
+        hiddenPosts: [],
+      },
       birthDate: undefined,
       interests: {
         tags: [],
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})
+    const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
     for (const pref of res.data.preferences) {
       if (
         AppBskyActorDefs.isAdultContentPref(pref) &&
         AppBskyActorDefs.validateAdultContentPref(pref).success
       ) {
-        prefs.adultContentEnabled = pref.enabled
+        // adult content preferences
+        prefs.moderationPrefs.adultContentEnabled = pref.enabled
       } else if (
         AppBskyActorDefs.isContentLabelPref(pref) &&
-        AppBskyActorDefs.validateAdultContentPref(pref).success
+        AppBskyActorDefs.validateContentLabelPref(pref).success
       ) {
-        let value = pref.visibility
-        if (value === 'show') {
-          value = 'ignore'
-        }
-        if (value === 'ignore' || value === 'warn' || value === 'hide') {
-          prefs.contentLabels[pref.label] = value as BskyLabelPreference
-        }
+        // content label preference
+        const adjustedPref = adjustLegacyContentLabelPref(pref)
+        labelPrefs.push(adjustedPref)
+      } else if (
+        AppBskyActorDefs.isLabelersPref(pref) &&
+        AppBskyActorDefs.validateLabelersPref(pref).success
+      ) {
+        // labelers preferences
+        prefs.moderationPrefs.labelers = BskyAgent.appLabelers
+          .map((did) => ({ did, labels: {} }))
+          .concat(
+            pref.labelers.map((labeler) => ({
+              ...labeler,
+              labels: {},
+            })),
+          )
       } else if (
         AppBskyActorDefs.isSavedFeedsPref(pref) &&
         AppBskyActorDefs.validateSavedFeedsPref(pref).success
       ) {
+        // saved and pinned feeds
         prefs.feeds.saved = pref.saved
         prefs.feeds.pinned = pref.pinned
       } else if (
         AppBskyActorDefs.isPersonalDetailsPref(pref) &&
         AppBskyActorDefs.validatePersonalDetailsPref(pref).success
       ) {
+        // birth date (irl)
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
@@ -363,6 +431,7 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isFeedViewPref(pref) &&
         AppBskyActorDefs.validateFeedViewPref(pref).success
       ) {
+        // feed view preferences
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, feed, ...v } = pref
         prefs.feedViewPrefs[pref.feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
@@ -370,6 +439,7 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isThreadViewPref(pref) &&
         AppBskyActorDefs.validateThreadViewPref(pref).success
       ) {
+        // thread view preferences
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
@@ -380,8 +450,44 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.interests = { ...prefs.interests, ...v }
+      } else if (
+        AppBskyActorDefs.isMutedWordsPref(pref) &&
+        AppBskyActorDefs.validateMutedWordsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.moderationPrefs.mutedWords = v.items
+      } else if (
+        AppBskyActorDefs.isHiddenPostsPref(pref) &&
+        AppBskyActorDefs.validateHiddenPostsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.moderationPrefs.hiddenPosts = v.items
       }
     }
+
+    // apply the label prefs
+    for (const pref of labelPrefs) {
+      if (pref.labelerDid) {
+        const labeler = prefs.moderationPrefs.labelers.find(
+          (labeler) => labeler.did === pref.labelerDid,
+        )
+        if (!labeler) continue
+        labeler.labels[pref.label] = pref.visibility as LabelPreference
+      } else {
+        prefs.moderationPrefs.labels[pref.label] =
+          pref.visibility as LabelPreference
+      }
+    }
+
+    prefs.moderationPrefs.labels = remapLegacyLabels(
+      prefs.moderationPrefs.labels,
+    )
+
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(res.data.preferences))
+
     return prefs
   }
 
@@ -441,35 +547,151 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async setContentLabelPref(key: string, value: BskyLabelPreference) {
-    // TEMP update old value
-    if (value === 'show') {
-      value = 'ignore'
+  async setContentLabelPref(
+    key: string,
+    value: LabelPreference,
+    labelerDid?: string,
+  ) {
+    if (labelerDid) {
+      ensureValidDid(labelerDid)
     }
-
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       let labelPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isContentLabelPref(pref) &&
-          AppBskyActorDefs.validateAdultContentPref(pref).success &&
-          pref.label === key,
+          AppBskyActorDefs.validateContentLabelPref(pref).success &&
+          pref.label === key &&
+          pref.labelerDid === labelerDid,
       )
+      let legacyLabelPref: AppBskyActorDefs.ContentLabelPref | undefined
+
       if (labelPref) {
         labelPref.visibility = value
       } else {
         labelPref = {
           $type: 'app.bsky.actor.defs#contentLabelPref',
           label: key,
+          labelerDid,
           visibility: value,
         }
       }
+
+      if (AppBskyActorDefs.isContentLabelPref(labelPref)) {
+        // is global
+        if (!labelPref.labelerDid) {
+          const legacyLabelValue = {
+            'graphic-media': 'gore',
+            porn: 'nsfw',
+            sexual: 'suggestive',
+          }[labelPref.label]
+
+          // if it's a legacy label, double-write the legacy label
+          if (legacyLabelValue) {
+            legacyLabelPref = prefs.findLast(
+              (pref) =>
+                AppBskyActorDefs.isContentLabelPref(pref) &&
+                AppBskyActorDefs.validateContentLabelPref(pref).success &&
+                pref.label === legacyLabelValue &&
+                pref.labelerDid === undefined,
+            ) as AppBskyActorDefs.ContentLabelPref | undefined
+
+            if (legacyLabelPref) {
+              legacyLabelPref.visibility = value
+            } else {
+              legacyLabelPref = {
+                $type: 'app.bsky.actor.defs#contentLabelPref',
+                label: legacyLabelValue,
+                labelerDid: undefined,
+                visibility: value,
+              }
+            }
+          }
+        }
+      }
+
       return prefs
         .filter(
           (pref) =>
-            !AppBskyActorDefs.isContentLabelPref(pref) || pref.label !== key,
+            !AppBskyActorDefs.isContentLabelPref(pref) ||
+            !(pref.label === key && pref.labelerDid === labelerDid),
         )
         .concat([labelPref])
+        .filter((pref) => {
+          if (!legacyLabelPref) return true
+          return (
+            !AppBskyActorDefs.isContentLabelPref(pref) ||
+            !(
+              pref.label === legacyLabelPref.label &&
+              pref.labelerDid === undefined
+            )
+          )
+        })
+        .concat(legacyLabelPref ? [legacyLabelPref] : [])
     })
+  }
+
+  async addLabeler(did: string) {
+    const prefs = await updatePreferences(
+      this,
+      (prefs: AppBskyActorDefs.Preferences) => {
+        let labelersPref = prefs.findLast(
+          (pref) =>
+            AppBskyActorDefs.isLabelersPref(pref) &&
+            AppBskyActorDefs.validateLabelersPref(pref).success,
+        )
+        if (!labelersPref) {
+          labelersPref = {
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [],
+          }
+        }
+        if (AppBskyActorDefs.isLabelersPref(labelersPref)) {
+          let labelerPrefItem = labelersPref.labelers.find(
+            (labeler) => labeler.did === did,
+          )
+          if (!labelerPrefItem) {
+            labelerPrefItem = {
+              did,
+            }
+            labelersPref.labelers.push(labelerPrefItem)
+          }
+        }
+        return prefs
+          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+          .concat([labelersPref])
+      },
+    )
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
+  }
+
+  async removeLabeler(did: string) {
+    const prefs = await updatePreferences(
+      this,
+      (prefs: AppBskyActorDefs.Preferences) => {
+        let labelersPref = prefs.findLast(
+          (pref) =>
+            AppBskyActorDefs.isLabelersPref(pref) &&
+            AppBskyActorDefs.validateLabelersPref(pref).success,
+        )
+        if (!labelersPref) {
+          labelersPref = {
+            $type: 'app.bsky.actor.defs#labelersPref',
+            labelers: [],
+          }
+        }
+        if (AppBskyActorDefs.isLabelersPref(labelersPref)) {
+          labelersPref.labelers = labelersPref.labelers.filter(
+            (labeler) => labeler.did !== did,
+          )
+        }
+        return prefs
+          .filter((pref) => !AppBskyActorDefs.isLabelersPref(pref))
+          .concat([labelersPref])
+      },
+    )
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
   }
 
   async setPersonalDetails({
@@ -548,6 +770,118 @@ export class BskyAgent extends AtpAgent {
         .concat([{ ...pref, $type: 'app.bsky.actor.defs#interestsPref' }])
     })
   }
+
+  async upsertMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let mutedWordsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isMutedWordsPref(pref) &&
+          AppBskyActorDefs.validateMutedWordsPref(pref).success,
+      )
+
+      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+        for (const updatedWord of newMutedWords) {
+          let foundMatch = false
+          const sanitizedUpdatedValue = sanitizeMutedWordValue(
+            updatedWord.value,
+          )
+
+          // was trimmed down to an empty string e.g. single `#`
+          if (!sanitizedUpdatedValue) continue
+
+          for (const existingItem of mutedWordsPref.items) {
+            if (existingItem.value === sanitizedUpdatedValue) {
+              existingItem.targets = Array.from(
+                new Set([...existingItem.targets, ...updatedWord.targets]),
+              )
+              foundMatch = true
+              break
+            }
+          }
+
+          if (!foundMatch) {
+            mutedWordsPref.items.push({
+              ...updatedWord,
+              value: sanitizedUpdatedValue,
+            })
+          }
+        }
+      } else {
+        // if the pref doesn't exist, create it
+        mutedWordsPref = {
+          items: newMutedWords.map((w) => ({
+            ...w,
+            value: sanitizeMutedWordValue(w.value),
+          })),
+        }
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+        .concat([
+          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+        ])
+    })
+  }
+
+  async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const mutedWordsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isMutedWordsPref(pref) &&
+          AppBskyActorDefs.validateMutedWordsPref(pref).success,
+      )
+
+      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+        for (const existingItem of mutedWordsPref.items) {
+          if (existingItem.value === mutedWord.value) {
+            existingItem.targets = mutedWord.targets
+            break
+          }
+        }
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+        .concat([
+          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+        ])
+    })
+  }
+
+  async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const mutedWordsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isMutedWordsPref(pref) &&
+          AppBskyActorDefs.validateMutedWordsPref(pref).success,
+      )
+
+      if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
+        for (let i = 0; i < mutedWordsPref.items.length; i++) {
+          const existing = mutedWordsPref.items[i]
+          if (existing.value === mutedWord.value) {
+            mutedWordsPref.items.splice(i, 1)
+            break
+          }
+        }
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+        .concat([
+          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+        ])
+    })
+  }
+
+  async hidePost(postUri: string) {
+    await updateHiddenPost(this, postUri, 'hide')
+  }
+
+  async unhidePost(postUri: string) {
+    await updateHiddenPost(this, postUri, 'unhide')
+  }
 }
 
 /**
@@ -567,11 +901,12 @@ async function updatePreferences(
   const res = await agent.app.bsky.actor.getPreferences({})
   const newPrefs = cb(res.data.preferences)
   if (newPrefs === false) {
-    return
+    return res.data.preferences
   }
   await agent.app.bsky.actor.putPreferences({
     preferences: newPrefs,
   })
+  return newPrefs
 }
 
 /**
@@ -608,4 +943,107 @@ async function updateFeedPreferences(
       .concat([feedsPref])
   })
   return res
+}
+
+/**
+ * Helper to transform the legacy content preferences.
+ */
+function adjustLegacyContentLabelPref(
+  pref: AppBskyActorDefs.ContentLabelPref,
+): AppBskyActorDefs.ContentLabelPref {
+  let visibility = pref.visibility
+
+  // adjust legacy values
+  if (visibility === 'show') {
+    visibility = 'ignore'
+  }
+
+  return { ...pref, visibility }
+}
+
+/**
+ * Re-maps legacy labels to new labels on READ. Does not save these changes to
+ * the user's preferences.
+ */
+function remapLegacyLabels(
+  labels: BskyPreferences['moderationPrefs']['labels'],
+) {
+  const _labels = { ...labels }
+  const legacyToNewMap: Record<string, string | undefined> = {
+    gore: 'graphic-media',
+    nsfw: 'porn',
+    suggestive: 'sexual',
+  }
+
+  for (const labelName in _labels) {
+    const newLabelName = legacyToNewMap[labelName]!
+    if (newLabelName) {
+      _labels[newLabelName] = _labels[labelName]
+    }
+  }
+
+  return _labels
+}
+
+/**
+ * A helper to get the currently enabled labelers from the full preferences array
+ */
+function prefsArrayToLabelerDids(
+  prefs: AppBskyActorDefs.Preferences,
+): string[] {
+  const labelersPref = prefs.findLast(
+    (pref) =>
+      AppBskyActorDefs.isLabelersPref(pref) &&
+      AppBskyActorDefs.validateLabelersPref(pref).success,
+  )
+  let dids: string[] = []
+  if (labelersPref) {
+    dids = (labelersPref as AppBskyActorDefs.LabelersPref).labelers.map(
+      (labeler) => labeler.did,
+    )
+  }
+  return dids
+}
+
+async function updateHiddenPost(
+  agent: BskyAgent,
+  postUri: string,
+  action: 'hide' | 'unhide',
+) {
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let pref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isHiddenPostsPref(pref) &&
+        AppBskyActorDefs.validateHiddenPostsPref(pref).success,
+    )
+    if (pref && AppBskyActorDefs.isHiddenPostsPref(pref)) {
+      pref.items =
+        action === 'hide'
+          ? Array.from(new Set([...pref.items, postUri]))
+          : pref.items.filter((uri) => uri !== postUri)
+    } else {
+      if (action === 'hide') {
+        pref = {
+          $type: 'app.bsky.actor.defs#hiddenPostsPref',
+          items: [postUri],
+        }
+      }
+    }
+    return prefs
+      .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+      .concat([{ ...pref, $type: 'app.bsky.actor.defs#hiddenPostsPref' }])
+  })
+}
+
+function isBskyPrefs(v: any): v is BskyPreferences {
+  return (
+    v &&
+    typeof v === 'object' &&
+    'moderationPrefs' in v &&
+    isModPrefs(v.moderationPrefs)
+  )
+}
+
+function isModPrefs(v: any): v is ModerationPrefs {
+  return v && typeof v === 'object' && 'labelers' in v
 }

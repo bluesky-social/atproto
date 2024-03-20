@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -18,8 +18,11 @@ export type InputSchema = undefined
 export interface OutputSchema {
   handle: string
   did: string
+  /** The complete DID document for this account. */
   didDoc: {}
+  /** List of all the collections (NSIDs) for which this repo contains at least one record. */
   collections: string[]
+  /** Indicates if handle is currently valid (resolves bi-directionally) */
   handleIsCorrect: boolean
   [k: string]: unknown
 }
@@ -37,7 +40,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

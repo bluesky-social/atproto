@@ -5,10 +5,10 @@ import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSub
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
-    auth: ctx.authVerifier.roleOrAdminService,
+    auth: ctx.authVerifier.roleOrModService,
     handler: async ({ params }) => {
       const { did, uri, blob } = params
-      const modService = ctx.services.moderation(ctx.db.getPrimary())
+
       let body: OutputSchema | null = null
       if (blob) {
         if (!did) {
@@ -16,46 +16,48 @@ export default function (server: Server, ctx: AppContext) {
             'Must provide a did to request blob state',
           )
         }
-        const takedown = await modService.getBlobTakedownRef(did, blob)
-        if (takedown) {
-          body = {
-            subject: {
-              $type: 'com.atproto.admin.defs#repoBlobRef',
-              did: did,
-              cid: blob,
-            },
-            takedown,
-          }
+        const res = await ctx.dataplane.getBlobTakedown({
+          did,
+          cid: blob,
+        })
+        body = {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoBlobRef',
+            did: did,
+            cid: blob,
+          },
+          takedown: {
+            applied: res.takenDown,
+            ref: res.takedownRef ? 'TAKEDOWN' : undefined,
+          },
         }
       } else if (uri) {
-        const [takedown, cidRes] = await Promise.all([
-          modService.getRecordTakedownRef(uri),
-          ctx.db
-            .getPrimary()
-            .db.selectFrom('record')
-            .where('uri', '=', uri)
-            .select('cid')
-            .executeTakeFirst(),
-        ])
-        if (cidRes && takedown) {
+        const res = await ctx.hydrator.getRecord(uri, true)
+        if (res) {
           body = {
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri,
-              cid: cidRes.cid,
+              cid: res.cid,
             },
-            takedown,
+            takedown: {
+              applied: !!res.takedownRef,
+              ref: res.takedownRef || undefined,
+            },
           }
         }
       } else if (did) {
-        const takedown = await modService.getRepoTakedownRef(did)
-        if (takedown) {
+        const res = (await ctx.hydrator.actor.getActors([did], true)).get(did)
+        if (res) {
           body = {
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
               did: did,
             },
-            takedown,
+            takedown: {
+              applied: !!res.takedownRef,
+              ref: res.takedownRef || undefined,
+            },
           }
         }
       } else {

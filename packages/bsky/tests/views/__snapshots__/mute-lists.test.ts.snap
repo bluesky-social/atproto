@@ -11,7 +11,6 @@ Object {
       Object {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(1)",
         "val": "self-label-a",
@@ -19,7 +18,6 @@ Object {
       Object {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(1)",
         "val": "self-label-b",
@@ -38,14 +36,15 @@ Object {
       "cid": "cids(4)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-a",
@@ -53,7 +52,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-b",
@@ -66,6 +64,7 @@ Object {
       },
       "description": "new descript",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "updated alice mutes",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(2)",
@@ -109,7 +108,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(2)",
           "val": "self-label-a",
@@ -117,7 +115,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(2)",
           "val": "self-label-b",
@@ -163,6 +160,7 @@ Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
               "cid": "cids(4)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
+              "labels": Array [],
               "name": "alice mutes",
               "purpose": "app.bsky.graph.defs#modlist",
               "uri": "record(6)",
@@ -214,6 +212,7 @@ Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
               "cid": "cids(4)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
+              "labels": Array [],
               "name": "alice mutes",
               "purpose": "app.bsky.graph.defs#modlist",
               "uri": "record(6)",
@@ -239,16 +238,14 @@ Object {
           Object {
             "cid": "cids(5)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(5)",
+            "src": "did:example:labeler",
             "uri": "record(9)",
             "val": "test-label",
           },
           Object {
             "cid": "cids(5)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(5)",
+            "src": "did:example:labeler",
             "uri": "record(9)",
             "val": "test-label-2",
           },
@@ -297,7 +294,7 @@ Object {
 
 exports[`bsky views with mutes from mute lists returns a users own list mutes 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -312,7 +309,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -320,7 +316,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -334,6 +329,7 @@ Object {
       },
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "new list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -355,7 +351,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -363,7 +358,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -377,6 +371,7 @@ Object {
       },
       "description": "big list of mutes",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "alice mutes",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
@@ -390,7 +385,7 @@ Object {
 
 exports[`bsky views with mutes from mute lists returns lists associated with a user 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -405,7 +400,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -413,7 +407,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -427,6 +420,7 @@ Object {
       },
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "new list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -448,7 +442,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -456,7 +449,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -470,6 +462,7 @@ Object {
       },
       "description": "big list of mutes",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "alice mutes",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
@@ -483,7 +476,7 @@ Object {
 
 exports[`bsky views with mutes from mute lists returns the contents of a list 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "items": Array [
     Object {
       "subject": Object {
@@ -510,6 +503,7 @@ Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "name": "alice mutes",
             "purpose": "app.bsky.graph.defs#modlist",
             "uri": "record(0)",
@@ -538,6 +532,7 @@ Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "name": "alice mutes",
             "purpose": "app.bsky.graph.defs#modlist",
             "uri": "record(0)",
@@ -564,7 +559,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(2)",
           "val": "self-label-a",
@@ -572,7 +566,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(2)",
           "val": "self-label-b",
@@ -586,6 +579,7 @@ Object {
     },
     "description": "big list of mutes",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "name": "alice mutes",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",

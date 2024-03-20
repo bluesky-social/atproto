@@ -46,6 +46,13 @@ export const handlerSuccess = zod.object({
 })
 export type HandlerSuccess = zod.infer<typeof handlerSuccess>
 
+export const handlerPipeThrough = zod.object({
+  encoding: zod.string(),
+  buffer: zod.instanceof(ArrayBuffer),
+  headers: zod.record(zod.string()).optional(),
+})
+export type HandlerPipeThrough = zod.infer<typeof handlerPipeThrough>
+
 export const handlerError = zod.object({
   status: zod.number(),
   error: zod.string().optional(),
@@ -53,7 +60,7 @@ export const handlerError = zod.object({
 })
 export type HandlerError = zod.infer<typeof handlerError>
 
-export type HandlerOutput = HandlerSuccess | HandlerError
+export type HandlerOutput = HandlerSuccess | HandlerPipeThrough | HandlerError
 
 export type XRPCReqContext = {
   auth: HandlerAuth | undefined

@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
+  /** The account (actor) to enumerate lists from. */
   actor: string
   limit?: number
   cursor?: string

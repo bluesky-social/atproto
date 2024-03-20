@@ -1,5 +1,5 @@
 import { Pool as PgPool } from 'pg'
-import { DynamicModule, RawBuilder, SelectQueryBuilder } from 'kysely'
+import { DynamicModule, RawBuilder, SelectQueryBuilder, sql } from 'kysely'
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 
@@ -12,4 +12,9 @@ export type PgOptions = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+}
+
+export const jsonb = <T>(val: T) => {
+  if (val === null) return sql<T>`null`
+  return sql<T>`${JSON.stringify(val)}::jsonb`
 }

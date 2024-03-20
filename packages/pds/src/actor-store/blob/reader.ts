@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db'
-import { notSoftDeletedClause } from '../../db/util'
+import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobReader {
@@ -72,5 +72,58 @@ export class BlobReader {
     return res.takedownRef
       ? { applied: true, ref: res.takedownRef }
       : { applied: false }
+  }
+
+  async getRecordsForBlob(cid: CID): Promise<string[]> {
+    const res = await this.db.db
+      .selectFrom('record_blob')
+      .where('blobCid', '=', cid.toString())
+      .selectAll()
+      .execute()
+    return res.map((row) => row.recordUri)
+  }
+
+  async blobCount(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('blob')
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
+  }
+
+  async recordBlobCount(): Promise<number> {
+    const { ref } = this.db.db.dynamic
+    const res = await this.db.db
+      .selectFrom('record_blob')
+      .select(countDistinct(ref('blobCid')).as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
+  }
+
+  async listMissingBlobs(opts: {
+    cursor?: string
+    limit: number
+  }): Promise<{ cid: string; recordUri: string }[]> {
+    const { cursor, limit } = opts
+    let builder = this.db.db
+      .selectFrom('record_blob')
+      .whereNotExists((qb) =>
+        qb
+          .selectFrom('blob')
+          .selectAll()
+          .whereRef('blob.cid', '=', 'record_blob.blobCid'),
+      )
+      .selectAll()
+      .orderBy('blobCid', 'asc')
+      .groupBy('blobCid')
+      .limit(limit)
+    if (cursor) {
+      builder = builder.where('blobCid', '>', cursor)
+    }
+    const res = await builder.execute()
+    return res.map((row) => ({
+      cid: row.blobCid,
+      recordUri: row.recordUri,
+    }))
   }
 }

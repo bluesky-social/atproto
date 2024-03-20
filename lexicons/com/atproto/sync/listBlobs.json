@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List blob CIDs since some revision.",
+      "description": "List blob CIDso for an account, since some repo revision. Does not require auth; implemented by PDS.",
       "parameters": {
         "type": "params",
         "required": ["did"],
