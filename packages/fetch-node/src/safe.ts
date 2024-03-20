@@ -1,8 +1,11 @@
 import {
+  DEFAULT_FORBIDDEN_DOMAIN_NAMES,
   Fetch,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
   protocolCheckRequestTransform,
+  requireHostHeaderTranform,
+  timeoutFetchWrap,
 } from '@atproto/fetch'
 import { compose } from '@atproto/transformer'
 
@@ -20,21 +23,25 @@ export const safeFetchWrap = ({
   fetch = globalThis.fetch as Fetch,
   responseMaxSize = 512 * 1024, // 512kB
   allowHttp = false,
+  allowData = false,
   ssrfProtection = true,
-  forbiddenDomainNames = [
-    'example.com',
-    'example.org',
-    'example.net',
-    'bsky.social',
-    'bsky.network',
-    'googleusercontent.com',
-  ] as Iterable<string>,
+  timeout = 10e3 as number,
+  forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
 } = {}): Fetch =>
   compose(
     /**
      * Prevent using http:, file: or data: protocols.
      */
-    protocolCheckRequestTransform(allowHttp ? ['http:', 'https:'] : ['https:']),
+    protocolCheckRequestTransform(
+      ['https:']
+        .concat(allowHttp ? ['http:'] : [])
+        .concat(allowData ? ['data:'] : []),
+    ),
+
+    /**
+     * Only requests that will be issued with a "Host" header are allowed.
+     */
+    requireHostHeaderTranform(),
 
     /**
      * Disallow fetching from domains we know are not atproto/OIDC client
@@ -46,10 +53,18 @@ export const safeFetchWrap = ({
 
     /**
      * Since we will be fetching from the network based on user provided
-     * input, we need to make sure that the request is not vulnerable to SSRF
-     * attacks.
+     * input, let's mitigate resource exhaustion attacks by setting a timeout.
      */
-    ssrfProtection ? ssrfFetchWrap({ fetch }) : fetch,
+    timeoutFetchWrap({
+      timeout,
+
+      /**
+       * Since we will be fetching from the network based on user provided
+       * input, we need to make sure that the request is not vulnerable to SSRF
+       * attacks.
+       */
+      fetch: ssrfProtection ? ssrfFetchWrap({ fetch }) : fetch,
+    }),
 
     /**
      * Since we will be fetching user owned data, we need to make sure that an
