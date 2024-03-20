@@ -155,6 +155,9 @@ export class Views {
             cidFromBlobJson(actor.profile.avatar),
           )
         : undefined,
+      // associated.feedgens and associated.lists info not necessarily included
+      // on profile and profile-basic views, but should be on profile-detailed.
+      associated: actor?.isLabeler ? { labeler: true } : undefined,
       viewer: this.profileViewer(did, state),
       labels,
     }

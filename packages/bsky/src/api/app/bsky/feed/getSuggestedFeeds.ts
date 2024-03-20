@@ -18,10 +18,8 @@ export default function (server: Server, ctx: AppContext) {
         cursor: params.cursor,
       })
       const uris = suggestedRes.uris
-      const hydration = await ctx.hydrator.hydrateFeedGens(uris, {
-        labelers,
-        viewer,
-      })
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
       const feedViews = mapDefined(uris, (uri) =>
         ctx.views.feedGenerator(uri, hydration),
       )
@@ -32,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
           feeds: feedViews,
           cursor: parseString(suggestedRes.cursor),
         },
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

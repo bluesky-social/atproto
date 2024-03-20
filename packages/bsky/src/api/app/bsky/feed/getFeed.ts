@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
         body: result,
         headers: {
           ...(feedResHeaders ?? {}),
-          ...resHeaders({ labelers }),
+          ...resHeaders({ labelers: hydrateCtx.labelers }),
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }

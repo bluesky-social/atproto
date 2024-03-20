@@ -31,14 +31,20 @@ export { Database } from './db'
 export { DiskBlobStore } from './disk-blobstore'
 export { AppContext } from './context'
 export { httpLogger } from './logger'
+export { createSecretKeyObject } from './auth-verifier'
+export { type Handler as SkeletonHandler } from './lexicon/types/app/bsky/feed/getFeedSkeleton'
+export { createServer as createLexiconServer } from './lexicon'
+export * as sequencer from './sequencer'
+export { type PreparedWrite } from './repo'
+export * as repoPrepare from './repo/prepare'
 
 export class PDS {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
-  private dbStatsInterval?: NodeJS.Timer
-  private sequencerStatsInterval?: NodeJS.Timer
+  private dbStatsInterval?: NodeJS.Timeout
+  private sequencerStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx

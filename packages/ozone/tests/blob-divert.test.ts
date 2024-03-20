@@ -1,10 +1,10 @@
+import assert from 'node:assert'
 import {
   ModeratorClient,
   SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { BlobDiverter } from '../src/daemon'
 import { forSnapshot } from './_util'
 
 describe('blob divert', () => {
@@ -31,8 +31,10 @@ describe('blob divert', () => {
   })
 
   const mockReportServiceResponse = (result: boolean) => {
+    const blobDiverter = network.ozone.ctx.blobDiverter
+    assert(blobDiverter)
     return jest
-      .spyOn(BlobDiverter.prototype, 'sendImage')
+      .spyOn(blobDiverter, 'sendImage')
       .mockImplementation(async () => {
         return result
       })

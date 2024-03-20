@@ -6,7 +6,7 @@ import Database from '../db'
 export class EventReverser {
   destroyed = false
   reversalPromise: Promise<void> = Promise.resolve()
-  timer: NodeJS.Timer | undefined
+  timer?: NodeJS.Timeout
 
   constructor(
     private db: Database,
@@ -32,6 +32,7 @@ export class EventReverser {
     this.destroyed = true
     if (this.timer) {
       clearTimeout(this.timer)
+      this.timer = undefined
     }
     await this.reversalPromise
   }

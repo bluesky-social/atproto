@@ -25,12 +25,15 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
-      const result = await getListBlocks({ ...params, hydrateCtx }, ctx)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const result = await getListBlocks(
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: result,
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

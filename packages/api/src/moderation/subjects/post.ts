@@ -41,6 +41,15 @@ export function decidePost(
     ) {
       // quoted post with media
       embedAcc = decideQuotedPost(subject.embed.record.record, opts)
+    } else if (AppBskyEmbedRecord.isViewBlocked(subject.embed.record)) {
+      // blocked quote post
+      embedAcc = decideBlockedQuotedPost(subject.embed.record, opts)
+    } else if (
+      AppBskyEmbedRecordWithMedia.isView(subject.embed) &&
+      AppBskyEmbedRecord.isViewBlocked(subject.embed.record.record)
+    ) {
+      // blocked quoted post with media
+      embedAcc = decideBlockedQuotedPost(subject.embed.record.record, opts)
     }
   }
 
@@ -69,6 +78,31 @@ function decideQuotedPost(
     decideAccount(subject.author, opts),
     decideProfile(subject.author, opts),
   )
+}
+
+function decideBlockedQuotedPost(
+  subject: AppBskyEmbedRecord.ViewBlocked,
+  opts: ModerationOpts,
+) {
+  const acc = new ModerationDecision()
+  acc.setDid(subject.author.did)
+  acc.setIsMe(subject.author.did === opts.userDid)
+  if (subject.author.viewer?.muted) {
+    if (subject.author.viewer?.mutedByList) {
+      acc.addMutedByList(subject.author.viewer?.mutedByList)
+    } else {
+      acc.addMuted(subject.author.viewer?.muted)
+    }
+  }
+  if (subject.author.viewer?.blocking) {
+    if (subject.author.viewer?.blockingByList) {
+      acc.addBlockingByList(subject.author.viewer?.blockingByList)
+    } else {
+      acc.addBlocking(subject.author.viewer?.blocking)
+    }
+  }
+  acc.addBlockedBy(subject.author.viewer?.blockedBy)
+  return acc
 }
 
 function checkHiddenPost(

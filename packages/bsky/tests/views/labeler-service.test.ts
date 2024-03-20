@@ -135,11 +135,17 @@ describe('labeler service views', () => {
     )
   })
 
-  it('blocked by labeler takedown', async () => {
-    await network.bsky.ctx.dataplane.takedownRecord({
-      recordUri: aliceService.uriStr,
-    })
+  it('renders profile as labeler in non-detailed profile views', async () => {
+    const { data: res } = await agent.api.app.bsky.actor.searchActors(
+      { q: sc.accounts[alice].handle },
+      { headers: await network.serviceHeaders(bob) },
+    )
+    expect(res.actors.length).toBe(1)
+    expect(res.actors[0].associated?.labeler).toBe(true)
+  })
 
+  it('blocked by labeler takedown', async () => {
+    await network.bsky.ctx.dataplane.takedownActor({ did: alice })
     const res = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob] },
       { headers: await network.serviceHeaders(bob) },
@@ -149,8 +155,6 @@ describe('labeler service views', () => {
     expect(res.data.views[0].creator.did).toEqual(bob)
 
     // Cleanup
-    await network.bsky.ctx.dataplane.untakedownRecord({
-      recordUri: aliceService.uriStr,
-    })
+    await network.bsky.ctx.dataplane.untakedownActor({ did: alice })
   })
 })

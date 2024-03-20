@@ -38,6 +38,7 @@ describe('admin repo search view', () => {
         did: sc.dids['cara-wiegand69.test'],
       },
     })
+    await network.ozone.processAll()
   })
 
   it('gives relevant results', async () => {

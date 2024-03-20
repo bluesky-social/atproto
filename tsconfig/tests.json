@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./node.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "noEmit": true
+  }
+}

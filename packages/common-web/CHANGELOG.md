@@ -1,5 +1,11 @@
 # @atproto/common-web
 
+## 0.3.0
+
+### Minor Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
 ## 0.2.4
 
 ### Patch Changes
