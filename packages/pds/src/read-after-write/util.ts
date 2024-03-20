@@ -52,8 +52,7 @@ export const readAfterWriteInternal = async <T>(
     if (local.count === 0) {
       return res
     }
-    const keypair = await ctx.actorStore.keypair(requester)
-    const localViewer = ctx.localViewer(store, keypair)
+    const localViewer = ctx.localViewer(store)
     const parsedRes = parseRes<T>(nsid, res)
     const data = await munge(localViewer, parsedRes, local, requester)
     return formatMungedResponse(data, getLocalLag(local))
