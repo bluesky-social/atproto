@@ -3052,7 +3052,8 @@ export const schemaDict = {
             commit: {
               type: 'string',
               format: 'cid',
-              description: 'An optional past commit CID.',
+              description:
+                'DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit',
             },
           },
         },
