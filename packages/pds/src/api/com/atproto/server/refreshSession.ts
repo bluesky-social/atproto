@@ -11,7 +11,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.refresh,
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
-      const user = await ctx.accountManager.getAccount(did, true)
+      const user = await ctx.accountManager.getAccount(did, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,

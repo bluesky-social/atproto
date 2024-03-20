@@ -5,7 +5,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ params }) => {
+  server.com.atproto.repo.getRecord(async ({ req, params }) => {
     const { repo, collection, rkey, cid } = params
     const did = await ctx.accountManager.getDidForActor(repo)
 
@@ -28,10 +28,10 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    return await pipethrough(
-      ctx.cfg.bskyAppView.url,
-      'com.atproto.repo.getRecord',
-      params,
-    )
+    if (!ctx.cfg.bskyAppView) {
+      throw new InvalidRequestError(`Could not locate record`)
+    }
+
+    return await pipethrough(ctx, req)
   })
 }

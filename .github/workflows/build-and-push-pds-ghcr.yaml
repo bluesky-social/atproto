@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - pds-node-v20
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

@@ -1,6 +1,7 @@
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { AccountDb, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { DAY } from '@atproto/common'
 
 export class UserAlreadyExistsError extends Error {}
 
@@ -10,19 +11,28 @@ export type ActorAccount = ActorEntry & {
   invitesDisabled: 0 | 1 | null
 }
 
-const selectAccountQB = (db: AccountDb, includeSoftDeleted: boolean) => {
+export type AvailabilityFlags = {
+  includeTakenDown?: boolean
+  includeDeactivated?: boolean
+}
+
+const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
+  const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('actor'))),
+    .if(!includeTakenDown, (qb) => qb.where(notSoftDeletedClause(ref('actor'))))
+    .if(!includeDeactivated, (qb) =>
+      qb.where('actor.deactivatedAt', 'is', null),
     )
     .select([
       'actor.did',
       'actor.handle',
       'actor.createdAt',
       'actor.takedownRef',
+      'actor.deactivatedAt',
+      'actor.deleteAfter',
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
@@ -32,9 +42,9 @@ const selectAccountQB = (db: AccountDb, includeSoftDeleted: boolean) => {
 export const getAccount = async (
   db: AccountDb,
   handleOrDid: string,
-  includeSoftDeleted = false,
+  flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
-  const found = await selectAccountQB(db, includeSoftDeleted)
+  const found = await selectAccountQB(db, flags)
     .where((qb) => {
       if (handleOrDid.startsWith('did:')) {
         return qb.where('actor.did', '=', handleOrDid)
@@ -49,9 +59,9 @@ export const getAccount = async (
 export const getAccountByEmail = async (
   db: AccountDb,
   email: string,
-  includeSoftDeleted = false,
+  flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
-  const found = await selectAccountQB(db, includeSoftDeleted)
+  const found = await selectAccountQB(db, flags)
     .where('email', '=', email.toLowerCase())
     .executeTakeFirst()
   return found || null
@@ -62,16 +72,21 @@ export const registerActor = async (
   opts: {
     did: string
     handle: string
+    deactivated?: boolean
   },
 ) => {
-  const { did, handle } = opts
+  const { did, handle, deactivated } = opts
+  const now = Date.now()
+  const createdAt = new Date(now).toISOString()
   const [registered] = await db.executeWithRetry(
     db.db
       .insertInto('actor')
       .values({
         did,
         handle,
-        createdAt: new Date().toISOString(),
+        createdAt,
+        deactivatedAt: deactivated ? createdAt : null,
+        deleteAfter: deactivated ? new Date(now + 3 * DAY).toISOString() : null,
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did'),
@@ -206,5 +221,33 @@ export const updateAccountTakedownStatus = async (
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),
+  )
+}
+
+export const deactivateAccount = async (
+  db: AccountDb,
+  did: string,
+  deleteAfter: string | null,
+) => {
+  await db.executeWithRetry(
+    db.db
+      .updateTable('actor')
+      .set({
+        deactivatedAt: new Date().toISOString(),
+        deleteAfter,
+      })
+      .where('did', '=', did),
+  )
+}
+
+export const activateAccount = async (db: AccountDb, did: string) => {
+  await db.executeWithRetry(
+    db.db
+      .updateTable('actor')
+      .set({
+        deactivatedAt: null,
+        deleteAfter: null,
+      })
+      .where('did', '=', did),
   )
 }

@@ -4,51 +4,6 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
 export const schemaDict = {
-  ComAtprotoAdminCreateCommunicationTemplate: {
-    lexicon: 1,
-    id: 'com.atproto.admin.createCommunicationTemplate',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Administrative action to create a new, re-usable communication (email for now) template.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'contentMarkdown', 'name'],
-            properties: {
-              name: {
-                type: 'string',
-                description: 'Name of the template.',
-              },
-              contentMarkdown: {
-                type: 'string',
-                description:
-                  'Content of the template, markdown supported, can contain variable placeholders.',
-              },
-              subject: {
-                type: 'string',
-                description: 'Subject of the message, used in emails.',
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-                description: 'DID of the user who is creating the template.',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminDefs: {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
@@ -62,409 +17,6 @@ export const schemaDict = {
           },
           ref: {
             type: 'string',
-          },
-        },
-      },
-      modEventView: {
-        type: 'object',
-        required: [
-          'id',
-          'event',
-          'subject',
-          'subjectBlobCids',
-          'createdBy',
-          'createdAt',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          event: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#modEventTakedown',
-              'lex:com.atproto.admin.defs#modEventReverseTakedown',
-              'lex:com.atproto.admin.defs#modEventComment',
-              'lex:com.atproto.admin.defs#modEventReport',
-              'lex:com.atproto.admin.defs#modEventLabel',
-              'lex:com.atproto.admin.defs#modEventAcknowledge',
-              'lex:com.atproto.admin.defs#modEventEscalate',
-              'lex:com.atproto.admin.defs#modEventMute',
-              'lex:com.atproto.admin.defs#modEventEmail',
-              'lex:com.atproto.admin.defs#modEventResolveAppeal',
-            ],
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
-          },
-          subjectBlobCids: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          creatorHandle: {
-            type: 'string',
-          },
-          subjectHandle: {
-            type: 'string',
-          },
-        },
-      },
-      modEventViewDetail: {
-        type: 'object',
-        required: [
-          'id',
-          'event',
-          'subject',
-          'subjectBlobs',
-          'createdBy',
-          'createdAt',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          event: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#modEventTakedown',
-              'lex:com.atproto.admin.defs#modEventReverseTakedown',
-              'lex:com.atproto.admin.defs#modEventComment',
-              'lex:com.atproto.admin.defs#modEventReport',
-              'lex:com.atproto.admin.defs#modEventLabel',
-              'lex:com.atproto.admin.defs#modEventAcknowledge',
-              'lex:com.atproto.admin.defs#modEventEscalate',
-              'lex:com.atproto.admin.defs#modEventMute',
-              'lex:com.atproto.admin.defs#modEventEmail',
-              'lex:com.atproto.admin.defs#modEventResolveAppeal',
-            ],
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoView',
-              'lex:com.atproto.admin.defs#repoViewNotFound',
-              'lex:com.atproto.admin.defs#recordView',
-              'lex:com.atproto.admin.defs#recordViewNotFound',
-            ],
-          },
-          subjectBlobs: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#blobView',
-            },
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      reportView: {
-        type: 'object',
-        required: [
-          'id',
-          'reasonType',
-          'subject',
-          'reportedBy',
-          'createdAt',
-          'resolvedByActionIds',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          reasonType: {
-            type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
-          },
-          comment: {
-            type: 'string',
-          },
-          subjectRepoHandle: {
-            type: 'string',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
-          },
-          reportedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          resolvedByActionIds: {
-            type: 'array',
-            items: {
-              type: 'integer',
-            },
-          },
-        },
-      },
-      subjectStatusView: {
-        type: 'object',
-        required: ['id', 'subject', 'createdAt', 'updatedAt', 'reviewState'],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
-          },
-          subjectBlobCids: {
-            type: 'array',
-            items: {
-              type: 'string',
-              format: 'cid',
-            },
-          },
-          subjectRepoHandle: {
-            type: 'string',
-          },
-          updatedAt: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp referencing when the last update was made to the moderation status of the subject',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp referencing the first moderation status impacting event was emitted on the subject',
-          },
-          reviewState: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectReviewState',
-          },
-          comment: {
-            type: 'string',
-            description: 'Sticky comment on the subject.',
-          },
-          muteUntil: {
-            type: 'string',
-            format: 'datetime',
-          },
-          lastReviewedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          lastReviewedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          lastReportedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          lastAppealedAt: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp referencing when the author of the subject appealed a moderation action',
-          },
-          takendown: {
-            type: 'boolean',
-          },
-          appealed: {
-            type: 'boolean',
-            description:
-              'True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
-          },
-          suspendUntil: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      reportViewDetail: {
-        type: 'object',
-        required: [
-          'id',
-          'reasonType',
-          'subject',
-          'reportedBy',
-          'createdAt',
-          'resolvedByActions',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          reasonType: {
-            type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
-          },
-          comment: {
-            type: 'string',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoView',
-              'lex:com.atproto.admin.defs#repoViewNotFound',
-              'lex:com.atproto.admin.defs#recordView',
-              'lex:com.atproto.admin.defs#recordViewNotFound',
-            ],
-          },
-          subjectStatus: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
-          },
-          reportedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          resolvedByActions: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#modEventView',
-            },
-          },
-        },
-      },
-      repoView: {
-        type: 'object',
-        required: [
-          'did',
-          'handle',
-          'relatedRecords',
-          'indexedAt',
-          'moderation',
-        ],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          email: {
-            type: 'string',
-          },
-          relatedRecords: {
-            type: 'array',
-            items: {
-              type: 'unknown',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderation',
-          },
-          invitedBy: {
-            type: 'ref',
-            ref: 'lex:com.atproto.server.defs#inviteCode',
-          },
-          invitesDisabled: {
-            type: 'boolean',
-          },
-          inviteNote: {
-            type: 'string',
-          },
-        },
-      },
-      repoViewDetail: {
-        type: 'object',
-        required: [
-          'did',
-          'handle',
-          'relatedRecords',
-          'indexedAt',
-          'moderation',
-        ],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          email: {
-            type: 'string',
-          },
-          relatedRecords: {
-            type: 'array',
-            items: {
-              type: 'unknown',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderationDetail',
-          },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
-          invitedBy: {
-            type: 'ref',
-            ref: 'lex:com.atproto.server.defs#inviteCode',
-          },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
-          invitesDisabled: {
-            type: 'boolean',
-          },
-          inviteNote: {
-            type: 'string',
-          },
-          emailConfirmedAt: {
-            type: 'string',
-            format: 'datetime',
           },
         },
       },
@@ -516,16 +68,6 @@ export const schemaDict = {
           },
         },
       },
-      repoViewNotFound: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
       repoRef: {
         type: 'object',
         required: ['did'],
@@ -554,395 +96,6 @@ export const schemaDict = {
           },
         },
       },
-      recordView: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'value',
-          'blobCids',
-          'indexedAt',
-          'moderation',
-          'repo',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          value: {
-            type: 'unknown',
-          },
-          blobCids: {
-            type: 'array',
-            items: {
-              type: 'string',
-              format: 'cid',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderation',
-          },
-          repo: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#repoView',
-          },
-        },
-      },
-      recordViewDetail: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'value',
-          'blobs',
-          'indexedAt',
-          'moderation',
-          'repo',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          value: {
-            type: 'unknown',
-          },
-          blobs: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#blobView',
-            },
-          },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderationDetail',
-          },
-          repo: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#repoView',
-          },
-        },
-      },
-      recordViewNotFound: {
-        type: 'object',
-        required: ['uri'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
-      },
-      moderation: {
-        type: 'object',
-        properties: {
-          subjectStatus: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
-          },
-        },
-      },
-      moderationDetail: {
-        type: 'object',
-        properties: {
-          subjectStatus: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
-          },
-        },
-      },
-      blobView: {
-        type: 'object',
-        required: ['cid', 'mimeType', 'size', 'createdAt'],
-        properties: {
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          mimeType: {
-            type: 'string',
-          },
-          size: {
-            type: 'integer',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          details: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#imageDetails',
-              'lex:com.atproto.admin.defs#videoDetails',
-            ],
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderation',
-          },
-        },
-      },
-      imageDetails: {
-        type: 'object',
-        required: ['width', 'height'],
-        properties: {
-          width: {
-            type: 'integer',
-          },
-          height: {
-            type: 'integer',
-          },
-        },
-      },
-      videoDetails: {
-        type: 'object',
-        required: ['width', 'height', 'length'],
-        properties: {
-          width: {
-            type: 'integer',
-          },
-          height: {
-            type: 'integer',
-          },
-          length: {
-            type: 'integer',
-          },
-        },
-      },
-      subjectReviewState: {
-        type: 'string',
-        knownValues: [
-          'lex:com.atproto.admin.defs#reviewOpen',
-          'lex:com.atproto.admin.defs#reviewEscalated',
-          'lex:com.atproto.admin.defs#reviewClosed',
-        ],
-      },
-      reviewOpen: {
-        type: 'token',
-        description:
-          'Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator',
-      },
-      reviewEscalated: {
-        type: 'token',
-        description:
-          'Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator',
-      },
-      reviewClosed: {
-        type: 'token',
-        description:
-          'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
-      },
-      modEventTakedown: {
-        type: 'object',
-        description: 'Take down a subject permanently or temporarily',
-        properties: {
-          comment: {
-            type: 'string',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long the takedown should be in effect before automatically expiring.',
-          },
-        },
-      },
-      modEventReverseTakedown: {
-        type: 'object',
-        description: 'Revert take down action on a subject',
-        properties: {
-          comment: {
-            type: 'string',
-            description: 'Describe reasoning behind the reversal.',
-          },
-        },
-      },
-      modEventResolveAppeal: {
-        type: 'object',
-        description: 'Resolve appeal on a subject',
-        properties: {
-          comment: {
-            type: 'string',
-            description: 'Describe resolution.',
-          },
-        },
-      },
-      modEventComment: {
-        type: 'object',
-        description: 'Add a comment to a subject',
-        required: ['comment'],
-        properties: {
-          comment: {
-            type: 'string',
-          },
-          sticky: {
-            type: 'boolean',
-            description: 'Make the comment persistent on the subject',
-          },
-        },
-      },
-      modEventReport: {
-        type: 'object',
-        description: 'Report a subject',
-        required: ['reportType'],
-        properties: {
-          comment: {
-            type: 'string',
-          },
-          reportType: {
-            type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
-          },
-        },
-      },
-      modEventLabel: {
-        type: 'object',
-        description: 'Apply/Negate labels on a subject',
-        required: ['createLabelVals', 'negateLabelVals'],
-        properties: {
-          comment: {
-            type: 'string',
-          },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-        },
-      },
-      modEventAcknowledge: {
-        type: 'object',
-        properties: {
-          comment: {
-            type: 'string',
-          },
-        },
-      },
-      modEventEscalate: {
-        type: 'object',
-        properties: {
-          comment: {
-            type: 'string',
-          },
-        },
-      },
-      modEventMute: {
-        type: 'object',
-        description: 'Mute incoming reports on a subject',
-        required: ['durationInHours'],
-        properties: {
-          comment: {
-            type: 'string',
-          },
-          durationInHours: {
-            type: 'integer',
-            description: 'Indicates how long the subject should remain muted.',
-          },
-        },
-      },
-      modEventUnmute: {
-        type: 'object',
-        description: 'Unmute action on a subject',
-        properties: {
-          comment: {
-            type: 'string',
-            description: 'Describe reasoning behind the reversal.',
-          },
-        },
-      },
-      modEventEmail: {
-        type: 'object',
-        description: 'Keep a log of outgoing email to a user',
-        required: ['subjectLine'],
-        properties: {
-          subjectLine: {
-            type: 'string',
-            description: 'The subject line of the email sent to the user.',
-          },
-          comment: {
-            type: 'string',
-            description: 'Additional comment about the outgoing comm.',
-          },
-        },
-      },
-      communicationTemplateView: {
-        type: 'object',
-        required: [
-          'id',
-          'name',
-          'contentMarkdown',
-          'disabled',
-          'lastUpdatedBy',
-          'createdAt',
-          'updatedAt',
-        ],
-        properties: {
-          id: {
-            type: 'string',
-          },
-          name: {
-            type: 'string',
-            description: 'Name of the template.',
-          },
-          subject: {
-            type: 'string',
-            description:
-              'Content of the template, can contain markdown and variable placeholders.',
-          },
-          contentMarkdown: {
-            type: 'string',
-            description: 'Subject of the message, used in emails.',
-          },
-          disabled: {
-            type: 'boolean',
-          },
-          lastUpdatedBy: {
-            type: 'string',
-            format: 'did',
-            description: 'DID of the user who last updated the template.',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          updatedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
     },
   },
   ComAtprotoAdminDeleteAccount: {
@@ -961,28 +114,6 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminDeleteCommunicationTemplate: {
-    lexicon: 1,
-    id: 'com.atproto.admin.deleteCommunicationTemplate',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Delete a communication template.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['id'],
-            properties: {
-              id: {
-                type: 'string',
               },
             },
           },
@@ -1046,70 +177,6 @@ export const schemaDict = {
             },
           },
         },
-      },
-    },
-  },
-  ComAtprotoAdminEmitModerationEvent: {
-    lexicon: 1,
-    id: 'com.atproto.admin.emitModerationEvent',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Take a moderation action on an actor.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['event', 'subject', 'createdBy'],
-            properties: {
-              event: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#modEventTakedown',
-                  'lex:com.atproto.admin.defs#modEventAcknowledge',
-                  'lex:com.atproto.admin.defs#modEventEscalate',
-                  'lex:com.atproto.admin.defs#modEventComment',
-                  'lex:com.atproto.admin.defs#modEventLabel',
-                  'lex:com.atproto.admin.defs#modEventReport',
-                  'lex:com.atproto.admin.defs#modEventMute',
-                  'lex:com.atproto.admin.defs#modEventReverseTakedown',
-                  'lex:com.atproto.admin.defs#modEventUnmute',
-                  'lex:com.atproto.admin.defs#modEventEmail',
-                ],
-              },
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                ],
-              },
-              subjectBlobCids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#modEventView',
-          },
-        },
-        errors: [
-          {
-            name: 'SubjectHasAction',
-          },
-        ],
       },
     },
   },
@@ -1254,100 +321,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetModerationEvent: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationEvent',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get details about a moderation event.',
-        parameters: {
-          type: 'params',
-          required: ['id'],
-          properties: {
-            id: {
-              type: 'integer',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#modEventViewDetail',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetRecord: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getRecord',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get details about a record.',
-        parameters: {
-          type: 'params',
-          required: ['uri'],
-          properties: {
-            uri: {
-              type: 'string',
-              format: 'at-uri',
-            },
-            cid: {
-              type: 'string',
-              format: 'cid',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#recordViewDetail',
-          },
-        },
-        errors: [
-          {
-            name: 'RecordNotFound',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoAdminGetRepo: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getRepo',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get details about a repository.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#repoViewDetail',
-          },
-        },
-        errors: [
-          {
-            name: 'RepoNotFound',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoAdminGetSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.getSubjectStatus',
@@ -1390,306 +363,6 @@ export const schemaDict = {
               takedown: {
                 type: 'ref',
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminListCommunicationTemplates: {
-    lexicon: 1,
-    id: 'com.atproto.admin.listCommunicationTemplates',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get list of all communication templates.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['communicationTemplates'],
-            properties: {
-              communicationTemplates: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminQueryModerationEvents: {
-    lexicon: 1,
-    id: 'com.atproto.admin.queryModerationEvents',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'List moderation events related to a subject.',
-        parameters: {
-          type: 'params',
-          properties: {
-            types: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              description:
-                'The types of events (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned.',
-            },
-            createdBy: {
-              type: 'string',
-              format: 'did',
-            },
-            sortDirection: {
-              type: 'string',
-              default: 'desc',
-              enum: ['asc', 'desc'],
-              description:
-                'Sort direction for the events. Defaults to descending order of created at timestamp.',
-            },
-            createdAfter: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Retrieve events created after a given timestamp',
-            },
-            createdBefore: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Retrieve events created before a given timestamp',
-            },
-            subject: {
-              type: 'string',
-              format: 'uri',
-            },
-            includeAllUserRecords: {
-              type: 'boolean',
-              default: false,
-              description:
-                'If true, events on all record types (posts, lists, profile etc.) owned by the did are returned',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            hasComment: {
-              type: 'boolean',
-              description: 'If true, only events with comments are returned',
-            },
-            comment: {
-              type: 'string',
-              description:
-                'If specified, only events with comments containing the keyword are returned',
-            },
-            addedLabels: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              description:
-                'If specified, only events where all of these labels were added are returned',
-            },
-            removedLabels: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              description:
-                'If specified, only events where all of these labels were removed are returned',
-            },
-            reportTypes: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['events'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              events: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#modEventView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminQueryModerationStatuses: {
-    lexicon: 1,
-    id: 'com.atproto.admin.queryModerationStatuses',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'View moderation statuses of subjects (record or repo).',
-        parameters: {
-          type: 'params',
-          properties: {
-            subject: {
-              type: 'string',
-              format: 'uri',
-            },
-            comment: {
-              type: 'string',
-              description: 'Search subjects by keyword from comments',
-            },
-            reportedAfter: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reported after a given timestamp',
-            },
-            reportedBefore: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reported before a given timestamp',
-            },
-            reviewedAfter: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reviewed after a given timestamp',
-            },
-            reviewedBefore: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reviewed before a given timestamp',
-            },
-            includeMuted: {
-              type: 'boolean',
-              description:
-                "By default, we don't include muted subjects in the results. Set this to true to include them.",
-            },
-            reviewState: {
-              type: 'string',
-              description: 'Specify when fetching subjects in a certain state',
-            },
-            ignoreSubjects: {
-              type: 'array',
-              items: {
-                type: 'string',
-                format: 'uri',
-              },
-            },
-            lastReviewedBy: {
-              type: 'string',
-              format: 'did',
-              description:
-                'Get all subject statuses that were reviewed by a specific moderator',
-            },
-            sortField: {
-              type: 'string',
-              default: 'lastReportedAt',
-              enum: ['lastReviewedAt', 'lastReportedAt'],
-            },
-            sortDirection: {
-              type: 'string',
-              default: 'desc',
-              enum: ['asc', 'desc'],
-            },
-            takendown: {
-              type: 'boolean',
-              description: 'Get subjects that were taken down',
-            },
-            appealed: {
-              type: 'boolean',
-              description: 'Get subjects in unresolved appealed status',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subjectStatuses'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              subjectStatuses: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#subjectStatusView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminSearchRepos: {
-    lexicon: 1,
-    id: 'com.atproto.admin.searchRepos',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Find repositories based on a search term.',
-        parameters: {
-          type: 'params',
-          properties: {
-            term: {
-              type: 'string',
-              description: "DEPRECATED: use 'q' instead",
-            },
-            q: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repos'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              repos: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#repoView',
-                },
               },
             },
           },
@@ -1801,53 +474,28 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminUpdateCommunicationTemplate: {
+  ComAtprotoAdminUpdateAccountPassword: {
     lexicon: 1,
-    id: 'com.atproto.admin.updateCommunicationTemplate',
+    id: 'com.atproto.admin.updateAccountPassword',
     defs: {
       main: {
         type: 'procedure',
         description:
-          'Administrative action to update an existing communication template. Allows passing partial fields to patch specific fields only.',
+          'Update the password for a user account as an administrator.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['id'],
+            required: ['did', 'password'],
             properties: {
-              id: {
-                type: 'string',
-                description: 'ID of the template to be updated.',
-              },
-              name: {
-                type: 'string',
-                description: 'Name of the template.',
-              },
-              contentMarkdown: {
-                type: 'string',
-                description:
-                  'Content of the template, markdown supported, can contain variable placeholders.',
-              },
-              subject: {
-                type: 'string',
-                description: 'Subject of the message, used in emails.',
-              },
-              updatedBy: {
+              did: {
                 type: 'string',
                 format: 'did',
-                description: 'DID of the user who is updating the template.',
               },
-              disabled: {
-                type: 'boolean',
+              password: {
+                type: 'string',
               },
             },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
           },
         },
       },
@@ -1906,6 +554,56 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoIdentityGetRecommendedDidCredentials: {
+    lexicon: 1,
+    id: 'com.atproto.identity.getRecommendedDidCredentials',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Describe the credentials that should be included in the DID doc of an account that is migrating to this service.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              rotationKeys: {
+                description:
+                  'Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs.',
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentityRequestPlcOperationSignature: {
+    lexicon: 1,
+    id: 'com.atproto.identity.requestPlcOperationSignature',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request an email with a code to in order to request a signed PLC operation. Requires Auth.',
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
@@ -1933,6 +631,84 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentitySignPlcOperation: {
+    lexicon: 1,
+    id: 'com.atproto.identity.signPlcOperation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Signs a PLC operation to update some value(s) in the requesting DID's document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              token: {
+                description:
+                  'A token received through com.atproto.identity.requestPlcOperationSignature',
+                type: 'string',
+              },
+              rotationKeys: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'unknown',
+                description: 'A signed DID PLC operation.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentitySubmitPlcOperation: {
+    lexicon: 1,
+    id: 'com.atproto.identity.submitPlcOperation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Validates a PLC operation to ensure that it doesn't violate a service's constraints or get the identity into a bad state, then submits it to the PLC registry",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'unknown',
               },
             },
           },
@@ -1975,6 +751,10 @@ export const schemaDict = {
           'Metadata tag on an atproto resource (eg, repo or record).',
         required: ['src', 'uri', 'val', 'cts'],
         properties: {
+          ver: {
+            type: 'integer',
+            description: 'The AT Protocol version of the label object.',
+          },
           src: {
             type: 'string',
             format: 'did',
@@ -2008,6 +788,16 @@ export const schemaDict = {
             format: 'datetime',
             description: 'Timestamp when this label was created.',
           },
+          exp: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp at which this label expires (no longer applies).',
+          },
+          sig: {
+            type: 'bytes',
+            description: 'Signature of dag-cbor encoded label.',
+          },
         },
       },
       selfLabels: {
@@ -2039,6 +829,94 @@ export const schemaDict = {
               'The short string name of the value or type of this label.',
           },
         },
+      },
+      labelValueDefinition: {
+        type: 'object',
+        description:
+          'Declares a label value and its expected interpertations and behaviors.',
+        required: ['identifier', 'severity', 'blurs', 'locales'],
+        properties: {
+          identifier: {
+            type: 'string',
+            description:
+              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
+            maxLength: 100,
+            maxGraphemes: 100,
+          },
+          severity: {
+            type: 'string',
+            description:
+              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing.",
+            knownValues: ['inform', 'alert', 'none'],
+          },
+          blurs: {
+            type: 'string',
+            description:
+              "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
+            knownValues: ['content', 'media', 'none'],
+          },
+          defaultSetting: {
+            type: 'string',
+            description: 'The default setting for this label.',
+            knownValues: ['ignore', 'warn', 'hide'],
+            default: 'warn',
+          },
+          adultOnly: {
+            type: 'boolean',
+            description:
+              'Does the user need to have adult content enabled in order to configure this label?',
+          },
+          locales: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinitionStrings',
+            },
+          },
+        },
+      },
+      labelValueDefinitionStrings: {
+        type: 'object',
+        description:
+          'Strings which describe the label in the UI, localized into a specific language.',
+        required: ['lang', 'name', 'description'],
+        properties: {
+          lang: {
+            type: 'string',
+            description:
+              'The code of the language these strings are written in.',
+            format: 'language',
+          },
+          name: {
+            type: 'string',
+            description: 'A short human-readable name for the label.',
+            maxGraphemes: 64,
+            maxLength: 640,
+          },
+          description: {
+            type: 'string',
+            description:
+              'A longer description of what the label means and why it might be applied.',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+          },
+        },
+      },
+      labelValue: {
+        type: 'string',
+        knownValues: [
+          '!hide',
+          '!no-promote',
+          '!warn',
+          '!no-unauthenticated',
+          'dmca-violation',
+          'doxxing',
+          'porn',
+          'sexual',
+          'nudity',
+          'nsfl',
+          'gore',
+        ],
       },
     },
   },
@@ -2648,6 +1526,78 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Import a repo in the form of a CAR file. Requires Content-Length HTTP header to be set.',
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoRepoListMissingBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.listMissingBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns a list of missing blobs for the requesting account. Intended to be used in the account migration flow.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blobs'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              blobs: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.repo.listMissingBlobs#recordBlob',
+                },
+              },
+            },
+          },
+        },
+      },
+      recordBlob: {
+        type: 'object',
+        required: ['cid', 'recordUri'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          recordUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoListRecords: {
     lexicon: 1,
     id: 'com.atproto.repo.listRecords',
@@ -2856,6 +1806,75 @@ export const schemaDict = {
             properties: {
               blob: {
                 type: 'blob',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerActivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.activateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Activates a currently deactivated account. Used to finalize account migration after the account's repo is imported and identity is setup.",
+      },
+    },
+  },
+  ComAtprotoServerCheckAccountStatus: {
+    lexicon: 1,
+    id: 'com.atproto.server.checkAccountStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the status of an account, especially as pertaining to import or recovery. Can be called many times over the course of an account migration. Requires auth and can only be called pertaining to oneself.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'activated',
+              'validDid',
+              'repoCommit',
+              'repoRev',
+              'repoBlocks',
+              'indexedRecords',
+              'privateStateValues',
+              'expectedBlobs',
+              'importedBlobs',
+            ],
+            properties: {
+              activated: {
+                type: 'boolean',
+              },
+              validDid: {
+                type: 'boolean',
+              },
+              repoCommit: {
+                type: 'string',
+                format: 'cid',
+              },
+              repoRev: {
+                type: 'string',
+              },
+              repoBlocks: {
+                type: 'integer',
+              },
+              indexedRecords: {
+                type: 'integer',
+              },
+              privateStateValues: {
+                type: 'integer',
+              },
+              expectedBlobs: {
+                type: 'integer',
+              },
+              importedBlobs: {
+                type: 'integer',
               },
             },
           },
@@ -3231,6 +2250,31 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerDeactivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.deactivateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Deactivates a currently active account. Stops serving of repo, and future writes to repo until reactivated. Used to finalize account migration with the old host after the account has been activated on the new host.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              deleteAfter: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'A recommendation to server as to how long they should hold onto the deactivated account before deleting.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerDefs: {
     lexicon: 1,
     id: 'com.atproto.server.defs',
@@ -3351,7 +2395,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['availableUserDomains'],
+            required: ['did', 'availableUserDomains'],
             properties: {
               inviteCodeRequired: {
                 type: 'boolean',
@@ -3376,6 +2420,15 @@ export const schemaDict = {
                 description: 'URLs of service policy documents.',
                 ref: 'lex:com.atproto.server.describeServer#links',
               },
+              contact: {
+                type: 'ref',
+                description: 'Contact information',
+                ref: 'lex:com.atproto.server.describeServer#contact',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
             },
           },
         },
@@ -3387,6 +2440,14 @@ export const schemaDict = {
             type: 'string',
           },
           termsOfService: {
+            type: 'string',
+          },
+        },
+      },
+      contact: {
+        type: 'object',
+        properties: {
+          email: {
             type: 'string',
           },
         },
@@ -3437,6 +2498,41 @@ export const schemaDict = {
             name: 'DuplicateCreate',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoServerGetServiceAuth: {
+    lexicon: 1,
+    id: 'com.atproto.server.getServiceAuth',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a signed token on behalf of the requesting DID for the requested service.',
+        parameters: {
+          type: 'params',
+          required: ['aud'],
+          properties: {
+            aud: {
+              type: 'string',
+              format: 'did',
+              description:
+                'The DID of the service that the token will be used to authenticate with',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -3643,6 +2739,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
                 description: 'The DID to reserve a key for.',
               },
             },
@@ -4183,6 +3280,7 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#identity',
               'lex:com.atproto.sync.subscribeRepos#handle',
               'lex:com.atproto.sync.subscribeRepos#migrate',
               'lex:com.atproto.sync.subscribeRepos#tombstone',
@@ -4289,10 +3387,29 @@ export const schemaDict = {
           },
         },
       },
+      identity: {
+        type: 'object',
+        description:
+          "Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache.",
+        required: ['seq', 'did', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       handle: {
         type: 'object',
         description:
-          "Represents an update of the account's handle, or transition to/from invalid state.",
+          "Represents an update of the account's handle, or transition to/from invalid state. NOTE: Will be deprecated in favor of #identity.",
         required: ['seq', 'did', 'handle', 'time'],
         properties: {
           seq: {
@@ -4315,7 +3432,7 @@ export const schemaDict = {
       migrate: {
         type: 'object',
         description:
-          'Represents an account moving from one PDS instance to another. NOTE: not implemented; full account migration may introduce a new message instead.',
+          'Represents an account moving from one PDS instance to another. NOTE: not implemented; account migration uses #identity instead',
         required: ['seq', 'did', 'migrateTo', 'time'],
         nullable: ['migrateTo'],
         properties: {
@@ -4337,7 +3454,8 @@ export const schemaDict = {
       },
       tombstone: {
         type: 'object',
-        description: 'Indicates that an account has been deleted.',
+        description:
+          'Indicates that an account has been deleted. NOTE: may be deprecated in favor of #identity or a future #account event',
         required: ['seq', 'did', 'time'],
         properties: {
           seq: {
@@ -4423,7 +3541,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Fetch all labels from a labeler created after a certain date. DEPRECATED: use queryLabels or subscribeLabels instead',
+          'DEPRECATED: use queryLabels or subscribeLabels instead -- Fetch all labels from a labeler created after a certain date.',
         parameters: {
           type: 'params',
           properties: {
@@ -4457,59 +3575,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempImportRepo: {
-    lexicon: 1,
-    id: 'com.atproto.temp.importRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Gets the did's repo, optionally catching up from a specific revision.",
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        input: {
-          encoding: 'application/vnd.ipld.car',
-        },
-        output: {
-          encoding: 'text/plain',
-        },
-      },
-    },
-  },
-  ComAtprotoTempPushBlob: {
-    lexicon: 1,
-    id: 'com.atproto.temp.pushBlob',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Gets the did's repo, optionally catching up from a specific revision.",
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        input: {
-          encoding: '*/*',
-        },
-      },
-    },
-  },
   ComAtprotoTempRequestPhoneVerification: {
     lexicon: 1,
     id: 'com.atproto.temp.requestPhoneVerification',
@@ -4530,83 +3595,6 @@ export const schemaDict = {
             },
           },
         },
-      },
-    },
-  },
-  ComAtprotoTempTransferAccount: {
-    lexicon: 1,
-    id: 'com.atproto.temp.transferAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Transfer an account. NOTE: temporary method, necessarily how account migration will be implemented.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'did', 'plcOp'],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              plcOp: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
-            properties: {
-              accessJwt: {
-                type: 'string',
-              },
-              refreshJwt: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidHandle',
-          },
-          {
-            name: 'InvalidPassword',
-          },
-          {
-            name: 'InvalidInviteCode',
-          },
-          {
-            name: 'HandleNotAvailable',
-          },
-          {
-            name: 'UnsupportedDomain',
-          },
-          {
-            name: 'UnresolvableDid',
-          },
-          {
-            name: 'IncompatibleDidDoc',
-          },
-        ],
       },
     },
   },
@@ -4633,6 +3621,10 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
           viewer: {
             type: 'ref',
@@ -4671,6 +3663,10 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
           indexedAt: {
             type: 'string',
@@ -4726,6 +3722,10 @@ export const schemaDict = {
           postsCount: {
             type: 'integer',
           },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -4740,6 +3740,20 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+        },
+      },
+      profileAssociated: {
+        type: 'object',
+        properties: {
+          lists: {
+            type: 'integer',
+          },
+          feedgens: {
+            type: 'integer',
+          },
+          labeler: {
+            type: 'boolean',
           },
         },
       },
@@ -4788,6 +3802,8 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
+            'lex:app.bsky.actor.defs#mutedWordsPref',
+            'lex:app.bsky.actor.defs#hiddenPostsPref',
           ],
         },
       },
@@ -4805,12 +3821,18 @@ export const schemaDict = {
         type: 'object',
         required: ['label', 'visibility'],
         properties: {
+          labelerDid: {
+            type: 'string',
+            description:
+              'Which labeler does this preference apply to? If undefined, applies globally.',
+            format: 'did',
+          },
           label: {
             type: 'string',
           },
           visibility: {
             type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
+            knownValues: ['ignore', 'show', 'warn', 'hide'],
           },
         },
       },
@@ -4831,6 +3853,9 @@ export const schemaDict = {
               type: 'string',
               format: 'at-uri',
             },
+          },
+          timelineIndex: {
+            type: 'integer',
           },
         },
       },
@@ -4861,6 +3886,7 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'Hide replies in the feed if they are not by followed users.',
+            default: true,
           },
           hideRepliesByLikeCount: {
             type: 'integer',
@@ -4905,6 +3931,85 @@ export const schemaDict = {
             },
             description:
               "A list of tags which describe the account owner's interests gathered during onboarding.",
+          },
+        },
+      },
+      mutedWordTarget: {
+        type: 'string',
+        knownValues: ['content', 'tag'],
+        maxLength: 640,
+        maxGraphemes: 64,
+      },
+      mutedWord: {
+        type: 'object',
+        description: 'A word that the account owner has muted.',
+        required: ['value', 'targets'],
+        properties: {
+          value: {
+            type: 'string',
+            description: 'The muted word itself.',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+          },
+          targets: {
+            type: 'array',
+            description: 'The intended targets of the muted word.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#mutedWordTarget',
+            },
+          },
+        },
+      },
+      mutedWordsPref: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#mutedWord',
+            },
+            description: 'A list of words the account owner has muted.',
+          },
+        },
+      },
+      hiddenPostsPref: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            description:
+              'A list of URIs of posts the account owner has hidden.',
+          },
+        },
+      },
+      labelersPref: {
+        type: 'object',
+        required: ['labelers'],
+        properties: {
+          labelers: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#labelerPrefItem',
+            },
+          },
+        },
+      },
+      labelerPrefItem: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
           },
         },
       },
@@ -5412,6 +4517,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
+              'lex:app.bsky.labeler.defs#labelerView',
             ],
           },
         },
@@ -5784,6 +4890,13 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
             minimum: 0,
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
           viewer: {
             type: 'ref',
@@ -6818,7 +5931,8 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
-              description: 'Additional non-inline tags describing this post.',
+              description:
+                'Additional hashtags, in addition to any included in post text and facets.',
               maxLength: 8,
               items: {
                 type: 'string',
@@ -7088,6 +6202,13 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.graph.defs#listViewerState',
@@ -7137,6 +6258,13 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
           viewer: {
             type: 'ref',
@@ -7952,6 +7080,198 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyLabelerDefs: {
+    lexicon: 1,
+    id: 'app.bsky.labeler.defs',
+    defs: {
+      labelerView: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      labelerViewDetailed: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'policies', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          policies: {
+            type: 'ref',
+            ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.labeler.defs#labelerViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      labelerViewerState: {
+        type: 'object',
+        properties: {
+          like: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      labelerPolicies: {
+        type: 'object',
+        required: ['labelValues'],
+        properties: {
+          labelValues: {
+            type: 'array',
+            description:
+              'The label values which this labeler publishes. May include global or custom labels.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValue',
+            },
+          },
+          labelValueDefinitions: {
+            type: 'array',
+            description:
+              'Label values created by this labeler and scoped exclusively to it. Labels defined here will override global label definitions for this labeler.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinition',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelerGetServices: {
+    lexicon: 1,
+    id: 'app.bsky.labeler.getServices',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a list of labeler services.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+            detailed: {
+              type: 'boolean',
+              default: false,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['views'],
+            properties: {
+              views: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.labeler.defs#labelerView',
+                    'lex:app.bsky.labeler.defs#labelerViewDetailed',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelerService: {
+    lexicon: 1,
+    id: 'app.bsky.labeler.service',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of the existence of labeler service.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['policies', 'createdAt'],
+          properties: {
+            policies: {
+              type: 'ref',
+              ref: 'lex:app.bsky.labeler.defs#labelerPolicies',
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationGetUnreadCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getUnreadCount',
@@ -8481,42 +7801,1411 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneCommunicationCreateTemplate: {
+    lexicon: 1,
+    id: 'tools.ozone.communication.createTemplate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Administrative action to create a new, re-usable communication (email for now) template.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'contentMarkdown', 'name'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the template.',
+              },
+              contentMarkdown: {
+                type: 'string',
+                description:
+                  'Content of the template, markdown supported, can contain variable placeholders.',
+              },
+              subject: {
+                type: 'string',
+                description: 'Subject of the message, used in emails.',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'DID of the user who is creating the template.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.communication.defs#templateView',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneCommunicationDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.communication.defs',
+    defs: {
+      templateView: {
+        type: 'object',
+        required: [
+          'id',
+          'name',
+          'contentMarkdown',
+          'disabled',
+          'lastUpdatedBy',
+          'createdAt',
+          'updatedAt',
+        ],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          name: {
+            type: 'string',
+            description: 'Name of the template.',
+          },
+          subject: {
+            type: 'string',
+            description:
+              'Content of the template, can contain markdown and variable placeholders.',
+          },
+          contentMarkdown: {
+            type: 'string',
+            description: 'Subject of the message, used in emails.',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          lastUpdatedBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who last updated the template.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneCommunicationDeleteTemplate: {
+    lexicon: 1,
+    id: 'tools.ozone.communication.deleteTemplate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete a communication template.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+              id: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneCommunicationListTemplates: {
+    lexicon: 1,
+    id: 'tools.ozone.communication.listTemplates',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get list of all communication templates.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['communicationTemplates'],
+            properties: {
+              communicationTemplates: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.communication.defs#templateView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneCommunicationUpdateTemplate: {
+    lexicon: 1,
+    id: 'tools.ozone.communication.updateTemplate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Administrative action to update an existing communication template. Allows passing partial fields to patch specific fields only.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+              id: {
+                type: 'string',
+                description: 'ID of the template to be updated.',
+              },
+              name: {
+                type: 'string',
+                description: 'Name of the template.',
+              },
+              contentMarkdown: {
+                type: 'string',
+                description:
+                  'Content of the template, markdown supported, can contain variable placeholders.',
+              },
+              subject: {
+                type: 'string',
+                description: 'Subject of the message, used in emails.',
+              },
+              updatedBy: {
+                type: 'string',
+                format: 'did',
+                description: 'DID of the user who is updating the template.',
+              },
+              disabled: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.communication.defs#templateView',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.defs',
+    defs: {
+      modEventView: {
+        type: 'object',
+        required: [
+          'id',
+          'event',
+          'subject',
+          'subjectBlobCids',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          event: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#modEventTakedown',
+              'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
+              'lex:tools.ozone.moderation.defs#modEventComment',
+              'lex:tools.ozone.moderation.defs#modEventReport',
+              'lex:tools.ozone.moderation.defs#modEventLabel',
+              'lex:tools.ozone.moderation.defs#modEventAcknowledge',
+              'lex:tools.ozone.moderation.defs#modEventEscalate',
+              'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventEmail',
+              'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
+              'lex:tools.ozone.moderation.defs#modEventDivert',
+            ],
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          creatorHandle: {
+            type: 'string',
+          },
+          subjectHandle: {
+            type: 'string',
+          },
+        },
+      },
+      modEventViewDetail: {
+        type: 'object',
+        required: [
+          'id',
+          'event',
+          'subject',
+          'subjectBlobs',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          event: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#modEventTakedown',
+              'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
+              'lex:tools.ozone.moderation.defs#modEventComment',
+              'lex:tools.ozone.moderation.defs#modEventReport',
+              'lex:tools.ozone.moderation.defs#modEventLabel',
+              'lex:tools.ozone.moderation.defs#modEventAcknowledge',
+              'lex:tools.ozone.moderation.defs#modEventEscalate',
+              'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventEmail',
+              'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
+              'lex:tools.ozone.moderation.defs#modEventDivert',
+            ],
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#repoView',
+              'lex:tools.ozone.moderation.defs#repoViewNotFound',
+              'lex:tools.ozone.moderation.defs#recordView',
+              'lex:tools.ozone.moderation.defs#recordViewNotFound',
+            ],
+          },
+          subjectBlobs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.defs#blobView',
+            },
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      subjectStatusView: {
+        type: 'object',
+        required: ['id', 'subject', 'createdAt', 'updatedAt', 'reviewState'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+          subjectRepoHandle: {
+            type: 'string',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the last update was made to the moderation status of the subject',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing the first moderation status impacting event was emitted on the subject',
+          },
+          reviewState: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectReviewState',
+          },
+          comment: {
+            type: 'string',
+            description: 'Sticky comment on the subject.',
+          },
+          muteUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReviewedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          lastReviewedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReportedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastAppealedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the author of the subject appealed a moderation action',
+          },
+          takendown: {
+            type: 'boolean',
+          },
+          appealed: {
+            type: 'boolean',
+            description:
+              'True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
+          },
+          suspendUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          tags: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      subjectReviewState: {
+        type: 'string',
+        knownValues: [
+          'lex:tools.ozone.moderation.defs#reviewOpen',
+          'lex:tools.ozone.moderation.defs#reviewEscalated',
+          'lex:tools.ozone.moderation.defs#reviewClosed',
+          'lex:tools.ozone.moderation.defs#reviewNone',
+        ],
+      },
+      reviewOpen: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator',
+      },
+      reviewEscalated: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator',
+      },
+      reviewClosed: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
+      },
+      reviewNone: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Unnecessary. Indicates that the subject does not need a review at the moment but there is probably some moderation related metadata available for it',
+      },
+      modEventTakedown: {
+        type: 'object',
+        description: 'Take down a subject permanently or temporarily',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+        },
+      },
+      modEventReverseTakedown: {
+        type: 'object',
+        description: 'Revert take down action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventResolveAppeal: {
+        type: 'object',
+        description: 'Resolve appeal on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe resolution.',
+          },
+        },
+      },
+      modEventComment: {
+        type: 'object',
+        description: 'Add a comment to a subject',
+        required: ['comment'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          sticky: {
+            type: 'boolean',
+            description: 'Make the comment persistent on the subject',
+          },
+        },
+      },
+      modEventReport: {
+        type: 'object',
+        description: 'Report a subject',
+        required: ['reportType'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+          },
+        },
+      },
+      modEventLabel: {
+        type: 'object',
+        description: 'Apply/Negate labels on a subject',
+        required: ['createLabelVals', 'negateLabelVals'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      modEventAcknowledge: {
+        type: 'object',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventEscalate: {
+        type: 'object',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventMute: {
+        type: 'object',
+        description: 'Mute incoming reports on a subject',
+        required: ['durationInHours'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description: 'Indicates how long the subject should remain muted.',
+          },
+        },
+      },
+      modEventUnmute: {
+        type: 'object',
+        description: 'Unmute action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventEmail: {
+        type: 'object',
+        description: 'Keep a log of outgoing email to a user',
+        required: ['subjectLine'],
+        properties: {
+          subjectLine: {
+            type: 'string',
+            description: 'The subject line of the email sent to the user.',
+          },
+          content: {
+            type: 'string',
+            description: 'The content of the email sent to the user.',
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about the outgoing comm.',
+          },
+        },
+      },
+      modEventDivert: {
+        type: 'object',
+        description:
+          "Divert a record's blobs to a 3rd party service for further scanning/tagging",
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventTag: {
+        type: 'object',
+        description: 'Add/Remove a tag on a subject',
+        required: ['add', 'remove'],
+        properties: {
+          add: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              "Tags to be added to the subject. If already exists, won't be duplicated.",
+          },
+          remove: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              "Tags to be removed to the subject. Ignores a tag If it doesn't exist, won't be duplicated.",
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      repoView: {
+        type: 'object',
+        required: [
+          'did',
+          'handle',
+          'relatedRecords',
+          'indexedAt',
+          'moderation',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          email: {
+            type: 'string',
+          },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#moderation',
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invitesDisabled: {
+            type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
+          },
+        },
+      },
+      repoViewDetail: {
+        type: 'object',
+        required: [
+          'did',
+          'handle',
+          'relatedRecords',
+          'indexedAt',
+          'moderation',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          email: {
+            type: 'string',
+          },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#moderationDetail',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
+          },
+          invitesDisabled: {
+            type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
+          },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      repoViewNotFound: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      recordView: {
+        type: 'object',
+        required: [
+          'uri',
+          'cid',
+          'value',
+          'blobCids',
+          'indexedAt',
+          'moderation',
+          'repo',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          value: {
+            type: 'unknown',
+          },
+          blobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#moderation',
+          },
+          repo: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#repoView',
+          },
+        },
+      },
+      recordViewDetail: {
+        type: 'object',
+        required: [
+          'uri',
+          'cid',
+          'value',
+          'blobs',
+          'indexedAt',
+          'moderation',
+          'repo',
+        ],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          value: {
+            type: 'unknown',
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.defs#blobView',
+            },
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#moderationDetail',
+          },
+          repo: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#repoView',
+          },
+        },
+      },
+      recordViewNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      moderation: {
+        type: 'object',
+        properties: {
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
+          },
+        },
+      },
+      moderationDetail: {
+        type: 'object',
+        properties: {
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
+          },
+        },
+      },
+      blobView: {
+        type: 'object',
+        required: ['cid', 'mimeType', 'size', 'createdAt'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          mimeType: {
+            type: 'string',
+          },
+          size: {
+            type: 'integer',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          details: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.moderation.defs#imageDetails',
+              'lex:tools.ozone.moderation.defs#videoDetails',
+            ],
+          },
+          moderation: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#moderation',
+          },
+        },
+      },
+      imageDetails: {
+        type: 'object',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+          },
+          height: {
+            type: 'integer',
+          },
+        },
+      },
+      videoDetails: {
+        type: 'object',
+        required: ['width', 'height', 'length'],
+        properties: {
+          width: {
+            type: 'integer',
+          },
+          height: {
+            type: 'integer',
+          },
+          length: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationEmitEvent: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.emitEvent',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Take a moderation action on an actor.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['event', 'subject', 'createdBy'],
+            properties: {
+              event: {
+                type: 'union',
+                refs: [
+                  'lex:tools.ozone.moderation.defs#modEventTakedown',
+                  'lex:tools.ozone.moderation.defs#modEventAcknowledge',
+                  'lex:tools.ozone.moderation.defs#modEventEscalate',
+                  'lex:tools.ozone.moderation.defs#modEventComment',
+                  'lex:tools.ozone.moderation.defs#modEventLabel',
+                  'lex:tools.ozone.moderation.defs#modEventReport',
+                  'lex:tools.ozone.moderation.defs#modEventMute',
+                  'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
+                  'lex:tools.ozone.moderation.defs#modEventUnmute',
+                  'lex:tools.ozone.moderation.defs#modEventEmail',
+                  'lex:tools.ozone.moderation.defs#modEventTag',
+                ],
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              subjectBlobCids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'cid',
+                },
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modEventView',
+          },
+        },
+        errors: [
+          {
+            name: 'SubjectHasAction',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneModerationGetEvent: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getEvent',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about a moderation event.',
+        parameters: {
+          type: 'params',
+          required: ['id'],
+          properties: {
+            id: {
+              type: 'integer',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modEventViewDetail',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationGetRecord: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getRecord',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about a record.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#recordViewDetail',
+          },
+        },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneModerationGetRepo: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getRepo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about a repository.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#repoViewDetail',
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneModerationQueryEvents: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.queryEvents',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List moderation events related to a subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            types: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'The types of events (fully qualified string in the format of tools.ozone.moderation.defs#modEvent<name>) to filter by. If not specified, all events are returned.',
+            },
+            createdBy: {
+              type: 'string',
+              format: 'did',
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+              description:
+                'Sort direction for the events. Defaults to descending order of created at timestamp.',
+            },
+            createdAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve events created after a given timestamp',
+            },
+            createdBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve events created before a given timestamp',
+            },
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            includeAllUserRecords: {
+              type: 'boolean',
+              default: false,
+              description:
+                'If true, events on all record types (posts, lists, profile etc.) owned by the did are returned',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            hasComment: {
+              type: 'boolean',
+              description: 'If true, only events with comments are returned',
+            },
+            comment: {
+              type: 'string',
+              description:
+                'If specified, only events with comments containing the keyword are returned',
+            },
+            addedLabels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these labels were added are returned',
+            },
+            removedLabels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these labels were removed are returned',
+            },
+            addedTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these tags were added are returned',
+            },
+            removedTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these tags were removed are returned',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#modEventView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationQueryStatuses: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.queryStatuses',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View moderation statuses of subjects (record or repo).',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            comment: {
+              type: 'string',
+              description: 'Search subjects by keyword from comments',
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported before a given timestamp',
+            },
+            reviewedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed after a given timestamp',
+            },
+            reviewedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed before a given timestamp',
+            },
+            includeMuted: {
+              type: 'boolean',
+              description:
+                "By default, we don't include muted subjects in the results. Set this to true to include them.",
+            },
+            reviewState: {
+              type: 'string',
+              description: 'Specify when fetching subjects in a certain state',
+            },
+            ignoreSubjects: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'uri',
+              },
+            },
+            lastReviewedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all subject statuses that were reviewed by a specific moderator',
+            },
+            sortField: {
+              type: 'string',
+              default: 'lastReportedAt',
+              enum: ['lastReviewedAt', 'lastReportedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            takendown: {
+              type: 'boolean',
+              description: 'Get subjects that were taken down',
+            },
+            appealed: {
+              type: 'boolean',
+              description: 'Get subjects in unresolved appealed status',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            tags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            excludeTags: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjectStatuses'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subjectStatuses: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#subjectStatusView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationSearchRepos: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.searchRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Find repositories based on a search term.',
+        parameters: {
+          type: 'params',
+          properties: {
+            term: {
+              type: 'string',
+              description: "DEPRECATED: use 'q' instead",
+            },
+            q: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#repoView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
-  ComAtprotoAdminCreateCommunicationTemplate:
-    'com.atproto.admin.createCommunicationTemplate',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
-  ComAtprotoAdminDeleteCommunicationTemplate:
-    'com.atproto.admin.deleteCommunicationTemplate',
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
-  ComAtprotoAdminEmitModerationEvent: 'com.atproto.admin.emitModerationEvent',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
-  ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
-  ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
-  ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
-  ComAtprotoAdminListCommunicationTemplates:
-    'com.atproto.admin.listCommunicationTemplates',
-  ComAtprotoAdminQueryModerationEvents:
-    'com.atproto.admin.queryModerationEvents',
-  ComAtprotoAdminQueryModerationStatuses:
-    'com.atproto.admin.queryModerationStatuses',
-  ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
-  ComAtprotoAdminUpdateCommunicationTemplate:
-    'com.atproto.admin.updateCommunicationTemplate',
+  ComAtprotoAdminUpdateAccountPassword:
+    'com.atproto.admin.updateAccountPassword',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoIdentityGetRecommendedDidCredentials:
+    'com.atproto.identity.getRecommendedDidCredentials',
+  ComAtprotoIdentityRequestPlcOperationSignature:
+    'com.atproto.identity.requestPlcOperationSignature',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
+  ComAtprotoIdentitySignPlcOperation: 'com.atproto.identity.signPlcOperation',
+  ComAtprotoIdentitySubmitPlcOperation:
+    'com.atproto.identity.submitPlcOperation',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
@@ -8528,22 +9217,28 @@ export const ids = {
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
+  ComAtprotoRepoImportRepo: 'com.atproto.repo.importRepo',
+  ComAtprotoRepoListMissingBlobs: 'com.atproto.repo.listMissingBlobs',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
+  ComAtprotoServerActivateAccount: 'com.atproto.server.activateAccount',
+  ComAtprotoServerCheckAccountStatus: 'com.atproto.server.checkAccountStatus',
   ComAtprotoServerConfirmEmail: 'com.atproto.server.confirmEmail',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateAppPassword: 'com.atproto.server.createAppPassword',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateInviteCodes: 'com.atproto.server.createInviteCodes',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
+  ComAtprotoServerDeactivateAccount: 'com.atproto.server.deactivateAccount',
   ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
+  ComAtprotoServerGetServiceAuth: 'com.atproto.server.getServiceAuth',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
@@ -8572,11 +9267,8 @@ export const ids = {
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
-  ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
-  ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
-  ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
@@ -8633,6 +9325,9 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyLabelerDefs: 'app.bsky.labeler.defs',
+  AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
+  AppBskyLabelerService: 'app.bsky.labeler.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
@@ -8647,4 +9342,21 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  ToolsOzoneCommunicationCreateTemplate:
+    'tools.ozone.communication.createTemplate',
+  ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',
+  ToolsOzoneCommunicationDeleteTemplate:
+    'tools.ozone.communication.deleteTemplate',
+  ToolsOzoneCommunicationListTemplates:
+    'tools.ozone.communication.listTemplates',
+  ToolsOzoneCommunicationUpdateTemplate:
+    'tools.ozone.communication.updateTemplate',
+  ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
+  ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
+  ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',
+  ToolsOzoneModerationGetRecord: 'tools.ozone.moderation.getRecord',
+  ToolsOzoneModerationGetRepo: 'tools.ozone.moderation.getRepo',
+  ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
+  ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
+  ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
 }

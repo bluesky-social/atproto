@@ -14,16 +14,20 @@ describe('image uri builder', () => {
   })
 
   it('generates paths.', () => {
-    expect(ImageUriBuilder.getPath({ preset: 'banner', did, cid })).toEqual(
-      `/banner/plain/${did}/${cid.toString()}@jpeg`,
-    )
     expect(
-      ImageUriBuilder.getPath({ preset: 'feed_thumbnail', did, cid }),
+      ImageUriBuilder.getPath({ preset: 'banner', did, cid: cid.toString() }),
+    ).toEqual(`/banner/plain/${did}/${cid.toString()}@jpeg`)
+    expect(
+      ImageUriBuilder.getPath({
+        preset: 'feed_thumbnail',
+        did,
+        cid: cid.toString(),
+      }),
     ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`)
   })
 
   it('generates uris.', () => {
-    expect(uriBuilder.getPresetUri('banner', did, cid)).toEqual(
+    expect(uriBuilder.getPresetUri('banner', did, cid.toString())).toEqual(
       `https://example.com/img/banner/plain/${did}/${cid.toString()}@jpeg`,
     )
     expect(
@@ -38,7 +42,7 @@ describe('image uri builder', () => {
       ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@png`),
     ).toEqual({
       did: 'did:plc:xyz',
-      cid,
+      cid: cid.toString(),
       fit: 'cover',
       format: 'png',
       height: 1000,
@@ -52,7 +56,7 @@ describe('image uri builder', () => {
       ),
     ).toEqual({
       did: 'did:plc:xyz',
-      cid,
+      cid: cid.toString(),
       fit: 'inside',
       format: 'jpeg',
       height: 2000,

@@ -19,7 +19,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, req }) => {
       const email = input.body.email.toLowerCase()
 
-      const account = await ctx.accountManager.getAccountByEmail(email)
+      const account = await ctx.accountManager.getAccountByEmail(email, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
 
       if (!account?.email) {
         if (ctx.entrywayAgent) {

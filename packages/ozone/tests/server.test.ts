@@ -1,9 +1,8 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestOzone, TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
-import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 describe('server', () => {
   let network: TestNetwork
@@ -55,6 +54,8 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
+    // destory sequencer to release connection that would prevent the db from closing
+    await ozone.ctx.sequencer.destroy()
     await ozone.ctx.db.close()
     let error: AxiosError
     try {

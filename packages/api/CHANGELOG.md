@@ -1,5 +1,139 @@
 # @atproto/api
 
+## 0.12.2
+
+### Patch Changes
+
+- [#2344](https://github.com/bluesky-social/atproto/pull/2344) [`abc6f82da`](https://github.com/bluesky-social/atproto/commit/abc6f82da38abef2b1bbe8d9e41a0534a5418c9e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support muting words that contain apostrophes and other punctuation
+
+## 0.12.1
+
+### Patch Changes
+
+- [#2342](https://github.com/bluesky-social/atproto/pull/2342) [`eb7668c07`](https://github.com/bluesky-social/atproto/commit/eb7668c07d44f4b42ea2cc28143c64f4ba3312f5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds the `associated` property to `profile` and `profile-basic` views, bringing them in line with `profile-detailed` views.
+
+## 0.12.0
+
+### Minor Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
+### Patch Changes
+
+- [#2338](https://github.com/bluesky-social/atproto/pull/2338) [`36f2e966c`](https://github.com/bluesky-social/atproto/commit/36f2e966cba6cc90ba4320520da5c7381cfb8086) Thanks [@pfrazee](https://github.com/pfrazee)! - Fix: correctly detected blocked quote-posts when moderating posts
+
+- Updated dependencies [[`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9)]:
+  - @atproto/common-web@0.3.0
+  - @atproto/lexicon@0.4.0
+  - @atproto/syntax@0.3.0
+  - @atproto/xrpc@0.5.0
+
+## 0.11.2
+
+### Patch Changes
+
+- [#2328](https://github.com/bluesky-social/atproto/pull/2328) [`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove unecessary escapes from regex, which was causing a minification error when bundled in React Native.
+
+## 0.11.1
+
+### Patch Changes
+
+- [#2312](https://github.com/bluesky-social/atproto/pull/2312) [`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5) Thanks [@pfrazee](https://github.com/pfrazee)! - Fixed an issue that would cause agent clones to drop the PDS URI config.
+
+## 0.11.0
+
+### Minor Changes
+
+- [#2302](https://github.com/bluesky-social/atproto/pull/2302) [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0) Thanks [@dholms](https://github.com/dholms)! - - Breaking changes
+  - Redesigned the `moderate*` APIs which now output a `ModerationUI` object.
+  - `agent.getPreferences()` output object `BskyPreferences` has been modified.
+  - Moved Ozone routes from `com.atproto.admin` to `tools.ozone` namespace.
+  - Additions
+    - Added support for labeler configuration in `Agent.configure()` and `agent.configureLabelerHeader()`.
+    - Added `agent.addLabeler()` and `agent.removeLabeler()` preference methods.
+    - Muted words and hidden posts are now handled in the `moderate*` APIs.
+    - Added `agent.getLabelers()` and `agent.getLabelDefinitions()`.
+    - Added `agent.configureProxyHeader()` and `withProxy()` methods to support remote service proxying behaviors.
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/xrpc@0.4.3
+
+## 0.10.5
+
+### Patch Changes
+
+- [#2279](https://github.com/bluesky-social/atproto/pull/2279) [`192223f12`](https://github.com/bluesky-social/atproto/commit/192223f127c0b226287df1ecfcd953636db08655) Thanks [@gaearon](https://github.com/gaearon)! - Change Following feed prefs to only show replies from people you follow by default
+
+## 0.10.4
+
+### Patch Changes
+
+- [#2260](https://github.com/bluesky-social/atproto/pull/2260) [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Export regex from rich text detection
+
+- [#2260](https://github.com/bluesky-social/atproto/pull/2260) [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Disallow rare unicode whitespace characters from tags
+
+- [#2260](https://github.com/bluesky-social/atproto/pull/2260) [`6ec885992`](https://github.com/bluesky-social/atproto/commit/6ec8859929a16f9725319cc398b716acf913b01f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Allow tags to lead with numbers
+
+## 0.10.3
+
+### Patch Changes
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix double sanitization bug when editing muted words.
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - More sanitization of muted words, including newlines and leading/trailing whitespace
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `sanitizeMutedWordValue` util
+
+- [#2247](https://github.com/bluesky-social/atproto/pull/2247) [`2a0ceb818`](https://github.com/bluesky-social/atproto/commit/2a0ceb8180faa17de8061d4fa6c361b57a2005ed) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Handle hash emoji in mute words
+
+## 0.10.2
+
+### Patch Changes
+
+- [#2245](https://github.com/bluesky-social/atproto/pull/2245) [`61b3d2525`](https://github.com/bluesky-social/atproto/commit/61b3d25253353db2da1336004f94e7dc5adb0410) Thanks [@mary-ext](https://github.com/mary-ext)! - Prevent hashtag emoji from being parsed as a tag
+
+- [#2218](https://github.com/bluesky-social/atproto/pull/2218) [`43531905c`](https://github.com/bluesky-social/atproto/commit/43531905ce1aec6d36d9be5943782811ecca6e6d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix mute word upsert logic by ensuring we're comparing sanitized word values
+
+- [#2245](https://github.com/bluesky-social/atproto/pull/2245) [`61b3d2525`](https://github.com/bluesky-social/atproto/commit/61b3d25253353db2da1336004f94e7dc5adb0410) Thanks [@mary-ext](https://github.com/mary-ext)! - Properly calculate length of tag
+
+- Updated dependencies [[`0c815b964`](https://github.com/bluesky-social/atproto/commit/0c815b964c030aa0f277c40bf9786f130dc320f4)]:
+  - @atproto/syntax@0.2.0
+  - @atproto/lexicon@0.3.2
+  - @atproto/xrpc@0.4.2
+
+## 0.10.1
+
+### Patch Changes
+
+- [#2215](https://github.com/bluesky-social/atproto/pull/2215) [`514aab92d`](https://github.com/bluesky-social/atproto/commit/514aab92d26acd43859285f46318e386846522b1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add missing `getPreferences` union return types
+
+## 0.10.0
+
+### Minor Changes
+
+- [#2170](https://github.com/bluesky-social/atproto/pull/2170) [`4c511b3d9`](https://github.com/bluesky-social/atproto/commit/4c511b3d9de41ffeae3fc11db941e7df04f4468a) Thanks [@dholms](https://github.com/dholms)! - Add lexicons and methods for account migration
+
+### Patch Changes
+
+- [#2195](https://github.com/bluesky-social/atproto/pull/2195) [`b60719480`](https://github.com/bluesky-social/atproto/commit/b60719480f5f00bffd074a40e8ddc03aa93d137d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add muted words/tags and hidden posts prefs and methods"
+
+## 0.9.8
+
+### Patch Changes
+
+- [#2192](https://github.com/bluesky-social/atproto/pull/2192) [`f79cc6339`](https://github.com/bluesky-social/atproto/commit/f79cc63390ae9dbd47a4ff5d694eec25b78b788e) Thanks [@foysalit](https://github.com/foysalit)! - Tag event on moderation subjects and allow filtering events and subjects by tags
+
+## 0.9.7
+
+### Patch Changes
+
+- [#2188](https://github.com/bluesky-social/atproto/pull/2188) [`8c94979f7`](https://github.com/bluesky-social/atproto/commit/8c94979f73fc5057449e24e66ef2e09b0e17e55b) Thanks [@dholms](https://github.com/dholms)! - Added timelineIndex to savedFeedsPref
+
 ## 0.9.6
 
 ### Patch Changes

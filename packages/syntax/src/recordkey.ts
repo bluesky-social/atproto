@@ -3,7 +3,7 @@ export const ensureValidRecordKey = (rkey: string): void => {
     throw new InvalidRecordKeyError('record key must be 1 to 512 characters')
   }
   // simple regex to enforce most constraints via just regex and length.
-  if (!/^[a-zA-Z0-9_~.-]{1,512}$/.test(rkey)) {
+  if (!/^[a-zA-Z0-9_~.:-]{1,512}$/.test(rkey)) {
     throw new InvalidRecordKeyError('record key syntax not valid (regex)')
   }
   if (rkey == '.' || rkey == '..')

@@ -28,6 +28,13 @@ export const getHandle = (doc: DidDocument): string | undefined => {
 export const getSigningKey = (
   doc: DidDocument,
 ): { type: string; publicKeyMultibase: string } | undefined => {
+  return getVerificationMaterial(doc, 'atproto')
+}
+
+export const getVerificationMaterial = (
+  doc: DidDocument,
+  keyId: string,
+): { type: string; publicKeyMultibase: string } | undefined => {
   const did = getDid(doc)
   let keys = doc.verificationMethod
   if (!keys) return undefined
@@ -36,13 +43,19 @@ export const getSigningKey = (
     keys = [keys]
   }
   const found = keys.find(
-    (key) => key.id === '#atproto' || key.id === `${did}#atproto`,
+    (key) => key.id === `#${keyId}` || key.id === `${did}#${keyId}`,
   )
   if (!found?.publicKeyMultibase) return undefined
   return {
     type: found.type,
     publicKeyMultibase: found.publicKeyMultibase,
   }
+}
+
+export const getSigningDidKey = (doc: DidDocument): string | undefined => {
+  const parsed = getSigningKey(doc)
+  if (!parsed) return
+  return `did:key:${parsed.publicKeyMultibase}`
 }
 
 export const getPdsEndpoint = (doc: DidDocument): string | undefined => {
@@ -68,7 +81,7 @@ export const getNotifEndpoint = (doc: DidDocument): string | undefined => {
 
 export const getServiceEndpoint = (
   doc: DidDocument,
-  opts: { id: string; type: string },
+  opts: { id: string; type?: string },
 ) => {
   const did = getDid(doc)
   let services = doc.service
@@ -81,7 +94,7 @@ export const getServiceEndpoint = (
     (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
   )
   if (!found) return undefined
-  if (found.type !== opts.type) {
+  if (opts.type && found.type !== opts.type) {
     return undefined
   }
   if (typeof found.serviceEndpoint !== 'string') {

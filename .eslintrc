@@ -13,16 +13,7 @@
     "plugin:prettier/recommended",
     "prettier"
   ],
-  "ignorePatterns": [
-    "dist",
-    "node_modules",
-    "jest.config.base.js",
-    "jest.bench.config.js",
-    "jest.config.js",
-    "babel.config.js",
-    "build.js",
-    "update-pkg.js"
-  ],
+  "ignorePatterns": ["dist", "node_modules"],
   "rules": {
     "no-var": "error",
     "prefer-const": "warn",
@@ -36,5 +27,21 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-explicit-any": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["jest.config.js"],
+      "env": { "commonjs": true }
+    },
+    {
+      "files": ["jest.setup.js"],
+      "env": { "jest": true }
+    },
+    {
+      "files": "*.js",
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ]
 }

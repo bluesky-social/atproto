@@ -111,22 +111,9 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: bob,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: bob,
+    })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -135,42 +122,16 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: bob,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: bob,
+    })
   })
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postRef.uriStr,
-          cid: postRef.cidStr,
-        },
-        takedown: {
-          applied: true,
-          ref: 'test',
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: postRef.uriStr,
+    })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -181,21 +142,8 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectStatus(
-      {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postRef.uriStr,
-          cid: postRef.cidStr,
-        },
-        takedown: {
-          applied: false,
-        },
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.untakedownRecord({
+      recordUri: postRef.uriStr,
+    })
   })
 })

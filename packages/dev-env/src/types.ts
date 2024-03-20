@@ -2,8 +2,7 @@ import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
 import * as bsync from '@atproto/bsync'
 import * as ozone from '@atproto/ozone'
-import { ImageInvalidator } from '@atproto/bsky'
-import { ExportableKeypair } from '@atproto/crypto'
+import { ExportableKeypair, Keypair } from '@atproto/crypto'
 
 export type PlcConfig = {
   port?: number
@@ -18,14 +17,11 @@ export type PdsConfig = Partial<pds.ServerEnvironment> & {
 export type BskyConfig = Partial<bsky.ServerConfig> & {
   plcUrl: string
   repoProvider: string
-  labelProvider: string
-  dbPrimaryPostgresUrl: string
+  dbPostgresUrl: string
+  dbPostgresSchema: string
   redisHost: string
   pdsPort: number
-  imgInvalidator?: ImageInvalidator
   migration?: string
-  indexer?: Partial<bsky.IndexerConfig>
-  ingester?: Partial<bsky.IngesterConfig>
 }
 
 export type BsyncConfig = Partial<bsync.ServerEnvironment> & {
@@ -35,9 +31,11 @@ export type BsyncConfig = Partial<bsync.ServerEnvironment> & {
 export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   plcUrl: string
   appviewUrl: string
+  appviewDid: string
   dbPostgresUrl: string
   migration?: string
   signingKey?: ExportableKeypair
+  imgInvalidator?: ozone.ImageInvalidator
 }
 
 export type TestServerParams = {
@@ -47,4 +45,9 @@ export type TestServerParams = {
   plc: Partial<PlcConfig>
   bsky: Partial<BskyConfig>
   ozone: Partial<OzoneConfig>
+}
+
+export type DidAndKey = {
+  did: string
+  key: Keypair
 }

@@ -1,4 +1,3 @@
-import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
@@ -20,7 +19,7 @@ export class ImageUriBuilder {
     'feed_fullsize',
   ]
 
-  getPresetUri(id: ImagePreset, did: string, cid: string | CID): string {
+  getPresetUri(id: ImagePreset, did: string, cid: string): string {
     const options = presets[id]
     if (!options) {
       throw new Error(`Unrecognized requested common uri type: ${id}`)
@@ -30,14 +29,14 @@ export class ImageUriBuilder {
       ImageUriBuilder.getPath({
         preset: id,
         did,
-        cid: typeof cid === 'string' ? CID.parse(cid) : cid,
+        cid,
       })
     )
   }
 
   static getPath(opts: { preset: ImagePreset } & BlobLocation) {
     const { format } = presets[opts.preset]
-    return `/${opts.preset}/plain/${opts.did}/${opts.cid.toString()}@${format}`
+    return `/${opts.preset}/plain/${opts.did}/${opts.cid}@${format}`
   }
 
   static getOptions(
@@ -59,14 +58,14 @@ export class ImageUriBuilder {
     return {
       ...presets[preset],
       did,
-      cid: CID.parse(cid),
+      cid,
       preset,
       format,
     }
   }
 }
 
-type BlobLocation = { cid: CID; did: string }
+type BlobLocation = { cid: string; did: string }
 
 export class BadPathError extends Error {}
 

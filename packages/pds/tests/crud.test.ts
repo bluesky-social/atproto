@@ -3,10 +3,6 @@ import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
 import { BlobRef } from '@atproto/lexicon'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/createRecord'
-import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'
-import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/deleteRecord'
-import * as applyWrites from '@atproto/api/src/client/types/com/atproto/repo/applyWrites'
 import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import { defaultFetchHandler } from '@atproto/xrpc'
@@ -39,6 +35,7 @@ describe('crud operations', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'crud',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getClient()
     aliceAgent = network.pds.getClient()
@@ -483,32 +480,6 @@ describe('crud operations', () => {
       expect(rootRes2.data.rev).toEqual(rootRes1.data.rev)
     })
 
-    it('temporarily only allows updates to profile', async () => {
-      const { repo } = bobAgent.api.com.atproto
-      const put = await repo.putRecord({
-        repo: bob.did,
-        collection: ids.AppBskyGraphFollow,
-        rkey: TID.nextStr(),
-        record: {
-          subject: alice.did,
-          createdAt: new Date().toISOString(),
-        },
-      })
-      const edit = repo.putRecord({
-        repo: bob.did,
-        collection: ids.AppBskyGraphFollow,
-        rkey: new AtUri(put.data.uri).rkey,
-        record: {
-          subject: bob.did,
-          createdAt: new Date().toISOString(),
-        },
-      })
-
-      await expect(edit).rejects.toThrow(
-        'Temporarily only accepting updates for collections: app.bsky.actor.profile, app.bsky.graph.list, app.bsky.feed.generator',
-      )
-    })
-
     it('fails on user mismatch', async () => {
       const { repo } = aliceAgent.api.com.atproto
       const put = repo.putRecord({
@@ -638,6 +609,146 @@ describe('crud operations', () => {
     )
   })
 
+  describe('unvalidated writes', () => {
+    it('disallows creation of unknown lexicons when validate is set to true', async () => {
+      const attempt = aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing',
+        },
+      })
+      await expect(attempt).rejects.toThrow(
+        'Lexicon not found: lex:com.example.record',
+      )
+    })
+
+    it('allows creation of unknown lexicons when validate is set to false', async () => {
+      const res = await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing',
+        },
+        validate: false,
+      })
+      const record = await ctx.actorStore.read(alice.did, (store) =>
+        store.record.getRecord(new AtUri(res.data.uri), res.data.cid),
+      )
+      expect(record?.value).toEqual({
+        $type: 'com.example.record',
+        blah: 'thing',
+      })
+    })
+
+    it('allows update of unknown lexicons when validate is set to false', async () => {
+      const createRes = await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing',
+        },
+        validate: false,
+      })
+      const uri = new AtUri(createRes.data.uri)
+      const updateRes = await aliceAgent.api.com.atproto.repo.putRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        rkey: uri.rkey,
+        record: {
+          blah: 'something else',
+        },
+        validate: false,
+      })
+      const record = await ctx.actorStore.read(alice.did, (store) =>
+        store.record.getRecord(uri, updateRes.data.cid),
+      )
+      expect(record?.value).toEqual({
+        $type: 'com.example.record',
+        blah: 'something else',
+      })
+    })
+
+    it('correctly associates images with unknown record types', async () => {
+      const file = await fs.readFile(
+        '../dev-env/src/seed/img/key-portrait-small.jpg',
+      )
+      const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
+        file,
+        {
+          encoding: 'image/jpeg',
+        },
+      )
+
+      const res = await aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing',
+          image: uploadedRes.data.blob,
+        },
+        validate: false,
+      })
+      const record = await ctx.actorStore.read(alice.did, (store) =>
+        store.record.getRecord(new AtUri(res.data.uri), res.data.cid),
+      )
+      expect(record?.value).toMatchObject({
+        $type: 'com.example.record',
+        blah: 'thing',
+      })
+      const recordBlobs = await ctx.actorStore.read(alice.did, (store) =>
+        store.db.db
+          .selectFrom('blob')
+          .innerJoin('record_blob', 'record_blob.blobCid', 'blob.cid')
+          .where('recordUri', '=', res.data.uri)
+          .selectAll()
+          .execute(),
+      )
+      expect(recordBlobs.length).toBe(1)
+      expect(recordBlobs.at(0)?.cid).toBe(uploadedRes.data.blob.ref.toString())
+    })
+
+    it('enforces record type constraint even when unvalidated', async () => {
+      const attempt = aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          $type: 'com.example.other',
+          blah: 'thing',
+        },
+      })
+      await expect(attempt).rejects.toThrow(
+        'Invalid $type: expected com.example.record, got com.example.other',
+      )
+    })
+
+    it('enforces blob ref format even when unvalidated', async () => {
+      const file = await fs.readFile(
+        '../dev-env/src/seed/img/key-portrait-small.jpg',
+      )
+      const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(
+        file,
+        {
+          encoding: 'image/jpeg',
+        },
+      )
+
+      const attempt = aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing',
+          image: {
+            cid: uploadedRes.data.blob.ref.toString(),
+            mimeType: uploadedRes.data.blob.mimeType,
+          },
+        },
+        validate: false,
+      })
+      await expect(attempt).rejects.toThrow(`Legacy blob ref at 'image'`)
+    })
+  })
+
   describe('compare-and-swap', () => {
     let recordCount = 0 // Ensures unique cids
     const postRecord = () => ({
@@ -683,7 +794,9 @@ describe('crud operations', () => {
         swapCommit: staleCommit.cid,
         record: postRecord(),
       })
-      await expect(attemptCreate).rejects.toThrow(createRecord.InvalidSwapError)
+      await expect(attemptCreate).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
     })
 
     it('deleteRecord succeeds on proper commit cas', async () => {
@@ -726,7 +839,9 @@ describe('crud operations', () => {
         rkey: uri.rkey,
         swapCommit: staleCommit.cid,
       })
-      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -771,7 +886,9 @@ describe('crud operations', () => {
         rkey: uri.rkey,
         swapRecord: (await cidForCbor({})).toString(),
       })
-      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -816,7 +933,7 @@ describe('crud operations', () => {
         swapCommit: staleCommit.cid,
         record: profileRecord(),
       })
-      await expect(attemptPut).rejects.toThrow(putRecord.InvalidSwapError)
+      await expect(attemptPut).rejects.toMatchObject({ error: 'InvalidSwap' })
     })
 
     it('putRecord succeeds on proper record cas', async () => {
@@ -867,7 +984,7 @@ describe('crud operations', () => {
         swapRecord: null,
         record: profileRecord(),
       })
-      await expect(attemptPut1).rejects.toThrow(putRecord.InvalidSwapError)
+      await expect(attemptPut1).rejects.toMatchObject({ error: 'InvalidSwap' })
       // Test swapRecord w/ cid (ensures update)
       const attemptPut2 = repo.putRecord({
         repo: alice.did,
@@ -876,7 +993,7 @@ describe('crud operations', () => {
         swapRecord: (await cidForCbor({})).toString(),
         record: profileRecord(),
       })
-      await expect(attemptPut2).rejects.toThrow(putRecord.InvalidSwapError)
+      await expect(attemptPut2).rejects.toMatchObject({ error: 'InvalidSwap' })
     })
 
     it('applyWrites succeeds on proper commit cas', async () => {
@@ -919,9 +1036,9 @@ describe('crud operations', () => {
           },
         ],
       })
-      await expect(attemptApplyWrite).rejects.toThrow(
-        applyWrites.InvalidSwapError,
-      )
+      await expect(attemptApplyWrite).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
     })
 
     it("writes fail on values that can't reliably transform between cbor to lex", async () => {

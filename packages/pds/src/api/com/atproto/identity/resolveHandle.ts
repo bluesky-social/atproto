@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     let did: string | undefined
-    const user = await ctx.accountManager.getAccount(handle, true)
+    const user = await ctx.accountManager.getAccount(handle)
 
     if (user) {
       did = user.did
@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-    if (!did) {
+    if (!did && ctx.appViewAgent) {
       did = await tryResolveFromAppView(ctx.appViewAgent, handle)
     }
 

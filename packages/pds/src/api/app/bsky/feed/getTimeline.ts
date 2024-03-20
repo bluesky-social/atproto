@@ -11,16 +11,13 @@ import { pipethrough } from '../../../../pipethrough'
 const METHOD_NSID = 'app.bsky.feed.getTimeline'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.access,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      const res = await pipethrough(
-        ctx.cfg.bskyAppView.url,
-        METHOD_NSID,
-        params,
-        await ctx.appviewAuthHeaders(requester),
-      )
+      const res = await pipethrough(ctx, req, requester)
       return await handleReadAfterWrite(
         ctx,
         METHOD_NSID,

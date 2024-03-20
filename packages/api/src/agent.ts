@@ -17,8 +17,12 @@ import {
   AtpAgentGlobalOpts,
   AtpPersistSessionHandler,
   AtpAgentOpts,
+  AtprotoServiceType,
 } from './types'
+import { BSKY_LABELER_DID } from './const'
 
+const MAX_MOD_AUTHORITIES = 3
+const MAX_LABELERS = 10
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
@@ -29,15 +33,13 @@ export class AtpAgent {
   service: URL
   api: AtpServiceClient
   session?: AtpSessionData
+  labelersHeader: string[] = []
+  proxyHeader: string | undefined
+  pdsUrl: URL | undefined // The PDS URL, driven by the did doc. May be undefined.
 
-  /**
-   * The PDS URL, driven by the did doc. May be undefined.
-   */
-  pdsUrl: URL | undefined
-
-  private _baseClient: AtpBaseClient
-  private _persistSession?: AtpPersistSessionHandler
-  private _refreshSessionPromise: Promise<void> | undefined
+  protected _baseClient: AtpBaseClient
+  protected _persistSession?: AtpPersistSessionHandler
+  protected _refreshSessionPromise: Promise<void> | undefined
 
   get com() {
     return this.api.com
@@ -49,10 +51,20 @@ export class AtpAgent {
   static fetch: AtpAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
+   * The labelers to be used across all requests with the takedown capability
+   */
+  static appLabelers: string[] = [BSKY_LABELER_DID]
+
+  /**
    * Configures the API globally.
    */
   static configure(opts: AtpAgentGlobalOpts) {
-    AtpAgent.fetch = opts.fetch
+    if (opts.fetch) {
+      AtpAgent.fetch = opts.fetch
+    }
+    if (opts.appLabelers) {
+      AtpAgent.appLabelers = opts.appLabelers
+    }
   }
 
   constructor(opts: AtpAgentOpts) {
@@ -64,6 +76,28 @@ export class AtpAgent {
     this._baseClient = new AtpBaseClient()
     this._baseClient.xrpc.fetch = this._fetch.bind(this) // patch its fetch implementation
     this.api = this._baseClient.service(opts.service)
+  }
+
+  clone() {
+    const inst = new AtpAgent({
+      service: this.service,
+    })
+    this.copyInto(inst)
+    return inst
+  }
+
+  copyInto(inst: AtpAgent) {
+    inst.session = this.session
+    inst.labelersHeader = this.labelersHeader
+    inst.proxyHeader = this.proxyHeader
+    inst.pdsUrl = this.pdsUrl
+    inst.api.xrpc.uri = this.pdsUrl || this.service
+  }
+
+  withProxy(serviceType: AtprotoServiceType, did: string) {
+    const inst = this.clone()
+    inst.configureProxyHeader(serviceType, did)
+    return inst
   }
 
   /**
@@ -79,6 +113,24 @@ export class AtpAgent {
    */
   setPersistSessionHandler(handler?: AtpPersistSessionHandler) {
     this._persistSession = handler
+  }
+
+  /**
+   * Configures the moderation services to be applied on requests.
+   * NOTE: this is called automatically by getPreferences() and the relevant moderation config
+   * methods in BskyAgent instances.
+   */
+  configureLabelersHeader(labelerDids: string[]) {
+    this.labelersHeader = labelerDids
+  }
+
+  /**
+   * Configures the atproto-proxy header to be applied on requests
+   */
+  configureProxyHeader(serviceType: AtprotoServiceType, did: string) {
+    if (did.startsWith('did:')) {
+      this.proxyHeader = `${did}#${serviceType}`
+    }
   }
 
   /**
@@ -194,12 +246,26 @@ export class AtpAgent {
   /**
    * Internal helper to add authorization headers to requests.
    */
-  private _addAuthHeader(reqHeaders: Record<string, string>) {
+  private _addHeaders(reqHeaders: Record<string, string>) {
     if (!reqHeaders.authorization && this.session?.accessJwt) {
-      return {
+      reqHeaders = {
         ...reqHeaders,
         authorization: `Bearer ${this.session.accessJwt}`,
       }
+    }
+    if (this.proxyHeader) {
+      reqHeaders = {
+        ...reqHeaders,
+        'atproto-proxy': this.proxyHeader,
+      }
+    }
+    reqHeaders = {
+      ...reqHeaders,
+      'atproto-accept-labelers': AtpAgent.appLabelers
+        .map((str) => `${str};redact`)
+        .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
+        .slice(0, MAX_LABELERS)
+        .join(', '),
     }
     return reqHeaders
   }
@@ -224,7 +290,7 @@ export class AtpAgent {
     let res = await AtpAgent.fetch(
       reqUri,
       reqMethod,
-      this._addAuthHeader(reqHeaders),
+      this._addHeaders(reqHeaders),
       reqBody,
     )
 
@@ -237,7 +303,7 @@ export class AtpAgent {
       res = await AtpAgent.fetch(
         reqUri,
         reqMethod,
-        this._addAuthHeader(reqHeaders),
+        this._addHeaders(reqHeaders),
         reqBody,
       )
     }

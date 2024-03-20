@@ -13,6 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       .selectFrom('actor')
       .innerJoin('repo_root', 'repo_root.did', 'actor.did')
       .where(notSoftDeletedClause(ref('actor')))
+      .where('actor.deactivatedAt', 'is', null)
       .select([
         'actor.did as did',
         'repo_root.cid as head',

@@ -26,11 +26,14 @@ describe('account', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account',
       pds: {
+        contactEmailAddress: 'abuse@example.com',
         termsOfServiceUrl: 'https://example.com/tos',
         privacyPolicyUrl: 'https://example.com/privacy-policy',
       },
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     mailer = network.pds.ctx.mailer
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getClient()
@@ -58,6 +61,7 @@ describe('account', () => {
       'https://example.com/privacy-policy',
     )
     expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
+    expect(res.data.contact?.email).toBe('abuse@example.com')
   })
 
   it('fails on invalid handles', async () => {
@@ -259,31 +263,6 @@ describe('account', () => {
 
     const accnt2 = await ctx.accountManager.getAccount(handle)
     expect(accnt2?.email).toBe(email)
-  })
-
-  it('disallows non-admin moderators to perform email updates', async () => {
-    const attemptUpdateMod = agent.api.com.atproto.admin.updateAccountEmail(
-      {
-        account: handle,
-        email: 'new@email.com',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
-      },
-    )
-    await expect(attemptUpdateMod).rejects.toThrow('Insufficient privileges')
-    const attemptUpdateTriage = agent.api.com.atproto.admin.updateAccountEmail(
-      {
-        account: handle,
-        email: 'new@email.com',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('triage'),
-      },
-    )
-    await expect(attemptUpdateTriage).rejects.toThrow('Insufficient privileges')
   })
 
   it('disallows duplicate email addresses and handles', async () => {
@@ -556,6 +535,37 @@ describe('account', () => {
       agent.api.com.atproto.server.createSession({
         identifier: handle,
         password,
+      }),
+    ).resolves.toBeDefined()
+  })
+
+  it('allows an admin to update password', async () => {
+    const tryUnauthed = agent.api.com.atproto.admin.updateAccountPassword({
+      did,
+      password: 'new-admin-pass',
+    })
+    await expect(tryUnauthed).rejects.toThrow('Authentication Required')
+
+    await agent.api.com.atproto.admin.updateAccountPassword(
+      { did, password: 'new-admin-password' },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
+
+    // old password fails
+    await expect(
+      agent.api.com.atproto.server.createSession({
+        identifier: did,
+        password,
+      }),
+    ).rejects.toThrow('Invalid identifier or password')
+
+    await expect(
+      agent.api.com.atproto.server.createSession({
+        identifier: did,
+        password: 'new-admin-password',
       }),
     ).resolves.toBeDefined()
   })

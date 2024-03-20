@@ -22,6 +22,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
+    contactEmailAddress: env.contactEmailAddress,
+    acceptingImports: env.acceptingImports ?? true,
+    blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
+    devMode: env.devMode ?? false,
   }
 
   const dbLoc = (name: string) => {
@@ -167,19 +171,46 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
   }
 
-  assert(env.bskyAppViewUrl)
-  assert(env.bskyAppViewDid)
-  const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
-    url: env.bskyAppViewUrl,
-    did: env.bskyAppViewDid,
-    cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+  let bskyAppViewCfg: ServerConfig['bskyAppView'] = null
+  if (env.bskyAppViewUrl) {
+    assert(
+      env.bskyAppViewDid,
+      'if bsky appview service url is configured, must configure its did as well.',
+    )
+    bskyAppViewCfg = {
+      url: env.bskyAppViewUrl,
+      did: env.bskyAppViewDid,
+      cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+    }
   }
 
-  assert(env.modServiceUrl)
-  assert(env.modServiceDid)
-  const modServiceCfg: ServerConfig['modService'] = {
-    url: env.modServiceUrl,
-    did: env.modServiceDid,
+  let modServiceCfg: ServerConfig['modService'] = null
+  if (env.modServiceUrl) {
+    assert(
+      env.modServiceDid,
+      'if mod service url is configured, must configure its did as well.',
+    )
+    modServiceCfg = {
+      url: env.modServiceUrl,
+      did: env.modServiceDid,
+    }
+  }
+
+  let reportServiceCfg: ServerConfig['reportService'] = null
+  if (env.reportServiceUrl) {
+    assert(
+      env.reportServiceDid,
+      'if report service url is configured, must configure its did as well.',
+    )
+    reportServiceCfg = {
+      url: env.reportServiceUrl,
+      did: env.reportServiceDid,
+    }
+  }
+
+  // if there's a mod service, default report service into it
+  if (modServiceCfg && !reportServiceCfg) {
+    reportServiceCfg = modServiceCfg
   }
 
   const redisCfg: ServerConfig['redis'] = env.redisScratchAddress
@@ -215,6 +246,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
     modService: modServiceCfg,
+    reportService: reportServiceCfg,
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
@@ -232,8 +264,9 @@ export type ServerConfig = {
   email: EmailConfig | null
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
-  bskyAppView: BksyAppViewConfig
-  modService: ModServiceConfig
+  bskyAppView: BksyAppViewConfig | null
+  modService: ModServiceConfig | null
+  reportService: ReportServiceConfig | null
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
@@ -247,6 +280,10 @@ export type ServiceConfig = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  acceptingImports: boolean
+  blobUploadLimit: number
+  contactEmailAddress?: string
+  devMode: boolean
 }
 
 export type DatabaseConfig = {
@@ -339,6 +376,11 @@ export type BksyAppViewConfig = {
 }
 
 export type ModServiceConfig = {
+  url: string
+  did: string
+}
+
+export type ReportServiceConfig = {
   url: string
   did: string
 }

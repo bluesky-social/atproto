@@ -14,7 +14,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -22,7 +21,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -102,8 +100,7 @@ Object {
         Object {
           "cid": "cids(0)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
-          "src": "user(4)",
+          "src": "did:example:labeler",
           "uri": "record(0)",
           "val": "test-label",
         },
@@ -155,7 +152,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -163,7 +159,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -219,7 +214,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -227,7 +221,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -300,16 +293,14 @@ Object {
             Object {
               "cid": "cids(3)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(5)",
+              "src": "did:example:labeler",
               "uri": "record(7)",
               "val": "test-label",
             },
             Object {
               "cid": "cids(3)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(5)",
+              "src": "did:example:labeler",
               "uri": "record(7)",
               "val": "test-label-2",
             },

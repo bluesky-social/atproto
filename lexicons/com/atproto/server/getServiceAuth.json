@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.getServiceAuth",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a signed token on behalf of the requesting DID for the requested service.",
+      "parameters": {
+        "type": "params",
+        "required": ["aud"],
+        "properties": {
+          "aud": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the service that the token will be used to authenticate with"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["token"],
+          "properties": {
+            "token": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

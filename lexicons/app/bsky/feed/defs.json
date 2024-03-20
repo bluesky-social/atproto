@@ -137,6 +137,10 @@
         },
         "avatar": { "type": "string" },
         "likeCount": { "type": "integer", "minimum": 0 },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "viewer": { "type": "ref", "ref": "#generatorViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }

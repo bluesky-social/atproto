@@ -1,5 +1,6 @@
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { IdResolver } from '@atproto/identity'
 import AtpAgent from '@atproto/api'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
@@ -7,6 +8,7 @@ import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { ModerationService, ModerationServiceCreator } from '../mod-service'
 import { BackgroundQueue } from '../background'
+import { getSigningKeyId } from '../util'
 
 export type DaemonContextOptions = {
   db: Database
@@ -30,30 +32,38 @@ export class DaemonContext {
       schema: cfg.db.postgresSchema,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+    const signingKeyId = await getSigningKeyId(db, signingKey.did())
+
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
 
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
-        iss: cfg.service.did,
+        iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
       })
 
-    const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
-
     const eventPusher = new EventPusher(db, createAuthHeaders, {
-      appview: cfg.appview,
+      appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
+
     const backgroundQueue = new BackgroundQueue(db)
+
     const modService = ModerationService.creator(
+      signingKey,
+      signingKeyId,
+      cfg,
       backgroundQueue,
+      idResolver,
       eventPusher,
       appviewAgent,
-      appviewAuth,
-      cfg.service.did,
+      createAuthHeaders,
     )
+
     const eventReverser = new EventReverser(db, modService)
 
     return new DaemonContext({

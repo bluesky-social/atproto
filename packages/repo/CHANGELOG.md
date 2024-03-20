@@ -1,5 +1,45 @@
 # @atproto/repo
 
+## 0.4.0
+
+### Minor Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
+### Patch Changes
+
+- Updated dependencies [[`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9)]:
+  - @atproto/common-web@0.3.0
+  - @atproto/lexicon@0.4.0
+  - @atproto/common@0.4.0
+  - @atproto/crypto@0.4.0
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+  - @atproto/identity@0.3.3
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/crypto@0.3.0
+
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [[`0c815b964`](https://github.com/bluesky-social/atproto/commit/0c815b964c030aa0f277c40bf9786f130dc320f4)]:
+  - @atproto/syntax@0.2.0
+  - @atproto/lexicon@0.3.2
+
+## 0.3.7
+
+### Patch Changes
+
+- [#2173](https://github.com/bluesky-social/atproto/pull/2173) [`fcf8e3faf`](https://github.com/bluesky-social/atproto/commit/fcf8e3faf311559162c3aa0d9af36f84951914bc) Thanks [@bnewbold](https://github.com/bnewbold)! - repo commit object prev field is nullable, but no longer nullable
+
 ## 0.3.6
 
 ### Patch Changes

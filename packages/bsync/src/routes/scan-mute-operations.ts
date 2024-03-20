@@ -13,7 +13,10 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
     const nextMuteOpPromise = once(events, createMuteOpChannel, {
-      signal: AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
+      signal: combineSignals(
+        ctx.shutdown,
+        AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
+      ),
     })
     nextMuteOpPromise.catch(() => null) // ensure timeout is always handled
 
@@ -31,6 +34,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextMuteOpPromise
       } catch (err) {
+        ctx.shutdown.throwIfAborted()
         return new ScanMuteOperationsResponse({
           operations: [],
           cursor: req.cursor,
@@ -66,4 +70,19 @@ const validCursor = (cursor: string): number | null => {
     throw new ConnectError('invalid cursor', Code.InvalidArgument)
   }
   return int
+}
+
+const combineSignals = (a: AbortSignal, b: AbortSignal) => {
+  const controller = new AbortController()
+  for (const signal of [a, b]) {
+    if (signal.aborted) {
+      controller.abort()
+      return signal
+    }
+    signal.addEventListener('abort', () => controller.abort(signal.reason), {
+      // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
+      signal: controller.signal,
+    })
+  }
+  return controller.signal
 }

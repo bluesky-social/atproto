@@ -1,56 +1,119 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { cleanQuery } from '../../../../services/util/search'
+import { mapDefined } from '@atproto/common'
+import AtpAgent from '@atproto/api'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
+import {
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipeline,
+} from '../../../../pipeline'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
+  const searchActors = createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.actor.searchActors({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params }) => {
-      const { cursor, limit } = params
-      const requester = auth.credentials.iss
-      const rawQuery = params.q ?? params.term
-      const query = cleanQuery(rawQuery || '')
-      const db = ctx.db.getReplica('search')
-
-      let results: string[]
-      let resCursor: string | undefined
-      if (ctx.searchAgent) {
-        // @NOTE cursors wont change on appview swap
-        const res =
-          await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
-            q: query,
-            cursor,
-            limit,
-          })
-        results = res.data.actors.map((a) => a.did)
-        resCursor = res.data.cursor
-      } else {
-        const res = await ctx.services
-          .actor(ctx.db.getReplica('search'))
-          .getSearchResults({ query, limit, cursor })
-        results = res.results.map((a) => a.did)
-        resCursor = res.cursor
-      }
-
-      const actors = await ctx.services
-        .actor(db)
-        .views.profiles(results, requester)
-
-      const SKIP = []
-      const filtered = results.flatMap((did) => {
-        const actor = actors[did]
-        if (!actor) return SKIP
-        if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
-        return actor
+    handler: async ({ auth, params, req }) => {
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers,
+        includeTakedowns,
       })
-
+      const results = await searchActors({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
-        body: {
-          cursor: resCursor,
-          actors: filtered,
-        },
+        body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
+}
+
+const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+  const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
+
+  // @TODO
+  // add hits total
+
+  if (ctx.searchAgent) {
+    // @NOTE cursors wont change on appview swap
+    const { data: res } =
+      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+        q: term,
+        cursor: params.cursor,
+        limit: params.limit,
+      })
+    return {
+      dids: res.actors.map(({ did }) => did),
+      cursor: parseString(res.cursor),
+    }
+  }
+
+  const res = await ctx.dataplane.searchActors({
+    term,
+    limit: params.limit,
+    cursor: params.cursor,
+  })
+  return {
+    dids: res.dids,
+    cursor: parseString(res.cursor),
+  }
+}
+
+const hydration = async (
+  inputs: HydrationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydrateProfiles(skeleton.dids, params.hydrateCtx)
+}
+
+const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.dids = skeleton.dids.filter(
+    (did) => !ctx.views.viewerBlockExists(did, hydration),
+  )
+  return skeleton
+}
+
+const presentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, skeleton, hydration } = inputs
+  const actors = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profile(did, hydration),
+  )
+  return {
+    actors,
+    cursor: skeleton.cursor,
+  }
+}
+
+type Context = {
+  dataplane: DataPlaneClient
+  hydrator: Hydrator
+  views: Views
+  searchAgent?: AtpAgent
+}
+
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
+
+type Skeleton = {
+  dids: string[]
+  hitsTotal?: number
+  cursor?: string
 }

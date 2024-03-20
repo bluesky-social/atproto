@@ -1,4 +1,9 @@
-import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  usersBulkSeed,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { paginateAll } from './_util'
 
@@ -6,16 +11,18 @@ describe('admin repo search view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_admin_repo_search',
     })
-    agent = network.pds.getClient()
+    agent = network.ozone.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await usersBulkSeed(sc)
-    headers = network.pds.adminAuthHeaders()
+    headers = await network.ozone.modHeaders()
     await network.processAll()
   })
 
@@ -24,17 +31,18 @@ describe('admin repo search view', () => {
   })
 
   beforeAll(async () => {
-    await sc.emitModerationEvent({
-      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids['cara-wiegand69.test'],
       },
     })
+    await network.ozone.processAll()
   })
 
   it('gives relevant results', async () => {
-    const result = await agent.api.com.atproto.admin.searchRepos(
+    const result = await agent.api.tools.ozone.moderation.searchRepos(
       { term: 'car' },
       { headers },
     )
@@ -64,7 +72,7 @@ describe('admin repo search view', () => {
 
   it('finds repo by did', async () => {
     const term = sc.dids['cara-wiegand69.test']
-    const res = await agent.api.com.atproto.admin.searchRepos(
+    const res = await agent.api.tools.ozone.moderation.searchRepos(
       { term },
       { headers },
     )
@@ -76,7 +84,7 @@ describe('admin repo search view', () => {
   it('paginates with term', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.com.atproto.admin.searchRepos(
+      const res = await agent.api.tools.ozone.moderation.searchRepos(
         { term: 'p', cursor, limit: 3 },
         { headers },
       )
@@ -88,7 +96,7 @@ describe('admin repo search view', () => {
       expect(res.repos.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.com.atproto.admin.searchRepos(
+    const full = await agent.api.tools.ozone.moderation.searchRepos(
       { term: 'p' },
       { headers },
     )
@@ -100,7 +108,7 @@ describe('admin repo search view', () => {
   it('paginates without term', async () => {
     const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.com.atproto.admin.searchRepos(
+      const res = await agent.api.tools.ozone.moderation.searchRepos(
         { cursor, limit: 3 },
         { headers },
       )
@@ -112,12 +120,11 @@ describe('admin repo search view', () => {
       expect(res.repos.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.com.atproto.admin.searchRepos(
+    const full = await agent.api.tools.ozone.moderation.searchRepos(
       { limit: 15 },
       { headers },
     )
 
-    expect(full.data.repos.length).toEqual(15)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

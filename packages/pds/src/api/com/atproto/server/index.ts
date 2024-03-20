@@ -30,6 +30,11 @@ import createAppPassword from './createAppPassword'
 import listAppPasswords from './listAppPasswords'
 import revokeAppPassword from './revokeAppPassword'
 
+import getServiceAuth from './getServiceAuth'
+import checkAccountStatus from './checkAccountStatus'
+import activateAccount from './activateAccount'
+import deactivateAccount from './deactivateAccount'
+
 export default function (server: Server, ctx: AppContext) {
   describeServer(server, ctx)
   createAccount(server, ctx)
@@ -52,4 +57,8 @@ export default function (server: Server, ctx: AppContext) {
   createAppPassword(server, ctx)
   listAppPasswords(server, ctx)
   revokeAppPassword(server, ctx)
+  getServiceAuth(server, ctx)
+  checkAccountStatus(server, ctx)
+  activateAccount(server, ctx)
+  deactivateAccount(server, ctx)
 }

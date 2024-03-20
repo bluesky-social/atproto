@@ -35,8 +35,14 @@ export default function (server: Server, ctx: AppContext) {
       const identifier = input.body.identifier.toLowerCase()
 
       const user = identifier.includes('@')
-        ? await ctx.accountManager.getAccountByEmail(identifier, true)
-        : await ctx.accountManager.getAccount(identifier, true)
+        ? await ctx.accountManager.getAccountByEmail(identifier, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+        : await ctx.accountManager.getAccount(identifier, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
 
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')

@@ -145,13 +145,11 @@ describe('entryway', () => {
       pds: pds.ctx.cfg.service.publicUrl,
       signer: rotationKey,
     })
-    const tryCreateAccount = pdsAgent.api.com.atproto.server.createAccount(
-      { did: plcCreate.did, plcOp: plcCreate.op, handle: 'weirdalice.test' },
-      {
-        headers: SeedClient.getHeaders(accessToken),
-        encoding: 'application/json',
-      },
-    )
+    const tryCreateAccount = pdsAgent.api.com.atproto.server.createAccount({
+      did: plcCreate.did,
+      plcOp: plcCreate.op,
+      handle: 'weirdalice.test',
+    })
     await expect(tryCreateAccount).rejects.toThrow('invalid plc operation')
   })
 })

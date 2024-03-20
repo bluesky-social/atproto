@@ -17,7 +17,7 @@ describe('proxies appview procedures', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -142,7 +142,11 @@ describe('proxies appview procedures', () => {
         { headers: sc.getHeaders(alice) },
       )
     expect(result1.notifications.length).toBeGreaterThanOrEqual(5)
-    expect(result1.notifications.every((n) => !n.isRead)).toBe(true)
+    expect(
+      result1.notifications.every((n, i) => {
+        return (i === 0 && !n.isRead) || (i !== 0 && n.isRead)
+      }),
+    ).toBe(true)
     // update last seen
     const { indexedAt: lastSeenAt } = result1.notifications[2]
     await agent.api.app.bsky.notification.updateSeen(
@@ -163,7 +167,7 @@ describe('proxies appview procedures', () => {
     expect(result2.notifications).toEqual(
       result1.notifications.map((n) => ({
         ...n,
-        isRead: n.indexedAt <= lastSeenAt,
+        isRead: n.indexedAt < lastSeenAt,
       })),
     )
   })

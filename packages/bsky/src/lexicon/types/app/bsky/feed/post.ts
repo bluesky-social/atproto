@@ -32,7 +32,7 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
-  /** Additional non-inline tags describing this post. */
+  /** Additional hashtags, in addition to any included in post text and facets. */
   tags?: string[]
   /** Client-declared timestamp when this post was originally created. */
   createdAt: string

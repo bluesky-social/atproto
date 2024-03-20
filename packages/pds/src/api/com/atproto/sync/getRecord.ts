@@ -9,7 +9,7 @@ import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
-    auth: ctx.authVerifier.optionalAccessOrRole,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did, collection, rkey } = params
       // takedown check for anyone other than an admin or the user

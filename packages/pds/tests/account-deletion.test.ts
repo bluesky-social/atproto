@@ -36,6 +36,7 @@ describe('account deletion', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     mailer = ctx.mailer
     agent = new AtpAgent({ service: network.pds.url })
@@ -220,34 +221,23 @@ describe('account deletion', () => {
     })
     await expect(tryUnauthed).rejects.toThrow('Authentication Required')
 
-    const tryAsModerator = agent.api.com.atproto.admin.deleteAccount(
-      { did: ferris.did },
-      {
-        headers: network.pds.adminAuthHeaders('moderator'),
-        encoding: 'application/json',
-      },
-    )
-    await expect(tryAsModerator).rejects.toThrow(
-      'Must be an admin to delete an account',
-    )
-
     const { data: acct } = await agent.api.com.atproto.admin.getAccountInfo(
       { did: ferris.did },
-      { headers: network.pds.adminAuthHeaders('admin') },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(acct.did).toBe(ferris.did)
 
     await agent.api.com.atproto.admin.deleteAccount(
       { did: ferris.did },
       {
-        headers: network.pds.adminAuthHeaders('admin'),
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
 
     const tryGetAccountInfo = agent.api.com.atproto.admin.getAccountInfo(
       { did: ferris.did },
-      { headers: network.pds.adminAuthHeaders('admin') },
+      { headers: network.pds.adminAuthHeaders() },
     )
     await expect(tryGetAccountInfo).rejects.toThrow('Account not found')
   })

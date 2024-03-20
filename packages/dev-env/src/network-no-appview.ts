@@ -1,4 +1,4 @@
-import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { SkeletonHandler } from '@atproto/pds'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
@@ -32,7 +32,7 @@ export class TestNetworkNoAppView {
     return fg
   }
 
-  getSeedClient(): SeedClient {
+  getSeedClient(): SeedClient<typeof this> {
     const agent = this.pds.getClient()
     return new SeedClient(this, agent)
   }

@@ -2,7 +2,7 @@ import * as syntax from '@atproto/syntax'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
-import { notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { ActorDb, Backlink } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
@@ -10,6 +10,14 @@ import { RepoRecord } from '@atproto/lexicon'
 
 export class RecordReader {
   constructor(public db: ActorDb) {}
+
+  async recordCount(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
+  }
 
   async listCollections(): Promise<string[]> {
     const collections = await this.db.db

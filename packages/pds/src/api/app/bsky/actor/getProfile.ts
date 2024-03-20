@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import {
   LocalViewer,
@@ -12,17 +11,13 @@ import { pipethrough } from '../../../../pipethrough'
 const METHOD_NSID = 'app.bsky.actor.getProfile'
 
 export default function (server: Server, ctx: AppContext) {
+  const { bskyAppView } = ctx.cfg
+  if (!bskyAppView) return
   server.app.bsky.actor.getProfile({
-    auth: ctx.authVerifier.accessOrRole,
-    handler: async ({ req, auth, params }) => {
-      const requester =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await pipethrough(
-        ctx.cfg.bskyAppView.url,
-        METHOD_NSID,
-        params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
-      )
+    auth: ctx.authVerifier.access,
+    handler: async ({ req, auth }) => {
+      const requester = auth.credentials.did
+      const res = await pipethrough(ctx, req, requester)
       if (!requester) {
         return res
       }

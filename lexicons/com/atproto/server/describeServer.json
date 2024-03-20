@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["availableUserDomains"],
+          "required": ["did", "availableUserDomains"],
           "properties": {
             "inviteCodeRequired": {
               "type": "boolean",
@@ -28,6 +28,15 @@
               "type": "ref",
               "description": "URLs of service policy documents.",
               "ref": "#links"
+            },
+            "contact": {
+              "type": "ref",
+              "description": "Contact information",
+              "ref": "#contact"
+            },
+            "did": {
+              "type": "string",
+              "format": "did"
             }
           }
         }
@@ -38,6 +47,12 @@
       "properties": {
         "privacyPolicy": { "type": "string" },
         "termsOfService": { "type": "string" }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" }
       }
     }
   }

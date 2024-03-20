@@ -308,8 +308,9 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(reply1))
     assert(isThreadViewPost(reply2))
     expect(otherReplies.length).toEqual(0)
-    expect(reply1.post.uri).toEqual(danReply.ref.uriStr)
-    expect(reply2.post.uri).toEqual(aliceReply.ref.uriStr)
+    expect([reply1.post.uri, reply2.post.uri].sort()).toEqual(
+      [danReply.ref.uriStr, aliceReply.ref.uriStr].sort(),
+    )
   })
 
   it('applies gate for unknown list rule.', async () => {
@@ -418,8 +419,9 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(reply1))
     assert(isThreadViewPost(reply2))
     expect(otherReplies.length).toEqual(0)
-    expect(reply1.post.uri).toEqual(danReply.ref.uriStr)
-    expect(reply2.post.uri).toEqual(aliceReply.ref.uriStr)
+    expect([reply1.post.uri, reply2.post.uri].sort()).toEqual(
+      [aliceReply.ref.uriStr, danReply.ref.uriStr].sort(),
+    )
   })
 
   it('applies gate for missing rules, takes no action.', async () => {

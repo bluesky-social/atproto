@@ -13,6 +13,7 @@ export interface ProfileViewBasic {
   handle: string
   displayName?: string
   avatar?: string
+  associated?: ProfileAssociated
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
@@ -36,6 +37,7 @@ export interface ProfileView {
   displayName?: string
   description?: string
   avatar?: string
+  associated?: ProfileAssociated
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -64,6 +66,7 @@ export interface ProfileViewDetailed {
   followersCount?: number
   followsCount?: number
   postsCount?: number
+  associated?: ProfileAssociated
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -80,6 +83,25 @@ export function isProfileViewDetailed(v: unknown): v is ProfileViewDetailed {
 
 export function validateProfileViewDetailed(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileViewDetailed', v)
+}
+
+export interface ProfileAssociated {
+  lists?: number
+  feedgens?: number
+  labeler?: boolean
+  [k: string]: unknown
+}
+
+export function isProfileAssociated(v: unknown): v is ProfileAssociated {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#profileAssociated'
+  )
+}
+
+export function validateProfileAssociated(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileAssociated', v)
 }
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
@@ -114,6 +136,8 @@ export type Preferences = (
   | FeedViewPref
   | ThreadViewPref
   | InterestsPref
+  | MutedWordsPref
+  | HiddenPostsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -135,8 +159,10 @@ export function validateAdultContentPref(v: unknown): ValidationResult {
 }
 
 export interface ContentLabelPref {
+  /** Which labeler does this preference apply to? If undefined, applies globally. */
+  labelerDid?: string
   label: string
-  visibility: 'show' | 'warn' | 'hide' | (string & {})
+  visibility: 'ignore' | 'show' | 'warn' | 'hide' | (string & {})
   [k: string]: unknown
 }
 
@@ -155,6 +181,7 @@ export function validateContentLabelPref(v: unknown): ValidationResult {
 export interface SavedFeedsPref {
   pinned: string[]
   saved: string[]
+  timelineIndex?: number
   [k: string]: unknown
 }
 
@@ -194,7 +221,7 @@ export interface FeedViewPref {
   /** Hide replies in the feed. */
   hideReplies?: boolean
   /** Hide replies in the feed if they are not by followed users. */
-  hideRepliesByUnfollowed?: boolean
+  hideRepliesByUnfollowed: boolean
   /** Hide replies in the feed if they do not have this number of likes. */
   hideRepliesByLikeCount?: number
   /** Hide reposts in the feed. */
@@ -252,4 +279,97 @@ export function isInterestsPref(v: unknown): v is InterestsPref {
 
 export function validateInterestsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#interestsPref', v)
+}
+
+export type MutedWordTarget = 'content' | 'tag' | (string & {})
+
+/** A word that the account owner has muted. */
+export interface MutedWord {
+  /** The muted word itself. */
+  value: string
+  /** The intended targets of the muted word. */
+  targets: MutedWordTarget[]
+  [k: string]: unknown
+}
+
+export function isMutedWord(v: unknown): v is MutedWord {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#mutedWord'
+  )
+}
+
+export function validateMutedWord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#mutedWord', v)
+}
+
+export interface MutedWordsPref {
+  /** A list of words the account owner has muted. */
+  items: MutedWord[]
+  [k: string]: unknown
+}
+
+export function isMutedWordsPref(v: unknown): v is MutedWordsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#mutedWordsPref'
+  )
+}
+
+export function validateMutedWordsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#mutedWordsPref', v)
+}
+
+export interface HiddenPostsPref {
+  /** A list of URIs of posts the account owner has hidden. */
+  items: string[]
+  [k: string]: unknown
+}
+
+export function isHiddenPostsPref(v: unknown): v is HiddenPostsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#hiddenPostsPref'
+  )
+}
+
+export function validateHiddenPostsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#hiddenPostsPref', v)
+}
+
+export interface LabelersPref {
+  labelers: LabelerPrefItem[]
+  [k: string]: unknown
+}
+
+export function isLabelersPref(v: unknown): v is LabelersPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelersPref'
+  )
+}
+
+export function validateLabelersPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelersPref', v)
+}
+
+export interface LabelerPrefItem {
+  did: string
+  [k: string]: unknown
+}
+
+export function isLabelerPrefItem(v: unknown): v is LabelerPrefItem {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelerPrefItem'
+  )
+}
+
+export function validateLabelerPrefItem(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
 }

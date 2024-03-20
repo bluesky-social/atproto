@@ -2,7 +2,7 @@
 
 exports[`pds follow views fetches followers 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -83,7 +83,7 @@ Object {
 
 exports[`pds follow views fetches followers 2`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -134,7 +134,7 @@ Object {
 
 exports[`pds follow views fetches followers 3`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -200,7 +200,7 @@ Object {
 
 exports[`pds follow views fetches followers 4`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -236,7 +236,7 @@ Object {
 
 exports[`pds follow views fetches followers 5`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "followers": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -287,7 +287,7 @@ Object {
 
 exports[`pds follow views fetches follows 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -368,7 +368,7 @@ Object {
 
 exports[`pds follow views fetches follows 2`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -419,7 +419,7 @@ Object {
 
 exports[`pds follow views fetches follows 3`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -455,7 +455,7 @@ Object {
 
 exports[`pds follow views fetches follows 4`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -521,7 +521,7 @@ Object {
 
 exports[`pds follow views fetches follows 5`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "follows": Array [
     Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
@@ -588,11 +588,6 @@ Object {
       "$type": "app.bsky.graph.defs#relationship",
       "did": "user(2)",
       "following": "record(2)",
-    },
-    Object {
-      "$type": "app.bsky.graph.defs#notFoundActor",
-      "actor": "did:example:fake",
-      "notFound": true,
     },
   ],
 }

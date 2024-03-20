@@ -1,52 +1,57 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { AtpAgent } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
-import { ImageUriBuilder } from './image/uri'
-import { Services } from './services'
-import DidRedisCache from './did-cache'
-import { BackgroundQueue } from './background'
-import { Redis } from './redis'
+import { DataPlaneClient } from './data-plane/client'
+import { Hydrator } from './hydration/hydrator'
+import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { CourierClient } from './courier'
+import {
+  ParsedLabelers,
+  defaultLabelerHeader,
+  parseLabelerHeader,
+} from './util'
+import { httpLogger as log } from './logger'
 
 export class AppContext {
   constructor(
     private opts: {
-      db: DatabaseCoordinator
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
-      services: Services
+      dataplane: DataPlaneClient
+      searchAgent: AtpAgent | undefined
+      hydrator: Hydrator
+      views: Views
       signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidRedisCache
-      redis: Redis
-      backgroundQueue: BackgroundQueue
-      searchAgent?: AtpAgent
-      bsyncClient?: BsyncClient
-      courierClient?: CourierClient
+      bsyncClient: BsyncClient
+      courierClient: CourierClient
       authVerifier: AuthVerifier
     },
   ) {}
-
-  get db(): DatabaseCoordinator {
-    return this.opts.db
-  }
-
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
-  }
 
   get cfg(): ServerConfig {
     return this.opts.cfg
   }
 
-  get services(): Services {
-    return this.opts.services
+  get dataplane(): DataPlaneClient {
+    return this.opts.dataplane
+  }
+
+  get searchAgent(): AtpAgent | undefined {
+    return this.opts.searchAgent
+  }
+
+  get hydrator(): Hydrator {
+    return this.opts.hydrator
+  }
+
+  get views(): Views {
+    return this.opts.views
   }
 
   get signingKey(): Keypair {
@@ -61,23 +66,11 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidRedisCache {
-    return this.opts.didCache
-  }
-
-  get redis(): Redis {
-    return this.opts.redis
-  }
-
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
-  }
-
-  get bsyncClient(): BsyncClient | undefined {
+  get bsyncClient(): BsyncClient {
     return this.opts.bsyncClient
   }
 
-  get courierClient(): CourierClient | undefined {
+  get courierClient(): CourierClient {
     return this.opts.courierClient
   }
 
@@ -94,8 +87,17 @@ export class AppContext {
     })
   }
 
-  get backgroundQueue(): BackgroundQueue {
-    return this.opts.backgroundQueue
+  reqLabelers(req: express.Request): ParsedLabelers {
+    const val = req.header('atproto-accept-labelers')
+    let parsed: ParsedLabelers | null
+    try {
+      parsed = parseLabelerHeader(val)
+    } catch (err) {
+      parsed = null
+      log.info({ err, val }, 'failed to parse labeler header')
+    }
+    if (!parsed) return defaultLabelerHeader(this.cfg.labelsFromIssuerDids)
+    return parsed
   }
 }
 

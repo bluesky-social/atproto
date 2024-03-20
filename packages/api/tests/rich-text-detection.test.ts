@@ -218,7 +218,7 @@ describe('detectFacets', () => {
     }
   })
 
-  it('correctly detects tags inline', async () => {
+  describe('correctly detects tags inline', () => {
     const inputs: [
       string,
       string[],
@@ -234,24 +234,32 @@ describe('detectFacets', () => {
         ],
       ],
       ['#1', [], []],
+      ['#1a', ['1a'], [{ byteStart: 0, byteEnd: 3 }]],
       ['#tag', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
       ['body #tag', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
       ['#tag body', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
       ['body #tag body', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
       ['body #1', [], []],
+      ['body #1a', ['1a'], [{ byteStart: 5, byteEnd: 8 }]],
       ['body #a1', ['a1'], [{ byteStart: 5, byteEnd: 8 }]],
       ['#', [], []],
+      ['#?', [], []],
       ['text #', [], []],
       ['text # text', [], []],
       [
-        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
-        [{ byteStart: 5, byteEnd: 71 }],
+        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        [{ byteStart: 5, byteEnd: 70 }],
       ],
       [
-        'body #thisisa65characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab',
+        'body #thisisa65characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab',
         [],
         [],
+      ],
+      [
+        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!',
+        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        [{ byteStart: 5, byteEnd: 70 }],
       ],
       [
         'its a #double#rainbow',
@@ -259,6 +267,7 @@ describe('detectFacets', () => {
         [{ byteStart: 6, byteEnd: 21 }],
       ],
       ['##hashash', ['#hashash'], [{ byteStart: 0, byteEnd: 9 }]],
+      ['##', [], []],
       ['some #n0n3s@n5e!', ['n0n3s@n5e'], [{ byteStart: 5, byteEnd: 15 }]],
       [
         'works #with,punctuation',
@@ -297,9 +306,47 @@ describe('detectFacets', () => {
           { byteStart: 17, byteEnd: 22 },
         ],
       ],
+      ['this #️⃣tag should not be a tag', [], []],
+      [
+        'this ##️⃣tag should be a tag',
+        ['#️⃣tag'],
+        [
+          {
+            byteStart: 5,
+            byteEnd: 16,
+          },
+        ],
+      ],
+      [
+        'this #t\nag should be a tag',
+        ['t'],
+        [
+          {
+            byteStart: 5,
+            byteEnd: 7,
+          },
+        ],
+      ],
+      ['no match (\\u200B): #​', [], []],
+      ['no match (\\u200Ba): #​a', [], []],
+      ['match (a\\u200Bb): #a​b', ['a'], [{ byteStart: 18, byteEnd: 20 }]],
+      ['match (ab\\u200B): #ab​', ['ab'], [{ byteStart: 18, byteEnd: 21 }]],
+      ['no match (\\u20e2tag): #⃢tag', [], []],
+      ['no match (a\\u20e2b): #a⃢b', ['a'], [{ byteStart: 21, byteEnd: 23 }]],
+      [
+        'match full width number sign (tag): ＃tag',
+        ['tag'],
+        [{ byteStart: 36, byteEnd: 42 }],
+      ],
+      [
+        'match full width number sign (tag): ＃#️⃣tag',
+        ['#️⃣tag'],
+        [{ byteStart: 36, byteEnd: 49 }],
+      ],
+      ['no match 1?: #1?', [], []],
     ]
 
-    for (const [input, tags, indices] of inputs) {
+    it.each(inputs)('%s', async (input, tags, indices) => {
       const rt = new RichText({ text: input })
       await rt.detectFacets(agent)
 
@@ -318,7 +365,7 @@ describe('detectFacets', () => {
 
       expect(detectedTags).toEqual(tags)
       expect(detectedIndices).toEqual(indices)
-    }
+    })
   })
 })
 

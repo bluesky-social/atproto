@@ -14,7 +14,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -22,7 +21,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -102,8 +100,7 @@ Object {
         Object {
           "cid": "cids(0)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
-          "src": "user(4)",
+          "src": "did:example:labeler",
           "uri": "record(0)",
           "val": "test-label",
         },
@@ -155,7 +152,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -163,7 +159,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -219,7 +214,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -227,7 +221,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -288,7 +281,7 @@ Object {
 
 exports[`pds views with blocking from block lists returns a users own list blocks 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -303,7 +296,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -311,7 +303,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -325,6 +316,7 @@ Object {
       },
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "new list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -347,7 +339,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -355,7 +346,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -369,6 +359,7 @@ Object {
       },
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "alice blocks",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(4)",
@@ -383,7 +374,7 @@ Object {
 
 exports[`pds views with blocking from block lists returns lists associated with a user 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "lists": Array [
     Object {
       "cid": "cids(0)",
@@ -398,7 +389,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -406,7 +396,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -420,6 +409,7 @@ Object {
       },
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "new list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -441,7 +431,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -449,7 +438,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -463,6 +451,7 @@ Object {
       },
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "alice blocks",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
@@ -477,7 +466,7 @@ Object {
 
 exports[`pds views with blocking from block lists returns the contents of a list 1`] = `
 Object {
-  "cursor": "0000000000000::bafycid",
+  "cursor": "0000000000000__bafycid",
   "items": Array [
     Object {
       "subject": Object {
@@ -503,6 +492,7 @@ Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "name": "alice blocks",
             "purpose": "app.bsky.graph.defs#modlist",
             "uri": "record(0)",
@@ -532,6 +522,7 @@ Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "name": "alice blocks",
             "purpose": "app.bsky.graph.defs#modlist",
             "uri": "record(0)",
@@ -560,7 +551,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(3)",
           "val": "self-label-a",
@@ -568,7 +558,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(3)",
           "val": "self-label-b",
@@ -582,6 +571,7 @@ Object {
     },
     "description": "big list of blocks",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "name": "alice blocks",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",

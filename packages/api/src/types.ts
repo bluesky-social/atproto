@@ -1,4 +1,10 @@
-import { LabelPreference } from './moderation/types'
+import { AppBskyActorDefs } from './client'
+import { ModerationPrefs } from './moderation/types'
+
+/**
+ * Supported proxy targets
+ */
+export type AtprotoServiceType = 'atproto_labeler'
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
@@ -66,14 +72,9 @@ export type AtpAgentFetchHandler = (
  * AtpAgent global config opts
  */
 export interface AtpAgentGlobalOpts {
-  fetch: AtpAgentFetchHandler
+  fetch?: AtpAgentFetchHandler
+  appLabelers?: string[]
 }
-
-/**
- * Content-label preference
- */
-export type BskyLabelPreference = LabelPreference | 'show'
-// TEMP we need to permanently convert 'show' to 'ignore', for now we manually convert -prf
 
 /**
  * Bluesky feed view preferences
@@ -115,8 +116,7 @@ export interface BskyPreferences {
   }
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
-  adultContentEnabled: boolean
-  contentLabels: Record<string, BskyLabelPreference>
+  moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
 }

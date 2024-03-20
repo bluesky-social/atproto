@@ -18,7 +18,6 @@ describe('image processing server', () => {
     const sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
@@ -36,7 +35,7 @@ describe('image processing server', () => {
       ImageUriBuilder.getPath({
         preset: 'feed_fullsize',
         did: fileDid,
-        cid: fileCid,
+        cid: fileCid.toString(),
       }),
       { responseType: 'stream' },
     )
@@ -62,7 +61,7 @@ describe('image processing server', () => {
     const path = ImageUriBuilder.getPath({
       preset: 'avatar',
       did: fileDid,
-      cid: fileCid,
+      cid: fileCid.toString(),
     })
     const res1 = await client.get(path, { responseType: 'arraybuffer' })
     expect(res1.headers['x-cache']).toEqual('miss')
@@ -80,7 +79,7 @@ describe('image processing server', () => {
       ImageUriBuilder.getPath({
         preset: 'feed_fullsize',
         did: fileDid,
-        cid: missingCid,
+        cid: missingCid.toString(),
       }),
     )
     expect(res.status).toEqual(404)

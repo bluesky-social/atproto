@@ -6,14 +6,18 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { OzoneConfig, OzoneSecrets } from './config'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
-import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
 import { EventPusher } from './daemon'
+import Sequencer from './sequencer/sequencer'
 import {
   CommunicationTemplateService,
   CommunicationTemplateServiceCreator,
 } from './communication-service/template'
+import { BlobDiverter } from './daemon/blob-diverter'
+import { AuthVerifier } from './auth-verifier'
+import { ImageInvalidator } from './image-invalidator'
+import { getSigningKeyId } from './util'
 
 export type AppContextOptions = {
   db: Database
@@ -22,9 +26,14 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
+  blobDiverter?: BlobDiverter
   signingKey: Keypair
+  signingKeyId: number
   idResolver: IdResolver
+  imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
+  sequencer: Sequencer
+  authVerifier: AuthVerifier
 }
 
 export class AppContext {
@@ -38,40 +47,61 @@ export class AppContext {
     const db = new Database({
       url: cfg.db.postgresUrl,
       schema: cfg.db.postgresSchema,
+      poolSize: cfg.db.poolSize,
+      poolMaxUses: cfg.db.poolMaxUses,
+      poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+    const signingKeyId = await getSigningKeyId(db, signingKey.did())
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const pdsAgent = cfg.pds
       ? new AtpAgent({ service: cfg.pds.url })
       : undefined
 
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
-        iss: cfg.service.did,
+        iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
       })
-    const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
     const backgroundQueue = new BackgroundQueue(db)
+    const blobDiverter = cfg.blobDivert
+      ? new BlobDiverter(db, {
+          idResolver,
+          serviceConfig: cfg.blobDivert,
+        })
+      : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
-      appview: cfg.appview,
+      appview: cfg.appview.pushEvents ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
-
     const modService = ModerationService.creator(
+      signingKey,
+      signingKeyId,
+      cfg,
       backgroundQueue,
+      idResolver,
       eventPusher,
       appviewAgent,
-      appviewAuth,
-      cfg.service.did,
+      createAuthHeaders,
+      overrides?.imgInvalidator,
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
 
-    const idResolver = new IdResolver({
-      plcUrl: cfg.identity.plcUrl,
+    const sequencer = new Sequencer(modService(db))
+
+    const authVerifier = new AuthVerifier(idResolver, {
+      serviceDid: cfg.service.did,
+      admins: cfg.access.admins,
+      moderators: cfg.access.moderators,
+      triage: cfg.access.triage,
+      adminPassword: secrets.adminPassword,
     })
 
     return new AppContext(
@@ -83,8 +113,12 @@ export class AppContext {
         appviewAgent,
         pdsAgent,
         signingKey,
+        signingKeyId,
         idResolver,
         backgroundQueue,
+        sequencer,
+        authVerifier,
+        blobDiverter,
         ...(overrides ?? {}),
       },
       secrets,
@@ -111,6 +145,10 @@ export class AppContext {
     return this.opts.modService
   }
 
+  get blobDiverter(): BlobDiverter | undefined {
+    return this.opts.blobDiverter
+  }
+
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
     return this.opts.communicationTemplateService
   }
@@ -127,6 +165,10 @@ export class AppContext {
     return this.opts.signingKey
   }
 
+  get signingKeyId(): number {
+    return this.opts.signingKeyId
+  }
+
   get plcClient(): plc.Client {
     return new plc.Client(this.cfg.identity.plcUrl)
   }
@@ -139,38 +181,16 @@ export class AppContext {
     return this.opts.backgroundQueue
   }
 
-  get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.service.did })
+  get sequencer(): Sequencer {
+    return this.opts.sequencer
   }
 
-  get authVerifierAnyAudience() {
-    return auth.authVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifierAnyAudience() {
-    return auth.authOptionalVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.service.did,
-    })
-  }
-
-  get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(
-      this.idResolver,
-      this.secrets,
-      this.cfg.service.did,
-    )
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.secrets)
+  get authVerifier(): AuthVerifier {
+    return this.opts.authVerifier
   }
 
   async serviceAuthHeaders(aud: string) {
-    const iss = this.cfg.service.did
+    const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
       aud,
@@ -188,6 +208,12 @@ export class AppContext {
   async appviewAuth() {
     return this.serviceAuthHeaders(this.cfg.appview.did)
   }
-}
 
+  devOverride(overrides: Partial<AppContextOptions>) {
+    this.opts = {
+      ...this.opts,
+      ...overrides,
+    }
+  }
+}
 export default AppContext

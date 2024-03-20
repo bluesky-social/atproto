@@ -9,6 +9,10 @@ export const readEnv = (): ServerEnvironment => {
     version: envStr('PDS_VERSION'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
+    acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
+    blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
+    devMode: envBool('PDS_DEV_MODE'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -75,6 +79,10 @@ export const readEnv = (): ServerEnvironment => {
     modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),
     modServiceDid: envStr('PDS_MOD_SERVICE_DID'),
 
+    // report service
+    reportServiceUrl: envStr('PDS_REPORT_SERVICE_URL'),
+    reportServiceDid: envStr('PDS_REPORT_SERVICE_DID'),
+
     // rate limits
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
     rateLimitBypassKey: envStr('PDS_RATE_LIMIT_BYPASS_KEY'),
@@ -90,8 +98,6 @@ export const readEnv = (): ServerEnvironment => {
     // secrets
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
-    moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
-    triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -110,6 +116,10 @@ export type ServerEnvironment = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  contactEmailAddress?: string
+  acceptingImports?: boolean
+  blobUploadLimit?: number
+  devMode?: boolean
 
   // database
   dataDirectory?: string
@@ -174,6 +184,10 @@ export type ServerEnvironment = {
   modServiceUrl?: string
   modServiceDid?: string
 
+  // report service
+  reportServiceUrl?: string
+  reportServiceDid?: string
+
   // rate limits
   rateLimitsEnabled?: boolean
   rateLimitBypassKey?: string
@@ -189,8 +203,6 @@ export type ServerEnvironment = {
   // secrets
   jwtSecret?: string
   adminPassword?: string
-  moderatorPassword?: string
-  triagePassword?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string
