@@ -41,3 +41,23 @@ const stringifyHeaders = (headers: Headers) =>
 
 const stringifyBody = (body: string) =>
   body ? `\n  ${body.replace(/\r?\n/g, '\\n')}` : ''
+
+export const timeoutFetchWrap = ({
+  fetch = globalThis.fetch as Fetch,
+  timeout = 60e3,
+} = {}): Fetch => {
+  if (timeout === Infinity) return fetch
+  if (!(timeout > 0)) throw new TypeError('Timeout must be positive')
+
+  return async (request) => {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeout).unref()
+    const signal = controller.signal
+    signal.addEventListener('abort', () => clearTimeout(timeoutId))
+    request.signal?.addEventListener('abort', () => controller.abort(), {
+      signal,
+    })
+
+    return fetch(new Request(request, { signal }))
+  }
+}
