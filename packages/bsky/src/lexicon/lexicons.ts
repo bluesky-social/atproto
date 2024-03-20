@@ -2438,9 +2438,11 @@ export const schemaDict = {
         properties: {
           privacyPolicy: {
             type: 'string',
+            format: 'uri',
           },
           termsOfService: {
             type: 'string',
+            format: 'uri',
           },
         },
       },
@@ -3621,6 +3623,7 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+            format: 'uri',
           },
           associated: {
             type: 'ref',
@@ -3663,6 +3666,7 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+            format: 'uri',
           },
           associated: {
             type: 'ref',
@@ -3709,9 +3713,11 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+            format: 'uri',
           },
           banner: {
             type: 'string',
+            format: 'uri',
           },
           followersCount: {
             type: 'integer',
@@ -4388,6 +4394,7 @@ export const schemaDict = {
           },
           thumb: {
             type: 'string',
+            format: 'uri',
           },
         },
       },
@@ -4468,11 +4475,13 @@ export const schemaDict = {
         properties: {
           thumb: {
             type: 'string',
+            format: 'uri',
             description:
               'Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View.',
           },
           fullsize: {
             type: 'string',
+            format: 'uri',
             description:
               'Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View.',
           },
@@ -4886,6 +4895,7 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+            format: 'uri',
           },
           likeCount: {
             type: 'integer',
@@ -6201,6 +6211,7 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+            format: 'uri',
           },
           labels: {
             type: 'array',
@@ -6258,6 +6269,7 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+            format: 'uri',
           },
           labels: {
             type: 'array',
