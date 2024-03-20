@@ -62,7 +62,7 @@ export default async (sc: SeedClient) => {
    * "detached" thread, where one Fred post breaks the continuity.
    */
   await sc.post(eve, evePosts[1])
-  await sc.reply(
+  const fredReply = await sc.reply(
     fred,
     sc.posts[eve][1].ref,
     sc.posts[eve][1].ref,
@@ -80,6 +80,9 @@ export default async (sc: SeedClient) => {
     sc.replies[eve][4].ref,
     eveFredReplies[1],
   )
+
+  // a repost for eve's feed
+  await sc.repost(eve, fredReply.ref)
 
   return sc
 }
