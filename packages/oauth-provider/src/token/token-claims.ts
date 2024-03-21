@@ -1,7 +1,7 @@
 import { jwtPayloadSchema } from '@atproto/jwk'
+import { oauthClientIdSchema } from '@atproto/oauth-client-metadata'
 import z from 'zod'
 
-import { clientIdSchema } from '../client/client-id.js'
 import { subSchema } from '../oidc/sub.js'
 import { Simplify } from '../util/type.js'
 
@@ -23,7 +23,7 @@ export const tokenClaimsSchema = z.intersection(
     .partial()
     .extend({
       sub: subSchema,
-      client_id: clientIdSchema,
+      client_id: oauthClientIdSchema,
     }),
 )
 
