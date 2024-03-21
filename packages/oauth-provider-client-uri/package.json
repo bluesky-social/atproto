@@ -28,6 +28,7 @@
     }
   },
   "dependencies": {
+    "@atproto/caching": "workspace:*",
     "@atproto/fetch": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "@atproto/oauth-provider": "workspace:*",
