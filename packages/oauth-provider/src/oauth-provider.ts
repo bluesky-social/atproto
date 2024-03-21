@@ -16,6 +16,11 @@ import {
   writeJson,
 } from '@atproto/http-util'
 import { Jwks, Jwt, Keyset, jwtSchema } from '@atproto/jwk'
+import {
+  OAuthClientId,
+  oauthClientIdSchema,
+} from '@atproto/oauth-client-metadata'
+
 import { JWTHeaderParameters, ResolvedKey } from 'jose'
 import { z } from 'zod'
 
@@ -36,7 +41,6 @@ import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   ClientIdentification,
 } from './client/client-credentials.js'
-import { ClientId, clientIdSchema } from './client/client-id.js'
 import { ClientDataHook, ClientManager } from './client/client-manager.js'
 import { ClientStore, asClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
@@ -536,7 +540,7 @@ export class OAuthProvider extends OAuthVerifier {
   protected async acceptRequest(
     deviceId: DeviceId,
     uri: RequestUri,
-    clientId: ClientId,
+    clientId: OAuthClientId,
     sub: string,
   ): Promise<AuthorizationResultRedirect> {
     const { issuer } = this
@@ -593,7 +597,7 @@ export class OAuthProvider extends OAuthVerifier {
   protected async rejectRequest(
     deviceId: DeviceId,
     uri: RequestUri,
-    clientId: ClientId,
+    clientId: OAuthClientId,
   ): Promise<AuthorizationResultRedirect> {
     try {
       const { parameters } = await this.requestManager.get(
@@ -1148,7 +1152,7 @@ export class OAuthProvider extends OAuthVerifier {
     const acceptQuerySchema = z.object({
       csrf_token: z.string(),
       request_uri: requestUriSchema,
-      client_id: clientIdSchema,
+      client_id: oauthClientIdSchema,
       account_sub: z.string(),
     })
 
@@ -1202,7 +1206,7 @@ export class OAuthProvider extends OAuthVerifier {
     const rejectQuerySchema = z.object({
       csrf_token: z.string(),
       request_uri: requestUriSchema,
-      client_id: clientIdSchema,
+      client_id: oauthClientIdSchema,
     })
 
     router.get('/oauth/authorize/reject', async function (req, res) {

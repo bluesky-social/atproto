@@ -1,9 +1,9 @@
 import {
-  ClientId,
-  ClientMetadata,
   ClientStore,
   InvalidClientMetadataError,
   InvalidRedirectUriError,
+  OAuthClientId,
+  OAuthClientMetadata,
   parseRedirectUri,
 } from '@atproto/oauth-provider'
 import {
@@ -29,7 +29,7 @@ export class OauthClientStore
  * Allow "loopback" clients using the following client metadata (as defined in
  * the ATPROTO spec).
  */
-function loopbackMetadata({ href }: URL): Partial<ClientMetadata> {
+function loopbackMetadata({ href }: URL): Partial<OAuthClientMetadata> {
   return {
     client_name: 'Loopback ATPROTO client',
     client_uri: href,
@@ -49,9 +49,9 @@ function loopbackMetadata({ href }: URL): Partial<ClientMetadata> {
  * Make sure that fetched metadata are spec compliant
  */
 function validateMetadata(
-  clientId: ClientId,
+  clientId: OAuthClientId,
   clientUrl: URL,
-  metadata: ClientMetadata,
+  metadata: OAuthClientMetadata,
 ) {
   // ATPROTO spec requires the use of DPoP (default is false)
   if (metadata.dpop_bound_access_tokens !== true) {

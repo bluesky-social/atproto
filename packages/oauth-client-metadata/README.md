@@ -1,0 +1,1 @@
+# @atproto/oauth-client-metadata

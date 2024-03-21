@@ -9,12 +9,12 @@ import { Jwks, jwksSchema } from '@atproto/jwk'
 import {
   Awaitable,
   ClientData,
-  ClientId,
-  ClientMetadata,
   ClientStore,
   InvalidClientMetadataError,
   InvalidRedirectUriError,
-  clientMetadataSchema,
+  OAuthClientId,
+  OAuthClientMetadata,
+  oauthClientMetadataSchema,
   parseRedirectUri,
 } from '@atproto/oauth-provider'
 import { compose } from '@atproto/transformer'
@@ -24,7 +24,7 @@ import { buildWellknownUrl, isInternetHost, isLoopbackHost } from './util.js'
 const metadataTransformer = compose(
   fetchOkProcessor(),
   fetchJsonProcessor('application/json', false),
-  fetchZodBodyProcessor(clientMetadataSchema),
+  fetchZodBodyProcessor(oauthClientMetadataSchema),
 )
 
 const responseToJwksTransformer = compose(
@@ -35,11 +35,11 @@ const responseToJwksTransformer = compose(
 
 export type LoopbackMetadataGetter = (
   url: URL,
-) => Awaitable<Partial<ClientMetadata>>
+) => Awaitable<Partial<OAuthClientMetadata>>
 export type ClientMetadataValidator = (
-  clientId: ClientId,
+  clientId: OAuthClientId,
   clientUrl: URL,
-  metadata: ClientMetadata,
+  metadata: OAuthClientMetadata,
 ) => Awaitable<void>
 
 export type OAuthClientUriStoreConfig = {
@@ -87,7 +87,7 @@ export class OAuthClientUriStore implements ClientStore {
     this.validateMetadataCustom = validateMetadata || undefined
   }
 
-  public async findClient(clientId: ClientId): Promise<ClientData> {
+  public async findClient(clientId: OAuthClientId): Promise<ClientData> {
     const clientUrl = await this.buildClientUrl(clientId)
 
     if (isLoopbackHost(clientUrl.hostname)) {
@@ -104,7 +104,7 @@ export class OAuthClientUriStore implements ClientStore {
     }
   }
 
-  protected async buildClientUrl(clientId: ClientId): Promise<URL> {
+  protected async buildClientUrl(clientId: OAuthClientId): Promise<URL> {
     const url = (() => {
       try {
         return new URL(clientId)
@@ -139,7 +139,7 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async loopbackClient(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
   ): Promise<ClientData> {
     if (!this.loopbackMetadata) {
@@ -158,7 +158,7 @@ export class OAuthClientUriStore implements ClientStore {
       )
     }
 
-    const metadata = clientMetadataSchema.parse(
+    const metadata = oauthClientMetadataSchema.parse(
       await this.loopbackMetadata(clientUrl),
     )
 
@@ -168,7 +168,7 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async internetClient(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
   ): Promise<ClientData> {
     const metadataEndpoint = await this.getMetadataEndpoint(clientId, clientUrl)
@@ -184,7 +184,7 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async getMetadataEndpoint(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
   ): Promise<URL> {
     return buildWellknownUrl(clientUrl, `oauth-client-metadata`)
@@ -192,7 +192,7 @@ export class OAuthClientUriStore implements ClientStore {
 
   protected async fetchMetadata(
     metadataEndpoint: string | URL,
-  ): Promise<ClientMetadata> {
+  ): Promise<OAuthClientMetadata> {
     const request = new Request(metadataEndpoint, {
       redirect: 'error',
       headers: { accept: 'application/json' },
@@ -216,9 +216,9 @@ export class OAuthClientUriStore implements ClientStore {
    * ClientManager class in the oauth-provider package.
    */
   protected async validateMetadata(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
-    metadata: ClientMetadata,
+    metadata: OAuthClientMetadata,
   ): Promise<void> {
     await this.validateMetadataClientId(clientId, clientUrl, metadata)
     await this.validateMetadataClientUri(clientId, clientUrl, metadata)
@@ -227,9 +227,9 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async validateMetadataClientId(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
-    metadata: ClientMetadata,
+    metadata: OAuthClientMetadata,
   ): Promise<void> {
     if (metadata.client_id && metadata.client_id !== clientId) {
       throw new InvalidClientMetadataError('client_id must match the client ID')
@@ -237,9 +237,9 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async validateMetadataClientUri(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
-    metadata: ClientMetadata,
+    metadata: OAuthClientMetadata,
   ): Promise<void> {
     if (metadata.client_uri && metadata.client_uri !== clientUrl.href) {
       throw new InvalidClientMetadataError(
@@ -249,9 +249,9 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async validateMetadataRedirectUris(
-    clientId: ClientId,
+    clientId: OAuthClientId,
     clientUrl: URL,
-    metadata: ClientMetadata,
+    metadata: OAuthClientMetadata,
   ): Promise<void> {
     for (const redirectUri of metadata.redirect_uris) {
       const uri = parseRedirectUri(redirectUri)
