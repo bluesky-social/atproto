@@ -5,6 +5,7 @@
     { "path": "./packages/aws" },
     { "path": "./packages/bsky" },
     { "path": "./packages/bsync" },
+    { "path": "./packages/caching" },
     { "path": "./packages/common" },
     { "path": "./packages/common-web" },
     { "path": "./packages/crypto" },
