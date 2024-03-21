@@ -18,6 +18,7 @@
     { "path": "./packages/jwk-node" },
     { "path": "./packages/lex-cli" },
     { "path": "./packages/lexicon" },
+    { "path": "./packages/oauth-client-metadata" },
     { "path": "./packages/oauth-provider" },
     { "path": "./packages/oauth-provider-client-uri" },
     { "path": "./packages/oauth-provider-client-fqdn" },

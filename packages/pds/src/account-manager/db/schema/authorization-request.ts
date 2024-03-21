@@ -1,4 +1,9 @@
-import { ClientId, Code, DeviceId, RequestId } from '@atproto/oauth-provider'
+import {
+  Code,
+  DeviceId,
+  OAuthClientId,
+  RequestId,
+} from '@atproto/oauth-provider'
 import { Selectable } from 'kysely'
 import { DateISO, JsonObject } from '../../../db'
 
@@ -7,7 +12,7 @@ export interface AuthorizationRequest {
   did: string | null
   deviceId: DeviceId | null
 
-  clientId: ClientId
+  clientId: OAuthClientId
   clientAuth: JsonObject
   parameters: JsonObject
   expiresAt: DateISO // TODO: Index this

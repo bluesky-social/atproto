@@ -1,4 +1,5 @@
-import { ClientId } from '../client/client-id.js'
+import { OAuthClientId } from '@atproto/oauth-client-metadata'
+
 import { DeviceId } from '../device/device-id.js'
 import { Sub } from '../oidc/sub.js'
 import { Awaitable } from '../util/awaitable.js'
@@ -19,7 +20,7 @@ export type LoginCredentials = {
 export type DeviceAccountInfo = {
   remembered: boolean
   authenticatedAt: Date
-  authorizedClients: readonly ClientId[]
+  authorizedClients: readonly OAuthClientId[]
 }
 
 // Export all types needed to implement the AccountStore interface
@@ -39,7 +40,7 @@ export interface AccountStore {
   addAuthorizedClient(
     deviceId: DeviceId,
     sub: Sub,
-    clientId: ClientId,
+    clientId: OAuthClientId,
   ): Awaitable<void>
 
   getDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<AccountInfo | null>

@@ -1,8 +1,8 @@
+import { oauthClientIdSchema } from '@atproto/oauth-client-metadata'
 import { z } from 'zod'
 
 import { accessTokenSchema } from '../access-token/access-token.js'
 import { clientIdentificationSchema } from '../client/client-credentials.js'
-import { clientIdSchema } from '../client/client-id.js'
 import { AuthorizationDetails } from '../parameters/authorization-details.js'
 import { codeSchema } from '../request/code.js'
 import { refreshTokenSchema } from './refresh-token.js'
@@ -31,7 +31,7 @@ export const refreshGrantRequestSchema = z.intersection(
   z.object({
     grant_type: z.literal('refresh_token'),
     refresh_token: refreshTokenSchema,
-    client_id: clientIdSchema,
+    client_id: oauthClientIdSchema,
   }),
 )
 

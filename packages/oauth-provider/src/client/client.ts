@@ -1,5 +1,9 @@
 import { Jwks } from '@atproto/jwk'
 import {
+  OAuthClientId,
+  OAuthClientMetadata,
+} from '@atproto/oauth-client-metadata'
+import {
   JWTPayload,
   JWTVerifyGetKey,
   JWTVerifyOptions,
@@ -22,8 +26,6 @@ import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   ClientIdentification,
 } from './client-credentials.js'
-import { ClientId } from './client-id.js'
-import { ClientMetadata } from './client-metadata.js'
 
 type AuthEndpoint = 'token' | 'introspection' | 'revocation'
 
@@ -36,8 +38,8 @@ export class Client {
   private readonly keyGetter: JWTVerifyGetKey
 
   constructor(
-    public readonly id: ClientId,
-    public readonly metadata: ClientMetadata,
+    public readonly id: OAuthClientId,
+    public readonly metadata: OAuthClientMetadata,
     jwks: undefined | Jwks = metadata.jwks,
   ) {
     // If the remote JWKS content is provided, we don't need to fetch it again.

@@ -1,12 +1,14 @@
 import { Jwks, Keyset } from '@atproto/jwk'
+import {
+  OAuthClientId,
+  OAuthClientMetadata,
+} from '@atproto/oauth-client-metadata'
 
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { OAuthError } from '../errors/oauth-error.js'
 import { Awaitable } from '../util/awaitable.js'
 import { ClientData } from './client-data.js'
-import { ClientId } from './client-id.js'
-import { ClientMetadata } from './client-metadata.js'
 import { ClientStore } from './client-store.js'
 import { parseRedirectUri } from './client-utils.js'
 import { Client } from './client.js'
@@ -15,8 +17,8 @@ import { Client } from './client.js'
  * Use this to alter or override client metadata & jwks before they are used.
  */
 export type ClientDataHook = (
-  clientId: ClientId,
-  data: { metadata: ClientMetadata; jwks?: Jwks },
+  clientId: OAuthClientId,
+  data: { metadata: OAuthClientMetadata; jwks?: Jwks },
 ) => Awaitable<void>
 
 export class ClientManager {
@@ -31,7 +33,7 @@ export class ClientManager {
    * and OIDC specifications. It will also ensure that the metadata is
    * compatible with this implementation.
    */
-  protected async findClient(clientId: ClientId): Promise<ClientData> {
+  protected async findClient(clientId: OAuthClientId): Promise<ClientData> {
     try {
       const { metadata, jwks } = await this.store.findClient(clientId)
 

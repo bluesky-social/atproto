@@ -1,8 +1,7 @@
 import { Jwks } from '@atproto/jwk'
-
-import { ClientMetadata } from './client-metadata.js'
+import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
 
 export type ClientData = {
-  metadata: ClientMetadata
+  metadata: OAuthClientMetadata
   jwks?: Jwks
 }

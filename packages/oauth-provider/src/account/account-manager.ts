@@ -1,4 +1,4 @@
-import { ClientId } from '../client/client-id.js'
+import { OAuthClientId } from '@atproto/oauth-client-metadata'
 import { DeviceId } from '../device/device-id.js'
 import { UnauthorizedError } from '../errors/unauthorized-error.js'
 import { Sub } from '../oidc/sub.js'
@@ -32,7 +32,7 @@ export class AccountManager {
   public async addAuthorizedClient(
     deviceId: DeviceId,
     sub: Sub,
-    clientId: ClientId,
+    clientId: OAuthClientId,
   ): Promise<void> {
     await this.store.addAuthorizedClient(deviceId, sub, clientId)
   }

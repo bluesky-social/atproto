@@ -1,7 +1,8 @@
+import { OAuthClientId } from '@atproto/oauth-client-metadata'
+
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
-import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
 import {
   AUTHORIZATION_INACTIVITY_TIMEOUT,
@@ -298,7 +299,7 @@ export class RequestManager {
 
   async get(
     uri: RequestUri,
-    clientId: ClientId,
+    clientId: OAuthClientId,
     deviceId: DeviceId,
   ): Promise<RequestInfo> {
     const id = decodeRequestUri(uri)

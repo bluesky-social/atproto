@@ -1,4 +1,5 @@
-import { ClientId } from '../client/client-id.js'
+import { OAuthClientId } from '@atproto/oauth-client-metadata'
+
 import {
   CLIENT_ASSERTION_MAX_AGE,
   DPOP_NONCE_MAX_AGE,
@@ -12,7 +13,7 @@ const asTimeFrame = (timeFrame: number) => Math.ceil(timeFrame * SECURITY_RATIO)
 export class ReplayManager {
   constructor(protected readonly replayStore: ReplayStore) {}
 
-  async uniqueAuth(jti: string, clientId: ClientId): Promise<boolean> {
+  async uniqueAuth(jti: string, clientId: OAuthClientId): Promise<boolean> {
     return this.replayStore.unique(
       `Auth@${clientId}`,
       jti,
@@ -20,7 +21,7 @@ export class ReplayManager {
     )
   }
 
-  async uniqueJar(jti: string, clientId: ClientId): Promise<boolean> {
+  async uniqueJar(jti: string, clientId: OAuthClientId): Promise<boolean> {
     return this.replayStore.unique(
       `JAR@${clientId}`,
       jti,
@@ -28,7 +29,7 @@ export class ReplayManager {
     )
   }
 
-  async uniqueDpop(jti: string, clientId?: ClientId): Promise<boolean> {
+  async uniqueDpop(jti: string, clientId?: OAuthClientId): Promise<boolean> {
     return this.replayStore.unique(
       clientId ? `DPoP@${clientId}` : `DPoP`,
       jti,

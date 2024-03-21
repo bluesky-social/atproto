@@ -1,12 +1,11 @@
 import { z } from 'zod'
-
-import { clientIdSchema } from './client-id.js'
+import { oauthClientIdSchema } from '@atproto/oauth-client-metadata'
 
 export const CLIENT_ASSERTION_TYPE_JWT_BEARER =
   'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
 export const clientJwtBearerAssertionSchema = z.object({
-  client_id: clientIdSchema,
+  client_id: oauthClientIdSchema,
   client_assertion_type: z.literal(CLIENT_ASSERTION_TYPE_JWT_BEARER),
   /**
    * - "sub" the subject MUST be the "client_id" of the OAuth client
@@ -23,7 +22,7 @@ export const clientJwtBearerAssertionSchema = z.object({
 })
 
 export const clientSecretPostSchema = z.object({
-  client_id: clientIdSchema,
+  client_id: oauthClientIdSchema,
   client_secret: z.string(),
 })
 
@@ -37,7 +36,7 @@ export type ClientCredentials = z.infer<typeof clientCredentialsSchema>
 export const clientIdentificationSchema = z.union([
   clientCredentialsSchema,
   // Must be last since it is less specific
-  z.object({ client_id: clientIdSchema }),
+  z.object({ client_id: oauthClientIdSchema }),
 ])
 
 export type ClientIdentification = z.infer<typeof clientIdentificationSchema>

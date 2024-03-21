@@ -1,7 +1,7 @@
 import {
-  ClientId,
   Code,
   DeviceId,
+  OAuthClientId,
   RefreshToken,
   Sub,
   TokenId,
@@ -18,7 +18,7 @@ export interface Token {
   createdAt: DateISO
   updatedAt: DateISO
   expiresAt: DateISO
-  clientId: ClientId
+  clientId: OAuthClientId
   clientAuth: JsonObject
   deviceId: DeviceId | null
   parameters: JsonObject

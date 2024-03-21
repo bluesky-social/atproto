@@ -1,8 +1,8 @@
 import {
   Account,
-  ClientId,
   DeviceAccountInfo,
   DeviceId,
+  OAuthClientId,
 } from '@atproto/oauth-provider'
 import { Insertable, Selectable } from 'kysely'
 
@@ -29,7 +29,7 @@ const selectAccountInfoQB = (db: AccountDb, deviceId: DeviceId) =>
 
 export type InsertableField = {
   authenticatedAt: Date
-  authorizedClients: ClientId[]
+  authorizedClients: OAuthClientId[]
   remember: boolean
 }
 
@@ -58,7 +58,7 @@ export function toDeviceAccountInfo(
   return {
     remembered: row.remember === 1,
     authenticatedAt: fromDateISO(row.authenticatedAt),
-    authorizedClients: fromJsonArray<ClientId[]>(row.authorizedClients),
+    authorizedClients: fromJsonArray<OAuthClientId[]>(row.authorizedClients),
   }
 }
 
@@ -87,7 +87,7 @@ export const getAuthorizedClients = async (
     .select('authorizedClients')
     .executeTakeFirstOrThrow()
 
-  return fromJsonArray<ClientId[]>(row.authorizedClients)
+  return fromJsonArray<OAuthClientId[]>(row.authorizedClients)
 }
 
 export const update = async (
@@ -96,7 +96,7 @@ export const update = async (
   did: string,
   entry: {
     authenticatedAt?: Date
-    authorizedClients?: ClientId[]
+    authorizedClients?: OAuthClientId[]
     remember?: boolean
   },
 ): Promise<void> => {
