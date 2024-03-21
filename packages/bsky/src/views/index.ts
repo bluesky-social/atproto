@@ -465,48 +465,33 @@ export class Views {
       post,
       reason,
       reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(item.post.uri, state, true)
+        ? this.replyRef(item.post.uri, state)
         : undefined,
     }
   }
 
-  replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
+  replyRef(uri: string, state: HydrationState) {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
-    let root = this.maybePost(
-      postRecord.reply.root.uri,
-      state,
-      usePostViewUnion,
-    )
-    let parent = this.maybePost(
-      postRecord.reply.parent.uri,
-      state,
-      usePostViewUnion,
-    )
+    let root = this.maybePost(postRecord.reply.root.uri, state)
+    let parent = this.maybePost(postRecord.reply.parent.uri, state)
     if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
-      const parentUri = parent.uri
-      parent = usePostViewUnion
-        ? this.blockedPost(parent.uri, parent.author.did, state)
-        : undefined
-      // in a reply to the root of a thread, parent and root should be identical.
-      if (root?.uri === parentUri) {
+      parent = this.blockedPost(parent.uri, parent.author.did, state)
+      // in a reply to the root of a thread, parent and root are the same post.
+      if (root.uri === parent.uri) {
         root = parent
       }
     }
     return root && parent ? { root, parent } : undefined
   }
 
-  maybePost(
-    uri: string,
-    state: HydrationState,
-    usePostViewUnion = false,
-  ): MaybePostView | undefined {
+  maybePost(uri: string, state: HydrationState): MaybePostView {
     const post = this.post(uri, state)
-    if (!post) return usePostViewUnion ? this.notFoundPost(uri) : undefined
+    if (!post) {
+      return this.notFoundPost(uri)
+    }
     if (this.viewerBlockExists(post.author.did, state)) {
-      return usePostViewUnion
-        ? this.blockedPost(uri, post.author.did, state)
-        : undefined
+      return this.blockedPost(uri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
