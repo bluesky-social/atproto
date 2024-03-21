@@ -1,9 +1,9 @@
+import { CachedGetter, GenericStore, MemoryStore } from '@atproto/caching'
 import {
   Fetch,
   fetchFailureHandler,
   fetchJsonProcessor,
   fetchOkProcessor,
-  fetchZodBodyProcessor,
 } from '@atproto/fetch'
 import { Jwks, jwksSchema } from '@atproto/jwk'
 import {
@@ -20,18 +20,6 @@ import {
 import { compose } from '@atproto/transformer'
 
 import { buildWellknownUrl, isInternetHost, isLoopbackHost } from './util.js'
-
-const metadataTransformer = compose(
-  fetchOkProcessor(),
-  fetchJsonProcessor('application/json', false),
-  fetchZodBodyProcessor(oauthClientMetadataSchema),
-)
-
-const responseToJwksTransformer = compose(
-  fetchOkProcessor(),
-  fetchJsonProcessor('application/json', false),
-  fetchZodBodyProcessor(jwksSchema),
-)
 
 export type LoopbackMetadataGetter = (
   url: URL,
@@ -50,6 +38,12 @@ export type OAuthClientUriStoreConfig = {
    * provide `globalThis.fetch` as fetch function.
    */
   fetch: Fetch
+
+  /**
+   * In order to speed up the client fetching process, you can provide a cache
+   * to store HTTP responses.
+   */
+  cache?: GenericStore<string>
 
   /**
    * In order to enable loopback clients, you can provide a function that
@@ -72,19 +66,37 @@ export type OAuthClientUriStoreConfig = {
  * clients are not pre-registered, we need to fetch their data from the network.
  */
 export class OAuthClientUriStore implements ClientStore {
-  protected readonly fetch: Fetch
+  #jsonFetch: CachedGetter<string>
+
   protected readonly loopbackMetadata?: LoopbackMetadataGetter
   protected readonly validateMetadataCustom?: ClientMetadataValidator
 
   constructor({
     fetch,
+    cache = new MemoryStore({ maxSize: 50 * 1024 * 1024 }),
     loopbackMetadata,
     validateMetadata,
   }: OAuthClientUriStoreConfig) {
-    this.fetch = fetch
-
     this.loopbackMetadata = loopbackMetadata || undefined
     this.validateMetadataCustom = validateMetadata || undefined
+
+    const jsonFetch = compose(
+      fetch,
+      fetchOkProcessor(),
+      fetchJsonProcessor('application/json', false),
+      (jsonResponse: { body: unknown }) => jsonResponse.body,
+    )
+
+    this.#jsonFetch = new CachedGetter<string>(async (url, options) => {
+      const headers = new Headers([['accept', 'application/json']])
+      if (options?.noCache) headers.set('cache-control', 'no-cache')
+      const request = new Request(url, {
+        headers,
+        signal: options?.signal,
+        redirect: 'error',
+      })
+      return jsonFetch(request).catch(fetchFailureHandler)
+    }, cache)
   }
 
   public async findClient(clientId: OAuthClientId): Promise<ClientData> {
@@ -178,7 +190,7 @@ export class OAuthClientUriStore implements ClientStore {
     return {
       metadata,
       jwks: metadata.jwks_uri
-        ? await this.fetchJwks(metadata.jwks_uri)
+        ? await this.fetchJwks(new URL(metadata.jwks_uri))
         : undefined,
     }
   }
@@ -191,23 +203,15 @@ export class OAuthClientUriStore implements ClientStore {
   }
 
   protected async fetchMetadata(
-    metadataEndpoint: string | URL,
+    metadataEndpoint: URL,
   ): Promise<OAuthClientMetadata> {
-    const request = new Request(metadataEndpoint, {
-      redirect: 'error',
-      headers: { accept: 'application/json' },
-    })
-    const { fetch } = this
-    return fetch(request).then(metadataTransformer, fetchFailureHandler)
+    const json = await this.#jsonFetch.get(metadataEndpoint.href)
+    return oauthClientMetadataSchema.parse(json)
   }
 
-  protected async fetchJwks(jwksUri: string): Promise<Jwks> {
-    const request = new Request(jwksUri, {
-      redirect: 'error',
-      headers: { accept: 'application/json' },
-    })
-    const { fetch } = this
-    return fetch(request).then(responseToJwksTransformer, fetchFailureHandler)
+  protected async fetchJwks(jwksUri: URL): Promise<Jwks> {
+    const json = this.#jsonFetch.get(jwksUri.href)
+    return jwksSchema.parse(json)
   }
 
   /**
