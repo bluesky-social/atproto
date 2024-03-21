@@ -25,6 +25,7 @@
     { "path": "./packages/oauth-provider-client-fqdn" },
     { "path": "./packages/oauth-provider-replay-memory" },
     { "path": "./packages/oauth-provider-replay-redis" },
+    { "path": "./packages/oauth-server-metadata" },
     { "path": "./packages/ozone" },
     { "path": "./packages/pds" },
     { "path": "./packages/repo" },
