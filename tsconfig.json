@@ -10,6 +10,8 @@
     { "path": "./packages/common-web" },
     { "path": "./packages/crypto" },
     { "path": "./packages/dev-env" },
+    { "path": "./packages/did" },
+    { "path": "./packages/did-node" },
     { "path": "./packages/fetch" },
     { "path": "./packages/fetch-node" },
     { "path": "./packages/html" },
