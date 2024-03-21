@@ -20,7 +20,7 @@ import {
   OAuthClientId,
   oauthClientIdSchema,
 } from '@atproto/oauth-client-metadata'
-
+import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 import { JWTHeaderParameters, ResolvedKey } from 'jose'
 import { z } from 'zod'
 
@@ -54,11 +54,7 @@ import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
-import {
-  CustomMetadata,
-  Metadata,
-  buildMetadata,
-} from './metadata/build-metadata.js'
+import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Userinfo } from './oidc/userinfo.js'
 import {
@@ -129,7 +125,13 @@ export type OAuthProviderStore = Partial<
     ReplayStore
 >
 
-export { Keyset, type CustomMetadata, type Customization, type Handler }
+export {
+  Keyset,
+  type CustomMetadata,
+  type Customization,
+  type Handler,
+  type OAuthServerMetadata,
+}
 export type OAuthProviderOptions = OAuthVerifierOptions & {
   /**
    * Maximum age a device/account session can be before requiring
@@ -172,7 +174,7 @@ export type OAuthProviderOptions = OAuthVerifierOptions & {
 }
 
 export class OAuthProvider extends OAuthVerifier {
-  public readonly metadata: Metadata
+  public readonly metadata: OAuthServerMetadata
 
   public readonly defaultMaxAge: number
 
