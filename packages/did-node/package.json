@@ -1,0 +1,27 @@
+{
+  "name": "@atproto/did-node",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Backend safe version of the @atproto/did DID library for node.js",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "did",
+    "node"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/did-node"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/did": "workspace:*",
+    "@atproto/fetch-node": "workspace:*"
+  }
+}
