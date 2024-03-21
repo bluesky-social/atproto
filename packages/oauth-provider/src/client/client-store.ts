@@ -1,13 +1,15 @@
+import {
+  OAuthClientId,
+  OAuthClientMetadata,
+} from '@atproto/oauth-client-metadata'
 import { Awaitable } from '../util/awaitable.js'
-import { ClientId } from './client-id.js'
-import { ClientMetadata } from './client-metadata.js'
 import { ClientData } from './client-data.js'
 
 // Export all types needed to implement the ClientStore interface
-export type { ClientId, ClientMetadata, ClientData, Awaitable }
+export type { Awaitable, ClientData, OAuthClientId, OAuthClientMetadata }
 
 export interface ClientStore {
-  findClient(clientId: ClientId): Awaitable<ClientData>
+  findClient(clientId: OAuthClientId): Awaitable<ClientData>
 }
 
 export function isClientStore(

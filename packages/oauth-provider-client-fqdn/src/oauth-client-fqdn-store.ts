@@ -1,7 +1,7 @@
 import {
-  ClientId,
   ClientStore,
   InvalidClientMetadataError,
+  OAuthClientId,
 } from '@atproto/oauth-provider'
 import {
   OAuthClientUriStore,
@@ -20,7 +20,7 @@ export class OAuthClientFQDNStore
   extends OAuthClientUriStore
   implements ClientStore
 {
-  override async buildClientUrl(clientId: ClientId): Promise<URL> {
+  override async buildClientUrl(clientId: OAuthClientId): Promise<URL> {
     if (clientId === 'localhost') {
       return super.buildClientUrl('http://localhost/')
     }
