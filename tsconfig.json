@@ -14,6 +14,8 @@
     { "path": "./packages/did-node" },
     { "path": "./packages/fetch" },
     { "path": "./packages/fetch-node" },
+    { "path": "./packages/handle-resolver" },
+    { "path": "./packages/handle-resolver-node" },
     { "path": "./packages/html" },
     { "path": "./packages/http-util" },
     { "path": "./packages/identity" },
