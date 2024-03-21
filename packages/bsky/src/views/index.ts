@@ -18,6 +18,7 @@ import {
   ReasonRepost,
   ThreadViewPost,
   ThreadgateView,
+  isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
@@ -464,26 +465,34 @@ export class Views {
       post,
       reason,
       reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(item.post.uri, state)
+        ? this.replyRef(item.post.uri, state, true)
         : undefined,
     }
   }
 
   replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
-    // don't hydrate reply if there isn't it violates a block
-    if (state.postBlocks?.get(uri)?.reply) return undefined
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
-    const root = this.maybePost(
+    let root = this.maybePost(
       postRecord.reply.root.uri,
       state,
       usePostViewUnion,
     )
-    const parent = this.maybePost(
+    let parent = this.maybePost(
       postRecord.reply.parent.uri,
       state,
       usePostViewUnion,
     )
+    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
+      const parentUri = parent.uri
+      parent = usePostViewUnion
+        ? this.blockedPost(parent.uri, parent.author.did, state)
+        : undefined
+      // in a reply to the root of a thread, parent and root should be identical.
+      if (root?.uri === parentUri) {
+        root = parent
+      }
+    }
     return root && parent ? { root, parent } : undefined
   }
 
