@@ -35,6 +35,7 @@
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-node": "workspace:*",
     "@atproto/oauth-client-metadata": "workspace:*",
+    "@atproto/oauth-server-metadata": "workspace:*",
     "cookie": "^0.6.0",
     "jose": "^5.2.0",
     "keygrip": "^1.1.0",

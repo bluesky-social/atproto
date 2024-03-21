@@ -1,4 +1,5 @@
 import { Keyset } from '@atproto/jwk'
+import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 
 import { Client } from '../client/client.js'
 import { OIDC_STANDARD_CLAIMS } from '../oidc/claims.js'
@@ -10,9 +11,6 @@ export type CustomMetadata = {
   authorization_details_types_supported?: string[]
 }
 
-// TODO: Load from shared package (with client class)
-export type Metadata = ReturnType<typeof buildMetadata>
-
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414#section-2}
  * @see {@link https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata}
@@ -21,7 +19,7 @@ export function buildMetadata(
   issuer: string,
   keyset: Keyset,
   customMetadata?: CustomMetadata,
-) {
+): OAuthServerMetadata {
   return {
     issuer: issuer,
 
@@ -116,31 +114,37 @@ export function buildMetadata(
     request_uri_parameter_supported: true,
     require_request_uri_registration: true,
 
-    jwks_uri: new URL('/oauth/jwks', issuer),
+    jwks_uri: new URL('/oauth/jwks', issuer).href,
 
-    authorization_endpoint: new URL('/oauth/authorize', issuer),
+    authorization_endpoint: new URL('/oauth/authorize', issuer).href,
 
-    token_endpoint: new URL('/oauth/token', issuer),
+    token_endpoint: new URL('/oauth/token', issuer).href,
     token_endpoint_auth_methods_supported: [...Client.AUTH_METHODS_SUPPORTED],
     token_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
-    revocation_endpoint: new URL('/oauth/revoke', issuer),
+    revocation_endpoint: new URL('/oauth/revoke', issuer).href,
     revocation_endpoint_auth_methods_supported: [
       ...Client.AUTH_METHODS_SUPPORTED,
     ],
     revocation_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
-    introspection_endpoint: new URL('/oauth/introspect', issuer),
+    introspection_endpoint: new URL('/oauth/introspect', issuer).href,
     introspection_endpoint_auth_methods_supported: [
       ...Client.AUTH_METHODS_SUPPORTED,
     ],
     introspection_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
-    userinfo_endpoint: new URL('/oauth/userinfo', issuer),
-    // end_session_endpoint: new URL('/oauth/logout', issuer),
+    userinfo_endpoint: new URL('/oauth/userinfo', issuer).href,
+    // end_session_endpoint: new URL('/oauth/logout', issuer).href,
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-5
-    pushed_authorization_request_endpoint: new URL('/oauth/par', issuer),
+    pushed_authorization_request_endpoint: new URL('/oauth/par', issuer).href,
+    pushed_authorization_request_endpoint_auth_methods_supported: [
+      ...Client.AUTH_METHODS_SUPPORTED,
+    ],
+    pushed_authorization_request_endpoint_auth_signing_alg_values_supported: [
+      ...VERIFY_ALGOS,
+    ],
 
     require_pushed_authorization_requests: true,
 
