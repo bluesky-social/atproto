@@ -43,7 +43,7 @@ import {
 } from './client/client-credentials.js'
 import { ClientDataHook, ClientManager } from './client/client-manager.js'
 import { ClientStore, asClientStore } from './client/client-store.js'
-import { Client } from './client/client.js'
+import { AuthEndpoint, Client } from './client/client.js'
 import { AUTH_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { DeviceId } from './device/device-id.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
@@ -259,7 +259,7 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected async authenticateClient(
     client: Client,
-    endpoint: 'token' | 'introspection' | 'revocation',
+    endpoint: AuthEndpoint,
     credentials: ClientIdentification,
   ): Promise<ClientAuth> {
     const { clientAuth, nonce } = await client.verifyCredentials(
@@ -342,7 +342,11 @@ export class OAuthProvider extends OAuthVerifier {
     dpopJkt: null | string,
   ) {
     const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(client, 'token', input)
+    const clientAuth = await this.authenticateClient(
+      client,
+      'pushed_authorization_request',
+      input,
+    )
 
     // TODO (?) should we allow using signed JAR for client authentication?
     const { payload: parameters } =
