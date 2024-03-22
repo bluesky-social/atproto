@@ -44,7 +44,7 @@ export async function sendAuthorizeRedirect(
   const { issuer, parameters, redirect, client } = result
 
   const uri = parameters.redirect_uri || client.metadata.redirect_uris[0]
-  const mode = parameters.response_mode || 'query'
+  const mode = parameters.response_mode || 'query' // TODO: default depends on response_type
 
   const entries: [string, string][] = Object.entries({
     iss: issuer, // rfc9207
