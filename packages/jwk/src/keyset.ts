@@ -31,7 +31,7 @@ export type JwtVerifyResult<P> = {
 
 export type KeySearch = {
   use?: 'sig' | 'enc'
-  kid?: string
+  kid?: string | string[]
   alg?: string | string[]
 }
 
@@ -109,9 +109,19 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   }
 
   *list(search: KeySearch): Generator<K> {
+    // Optimization: Empty string or empty array will not match any key
+    if (search.kid?.length === 0) return
+    if (search.alg?.length === 0) return
+
     for (const key of this) {
-      if (search.kid && key.kid !== search.kid) continue
       if (search.use && key.use !== search.use) continue
+
+      if (Array.isArray(search.kid)) {
+        if (!search.kid.includes(key.kid)) continue
+      } else if (search.kid) {
+        if (key.kid !== search.kid) continue
+      }
+
       if (Array.isArray(search.alg)) {
         if (!search.alg.some((a) => key.algorithms.includes(a))) continue
       } else if (typeof search.alg === 'string') {
