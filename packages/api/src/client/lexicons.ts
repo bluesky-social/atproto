@@ -1067,6 +1067,8 @@ export const schemaDict = {
               },
               reason: {
                 type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
                 description:
                   'Additional context about the content and violation.',
               },
@@ -3054,7 +3056,8 @@ export const schemaDict = {
             commit: {
               type: 'string',
               format: 'cid',
-              description: 'An optional past commit CID.',
+              description:
+                'DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit',
             },
           },
         },
