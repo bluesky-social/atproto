@@ -27,7 +27,11 @@ import {
   ClientIdentification,
 } from './client-credentials.js'
 
-type AuthEndpoint = 'token' | 'introspection' | 'revocation'
+export type AuthEndpoint =
+  | 'token'
+  | 'introspection'
+  | 'revocation'
+  | 'pushed_authorization_request'
 
 export class Client {
   /**
