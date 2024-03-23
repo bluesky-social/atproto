@@ -23,7 +23,14 @@
       },
       "output": {
         "encoding": "*/*"
-      }
+      },
+      "errors": [
+        { "name": "BlobNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

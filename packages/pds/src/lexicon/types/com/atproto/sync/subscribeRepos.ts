@@ -16,6 +16,7 @@ export interface QueryParams {
 export type OutputSchema =
   | Commit
   | Identity
+  | Account
   | Handle
   | Migrate
   | Tombstone
@@ -90,6 +91,35 @@ export function isIdentity(v: unknown): v is Identity {
 
 export function validateIdentity(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.sync.subscribeRepos#identity', v)
+}
+
+/** Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active. */
+export interface Account {
+  seq: number
+  did: string
+  time: string
+  /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
+  active: boolean
+  /** If active=false, this optional field indicates a reason for why the account is not active. */
+  status?:
+    | 'com.atproto.sync.defs#takendown'
+    | 'com.atproto.sync.defs#suspended'
+    | 'com.atproto.sync.defs#deleted'
+    | 'com.atproto.sync.defs#deactivated'
+    | (string & {})
+  [k: string]: unknown
+}
+
+export function isAccount(v: unknown): v is Account {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#account'
+  )
+}
+
+export function validateAccount(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#account', v)
 }
 
 /** Represents an update of the account's handle, or transition to/from invalid state. NOTE: Will be deprecated in favor of #identity. */
