@@ -101,9 +101,9 @@ export class Views {
             cidFromBlobJson(actor.profile.banner),
           )
         : undefined,
-      followersCount: profileAggs?.followers,
-      followsCount: profileAggs?.follows,
-      postsCount: profileAggs?.posts,
+      followersCount: profileAggs?.followers ?? 0,
+      followsCount: profileAggs?.follows ?? 0,
+      postsCount: profileAggs?.posts ?? 0,
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
@@ -296,7 +296,7 @@ export class Views {
       uri,
       cid: labeler.cid.toString(),
       creator,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
       viewer: viewer
         ? {
             like: viewer.like,
@@ -371,7 +371,7 @@ export class Views {
             cidFromBlobJson(feedgen.record.avatar),
           )
         : undefined,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
       labels,
       viewer: viewer
         ? {
@@ -427,9 +427,9 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
-      replyCount: aggs?.replies,
-      repostCount: aggs?.reposts,
-      likeCount: aggs?.likes,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
       indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {

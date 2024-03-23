@@ -168,6 +168,9 @@ export class LocalViewer {
     return {
       uri: uri.toString(),
       cid: cid.toString(),
+      likeCount: 0, // counts presumed to be 0 directly after post creation
+      replyCount: 0,
+      repostCount: 0,
       author,
       record,
       embed: embed ?? undefined,
@@ -240,9 +243,7 @@ export class LocalViewer {
     const collection = new AtUri(embed.record.uri).collection
     if (collection === ids.AppBskyFeedPost) {
       const res = await this.appViewAgent.api.app.bsky.feed.getPosts(
-        {
-          uris: [embed.record.uri],
-        },
+        { uris: [embed.record.uri] },
         await this.serviceAuthHeaders(this.did),
       )
       const post = res.data.posts[0]
@@ -259,24 +260,20 @@ export class LocalViewer {
       }
     } else if (collection === ids.AppBskyFeedGenerator) {
       const res = await this.appViewAgent.api.app.bsky.feed.getFeedGenerator(
-        {
-          feed: embed.record.uri,
-        },
+        { feed: embed.record.uri },
         await this.serviceAuthHeaders(this.did),
       )
       return {
-        $type: 'app.bsaky.feed.defs#generatorView',
+        $type: 'app.bsky.feed.defs#generatorView',
         ...res.data.view,
       }
     } else if (collection === ids.AppBskyGraphList) {
       const res = await this.appViewAgent.api.app.bsky.graph.getList(
-        {
-          list: embed.record.uri,
-        },
+        { list: embed.record.uri },
         await this.serviceAuthHeaders(this.did),
       )
       return {
-        $type: 'app.bsaky.graph.defs#listView',
+        $type: 'app.bsky.graph.defs#listView',
         ...res.data.list,
       }
     }
