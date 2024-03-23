@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/api" },
     { "path": "./packages/aws" },
+    { "path": "./packages/b64" },
     { "path": "./packages/bsky" },
     { "path": "./packages/bsync" },
     { "path": "./packages/caching" },
