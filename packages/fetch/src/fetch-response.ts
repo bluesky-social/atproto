@@ -144,54 +144,39 @@ export function fetchTypeProcessor(
   }
 }
 
-type ParsedJsonResponse<Body = unknown> = {
-  status: number
-  headers: Headers
-  body: Body
+export type ParsedJsonResponse<T = unknown> = {
+  response: Response
+  json: T
 }
 
-export async function jsonTranformer<Body = unknown>(
+export async function jsonTranformer<T = unknown>(
   response: Response,
-): Promise<ParsedJsonResponse<Body>> {
+): Promise<ParsedJsonResponse<T>> {
   return response
     .json()
-    .then((body) => ({
-      status: response.status,
-      headers: response.headers,
-      body: body as Body,
+    .then((json) => ({
+      response,
+      json: json as T,
     }))
     .catch((err) => {
       throw new FetchError(502, err, { response })
     })
 }
 
-export function fetchJsonProcessor<Body = unknown>(
+export function fetchJsonProcessor<T = unknown>(
   contentType: ContentTypeCheck = /^application\/(?:[^+]+\+)?json$/,
   contentTypeRequired = true,
-): Transformer<Response, ParsedJsonResponse<Body>> {
+): Transformer<Response, ParsedJsonResponse<T>> {
   return compose(
     fetchTypeProcessor(contentType, contentTypeRequired),
-    jsonTranformer<Body>,
+    jsonTranformer<T>,
   )
 }
 
-export function fetchZodProcessor<S extends z.ZodTypeAny>(
-  schema: S,
-  params?: Partial<z.ParseParams>,
-): Transformer<ParsedJsonResponse, z.infer<S>> {
-  return async ({
-    body,
-    ...rest
-  }: ParsedJsonResponse): Promise<ParsedJsonResponse<z.infer<S>>> => ({
-    body: schema.parseAsync(body, params),
-    ...rest,
-  })
-}
-
-export function fetchZodBodyProcessor<S extends z.ZodTypeAny>(
+export function fetchJsonZodProcessor<S extends z.ZodTypeAny>(
   schema: S,
   params?: Partial<z.ParseParams>,
 ): Transformer<ParsedJsonResponse, z.infer<S>> {
   return async (jsonResponse: ParsedJsonResponse): Promise<z.infer<S>> =>
-    schema.parseAsync(jsonResponse.body, params)
+    schema.parseAsync(jsonResponse.json, params)
 }
