@@ -10,9 +10,9 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const { id } = input.body
 
-      if (!access.isAdmin) {
+      if (!access.isModerator) {
         throw new AuthRequiredError(
-          'Must be an admin to delete a communication template',
+          'Must be a moderator to delete a communication template',
         )
       }
 
