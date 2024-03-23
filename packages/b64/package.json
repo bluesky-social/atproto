@@ -1,0 +1,28 @@
+{
+  "name": "@atproto/b64",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "A library for encoding/decoding in base64-url",
+  "keywords": [
+    "atproto",
+    "base64",
+    "base64-url"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/b64"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "base64-js": "^1.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}
