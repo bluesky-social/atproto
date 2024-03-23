@@ -19,14 +19,8 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "dependencies": {
-    "jose": "^5.2.2",
+    "@atproto/b64": "workspace:*",
     "tslib": "^2.6.2",
     "zod": "^3.22.4"
   },

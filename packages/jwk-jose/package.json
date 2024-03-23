@@ -1,26 +1,26 @@
 {
-  "name": "@atproto/jwk-node",
+  "name": "@atproto/jwk-jose",
   "version": "0.0.1",
   "license": "MIT",
   "description": "NodeJS implementation of Keypair from @atproto/jwk",
   "keywords": [
     "atproto",
     "jwk",
-    "node",
+    "jose",
     "keypair"
   ],
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/jwk-node"
+    "directory": "packages/jwk-jose"
   },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
     "@atproto/jwk": "workspace:*",
-    "@atproto/jwk-jose": "workspace:*",
+    "jose": "^5.2.0",
     "tslib": "^2.6.2"
   },
   "devDependencies": {

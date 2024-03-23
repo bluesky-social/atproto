@@ -1,33 +1,23 @@
-import { JWTVerifyOptions, SignJWT, jwtVerify } from 'jose'
-
 import { Jwk } from './jwk.js'
 import { Jwks } from './jwks.js'
+import { unsafeDecodeJwt } from './jwt-decode.js'
+import { VerifyOptions } from './jwt-verify.js'
 import { Jwt, JwtHeader, JwtPayload } from './jwt.js'
 import { Key } from './key.js'
 import {
   Override,
-  RequiredKey,
-  Simplify,
   cachedGetter,
   isDefined,
   matchesAny,
   preferredOrderCmp,
 } from './util.js'
 
-export type { JWTVerifyOptions }
-
-export type JwtProtectedHeader = RequiredKey<JwtHeader, 'kid'>
-export type JwtPayloadGetter<P = JwtPayload> = (
-  protectedHeader: JwtProtectedHeader,
-  key: Key,
-) => P | PromiseLike<P>
-
 export type JwtSignHeader = Override<JwtHeader, Pick<KeySearch, 'alg' | 'kid'>>
 
-export type JwtVerifyResult<P> = {
-  payload: Simplify<P & JwtPayload>
-  protectedHeader: JwtProtectedHeader
-}
+export type JwtPayloadGetter<P = JwtPayload> = (
+  header: JwtHeader,
+  key: Key,
+) => P | PromiseLike<P>
 
 export type KeySearch = {
   use?: 'sig' | 'enc'
@@ -60,9 +50,11 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     if (!keys.length) throw new Error('Keyset is empty')
 
     const kids = new Set<string>()
-    for (const key of keys) {
-      if (kids.has(key.kid)) throw new Error(`Duplicate key id: ${key.kid}`)
-      else kids.add(key.kid)
+    for (const { kid } of keys) {
+      if (!kid) continue
+
+      if (kids.has(kid)) throw new Error(`Duplicate key id: ${kid}`)
+      else kids.add(kid)
     }
   }
 
@@ -117,7 +109,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
       if (search.use && key.use !== search.use) continue
 
       if (Array.isArray(search.kid)) {
-        if (!search.kid.includes(key.kid)) continue
+        if (!key.kid || !search.kid.includes(key.kid)) continue
       } else if (search.kid) {
         if (key.kid !== search.kid) continue
       }
@@ -172,39 +164,37 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     return this.keys.values()
   }
 
-  async sign<P extends JwtPayload = JwtPayload>(
+  async sign(
     { alg: searchAlg, kid: searchKid, ...header }: JwtSignHeader,
-    payload: P | JwtPayloadGetter<P>,
-  ): Promise<Jwt> {
+    payload: JwtPayload | JwtPayloadGetter,
+  ) {
     const [key, alg] = this.findSigningKey({ alg: searchAlg, kid: searchKid })
-
-    const protectedHeader: JwtProtectedHeader = { ...header, alg, kid: key.kid }
-
-    const keyObj = await key.signKeyObject()
+    const protectedHeader = { ...header, alg, kid: key.kid }
 
     if (typeof payload === 'function') {
       payload = await payload(protectedHeader, key)
     }
 
-    return new SignJWT(payload)
-      .setProtectedHeader(protectedHeader)
-      .sign(keyObj) as Promise<Jwt>
+    return key.createJwt(protectedHeader, payload)
   }
 
-  async verify<P>(
-    token: Jwt,
-    options?: JWTVerifyOptions,
-  ): Promise<JwtVerifyResult<P>> {
-    return jwtVerify<Simplify<P & JwtPayload>>(
-      token,
-      async ({ kid, alg }) => {
-        // Ensure that the casting to JwtVerifyResult<P> is actually safe
-        if (!kid || !alg) throw new TypeError('Missing "kid" or "alg"')
+  async verify<
+    P extends Record<string, unknown> = JwtPayload,
+    C extends string = string,
+  >(token: Jwt, options?: VerifyOptions<C>) {
+    const { header } = unsafeDecodeJwt(token)
+    const { kid, alg } = header
 
-        const key = this.get({ use: 'sig', kid, alg })
-        return key.verifyKeyObject()
-      },
-      options,
-    ) as Promise<JwtVerifyResult<P>>
+    const errors: unknown[] = []
+
+    for (const key of this.list({ use: 'sig', kid, alg })) {
+      try {
+        return await key.verifyJwt<P, C>(token, options)
+      } catch (err) {
+        errors.push(err)
+      }
+    }
+
+    throw new AggregateError(errors, 'Unable to verify signature')
   }
 }
