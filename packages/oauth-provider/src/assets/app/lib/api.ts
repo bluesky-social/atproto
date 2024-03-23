@@ -16,7 +16,7 @@ export class Api {
   ) {}
 
   async signIn(credentials: SignInFormOutput): Promise<Session> {
-    const { body } = await fetch('/oauth/authorize/sign-in', {
+    const { json } = await fetch('/oauth/authorize/sign-in', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       mode: 'same-origin',
@@ -31,13 +31,13 @@ export class Api {
       .then(fetchJsonProcessor<{ account: Account; info: Info }>())
 
     return {
-      account: body.account,
-      info: body.info,
+      account: json.account,
+      info: json.info,
 
       selected: true,
       consentRequired:
         this.newSessionsRequireConsent ||
-        !body.info.authorizedClients.includes(this.clientId),
+        !json.info.authorizedClients.includes(this.clientId),
       loginRequired: false,
     }
   }

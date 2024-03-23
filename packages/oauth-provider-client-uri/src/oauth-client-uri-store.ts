@@ -84,7 +84,7 @@ export class OAuthClientUriStore implements ClientStore {
       fetch,
       fetchOkProcessor(),
       fetchJsonProcessor('application/json', false),
-      (jsonResponse: { body: unknown }) => jsonResponse.body,
+      (r: { json: unknown }) => r.json,
     )
 
     this.#jsonFetch = new CachedGetter<string>(async (url, options) => {
