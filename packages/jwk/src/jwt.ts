@@ -61,7 +61,7 @@ export type JwtHeader = z.infer<typeof jwtHeaderSchema>
 
 // https://www.iana.org/assignments/jwt/jwt.xhtml
 export const jwtPayloadSchema = z.object({
-  iss: z.string(),
+  iss: z.string().optional(),
   aud: z.union([z.string(), z.array(z.string()).nonempty()]).optional(),
   sub: z.string().optional(),
   exp: z.number().int().optional(),
