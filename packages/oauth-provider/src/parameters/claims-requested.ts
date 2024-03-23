@@ -94,7 +94,6 @@ function compareClaimValue(
     case 'number':
     case 'boolean':
       return expectedValue === value
-    // @ts-expect-error
     case 'object':
       if (expectedValue === null) return value === null
     // TODO (?): allow for object comparison
