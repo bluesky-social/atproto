@@ -2,9 +2,12 @@
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
 export type Override<T, V> = Simplify<V & Omit<T, keyof V>>
 
-export type RequiredKey<T, K extends keyof T> = Override<
-  T,
-  Required<Pick<T, K>>
+export type RequiredKey<T, K extends string> = Simplify<
+  string extends K
+    ? T
+    : {
+        [L in K]: Exclude<L extends keyof T ? T[L] : unknown, undefined>
+      } & Omit<T, K>
 >
 
 export const isDefined = <T>(i: T | undefined): i is T => i !== undefined
@@ -26,8 +29,8 @@ export function matchesAny<T extends string | number | symbol | boolean>(
   return value == null
     ? (v): v is T => true
     : Array.isArray(value)
-    ? (v): v is T => value.includes(v)
-    : (v): v is T => v === value
+      ? (v): v is T => value.includes(v)
+      : (v): v is T => v === value
 }
 
 /**
@@ -48,12 +51,5 @@ export const cachedGetter = <T extends object, V>(
   }
 }
 
-export function either<T extends string | number | boolean>(
-  a?: T,
-  b?: T,
-): T | undefined {
-  if (a != null && b != null && a !== b) {
-    throw new TypeError(`Expected "${b}", got "${a}"`)
-  }
-  return a ?? b ?? undefined
-}
+export const decoder = new TextDecoder()
+export const ui8ToString = (value: Uint8Array) => decoder.decode(value)
