@@ -7,10 +7,10 @@ import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
-import { TestOzone, createOzoneDid } from './ozone'
+import { TestOzone } from './ozone'
+import { OzoneServiceProfile } from './ozone-service-profile'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
-import { Secp256k1Keypair } from '@atproto/crypto'
 import { EXAMPLE_LABELER } from './const'
 
 const ADMIN_USERNAME = 'admin'
@@ -42,13 +42,16 @@ export class TestNetwork extends TestNetworkNoAppView {
     const pdsPort = params.pds?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
-    const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
-    const ozoneDid = await createOzoneDid(
-      plc.url,
-      ozoneKey,
-      `http://localhost:${ozonePort}`,
-      `http://localhost:${pdsPort}`,
-    )
+    const pdsProps = {
+      didPlcUrl: plc.url,
+      ...params.pds,
+      inviteRequired: false,
+      port: await getPort(),
+    }
+    const thirdPartyPds = await TestPds.create(pdsProps)
+    const ozoneServiceProfile = new OzoneServiceProfile(thirdPartyPds)
+    const { did: ozoneDid, key: ozoneKey } =
+      await ozoneServiceProfile.createDidAndKey()
 
     const bsky = await TestBsky.create({
       port: bskyPort,
@@ -63,12 +66,13 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.bsky,
     })
 
+    const modServiceUrl = `http://localhost:${ozonePort}`
     const pds = await TestPds.create({
       port: pdsPort,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      modServiceUrl: `http://localhost:${ozonePort}`,
+      modServiceUrl,
       modServiceDid: ozoneDid,
       ...params.pds,
     })
@@ -78,7 +82,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       plcUrl: plc.url,
       signingKey: ozoneKey,
       serverDid: ozoneDid,
-      dbPostgresSchema: `ozone_${dbPostgresSchema}`,
+      dbPostgresSchema: `ozone_${dbPostgresSchema || 'db'}`,
       dbPostgresUrl,
       appviewUrl: bsky.url,
       appviewDid: bsky.ctx.cfg.serverDid,
@@ -87,6 +91,11 @@ export class TestNetwork extends TestNetworkNoAppView {
       pdsDid: pds.ctx.cfg.service.did,
       ...params.ozone,
     })
+
+    await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl)
+    await thirdPartyPds.close()
+
+    ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
 
