@@ -24,6 +24,7 @@ import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export * from './data-plane'
+export * from './lexicon';
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
