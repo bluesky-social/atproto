@@ -8,9 +8,9 @@ export class OzoneServiceProfile {
   thirdPartyPdsClient: AtpAgent
 
   modUserDetails = {
-    email: 'labeler.test@test.com',
-    handle: 'labeler.test',
-    password: 'labeler-pass',
+    email: 'mod-authority@test.com',
+    handle: 'mod-authority.test',
+    password: 'hunter2',
   }
 
   public constructor(public thirdPartyPds: TestPds) {
@@ -100,8 +100,8 @@ export class OzoneServiceProfile {
     await pdsClient.api.app.bsky.actor.profile.create(
       { repo: this.did },
       {
-        displayName: 'Test Labeler',
-        description: `Labeling things across the atmosphere`,
+        displayName: 'Dev-env Moderation',
+        description: `The pretend version of mod.bsky.app`,
       },
     )
 
