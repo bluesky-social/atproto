@@ -58,15 +58,17 @@ export function buildMetadata(
       // 'pairwise', // A different "sub" is returned for each client
     ],
     response_types_supported: [
-      //
-      'none',
+      // OAuth
       'code',
       'token',
-      'id_token',
-      'id_token token',
+
+      // OpenID
+      'none',
+      'code id_token token',
       'code id_token',
       'code token',
-      'code id_token token',
+      'id_token token',
+      'id_token',
     ],
     response_modes_supported: [
       // https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#ResponseModes
