@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
 import {
-  JWTVerifyOptions,
+  VerifyOptions,
   Jwt,
   JwtPayload,
   JwtPayloadGetter,
@@ -25,14 +25,19 @@ import {
   signedTokenPayloadSchema,
 } from './signed-token-payload.js'
 
-export type VerifyOptions = Omit<JWTVerifyOptions, 'issuer'>
 export type SignPayload = Omit<JwtPayload, 'iss'>
 
 export class Signer {
   constructor(public readonly issuer: string, public readonly keyset: Keyset) {}
 
-  async verify<P>(token: Jwt, options?: VerifyOptions) {
-    return this.keyset.verify<P>(token, { ...options, issuer: [this.issuer] })
+  async verify<P extends Record<string, unknown> = JwtPayload>(
+    token: Jwt,
+    options?: VerifyOptions,
+  ) {
+    return this.keyset.verify<P>(token, {
+      ...options,
+      issuer: [this.issuer],
+    })
   }
 
   public async sign(
