@@ -1,0 +1,111 @@
+[
+  {
+  	"note": "top-level not an object",
+	"json": "blah"
+  },
+  {
+  	"note": "float",
+	"json": {
+		"rcrd": {
+        	"$type": "com.example.blah",
+        	"a": 123.456,
+        	"b": "blah"
+		}
+	}
+  },
+  {
+  	"note": "record with $type null",
+	"json": {
+		"rcrd": {
+        	"$type": null,
+        	"a": 123,
+        	"b": "blah"
+		}
+	}
+  },
+  {
+  	"note": "record with $type wrong type",
+	"json": {
+		"rcrd": {
+        	"$type": 123,
+        	"a": 123,
+        	"b": "blah"
+		}
+	}
+  },
+  {
+  	"note": "record with empty $type string",
+	"json": {
+		"rcrd": {
+        	"$type": "",
+        	"a": 123,
+        	"b": "blah"
+		}
+	}
+  },
+  {
+  	"note": "blob with string size",
+	"json": {
+		"blb": {
+        	"$type": "blob",
+        	"ref": {
+        		"$link": "bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity"
+        	},
+        	"mimeType": "image/jpeg",
+        	"size": "10000"
+		}
+	}
+  },
+  {
+  	"note": "blob with missing key",
+	"json": {
+		"blb": {
+        	"$type": "blob",
+        	"mimeType": "image/jpeg",
+        	"size": 10000
+		}
+	}
+  },
+  {
+  	"note": "bytes with wrong field type",
+	"json": {
+		"lnk": {
+			"$bytes": [1,2,3]
+		}
+	}
+  },
+  {
+  	"note": "bytes with extra fields",
+	"json": {
+		"lnk": {
+			"$bytes": "nFERjvLLiw9qm45JrqH9QTzyC2Lu1Xb4ne6+sBrCzI0",
+			"other": "blah"
+		}
+	}
+  },
+  {
+  	"note": "link with wrong field type",
+	"json": {
+		"lnk": {
+			"$link": 1234
+		}
+	}
+  },
+  {
+  	"note": "link with bogus CID",
+	"json": {
+		"lnk": {
+			"$link": "."
+		}
+	}
+  },
+  {
+  	"note": "link with extra fields",
+	"json": {
+		"lnk": {
+			"$link": "bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity",
+			"other": "blah"
+		}
+	}
+  }
+]
