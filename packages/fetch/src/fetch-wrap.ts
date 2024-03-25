@@ -1,33 +1,39 @@
 import { Fetch } from './fetch.js'
+import { TransformedResponse } from './transformed-response.js'
 
-export const loggedFetchWrap =
-  ({ fetch = globalThis.fetch as Fetch, prefix = '' } = {}): Fetch =>
-  async (request) => {
-    await logRequest(request, prefix)
-    try {
-      const response = await fetch(request)
-      await logResponse(response, prefix)
-      return response
-    } catch (error) {
-      await logError(error, prefix)
-      throw error
-    }
+export const loggedFetchWrap = ({
+  fetch = globalThis.fetch as Fetch,
+} = {}): Fetch => {
+  return async function (request) {
+    return fetchLog.call(this, request, fetch)
   }
+}
 
-const logRequest = async (request: Request, prefix = '') =>
+async function fetchLog(
+  this: ThisParameterType<Fetch>,
+  request: Request,
+  fetch: Fetch = globalThis.fetch,
+) {
   console.info(
-    `${prefix}> ${request.method} ${request.url}\n` +
+    `> ${request.method} ${request.url}\n` +
       stringifyPayload(request.headers, await request.clone().text()),
   )
 
-const logResponse = async (response: Response, prefix = '') =>
-  console.info(
-    `${prefix}< HTTP/1.1 ${response.status} ${response.statusText}\n` +
-      stringifyPayload(response.headers, await response.clone().text()),
-  )
+  try {
+    const response = await fetch(request)
 
-const logError = async (error: unknown, prefix = '') =>
-  console.error(`${prefix} error:`, error)
+    console.info(
+      `< HTTP/1.1 ${response.status} ${response.statusText}\n` +
+        stringifyPayload(response.headers, await response.clone().text()),
+    )
+
+    return response
+  } catch (error) {
+    console.error(`< Error:`, error)
+
+    throw error
+  }
+}
 
 const stringifyPayload = (headers: Headers, body: string) =>
   [stringifyHeaders(headers), stringifyBody(body)]
@@ -47,17 +53,49 @@ export const timeoutFetchWrap = ({
   timeout = 60e3,
 } = {}): Fetch => {
   if (timeout === Infinity) return fetch
-  if (!(timeout > 0)) throw new TypeError('Timeout must be positive')
+  if (!Number.isFinite(timeout) || timeout <= 0) {
+    throw new TypeError('Timeout must be positive')
+  }
+  return async function (request) {
+    return fetchTimeout.call(this, request, timeout, fetch)
+  }
+}
 
-  return async (request) => {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), timeout).unref()
-    const signal = controller.signal
-    signal.addEventListener('abort', () => clearTimeout(timeoutId))
-    request.signal?.addEventListener('abort', () => controller.abort(), {
-      signal,
-    })
+export async function fetchTimeout(
+  this: ThisParameterType<Fetch>,
+  request: Request,
+  timeout = 30e3,
+  fetch: Fetch = globalThis.fetch,
+): Promise<Response> {
+  if (timeout === Infinity) return fetch(request)
+  if (!Number.isFinite(timeout) || timeout <= 0) {
+    throw new TypeError('Timeout must be positive')
+  }
 
-    return fetch(new Request(request, { signal }))
+  const controller = new AbortController()
+  const signal = controller.signal
+
+  const abort = () => {
+    controller.abort()
+  }
+  const cleanup = () => {
+    clearTimeout(timeoutId)
+    request.signal?.removeEventListener('abort', abort)
+  }
+
+  const timeoutId = setTimeout(abort, timeout).unref()
+  request.signal?.addEventListener('abort', abort)
+
+  signal.addEventListener('abort', cleanup)
+
+  const response = await fetch(new Request(request, { signal }))
+
+  if (!response.body) {
+    cleanup()
+    return response
+  } else {
+    // Cleanup the timer & event listeners when the body stream is closed
+    const transform = new TransformStream({ flush: cleanup })
+    return new TransformedResponse(response, transform)
   }
 }

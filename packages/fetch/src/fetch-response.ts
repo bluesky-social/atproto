@@ -2,7 +2,7 @@ import { Transformer, compose } from '@atproto/transformer'
 import { z } from 'zod'
 
 import { FetchError, FetchErrorOptions } from './fetch-error.js'
-import { overrideResponseBody } from './utils.js'
+import { TransformedResponse } from './transformed-response.js'
 
 export type ResponseTranformer = Transformer<Response>
 
@@ -64,44 +64,46 @@ export function fetchOkProcessor(): ResponseTranformer {
 }
 
 export function fetchMaxSizeProcessor(maxBytes: number): ResponseTranformer {
-  if (!(maxBytes >= 0)) throw new TypeError('maxBytes must be >= 0')
   if (maxBytes === Infinity) return (response) => response
-
-  return async (response) => {
-    if (!response.body) return response
-
-    const contentLength = response.headers.get('content-length')
-    if (contentLength) {
-      const length = Number(contentLength)
-      if (!(length < maxBytes)) {
-        const err = new FetchError(502, 'Response too large', { response })
-        await response.body.cancel(err)
-        throw err
-      }
-    }
-
-    let bytesRead = 0
-
-    // @ts-ignore - @types/node does not have ReadableStream as global
-    const newBody: ReadableStream<Uint8Array> = response.body.pipeThrough(
-      // @ts-ignore - @types/node does not have TransformStream as global
-      new TransformStream<Uint8Array, Uint8Array>({
-        transform: (
-          chunk: Uint8Array,
-          // @ts-ignore - @types/node does not have TransformStreamDefaultController as global
-          ctrl: TransformStreamDefaultController<Uint8Array>,
-        ) => {
-          if ((bytesRead += chunk.length) <= maxBytes) {
-            ctrl.enqueue(chunk)
-          } else {
-            ctrl.error(new FetchError(502, 'Response too large', { response }))
-          }
-        },
-      }),
-    )
-
-    return overrideResponseBody(response, newBody)
+  if (!Number.isFinite(maxBytes) || maxBytes < 0) {
+    throw new TypeError('maxBytes must be a non-negative number')
   }
+  return async (response) => fetchResponseMaxSize(response, maxBytes)
+}
+
+export async function fetchResponseMaxSize(
+  response: Response,
+  maxBytes: number,
+): Promise<Response> {
+  if (maxBytes === Infinity) return response
+  if (!response.body) return response
+
+  const contentLength = response.headers.get('content-length')
+  if (contentLength) {
+    const length = Number(contentLength)
+    if (!(length < maxBytes)) {
+      const err = new FetchError(502, 'Response too large', { response })
+      await response.body.cancel(err)
+      throw err
+    }
+  }
+
+  let bytesRead = 0
+
+  const transform = new TransformStream<Uint8Array, Uint8Array>({
+    transform: (
+      chunk: Uint8Array,
+      ctrl: TransformStreamDefaultController<Uint8Array>,
+    ) => {
+      if ((bytesRead += chunk.length) <= maxBytes) {
+        ctrl.enqueue(chunk)
+      } else {
+        ctrl.error(new FetchError(502, 'Response too large', { response }))
+      }
+    },
+  })
+
+  return new TransformedResponse(response, transform)
 }
 
 export type ContentTypeCheckFn = (contentType: string) => boolean
