@@ -2,7 +2,7 @@ import { Transformer, compose } from '@atproto/transformer'
 import { z } from 'zod'
 
 import { FetchError, FetchErrorOptions } from './fetch-error.js'
-import { overrideResponseBody } from './utils.js'
+import { TransformedResponse } from './transformed-response.js'
 
 export type ResponseTranformer = Transformer<Response>
 
@@ -36,20 +36,20 @@ export class FetchResponseError extends FetchError {
   constructor(
     statusCode: number,
     message?: string,
-    public readonly body?: Blob,
     options?: FetchErrorOptions,
   ) {
     super(statusCode, message, options)
   }
 
-  static async from(response: Response) {
-    const message = await extractResponseMessage(response)
-    const body: undefined | Blob =
-      response.body && !response.bodyUsed
-        ? await response.clone().blob()
-        : undefined
-
-    return new FetchResponseError(response.status, message, body, {
+  static async from(
+    response: Response,
+    status = response.status,
+    message?: string,
+    cause?: unknown,
+  ) {
+    message ??= await extractResponseMessage(response)
+    return new FetchResponseError(status, message, {
+      cause,
       response,
     })
   }
@@ -64,44 +64,52 @@ export function fetchOkProcessor(): ResponseTranformer {
 }
 
 export function fetchMaxSizeProcessor(maxBytes: number): ResponseTranformer {
-  if (!(maxBytes >= 0)) throw new TypeError('maxBytes must be >= 0')
   if (maxBytes === Infinity) return (response) => response
-
-  return async (response) => {
-    if (!response.body) return response
-
-    const contentLength = response.headers.get('content-length')
-    if (contentLength) {
-      const length = Number(contentLength)
-      if (!(length < maxBytes)) {
-        const err = new FetchError(502, 'Response too large', { response })
-        await response.body.cancel(err)
-        throw err
-      }
-    }
-
-    let bytesRead = 0
-
-    // @ts-ignore - @types/node does not have ReadableStream as global
-    const newBody: ReadableStream<Uint8Array> = response.body.pipeThrough(
-      // @ts-ignore - @types/node does not have TransformStream as global
-      new TransformStream<Uint8Array, Uint8Array>({
-        transform: (
-          chunk: Uint8Array,
-          // @ts-ignore - @types/node does not have TransformStreamDefaultController as global
-          ctrl: TransformStreamDefaultController<Uint8Array>,
-        ) => {
-          if ((bytesRead += chunk.length) <= maxBytes) {
-            ctrl.enqueue(chunk)
-          } else {
-            ctrl.error(new FetchError(502, 'Response too large', { response }))
-          }
-        },
-      }),
-    )
-
-    return overrideResponseBody(response, newBody)
+  if (!Number.isFinite(maxBytes) || maxBytes < 0) {
+    throw new TypeError('maxBytes must be a non-negative number')
   }
+  return async (response) => fetchResponseMaxSize(response, maxBytes)
+}
+
+export async function fetchResponseMaxSize(
+  response: Response,
+  maxBytes: number,
+): Promise<Response> {
+  if (maxBytes === Infinity) return response
+  if (!response.body) return response
+
+  const contentLength = response.headers.get('content-length')
+  if (contentLength) {
+    const length = Number(contentLength)
+    if (!(length < maxBytes)) {
+      const err = new FetchResponseError(502, 'Response too large', {
+        response,
+      })
+      await response.body.cancel(err)
+      throw err
+    }
+  }
+
+  let bytesRead = 0
+
+  const transform = new TransformStream<Uint8Array, Uint8Array>({
+    transform: (
+      chunk: Uint8Array,
+      ctrl: TransformStreamDefaultController<Uint8Array>,
+    ) => {
+      if ((bytesRead += chunk.length) <= maxBytes) {
+        ctrl.enqueue(chunk)
+      } else {
+        ctrl.error(
+          new FetchResponseError(502, 'Response too large', {
+            response,
+          }),
+        )
+      }
+    },
+  })
+
+  return new TransformedResponse(response, transform)
 }
 
 export type ContentTypeCheckFn = (contentType: string) => boolean
@@ -115,8 +123,8 @@ export function fetchTypeProcessor(
     typeof expectedType === 'string'
       ? (ct) => ct === expectedType
       : expectedType instanceof RegExp
-      ? (ct) => expectedType.test(ct)
-      : expectedType
+        ? (ct) => expectedType.test(ct)
+        : expectedType
 
   return async (response) => {
     const contentType = response.headers
@@ -126,18 +134,18 @@ export function fetchTypeProcessor(
 
     if (contentType) {
       if (!isExpected(contentType)) {
-        throw new FetchError(
+        throw new FetchResponseError(
           502,
           `Unexpected response Content-Type (${contentType})`,
-          {
-            response,
-          },
+          { response },
         )
       }
     } else if (contentTypeRequired) {
-      throw new FetchError(502, 'Missing response Content-Type header', {
-        response,
-      })
+      throw new FetchResponseError(
+        502,
+        'Missing response Content-Type header',
+        { response },
+      )
     }
 
     return response
@@ -158,8 +166,11 @@ export async function jsonTranformer<T = unknown>(
       response,
       json: json as T,
     }))
-    .catch((err) => {
-      throw new FetchError(502, err, { response })
+    .catch(async (cause) => {
+      throw new FetchResponseError(502, 'Unable to parse response JSON', {
+        response,
+        cause,
+      })
     })
 }
 
