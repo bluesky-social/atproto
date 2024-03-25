@@ -4,7 +4,21 @@ import {
   PassThrough,
   Transform,
   TransformCallback,
+  Duplex,
 } from 'stream'
+
+// TODO: Replace this with Node.JS's compose once it is stable
+export const compose = (
+  readable: Readable,
+  ...transforms: Duplex[]
+): Readable => {
+  let stream: Readable = readable
+  for (const transform of transforms) {
+    forwardStreamErrors(stream, transform)
+    stream = stream.pipe(transform)
+  }
+  return stream
+}
 
 export const forwardStreamErrors = (...streams: Stream[]) => {
   for (let i = 0; i < streams.length; ++i) {
