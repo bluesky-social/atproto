@@ -14,6 +14,7 @@
     { "path": "./packages/did" },
     { "path": "./packages/did-node" },
     { "path": "./packages/fetch" },
+    { "path": "./packages/fetch-dpop" },
     { "path": "./packages/fetch-node" },
     { "path": "./packages/handle-resolver" },
     { "path": "./packages/handle-resolver-node" },
