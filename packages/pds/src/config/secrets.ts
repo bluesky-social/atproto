@@ -27,6 +27,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
   }
 
   return {
+    dpopSecret: env.dpopSecret,
     jwtSecret: env.jwtSecret,
     adminPassword: env.adminPassword,
     plcRotationKey,
@@ -34,6 +35,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 }
 
 export type ServerSecrets = {
+  dpopSecret?: string
   jwtSecret: string
   adminPassword: string
   plcRotationKey: SigningKeyKms | SigningKeyMemory

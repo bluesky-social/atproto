@@ -1,0 +1,35 @@
+{
+  "name": "@atproto/oauth-client-browser",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Implementation of OAuth client using SubtleCrypto API for browser and Node.js",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "browser",
+    "node",
+    "browser"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth-client-browser"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/fetch": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/jwk-jose": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-client-metadata": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

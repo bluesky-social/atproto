@@ -1,0 +1,31 @@
+{
+  "name": "@atproto/oauth-client-metadata",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "OAuth Client metadata lib",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "metadata",
+    "isomorphic"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth-client-metadata"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/jwk": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
