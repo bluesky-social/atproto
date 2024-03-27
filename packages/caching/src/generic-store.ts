@@ -11,8 +11,8 @@ export interface GenericStore<K extends Key, V extends Value = Value> {
   /**
    * @return undefined if the key is not in the cache.
    */
-  get(key: K, options?: StoreGetOptions): Awaitable<undefined | V>
-  set(key: K, value: V): Awaitable<void | this>
-  delete(key: K): Awaitable<void | this>
-  clear(): Awaitable<void | this>
+  get: (key: K, options?: StoreGetOptions) => Awaitable<undefined | V>
+  set: (key: K, value: V) => Awaitable<void | this>
+  del: (key: K) => Awaitable<void | this>
+  clear?: () => Awaitable<void | this>
 }

@@ -87,12 +87,12 @@ export class MemoryStore<K extends Key, V extends Value>
     this.#cache.set(key, normalize(value))
   }
 
-  clear(): void {
-    this.#cache.clear()
+  del(key: K): void {
+    this.#cache.delete(key)
   }
 
-  delete(key: K): void {
-    this.#cache.delete(key)
+  clear(): void {
+    this.#cache.clear()
   }
 }
 

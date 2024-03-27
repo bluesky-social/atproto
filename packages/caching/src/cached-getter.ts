@@ -108,7 +108,7 @@ export class CachedGetter<
 
   async delCached(key: K): Promise<void> {
     try {
-      await this.cache.delete(key)
+      await this.cache.del(key)
     } catch (err) {
       await this.options?.onCacheError?.(err, key)
     }

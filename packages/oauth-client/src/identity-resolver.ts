@@ -12,20 +12,28 @@ import IsomorphicHandleResolver, {
 
 export type IdentityResolverOptions = {
   fetch?: Fetch
+
   didCache?: DidCache
+  didResolver?: DidResolver<'plc' | 'web'>
+
   handleCache?: HandleResolverCache
+  handleResolver?: HandleResolver
 }
 
 export class IdentityResolver {
   static from({
     fetch = globalThis.fetch,
+
     didCache,
+    didResolver = new IsomorphicDidResolver({ fetch, cache: didCache }),
+
     handleCache,
+    handleResolver = new IsomorphicHandleResolver({
+      fetch,
+      cache: handleCache,
+    }),
   }: IdentityResolverOptions) {
-    return new IdentityResolver(
-      new IsomorphicHandleResolver({ fetch, cache: handleCache }),
-      new IsomorphicDidResolver({ fetch, cache: didCache }),
-    )
+    return new IdentityResolver(handleResolver, didResolver)
   }
 
   constructor(

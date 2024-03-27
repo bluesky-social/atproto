@@ -11,16 +11,15 @@ export type OAuthResolverOptions = IdentityResolverOptions & {
 
 export class OAuthResolver {
   static from({
-    fetch = globalThis.fetch,
     serverMetadataCache,
     ...identityResolverOptions
   }: OAuthResolverOptions) {
     return new OAuthResolver(
       new IsomorphicOAuthServerMetadataResolver({
-        fetch,
+        fetch: identityResolverOptions.fetch,
         cache: serverMetadataCache,
       }),
-      IdentityResolver.from({ fetch, ...identityResolverOptions }),
+      IdentityResolver.from(identityResolverOptions),
     )
   }
 

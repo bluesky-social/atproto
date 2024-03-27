@@ -33,6 +33,9 @@ export class CryptoWrapper {
     header: JwtHeader
     payload: JwtPayload
   }> {
+    // It's fine to use unsafeDecodeJwt here because the token was received from
+    // the server's token endpoint. The following checks are to ensure that the
+    // oauth flow was indeed initiated by the client.
     const { header, payload } = unsafeDecodeJwt(token)
     if (!payload.nonce || payload.nonce !== nonce) {
       throw new TypeError('Nonce mismatch')

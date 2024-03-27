@@ -1,6 +1,6 @@
-import { browserOAuthClientFactory } from '..'
+import { OAuthBrowserClient } from '..'
 
-const OAuthClient = browserOAuthClientFactory({
+const OAuthClient = OAuthBrowserClient.create({
   clientMetadata: {
     client_id: 'https://example.com',
     redirect_uris: ['https://example.com/cb'],
@@ -12,9 +12,14 @@ const OAuthClient = browserOAuthClientFactory({
   },
 })
 
+// Redirect the user to the PDS's login page
+await OAuthClient.signIn('@matthieu.bsky.team', {
+  state: '123',
+})
+
 // If the current url is the callback url, and contains "state" query param,
 // call the callback() method to complete the OAuth flow
-OAuthClient.callback().then(async ({ sessionId, client, state }) => {
+OAuthClient.signInCallback().then(async ({ sessionId, client, state }) => {
   console.log(state) // "123"
   console.log(sessionId) // Add this to the app's list of active sessions
 
@@ -24,11 +29,7 @@ OAuthClient.callback().then(async ({ sessionId, client, state }) => {
   })
 })
 
-OAuthClient.signIn('@matthieusieben.com').then(() => {
-  // Never called (navigated to the login page)
-})
-
-OAuthClient.signInPopup('@matthieusieben.com').then(async (client) => {
+OAuthClient.signInPopup('@matthieu.bsky.team').then(async (client) => {
   await client.request('/xrpc/com.atproto.goo', {
     method: 'get',
     headers: {},
