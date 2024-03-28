@@ -1,4 +1,5 @@
 import { OAuthClientId } from '@atproto/oauth-client-metadata'
+import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
@@ -56,6 +57,7 @@ export class RequestManager {
   constructor(
     protected readonly store: RequestStore,
     protected readonly signer: Signer,
+    protected readonly metadata: OAuthServerMetadata,
     protected readonly hooks: {
       onAuthorizationRequest?: AuthorizationRequestHook
     },
@@ -117,7 +119,49 @@ export class RequestManager {
     dpopJkt: null | string,
     pkceRequired = this.pkceRequired,
   ): Promise<AuthorizationParameters> {
-    const scopes = parameters.scope?.split(' ')
+    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
+    // > The authorization server MAY fully or partially ignore the scope
+    // > requested by the client, based on the authorization server policy or
+    // > the resource owner's instructions. If the issued access token scope is
+    // > different from the one requested by the client, the authorization
+    // > server MUST include the scope response parameter in the token response
+    // > (Section 3.2.3) to inform the client of the actual scope granted.
+
+    const cScopes = client.metadata.scope?.split(' ')
+    const sScopes = this.metadata.scopes_supported
+
+    const scopes =
+      (parameters.scope || client.metadata.scope)
+        ?.split(' ')
+        .filter((scope) => !!scope && (sScopes?.includes(scope) ?? true)) ?? []
+
+    for (const scope of scopes) {
+      if (!cScopes?.includes(scope)) {
+        throw new InvalidParametersError(
+          parameters,
+          `Scope "${scope}" is not registered for this client`,
+        )
+      }
+    }
+
+    for (const [scope, claims] of Object.entries(OIDC_SCOPE_CLAIMS)) {
+      for (const claim of claims) {
+        if (
+          parameters?.claims?.id_token?.[claim]?.essential === true ||
+          parameters?.claims?.userinfo?.[claim]?.essential === true
+        ) {
+          if (!scopes?.includes(scope)) {
+            throw new InvalidParametersError(
+              parameters,
+              `Essential ${claim} claim requires "${scope}" scope`,
+            )
+          }
+        }
+      }
+    }
+
+    parameters = { ...parameters, scope: scopes.join(' ') }
+
     const responseTypes = parameters.response_type.split(' ')
 
     if (parameters.authorization_details) {
@@ -225,44 +269,12 @@ export class RequestManager {
     if (responseTypes.includes('id_token') && !scopes?.includes('openid')) {
       throw new InvalidParametersError(
         parameters,
-        'id_token response_type requires openid scope',
+        '"id_token" response_type requires "openid" scope',
       )
     }
 
     // TODO Validate parameters against **all** client metadata (are some checks
     // missing?) !!!
-
-    if (!parameters.scope) {
-      parameters = { ...parameters, scope: client.metadata.scope }
-    }
-
-    if (scopes) {
-      const cScopes = client.metadata.scope?.split(' ')
-      for (const scope of scopes) {
-        if (!cScopes?.includes(scope)) {
-          throw new InvalidParametersError(
-            parameters,
-            `Scope "${scope}" is not registered for this client`,
-          )
-        }
-      }
-    }
-
-    for (const [scope, claims] of Object.entries(OIDC_SCOPE_CLAIMS)) {
-      for (const claim of claims) {
-        if (
-          parameters?.claims?.id_token?.[claim]?.essential === true ||
-          parameters?.claims?.userinfo?.[claim]?.essential === true
-        ) {
-          if (!scopes?.includes(scope)) {
-            throw new InvalidParametersError(
-              parameters,
-              `Essential ${claim} claim requires "${scope}" scope`,
-            )
-          }
-        }
-      }
-    }
 
     // Make "expensive" checks after the "cheaper" checks
 
