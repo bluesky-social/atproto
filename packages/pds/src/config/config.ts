@@ -147,7 +147,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     }
     emailCfg = {
       smtpUrl: env.emailSmtpUrl,
-      fromAddress: env.emailFromAddress,
+      fromAddress: env.emailFromName
+        ? {
+            name: env.emailFromName,
+            address: env.emailFromAddress,
+          }
+        : env.emailFromAddress,
     }
   }
 
@@ -162,7 +167,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     }
     moderationEmailCfg = {
       smtpUrl: env.moderationEmailSmtpUrl,
-      fromAddress: env.moderationEmailAddress,
+      fromAddress: env.moderationEmailName
+        ? {
+            name: env.moderationEmailName,
+            address: env.moderationEmailAddress,
+          }
+        : env.moderationEmailAddress,
     }
   }
 
@@ -347,7 +357,12 @@ export type InvitesConfig =
 
 export type EmailConfig = {
   smtpUrl: string
-  fromAddress: string
+  fromAddress:
+    | string
+    | {
+        name: string
+        address: string
+      }
 }
 
 export type SubscriptionConfig = {
