@@ -47,8 +47,15 @@ const didWebDocumentTransformer = compose(
 )
 
 export type DidPlcMethodOptions = {
-  plcDirectoryUrl?: string | URL
+  /**
+   * @default globalThis.fetch
+   */
   fetch?: Fetch
+
+  /**
+   * @default 'https://plc.directory/'
+   */
+  plcDirectoryUrl?: string | URL
 }
 
 export class DidPlcMethod implements DidMethod<'plc'> {

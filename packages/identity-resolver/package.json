@@ -1,0 +1,32 @@
+{
+  "name": "@atproto/identity-resolver",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "A library resolving atproto identities",
+  "keywords": [
+    "atproto",
+    "identity",
+    "resolver"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/identity-resolver"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@atproto/did": "workspace:*",
+    "@atproto/fetch": "workspace:*",
+    "@atproto/handle-resolver": "workspace:*",
+    "@atproto/syntax": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}

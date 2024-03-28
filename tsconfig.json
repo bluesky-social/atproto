@@ -21,6 +21,7 @@
     { "path": "./packages/html" },
     { "path": "./packages/http-util" },
     { "path": "./packages/identity" },
+    { "path": "./packages/identity-resolver" },
     { "path": "./packages/jwk" },
     { "path": "./packages/jwk-jose" },
     { "path": "./packages/jwk-node" },
