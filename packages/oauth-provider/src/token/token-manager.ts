@@ -58,7 +58,7 @@ export type TokenResponse = {
   token_type?: TokenType
   expires_in?: number
   refresh_token?: RefreshToken
-  scope?: string
+  scope: string
   authorization_details?: AuthorizationDetails
 
   // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
@@ -287,7 +287,7 @@ export class TokenManager {
       token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
       refresh_token: refreshToken,
       id_token: idToken,
-      scope: parameters.scope,
+      scope: parameters.scope ?? '',
       authorization_details: authorizationDetails,
       get expires_in() {
         return dateToRelativeSeconds(expiresAt)
@@ -435,7 +435,7 @@ export class TokenManager {
         access_token: accessToken,
         token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
         refresh_token: nextRefreshToken,
-        scope: parameters.scope,
+        scope: parameters.scope ?? '',
         authorization_details,
         get expires_in() {
           return dateToRelativeSeconds(expiresAt)

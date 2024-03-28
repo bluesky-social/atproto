@@ -224,7 +224,12 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.accountManager = new AccountManager(accountStore)
     this.clientManager = new ClientManager(clientStore, this.keyset, hooks)
-    this.requestManager = new RequestManager(requestStore, this.signer, hooks)
+    this.requestManager = new RequestManager(
+      requestStore,
+      this.signer,
+      this.metadata,
+      hooks,
+    )
     this.tokenManager = new TokenManager(
       tokenStore,
       this.signer,

@@ -1,0 +1,39 @@
+{
+  "name": "@atproto/oauth-client",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Client for com.atproto flavoured OAuth",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "isomorphic"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth-client"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/b64": "workspace:*",
+    "@atproto/caching": "workspace:*",
+    "@atproto/did": "workspace:*",
+    "@atproto/fetch": "workspace:*",
+    "@atproto/fetch-dpop": "workspace:*",
+    "@atproto/handle-resolver": "workspace:*",
+    "@atproto/identity-resolver": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/oauth-client-metadata": "workspace:*",
+    "@atproto/oauth-server-metadata": "workspace:*",
+    "@atproto/oauth-server-metadata-resolver": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
