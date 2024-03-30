@@ -3,8 +3,8 @@ import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 
 export class OzoneServiceProfile {
-  did: string
-  key: Secp256k1Keypair
+  did?: string
+  key?: Secp256k1Keypair
   thirdPartyPdsClient: AtpAgent
 
   modUserDetails = {
@@ -33,6 +33,9 @@ export class OzoneServiceProfile {
   }
 
   async createServiceDetails(pds: TestPds, ozoneUrl: string) {
+    if (!this.did || !this.key) {
+      throw new Error('No DID/key found!')
+    }
     const pdsClient = pds.getClient()
     const describeRes = await pdsClient.api.com.atproto.server.describeServer()
     const newServerDid = describeRes.data.did
