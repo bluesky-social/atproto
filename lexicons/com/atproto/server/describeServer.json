@@ -45,8 +45,8 @@
     "links": {
       "type": "object",
       "properties": {
-        "privacyPolicy": { "type": "string" },
-        "termsOfService": { "type": "string" }
+        "privacyPolicy": { "type": "string", "format": "uri" },
+        "termsOfService": { "type": "string", "format": "uri" }
       }
     },
     "contact": {

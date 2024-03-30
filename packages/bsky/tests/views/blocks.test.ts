@@ -1,14 +1,7 @@
 import assert from 'assert'
 import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
-import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import {
-  isViewRecord as isEmbedViewRecord,
-  isViewBlocked as isEmbedViewBlocked,
-} from '@atproto/api/src/client/types/app/bsky/embed/record'
-import { forSnapshot } from '../_util'
+import { assertIsThreadViewPost, forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {
   let network: TestNetwork
@@ -116,9 +109,9 @@ describe('pds views with blocking', () => {
       { depth: 1, uri: carolReplyToDan.ref.uriStr },
       { headers: await network.serviceHeaders(alice) },
     )
-    if (!isThreadViewPost(thread.thread)) {
-      throw new Error('Expected thread view post')
-    }
+
+    assertIsThreadViewPost(thread.thread)
+
     expect(thread.thread.post.uri).toEqual(carolReplyToDan.ref.uriStr)
     expect(thread.thread.parent).toMatchObject({
       $type: 'app.bsky.feed.defs#blockedPost',
@@ -149,13 +142,17 @@ describe('pds views with blocking', () => {
       { actor: carol },
       { headers: await network.serviceHeaders(dan) },
     )
-    await expect(attempt1).rejects.toThrow(BlockedActorError)
+    await expect(attempt1).rejects.toMatchObject({
+      error: 'BlockedActor',
+    })
 
     const attempt2 = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: dan },
       { headers: await network.serviceHeaders(carol) },
     )
-    await expect(attempt2).rejects.toThrow(BlockedByActorError)
+    await expect(attempt2).rejects.toMatchObject({
+      error: 'BlockedByActor',
+    })
   })
 
   it('strips blocked users out of getTimeline', async () => {
@@ -396,7 +393,8 @@ describe('pds views with blocking', () => {
         { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    assert(isThreadViewPost(replyThenBlock.thread))
+    assertIsThreadViewPost(replyThenBlock.thread)
+
     expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
       aliceReplyToDan.ref.uriStr,
     ])
@@ -411,10 +409,12 @@ describe('pds views with blocking', () => {
       { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
       { headers: await network.serviceHeaders(alice) },
     )
-    assert(isThreadViewPost(unblock.thread))
-    expect(unblock.thread.replies?.map(getThreadPostUri).sort()).toEqual(
-      [aliceReplyToDan.ref.uriStr, carolReplyToDan.ref.uriStr].sort(),
-    )
+
+    assertIsThreadViewPost(unblock.thread)
+    expect(unblock.thread.replies?.map(getThreadPostUri)).toEqual([
+      carolReplyToDan.ref.uriStr,
+      aliceReplyToDan.ref.uriStr,
+    ])
 
     // block then reply
     danBlockCarol = await pdsAgent.api.app.bsky.graph.block.create(
@@ -434,7 +434,9 @@ describe('pds views with blocking', () => {
         { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    assert(isThreadViewPost(blockThenReply.thread))
+
+    assertIsThreadViewPost(blockThenReply.thread)
+
     expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
       aliceReplyToDan.ref.uriStr,
     ])
@@ -454,8 +456,12 @@ describe('pds views with blocking', () => {
         { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    assert(isThreadViewPost(embedThenBlock.thread))
-    assert(isEmbedViewBlocked(embedThenBlock.thread.post.embed?.record))
+
+    assertIsThreadViewPost(embedThenBlock.thread)
+
+    expect(embedThenBlock.thread.post.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewBlocked',
+    })
 
     // unblock
     await pdsAgent.api.app.bsky.graph.block.delete(
@@ -467,8 +473,12 @@ describe('pds views with blocking', () => {
       { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
       { headers: await network.serviceHeaders(alice) },
     )
-    assert(isThreadViewPost(unblock.thread))
-    assert(isEmbedViewRecord(unblock.thread.post.embed?.record))
+
+    assertIsThreadViewPost(unblock.thread)
+
+    expect(unblock.thread.post?.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewRecord',
+    })
 
     // block then embed
     danBlockCarol = await pdsAgent.api.app.bsky.graph.block.create(
@@ -489,8 +499,11 @@ describe('pds views with blocking', () => {
         { depth: 0, uri: carolEmbedsDan.ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    assert(isThreadViewPost(blockThenEmbed.thread))
-    assert(isEmbedViewBlocked(blockThenEmbed.thread.post.embed?.record))
+    assertIsThreadViewPost(blockThenEmbed.thread)
+
+    expect(blockThenEmbed.thread.post.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewBlocked',
+    })
 
     // cleanup
     await pdsAgent.api.app.bsky.feed.post.delete(
@@ -517,7 +530,9 @@ describe('pds views with blocking', () => {
       (item) => item.post.uri === embedBlockedUri,
     )
     assert(embedBlockedPost)
-    assert(isEmbedViewBlocked(embedBlockedPost.post.embed?.record))
+    expect(embedBlockedPost.post.embed?.record).toMatchObject({
+      $type: 'app.bsky.embed.record#viewBlocked',
+    })
   })
 
   it('returns a list of blocks', async () => {

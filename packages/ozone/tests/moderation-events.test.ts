@@ -7,7 +7,6 @@ import {
   ModeratorClient,
 } from '@atproto/dev-env'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
-import Mail from 'nodemailer/lib/mailer'
 import { forSnapshot } from './_util'
 import {
   REASONAPPEAL,
@@ -386,7 +385,9 @@ describe('moderation-events', () => {
   describe('email event', () => {
     let sendMailOriginal
     const mailCatcher = new EventEmitter()
-    const getMailFrom = async (promise): Promise<Mail.Options> => {
+    const getMailFrom = async (
+      promise,
+    ): Promise<{ to: string; subject: string; from: string }> => {
       const result = await Promise.all([once(mailCatcher, 'mail'), promise])
       return result[0][0]
     }

@@ -4,6 +4,7 @@ import axios from 'axios'
 
 describe('label hydration', () => {
   let network: TestNetwork
+  let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
@@ -16,6 +17,7 @@ describe('label hydration', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_label_hydration',
     })
+    agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -104,6 +106,22 @@ describe('label hydration', () => {
     expect(labels.map((l) => ({ val: l.val, src: l.src }))).toEqual([
       { src: alice, val: 'spam' },
     ])
+  })
+
+  it('does not hydrate labels from takendown labeler', async () => {
+    AtpAgent.configure({ appLabelers: [alice, sc.dids.dan] })
+    pdsAgent.configureLabelersHeader([])
+    await network.bsky.ctx.dataplane.takedownActor({ did: alice })
+    const res = await pdsAgent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: sc.getHeaders(bob) },
+    )
+    const { labels = [] } = res.data
+    expect(labels).toEqual([])
+    expect(res.headers['atproto-content-labelers']).toEqual(
+      `${sc.dids.dan};redact`, // does not include alice
+    )
+    await network.bsky.ctx.dataplane.untakedownActor({ did: alice })
   })
 
   it('hydrates labels onto list views.', async () => {

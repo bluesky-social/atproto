@@ -636,6 +636,7 @@ describe('moderation', () => {
       // In the actual app, this will be instantiated and run on server startup
       const reverser = new EventReverser(
         network.ozone.ctx.db,
+        // @ts-expect-error Error due to circular dependency with the dev-env package
         network.ozone.ctx.modService,
       )
       await reverser.findAndRevertDueActions()

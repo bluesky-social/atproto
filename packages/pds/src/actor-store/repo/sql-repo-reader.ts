@@ -12,7 +12,6 @@ import { countAll } from '../../db'
 
 export class SqlRepoReader extends ReadableBlockstore {
   cache: BlockMap = new BlockMap()
-  now: string
 
   constructor(public db: ActorDb) {
     super()

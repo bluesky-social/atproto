@@ -1,9 +1,13 @@
 import { secp256k1 as k256 } from '@noble/curves/secp256k1'
 import { sha256 } from '@noble/hashes/sha256'
-import * as uint8arrays from 'uint8arrays'
-import { SupportedEncodings } from 'uint8arrays/util/bases'
-import * as did from '../did'
+import {
+  fromString as ui8FromString,
+  toString as ui8ToString,
+} from 'uint8arrays'
+import { SupportedEncodings } from 'uint8arrays/to-string'
+
 import { SECP256K1_JWT_ALG } from '../const'
+import * as did from '../did'
 import { Keypair } from '../types'
 
 export type Secp256k1KeypairOptions = {
@@ -32,9 +36,7 @@ export class Secp256k1Keypair implements Keypair {
   ): Promise<Secp256k1Keypair> {
     const { exportable = false } = opts || {}
     const privKeyBytes =
-      typeof privKey === 'string'
-        ? uint8arrays.fromString(privKey, 'hex')
-        : privKey
+      typeof privKey === 'string' ? ui8FromString(privKey, 'hex') : privKey
     return new Secp256k1Keypair(privKeyBytes, exportable)
   }
 
@@ -43,7 +45,7 @@ export class Secp256k1Keypair implements Keypair {
   }
 
   publicKeyStr(encoding: SupportedEncodings = 'base64pad'): string {
-    return uint8arrays.toString(this.publicKey, encoding)
+    return ui8ToString(this.publicKey, encoding)
   }
 
   did(): string {

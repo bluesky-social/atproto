@@ -3,10 +3,6 @@ import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
 import { BlobRef } from '@atproto/lexicon'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/createRecord'
-import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'
-import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/deleteRecord'
-import * as applyWrites from '@atproto/api/src/client/types/com/atproto/repo/applyWrites'
 import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import { defaultFetchHandler } from '@atproto/xrpc'
@@ -39,6 +35,7 @@ describe('crud operations', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'crud',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getClient()
     aliceAgent = network.pds.getClient()
@@ -797,7 +794,9 @@ describe('crud operations', () => {
         swapCommit: staleCommit.cid,
         record: postRecord(),
       })
-      await expect(attemptCreate).rejects.toThrow(createRecord.InvalidSwapError)
+      await expect(attemptCreate).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
     })
 
     it('deleteRecord succeeds on proper commit cas', async () => {
@@ -840,7 +839,9 @@ describe('crud operations', () => {
         rkey: uri.rkey,
         swapCommit: staleCommit.cid,
       })
-      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -885,7 +886,9 @@ describe('crud operations', () => {
         rkey: uri.rkey,
         swapRecord: (await cidForCbor({})).toString(),
       })
-      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -930,7 +933,7 @@ describe('crud operations', () => {
         swapCommit: staleCommit.cid,
         record: profileRecord(),
       })
-      await expect(attemptPut).rejects.toThrow(putRecord.InvalidSwapError)
+      await expect(attemptPut).rejects.toMatchObject({ error: 'InvalidSwap' })
     })
 
     it('putRecord succeeds on proper record cas', async () => {
@@ -981,7 +984,7 @@ describe('crud operations', () => {
         swapRecord: null,
         record: profileRecord(),
       })
-      await expect(attemptPut1).rejects.toThrow(putRecord.InvalidSwapError)
+      await expect(attemptPut1).rejects.toMatchObject({ error: 'InvalidSwap' })
       // Test swapRecord w/ cid (ensures update)
       const attemptPut2 = repo.putRecord({
         repo: alice.did,
@@ -990,7 +993,7 @@ describe('crud operations', () => {
         swapRecord: (await cidForCbor({})).toString(),
         record: profileRecord(),
       })
-      await expect(attemptPut2).rejects.toThrow(putRecord.InvalidSwapError)
+      await expect(attemptPut2).rejects.toMatchObject({ error: 'InvalidSwap' })
     })
 
     it('applyWrites succeeds on proper commit cas', async () => {
@@ -1033,9 +1036,9 @@ describe('crud operations', () => {
           },
         ],
       })
-      await expect(attemptApplyWrite).rejects.toThrow(
-        applyWrites.InvalidSwapError,
-      )
+      await expect(attemptApplyWrite).rejects.toMatchObject({
+        error: 'InvalidSwap',
+      })
     })
 
     it("writes fail on values that can't reliably transform between cbor to lex", async () => {
