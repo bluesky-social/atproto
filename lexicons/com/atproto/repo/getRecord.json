@@ -19,7 +19,11 @@
             "format": "nsid",
             "description": "The NSID of the record collection."
           },
-          "rkey": { "type": "string", "description": "The Record Key." },
+          "rkey": {
+            "type": "string",
+            "description": "The Record Key.",
+            "format": "record-key"
+          },
           "cid": {
             "type": "string",
             "format": "cid",

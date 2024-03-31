@@ -18,7 +18,8 @@
             },
             "validate": {
               "type": "boolean",
-              "description": "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons."
+              "default": true,
+              "description": "Can be set to 'false' to skip Lexicon schema validation of record data, for all operations."
             },
             "writes": {
               "type": "array",
@@ -70,7 +71,7 @@
       "required": ["collection", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "maxLength": 512 },
+        "rkey": { "type": "string", "maxLength": 512, "format": "record-key" },
         "value": { "type": "unknown" }
       }
     },
@@ -80,7 +81,7 @@
       "required": ["collection", "rkey", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string" },
+        "rkey": { "type": "string", "format": "record-key" },
         "value": { "type": "unknown" }
       }
     },
@@ -90,7 +91,7 @@
       "required": ["collection", "rkey"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string" }
+        "rkey": { "type": "string", "format": "record-key" }
       }
     },
     "createResult": {
