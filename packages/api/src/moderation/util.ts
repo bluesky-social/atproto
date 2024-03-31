@@ -38,8 +38,8 @@ export function interpretLabelValueDefinition(
     def.severity === 'alert'
       ? 'alert'
       : def.severity === 'inform'
-      ? 'inform'
-      : undefined
+        ? 'inform'
+        : undefined
   if (def.blurs === 'content') {
     // target=account, blurs=content
     behaviors.account.profileList = alertOrInform

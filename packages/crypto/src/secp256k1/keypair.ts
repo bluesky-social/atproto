@@ -18,7 +18,10 @@ export class Secp256k1Keypair implements Keypair {
   jwtAlg = SECP256K1_JWT_ALG
   private publicKey: Uint8Array
 
-  constructor(private privateKey: Uint8Array, private exportable: boolean) {
+  constructor(
+    private privateKey: Uint8Array,
+    private exportable: boolean,
+  ) {
     this.publicKey = k256.getPublicKey(privateKey)
   }
 
