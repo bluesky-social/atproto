@@ -50,6 +50,11 @@ export class S3BlobStore implements BlobStore {
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
+    const abortController = new AbortController()
+    const timeout = setTimeout(
+      () => abortController.abort('upload timed out'),
+      10000,
+    )
     await new Upload({
       client: this.client,
       params: {
@@ -57,7 +62,10 @@ export class S3BlobStore implements BlobStore {
         Body: bytes,
         Key: this.getTmpPath(key),
       },
+      // @ts-ignore native implementation fine in node >=15
+      abortController,
     }).done()
+    clearTimeout(timeout)
     return key
   }
 
