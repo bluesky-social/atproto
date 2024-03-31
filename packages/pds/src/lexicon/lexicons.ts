@@ -1632,16 +1632,6 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
-            rkeyStart: {
-              type: 'string',
-              description:
-                'DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)',
-            },
-            rkeyEnd: {
-              type: 'string',
-              description:
-                'DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)',
-            },
             reverse: {
               type: 'boolean',
               description: 'Flag to reverse the order of the returned records.',
@@ -2921,70 +2911,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncGetCheckout: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getCheckout',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetHead: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getHead',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HeadNotFound',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoSyncGetLatestCommit: {
     lexicon: 1,
     id: 'com.atproto.sync.getLatestCommit',
@@ -3052,12 +2978,6 @@ export const schemaDict = {
             rkey: {
               type: 'string',
               description: 'Record Key',
-            },
-            commit: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit',
             },
           },
         },
@@ -3344,11 +3264,6 @@ export const schemaDict = {
           commit: {
             type: 'cid-link',
             description: 'Repo commit object CID.',
-          },
-          prev: {
-            type: 'cid-link',
-            description:
-              'DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability.',
           },
           rev: {
             type: 'string',
@@ -4246,10 +4161,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            term: {
-              type: 'string',
-              description: "DEPRECATED: use 'q' instead.",
-            },
             q: {
               type: 'string',
               description:
@@ -4299,10 +4210,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            term: {
-              type: 'string',
-              description: "DEPRECATED: use 'q' instead.",
-            },
             q: {
               type: 'string',
               description: 'Search query prefix; not a full query string.',
@@ -9153,10 +9060,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            term: {
-              type: 'string',
-              description: "DEPRECATED: use 'q' instead",
-            },
             q: {
               type: 'string',
             },
@@ -9270,8 +9173,6 @@ export const ids = {
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
-  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
-  ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',

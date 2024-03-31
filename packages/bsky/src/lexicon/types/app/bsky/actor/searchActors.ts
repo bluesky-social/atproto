@@ -10,8 +10,6 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead. */
-  term?: string
   /** Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. */
   q?: string
   limit: number

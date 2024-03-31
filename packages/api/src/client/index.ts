@@ -71,8 +71,6 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
-import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
@@ -230,8 +228,6 @@ export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
-export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
@@ -1111,28 +1107,6 @@ export class ComAtprotoSyncNS {
       .call('com.atproto.sync.getBlocks', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetBlocks.toKnownErr(e)
-      })
-  }
-
-  getCheckout(
-    params?: ComAtprotoSyncGetCheckout.QueryParams,
-    opts?: ComAtprotoSyncGetCheckout.CallOptions,
-  ): Promise<ComAtprotoSyncGetCheckout.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getCheckout', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetCheckout.toKnownErr(e)
-      })
-  }
-
-  getHead(
-    params?: ComAtprotoSyncGetHead.QueryParams,
-    opts?: ComAtprotoSyncGetHead.CallOptions,
-  ): Promise<ComAtprotoSyncGetHead.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getHead', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetHead.toKnownErr(e)
       })
   }
 

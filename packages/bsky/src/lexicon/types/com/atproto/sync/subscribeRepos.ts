@@ -45,8 +45,6 @@ export interface Commit {
   repo: string
   /** Repo commit object CID. */
   commit: CID
-  /** DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability. */
-  prev?: CID | null
   /** The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event. */
   rev: string
   /** The rev of the last emitted commit from this repo (if any). */
