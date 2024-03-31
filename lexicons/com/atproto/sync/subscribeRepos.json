@@ -71,10 +71,6 @@
           "type": "cid-link",
           "description": "Repo commit object CID."
         },
-        "prev": {
-          "type": "cid-link",
-          "description": "DEPRECATED -- unused. WARNING -- nullable and optional; stick with optional to ensure golang interoperability."
-        },
         "rev": {
           "type": "string",
           "description": "The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event."
