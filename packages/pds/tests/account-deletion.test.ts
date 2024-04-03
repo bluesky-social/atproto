@@ -185,6 +185,13 @@ describe('account deletion', () => {
     await expect(attempt2).rejects.toThrow(BlobNotFoundError)
   })
 
+  it('maintains blobs from other actors', async () => {
+    const bobBlobstore = network.pds.ctx.blobstore(sc.dids.bob)
+    const [img] = sc.replies[sc.dids.bob][0].images
+    const attempt = bobBlobstore.getBytes(img.image.ref)
+    await expect(attempt).resolves.toBeDefined()
+  })
+
   it('can delete an empty user', async () => {
     const eve = await sc.createAccount('eve', {
       handle: 'eve.test',
