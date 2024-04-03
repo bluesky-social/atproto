@@ -23,6 +23,7 @@
     { "path": "./packages/http-util" },
     { "path": "./packages/identity" },
     { "path": "./packages/identity-resolver" },
+    { "path": "./packages/indexed-db" },
     { "path": "./packages/jwk" },
     { "path": "./packages/jwk-jose" },
     { "path": "./packages/jwk-node" },
