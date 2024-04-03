@@ -49,7 +49,11 @@
       "properties": {
         "post": { "type": "ref", "ref": "#postView" },
         "reply": { "type": "ref", "ref": "#replyRef" },
-        "reason": { "type": "union", "refs": ["#reasonRepost"] }
+        "reason": { "type": "union", "refs": ["#reasonRepost"] },
+        "metadata": {
+          "type": "string",
+          "description": "Metadata provided by feed generator that may be passed back alongside interactions."
+        }
       }
     },
     "replyRef": {
@@ -157,7 +161,11 @@
       "required": ["post"],
       "properties": {
         "post": { "type": "string", "format": "at-uri" },
-        "reason": { "type": "union", "refs": ["#skeletonReasonRepost"] }
+        "reason": { "type": "union", "refs": ["#skeletonReasonRepost"] },
+        "metadata": {
+          "type": "string",
+          "description": "Metadata that will be passed through to client and may be passed to feed generator back alongside interactions."
+        }
       }
     },
     "skeletonReasonRepost": {
@@ -179,61 +187,33 @@
         }
       }
     },
-    "interactionSeen": {
+    "interaction": {
       "type": "object",
-      "required": ["uri"],
       "properties": {
-        "uri": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "interactionClickthroughActor": {
-      "type": "object",
-      "required": ["actor"],
-      "properties": {
-        "actor": { "type": "string", "format": "did" },
-        "post": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "interactionClickthroughThread": {
-      "type": "object",
-      "required": ["post"],
-      "properties": {
-        "post": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "interactionClickthroughEmbed": {
-      "type": "object",
-      "required": ["embed"],
-      "properties": {
-        "embed": { "type": "string", "format": "uri" }
-      }
-    },
-    "interactionLike": {
-      "type": "object",
-      "required": ["subject"],
-      "properties": {
-        "subject": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "interactionRepost": {
-      "type": "object",
-      "required": ["subject"],
-      "properties": {
-        "subject": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "interactionReply": {
-      "type": "object",
-      "required": ["subject"],
-      "properties": {
-        "subject": { "type": "string", "format": "at-uri" }
-      }
-    },
-    "interactionEmbed": {
-      "type": "object",
-      "required": ["subject"],
-      "properties": {
-        "subject": { "type": "string", "format": "at-uri" }
+        "item": { "type": "string", "format": "at-uri" },
+        "itemReason": {
+          "type": "union",
+          "refs": ["#skeletonReasonRepost"]
+        },
+        "durationMs": { "type": "integer" },
+        "event": {
+          "type": "string",
+          "knownValues": [
+            "seen",
+            "clickthroughAuthor",
+            "clickthroughReposter",
+            "clickthroughEmbed",
+            "clickthroughThread",
+            "like",
+            "repost",
+            "reply",
+            "embed"
+          ]
+        },
+        "metadata": {
+          "type": "string",
+          "description": "Metadata on a feed item that was orginally supplied by the feed generator on getFeedSkeleton."
+        }
       }
     }
   }

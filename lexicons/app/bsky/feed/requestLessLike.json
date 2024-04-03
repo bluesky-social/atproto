@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.requestLessLike",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Request a feed generator to show less content like the provided uri",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["item"],
+          "properties": {
+            "item": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}
