@@ -137,6 +137,7 @@
         },
         "avatar": { "type": "string", "format": "uri" },
         "likeCount": { "type": "integer", "minimum": 0 },
+        "requestFeedback": { "type": "boolean", "default": false },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
