@@ -50,9 +50,9 @@
         "post": { "type": "ref", "ref": "#postView" },
         "reply": { "type": "ref", "ref": "#replyRef" },
         "reason": { "type": "union", "refs": ["#reasonRepost"] },
-        "metadata": {
+        "feedContext": {
           "type": "string",
-          "description": "Metadata provided by feed generator that may be passed back alongside interactions."
+          "description": "Context provided by feed generator that may be passed back alongside interactions."
         }
       }
     },
@@ -141,7 +141,7 @@
         },
         "avatar": { "type": "string", "format": "uri" },
         "likeCount": { "type": "integer", "minimum": 0 },
-        "requestFeedback": { "type": "boolean", "default": false },
+        "acceptsFeedback": { "type": "boolean", "default": false },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
@@ -162,9 +162,9 @@
       "properties": {
         "post": { "type": "string", "format": "at-uri" },
         "reason": { "type": "union", "refs": ["#skeletonReasonRepost"] },
-        "metadata": {
+        "feedContext": {
           "type": "string",
-          "description": "Metadata that will be passed through to client and may be passed to feed generator back alongside interactions."
+          "description": "Context that will be passed through to client and may be passed to feed generator back alongside interactions."
         }
       }
     },
@@ -194,11 +194,13 @@
         "event": {
           "type": "string",
           "knownValues": [
-            "app.bsky.feed.defs#interactionSeen",
+            "app.bsky.feed.defs#requestLess",
+            "app.bsky.feed.defs#requestMore",
+            "app.bsky.feed.defs#clickthroughItem",
             "app.bsky.feed.defs#clickthroughAuthor",
             "app.bsky.feed.defs#clickthroughReposter",
             "app.bsky.feed.defs#clickthroughEmbed",
-            "app.bsky.feed.defs#clickthroughThread",
+            "app.bsky.feed.defs#interactionSeen",
             "app.bsky.feed.defs#interactionLike",
             "app.bsky.feed.defs#interactionRepost",
             "app.bsky.feed.defs#interactionReply",
@@ -206,15 +208,23 @@
             "app.bsky.feed.defs#interactionShare"
           ]
         },
-        "metadata": {
+        "feedContext": {
           "type": "string",
-          "description": "Metadata on a feed item that was orginally supplied by the feed generator on getFeedSkeleton."
+          "description": "Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton."
         }
       }
     },
-    "interactionSeen": {
+    "requestLess": {
       "type": "token",
-      "description": "Feed item was seen by user"
+      "description": "Request that less content like the given feed item be shown in the feed"
+    },
+    "requestMore": {
+      "type": "token",
+      "description": "Request that more content like the given feed item be shown in the feed"
+    },
+    "clickthroughItem": {
+      "type": "token",
+      "description": "User clicked through to the feed item"
     },
     "clickthroughAuthor": {
       "type": "token",
@@ -228,9 +238,9 @@
       "type": "token",
       "description": "User clicked through to the embedded content of the feed item"
     },
-    "clickthroughThread": {
+    "interactionSeen": {
       "type": "token",
-      "description": "User clicked through to the thread view of the feed item"
+      "description": "Feed item was seen by user"
     },
     "interactionLike": {
       "type": "token",
