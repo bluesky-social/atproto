@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.12
+
+### Patch Changes
+
+- [`d77ac35d4`](https://github.com/bluesky-social/atproto/commit/d77ac35d484925d90169e6a1047cddfbe90923bc) Thanks [@devinivy](https://github.com/devinivy)! - Fix to blob deletion w/ disk store (see #2381)
+
 ## 0.4.11
 
 ### Patch Changes
