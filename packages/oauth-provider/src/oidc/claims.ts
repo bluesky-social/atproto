@@ -29,7 +29,7 @@ export const OIDC_STANDARD_CLAIMS = Object.freeze(
   Object.values(OIDC_SCOPE_CLAIMS).flat(),
 )
 
-export type OIDCStandardClaim = typeof OIDC_STANDARD_CLAIMS[number]
+export type OIDCStandardClaim = (typeof OIDC_STANDARD_CLAIMS)[number]
 export type OIDCStandardPayload = Partial<{
   [K in OIDCStandardClaim]?: JwtPayload[K]
 }>
