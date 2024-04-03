@@ -32,7 +32,7 @@
           },
           "requestFeedback": { 
             "type": "boolean",
-            "description": "Request from a feed for a client to seend feedback in the form of user interactions."
+            "description": "Request from a feed for a client to send feedback in the form of user interactions."
           },
           "labels": {
             "type": "union",

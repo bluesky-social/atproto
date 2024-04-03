@@ -191,11 +191,6 @@
       "type": "object",
       "properties": {
         "item": { "type": "string", "format": "at-uri" },
-        "itemReason": {
-          "type": "union",
-          "refs": ["#skeletonReasonRepost"]
-        },
-        "durationMs": { "type": "integer" },
         "event": {
           "type": "string",
           "knownValues": [
