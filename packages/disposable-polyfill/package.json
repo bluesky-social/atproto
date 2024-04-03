@@ -1,0 +1,34 @@
+{
+  "name": "@atproto/disposable-polyfill",
+  "version": "0.0.1",
+  "license": "MIT",
+  "keywords": [
+    "atproto",
+    "disposable",
+    "polyfill"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/disposable-polyfill"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}
