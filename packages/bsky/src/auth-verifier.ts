@@ -64,7 +64,10 @@ export class AuthVerifier {
   public modServiceDid: string
   private adminPasses: Set<string>
 
-  constructor(public dataplane: DataPlaneClient, opts: AuthVerifierOpts) {
+  constructor(
+    public dataplane: DataPlaneClient,
+    opts: AuthVerifierOpts,
+  ) {
     this.ownDid = opts.ownDid
     this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)

@@ -29,7 +29,10 @@ export class ImageProcessingServer {
   app: Express = express()
   uriBuilder: ImageUriBuilder
 
-  constructor(public cfg: ServerConfig, public cache: BlobCache) {
+  constructor(
+    public cfg: ServerConfig,
+    public cache: BlobCache,
+  ) {
     this.uriBuilder = new ImageUriBuilder('')
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)

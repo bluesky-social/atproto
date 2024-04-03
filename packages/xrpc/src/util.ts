@@ -39,7 +39,7 @@ export function constructMethodCallUri(
       }
       if (value !== undefined) {
         if (paramSchema.type === 'array') {
-          const vals: typeof value[] = []
+          const vals: (typeof value)[] = []
           vals.concat(value).forEach((val) => {
             uri.searchParams.append(
               key,

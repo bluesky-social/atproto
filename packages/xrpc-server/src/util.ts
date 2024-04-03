@@ -33,7 +33,7 @@ export function decodeQueryParams(
     const property = def.parameters?.properties?.[k]
     if (property) {
       if (property.type === 'array') {
-        const vals: typeof val[] = []
+        const vals: (typeof val)[] = []
         decoded[k] = val
           ? vals
               .concat(val) // Cast to array
@@ -282,7 +282,10 @@ export function serverTimingHeader(timings: ServerTiming[]) {
 export class ServerTimer implements ServerTiming {
   public duration?: number
   private startMs?: number
-  constructor(public name: string, public description?: string) {}
+  constructor(
+    public name: string,
+    public description?: string,
+  ) {}
   start() {
     this.startMs = Date.now()
     return this

@@ -22,7 +22,7 @@ export type Options = {
   }
 }
 
-export type UndecodedParams = typeof express.request['query']
+export type UndecodedParams = (typeof express.request)['query']
 
 export type Primitive = string | number | boolean
 export type Params = Record<string, Primitive | Primitive[] | undefined>
