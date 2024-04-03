@@ -35,7 +35,7 @@ export function buildWebPage({
   }
 
   return html`
-    <!DOCTYPE html>
+    <!doctype html>
     <html lang="${lang}">
       <head>
         <meta charset="UTF-8" />

@@ -28,7 +28,10 @@ import {
 export type SignPayload = Omit<JwtPayload, 'iss'>
 
 export class Signer {
-  constructor(public readonly issuer: string, public readonly keyset: Keyset) {}
+  constructor(
+    public readonly issuer: string,
+    public readonly keyset: Keyset,
+  ) {}
 
   async verify<P extends Record<string, unknown> = JwtPayload>(
     token: Jwt,
