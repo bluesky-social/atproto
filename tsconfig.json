@@ -13,6 +13,7 @@
     { "path": "./packages/dev-env" },
     { "path": "./packages/did" },
     { "path": "./packages/did-node" },
+    { "path": "./packages/disposable-polyfill" },
     { "path": "./packages/fetch" },
     { "path": "./packages/fetch-dpop" },
     { "path": "./packages/fetch-node" },
