@@ -1,0 +1,35 @@
+{
+  "name": "@atproto/indexed-db",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Isomorphic wrapper utilities for indexed-db API",
+  "keywords": [
+    "atproto",
+    "indexed-db"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/indexed-db"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@atproto/disposable-polyfill": "workspace:*",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}
