@@ -26,6 +26,7 @@
     { "path": "./packages/jwk" },
     { "path": "./packages/jwk-jose" },
     { "path": "./packages/jwk-node" },
+    { "path": "./packages/jwk-webcrypto" },
     { "path": "./packages/lex-cli" },
     { "path": "./packages/lexicon" },
     { "path": "./packages/oauth-client-metadata" },

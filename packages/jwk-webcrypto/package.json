@@ -1,0 +1,31 @@
+{
+  "name": "@atproto/jwk-webcrypto",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Webcrypto based implementation of Keypair from @atproto/jwk",
+  "keywords": [
+    "atproto",
+    "jwk",
+    "webcrypto",
+    "keypair"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/jwk-webcrypto"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/indexed-db": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/jwk-jose": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
