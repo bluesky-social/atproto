@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.sendInteraction",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["interaction"],
+          "properties": {
+            "interaction": {
+              "type": "union",
+              "refs": [
+                "app.bsky.feed.defs#interactionSeen",
+                "app.bsky.feed.defs#interactionClickthroughActor",
+                "app.bsky.feed.defs#interactionClickthroughThread",
+                "app.bsky.feed.defs#interactionClickthroughEmbed",
+                "app.bsky.feed.defs#interactionLike",
+                "app.bsky.feed.defs#interactionRepost",
+                "app.bsky.feed.defs#interactionReply",
+                "app.bsky.feed.defs#interactionEmbed"
+              ]
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": { }
+        }
+      }
+    }
+  }
+}

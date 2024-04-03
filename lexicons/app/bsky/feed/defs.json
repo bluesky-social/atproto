@@ -177,6 +177,63 @@
           "items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
         }
       }
+    },
+    "interactionSeen": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "interactionClickthroughActor": {
+      "type": "object",
+      "required": ["actor"],
+      "properties": {
+        "actor": { "type": "string", "format": "did" },
+        "post": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "interactionClickthroughThread": {
+      "type": "object",
+      "required": ["post"],
+      "properties": {
+        "post": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "interactionClickthroughEmbed": {
+      "type": "object",
+      "required": ["embed"],
+      "properties": {
+        "embed": { "type": "string", "format": "uri" }
+      }
+    },
+    "interactionLike": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "interactionRepost": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "interactionReply": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "interactionEmbed": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": { "type": "string", "format": "at-uri" }
+      }
     }
   }
 }
