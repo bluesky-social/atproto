@@ -199,15 +199,16 @@
         "event": {
           "type": "string",
           "knownValues": [
-            "seen",
-            "clickthroughAuthor",
-            "clickthroughReposter",
-            "clickthroughEmbed",
-            "clickthroughThread",
-            "like",
-            "repost",
-            "reply",
-            "embed"
+            "app.bsky.feed.defs#interactionSeen",
+            "app.bsky.feed.defs#clickthroughAuthor",
+            "app.bsky.feed.defs#clickthroughReposter",
+            "app.bsky.feed.defs#clickthroughEmbed",
+            "app.bsky.feed.defs#clickthroughThread",
+            "app.bsky.feed.defs#interactionLike",
+            "app.bsky.feed.defs#interactionRepost",
+            "app.bsky.feed.defs#interactionReply",
+            "app.bsky.feed.defs#interactionQuote",
+            "app.bsky.feed.defs#interactionShare"
           ]
         },
         "metadata": {
@@ -215,6 +216,46 @@
           "description": "Metadata on a feed item that was orginally supplied by the feed generator on getFeedSkeleton."
         }
       }
+    },
+    "interactionSeen": {
+      "type": "token",
+      "description": "Feed item was seen by user"
+    },
+    "clickthroughAuthor": {
+      "type": "token",
+      "description": "User clicked through to the author of the feed item"
+    },
+    "clickthroughReposter": {
+      "type": "token",
+      "description": "User clicked through to the reposter of the feed item"
+    },
+    "clickthroughEmbed": {
+      "type": "token",
+      "description": "User clicked through to the embedded content of the feed item"
+    },
+    "clickthroughThread": {
+      "type": "token",
+      "description": "User clicked through to the thread view of the feed item"
+    },
+    "interactionLike": {
+      "type": "token",
+      "description": "User liked the feed item"
+    },
+    "interactionRepost": {
+      "type": "token",
+      "description": "User reposted the feed item"
+    },
+    "interactionReply": {
+      "type": "token",
+      "description": "User replied to the feed item"
+    },
+    "interactionQuote": {
+      "type": "token",
+      "description": "User quoted the feed item"
+    },
+    "interactionShare": {
+      "type": "token",
+      "description": "User shared the feed item"
     }
   }
 }
