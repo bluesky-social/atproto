@@ -118,6 +118,7 @@ import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
 import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
@@ -277,6 +278,7 @@ export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+export * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
 export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
@@ -333,6 +335,20 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
+export const APP_BSKY_FEED = {
+  DefsRequestLess: 'app.bsky.feed.defs#requestLess',
+  DefsRequestMore: 'app.bsky.feed.defs#requestMore',
+  DefsClickthroughItem: 'app.bsky.feed.defs#clickthroughItem',
+  DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
+  DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
+  DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
+  DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
+  DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
+  DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
+  DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
+  DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -1635,6 +1651,17 @@ export class AppBskyFeedNS {
       .call('app.bsky.feed.searchPosts', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedSearchPosts.toKnownErr(e)
+      })
+  }
+
+  sendInteractions(
+    data?: AppBskyFeedSendInteractions.InputSchema,
+    opts?: AppBskyFeedSendInteractions.CallOptions,
+  ): Promise<AppBskyFeedSendInteractions.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.sendInteractions', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedSendInteractions.toKnownErr(e)
       })
   }
 }

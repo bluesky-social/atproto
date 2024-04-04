@@ -30,7 +30,7 @@
             "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
           },
-          "acceptsInteractions": { 
+          "acceptsInteractions": {
             "type": "boolean",
             "description": "Declaration that a feed accepts feedback interactions from a client through app.bsky.feed.sendInteractions"
           },
