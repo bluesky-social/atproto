@@ -8,8 +8,15 @@ import {
   ResponseTypeNames,
 } from '@atproto/xrpc'
 
+export type CatchallHandler = (
+  req: express.Request,
+  _res: express.Response,
+  next: express.NextFunction,
+) => unknown
+
 export type Options = {
   validateResponse?: boolean
+  catchall?: CatchallHandler
   payload?: {
     jsonLimit?: number
     blobLimit?: number
