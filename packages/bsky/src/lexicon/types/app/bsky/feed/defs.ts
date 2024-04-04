@@ -221,7 +221,7 @@ export interface GeneratorView {
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
   likeCount?: number
-  acceptsInteractions: boolean
+  acceptsInteractions?: boolean
   labels?: ComAtprotoLabelDefs.Label[]
   viewer?: GeneratorViewerState
   indexedAt: string

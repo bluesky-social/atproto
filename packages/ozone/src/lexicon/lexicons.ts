@@ -4912,7 +4912,6 @@ export const schemaDict = {
           },
           acceptsInteractions: {
             type: 'boolean',
-            default: false,
           },
           labels: {
             type: 'array',
