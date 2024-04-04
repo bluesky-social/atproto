@@ -52,7 +52,8 @@
         "reason": { "type": "union", "refs": ["#reasonRepost"] },
         "feedContext": {
           "type": "string",
-          "description": "Context provided by feed generator that may be passed back alongside interactions."
+          "description": "Context provided by feed generator that may be passed back alongside interactions.",
+          "maxLength": 2000
         }
       }
     },
@@ -141,7 +142,7 @@
         },
         "avatar": { "type": "string", "format": "uri" },
         "likeCount": { "type": "integer", "minimum": 0 },
-        "acceptsFeedback": { "type": "boolean", "default": false },
+        "acceptsInteractions": { "type": "boolean", "default": false },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
@@ -164,7 +165,8 @@
         "reason": { "type": "union", "refs": ["#skeletonReasonRepost"] },
         "feedContext": {
           "type": "string",
-          "description": "Context that will be passed through to client and may be passed to feed generator back alongside interactions."
+          "description": "Context that will be passed through to client and may be passed to feed generator back alongside interactions.",
+          "maxLength": 2000
         }
       }
     },
@@ -210,7 +212,8 @@
         },
         "feedContext": {
           "type": "string",
-          "description": "Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton."
+          "description": "Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton.",
+          "maxLength": 2000
         }
       }
     },
