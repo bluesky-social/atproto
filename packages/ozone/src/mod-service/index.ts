@@ -759,7 +759,7 @@ export class ModerationService {
 
     if (tags.length) {
       builder = builder.where(
-        sql`${ref('moderation_subject_status.tags')}::jsonb ?| array[${sql.join(
+        sql`${ref('moderation_subject_status.tags')} ?| array[${sql.join(
           tags,
         )}]::TEXT[]`,
       )
@@ -771,7 +771,7 @@ export class ModerationService {
           .where(
             sql`NOT(${ref(
               'moderation_subject_status.tags',
-            )}::jsonb ?| array[${sql.join(excludeTags)}]::TEXT[])`,
+            )} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
           )
           .orWhere('tags', 'is', null),
       )
