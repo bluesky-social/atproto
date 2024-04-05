@@ -151,15 +151,6 @@ export class OAuthServer {
    * able to use the "sub" (DID) as being the actual user's identifier.
    */
   protected async checkSubIssuer(sub: string) {
-    /// XXX Faking it for dev purposes !!!
-    if (sub) {
-      return {
-        did: sub,
-        url: new URL('https://pds.bsky.msbn.xyz'),
-        metadata: this.serverMetadata,
-      }
-    }
-
     const resolved = await this.resolver.resolve(sub)
     if (resolved.metadata.issuer !== this.serverMetadata.issuer) {
       // Maybe the user switched PDS.
