@@ -127,20 +127,14 @@ export class BrowserOAuthDatabase {
     return {
       get: async (key) => {
         // Find item in store
-        const item = await this.run(name, 'readonly', (dbStore) => {
-          return dbStore.get(key)
-        })
-
-        console.error('GOT item', key, item)
+        const item = await this.run(name, 'readonly', (store) => store.get(key))
 
         // Not found
         if (item === undefined) return undefined
 
-        // Too old, proactively delete
+        // Too old (delete)
         if (item.expiresAt != null && item.expiresAt < Date.now()) {
-          await this.run(name, 'readwrite', (dbStore) => {
-            return dbStore.delete(key)
-          })
+          await this.run(name, 'readwrite', (store) => store.delete(key))
           return undefined
         }
 
@@ -149,10 +143,10 @@ export class BrowserOAuthDatabase {
       },
 
       getKeys: async () => {
-        const keys = await this.run(name, 'readonly', (dbStore) => {
-          return dbStore.getAllKeys()
-        })
-        return keys.filter((key) => typeof key === 'string') as string[]
+        const keys = await this.run(name, 'readonly', (store) =>
+          store.getAllKeys(),
+        )
+        return keys.filter((key): key is string => typeof key === 'string')
       },
 
       set: async (key, value) => {
@@ -163,16 +157,12 @@ export class BrowserOAuthDatabase {
         } as Schema[N]
 
         // Store item record
-        await this.run(name, 'readwrite', (dbStore) => {
-          return dbStore.put(item, key)
-        })
+        await this.run(name, 'readwrite', (store) => store.put(item, key))
       },
 
       del: async (key) => {
         // Delete
-        await this.run(name, 'readwrite', (dbStore) => {
-          return dbStore.delete(key)
-        })
+        await this.run(name, 'readwrite', (store) => store.delete(key))
       },
     }
   }

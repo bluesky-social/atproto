@@ -40,19 +40,28 @@ function App() {
     const info = await client.getUserinfo()
     console.log('info', info)
 
-    const params = new URLSearchParams({
-      repo: info.sub,
-      collection: 'app.bsky.actor.profile',
-      rkey: 'self',
-      // cid: undefined,
-    })
+    const get = async (method: string, params: Record<string, string>) => {
+      const response = await client.request(
+        `/xrpc/${method}?${new URLSearchParams(params).toString()}`,
+      )
+      return response.json()
+    }
 
-    const getRecord = await client.request(
-      `/xrpc/com.atproto.repo.getRecord?${params.toString()}`,
+    console.log(
+      'getProfile',
+      await get('com.atproto.repo.getRecord', {
+        repo: info.sub,
+        collection: 'app.bsky.actor.profile',
+        rkey: 'self',
+      }),
     )
 
-    console.log('getRecord.headers', getRecord.headers)
-    console.log('getRecord.json()', await getRecord.json())
+    console.log(
+      'getServiceAuth',
+      await get('com.atproto.server.getServiceAuth', {
+        aud: info.sub,
+      }),
+    )
   }, [client])
 
   return oauth.signedIn ? (
