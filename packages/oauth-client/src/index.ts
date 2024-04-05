@@ -1,6 +1,7 @@
 export * from './crypto-implementation.js'
 export * from './oauth-client-factory.js'
 export * from './oauth-client.js'
+export * from './oauth-callback-error.js'
 export * from './oauth-server-factory.js'
 export * from './oauth-server.js'
 export * from './oauth-types.js'

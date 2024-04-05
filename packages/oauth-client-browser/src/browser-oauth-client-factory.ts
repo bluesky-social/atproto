@@ -4,11 +4,15 @@ import {
   OAuthAuthorizeOptions,
   OAuthClient,
   OAuthClientFactory,
+  OAuthCallbackError,
   OAuthResponseMode,
   OAuthResponseType,
   Session,
 } from '@atproto/oauth-client'
-import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
+import {
+  OAuthClientMetadata,
+  oauthClientMetadataSchema,
+} from '@atproto/oauth-client-metadata'
 import IsomorphicOAuthServerMetadataResolver from '@atproto/oauth-server-metadata-resolver'
 import {
   BrowserOAuthDatabase,
@@ -16,6 +20,7 @@ import {
   PopupStateData,
 } from './browser-oauth-database.js'
 import { CryptoSubtle } from './crypto-subtle.js'
+import { LoginContinuedInParentWindowError } from './errors.js'
 
 export type BrowserOauthClientFactoryOptions = {
   responseMode?: OAuthResponseMode
@@ -25,9 +30,23 @@ export type BrowserOauthClientFactoryOptions = {
   crypto?: Crypto
 }
 
-const POPUP_KEY_PREFIX = '@@oauth-popup-callback:'
+const POPUP_STATE_PREFIX = '@@oauth-popup-callback:'
 
 export class BrowserOAuthClientFactory extends OAuthClientFactory {
+  static async load(
+    options?: Omit<BrowserOauthClientFactoryOptions, 'clientMetadata'>,
+  ) {
+    const fetch = options?.fetch ?? globalThis.fetch
+    const request = new Request('/.well-known/oauth-client-metadata', {
+      redirect: 'error',
+    })
+    const response = await fetch(request)
+    const clientMetadata = oauthClientMetadataSchema.parse(
+      await response.json(),
+    )
+    return new BrowserOAuthClientFactory({ clientMetadata, ...options })
+  }
+
   readonly popupStore: DatabaseStore<PopupStateData>
   readonly sessionStore: DatabaseStore<Session>
 
@@ -73,27 +92,29 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
     const sessionIds = await this.sessionStore.getKeys()
     return Object.fromEntries(
       await Promise.all(
-        sessionIds.map(
-          async (sessionId) =>
-            [sessionId, await this.restore(sessionId, false)] as const,
-        ),
+        sessionIds.map(async (sessionId) => {
+          return [sessionId, await this.restore(sessionId, false)] as const
+        }),
       ),
     )
   }
 
-  async init(sessionId?: string, forceRefresh = false) {
+  async init(sessionId?: string, refresh?: boolean) {
     const signInResult = await this.signInCallback()
     if (signInResult) {
       return signInResult
     } else if (sessionId) {
-      const client = await this.restore(sessionId, forceRefresh)
+      const client = await this.restore(sessionId, refresh)
       return { client }
     } else {
       // TODO: we could restore any session from the store ?
     }
   }
 
-  async signIn(input: string, options?: OAuthAuthorizeOptions) {
+  async signIn(
+    input: string,
+    options?: OAuthAuthorizeOptions & { signal?: AbortSignal },
+  ) {
     if (options?.display === 'popup') {
       return this.signInPopup(input, options)
     } else {
@@ -114,20 +135,17 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
 
   async signInPopup(
     input: string,
-    options?: Omit<OAuthAuthorizeOptions, 'state'> & {
-      signal?: AbortSignal
-    },
+    options?: Omit<OAuthAuthorizeOptions, 'state'> & { signal?: AbortSignal },
   ): Promise<OAuthClient> {
     // Open new window asap to prevent popup busting by browsers
-    // TODO: If this doesn't work, maybe try opening the windows with
-    // `${redirect_uris[0]}#placeholder` ?
-    let popup = window.open('about:blank', '_blank', 'width=600,height=600')
+    const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'
+    let popup = window.open('about:blank', '_blank', popupFeatures)
 
     const stateKey = `${Math.random().toString(36).slice(2)}`
 
     const url = await this.authorize(input, {
       ...options,
-      state: `${POPUP_KEY_PREFIX}${stateKey}`,
+      state: `${POPUP_STATE_PREFIX}${stateKey}`,
       display: options?.display ?? 'popup',
     })
 
@@ -137,8 +155,10 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
       if (popup) {
         popup.window.location.href = url.href
       } else {
-        popup = window.open(url.href, '_blank', 'width=600,height=600')
+        popup = window.open(url.href, '_blank', popupFeatures)
       }
+
+      popup?.focus()
 
       return await new Promise<OAuthClient>((resolve, reject) => {
         const cleanup = () => {
@@ -167,18 +187,17 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
           cleanup()
 
           if (result.status === 'fulfilled') {
-            const sessionId = result.value
+            const { sessionId } = result.value
             try {
               options?.signal?.throwIfAborted()
-              resolve(await this.restore(sessionId, true))
+              resolve(await this.restore(sessionId))
             } catch (err) {
               reject(err)
               void this.revoke(sessionId)
             }
           } else {
-            // TODO: Re-build a proper error object (from the same class
-            // that was used to throw the error)
-            reject(new Error(result.reason))
+            const { message, params } = result.reason
+            reject(new OAuthCallbackError(new URLSearchParams(params), message))
           }
         }, 500)
       })
@@ -188,59 +207,66 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
   }
 
   async signInCallback() {
-    const redirectUri = new URL(this.clientMetadata.redirect_uris[0])
-    if (location.pathname !== redirectUri.pathname) return null
-
-    const params =
-      this.responseMode === 'query'
-        ? new URLSearchParams(location.search)
-        : new URLSearchParams(location.hash.slice(1))
-
-    // Only if the query string contains oauth callback params
+    // Only if the current URL is a redirect URI
     if (
-      !params.has('iss') ||
-      !params.has('state') ||
-      !(params.has('code') || params.has('error'))
+      this.clientMetadata.redirect_uris.every(
+        (uri) => new URL(uri).pathname !== location.pathname,
+      )
     ) {
       return null
     }
 
+    const params =
+      this.responseMode === 'fragment'
+        ? new URLSearchParams(location.hash.slice(1))
+        : new URLSearchParams(location.search)
+
+    // Only if the current URL contain oauth response params
+    if (!params.has('state') || !(params.has('code') || params.has('error'))) {
+      return null
+    }
+
     // Replace the current history entry without the query string (this will
-    // prevent this 'if' branch to run again if the user refreshes the page)
+    // prevent the following code to run again if the user refreshes the page)
     history.replaceState(null, '', location.pathname)
 
     return this.callback(params)
       .then(async (result) => {
-        if (result.state?.startsWith(POPUP_KEY_PREFIX)) {
-          const stateKey = result.state.slice(POPUP_KEY_PREFIX.length)
+        if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
+          const stateKey = result.state.slice(POPUP_STATE_PREFIX.length)
 
           await this.popupStore.set(stateKey, {
             status: 'fulfilled',
-            value: result.client.sessionId,
+            value: {
+              sessionId: result.client.sessionId,
+            },
           })
 
-          window.close() // continued in signInPopup
-          throw new Error('Login complete, please close the popup window.')
+          throw new LoginContinuedInParentWindowError() // signInPopup
         }
 
         return result
       })
       .catch(async (err) => {
-        // TODO: Throw a proper error from parent class to actually detect
-        // oauth authorization errors
-        const state = typeof (err as any)?.state
-        if (typeof state === 'string' && state?.startsWith(POPUP_KEY_PREFIX)) {
-          const stateKey = state.slice(POPUP_KEY_PREFIX.length)
+        if (
+          err instanceof OAuthCallbackError &&
+          err.state?.startsWith(POPUP_STATE_PREFIX)
+        ) {
+          const stateKey = err.state.slice(POPUP_STATE_PREFIX.length)
 
           await this.popupStore.set(stateKey, {
             status: 'rejected',
-            reason: err,
+            reason: {
+              message: err.message,
+              params: Array.from(err.params.entries()),
+            },
           })
 
-          window.close() // continued in signInPopup
-          throw new Error('Login complete, please close the popup window.')
+          throw new LoginContinuedInParentWindowError() // signInPopup
         }
 
+        // Most probable cause at this point is that the "state" parameter is
+        // invalid.
         throw err
       })
   }

@@ -13,6 +13,7 @@ import {
   OAuthResponseType,
 } from './oauth-types.js'
 import { Session, SessionGetter } from './session-getter.js'
+import { OAuthCallbackError } from './oauth-callback-error.js'
 
 export type InternalStateData = {
   iss: string
@@ -155,74 +156,102 @@ export class OAuthClientFactory {
   }> {
     // TODO: better errors
 
-    const state = params.get('state')
-    if (!state) throw new TypeError('"state" parameter missing')
-
-    const stateData = await this.stateStore.get(state)
-    if (!stateData) throw new TypeError('Invalid state')
-    else await this.stateStore.del(state)
-
-    const server = await this.serverFactory.fromIssuer(
-      stateData.iss,
-      stateData.dpopKey,
-    )
-
-    if (params.get('response') != null) {
-      throw new TypeError('JARM not implemented')
+    const responseJwt = params.get('response')
+    if (responseJwt != null) {
+      // https://openid.net/specs/oauth-v2-jarm.html
+      throw new OAuthCallbackError(params, 'JARM not supported')
     }
 
-    const issuer = params.get('iss')
-    if (issuer != null) {
-      if (!server.serverMetadata.issuer)
-        throw new TypeError('Issuer not found in metadata')
-      if (server.serverMetadata.issuer !== issuer) {
-        throw new TypeError('Issuer mismatch')
-      }
-    } else if (
-      server.serverMetadata.authorization_response_iss_parameter_supported
-    ) {
-      throw new TypeError('iss missing from the response')
+    const issuerParam = params.get('iss')
+    const stateParam = params.get('state')
+    const errorParam = params.get('error')
+    const codeParam = params.get('code')
+
+    if (!stateParam) {
+      throw new OAuthCallbackError(params, 'Missing "state" parameter')
     }
-
-    const error = params.get('error')
-    const code = params.get('code')
-
-    const errorDescription = params.get('error_description')
-    if (error != null || errorDescription != null || !code) {
-      // TODO: provide a proper way for the calling fn to read the error (e.g.
-      // "login_required", etc.)
-      const message = error || errorDescription || 'Missing "code" query param'
-      throw new TypeError(message)
+    const stateData = await this.stateStore.get(stateParam)
+    if (stateData) {
+      // Prevent any kind of replay
+      await this.stateStore.del(stateParam)
+    } else {
+      throw new OAuthCallbackError(params, 'Invalid state')
     }
-
-    const tokenSet = await server.exchangeCode(code, stateData.verifier)
 
     try {
-      // OpenID checks
-      if (tokenSet.id_token) {
-        await this.serverFactory.crypto.validateIdTokenClaims(
-          tokenSet.id_token,
-          state,
-          stateData.nonce,
-          code,
-          tokenSet.access_token,
+      if (errorParam != null) {
+        throw new OAuthCallbackError(params, undefined, stateData.appState)
+      }
+
+      if (!codeParam) {
+        throw new OAuthCallbackError(
+          params,
+          'Missing "code" query param',
+          stateData.appState,
         )
       }
 
-      const sessionId = await this.serverFactory.crypto.generateNonce(4)
+      const server = await this.serverFactory.fromIssuer(
+        stateData.iss,
+        stateData.dpopKey,
+      )
 
-      const client = this.createClient(server, sessionId)
+      if (issuerParam != null) {
+        if (!server.serverMetadata.issuer) {
+          throw new OAuthCallbackError(
+            params,
+            'Issuer not found in metadata',
+            stateData.appState,
+          )
+        }
+        if (server.serverMetadata.issuer !== issuerParam) {
+          throw new OAuthCallbackError(
+            params,
+            'Issuer mismatch',
+            stateData.appState,
+          )
+        }
+      } else if (
+        server.serverMetadata.authorization_response_iss_parameter_supported
+      ) {
+        throw new OAuthCallbackError(
+          params,
+          'iss missing from the response',
+          stateData.appState,
+        )
+      }
 
-      await this.sessionGetter.setStored(sessionId, {
-        dpopKey: stateData.dpopKey,
-        tokenSet,
-      })
+      const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
+      try {
+        if (tokenSet.id_token) {
+          await this.serverFactory.crypto.validateIdTokenClaims(
+            tokenSet.id_token,
+            stateParam,
+            stateData.nonce,
+            codeParam,
+            tokenSet.access_token,
+          )
+        }
 
-      return { client, state: stateData.appState }
+        const sessionId = await this.serverFactory.crypto.generateNonce(4)
+
+        await this.sessionGetter.setStored(sessionId, {
+          dpopKey: stateData.dpopKey,
+          tokenSet,
+        })
+
+        const client = this.createClient(server, sessionId)
+
+        return { client, state: stateData.appState }
+      } catch (err) {
+        await server.revoke(tokenSet.access_token)
+
+        throw err
+      }
     } catch (err) {
-      await server.revoke(tokenSet.access_token)
-
-      throw err
+      // Make sure, whatever the underlying error, that the appState is
+      // available in the calling code
+      throw OAuthCallbackError.from(err, params, stateData.appState)
     }
   }
 
@@ -244,7 +273,9 @@ export class OAuthClientFactory {
   }
 
   async revoke(sessionId: string) {
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sessionId)
+    const { dpopKey, tokenSet } = await this.sessionGetter.get(sessionId, {
+      allowStale: true,
+    })
 
     const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
 

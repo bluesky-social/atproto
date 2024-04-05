@@ -1,10 +1,14 @@
 import { OAuthAuthorizeOptions, OAuthClient } from '@atproto/oauth-client'
-import { BrowserOAuthClientFactory } from '@atproto/oauth-client-browser'
+import {
+  BrowserOAuthClientFactory,
+  LoginContinuedInParentWindowError,
+} from '@atproto/oauth-client-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const CURRENT_SESSION_ID_KEY = 'CURRENT_SESSION_ID_KEY'
 
 export function useOAuth(factory: BrowserOAuthClientFactory) {
+  const [initialized, setInitialized] = useState(false)
   const [client, setClient] = useState<undefined | null | OAuthClient>(void 0)
   const [clients, setClients] = useState<{ [_: string]: OAuthClient }>({})
   const [error, setError] = useState<null | string>(null)
@@ -24,6 +28,7 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
   useEffect(() => {
     semaphore.current++
 
+    setInitialized(false)
     setClient(undefined)
     setClients({})
     setError(null)
@@ -38,6 +43,7 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
           console.error('Failed to restore clients:', err)
           return {}
         })
+        setInitialized(true)
         setClients(clients)
         setClient(r?.client || (sessionId && clients[sessionId]) || null)
         setState(r?.state)
@@ -46,6 +52,7 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
         localStorage.removeItem(CURRENT_SESSION_ID_KEY)
         console.error('Failed to init:', err)
         setError(String(err))
+        setInitialized(!(err instanceof LoginContinuedInParentWindowError))
       })
       .finally(() => {
         setLoading(false)
@@ -99,6 +106,7 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
   )
 
   return {
+    initialized,
     clients,
     client: client ?? null,
     state,

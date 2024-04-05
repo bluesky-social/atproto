@@ -29,12 +29,11 @@ export type AppState = {
  */
 
 function App() {
-  const oauth = useOAuth(oauthFactory)
+  const { initialized, client, signedIn, signOut, error, loading, signIn } =
+    useOAuth(oauthFactory)
   const [profile, setProfile] = useState<{
     value: { displayName?: string }
   } | null>(null)
-
-  const { client } = oauth
 
   const loadProfile = useCallback(async () => {
     if (!client) return
@@ -66,7 +65,11 @@ function App() {
     console.log(profile)
   }, [client])
 
-  return oauth.signedIn ? (
+  if (!initialized) {
+    return <p>{error || 'Loading...'}</p>
+  }
+
+  return signedIn ? (
     <div>
       <p>Logged in!</p>
       <button onClick={loadProfile}>Load profile</button>
@@ -74,13 +77,13 @@ function App() {
         <pre>{profile ? JSON.stringify(profile, undefined, 2) : null}</pre>
       </code>
 
-      <button onClick={oauth.signOut}>Logout</button>
+      <button onClick={signOut}>Logout</button>
     </div>
   ) : (
     <LoginForm
-      error={oauth.error}
-      loading={oauth.loading}
-      onLogin={(input) => void oauth.signIn(input)}
+      error={error}
+      loading={loading}
+      onLogin={(input) => void signIn(input, { display: 'popup' })}
     />
   )
 }

@@ -33,7 +33,9 @@ async function decodeKey(encoded: EncodedKey): Promise<Key> {
 
 export type PopupStateData =
   | PromiseRejectedResult
-  | PromiseFulfilledResult<string>
+  | PromiseFulfilledResult<{
+      sessionId: string
+    }>
 
 export type Schema = {
   popup: Item<PopupStateData>
@@ -184,7 +186,7 @@ export class BrowserOAuthDatabase {
 
   getStateStore(): DatabaseStore<InternalStateData> {
     return this.createStore('state', {
-      expiresAt: (_value) => Date.now() + 600e3,
+      expiresAt: (_value) => Date.now() + 10 * 60e3,
       encode: ({ dpopKey, ...session }) => ({
         ...session,
         dpopKey: encodeKey(dpopKey),
