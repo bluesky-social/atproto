@@ -1,6 +1,6 @@
 import { BrowserOAuthClientFactory } from '@atproto/oauth-client-browser'
 import { oauthClientMetadataSchema } from '@atproto/oauth-client-metadata'
-import { useCallback, useRef } from 'react'
+import { useCallback, useState } from 'react'
 
 import LoginForm from './login-form'
 import { useOAuth } from './oauth'
@@ -30,11 +30,13 @@ export type AppState = {
 
 function App() {
   const oauth = useOAuth(oauthFactory)
-  const fileInput = useRef<HTMLInputElement>(null)
+  const [profile, setProfile] = useState<{
+    value: { displayName?: string }
+  } | null>(null)
 
   const { client } = oauth
 
-  const sendPost = useCallback(async () => {
+  const loadProfile = useCallback(async () => {
     if (!client) return
 
     const info = await client.getUserinfo()
@@ -47,28 +49,31 @@ function App() {
       return response.json()
     }
 
+    // A call that requires to be authenticated
     console.log(
-      'getProfile',
-      await get('com.atproto.repo.getRecord', {
-        repo: info.sub,
-        collection: 'app.bsky.actor.profile',
-        rkey: 'self',
-      }),
+      await get('com.atproto.server.getServiceAuth', { aud: info.sub }),
     )
 
-    console.log(
-      'getServiceAuth',
-      await get('com.atproto.server.getServiceAuth', {
-        aud: info.sub,
-      }),
-    )
+    // This call does not require authentication
+    const profile = await get('com.atproto.repo.getRecord', {
+      repo: info.sub,
+      collection: 'app.bsky.actor.profile',
+      rkey: 'self',
+    })
+
+    setProfile(profile)
+
+    console.log(profile)
   }, [client])
 
   return oauth.signedIn ? (
     <div>
       <p>Logged in!</p>
-      <input type="file" ref={fileInput} />
-      <button onClick={sendPost}>Send Post</button>
+      <button onClick={loadProfile}>Load profile</button>
+      <code>
+        <pre>{profile ? JSON.stringify(profile, undefined, 2) : null}</pre>
+      </code>
+
       <button onClick={oauth.signOut}>Logout</button>
     </div>
   ) : (
