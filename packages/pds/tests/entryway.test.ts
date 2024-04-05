@@ -120,9 +120,8 @@ describe('entryway', () => {
       },
     )
     const doc = await entryway.ctx.idResolver.did.resolve(alice)
-    const handleToDid = await entryway.ctx.idResolver.handle.resolve(
-      'alice3.test',
-    )
+    const handleToDid =
+      await entryway.ctx.idResolver.handle.resolve('alice3.test')
     const accountFromPds = await pds.ctx.accountManager.getAccount(alice)
     const accountFromEntryway = await entryway.ctx.services
       .account(entryway.ctx.db)

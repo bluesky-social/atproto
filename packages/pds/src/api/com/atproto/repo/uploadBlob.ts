@@ -21,9 +21,8 @@ export default function (server: Server, ctx: AppContext) {
           )
 
           return store.transact(async (actorTxn) => {
-            const blobRef = await actorTxn.repo.blob.trackUntetheredBlob(
-              metadata,
-            )
+            const blobRef =
+              await actorTxn.repo.blob.trackUntetheredBlob(metadata)
 
             // make the blob permanent if an associated record is already indexed
             const recordsForBlob = await actorTxn.repo.blob.getRecordsForBlob(

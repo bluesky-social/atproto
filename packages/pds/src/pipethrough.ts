@@ -163,10 +163,13 @@ const RES_HEADERS_TO_FORWARD = [
 ]
 
 const makeResHeaders = (res: Response): Record<string, string> => {
-  const headers = RES_HEADERS_TO_FORWARD.reduce((acc, cur) => {
-    acc[cur] = res.headers.get(cur) ?? undefined
-    return acc
-  }, {} as Record<string, string | undefined>)
+  const headers = RES_HEADERS_TO_FORWARD.reduce(
+    (acc, cur) => {
+      acc[cur] = res.headers.get(cur) ?? undefined
+      return acc
+    },
+    {} as Record<string, string | undefined>,
+  )
   return noUndefinedVals(headers)
 }
 

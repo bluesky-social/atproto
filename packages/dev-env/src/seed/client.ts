@@ -76,7 +76,10 @@ export class SeedClient<
     { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
   >
   likes: Record<string, Record<string, AtUri>>
-  replies: Record<string, { text: string; ref: RecordRef }[]>
+  replies: Record<
+    string,
+    { text: string; ref: RecordRef; images: ImageRef[] }[]
+  >
   reposts: Record<string, RecordRef[]>
   lists: Record<
     string,
@@ -88,7 +91,10 @@ export class SeedClient<
   >
   dids: Record<string, string>
 
-  constructor(public network: Network, public agent: AtpAgent) {
+  constructor(
+    public network: Network,
+    public agent: AtpAgent,
+  ) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
@@ -277,8 +283,8 @@ export class SeedClient<
             media: imageEmbed,
           }
         : recordEmbed
-        ? { $type: 'app.bsky.embed.record', ...recordEmbed }
-        : imageEmbed
+          ? { $type: 'app.bsky.embed.record', ...recordEmbed }
+          : imageEmbed
     const res = await this.agent.api.app.bsky.feed.post.create(
       { repo: by },
       {
@@ -375,6 +381,7 @@ export class SeedClient<
     const reply = {
       text,
       ref: new RecordRef(res.uri, res.cid),
+      images: images ?? [],
     }
     this.replies[by].push(reply)
     return reply
