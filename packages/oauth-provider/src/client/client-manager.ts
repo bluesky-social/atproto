@@ -75,12 +75,18 @@ export class ClientManager {
           )
         }
 
-        for (const t of ['id_token', 'token'] as const) {
-          if (rt.includes(t) && !metadata.grant_types.includes('implicit')) {
-            throw new InvalidClientMetadataError(
-              `Response type "${responseType}" requires the "implicit" grant type`,
-            )
-          }
+        // Asking for "code token" or "code id_token" is fine (as long as the
+        // grant_types includes "authorization_code" and the scope includes
+        // "openid"). Asking for "token" or "id_token" (without "code") requires
+        // the "implicit" grant type.
+        if (
+          !rt.includes('code') &&
+          (rt.includes('token') || rt.includes('id_token')) &&
+          !metadata.grant_types.includes('implicit')
+        ) {
+          throw new InvalidClientMetadataError(
+            `Response type "${responseType}" requires the "implicit" grant type`,
+          )
         }
       }
 
