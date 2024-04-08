@@ -65,6 +65,17 @@ export class TestNetwork extends TestNetworkNoAppView {
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
       modServiceUrl: `http://localhost:${ozonePort}`,
       modServiceDid: ozoneDid,
+      oauthDisableSsrf: true,
+      oauthProviderName: 'PDS (dev)',
+      oauthProviderPrimaryColor: '#ffcb1e',
+      oauthProviderLogo:
+        'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
+      oauthProviderErrorColor: undefined,
+      oauthProviderHomeLink: 'https://bsky.social/',
+      oauthProviderTosLink: 'https://bsky.social/about/support/tos',
+      oauthProviderPrivacyPolicyLink:
+        'https://bsky.social/about/support/privacy-policy',
+      oauthProviderSupportLink: 'https://blueskyweb.zendesk.com/hc/en-us',
       ...params.pds,
     })
 
