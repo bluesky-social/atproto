@@ -135,10 +135,12 @@ export class OAuthClientUriStore implements ClientStore {
       throw new InvalidClientMetadataError(`ClientID must be a normalized URI`)
     }
 
-    if (url.port || url.search || url.hash || url.username || url.password) {
-      throw new InvalidClientMetadataError(
-        `ClientID URI must not contain any port, username, password, query or fragment`,
-      )
+    if (url.username || url.password) {
+      throw new TypeError('ClientID URI must not contain credentials')
+    }
+
+    if (url.search || url.hash) {
+      throw new TypeError('ClientID URI must not contain a query or fragment')
     }
 
     if (url.pathname.includes('//')) {
@@ -160,13 +162,19 @@ export class OAuthClientUriStore implements ClientStore {
 
     if (clientUrl.protocol !== 'http:') {
       throw new InvalidClientMetadataError(
-        'Loopback client must use the "http:" protocol',
+        'Loopback ClientID URI must use the "http:" protocol',
       )
     }
 
     if (clientUrl.hostname !== 'localhost') {
       throw new InvalidClientMetadataError(
-        'Loopback client must use the "localhost" hostname',
+        'Loopback ClientID URI must use the "localhost" hostname',
+      )
+    }
+
+    if (clientUrl.port) {
+      throw new InvalidClientMetadataError(
+        'Loopback ClientID URI must not use a custom port number',
       )
     }
 
