@@ -71,18 +71,14 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
         if (isFresh || (await checkCached(value))) {
           return value
         }
-      } catch (err) {
-        // If the get() call was aborted, rethrow the error
-        if (options?.signal?.aborted) throw err
-
-        // The pending item failed due to a non abort error
-        if (pending.signal?.aborted !== true) throw err
+      } catch {
+        // Ignore errors from pending promises.
       }
     }
 
-    try {
-      options?.signal?.throwIfAborted()
+    options?.signal?.throwIfAborted()
 
+    try {
       const promise = Promise.resolve().then(async () => {
         const storedValue = await this.getStored(key, options)
         if (storedValue !== undefined) {
@@ -94,10 +90,11 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
         return Promise.resolve()
           .then(async () => this.getter(key, options, storedValue))
           .catch(async (err) => {
-            const shouldDelete =
-              storedValue !== undefined &&
-              (await this.options?.deleteOnError?.(err, key, storedValue))
-            if (shouldDelete === true) await this.delStored(key)
+            if (storedValue !== undefined && this.options?.deleteOnError) {
+              if (await this.options.deleteOnError(err, key, storedValue)) {
+                await this.delStored(key)
+              }
+            }
             throw err
           })
           .then(async (value) => {

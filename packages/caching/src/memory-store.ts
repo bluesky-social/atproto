@@ -66,7 +66,8 @@ export class MemoryStore<K extends Key, V extends Value>
     this.#cache = new LRUCache<K, NormalizedValue<V>>({
       ...options,
       allowStale: false,
-      noDeleteOnStaleGet: true,
+      updateAgeOnGet: false,
+      updateAgeOnHas: false,
       sizeCalculation: sizeCalculation
         ? (value, key) => sizeCalculation(denormalize(value), key)
         : options.maxEntrySize != null || options.maxSize != null
@@ -78,7 +79,7 @@ export class MemoryStore<K extends Key, V extends Value>
 
   get(key: K): V | undefined {
     const value = this.#cache.get(key)
-    if (value === undefined) return undefined // Item not in cache
+    if (value === undefined) return undefined
 
     return denormalize(value)
   }
