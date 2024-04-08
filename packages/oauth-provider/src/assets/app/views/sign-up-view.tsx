@@ -124,6 +124,16 @@ export function SignUpView({
           </SignUpAccountForm>
         )}
 
+        {step === 2 && (
+          <button
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-slate-700 bg-slate-100 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+            onClick={() => setStep(1)}
+          >
+            Back
+          </button>
+        )}
+
         <HelpCard className="mb-4" links={links} />
       </div>
     </LayoutTitlePage>
