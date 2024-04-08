@@ -13,8 +13,24 @@ export function validateClientMetadata(
   if (url.pathname !== '/') {
     throw new TypeError('origin must be a URL root')
   }
+  if (url.username || url.password) {
+    throw new TypeError('client_id URI must not contain a username or password')
+  }
+  if (url.search || url.hash) {
+    throw new TypeError('client_id URI must not contain a query or fragment')
+  }
   if (url.href !== metadata.client_id) {
-    throw new TypeError('client_id must be a normalized URL')
+    throw new TypeError('client_id URI must be a normalized URL')
+  }
+
+  if (
+    url.hostname === 'localhost' ||
+    url.hostname === '[::1]' ||
+    url.hostname === '127.0.0.1'
+  ) {
+    if (url.protocol !== 'http:' || url.port) {
+      throw new TypeError('loopback clients must use "http:" and port "80"')
+    }
   }
 
   if (metadata.client_uri && metadata.client_uri !== metadata.client_id) {
@@ -26,8 +42,20 @@ export function validateClientMetadata(
   }
   for (const u of metadata.redirect_uris) {
     const redirectUrl = new URL(u)
-    if (redirectUrl.origin !== url.origin) {
-      throw new TypeError('redirect_uris must have the same origin')
+    // Loopback redirect_uris require special handling
+    if (
+      redirectUrl.hostname === 'localhost' ||
+      redirectUrl.hostname === '[::1]' ||
+      redirectUrl.hostname === '127.0.0.1'
+    ) {
+      if (redirectUrl.protocol !== 'http:') {
+        throw new TypeError('loopback redirect_uris must use "http:"')
+      }
+    } else {
+      // Not a loopback client
+      if (redirectUrl.origin !== url.origin) {
+        throw new TypeError('redirect_uris must have the same origin')
+      }
     }
   }
 
