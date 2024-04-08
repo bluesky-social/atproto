@@ -6,6 +6,7 @@ import {
 import { Fetch } from '@atproto/fetch'
 import UniversalHandleResolver, {
   HandleResolverCache,
+  UniversalHandleResolverOptions,
 } from '@atproto/handle-resolver'
 import { IdentityResolver } from './identity-resolver.js'
 
@@ -19,6 +20,11 @@ export type UniversalIdentityResolverOptions = {
    * @see {@link IsomorphicDidResolverOptions.plcDirectoryUrl}
    */
   plcDirectoryUrl?: IsomorphicDidResolverOptions['plcDirectoryUrl']
+
+  /**
+   * @see {@link UniversalHandleResolverOptions.atprotoLexiconUrl}
+   */
+  atprotoLexiconUrl?: UniversalHandleResolverOptions['atprotoLexiconUrl']
 }
 
 export class UniversalIdentityResolver extends IdentityResolver {
@@ -27,11 +33,13 @@ export class UniversalIdentityResolver extends IdentityResolver {
     didCache,
     handleCache,
     plcDirectoryUrl,
+    atprotoLexiconUrl,
   }: UniversalIdentityResolverOptions) {
     return new this(
       new UniversalHandleResolver({
         fetch,
         cache: handleCache,
+        atprotoLexiconUrl,
       }),
       new IsomorphicDidResolver({
         fetch, //
