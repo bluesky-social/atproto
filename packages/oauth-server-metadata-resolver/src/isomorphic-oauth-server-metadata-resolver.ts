@@ -43,13 +43,20 @@ export class IsomorphicOAuthServerMetadataResolver
     suffix: 'openid-configuration' | 'oauth-authorization-server',
     options?: ResolveOptions,
   ): Promise<OAuthServerMetadata> {
-    if (!origin.startsWith('https://') || origin.includes('/', 8)) {
-      throw new TypeError(`Invalid origin "${origin}"`)
+    const originUrl = new URL(origin)
+    if (originUrl.origin !== origin) {
+      throw new TypeError(
+        `OAuth server origin must not contain a path, query, or fragment.`,
+      )
+    }
+
+    if (originUrl.protocol !== 'https:' && originUrl.protocol !== 'http:') {
+      throw new TypeError(`Issuer origin must use "https" or "http"`)
     }
 
     const oauthServerMetadataEndpoint = new URL(
       `/.well-known/${suffix}`,
-      origin,
+      originUrl,
     )
 
     const headers = new Headers([['accept', 'application/json']])
