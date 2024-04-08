@@ -128,8 +128,8 @@ export class TestOzone {
       role === 'admin'
         ? this.adminAccnt
         : role === 'moderator'
-        ? this.moderatorAccnt
-        : this.triageAccnt
+          ? this.moderatorAccnt
+          : this.triageAccnt
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,

@@ -190,7 +190,10 @@ class SelfThreadTracker {
   feedUris = new Set<string>()
   cache = new Map<string, boolean>()
 
-  constructor(items: FeedItem[], private hydration: HydrationState) {
+  constructor(
+    items: FeedItem[],
+    private hydration: HydrationState,
+  ) {
     items.forEach((item) => {
       if (!item.repost) {
         this.feedUris.add(item.post.uri)

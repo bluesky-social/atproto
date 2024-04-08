@@ -8,8 +8,15 @@ import {
   ResponseTypeNames,
 } from '@atproto/xrpc'
 
+export type CatchallHandler = (
+  req: express.Request,
+  _res: express.Response,
+  next: express.NextFunction,
+) => unknown
+
 export type Options = {
   validateResponse?: boolean
+  catchall?: CatchallHandler
   payload?: {
     jsonLimit?: number
     blobLimit?: number
@@ -22,7 +29,7 @@ export type Options = {
   }
 }
 
-export type UndecodedParams = typeof express.request['query']
+export type UndecodedParams = (typeof express.request)['query']
 
 export type Primitive = string | number | boolean
 export type Params = Record<string, Primitive | Primitive[] | undefined>
