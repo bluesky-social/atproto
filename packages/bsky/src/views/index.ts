@@ -18,6 +18,7 @@ import {
   ReasonRepost,
   ThreadViewPost,
   ThreadgateView,
+  isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
@@ -101,9 +102,9 @@ export class Views {
             cidFromBlobJson(actor.profile.banner),
           )
         : undefined,
-      followersCount: profileAggs?.followers,
-      followsCount: profileAggs?.follows,
-      postsCount: profileAggs?.posts,
+      followersCount: profileAggs?.followers ?? 0,
+      followsCount: profileAggs?.follows ?? 0,
+      postsCount: profileAggs?.posts ?? 0,
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
@@ -136,8 +137,8 @@ export class Views {
       'self',
     ).toString()
     const labels = [
-      ...(state.labels?.get(did)?.labels ?? []),
-      ...(state.labels?.get(profileUri)?.labels ?? []),
+      ...(state.labels?.getBySubject(did) ?? []),
+      ...(state.labels?.getBySubject(profileUri) ?? []),
       ...this.selfLabels({
         uri: profileUri,
         cid: actor.profileCid?.toString(),
@@ -155,6 +156,9 @@ export class Views {
             cidFromBlobJson(actor.profile.avatar),
           )
         : undefined,
+      // associated.feedgens and associated.lists info not necessarily included
+      // on profile and profile-basic views, but should be on profile-detailed.
+      associated: actor?.isLabeler ? { labeler: true } : undefined,
       viewer: this.profileViewer(did, state),
       labels,
     }
@@ -225,7 +229,7 @@ export class Views {
       return undefined
     }
     const listViewer = state.listViewers?.get(uri)
-    const labels = state.labels?.get(uri)?.labels ?? []
+    const labels = state.labels?.getBySubject(uri) ?? []
     const creator = new AtUri(uri).hostname
     return {
       uri,
@@ -267,7 +271,7 @@ export class Views {
         ? normalizeDatetimeAlways(record.createdAt)
         : new Date(0).toISOString()
     return record.labels.values.map(({ val }) => {
-      return { src, uri, cid, val, cts, neg: false }
+      return { src, uri, cid, val, cts }
     })
   }
 
@@ -281,7 +285,7 @@ export class Views {
 
     const uri = AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
     const labels = [
-      ...(state.labels?.get(uri)?.labels ?? []),
+      ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
         uri,
         cid: labeler.cid.toString(),
@@ -293,7 +297,7 @@ export class Views {
       uri,
       cid: labeler.cid.toString(),
       creator,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
       viewer: viewer
         ? {
             like: viewer.like,
@@ -351,7 +355,7 @@ export class Views {
     if (!creator) return
     const viewer = state.feedgenViewers?.get(uri)
     const aggs = state.feedgenAggs?.get(uri)
-    const labels = state.labels?.get(uri)?.labels ?? []
+    const labels = state.labels?.getBySubject(uri) ?? []
 
     return {
       uri,
@@ -368,7 +372,7 @@ export class Views {
             cidFromBlobJson(feedgen.record.avatar),
           )
         : undefined,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
       labels,
       viewer: viewer
         ? {
@@ -408,7 +412,7 @@ export class Views {
       parsedUri.rkey,
     ).toString()
     const labels = [
-      ...(state.labels?.get(uri)?.labels ?? []),
+      ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
         uri,
         cid: post.cid,
@@ -424,9 +428,9 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
-      replyCount: aggs?.replies,
-      repostCount: aggs?.reposts,
-      likeCount: aggs?.likes,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
       indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {
@@ -466,35 +470,28 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
-    // don't hydrate reply if there isn't it violates a block
-    if (state.postBlocks?.get(uri)?.reply) return undefined
+  replyRef(uri: string, state: HydrationState) {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
-    const root = this.maybePost(
-      postRecord.reply.root.uri,
-      state,
-      usePostViewUnion,
-    )
-    const parent = this.maybePost(
-      postRecord.reply.parent.uri,
-      state,
-      usePostViewUnion,
-    )
+    let root = this.maybePost(postRecord.reply.root.uri, state)
+    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
+      parent = this.blockedPost(parent.uri, parent.author.did, state)
+      // in a reply to the root of a thread, parent and root are the same post.
+      if (root.uri === parent.uri) {
+        root = parent
+      }
+    }
     return root && parent ? { root, parent } : undefined
   }
 
-  maybePost(
-    uri: string,
-    state: HydrationState,
-    usePostViewUnion = false,
-  ): MaybePostView | undefined {
+  maybePost(uri: string, state: HydrationState): MaybePostView {
     const post = this.post(uri, state)
-    if (!post) return usePostViewUnion ? this.notFoundPost(uri) : undefined
+    if (!post) {
+      return this.notFoundPost(uri)
+    }
     if (this.viewerBlockExists(post.author.did, state)) {
-      return usePostViewUnion
-        ? this.blockedPost(uri, post.author.did, state)
-        : undefined
+      return this.blockedPost(uri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
@@ -886,7 +883,7 @@ export class Views {
       recordInfo = state.follows?.get(notif.uri)
     }
     if (!recordInfo) return
-    const labels = state.labels?.get(notif.uri)?.labels ?? []
+    const labels = state.labels?.getBySubject(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
       cid: recordInfo.cid,

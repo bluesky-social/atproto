@@ -206,13 +206,16 @@ export class IndexingService {
       .where('did', '=', did)
       .select(['uri', 'cid'])
       .execute()
-    return res.reduce((acc, cur) => {
-      acc[cur.uri] = {
-        uri: new AtUri(cur.uri),
-        cid: CID.parse(cur.cid),
-      }
-      return acc
-    }, {} as Record<string, { uri: AtUri; cid: CID }>)
+    return res.reduce(
+      (acc, cur) => {
+        acc[cur.uri] = {
+          uri: new AtUri(cur.uri),
+          cid: CID.parse(cur.cid),
+        }
+        return acc
+      },
+      {} as Record<string, { uri: AtUri; cid: CID }>,
+    )
   }
 
   async setCommitLastSeen(

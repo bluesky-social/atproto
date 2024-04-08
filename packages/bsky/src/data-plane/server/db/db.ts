@@ -169,7 +169,7 @@ const onClientError = (err: Error) => dbLogger.error({ err }, 'db client error')
 // -------
 
 class LeakyTxPlugin implements KyselyPlugin {
-  private txOver: boolean
+  private txOver = false
 
   endTx() {
     this.txOver = true

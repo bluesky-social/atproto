@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
       let result: OutputSchema
       try {
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         body: result,
         headers: resHeaders({
           repoRev,
-          labelers,
+          labelers: hydrateCtx.labelers,
         }),
       }
     },

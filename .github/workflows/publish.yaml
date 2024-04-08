@@ -27,6 +27,7 @@ jobs:
           node-version: 18
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
+      - run: pnpm build
       - run: pnpm verify
       - name: Publish
         id: changesets

@@ -117,7 +117,10 @@ export interface RichTextOpts {
 }
 
 export class RichTextSegment {
-  constructor(public text: string, public facet?: Facet) {}
+  constructor(
+    public text: string,
+    public facet?: Facet,
+  ) {}
 
   get link(): FacetLink | undefined {
     const link = this.facet?.features.find(AppBskyRichtextFacet.isLink)

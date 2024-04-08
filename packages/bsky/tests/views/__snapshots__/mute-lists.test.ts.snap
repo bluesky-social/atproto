@@ -11,7 +11,6 @@ Object {
       Object {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(1)",
         "val": "self-label-a",
@@ -19,7 +18,6 @@ Object {
       Object {
         "cid": "cids(2)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(1)",
         "val": "self-label-b",
@@ -47,7 +45,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-a",
@@ -55,7 +52,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-b",
@@ -112,7 +108,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(2)",
           "val": "self-label-a",
@@ -120,7 +115,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(2)",
           "val": "self-label-b",
@@ -244,7 +238,6 @@ Object {
           Object {
             "cid": "cids(5)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "did:example:labeler",
             "uri": "record(9)",
             "val": "test-label",
@@ -252,7 +245,6 @@ Object {
           Object {
             "cid": "cids(5)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "did:example:labeler",
             "uri": "record(9)",
             "val": "test-label-2",
@@ -317,7 +309,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -325,7 +316,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -361,7 +351,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -369,7 +358,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -412,7 +400,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -420,7 +407,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -456,7 +442,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -464,7 +449,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -575,7 +559,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(2)",
           "val": "self-label-a",
@@ -583,7 +566,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(2)",
           "val": "self-label-b",

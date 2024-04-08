@@ -38,6 +38,8 @@ export const lexStringFormat = z.enum([
   'nsid',
   'cid',
   'language',
+  'tid',
+  'record-key',
 ])
 export type LexStringFormat = z.infer<typeof lexStringFormat>
 

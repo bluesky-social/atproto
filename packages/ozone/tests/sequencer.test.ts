@@ -16,6 +16,7 @@ describe('sequencer', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_sequencer',
     })
+    // @ts-expect-error
     sequencer = network.ozone.ctx.sequencer
   })
 
@@ -37,6 +38,7 @@ describe('sequencer', () => {
     return {
       id: e.seq,
       ...label,
+      neg: !!label.neg,
       cid: label.cid ? label.cid : '',
       exp: null,
       sig: label.sig ? Buffer.from(label.sig) : null,

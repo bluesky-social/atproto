@@ -4,7 +4,13 @@ import os from 'os'
 import path from 'path'
 import { Readable } from 'stream'
 import axios, { AxiosError } from 'axios'
-import express, { ErrorRequestHandler, NextFunction } from 'express'
+import express, {
+  Request,
+  Response,
+  Express,
+  ErrorRequestHandler,
+  NextFunction,
+} from 'express'
 import createError, { isHttpError } from 'http-errors'
 import { BlobNotFoundError } from '@atproto/repo'
 import {
@@ -20,20 +26,19 @@ import { retryHttp } from '../util/retry'
 import { ServerConfig } from '../config'
 
 export class ImageProcessingServer {
-  app = express()
+  app: Express = express()
   uriBuilder: ImageUriBuilder
 
-  constructor(public cfg: ServerConfig, public cache: BlobCache) {
+  constructor(
+    public cfg: ServerConfig,
+    public cache: BlobCache,
+  ) {
     this.uriBuilder = new ImageUriBuilder('')
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)
   }
 
-  async handler(
-    req: express.Request,
-    res: express.Response,
-    next: NextFunction,
-  ) {
+  async handler(req: Request, res: Response, next: NextFunction) {
     try {
       const path = req.path
       const options = ImageUriBuilder.getOptions(path)

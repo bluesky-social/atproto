@@ -1,12 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
-import {
-  REASONOTHER,
-  REASONSPAM,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { forSnapshot } from '../_util'
-import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork
@@ -78,7 +73,7 @@ describe('proxies admin requests', () => {
     const { data: reportA } =
       await agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: REASONSPAM,
+          reasonType: 'com.atproto.moderation.defs#reasonSpam',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.bob,
@@ -92,7 +87,7 @@ describe('proxies admin requests', () => {
     const { data: reportB } =
       await agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: REASONOTHER,
+          reasonType: 'com.atproto.moderation.defs#reasonOther',
           reason: 'impersonation',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -291,12 +286,18 @@ describe('proxies admin requests', () => {
       },
     )
     await network.processAll()
-    // check thread and labels
-    const tryGetPost = agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
-    await expect(tryGetPost).rejects.toThrow(NotFoundError)
+
+    // check takedown label has been created
+    const label = await network.ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('val', '=', '!takedown')
+      .where('uri', '=', post.ref.uriStr)
+      .where('cid', '=', post.ref.cidStr)
+      .executeTakeFirst()
+    expect(label).toBeDefined()
+    expect(label?.neg).toBe(false)
+
     // reverse action
     await agent.api.tools.ozone.moderation.emitEvent(
       {
@@ -315,15 +316,15 @@ describe('proxies admin requests', () => {
       },
     )
     await network.processAll()
-    // check thread and labels
-    const { data: threadAppview } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      {
-        headers: { ...sc.getHeaders(sc.dids.carol) },
-      },
-    )
-    expect(threadAppview.thread.post).toEqual(
-      expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
-    )
+
+    // check takedown label has been negated
+    const labelNeg = await network.ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('val', '=', '!takedown')
+      .where('uri', '=', post.ref.uriStr)
+      .where('cid', '=', post.ref.cidStr)
+      .executeTakeFirst()
+    expect(labelNeg?.neg).toBe(true)
   })
 })

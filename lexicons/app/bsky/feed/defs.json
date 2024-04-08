@@ -135,7 +135,7 @@
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
         "likeCount": { "type": "integer", "minimum": 0 },
         "labels": {
           "type": "array",

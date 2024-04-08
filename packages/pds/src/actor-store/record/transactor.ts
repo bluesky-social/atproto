@@ -8,7 +8,10 @@ import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { RepoRecord } from '@atproto/lexicon'
 
 export class RecordTransactor extends RecordReader {
-  constructor(public db: ActorDb, public blobstore: BlobStore) {
+  constructor(
+    public db: ActorDb,
+    public blobstore: BlobStore,
+  ) {
     super(db)
   }
 

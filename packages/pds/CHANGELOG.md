@@ -1,5 +1,84 @@
 # @atproto/pds
 
+## 0.4.13
+
+### Patch Changes
+
+- Updated dependencies [[`cd4fcc709`](https://github.com/bluesky-social/atproto/commit/cd4fcc709fe8d725a4af769ce21f53711fe5622a)]:
+  - @atproto/xrpc-server@0.5.1
+
+## 0.4.12
+
+### Patch Changes
+
+- [`d77ac35d4`](https://github.com/bluesky-social/atproto/commit/d77ac35d484925d90169e6a1047cddfbe90923bc) Thanks [@devinivy](https://github.com/devinivy)! - Fix to blob deletion w/ disk store (see #2381)
+
+## 0.4.11
+
+### Patch Changes
+
+- Updated dependencies [[`abc6f82da`](https://github.com/bluesky-social/atproto/commit/abc6f82da38abef2b1bbe8d9e41a0534a5418c9e)]:
+  - @atproto/api@0.12.2
+
+## 0.4.10
+
+### Patch Changes
+
+- [#2342](https://github.com/bluesky-social/atproto/pull/2342) [`eb7668c07`](https://github.com/bluesky-social/atproto/commit/eb7668c07d44f4b42ea2cc28143c64f4ba3312f5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds the `associated` property to `profile` and `profile-basic` views, bringing them in line with `profile-detailed` views.
+
+- Updated dependencies [[`eb7668c07`](https://github.com/bluesky-social/atproto/commit/eb7668c07d44f4b42ea2cc28143c64f4ba3312f5)]:
+  - @atproto/api@0.12.1
+
+## 0.4.9
+
+### Patch Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
+- Updated dependencies [[`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9), [`36f2e966c`](https://github.com/bluesky-social/atproto/commit/36f2e966cba6cc90ba4320520da5c7381cfb8086)]:
+  - @atproto/xrpc-server@0.5.0
+  - @atproto/identity@0.4.0
+  - @atproto/lexicon@0.4.0
+  - @atproto/common@0.4.0
+  - @atproto/crypto@0.4.0
+  - @atproto/syntax@0.3.0
+  - @atproto/repo@0.4.0
+  - @atproto/xrpc@0.5.0
+  - @atproto/api@0.12.0
+  - @atproto/aws@0.2.0
+
+## 0.4.8
+
+### Patch Changes
+
+- Updated dependencies [[`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca)]:
+  - @atproto/api@0.11.2
+
+## 0.4.7
+
+### Patch Changes
+
+- [`971d3e4c2`](https://github.com/bluesky-social/atproto/commit/971d3e4c26ecfda746e83d458391715752ea7064) Thanks [@devinivy](https://github.com/devinivy)! - PDS operators may configure a public contact email
+
+- Updated dependencies [[`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5)]:
+  - @atproto/api@0.11.1
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0), [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/identity@0.3.3
+  - @atproto/api@0.11.0
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/repo@0.3.9
+  - @atproto/syntax@0.2.1
+  - @atproto/aws@0.1.9
+  - @atproto/crypto@0.3.0
+  - @atproto/xrpc-server@0.4.4
+  - @atproto/xrpc@0.4.3
+
 ## 0.4.5
 
 ### Patch Changes

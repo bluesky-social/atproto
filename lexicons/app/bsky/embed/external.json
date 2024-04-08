@@ -44,7 +44,7 @@
         "uri": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "thumb": { "type": "string" }
+        "thumb": { "type": "string", "format": "uri" }
       }
     }
   }

@@ -10,7 +10,7 @@
         "cid": { "type": "string", "format": "cid" },
         "name": { "type": "string", "maxLength": 64, "minLength": 1 },
         "purpose": { "type": "ref", "ref": "#listPurpose" },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
@@ -37,7 +37,7 @@
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }

@@ -18,7 +18,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   queued = false
   conn: PoolClient | undefined
 
-  constructor(public modSrvc: ModerationService, public lastSeen = 0) {
+  constructor(
+    public modSrvc: ModerationService,
+    public lastSeen = 0,
+  ) {
     super()
     this.db = modSrvc.db
     // note: this does not err when surpassed, just prints a warning to stderr

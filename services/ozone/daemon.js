@@ -1,4 +1,6 @@
-'use strict' /* eslint-disable */
+/* eslint-env node */
+
+'use strict'
 
 require('dd-trace/init') // Only works with commonjs
 

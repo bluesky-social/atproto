@@ -13,7 +13,11 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -37,7 +41,11 @@
           "maxGraphemes": 256,
           "maxLength": 2560
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
@@ -62,8 +70,8 @@
           "maxGraphemes": 256,
           "maxLength": 2560
         },
-        "avatar": { "type": "string" },
-        "banner": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "banner": { "type": "string", "format": "uri" },
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },

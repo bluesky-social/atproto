@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
       const result = await getActorLikes({ ...params, hydrateCtx }, ctx)
 
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         body: result,
         headers: resHeaders({
           repoRev,
-          labelers,
+          labelers: hydrateCtx.labelers,
         }),
       }
     },

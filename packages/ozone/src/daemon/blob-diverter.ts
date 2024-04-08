@@ -87,7 +87,9 @@ export class BlobDiverter {
       subjectUri,
     }: { subjectDid: string; subjectUri: string | null },
   ) {
-    const url = new URL(this.serviceConfig.url)
+    const url = new URL(
+      `${this.serviceConfig.url}/xrpc/com.atproto.unspecced.reportBlob`,
+    )
     url.searchParams.set('did', subjectDid)
     if (subjectUri) url.searchParams.set('uri', subjectUri)
     const result = await this.sendImage({

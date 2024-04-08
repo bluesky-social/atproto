@@ -91,6 +91,7 @@ export class AtpAgent {
     inst.labelersHeader = this.labelersHeader
     inst.proxyHeader = this.proxyHeader
     inst.pdsUrl = this.pdsUrl
+    inst.api.xrpc.uri = this.pdsUrl || this.service
   }
 
   withProxy(serviceType: AtprotoServiceType, did: string) {
