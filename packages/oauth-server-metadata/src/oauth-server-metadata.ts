@@ -4,19 +4,37 @@ import { z } from 'zod'
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414}
  */
 export const oauthServerMetadataSchema = z.object({
-  issuer: z.string().refine((value) => {
+  issuer: z.string().superRefine((value, ctx) => {
     try {
       const url = new URL(value)
-      return (
-        url.pathname === '/' &&
-        url.search === '' &&
-        url.hash === '' &&
-        url.protocol === 'https:'
-      )
+
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Issuer URL must use "https" or "http"',
+        })
+        return false
+      }
+
+      if (value !== `${url.origin}/`) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            'Issuer URL must not contain a path, username, password, query, or fragment',
+        })
+        return false
+      }
+
+      return true
     } catch {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Issuer must be a valid URL',
+      })
+
       return false
     }
-  }, 'Invalid issuer'),
+  }),
 
   claims_supported: z.array(z.string()).optional(),
   claims_locales_supported: z.array(z.string()).optional(),
