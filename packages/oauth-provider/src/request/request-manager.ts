@@ -192,7 +192,7 @@ export class RequestManager {
     ) {
       throw new InvalidParametersError(
         parameters,
-        `Invalid redirect_uri ${redirect_uri}`,
+        `Invalid redirect_uri ${redirect_uri} (allowed: ${client.metadata.redirect_uris})`,
       )
     }
 
