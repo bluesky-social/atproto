@@ -401,7 +401,7 @@ export class SeedClient<
     by: string,
     name: string,
     purpose: 'mod' | 'curate',
-    overrides: Partial<ListRecord>,
+    overrides?: Partial<ListRecord>,
   ) {
     const res = await this.agent.api.app.bsky.graph.list.create(
       { repo: by },
