@@ -14,7 +14,11 @@ import { parseRedirectUri } from './client-utils.js'
 import { Client } from './client.js'
 
 /**
- * Use this to alter or override client metadata & jwks before they are used.
+ * Use this to alter, override or validate the client metadata & jwks returned
+ * by the client store.
+ *
+ * @throws {InvalidClientMetadataError} if the metadata is invalid
+ * @see {@link InvalidClientMetadataError}
  */
 export type ClientDataHook = (
   clientId: OAuthClientId,
@@ -319,6 +323,9 @@ export class ClientManager {
       return { metadata, jwks }
     } catch (err) {
       if (err instanceof OAuthError) throw err
+      if ((err as any)?.code === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
+        throw new InvalidClientMetadataError('Self-signed certificate', err)
+      }
       throw new InvalidClientMetadataError('Unable to obtain metadata', err)
     }
   }
