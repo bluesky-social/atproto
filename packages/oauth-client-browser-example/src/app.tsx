@@ -12,6 +12,7 @@ export const oauthFactory = new BrowserOAuthClientFactory({
   responseType: 'code id_token',
   responseMode: 'fragment',
   plcDirectoryUrl: 'http://localhost:2582', // dev-env
+  atprotoLexiconUrl: 'http://localhost:2584', // dev-env (bsky appview)
 })
 
 /**
