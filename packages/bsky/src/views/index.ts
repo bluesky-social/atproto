@@ -18,6 +18,7 @@ import {
   ReasonRepost,
   ThreadViewPost,
   ThreadgateView,
+  isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
@@ -469,35 +470,28 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
-    // don't hydrate reply if there isn't it violates a block
-    if (state.postBlocks?.get(uri)?.reply) return undefined
+  replyRef(uri: string, state: HydrationState) {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
-    const root = this.maybePost(
-      postRecord.reply.root.uri,
-      state,
-      usePostViewUnion,
-    )
-    const parent = this.maybePost(
-      postRecord.reply.parent.uri,
-      state,
-      usePostViewUnion,
-    )
+    let root = this.maybePost(postRecord.reply.root.uri, state)
+    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
+      parent = this.blockedPost(parent.uri, parent.author.did, state)
+      // in a reply to the root of a thread, parent and root are the same post.
+      if (root.uri === parent.uri) {
+        root = parent
+      }
+    }
     return root && parent ? { root, parent } : undefined
   }
 
-  maybePost(
-    uri: string,
-    state: HydrationState,
-    usePostViewUnion = false,
-  ): MaybePostView | undefined {
+  maybePost(uri: string, state: HydrationState): MaybePostView {
     const post = this.post(uri, state)
-    if (!post) return usePostViewUnion ? this.notFoundPost(uri) : undefined
+    if (!post) {
+      return this.notFoundPost(uri)
+    }
     if (this.viewerBlockExists(post.author.did, state)) {
-      return usePostViewUnion
-        ? this.blockedPost(uri, post.author.did, state)
-        : undefined
+      return this.blockedPost(uri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
