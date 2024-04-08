@@ -1,4 +1,3 @@
-import { LRUCache } from 'lru-cache'
 import { safeFetchWrap } from '@atproto/fetch-node'
 import {
   AccessTokenType,
@@ -13,14 +12,15 @@ import {
 } from '@atproto/oauth-provider'
 import { OAuthReplayStoreMemory } from '@atproto/oauth-provider-replay-memory'
 import { OAuthReplayStoreRedis } from '@atproto/oauth-provider-replay-redis'
-
 import { Redis } from 'ioredis'
+
+import { CachedGetter } from '@atproto/caching'
 import { AccountManager } from './account-manager'
+import { ActorStore } from './actor-store'
+import { ProfileViewBasic } from './lexicon/types/app/bsky/actor/defs'
 import { fetchLogger, oauthLogger } from './logger'
 import { OauthClientStore } from './oauth/oauth-client-store'
-import { ActorStore } from './actor-store'
 import { LocalViewerCreator } from './read-after-write'
-import { ProfileViewBasic } from './lexicon/types/app/bsky/actor/defs'
 
 export type AuthProviderOptions = {
   issuer: string
@@ -61,7 +61,7 @@ export class AuthProvider extends OAuthProvider {
       // profile information using the account's repos through the actorStore.
       accountStore: new DetailedAccountStore(
         accountManager,
-        new ActorProfileStoreCached(actorStore, localViewer),
+        new BasicProfileGetterCached(actorStore, localViewer),
       ),
       requestStore: accountManager,
       sessionStore: accountManager,
@@ -133,12 +133,12 @@ export class AuthProvider extends OAuthProvider {
 
 /**
  * This class wraps an AccountStore in order to enrich the accounts it returns
- * with profile information through the ActorStore.
+ * with basic profile data from an ActorStore.
  */
 class DetailedAccountStore implements AccountStore {
   constructor(
     private store: AccountStore,
-    private actorProfileStore: ActorProfileStore,
+    private basicProfileGetter: BasicProfileGetter,
   ) {}
 
   private async enrichAccountInfo(
@@ -146,7 +146,7 @@ class DetailedAccountStore implements AccountStore {
   ): Promise<AccountInfo> {
     const { account } = accountInfo
     if (!account.picture || !account.name) {
-      const profile = await this.actorProfileStore.get(account.sub)
+      const profile = await this.basicProfileGetter.get(account.sub)
       if (profile) {
         account.picture ||= profile.avatar
         account.name ||= profile.displayName
@@ -200,51 +200,35 @@ class DetailedAccountStore implements AccountStore {
 }
 
 /**
- * Utility class to fetch profile information for a given DID.
+ * Utility class to fetch basic profile data for a given DID.
  */
-class ActorProfileStore {
+class BasicProfileGetter {
   constructor(
     private actorStore: ActorStore,
     private localViewer: LocalViewerCreator,
   ) {}
 
   public async get(did: string): Promise<ProfileViewBasic | null> {
-    return this.actorStore.read(did, async (store) => {
-      const localViewer = this.localViewer(store)
+    return this.actorStore.read(did, async (actorStoreReader) => {
+      const localViewer = this.localViewer(actorStoreReader)
       return localViewer.getProfileBasic()
     })
   }
 }
 
 /**
- * Drop-in replacement for ActorProfileStore that caches the results of the
+ * Drop-in replacement for BasicProfileGetter that caches the results of the
  * get method.
  */
-class ActorProfileStoreCached
-  extends ActorProfileStore
-  implements ActorProfileStore
+class BasicProfileGetterCached
+  extends BasicProfileGetter
+  implements BasicProfileGetter
 {
-  cache = new LRUCache<string, ProfileViewBasic | 'nullValue'>({
-    ttl: 10 * 60e3, // 10 minutes
-    max: 1000,
-    allowStale: true,
-    updateAgeOnGet: false,
-    updateAgeOnHas: false,
-    allowStaleOnFetchAbort: true,
-    allowStaleOnFetchRejection: true,
-    ignoreFetchAbort: true,
-    noDeleteOnStaleGet: true,
-    noDeleteOnFetchRejection: true,
-    fetchMethod: async (did) => (await super.get(did)) ?? 'nullValue',
-  })
+  readonly #getter = new CachedGetter<string, ProfileViewBasic | null>((did) =>
+    super.get(did),
+  )
 
-  public async get(did: string): Promise<ProfileViewBasic | null> {
-    const cached = await this.cache.fetch(did)
-    if (cached != null) return cached === 'nullValue' ? null : cached
-
-    // Should never happen when using the fetchMethod option
-    const result = await super.get(did)
-    this.cache.set(did, result ?? 'nullValue')
-    return result
+  async get(did: string): Promise<ProfileViewBasic | null> {
+    return this.#getter.get(did)
   }
 }
