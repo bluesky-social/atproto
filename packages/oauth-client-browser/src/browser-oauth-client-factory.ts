@@ -1,5 +1,8 @@
 import { Fetch } from '@atproto/fetch'
-import { UniversalIdentityResolver } from '@atproto/identity-resolver'
+import {
+  UniversalIdentityResolver,
+  UniversalIdentityResolverOptions,
+} from '@atproto/identity-resolver'
 import {
   OAuthAuthorizeOptions,
   OAuthClient,
@@ -26,6 +29,7 @@ export type BrowserOauthClientFactoryOptions = {
   responseMode?: OAuthResponseMode
   responseType?: OAuthResponseType
   clientMetadata: OAuthClientMetadata
+  plcDirectoryUrl?: UniversalIdentityResolverOptions['plcDirectoryUrl']
   fetch?: Fetch
   crypto?: Crypto
 }
@@ -57,6 +61,7 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
     // "fragment" is safer as it is not sent to the server
     responseMode = 'fragment',
     responseType,
+    plcDirectoryUrl,
     crypto = globalThis.crypto,
     fetch = globalThis.fetch,
   }: BrowserOauthClientFactoryOptions) {
@@ -76,6 +81,7 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
       }),
       identityResolver: UniversalIdentityResolver.from({
         fetch,
+        plcDirectoryUrl,
         didCache: database.getDidCache(),
         handleCache: database.getHandleCache(),
       }),
