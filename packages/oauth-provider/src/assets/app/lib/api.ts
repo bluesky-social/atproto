@@ -4,7 +4,6 @@ import {
   fetchOkProcessor,
 } from '@atproto/fetch'
 
-import { SignInFormOutput } from '../components/sign-in-form'
 import { Account, Info, Session } from '../types'
 
 export class Api {
@@ -15,7 +14,11 @@ export class Api {
     private newSessionsRequireConsent: boolean,
   ) {}
 
-  async signIn(credentials: SignInFormOutput): Promise<Session> {
+  async signIn(credentials: {
+    username: string
+    password: string
+    remember?: boolean
+  }): Promise<Session> {
     const { json } = await fetch('/oauth/authorize/sign-in', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
