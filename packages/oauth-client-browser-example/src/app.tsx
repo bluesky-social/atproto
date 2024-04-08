@@ -5,10 +5,11 @@ import { useCallback, useState } from 'react'
 import LoginForm from './login-form'
 import { useOAuth } from './oauth'
 
-import metadata from './oauth-client-metadata.json'
-
 export const oauthFactory = new BrowserOAuthClientFactory({
-  clientMetadata: oauthClientMetadataSchema.parse(metadata),
+  clientMetadata: oauthClientMetadataSchema.parse({
+    client_id: 'http://localhost/',
+    redirect_uris: ['http://127.0.0.1:5173/'],
+  }),
   responseType: 'code id_token',
   responseMode: 'fragment',
   plcDirectoryUrl: 'http://localhost:2582', // dev-env
@@ -85,7 +86,7 @@ function App() {
     <LoginForm
       error={error}
       loading={loading}
-      onLogin={(input) => void signIn(input, { display: 'popup' })}
+      onLogin={(input) => void signIn(input)}
     />
   )
 }
