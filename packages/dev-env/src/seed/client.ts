@@ -6,7 +6,7 @@ import AtpAgent, {
   AppBskyRichtextFacet,
   AppBskyFeedLike,
   AppBskyGraphFollow,
-  ListRecord,
+  AppBskyGraphList,
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
@@ -401,7 +401,7 @@ export class SeedClient<
     by: string,
     name: string,
     purpose: 'mod' | 'curate',
-    overrides?: Partial<ListRecord>,
+    overrides?: Partial<AppBskyGraphList.Record>,
   ) {
     const res = await this.agent.api.app.bsky.graph.list.create(
       { repo: by },
