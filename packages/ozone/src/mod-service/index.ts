@@ -688,6 +688,7 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
+    onlyMuted,
     ignoreSubjects,
     sortDirection,
     lastReviewedBy,
@@ -706,6 +707,7 @@ export class ModerationService {
     reportedAfter?: string
     reportedBefore?: string
     includeMuted?: boolean
+    onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
     sortDirection: 'asc' | 'desc'
@@ -774,6 +776,14 @@ export class ModerationService {
         qb
           .where('muteUntil', '<', new Date().toISOString())
           .orWhere('muteUntil', 'is', null),
+      )
+    }
+
+    if (onlyMuted) {
+      builder = builder.where((qb) =>
+        qb
+          .where('muteUntil', '>', new Date().toISOString())
+          .orWhere('muteReportingUntil', '>', new Date().toISOString()),
       )
     }
 

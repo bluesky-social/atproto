@@ -9077,6 +9077,11 @@ export const schemaDict = {
               description:
                 "By default, we don't include muted subjects in the results. Set this to true to include them.",
             },
+            onlyMuted: {
+              type: 'boolean',
+              description:
+                'When set to true, only muted subjects and reporters will be returned.',
+            },
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',

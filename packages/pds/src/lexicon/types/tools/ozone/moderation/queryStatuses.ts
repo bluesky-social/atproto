@@ -23,6 +23,8 @@ export interface QueryParams {
   reviewedBefore?: string
   /** By default, we don't include muted subjects in the results. Set this to true to include them. */
   includeMuted?: boolean
+  /** When set to true, only muted subjects and reporters will be returned. */
+  onlyMuted?: boolean
   /** Specify when fetching subjects in a certain state */
   reviewState?: string
   ignoreSubjects?: string[]
