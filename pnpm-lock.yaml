@@ -1276,6 +1276,9 @@ importers:
       '@atproto/aws':
         specifier: workspace:^
         version: link:../aws
+      '@atproto/caching':
+        specifier: workspace:^
+        version: link:../caching
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
