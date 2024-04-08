@@ -11,6 +11,7 @@ export const oauthFactory = new BrowserOAuthClientFactory({
   clientMetadata: oauthClientMetadataSchema.parse(metadata),
   responseType: 'code id_token',
   responseMode: 'fragment',
+  plcDirectoryUrl: 'http://localhost:2582', // dev-env
 })
 
 /**

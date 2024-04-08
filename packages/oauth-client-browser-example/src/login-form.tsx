@@ -21,7 +21,11 @@ export default function LoginForm({
     e.preventDefault()
     if (loading) return
 
-    onLogin(loginType === 'host' ? `https://${value}` : value)
+    onLogin(
+      loginType === 'host' && !/^https?:\/\//.test(value)
+        ? `https://${value}`
+        : value,
+    )
   }
 
   return (
