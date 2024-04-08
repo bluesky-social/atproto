@@ -1,4 +1,8 @@
-import { DidCache, IsomorphicDidResolver } from '@atproto/did'
+import {
+  DidCache,
+  IsomorphicDidResolver,
+  IsomorphicDidResolverOptions,
+} from '@atproto/did'
 import { Fetch } from '@atproto/fetch'
 import UniversalHandleResolver, {
   HandleResolverCache,
@@ -10,6 +14,7 @@ export type UniversalIdentityResolverOptions = {
 
   didCache?: DidCache
   handleCache?: HandleResolverCache
+  plcDirectoryUrl?: IsomorphicDidResolverOptions['plcDirectoryUrl']
 }
 
 export class UniversalIdentityResolver extends IdentityResolver {
@@ -17,6 +22,7 @@ export class UniversalIdentityResolver extends IdentityResolver {
     fetch = globalThis.fetch,
     didCache,
     handleCache,
+    plcDirectoryUrl,
   }: UniversalIdentityResolverOptions) {
     return new this(
       new UniversalHandleResolver({
@@ -26,6 +32,7 @@ export class UniversalIdentityResolver extends IdentityResolver {
       new IsomorphicDidResolver({
         fetch, //
         cache: didCache,
+        plcDirectoryUrl,
       }),
     )
   }
