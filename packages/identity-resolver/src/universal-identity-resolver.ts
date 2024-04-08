@@ -14,6 +14,10 @@ export type UniversalIdentityResolverOptions = {
 
   didCache?: DidCache
   handleCache?: HandleResolverCache
+
+  /**
+   * @see {@link IsomorphicDidResolverOptions.plcDirectoryUrl}
+   */
   plcDirectoryUrl?: IsomorphicDidResolverOptions['plcDirectoryUrl']
 }
 
