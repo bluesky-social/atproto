@@ -30,6 +30,7 @@ export type BrowserOauthClientFactoryOptions = {
   responseType?: OAuthResponseType
   clientMetadata: OAuthClientMetadata
   plcDirectoryUrl?: UniversalIdentityResolverOptions['plcDirectoryUrl']
+  atprotoLexiconUrl?: UniversalIdentityResolverOptions['atprotoLexiconUrl']
   fetch?: Fetch
   crypto?: Crypto
 }
@@ -62,6 +63,7 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
     responseMode = 'fragment',
     responseType,
     plcDirectoryUrl,
+    atprotoLexiconUrl,
     crypto = globalThis.crypto,
     fetch = globalThis.fetch,
   }: BrowserOauthClientFactoryOptions) {
@@ -82,6 +84,7 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
       identityResolver: UniversalIdentityResolver.from({
         fetch,
         plcDirectoryUrl,
+        atprotoLexiconUrl,
         didCache: database.getDidCache(),
         handleCache: database.getHandleCache(),
       }),
