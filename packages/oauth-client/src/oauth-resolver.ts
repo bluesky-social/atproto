@@ -16,7 +16,7 @@ export class OAuthResolver {
       metadata: OAuthServerMetadata
     }
   > {
-    const identity = input.startsWith('https:')
+    const identity = /^https?:\/\//.test(input)
       ? // Allow using a PDS url directly as login input (e.g. when the handle does not resolve to a DID)
         { url: new URL(input) }
       : await this.identityResolver.resolve(input, 'AtprotoPersonalDataServer')
