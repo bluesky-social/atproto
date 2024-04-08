@@ -3,7 +3,10 @@ import { Fetch } from '@atproto/fetch'
 
 import { CachedHandleResolver } from './cached-handle-resolver.js'
 import { HandleResolver, ResolvedHandle } from './handle-resolver.js'
-import { PublicXrpcHandleResolver } from './public-xrpc-handle-resolver.js'
+import {
+  AtprotoLexiconHandleResolver,
+  AtprotoLexiconHandleResolverOptions,
+} from './atproto-lexicon-handle-resolver.js'
 import { SerialHandleResolver } from './serial-handle-resolver.js'
 import { WellKnownHandleResolver } from './well-known-handler-resolver.js'
 
@@ -22,6 +25,11 @@ export type UniversalHandleResolverOptions = {
    * @default `globalThis.fetch`
    */
   fetch?: Fetch
+
+  /**
+   * @see {@link AtprotoLexiconHandleResolverOptions.url}
+   */
+  atprotoLexiconUrl?: AtprotoLexiconHandleResolverOptions['url']
 }
 
 /**
@@ -36,12 +44,13 @@ export class UniversalHandleResolver
   constructor({
     fetch = globalThis.fetch,
     cache,
+    atprotoLexiconUrl,
   }: UniversalHandleResolverOptions = {}) {
     const resolver = new SerialHandleResolver([
       // Try the well-known method first, allowing to reduce the load on the
       // XRPC.
       new WellKnownHandleResolver({ fetch }),
-      new PublicXrpcHandleResolver({ fetch }),
+      new AtprotoLexiconHandleResolver({ fetch, url: atprotoLexiconUrl }),
     ])
 
     super({ resolver, cache })

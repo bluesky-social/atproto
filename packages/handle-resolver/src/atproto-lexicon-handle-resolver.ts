@@ -13,19 +13,32 @@ export const xrpcErrorSchema = z.object({
   message: z.string().optional(),
 })
 
-export type PublicXrpcHandleResolverOptions = {
-  url?: URL | string
+export type AtprotoLexiconHandleResolverOptions = {
+  /**
+   * Fetch function to use for HTTP requests. Allows customizing the request
+   * behavior, e.g. adding headers, setting a timeout, mocking, etc.
+   *
+   * @default globalThis.fetch
+   */
   fetch?: Fetch
+
+  /**
+   * URL of the atproto lexicon server. This is the base URL where the
+   * `com.atproto.identity.resolveHandle` XRPC method is located.
+   *
+   * @default 'https://bsky.social'
+   */
+  url?: URL | string
 }
 
-export class PublicXrpcHandleResolver implements HandleResolver {
+export class AtprotoLexiconHandleResolver implements HandleResolver {
   protected readonly url: URL
   protected readonly fetch: Fetch
 
   constructor({
-    url = new URL('https://bsky.social'),
+    url = 'https://bsky.social/',
     fetch = globalThis.fetch,
-  }: PublicXrpcHandleResolverOptions = {}) {
+  }: AtprotoLexiconHandleResolverOptions = {}) {
     this.url = new URL(url)
     this.fetch = fetch
   }
