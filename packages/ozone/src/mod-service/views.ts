@@ -500,6 +500,7 @@ export class ModerationViews {
       lastReportedAt: status.lastReportedAt ?? undefined,
       lastAppealedAt: status.lastAppealedAt ?? undefined,
       muteUntil: status.muteUntil ?? undefined,
+      muteReportingUntil: status.muteReportingUntil ?? undefined,
       suspendUntil: status.suspendUntil ?? undefined,
       takendown: status.takendown ?? undefined,
       appealed: status.appealed ?? undefined,

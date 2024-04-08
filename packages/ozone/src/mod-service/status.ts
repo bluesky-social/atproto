@@ -19,12 +19,14 @@ const getSubjectStatusForModerationEvent = ({
   action,
   createdBy,
   createdAt,
+  muteReportingOnly,
   durationInHours,
 }: {
   currentStatus?: ModerationSubjectStatusRow
   action: string
   createdBy: string
   createdAt: string
+  muteReportingOnly?: boolean
   durationInHours: number | null
 }): Partial<ModerationSubjectStatusRow> => {
   const defaultReviewState = currentStatus
@@ -60,7 +62,9 @@ const getSubjectStatusForModerationEvent = ({
     case 'tools.ozone.moderation.defs#modEventUnmute':
       return {
         lastReviewedBy: createdBy,
-        muteUntil: null,
+        ...(muteReportingOnly
+          ? { muteReportingUntil: null }
+          : { muteUntil: null }),
         // It's not likely to receive an unmute event that does not already have a status row
         // but if it does happen, default to unnecessary
         reviewState: defaultReviewState,
@@ -81,7 +85,7 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
         // By default, mute for 24hrs
-        muteUntil: new Date(
+        [muteReportingOnly ? 'muteReportingUntil' : 'muteUntil']: new Date(
           Date.now() + (durationInHours || 24) * HOUR,
         ).toISOString(),
         // It's not likely to receive a mute event on a subject that does not already have a status row
@@ -149,6 +153,7 @@ export const adjustModerationSubjectStatus = async (
     action,
     createdBy,
     createdAt,
+    muteReportingOnly: !!meta?.reportingOnly,
     durationInHours: moderationEvent.durationInHours,
   })
 

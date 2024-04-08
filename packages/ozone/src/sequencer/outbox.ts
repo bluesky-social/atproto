@@ -13,10 +13,7 @@ export class Outbox {
   cutoverBuffer: LabelsEvt[]
   outBuffer: AsyncBuffer<LabelsEvt>
 
-  constructor(
-    public sequencer: Sequencer,
-    opts: Partial<OutboxOpts> = {},
-  ) {
+  constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
     const { maxBufferSize = 500 } = opts
     this.cutoverBuffer = []
     this.outBuffer = new AsyncBuffer<LabelsEvt>(maxBufferSize)

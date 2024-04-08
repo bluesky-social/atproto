@@ -5,8 +5,10 @@ import {
   isModEventDivert,
   isModEventEmail,
   isModEventLabel,
+  isModEventMute,
   isModEventReverseTakedown,
   isModEventTakedown,
+  isModEventUnmute,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
@@ -111,6 +113,16 @@ const handleModerationEvent = async ({
       )
     }
     await ctx.blobDiverter.uploadBlobOnService(subject.info())
+  }
+
+  if (
+    (isModEventMute(event) || isModEventUnmute(event)) &&
+    !subject.isRepo() &&
+    event.reportingOnly
+  ) {
+    throw new InvalidRequestError(
+      'Subject must be a repo when muting reporting only',
+    )
   }
 
   const moderationEvent = await db.transaction(async (dbTxn) => {

@@ -18,6 +18,7 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
+  isModEventUnmute,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -303,6 +304,13 @@ export class ModerationService {
       meta.sticky = event.sticky
     }
 
+    if (
+      (isModEventMute(event) || isModEventUnmute(event)) &&
+      event.reportingOnly
+    ) {
+      meta.reportingOnly = event.reportingOnly
+    }
+
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
       if (event.content) {
@@ -340,6 +348,18 @@ export class ModerationService {
       })
       .returningAll()
       .executeTakeFirstOrThrow()
+
+    // If reporting is muted for this reporter, we don't want to create a subject status
+    if (isModEventReport(event)) {
+      const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
+      if (isReportingMuted) {
+        const subjectStatus = await this.getStatus(subject)
+        return {
+          event: modEvent,
+          subjectStatus,
+        }
+      }
+    }
 
     const subjectStatus = await adjustModerationSubjectStatus(
       this.db,
@@ -814,6 +834,20 @@ export class ModerationService {
       .selectAll()
       .executeTakeFirst()
     return result ?? null
+  }
+
+  // This is used to check if the reporter of an incoming report is muted from reporting
+  // so we want to make sure this look up is as fast as possible
+  async isReportingMutedForSubject(did: string) {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('muteReportingUntil', '>', new Date().toISOString())
+      .select(sql`true`.as('status'))
+      .executeTakeFirst()
+
+    return !!result
   }
 
   async formatAndCreateLabels(

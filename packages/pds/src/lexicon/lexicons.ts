@@ -8180,6 +8180,10 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          muteReportingUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
           lastReviewedBy: {
             type: 'string',
             format: 'did',
@@ -8355,6 +8359,11 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
+          reportingOnly: {
+            type: 'boolean',
+            description:
+              'Mute incoming reports from this subject. Only enabled when the subject is a DID',
+          },
           durationInHours: {
             type: 'integer',
             description: 'Indicates how long the subject should remain muted.',
@@ -8365,6 +8374,11 @@ export const schemaDict = {
         type: 'object',
         description: 'Unmute action on a subject',
         properties: {
+          reportingOnly: {
+            type: 'boolean',
+            description:
+              'Unmute incoming reports from this subject. Only enabled when the subject is a DID',
+          },
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',

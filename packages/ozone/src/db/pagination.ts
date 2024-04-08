@@ -23,10 +23,7 @@ export type LabeledResult = {
  *                     ↳ SQL Condition
  */
 export abstract class GenericKeyset<R, LR extends LabeledResult> {
-  constructor(
-    public primary: DbRef,
-    public secondary: DbRef,
-  ) {}
+  constructor(public primary: DbRef, public secondary: DbRef) {}
   abstract labelResult(result: R): LR
   abstract labeledResultToCursor(labeled: LR): Cursor
   abstract cursorToLabeledResult(cursor: Cursor): LR
