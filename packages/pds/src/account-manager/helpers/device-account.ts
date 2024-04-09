@@ -33,9 +33,9 @@ export type InsertableField = {
   remember: boolean
 }
 
-function toInsertable<K extends string>(
-  values: Partial<InsertableField> & { [k in K]: unknown },
-): Pick<Insertable<DeviceAccount>, K & keyof Insertable<DeviceAccount>>
+function toInsertable<V extends Partial<InsertableField>>(
+  values: V,
+): Pick<Insertable<DeviceAccount>, keyof V & keyof Insertable<DeviceAccount>>
 function toInsertable(
   values: Partial<InsertableField>,
 ): Partial<Insertable<DeviceAccount>> {
