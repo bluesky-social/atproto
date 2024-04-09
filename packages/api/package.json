@@ -32,6 +32,7 @@
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "get-port": "^6.1.2",
-    "jest": "^28.1.2"
+    "jest": "^28.1.2",
+    "prettier": "^3.2.5"
   }
 }
