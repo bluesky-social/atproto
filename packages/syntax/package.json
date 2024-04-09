@@ -28,5 +28,7 @@
   "browser": {
     "dns/promises": false
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }

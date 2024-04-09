@@ -45,5 +45,7 @@
     "key-encoder": "^2.0.3",
     "multiformats": "^9.9.0"
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }

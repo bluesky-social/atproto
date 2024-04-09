@@ -31,5 +31,7 @@
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }

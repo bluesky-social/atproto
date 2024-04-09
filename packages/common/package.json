@@ -31,5 +31,7 @@
     "typescript": "^5.3.3",
     "uint8arrays": "3.0.0"
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }
