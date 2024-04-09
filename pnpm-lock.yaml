@@ -1375,9 +1375,6 @@ importers:
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
-      lru-cache:
-        specifier: ^10.2.0
-        version: 10.2.0
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
