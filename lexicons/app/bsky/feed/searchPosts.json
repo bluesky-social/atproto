@@ -13,6 +13,46 @@
             "type": "string",
             "description": "Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended."
           },
+          "sort": {
+            "type": "string",
+            "knownValues": ["top", "latest"],
+            "description": "Specifies the ranking order of results. Default behavior is 'latest'."
+          },
+          "since": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Filter results for posts after the indicated datetime (inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'."
+          },
+          "until": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Filter results for posts before the indicated datetime (inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'."
+          },
+          "mentions": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Filter to posts which mention the given account. Handles are resolved to DID before query-time. Only matches rich-text facet mentions."
+          },
+          "author": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Filter to posts by the given account. Handles are resolved to DID before query-time."
+          },
+          "lang": {
+            "type": "string",
+            "format": "language",
+            "description": "Filter to posts in the given language. Expected to be based on post language field, though server may override language detection."
+          },
+          "domain": {
+            "type": "string",
+            "format": "language",
+            "description": "Filter to posts with URLs (facet links or embeds) linking to the given domain (hostname). Server may apply hostname normalization."
+          },
+          "url": {
+            "type": "string",
+            "format": "language",
+            "description": "Filter to posts with links (facet links or embeds) pointing to this URL. Server may apply URL normalization or fuzzy matching."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
