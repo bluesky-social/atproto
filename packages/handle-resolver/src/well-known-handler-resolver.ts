@@ -1,4 +1,4 @@
-import { Fetch, FetchResponseError } from '@atproto/fetch'
+import { Fetch } from '@atproto/fetch'
 
 import {
   HandleResolveOptions,
@@ -31,30 +31,19 @@ export class WellKnownHandleResolver implements HandleResolver {
     const request = new Request(url, { headers, signal: options?.signal })
 
     try {
-      const response = await this.fetch.call(globalThis, request)
+      const response = await (0, this.fetch)(request)
       const text = await response.text()
       const firstLine = text.split('\n')[0]!.trim()
 
       if (isResolvedHandle(firstLine)) return firstLine
 
-      // If a web server is present at the handle's domain, it could return
-      // any response. Only payload that start with "did:" but are not a
-      // valid DID are considered unexpected behavior.
-      if (firstLine.startsWith('did:')) {
-        throw new FetchResponseError(
-          502,
-          'Invalid DID returned from well-known method',
-          { request, response },
-        )
-      }
-
-      // Any other response is considered as a positive indication that the
-      // handle does not resolve to a DID using the well-known method.
       return null
-    } catch {
+    } catch (err) {
       // The the request failed, assume the handle does not resolve to a DID,
       // unless the failure was due to the signal being aborted.
       options?.signal?.throwIfAborted()
+
+      // TODO: propagate some errors as-is (?)
 
       return null
     }
