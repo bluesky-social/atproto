@@ -34,6 +34,7 @@
     "@atproto/oauth-types": "workspace:*"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "^1.23.1",
     "react-native-mmkv": "^2.12.2",
     "react-native-quick-crypto": "^0.6.1",
     "typescript": "^5.3.3"
