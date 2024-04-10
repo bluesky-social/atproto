@@ -54,9 +54,9 @@
           "tag": {
             "type": "array",
             "items": {
-                "type": "string",
-                "maxLength": 640,
-                "maxGraphemes": 64
+              "type": "string",
+              "maxLength": 640,
+              "maxGraphemes": 64
             },
             "description": "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix. Multiple tags can be specified, with 'AND' matching."
           },
