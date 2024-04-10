@@ -1,7 +1,11 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 
 import { getVerificationMaterial } from '@atproto/common'
-import { OAuthError, OAuthVerifier } from '@atproto/oauth-provider'
+import {
+  OAuthError,
+  OAuthVerifier,
+  WWWAuthenticateError,
+} from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -130,15 +134,12 @@ export class AuthVerifier {
 
   access = async (ctx: ReqCtx): Promise<AccessOutput> => {
     this.setAuthHeaders(ctx)
-    return this.validateAccessToken(ctx.req, [
-      AuthScope.Access,
-      AuthScope.AppPass,
-    ])
+    return this.validateAccessToken(ctx, [AuthScope.Access, AuthScope.AppPass])
   }
 
   accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessOutput> => {
     this.setAuthHeaders(ctx)
-    const result = await this.validateAccessToken(ctx.req, [
+    const result = await this.validateAccessToken(ctx, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
@@ -160,12 +161,12 @@ export class AuthVerifier {
 
   accessNotAppPassword = async (ctx: ReqCtx): Promise<AccessOutput> => {
     this.setAuthHeaders(ctx)
-    return this.validateAccessToken(ctx.req, [AuthScope.Access])
+    return this.validateAccessToken(ctx, [AuthScope.Access])
   }
 
   accessDeactived = async (ctx: ReqCtx): Promise<AccessOutput> => {
     this.setAuthHeaders(ctx)
-    return this.validateAccessToken(ctx.req, [
+    return this.validateAccessToken(ctx, [
       AuthScope.Access,
       AuthScope.AppPass,
       AuthScope.Deactivated,
@@ -362,15 +363,15 @@ export class AuthVerifier {
   }
 
   async validateAccessToken(
-    req: express.Request,
+    ctx: ReqCtx,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
-    const [type] = parseAuthorizationHeader(req.headers.authorization)
+    const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
     switch (type) {
       case BEARER:
-        return this.validateBearerAccessToken(req, scopes)
+        return this.validateBearerAccessToken(ctx, scopes)
       case DPOP:
-        return this.validateDpopAccessToken(req, scopes)
+        return this.validateDpopAccessToken(ctx, scopes)
       case null:
         throw new AuthRequiredError(undefined, 'AuthMissing')
       default:
@@ -382,7 +383,7 @@ export class AuthVerifier {
   }
 
   async validateDpopAccessToken(
-    req: express.Request,
+    { req, res }: ReqCtx,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
     if (!scopes.includes(AuthScope.Access)) {
@@ -416,8 +417,12 @@ export class AuthVerifier {
         artifacts: result.token,
       }
     } catch (err) {
-      // 'use_dpop_nonce' is expected to be in a particular format. Let's
-      // also transform any other OAuthError into an XRPCError.
+      // Make sure to include any WWW-Authenticate header in the response
+      // (particularly useful for DPoP's "use_dpop_nonce" error)
+      if (err instanceof WWWAuthenticateError) {
+        res?.setHeader('WWW-Authenticate', err.wwwAuthenticateHeader)
+      }
+
       if (err instanceof OAuthError) {
         throw new XRPCError(err.status, err.error_description, err.error)
       }
@@ -427,7 +432,7 @@ export class AuthVerifier {
   }
 
   async validateBearerAccessToken(
-    req: express.Request,
+    { req }: ReqCtx,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
     const { did, scope, token, audience } = await this.validateBearerToken(
