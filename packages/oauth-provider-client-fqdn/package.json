@@ -34,6 +34,6 @@
   },
   "devDependencies": {},
   "scripts": {
-    "build": "tsc"
+    "build": "tsc --build tsconfig.json"
   }
 }

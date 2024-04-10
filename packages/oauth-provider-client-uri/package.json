@@ -40,6 +40,6 @@
     "@types/psl": "^1.1.3"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc --build tsconfig.json"
   }
 }
