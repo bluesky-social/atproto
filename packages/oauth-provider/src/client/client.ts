@@ -19,6 +19,7 @@ import {
 import { JOSEError } from 'jose/errors'
 
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
+import { InvalidClientError } from '../errors/invalid-client-error.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
@@ -145,19 +146,19 @@ export class Client {
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
         }).catch((err) => {
           if (err instanceof JOSEError) {
-            const msg = `Invalid "client_assertion": ${err.message}`
-            throw new InvalidRequestError(msg, err)
+            const msg = `Validation of "client_assertion" failed: ${err.message}`
+            throw new InvalidClientError(msg, err)
           }
 
           throw err
         })
 
         if (!result.protectedHeader.kid) {
-          throw new InvalidRequestError(`"kid" required in client_assertion`)
+          throw new InvalidClientError(`"kid" required in client_assertion`)
         }
 
         if (!result.payload.jti) {
-          throw new InvalidRequestError(`"jti" required in client_assertion`)
+          throw new InvalidClientError(`"jti" required in client_assertion`)
         }
 
         const clientAuth: ClientAuth = {
@@ -170,7 +171,7 @@ export class Client {
         return { clientAuth, nonce: result.payload.jti }
       }
 
-      throw new InvalidRequestError(
+      throw new InvalidClientError(
         `Unsupported client_assertion_type "${input.client_assertion_type}"`,
       )
     }

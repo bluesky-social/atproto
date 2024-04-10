@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 import { accessTokenSchema } from '../access-token/access-token.js'
-import { UnauthorizedError } from '../errors/unauthorized-error.js'
+import { InvalidRequestError } from '../errors/invalid-request-error.js'
+import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import { tokenTypeSchema } from '../token/token-type.js'
 
 export const authorizationHeaderSchema = z.tuple([
@@ -10,12 +11,17 @@ export const authorizationHeaderSchema = z.tuple([
 ])
 
 export const parseAuthorizationHeader = (header?: string) => {
-  const parsed = authorizationHeaderSchema.safeParse(header?.split(' ', 2))
+  if (header == null) {
+    throw new WWWAuthenticateError(
+      'invalid_request',
+      'Authorization header required',
+      { Bearer: {}, DPoP: {} },
+    )
+  }
+
+  const parsed = authorizationHeaderSchema.safeParse(header.split(' ', 2))
   if (!parsed.success) {
-    throw new UnauthorizedError('Invalid authorization header', {
-      Bearer: {},
-      DPoP: {},
-    })
+    throw new InvalidRequestError('Invalid authorization header')
   }
   return parsed.data
 }

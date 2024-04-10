@@ -1,7 +1,7 @@
 import { AccessToken } from '../access-token/access-token.js'
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
-import { UnauthorizedError } from '../errors/unauthorized-error.js'
+import { InvalidTokenError } from '../oauth-errors.js'
 import { asArray } from '../util/cast.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenId } from './token-id.js'
@@ -33,9 +33,7 @@ export function verifyTokenClaims(
 
   const expectedTokenType: TokenType = claimsJkt ? 'DPoP' : 'Bearer'
   if (expectedTokenType !== tokenType) {
-    throw new UnauthorizedError(`Invalid token type`, {
-      [expectedTokenType]: {},
-    })
+    throw new InvalidTokenError(expectedTokenType, `Invalid token type`)
   }
   if (tokenType === 'DPoP' && !dpopJkt) {
     throw new InvalidDpopProofError(`jkt is required for DPoP tokens`)
@@ -47,18 +45,14 @@ export function verifyTokenClaims(
   if (options?.audience) {
     const aud = asArray(claims.aud)
     if (!options.audience.some((v) => aud.includes(v))) {
-      throw new UnauthorizedError(`Invalid audience`, {
-        [tokenType]: {},
-      })
+      throw new InvalidTokenError(tokenType, `Invalid audience`)
     }
   }
 
   if (options?.scope) {
     const scopes = claims.scope?.split(' ')
     if (!scopes || !options.scope.some((v) => scopes.includes(v))) {
-      throw new UnauthorizedError(`Invalid scope`, {
-        [tokenType]: {},
-      })
+      throw new InvalidTokenError(tokenType, `Invalid scope`)
     }
   }
 

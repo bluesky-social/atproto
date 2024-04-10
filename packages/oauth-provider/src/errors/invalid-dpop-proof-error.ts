@@ -6,7 +6,6 @@ export class InvalidDpopProofError extends WWWAuthenticateError {
     super(
       error,
       error_description,
-      400,
       { DPoP: { error, error_description } },
       cause,
     )

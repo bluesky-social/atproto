@@ -11,11 +11,10 @@ export class WWWAuthenticateError extends OAuthError {
   constructor(
     error: string,
     error_description: string,
-    status: number,
     wwwAuthenticate: WWWAuthenticate,
     cause?: unknown,
   ) {
-    super(error, error_description, status, cause)
+    super(error, error_description, 401, cause)
 
     this.wwwAuthenticate =
       wwwAuthenticate['DPoP'] != null

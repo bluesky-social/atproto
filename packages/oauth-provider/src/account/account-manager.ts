@@ -1,6 +1,6 @@
 import { OAuthClientId } from '@atproto/oauth-client-metadata'
 import { DeviceId } from '../device/device-id.js'
-import { UnauthorizedError } from '../errors/unauthorized-error.js'
+import { InvalidRequestError } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { constantTime } from '../util/time.js'
 import { AccountInfo, AccountStore, LoginCredentials } from './account-store.js'
@@ -18,7 +18,7 @@ export class AccountManager {
       const result = await this.store.authenticateAccount(credentials, deviceId)
       if (result) return result
 
-      throw new UnauthorizedError('Invalid credentials', {})
+      throw new InvalidRequestError('Invalid credentials')
     })
   }
 
@@ -26,7 +26,7 @@ export class AccountManager {
     const result = await this.store.getDeviceAccount(deviceId, sub)
     if (result) return result
 
-    throw new UnauthorizedError(`Account not found`, {})
+    throw new InvalidRequestError(`Account not found`)
   }
 
   public async addAuthorizedClient(
