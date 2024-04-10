@@ -52,10 +52,13 @@
             "description": "Filter to posts with links (facet links or embeds) pointing to this URL. Server may apply URL normalization or fuzzy matching."
           },
           "tag": {
-            "type": "string",
-            "maxLength": 640,
-            "maxGraphemes": 64,
-            "description": "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix."
+            "type": "array",
+            "items": {
+                "type": "string",
+                "maxLength": 640,
+                "maxGraphemes": 64
+            },
+            "description": "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix. Multiple tags can be specified, with 'AND' matching."
           },
           "limit": {
             "type": "integer",
