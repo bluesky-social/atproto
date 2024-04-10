@@ -1,0 +1,46 @@
+{
+  "name": "@atproto/oauth-client-react-native",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Implementation of OAuth client for React Native. Supports both web and native platforms.",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "native",
+    "react"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth-client-react-native"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "@atproto/caching": "workspace:*",
+    "@atproto/did": "workspace:*",
+    "@atproto/disposable-polyfill": "workspace:*",
+    "@atproto/fetch": "workspace:*",
+    "@atproto/handle-resolver": "workspace:*",
+    "@atproto/identity-resolver": "workspace:*",
+    "@atproto/indexed-db": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/jwk-jose": "workspace:*",
+    "@atproto/jwk-webcrypto": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-client-metadata": "workspace:*",
+    "@atproto/oauth-server-metadata": "workspace:*",
+    "@atproto/oauth-server-metadata-resolver": "workspace:*"
+  },
+  "devDependencies": {
+    "react-native-mmkv": "^2.12.2",
+    "react-native-quick-crypto": "github:bluesky-social/react-native-quick-crypto",
+    "typescript": "^5.3.3"
+  }
+}
