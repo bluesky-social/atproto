@@ -32,7 +32,7 @@
     "@atproto/indexed-db": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "@atproto/jwk-jose": "workspace:*",
-    "@atproto/jwk-webcrypto": "workspace:*",
+    "@atproto/jwk-react-native-crypto": "workspace:*",
     "@atproto/oauth-client": "workspace:*",
     "@atproto/oauth-client-metadata": "workspace:*",
     "@atproto/oauth-server-metadata": "workspace:*",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "react-native-mmkv": "^2.12.2",
-    "react-native-quick-crypto": "github:bluesky-social/react-native-quick-crypto",
+    "react-native-quick-crypto": "^0.6.1",
     "typescript": "^5.3.3"
   }
 }

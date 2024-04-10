@@ -3,7 +3,7 @@ import { DidDocument } from '@atproto/did'
 import { ResolvedHandle } from '@atproto/handle-resolver'
 import { DB, DBObjectStore } from '@atproto/indexed-db'
 import { Key } from '@atproto/jwk'
-import { WebcryptoKey } from '@atproto/jwk-webcrypto'
+import { WebcryptoKey } from '@atproto/jwk-react-native-crypto'
 import { InternalStateData, Session, TokenSet } from '@atproto/oauth-client'
 import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 
