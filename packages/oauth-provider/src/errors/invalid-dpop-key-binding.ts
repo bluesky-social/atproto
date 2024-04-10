@@ -1,7 +1,21 @@
-import { InvalidTokenError } from './invalid-token-error.js'
+import { WWWAuthenticateError } from './www-authenticate-error.js'
 
-export class InvalidDpopKeyBindingError extends InvalidTokenError {
+/**
+ * @see
+ * {@link https://datatracker.ietf.org/doc/html/rfc6750#section-3.1 | RFC6750 - The WWW-Authenticate Response Header Field}
+ *
+ * @see
+ * {@link https://datatracker.ietf.org/doc/html/rfc9449#name-the-dpop-authentication-sch | RFC9449 - The DPoP Authentication Scheme}
+ */
+export class InvalidDpopKeyBindingError extends WWWAuthenticateError {
   constructor(cause?: unknown) {
-    super('Invalid DPoP key binding', { DPoP: {} }, cause)
+    const error = 'invalid_token'
+    const error_description = 'Invalid DPoP key binding'
+    super(
+      error,
+      error_description,
+      { DPoP: { error, error_description } },
+      cause,
+    )
   }
 }

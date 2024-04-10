@@ -12,9 +12,9 @@ import {
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
-import { UnknownRequestError } from '../oauth-errors.js'
 import { OIDC_SCOPE_CLAIMS } from '../oidc/claims.js'
 import { Sub } from '../oidc/sub.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
@@ -317,7 +317,7 @@ export class RequestManager {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
-    if (!data) throw new UnknownRequestError(uri)
+    if (!data) throw new InvalidRequestError(`Unknown request_uri "${uri}"`)
 
     const updates: UpdateRequestData = {}
 
@@ -382,7 +382,7 @@ export class RequestManager {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
-    if (!data) throw new UnknownRequestError(uri)
+    if (!data) throw new InvalidRequestError(`Unknown request_uri "${uri}"`)
 
     try {
       if (data.expiresAt < new Date()) {
@@ -450,7 +450,7 @@ export class RequestManager {
     parameters: AuthorizationParameters
   }> {
     const result = await this.store.findRequestByCode(code)
-    if (!result) throw new InvalidRequestError('Invalid code')
+    if (!result) throw new InvalidGrantError('Invalid code')
 
     try {
       const { data } = result
@@ -461,11 +461,11 @@ export class RequestManager {
       }
 
       if (data.clientId !== client.id) {
-        throw new InvalidRequestError('This code was issued for another client')
+        throw new InvalidGrantError('This code was issued for another client')
       }
 
       if (data.expiresAt < new Date()) {
-        throw new InvalidRequestError('This code has expired')
+        throw new InvalidGrantError('This code has expired')
       }
 
       if (data.clientAuth.method === 'none') {
@@ -476,11 +476,11 @@ export class RequestManager {
         // method (the token created will be bound to the current clientAuth).
       } else {
         if (clientAuth.method !== data.clientAuth.method) {
-          throw new InvalidRequestError('Invalid client authentication')
+          throw new InvalidGrantError('Invalid client authentication')
         }
 
         if (!(await client.validateClientAuth(data.clientAuth))) {
-          throw new InvalidRequestError('Invalid client authentication')
+          throw new InvalidGrantError('Invalid client authentication')
         }
       }
 

@@ -49,6 +49,8 @@ import { DeviceId } from './device/device-id.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
+import { InvalidClientError } from './errors/invalid-client-error.js'
+import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
@@ -276,7 +278,7 @@ export class OAuthProvider extends OAuthVerifier {
     if (nonce != null) {
       const unique = await this.replayManager.uniqueAuth(nonce, client.id)
       if (!unique) {
-        throw new InvalidRequestError(`${clientAuth.method} jti reused`)
+        throw new InvalidClientError(`${clientAuth.method} jti reused`)
       }
     }
 
@@ -643,7 +645,7 @@ export class OAuthProvider extends OAuthVerifier {
     const clientAuth = await this.authenticateClient(client, 'token', input)
 
     if (!client.metadata.grant_types.includes(input.grant_type)) {
-      throw new InvalidRequestError(
+      throw new InvalidGrantError(
         `"${input.grant_type}" grant type is not allowed for this client`,
       )
     }
@@ -656,7 +658,7 @@ export class OAuthProvider extends OAuthVerifier {
       return this.refreshTokenGrant(client, clientAuth, input, dpopJkt)
     }
 
-    throw new InvalidRequestError(
+    throw new InvalidGrantError(
       // @ts-expect-error: fool proof
       `Grant type "${input.grant_type}" not supported`,
     )

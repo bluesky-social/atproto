@@ -5,6 +5,7 @@ import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'
 import { DpopNonce } from './dpop/dpop-nonce.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidTokenError } from './errors/invalid-token-error.js'
+import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { ReplayManager } from './replay/replay-manager.js'
 import { ReplayStore } from './replay/replay-store.js'
 import { Signer } from './signer/signer.js'
@@ -128,7 +129,7 @@ export class OAuthVerifier {
       this.accessTokenType !== AccessTokenType.auto &&
       this.accessTokenType !== accessTokenType
     ) {
-      throw new InvalidTokenError(`Invalid token`, { [tokenType]: {} })
+      throw new InvalidTokenError(tokenType, `Invalid token`)
     }
   }
 
@@ -140,7 +141,7 @@ export class OAuthVerifier {
   ): Promise<VerifyTokenClaimsResult> {
     const jwt = jwtSchema.safeParse(token)
     if (!jwt.success) {
-      throw new InvalidTokenError(`Invalid token`, { [tokenType]: {} })
+      throw new InvalidTokenError(tokenType, `Invalid token`)
     }
 
     this.assertTokenTypeAllowed(tokenType, AccessTokenType.jwt)
@@ -148,11 +149,7 @@ export class OAuthVerifier {
     const { payload } = await this.signer
       .verifyAccessToken(jwt.data)
       .catch((err) => {
-        throw InvalidTokenError.from(
-          err,
-          { [tokenType]: {} },
-          'Unable to verify token',
-        )
+        throw InvalidTokenError.from(err, tokenType)
       })
 
     return verifyTokenClaims(
@@ -175,10 +172,27 @@ export class OAuthVerifier {
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
     const [tokenType, token] = parseAuthorizationHeader(headers.authorization)
-    const dpopJkt = await this.checkDpopProof(headers.dpop, method, url, token)
-    if (tokenType === 'DPoP' && !dpopJkt) {
-      throw new InvalidDpopProofError(`DPoP proof required`)
+    try {
+      const dpopJkt = await this.checkDpopProof(
+        headers.dpop,
+        method,
+        url,
+        token,
+      )
+
+      if (tokenType === 'DPoP' && !dpopJkt) {
+        throw new InvalidDpopProofError(`DPoP proof required`)
+      }
+
+      return await this.authenticateToken(
+        tokenType,
+        token,
+        dpopJkt,
+        verifyOptions,
+      )
+    } catch (err) {
+      if (err instanceof WWWAuthenticateError) throw err
+      throw InvalidTokenError.from(err, tokenType)
     }
-    return this.authenticateToken(tokenType, token, dpopJkt, verifyOptions)
   }
 }

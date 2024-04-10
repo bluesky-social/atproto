@@ -16,10 +16,10 @@ import {
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding.js'
+import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
+import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
-import { UnauthorizedClientError } from '../errors/unauthorized-client-error.js'
-import { UnauthorizedDpopError } from '../errors/unauthorized-dpop-error.js'
 import { AuthorizationDetails } from '../parameters/authorization-details.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { isCode } from '../request/code.js'
@@ -129,13 +129,13 @@ export class TokenManager {
     dpopJkt: null | string,
   ): Promise<TokenResponse> {
     if (client.metadata.dpop_bound_access_tokens && !dpopJkt) {
-      throw new UnauthorizedDpopError()
+      throw new InvalidDpopProofError('DPoP proof required')
     }
 
     if (!parameters.dpop_jkt) {
       if (dpopJkt) parameters = { ...parameters, dpop_jkt: dpopJkt }
     } else if (!dpopJkt) {
-      throw new UnauthorizedDpopError()
+      throw new InvalidDpopProofError('DPoP proof required')
     } else if (parameters.dpop_jkt !== dpopJkt) {
       throw new InvalidDpopKeyBindingError()
     }
@@ -144,6 +144,7 @@ export class TokenManager {
       clientAuth.method ===
       'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
     ) {
+      // Clients **must not** use their private key to sign DPoP proofs.
       if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
         throw new InvalidRequestError(
           'The DPoP proof must be signed with a different key than the client assertion',
@@ -152,7 +153,7 @@ export class TokenManager {
     }
 
     if (!client.metadata.grant_types.includes(input.grant_type)) {
-      throw new InvalidRequestError(
+      throw new InvalidGrantError(
         `This client is not allowed to use the "${input.grant_type}" grant type`,
       )
     }
@@ -160,7 +161,7 @@ export class TokenManager {
     switch (input.grant_type) {
       case 'authorization_code':
         if (!parameters.code_challenge || !parameters.code_challenge_method) {
-          throw new InvalidRequestError('PKCE is required')
+          throw new InvalidGrantError('PKCE is required')
         }
 
         if (!parameters.redirect_uri) {
@@ -170,10 +171,10 @@ export class TokenManager {
           if (redirect_uri) {
             parameters = { ...parameters, redirect_uri }
           } else {
-            throw new InvalidRequestError(`Invalid redirect_uri`)
+            throw new InvalidGrantError(`Invalid redirect_uri`)
           }
         } else if (parameters.redirect_uri !== input.redirect_uri) {
-          throw new InvalidRequestError(
+          throw new InvalidGrantError(
             'This code was issued for another redirect_uri',
           )
         }
@@ -186,13 +187,13 @@ export class TokenManager {
 
     if (parameters.code_challenge) {
       if (!('code_verifier' in input) || !input.code_verifier) {
-        throw new InvalidRequestError('code_verifier is required')
+        throw new InvalidGrantError('code_verifier is required')
       }
       switch (parameters.code_challenge_method) {
         case undefined: // Default is "plain" (per spec)
         case 'plain': {
           if (parameters.code_challenge !== input.code_verifier) {
-            throw new InvalidRequestError('Invalid code_verifier')
+            throw new InvalidGrantError('Invalid code_verifier')
           }
           break
         }
@@ -207,7 +208,7 @@ export class TokenManager {
             .update(input.code_verifier)
             .digest()
           if (inputChallenge.compare(computedChallenge) !== 0) {
-            throw new InvalidRequestError('Invalid code_verifier')
+            throw new InvalidGrantError('Invalid code_verifier')
           }
           break
         }
@@ -224,7 +225,7 @@ export class TokenManager {
       const tokenInfo = await this.store.findTokenByCode(code)
       if (tokenInfo) {
         await this.store.deleteToken(tokenInfo.id)
-        throw new InvalidRequestError(`Code replayed`)
+        throw new InvalidGrantError(`Code replayed`)
       }
     }
 
@@ -309,19 +310,19 @@ export class TokenManager {
     tokenInfo: TokenInfo,
   ) {
     if (tokenInfo.data.clientId !== client.id) {
-      throw new InvalidRequestError(`Token was not issued to this client`)
+      throw new InvalidGrantError(`Token was not issued to this client`)
     }
 
     if (tokenInfo.info?.authorizedClients.includes(client.id) === false) {
-      throw new InvalidRequestError(`Client no longer trusted by user`)
+      throw new InvalidGrantError(`Client no longer trusted by user`)
     }
 
     if (tokenInfo.data.clientAuth.method !== clientAuth.method) {
-      throw new InvalidRequestError(`Client authentication method mismatch`)
+      throw new InvalidGrantError(`Client authentication method mismatch`)
     }
 
     if (!(await client.validateClientAuth(tokenInfo.data.clientAuth))) {
-      throw new InvalidRequestError(`Client authentication mismatch`)
+      throw new InvalidGrantError(`Client authentication mismatch`)
     }
   }
 
@@ -335,7 +336,7 @@ export class TokenManager {
       input.refresh_token,
     )
     if (!tokenInfo?.currentRefreshToken) {
-      throw new InvalidRequestError(`Invalid refresh token`)
+      throw new InvalidGrantError(`Invalid refresh token`)
     }
 
     const { account, info, data } = tokenInfo
@@ -343,14 +344,14 @@ export class TokenManager {
 
     try {
       if (tokenInfo.currentRefreshToken !== input.refresh_token) {
-        throw new InvalidRequestError(`refresh token replayed`)
+        throw new InvalidGrantError(`refresh token replayed`)
       }
 
       await this.validateAccess(client, clientAuth, tokenInfo)
 
       if (parameters.dpop_jkt) {
         if (!dpopJkt) {
-          throw new UnauthorizedDpopError()
+          throw new InvalidDpopProofError('DPoP proof required')
         } else if (parameters.dpop_jkt !== dpopJkt) {
           throw new InvalidDpopKeyBindingError()
         }
@@ -362,13 +363,11 @@ export class TokenManager {
           ? UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
           : AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
       if (lastActivity.getTime() + inactivityTimeout < Date.now()) {
-        throw new InvalidRequestError(
-          `Refresh token exceeded inactivity timeout`,
-        )
+        throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
       }
 
       if (data.createdAt.getTime() + TOTAL_REFRESH_LIFETIME < Date.now()) {
-        throw new InvalidRequestError(`Refresh token expired`)
+        throw new InvalidGrantError(`Refresh token expired`)
       }
 
       const authorization_details =
@@ -460,7 +459,7 @@ export class TokenManager {
   }
 
   /**
-   * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.2 rfc7009}
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.2 | RFC7009 Section 2.2}
    */
   async revoke(token: string): Promise<void> {
     switch (true) {
@@ -508,7 +507,7 @@ export class TokenManager {
   ): Promise<TokenInfo> {
     const tokenInfo = await this.findTokenInfo(token)
     if (!tokenInfo) {
-      throw new UnauthorizedClientError(`Invalid token`)
+      throw new InvalidGrantError(`Invalid token`)
     }
 
     try {
@@ -519,7 +518,7 @@ export class TokenManager {
     }
 
     if (tokenInfo.data.expiresAt.getTime() < Date.now()) {
-      throw new UnauthorizedClientError(`Token expired`)
+      throw new InvalidGrantError(`Token expired`)
     }
 
     return tokenInfo
@@ -571,11 +570,11 @@ export class TokenManager {
     const tokenInfo = await this.store.readToken(tokenId)
 
     if (!tokenInfo) {
-      throw new InvalidTokenError(`Invalid token`, { [tokenType]: {} })
+      throw new InvalidTokenError(tokenType, `Invalid token`)
     }
 
     if (!(tokenInfo.data.expiresAt.getTime() > Date.now())) {
-      throw new InvalidTokenError(`Token expired`, { [tokenType]: {} })
+      throw new InvalidTokenError(tokenType, `Token expired`)
     }
 
     return tokenInfo
