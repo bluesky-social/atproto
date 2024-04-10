@@ -68,6 +68,55 @@ Array [
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
+    "reply": Object {
+      "parent": Object {
+        "$type": "app.bsky.feed.defs#notFoundPost",
+        "notFound": true,
+        "uri": "record(3)",
+      },
+      "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(3)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 3,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
+          "text": "again",
+        },
+        "replyCount": 2,
+        "repostCount": 1,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
+    },
   },
   Object {
     "post": Object {
@@ -178,6 +227,55 @@ Array [
       "uri": "record(0)",
       "viewer": Object {},
     },
+    "reply": Object {
+      "parent": Object {
+        "$type": "app.bsky.feed.defs#notFoundPost",
+        "notFound": true,
+        "uri": "record(3)",
+      },
+      "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(3)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 3,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
+          "text": "again",
+        },
+        "replyCount": 2,
+        "repostCount": 1,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
+    },
   },
   Object {
     "post": Object {
@@ -235,6 +333,9 @@ Array [
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(6)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -549,6 +650,55 @@ Array [
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
+    "reply": Object {
+      "parent": Object {
+        "$type": "app.bsky.feed.defs#notFoundPost",
+        "notFound": true,
+        "uri": "record(3)",
+      },
+      "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(3)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 3,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
+          "text": "again",
+        },
+        "replyCount": 2,
+        "repostCount": 1,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
+    },
   },
   Object {
     "post": Object {
@@ -658,6 +808,55 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {},
+    },
+    "reply": Object {
+      "parent": Object {
+        "$type": "app.bsky.feed.defs#notFoundPost",
+        "notFound": true,
+        "uri": "record(3)",
+      },
+      "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
+        "cid": "cids(3)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 3,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
+          "text": "again",
+        },
+        "replyCount": 2,
+        "repostCount": 1,
+        "uri": "record(2)",
+        "viewer": Object {},
+      },
     },
   },
   Object {
@@ -1009,6 +1208,9 @@ Array [
                 "val": "test-label-3",
               },
             ],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(15)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1510,6 +1712,9 @@ Array [
                       "val": "test-label-3",
                     },
                   ],
+                  "likeCount": 0,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(11)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -1534,6 +1739,9 @@ Array [
               "val": "test-label-3",
             },
           ],
+          "likeCount": 2,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(8)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -2167,6 +2375,9 @@ Array [
                     "val": "test-label-3",
                   },
                 ],
+                "likeCount": 2,
+                "replyCount": 0,
+                "repostCount": 0,
                 "uri": "record(8)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -2214,6 +2425,9 @@ Array [
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(7)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -2419,6 +2633,9 @@ Array [
                       "val": "test-label-3",
                     },
                   ],
+                  "likeCount": 0,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(11)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -2443,6 +2660,9 @@ Array [
               "val": "test-label-3",
             },
           ],
+          "likeCount": 2,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(8)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -2608,6 +2828,9 @@ Array [
                 "val": "test-label-3",
               },
             ],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(11)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -2858,6 +3081,9 @@ Array [
                       "val": "test-label-3",
                     },
                   ],
+                  "likeCount": 0,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(4)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -2882,6 +3108,9 @@ Array [
               "val": "test-label-3",
             },
           ],
+          "likeCount": 2,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(2)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -3532,6 +3761,9 @@ Array [
                     "val": "test-label-3",
                   },
                 ],
+                "likeCount": 2,
+                "replyCount": 0,
+                "repostCount": 0,
                 "uri": "record(2)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -3579,6 +3811,9 @@ Array [
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(0)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -3770,6 +4005,9 @@ Array [
                 "val": "test-label-3",
               },
             ],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(4)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -4019,6 +4257,9 @@ Array [
                       "val": "test-label-3",
                     },
                   ],
+                  "likeCount": 0,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(2)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -4043,6 +4284,9 @@ Array [
               "val": "test-label-3",
             },
           ],
+          "likeCount": 2,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(1)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -4519,6 +4763,9 @@ Array [
                     "val": "test-label-3",
                   },
                 ],
+                "likeCount": 2,
+                "replyCount": 0,
+                "repostCount": 0,
                 "uri": "record(1)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -4566,6 +4813,9 @@ Array [
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(0)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -4729,6 +4979,9 @@ Array [
                 "val": "test-label-3",
               },
             ],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(2)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -5395,6 +5648,9 @@ Array [
                       "val": "test-label-3",
                     },
                   ],
+                  "likeCount": 0,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(12)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -5419,6 +5675,9 @@ Array [
               "val": "test-label-3",
             },
           ],
+          "likeCount": 2,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(11)",
           "value": Object {
             "$type": "app.bsky.feed.post",

@@ -43,7 +43,7 @@ async function gen() {
     2,
   )}
   `,
-    { semi: false, parser: 'babel', singleQuote: true },
+    { semi: false, parser: 'typescript', singleQuote: true },
   )
 }
 

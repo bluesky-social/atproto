@@ -9,7 +9,10 @@ import { IdResolver, MemoryCache } from '@atproto/identity'
 export { RepoSubscription } from './subscription'
 
 export class DataPlaneServer {
-  constructor(public server: http.Server, public idResolver: IdResolver) {}
+  constructor(
+    public server: http.Server,
+    public idResolver: IdResolver,
+  ) {}
 
   static async create(db: Database, port: number, plcUrl?: string) {
     const app = express()

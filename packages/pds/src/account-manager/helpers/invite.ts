@@ -43,7 +43,7 @@ export const createAccountInviteCodes = async (
         forAccount,
         createdBy: forAccount,
         createdAt: now,
-      } as InviteCode),
+      }) as InviteCode,
   )
   await db.executeWithRetry(db.db.insertInto('invite_code').values(rows))
 
@@ -199,12 +199,15 @@ export const getInvitedByForAccounts = async (
     uses: uses[row.code] ?? [],
     disabled: row.disabled === 1,
   }))
-  return codeDetails.reduce((acc, cur) => {
-    for (const use of cur.uses) {
-      acc[use.usedBy] = cur
-    }
-    return acc
-  }, {} as Record<string, CodeDetail>)
+  return codeDetails.reduce(
+    (acc, cur) => {
+      for (const use of cur.uses) {
+        acc[use.usedBy] = cur
+      }
+      return acc
+    },
+    {} as Record<string, CodeDetail>,
+  )
 }
 
 export const disableInviteCodes = async (

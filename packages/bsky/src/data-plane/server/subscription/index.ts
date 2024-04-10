@@ -134,9 +134,8 @@ export class RepoSubscription {
         return
       }
       if (msg.rebase) {
-        const needsReindex = await this.indexingSvc.checkCommitNeedsIndexing(
-          root,
-        )
+        const needsReindex =
+          await this.indexingSvc.checkCommitNeedsIndexing(root)
         if (needsReindex) {
           await this.indexingSvc.indexRepo(msg.repo, rootCid.toString())
         }

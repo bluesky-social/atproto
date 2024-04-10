@@ -37,7 +37,10 @@ export type AppContextOptions = {
 }
 
 export class AppContext {
-  constructor(private opts: AppContextOptions, private secrets: OzoneSecrets) {}
+  constructor(
+    private opts: AppContextOptions,
+    private secrets: OzoneSecrets,
+  ) {}
 
   static async fromConfig(
     cfg: OzoneConfig,

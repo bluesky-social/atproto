@@ -17,7 +17,10 @@ export class S3BlobStore implements BlobStore {
   private client: aws.S3
   private bucket: string
 
-  constructor(public did: string, cfg: S3Config) {
+  constructor(
+    public did: string,
+    cfg: S3Config,
+  ) {
     const { bucket, ...rest } = cfg
     this.bucket = bucket
     this.client = new aws.S3({
