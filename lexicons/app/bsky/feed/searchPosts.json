@@ -46,12 +46,11 @@
           },
           "domain": {
             "type": "string",
-            "format": "language",
             "description": "Filter to posts with URLs (facet links or embeds) linking to the given domain (hostname). Server may apply hostname normalization."
           },
           "url": {
             "type": "string",
-            "format": "language",
+            "format": "uri",
             "description": "Filter to posts with links (facet links or embeds) pointing to this URL. Server may apply URL normalization or fuzzy matching."
           },
           "tag": {
