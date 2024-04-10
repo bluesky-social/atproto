@@ -85,6 +85,7 @@ import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyActorGetSuggestionsSkeleton from './types/app/bsky/actor/getSuggestionsSkeleton'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
@@ -1134,6 +1135,17 @@ export class AppBskyActorNS {
     >,
   ) {
     const nsid = 'app.bsky.actor.getSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestionsSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyActorGetSuggestionsSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyActorGetSuggestionsSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.actor.getSuggestionsSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

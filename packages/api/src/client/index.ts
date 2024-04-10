@@ -89,6 +89,7 @@ import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyActorGetSuggestionsSkeleton from './types/app/bsky/actor/getSuggestionsSkeleton'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
@@ -248,6 +249,7 @@ export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+export * as AppBskyActorGetSuggestionsSkeleton from './types/app/bsky/actor/getSuggestionsSkeleton'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
@@ -1339,6 +1341,17 @@ export class AppBskyActorNS {
       .call('app.bsky.actor.getSuggestions', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorGetSuggestions.toKnownErr(e)
+      })
+  }
+
+  getSuggestionsSkeleton(
+    params?: AppBskyActorGetSuggestionsSkeleton.QueryParams,
+    opts?: AppBskyActorGetSuggestionsSkeleton.CallOptions,
+  ): Promise<AppBskyActorGetSuggestionsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.getSuggestionsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyActorGetSuggestionsSkeleton.toKnownErr(e)
       })
   }
 
