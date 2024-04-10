@@ -27,7 +27,7 @@
           "until": {
             "type": "string",
             "format": "datetime",
-            "description": "Filter results for posts before the indicated datetime (inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'."
+            "description": "Filter results for posts before the indicated datetime (not inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'."
           },
           "mentions": {
             "type": "string",
