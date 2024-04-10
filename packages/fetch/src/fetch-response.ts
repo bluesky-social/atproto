@@ -2,40 +2,52 @@ import { Transformer, compose } from '@atproto/transformer'
 import { z } from 'zod'
 
 import { FetchError, FetchErrorOptions } from './fetch-error.js'
+import { Json, ifObject, ifString } from './util.js'
 import { TransformedResponse } from './transformed-response.js'
 
 export type ResponseTranformer = Transformer<Response>
 
-async function extractResponseMessage(response: Response): Promise<string> {
+async function extractResponseMessage(
+  headers: Headers,
+  body?: Blob | null,
+): Promise<string | undefined> {
+  if (!body) return undefined
+
+  const contentType = headers.get('content-type')
+  if (!contentType) return undefined
+
+  const mimeType = contentType.split(';')[0].trim()
+  if (!mimeType) return undefined
+
   try {
-    const contentType = response.headers
-      .get('content-type')
-      ?.split(';')[0]
-      .trim()
-    if (contentType && response.body && !response.bodyUsed) {
-      if (contentType === 'text/plain') {
-        return response.clone().text()
-      } else if (/^application\/(?:[^+]+\+)?json$/i.test(contentType)) {
-        const json = await response.clone().json()
-        if (typeof json?.error_description === 'string') {
-          return json.error_description
-        } else if (typeof json?.error === 'string') {
-          return json.error
-        } else if (typeof json?.message === 'string') {
-          return json.message
-        }
-      }
+    if (mimeType === 'text/plain') {
+      return await body.text()
+    } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
+      const json = await body.text().then(JSON.parse)
+
+      if (typeof json === 'string') return json
+
+      const errorDescription = ifString(ifObject(json)?.['error_description'])
+      if (errorDescription) return errorDescription
+
+      const error = ifString(ifObject(json)?.['error'])
+      if (error) return error
+
+      const message = ifString(ifObject(json)?.['message'])
+      if (message) return message
     }
   } catch {
     // noop
   }
-  return response.statusText
+
+  return undefined
 }
 
 export class FetchResponseError extends FetchError {
   constructor(
     statusCode: number,
     message?: string,
+    readonly body?: Blob | null,
     options?: FetchErrorOptions,
   ) {
     super(statusCode, message, options)
@@ -44,12 +56,24 @@ export class FetchResponseError extends FetchError {
   static async from(
     response: Response,
     status = response.status,
-    message?: string,
-    cause?: unknown,
+    customMessage?: string,
+    options?: FetchErrorOptions,
   ) {
-    message ??= await extractResponseMessage(response)
-    return new FetchResponseError(status, message, {
-      cause,
+    // Make sure the body gets consumed as, in some environments (Node 👀), the
+    // response will not be GC'd.
+    const body = response.body
+      ? !response.bodyUsed
+        ? await response.blob()
+        : undefined
+      : null
+
+    const message =
+      customMessage ??
+      (await extractResponseMessage(response.headers, body)) ??
+      response.statusText
+
+    return new FetchResponseError(status, message, body, {
+      ...options,
       response,
     })
   }
@@ -82,7 +106,7 @@ export async function fetchResponseMaxSize(
   if (contentLength) {
     const length = Number(contentLength)
     if (!(length < maxBytes)) {
-      const err = new FetchResponseError(502, 'Response too large', {
+      const err = new FetchResponseError(502, 'Response too large', undefined, {
         response,
       })
       await response.body.cancel(err)
@@ -101,7 +125,7 @@ export async function fetchResponseMaxSize(
         ctrl.enqueue(chunk)
       } else {
         ctrl.error(
-          new FetchResponseError(502, 'Response too large', {
+          new FetchResponseError(502, 'Response too large', undefined, {
             response,
           }),
         )
@@ -134,17 +158,17 @@ export function fetchTypeProcessor(
 
     if (contentType) {
       if (!isExpected(contentType)) {
-        throw new FetchResponseError(
+        throw await FetchResponseError.from(
+          response,
           502,
           `Unexpected response Content-Type (${contentType})`,
-          { response },
         )
       }
     } else if (contentTypeRequired) {
-      throw new FetchResponseError(
+      throw await FetchResponseError.from(
+        response,
         502,
         'Missing response Content-Type header',
-        { response },
       )
     }
 
@@ -152,29 +176,48 @@ export function fetchTypeProcessor(
   }
 }
 
-export type ParsedJsonResponse<T = unknown> = {
+export type ParsedJsonResponse<T = Json> = {
   response: Response
   json: T
 }
 
-export async function jsonTranformer<T = unknown>(
+export async function jsonTranformer<T = Json>(
   response: Response,
 ): Promise<ParsedJsonResponse<T>> {
-  return response
-    .json()
-    .then((json) => ({
+  if (response.body === null) {
+    throw new FetchResponseError(502, 'No response body', null, {
       response,
-      json: json as T,
-    }))
-    .catch(async (cause) => {
-      throw new FetchResponseError(502, 'Unable to parse response JSON', {
-        response,
-        cause,
-      })
     })
+  }
+
+  if (response.bodyUsed) {
+    throw new FetchResponseError(502, 'Response body already used', undefined, {
+      response,
+    })
+  }
+
+  // Read as blob to allow throwing with the body in case on invalid JSON (for debugging/logging purposes mainly)
+  const body = await response.blob().catch(async (cause) => {
+    throw new FetchResponseError(
+      502,
+      'Failed to read response body',
+      undefined,
+      { response, cause },
+    )
+  })
+
+  try {
+    const json = (await body.text().then(JSON.parse)) as T
+    return { response, json }
+  } catch (cause) {
+    throw new FetchResponseError(502, 'Unable to parse response JSON', body, {
+      response,
+      cause,
+    })
+  }
 }
 
-export function fetchJsonProcessor<T = unknown>(
+export function fetchJsonProcessor<T = Json>(
   contentType: ContentTypeCheck = /^application\/(?:[^+]+\+)?json$/,
   contentTypeRequired = true,
 ): Transformer<Response, ParsedJsonResponse<T>> {
