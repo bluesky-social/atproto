@@ -1,11 +1,7 @@
 import { GenericStore, Key, Value } from '@atproto/caching'
-import { DB, DBObjectStore } from '@atproto/indexed-db'
+import Storage from '@react-native-async-storage/async-storage'
 
 const storeName = 'store'
-type Item<V> = {
-  value: V
-  createdAt: Date
-}
 
 export class IndexedDBStore<
   K extends Extract<IDBValidKey, Key>,
@@ -17,63 +13,51 @@ export class IndexedDBStore<
     protected maxAge = 600e3,
   ) {}
 
-  protected async run<R>(
-    mode: 'readonly' | 'readwrite',
-    fn: (s: DBObjectStore<Item<V>>) => R | Promise<R>,
-  ): Promise<R> {
-    const db = await DB.open<{ store: Item<V> }>(
-      this.dbName,
-      [
-        (db) => {
-          const store = db.createObjectStore(storeName)
-          store.createIndex('createdAt', 'createdAt', { unique: false })
-        },
-      ],
-      { durability: 'strict' },
-    )
-    try {
-      return await db.transaction([storeName], mode, (tx) =>
-        fn(tx.objectStore(storeName)),
-      )
-    } finally {
-      await db[Symbol.dispose]()
-    }
-  }
-
   async get(key: K): Promise<V | undefined> {
-    const item = await this.run('readonly', (store) => store.get(key))
+    const fullKey = `${storeName}.${this.dbName}.${key}`
+    const value = await Storage.getItem(fullKey)
 
-    if (!item) return undefined
+    if (!value) return undefined
 
-    const age = Date.now() - item.createdAt.getTime()
+    const createdAt = await Storage.getItem(`${storeName}.${fullKey}.createdAt`)
+    const age = Date.now() - Number(createdAt)
+
     if (age > this.maxAge) {
       await this.del(key)
       return undefined
     }
 
-    return item?.value
+    return value as any
   }
 
   async set(key: K, value: V): Promise<void> {
-    await this.run('readwrite', (store) => {
-      store.put({ value, createdAt: new Date() }, key)
-    })
+    const fullKey = `${storeName}.${this.dbName}.${key}`
+    await Storage.setItem(fullKey, value as string)
+    await Storage.setItem(
+      `${storeName}.${fullKey}.createdAt`,
+      Date.now().toString(),
+    )
   }
 
   async del(key: K): Promise<void> {
-    await this.run('readwrite', (store) => {
-      store.delete(key)
-    })
+    const fullKey = `${storeName}.${this.dbName}.${key}`
+    await Storage.removeItem(fullKey)
+    await Storage.removeItem(`${storeName}.${fullKey}.createdAt`)
   }
 
   async deleteOutdated() {
     const upperBound = new Date(Date.now() - this.maxAge)
-    const query = IDBKeyRange.upperBound(upperBound)
 
-    await this.run('readwrite', async (store) => {
-      const index = store.index('createdAt')
-      const keys = await index.getAllKeys(query)
-      for (const key of keys) store.delete(key)
-    })
+    const allKeys = await Storage.getAllKeys()
+
+    for (const key of allKeys) {
+      if (key.startsWith(`${storeName}.${this.dbName}.`)) {
+        const createdAt = await Storage.getItem(`${storeName}.${key}.createdAt`)
+        if (createdAt && new Date(Number(createdAt)) < upperBound) {
+          await Storage.removeItem(key)
+          await Storage.removeItem(`${storeName}.${key}.createdAt`)
+        }
+      }
+    }
   }
 }
