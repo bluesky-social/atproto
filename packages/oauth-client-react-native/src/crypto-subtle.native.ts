@@ -4,15 +4,11 @@ import {
   CryptoImplementation,
   DigestAlgorithm,
 } from '@atproto/oauth-client'
+import crypto from 'react-native-quick-crypto'
 
 export class CryptoSubtle implements CryptoImplementation {
-  constructor(private crypto: Crypto = globalThis.crypto) {
-    if (!crypto?.subtle) {
-      throw new Error(
-        'Crypto with CryptoSubtle is required. If running in a browser, make sure the current page is loaded over HTTPS.',
-      )
-    }
-  }
+  // @ts-ignore
+  constructor(private crypto: Crypto = globalThis.crypto) {}
 
   async createKey(algs: string[]): Promise<Key> {
     return WebcryptoKey.generate(undefined, algs)
@@ -20,7 +16,7 @@ export class CryptoSubtle implements CryptoImplementation {
 
   getRandomValues(byteLength: number): Uint8Array {
     const bytes = new Uint8Array(byteLength)
-    this.crypto.getRandomValues(bytes)
+    crypto.getRandomValues(bytes)
     return bytes
   }
 
@@ -28,14 +24,12 @@ export class CryptoSubtle implements CryptoImplementation {
     bytes: Uint8Array,
     algorithm: DigestAlgorithm,
   ): Promise<Uint8Array> {
-    const buffer = await this.crypto.subtle.digest(
-      digestAlgorithmToSubtle(algorithm),
-      bytes,
-    )
+    const buffer = crypto.createHash('sha256').digest()
     return new Uint8Array(buffer)
   }
 }
 
+// @ts-ignore
 function digestAlgorithmToSubtle({
   name,
 }: DigestAlgorithm): AlgorithmIdentifier {
