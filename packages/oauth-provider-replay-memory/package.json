@@ -31,6 +31,6 @@
     "tslib": "^2.6.2"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc --build tsconfig.json"
   }
 }
