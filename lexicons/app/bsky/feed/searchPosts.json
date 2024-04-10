@@ -16,7 +16,8 @@
           "sort": {
             "type": "string",
             "knownValues": ["top", "latest"],
-            "description": "Specifies the ranking order of results. Default behavior is 'latest'."
+            "default": "latest",
+            "description": "Specifies the ranking order of results."
           },
           "since": {
             "type": "string",
@@ -52,6 +53,12 @@
             "type": "string",
             "format": "language",
             "description": "Filter to posts with links (facet links or embeds) pointing to this URL. Server may apply URL normalization or fuzzy matching."
+          },
+          "tag": {
+            "type": "string",
+            "maxLength": 640,
+            "maxGraphemes": 64,
+            "description": "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix."
           },
           "limit": {
             "type": "integer",
