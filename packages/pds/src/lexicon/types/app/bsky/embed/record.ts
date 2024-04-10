@@ -62,6 +62,9 @@ export interface ViewRecord {
   /** The record data itself. */
   value: {}
   labels?: ComAtprotoLabelDefs.Label[]
+  replyCount?: number
+  repostCount?: number
+  likeCount?: number
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
