@@ -75,7 +75,7 @@ export class SessionGetter extends CachedGetter<string, Session> {
         isStale: (sessionId, { tokenSet }) => {
           return (
             tokenSet.expires_at != null &&
-            tokenSet.expires_at <
+            new Date(tokenSet.expires_at).getTime() <
               Date.now() +
                 // Add some lee way to ensure the token is not expired when it
                 // reaches the server.

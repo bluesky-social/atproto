@@ -28,7 +28,8 @@ export type TokenSet = {
   refresh_token?: string
   access_token: string
   token_type: OAuthTokenType
-  expires_at?: number
+  /** ISO Date */
+  expires_at?: string
 }
 
 export class OAuthServer {
@@ -95,7 +96,9 @@ export class OAuthServer {
         token_type: tokenResponse.token_type ?? 'Bearer',
         expires_at:
           typeof tokenResponse.expires_in === 'number'
-            ? Date.now() + tokenResponse.expires_in * 1000
+            ? new Date(
+                Date.now() + tokenResponse.expires_in * 1000,
+              ).toISOString()
             : undefined,
       }
     } catch (err) {
@@ -135,7 +138,9 @@ export class OAuthServer {
         refresh_token: tokenResponse.refresh_token,
         access_token: tokenResponse.access_token,
         token_type: tokenResponse.token_type ?? 'Bearer',
-        expires_at: Date.now() + (tokenResponse.expires_in ?? 60) * 1000,
+        expires_at: tokenResponse.expires_in
+          ? new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString()
+          : undefined,
       }
     } catch (err) {
       await this.revoke(tokenResponse.access_token)
