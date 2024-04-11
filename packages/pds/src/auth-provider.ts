@@ -3,9 +3,13 @@ import {
   AccessTokenType,
   AccountInfo,
   AccountStore,
+  Client,
+  ClientAuth,
+  ConsentRequiredError,
   Customization,
   DeviceId,
   DpopManagerOptions,
+  InvalidParametersError,
   Keyset,
   LoginCredentials,
   OAuthProvider,
@@ -48,6 +52,13 @@ export class AuthProvider extends OAuthProvider {
     customization,
     disableSsrf = false,
   }: AuthProviderOptions) {
+    // TODO: make allow listed client ids configurable
+    const isAllowListedClient = (clientId) => clientId === 'https://bsky.app/'
+
+    const isTrustableClient = (client: Client, clientAuth: ClientAuth) => {
+      return clientAuth.method !== 'none' || isAllowListedClient(client.id)
+    }
+
     super({
       issuer,
       keyset,
@@ -94,17 +105,28 @@ export class AuthProvider extends OAuthProvider {
       accessTokenType: AccessTokenType.id,
 
       onAuthorizationRequest: (parameters, { client, clientAuth }) => {
-        // ATPROTO extension: if the client is not "trustable", force the
-        // user to consent to the request. We do this to avoid
-        // unauthenticated clients from being able to silently
-        // re-authenticate users.
+        // ATPROTO extension: if the client is not trustable, force users to
+        // consent to authorization requests. We do this to avoid
+        // unauthenticated clients from being able to silently re-authenticate
+        // users.
 
-        // TODO: make allow listed client ids configurable
-        if (clientAuth.method === 'none' && client.id !== 'https://bsky.app/') {
-          // Prevent sso and require consent by default
-          if (!parameters.prompt || parameters.prompt === 'none') {
-            parameters.prompt = 'consent'
+        if (!isTrustableClient(client, clientAuth)) {
+          if (parameters.prompt === 'none') {
+            throw new ConsentRequiredError(
+              parameters,
+              'Public clients are not allowed to use silent-sign-on',
+            )
           }
+
+          if (parameters.scope?.includes('offline_access')) {
+            throw new InvalidParametersError(
+              parameters,
+              'Public clients are not allowed to request offline access',
+            )
+          }
+
+          // force "consent" for unauthenticated, untrusted clients
+          parameters.prompt = 'consent'
         }
       },
 
