@@ -324,7 +324,11 @@ export class Hydrator {
       feedGenState,
       labelerState,
     ] = await Promise.all([
-      this.feed.getPostAggregates(refs),
+      this.feed.getPostAggregates([
+        ...refs,
+        ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
+        ...postUrisLayer2.map(uriToRef),
+      ]),
       ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
@@ -842,4 +846,8 @@ const actionTakedownLabels = <T>(
       hydrationMap.set(key, null)
     }
   }
+}
+
+const uriToRef = (uri: string): ItemRef => {
+  return { uri }
 }
