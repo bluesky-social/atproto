@@ -15,7 +15,7 @@ const oauthFactory = new BrowserOAuthClientFactory({
     client_id: 'https://example.com',
     redirect_uris: ['https://example.com/cb'],
     grant_types: ['authorization_code', 'refresh_token'],
-    response_types: ['code', 'code id_token'],
+    response_types: ['code id_token', 'code'],
     scope: 'openid profile email phone offline_access',
     dpop_bound_access_tokens: true,
     application_type: 'web',
