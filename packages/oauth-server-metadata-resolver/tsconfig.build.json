@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig/node.json",
+  "extends": "../../tsconfig/isomorphic.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist"
