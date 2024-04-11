@@ -1,14 +1,24 @@
-import { OAuthClientId } from '@atproto/oauth-client-metadata'
+import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
+import { ClientAuth } from '../token/token-store.js'
 import { constantTime } from '../util/time.js'
-import { AccountInfo, AccountStore, LoginCredentials } from './account-store.js'
+import { AccountHooks } from './account-hooks.js'
+import {
+  Account,
+  AccountInfo,
+  AccountStore,
+  LoginCredentials,
+} from './account-store.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 
 export class AccountManager {
-  constructor(protected readonly store: AccountStore) {}
+  constructor(
+    protected readonly store: AccountStore,
+    protected readonly hooks: AccountHooks,
+  ) {}
 
   public async signIn(
     credentials: LoginCredentials,
@@ -31,10 +41,20 @@ export class AccountManager {
 
   public async addAuthorizedClient(
     deviceId: DeviceId,
-    sub: Sub,
-    clientId: OAuthClientId,
+    account: Account,
+    client: Client,
+    clientAuth: ClientAuth,
   ): Promise<void> {
-    await this.store.addAuthorizedClient(deviceId, sub, clientId)
+    if (this.hooks.onAccountAddAuthorizedClient) {
+      const shouldAdd = await this.hooks.onAccountAddAuthorizedClient(client, {
+        deviceId,
+        account,
+        clientAuth,
+      })
+      if (!shouldAdd) return
+    }
+
+    await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
   }
 
   public async list(deviceId: DeviceId): Promise<AccountInfo[]> {

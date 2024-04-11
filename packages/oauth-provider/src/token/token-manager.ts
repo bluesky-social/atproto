@@ -20,20 +20,15 @@ import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
-import { AuthorizationDetails } from '../parameters/authorization-details.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
-import { Awaitable } from '../util/awaitable.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../util/date.js'
 import { matchRedirectUri } from '../util/redirect-uri.js'
-import {
-  RefreshToken,
-  generateRefreshToken,
-  isRefreshToken,
-} from './refresh-token.js'
+import { generateRefreshToken, isRefreshToken } from './refresh-token.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
+import { TokenHooks } from './token-hooks.js'
 import {
   TokenId,
   generateTokenId,
@@ -48,61 +43,17 @@ import {
   VerifyTokenClaimsResult,
   verifyTokenClaims,
 } from './verify-token-claims.js'
-
-/**
- * @see {@link https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1 | RFC 6749 (OAuth2), Section 5.1}
- */
-export type TokenResponse = {
-  id_token?: string
-  access_token?: AccessToken
-  token_type?: TokenType
-  expires_in?: number
-  refresh_token?: RefreshToken
-  scope: string
-  authorization_details?: AuthorizationDetails
-
-  // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
-  // > The client MUST ignore unrecognized value names in the response.
-  [k: string]: unknown
-}
+import { TokenResponse } from './token-response.js'
 
 export type AuthenticateTokenIdResult = VerifyTokenClaimsResult & {
   tokenInfo: TokenInfo
 }
 
-/**
- * Allows enriching the authorization details with additional information
- * before the tokens are issued.
- *
- * @see {@link https://datatracker.ietf.org/doc/html/rfc9396 | RFC 9396}
- */
-export type AuthorizationDetailsHook = (
-  this: null,
-  data: {
-    client: Client
-    parameters: AuthorizationParameters
-    account: Account
-  },
-) => Awaitable<undefined | AuthorizationDetails>
-
-export type TokenResponseHook = (
-  this: null,
-  tokenResponse: TokenResponse,
-  data: {
-    client: Client
-    parameters: AuthorizationParameters
-    account: Account
-  },
-) => Awaitable<void>
-
 export class TokenManager {
   constructor(
     protected readonly store: TokenStore,
     protected readonly signer: Signer,
-    protected readonly hooks: {
-      onAuthorizationDetails?: AuthorizationDetailsHook
-      onTokenResponse?: TokenResponseHook
-    },
+    protected readonly hooks: TokenHooks,
     protected readonly accessTokenType: AccessTokenType,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}

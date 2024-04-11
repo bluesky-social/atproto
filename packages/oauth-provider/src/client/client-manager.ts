@@ -1,35 +1,20 @@
-import { Jwks, Keyset } from '@atproto/jwk'
-import {
-  OAuthClientId,
-  OAuthClientMetadata,
-} from '@atproto/oauth-client-metadata'
+import { Keyset } from '@atproto/jwk'
+import { OAuthClientId } from '@atproto/oauth-client-metadata'
 
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { OAuthError } from '../errors/oauth-error.js'
-import { Awaitable } from '../util/awaitable.js'
 import { ClientData } from './client-data.js'
+import { ClientHooks } from './client-hooks.js'
 import { ClientStore } from './client-store.js'
 import { parseRedirectUri } from './client-utils.js'
 import { Client } from './client.js'
-
-/**
- * Use this to alter, override or validate the client metadata & jwks returned
- * by the client store.
- *
- * @throws {InvalidClientMetadataError} if the metadata is invalid
- * @see {@link InvalidClientMetadataError}
- */
-export type ClientDataHook = (
-  clientId: OAuthClientId,
-  data: { metadata: OAuthClientMetadata; jwks?: Jwks },
-) => Awaitable<void>
 
 export class ClientManager {
   constructor(
     protected readonly store: ClientStore,
     protected readonly keyset: Keyset,
-    protected readonly hooks: { onClientData?: ClientDataHook },
+    protected readonly hooks: ClientHooks,
   ) {}
 
   /**

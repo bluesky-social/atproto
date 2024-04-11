@@ -24,7 +24,7 @@ export type DeviceAccountInfo = {
 }
 
 // Export all types needed to implement the AccountStore interface
-export type { Awaitable, Account, DeviceId, Sub }
+export type { Account, DeviceId, Sub }
 
 export type AccountInfo = {
   account: Account

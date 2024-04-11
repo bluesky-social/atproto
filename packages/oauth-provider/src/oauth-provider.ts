@@ -41,7 +41,7 @@ import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   ClientIdentification,
 } from './client/client-credentials.js'
-import { ClientDataHook, ClientManager } from './client/client-manager.js'
+import { ClientManager } from './client/client-manager.js'
 import { ClientStore, asClientStore } from './client/client-store.js'
 import { AuthEndpoint, Client } from './client/client.js'
 import { AUTH_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
@@ -57,6 +57,7 @@ import { LoginRequiredError } from './errors/login-required-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
+import { OAuthHooks } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Userinfo } from './oidc/userinfo.js'
 import {
@@ -79,10 +80,7 @@ import {
 } from './parameters/authorization-parameters.js'
 import { oidcPayload } from './parameters/oidc-payload.js'
 import { ReplayStore, asReplayStore } from './replay/replay-store.js'
-import {
-  AuthorizationRequestHook,
-  RequestManager,
-} from './request/request-manager.js'
+import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStore, isRequestStore } from './request/request-store.js'
 import { RequestUri, requestUriSchema } from './request/request-uri.js'
@@ -96,12 +94,8 @@ import {
 import { SessionManager } from './session/session-manager.js'
 import { SessionStore, asSessionStore } from './session/session-store.js'
 import { isTokenId } from './token/token-id.js'
-import {
-  AuthorizationDetailsHook,
-  TokenManager,
-  TokenResponse,
-  TokenResponseHook,
-} from './token/token-manager.js'
+import { TokenManager } from './token/token-manager.js'
+import { TokenResponse } from './token/token-response.js'
 import { TokenInfo, TokenStore, asTokenStore } from './token/token-store.js'
 import { TokenType } from './token/token-type.js'
 import {
@@ -117,6 +111,7 @@ import {
 } from './token/types.js'
 import { VerifyTokenClaimsOptions } from './token/verify-token-claims.js'
 import { dateToEpoch, dateToRelativeSeconds } from './util/date.js'
+import { Override } from './util/type.js'
 
 export type OAuthProviderStore = Partial<
   ClientStore &
@@ -134,46 +129,44 @@ export {
   type Handler,
   type OAuthServerMetadata,
 }
-export type OAuthProviderOptions = OAuthVerifierOptions & {
-  /**
-   * Maximum age a device/account session can be before requiring
-   * re-authentication. This can be overridden on a authorization request basis
-   * using the `max_age` parameter and on a client basis using the
-   * `default_max_age` client metadata.
-   */
-  defaultMaxAge?: number
+export type OAuthProviderOptions = Override<
+  OAuthVerifierOptions & OAuthHooks,
+  {
+    /**
+     * Maximum age a device/account session can be before requiring
+     * re-authentication. This can be overridden on a authorization request basis
+     * using the `max_age` parameter and on a client basis using the
+     * `default_max_age` client metadata.
+     */
+    defaultMaxAge?: number
 
-  /**
-   * Maximum age access & id tokens can be before requiring a refresh.
-   */
-  tokenMaxAge?: number
+    /**
+     * Maximum age access & id tokens can be before requiring a refresh.
+     */
+    tokenMaxAge?: number
 
-  /**
-   * Additional metadata to be included in the discovery document.
-   */
-  metadata?: CustomMetadata
+    /**
+     * Additional metadata to be included in the discovery document.
+     */
+    metadata?: CustomMetadata
 
-  onAuthorizationRequest?: AuthorizationRequestHook
-  onAuthorizationDetails?: AuthorizationDetailsHook
-  onClientData?: ClientDataHook
-  onTokenResponse?: TokenResponseHook
+    accountStore?: AccountStore
+    clientStore?: ClientStore
+    replayStore?: ReplayStore
+    requestStore?: RequestStore
+    sessionStore?: SessionStore
+    tokenStore?: TokenStore
 
-  accountStore?: AccountStore
-  clientStore?: ClientStore
-  replayStore?: ReplayStore
-  requestStore?: RequestStore
-  sessionStore?: SessionStore
-  tokenStore?: TokenStore
-
-  /**
-   * This will be used as the default store for all the stores. If a store is
-   * not provided, this store will be used instead. If the `store` does not
-   * implement a specific store, a runtime error will be thrown. Make sure that
-   * this store implements all the interfaces not provided in the other
-   * `<name>Store` options.
-   */
-  store?: OAuthProviderStore
-}
+    /**
+     * This will be used as the default store for all the stores. If a store is
+     * not provided, this store will be used instead. If the `store` does not
+     * implement a specific store, a runtime error will be thrown. Make sure that
+     * this store implements all the interfaces not provided in the other
+     * `<name>Store` options.
+     */
+    store?: OAuthProviderStore
+  }
+>
 
 export class OAuthProvider extends OAuthVerifier {
   public readonly metadata: OAuthServerMetadata
@@ -194,11 +187,6 @@ export class OAuthProvider extends OAuthVerifier {
     store,
     metadata,
 
-    onAuthorizationRequest,
-    onAuthorizationDetails,
-    onClientData,
-    onTokenResponse,
-
     accountStore = asAccountStore(store),
     clientStore = asClientStore(store),
     replayStore = asReplayStore(store),
@@ -208,34 +196,27 @@ export class OAuthProvider extends OAuthVerifier {
     sessionStore = asSessionStore(store),
     tokenStore = asTokenStore(store),
 
-    ...superOptions
+    ...rest
   }: OAuthProviderOptions) {
-    super({ replayStore, ...superOptions })
-
-    const hooks = {
-      onAuthorizationRequest,
-      onAuthorizationDetails,
-      onClientData,
-      onTokenResponse,
-    }
+    super({ replayStore, ...rest })
 
     this.defaultMaxAge = defaultMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
 
     this.sessionStore = sessionStore
 
-    this.accountManager = new AccountManager(accountStore)
-    this.clientManager = new ClientManager(clientStore, this.keyset, hooks)
+    this.accountManager = new AccountManager(accountStore, rest)
+    this.clientManager = new ClientManager(clientStore, this.keyset, rest)
     this.requestManager = new RequestManager(
       requestStore,
       this.signer,
       this.metadata,
-      hooks,
+      rest,
     )
     this.tokenManager = new TokenManager(
       tokenStore,
       this.signer,
-      hooks,
+      rest,
       this.accessTokenType,
       tokenMaxAge,
     )
@@ -454,7 +435,7 @@ export class OAuthProvider extends OAuthVerifier {
         )
 
         if (parameters.prompt === 'none') {
-          const ssoSessions = sessions.filter((s) => s.ssoAllowed)
+          const ssoSessions = sessions.filter((s) => s.matchesHint)
           if (ssoSessions.length > 1) {
             throw new AccountSelectionRequiredError(parameters)
           }
@@ -479,6 +460,25 @@ export class OAuthProvider extends OAuthVerifier {
           )
 
           return { issuer, client, parameters, redirect }
+        }
+
+        // Automatic SSO when a did was provided
+        if (parameters.prompt == null && parameters.login_hint != null) {
+          const ssoSessions = sessions.filter((s) => s.matchesHint)
+          if (ssoSessions.length === 1) {
+            const ssoSession = ssoSessions[0]!
+            if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
+              const redirect = await this.requestManager.setAuthorized(
+                client,
+                uri,
+                deviceId,
+                ssoSession.account,
+                ssoSession.info,
+              )
+
+              return { issuer, client, parameters, redirect }
+            }
+          }
         }
 
         return { issuer, client, parameters, authorize: { uri, sessions } }
@@ -513,10 +513,11 @@ export class OAuthProvider extends OAuthVerifier {
       account: Account
       info: DeviceAccountInfo
 
-      ssoAllowed: boolean
       selected: boolean
       loginRequired: boolean
       consentRequired: boolean
+
+      matchesHint: boolean
     }[]
   > {
     const accounts = await this.accountManager.list(deviceId)
@@ -536,10 +537,8 @@ export class OAuthProvider extends OAuthVerifier {
         parameters.prompt === 'consent' ||
         !info.authorizedClients.includes(client.id),
 
-      ssoAllowed:
-        parameters.prompt === 'none' &&
-        (parameters.login_hint === account.sub ||
-          parameters.login_hint == null),
+      matchesHint:
+        parameters.login_hint === account.sub || parameters.login_hint == null,
     }))
   }
 
@@ -560,7 +559,7 @@ export class OAuthProvider extends OAuthVerifier {
     const client = await this.clientManager.getClient(clientId)
 
     try {
-      const { parameters } = await this.requestManager.get(
+      const { parameters, clientAuth } = await this.requestManager.get(
         uri,
         clientId,
         deviceId,
@@ -587,8 +586,9 @@ export class OAuthProvider extends OAuthVerifier {
 
         await this.accountManager.addAuthorizedClient(
           deviceId,
-          account.sub,
-          client.id,
+          account,
+          client,
+          clientAuth,
         )
 
         return { issuer, client, parameters, redirect }
