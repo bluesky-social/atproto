@@ -37,7 +37,7 @@ export class OAuthClient {
       expired:
         tokenSet.expires_at == null
           ? undefined
-          : tokenSet.expires_at < Date.now() - 5e3,
+          : new Date(tokenSet.expires_at).getTime() < Date.now() - 5e3,
       scope: tokenSet.scope,
       iss: tokenSet.iss,
       aud: tokenSet.aud,

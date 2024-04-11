@@ -9,7 +9,7 @@ import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 
 type Item<V> = {
   value: V
-  expiresAt: null | number
+  expiresAt?: string // ISO Date
 }
 
 type EncodedKey = {
@@ -123,7 +123,7 @@ export class BrowserOAuthDatabase {
     }: {
       encode: (value: V) => Schema[N]['value'] | PromiseLike<Schema[N]['value']>
       decode: (encoded: Schema[N]['value']) => V | PromiseLike<V>
-      expiresAt: (value: V) => null | number
+      expiresAt: (value: V) => null | Date
     },
   ): DatabaseStore<V> {
     return {
@@ -135,7 +135,7 @@ export class BrowserOAuthDatabase {
         if (item === undefined) return undefined
 
         // Too old (delete)
-        if (item.expiresAt != null && item.expiresAt < Date.now()) {
+        if (item.expiresAt != null && new Date(item.expiresAt) < new Date()) {
           await this.run(name, 'readwrite', (store) => store.delete(key))
           return undefined
         }
@@ -155,7 +155,7 @@ export class BrowserOAuthDatabase {
         // Create encoded item record
         const item = {
           value: await encode(value),
-          expiresAt: expiresAt(value),
+          expiresAt: expiresAt(value)?.toISOString(),
         } as Schema[N]
 
         // Store item record
@@ -172,7 +172,9 @@ export class BrowserOAuthDatabase {
   getSessionStore(): DatabaseStore<Session> {
     return this.createStore('session', {
       expiresAt: ({ tokenSet }) =>
-        tokenSet.refresh_token ? null : tokenSet.expires_at ?? null,
+        tokenSet.refresh_token || tokenSet.expires_at == null
+          ? null
+          : new Date(tokenSet.expires_at),
       encode: ({ dpopKey, ...session }) => ({
         ...session,
         dpopKey: encodeKey(dpopKey),
@@ -186,7 +188,7 @@ export class BrowserOAuthDatabase {
 
   getStateStore(): DatabaseStore<InternalStateData> {
     return this.createStore('state', {
-      expiresAt: (_value) => Date.now() + 10 * 60e3,
+      expiresAt: (_value) => new Date(Date.now() + 10 * 60e3),
       encode: ({ dpopKey, ...session }) => ({
         ...session,
         dpopKey: encodeKey(dpopKey),
@@ -200,7 +202,7 @@ export class BrowserOAuthDatabase {
 
   getPopupStore(): DatabaseStore<PopupStateData> {
     return this.createStore('popup', {
-      expiresAt: (_value) => Date.now() + 600e3,
+      expiresAt: (_value) => new Date(Date.now() + 600e3),
       encode: (value) => value,
       decode: (encoded) => encoded,
     })
@@ -208,7 +210,7 @@ export class BrowserOAuthDatabase {
 
   getDpopNonceCache(): undefined | DatabaseStore<string> {
     return this.createStore('dpopNonceCache', {
-      expiresAt: (_value) => Date.now() + 600e3,
+      expiresAt: (_value) => new Date(Date.now() + 600e3),
       encode: (value) => value,
       decode: (encoded) => encoded,
     })
@@ -216,7 +218,7 @@ export class BrowserOAuthDatabase {
 
   getDidCache(): undefined | DatabaseStore<DidDocument> {
     return this.createStore('didCache', {
-      expiresAt: (_value) => Date.now() + 60e3,
+      expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
       decode: (encoded) => encoded,
     })
@@ -224,7 +226,7 @@ export class BrowserOAuthDatabase {
 
   getHandleCache(): undefined | DatabaseStore<ResolvedHandle> {
     return this.createStore('handleCache', {
-      expiresAt: (_value) => Date.now() + 60e3,
+      expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
       decode: (encoded) => encoded,
     })
@@ -232,7 +234,7 @@ export class BrowserOAuthDatabase {
 
   getMetadataCache(): undefined | DatabaseStore<OAuthServerMetadata> {
     return this.createStore('metadataCache', {
-      expiresAt: (_value) => Date.now() + 60e3,
+      expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
       decode: (encoded) => encoded,
     })
