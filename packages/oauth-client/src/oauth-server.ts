@@ -1,9 +1,9 @@
 import { GenericStore } from '@atproto/caching'
 import {
   Fetch,
+  Json,
   fetchFailureHandler,
   fetchJsonProcessor,
-  fetchOkProcessor,
 } from '@atproto/fetch'
 import { dpopFetchWrapper } from '@atproto/fetch-dpop'
 import { Jwt, Key, Keyset } from '@atproto/jwk'
@@ -12,6 +12,7 @@ import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 import { FALLBACK_ALG } from './constants.js'
 import { CryptoWrapper } from './crypto-wrapper.js'
 import { OAuthResolver } from './oauth-resolver.js'
+import { OAuthResponseError } from './oauth-response-error.js'
 import {
   OAuthEndpointName,
   OAuthTokenResponse,
@@ -33,7 +34,7 @@ export type TokenSet = {
 }
 
 export class OAuthServer {
-  readonly dpopFetch: (request: Request) => Promise<Response>
+  private readonly dpopFetch: (request: Request) => Promise<Response>
 
   constructor(
     readonly dpopKey: Key,
@@ -49,15 +50,20 @@ export class OAuthServer {
       fetch,
       iss: this.clientMetadata.client_id,
       key: dpopKey,
-      alg: negotiateAlg(
-        dpopKey,
-        serverMetadata.dpop_signing_alg_values_supported,
-      ),
+      alg: this.dpopAlg,
       sha256: async (v) => crypto.sha256(v),
       nonceCache: dpopNonceCache,
+      isAuthServer: true,
     })
 
     this.dpopFetch = (request) => dpopFetch(request).catch(fetchFailureHandler)
+  }
+
+  get dpopAlg() {
+    return negotiateAlg(
+      this.dpopKey,
+      this.serverMetadata.dpop_signing_alg_values_supported,
+    )
   }
 
   async revoke(token: string) {
@@ -69,7 +75,7 @@ export class OAuthServer {
   }
 
   async exchangeCode(code: string, verifier?: string): Promise<TokenSet> {
-    const { json: tokenResponse } = await this.request('token', {
+    const tokenResponse = await this.request('token', {
       grant_type: 'authorization_code',
       redirect_uri: this.clientMetadata.redirect_uris[0]!,
       code,
@@ -113,7 +119,7 @@ export class OAuthServer {
       throw new Error('No refresh token available')
     }
 
-    const { json: tokenResponse } = await this.request('token', {
+    const tokenResponse = await this.request('token', {
       grant_type: 'refresh_token',
       refresh_token: tokenSet.refresh_token,
     })
@@ -170,34 +176,33 @@ export class OAuthServer {
   ) {
     const url = this.serverMetadata[`${endpoint}_endpoint`]
     if (!url) throw new Error(`No ${endpoint} endpoint available`)
-    const auth = await this.buildClientAuth(endpoint)
 
+    const auth = await this.buildClientAuth(endpoint)
     const request = new Request(url, {
       method: 'POST',
       headers: { ...auth.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...payload, ...auth.payload }),
     })
 
-    const response = await this.dpopFetch(request)
-      .then(fetchOkProcessor())
-      .then(
-        fetchJsonProcessor<
-          E extends 'pushed_authorization_request'
-            ? { request_uri: string }
-            : E extends 'token'
-              ? OAuthTokenResponse
-              : unknown
-        >(),
-      )
+    const { response, json } =
+      await this.dpopFetch(request).then(fetchJsonProcessor())
 
-    // TODO: validate using zod ?
-    if (endpoint === 'token') {
-      if (!response.json['access_token']) {
-        throw new TypeError('No access token in token response')
+    if (response.ok) {
+      // TODO: parse using zod
+      if (endpoint === 'token') {
+        if (typeof json?.['access_token'] !== 'string') {
+          throw new TypeError('No access token in token response')
+        }
       }
-    }
 
-    return response
+      return json as E extends 'pushed_authorization_request'
+        ? { request_uri: string }
+        : E extends 'token'
+          ? OAuthTokenResponse
+          : Json
+    } else {
+      throw new OAuthResponseError(response, json)
+    }
   }
 
   async buildClientAuth(endpoint: OAuthEndpointName): Promise<{

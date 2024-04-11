@@ -1,6 +1,7 @@
 import { GenericStore } from '@atproto/caching'
 import { Key } from '@atproto/jwk'
 import { FALLBACK_ALG } from './constants.js'
+import { OAuthCallbackError } from './oauth-callback-error.js'
 import { OAuthClient } from './oauth-client.js'
 import {
   OAuthServerFactory,
@@ -13,7 +14,6 @@ import {
   OAuthResponseType,
 } from './oauth-types.js'
 import { Session, SessionGetter } from './session-getter.js'
-import { OAuthCallbackError } from './oauth-callback-error.js'
 
 export type InternalStateData = {
   iss: string
@@ -113,7 +113,7 @@ export class OAuthClientFactory {
 
     if (metadata.pushed_authorization_request_endpoint) {
       const server = await this.serverFactory.fromMetadata(metadata, dpopKey)
-      const { json } = await server.request(
+      const parResponse = await server.request(
         'pushed_authorization_request',
         parameters,
       )
@@ -123,7 +123,7 @@ export class OAuthClientFactory {
         'client_id',
         this.clientMetadata.client_id,
       )
-      authorizationUrl.searchParams.set('request_uri', json.request_uri)
+      authorizationUrl.searchParams.set('request_uri', parResponse.request_uri)
       return authorizationUrl
     } else if (metadata.require_pushed_authorization_requests) {
       throw new Error(
@@ -154,8 +154,6 @@ export class OAuthClientFactory {
     client: OAuthClient
     state?: string
   }> {
-    // TODO: better errors
-
     const responseJwt = params.get('response')
     if (responseJwt != null) {
       // https://openid.net/specs/oauth-v2-jarm.html
