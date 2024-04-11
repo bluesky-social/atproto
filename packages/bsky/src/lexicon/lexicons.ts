@@ -4757,6 +4757,12 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.feed.defs#reasonRepost'],
           },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context provided by feed generator that may be passed back alongside interactions.',
+            maxLength: 2000,
+          },
         },
       },
       replyRef: {
@@ -4913,6 +4919,9 @@ export const schemaDict = {
             type: 'integer',
             minimum: 0,
           },
+          acceptsInteractions: {
+            type: 'boolean',
+          },
           labels: {
             type: 'array',
             items: {
@@ -4951,6 +4960,12 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.feed.defs#skeletonReasonRepost'],
           },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context that will be passed through to client and may be passed to feed generator back alongside interactions.',
+            maxLength: 2000,
+          },
         },
       },
       skeletonReasonRepost: {
@@ -4985,6 +5000,89 @@ export const schemaDict = {
             },
           },
         },
+      },
+      interaction: {
+        type: 'object',
+        properties: {
+          item: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          event: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.feed.defs#requestLess',
+              'app.bsky.feed.defs#requestMore',
+              'app.bsky.feed.defs#clickthroughItem',
+              'app.bsky.feed.defs#clickthroughAuthor',
+              'app.bsky.feed.defs#clickthroughReposter',
+              'app.bsky.feed.defs#clickthroughEmbed',
+              'app.bsky.feed.defs#interactionSeen',
+              'app.bsky.feed.defs#interactionLike',
+              'app.bsky.feed.defs#interactionRepost',
+              'app.bsky.feed.defs#interactionReply',
+              'app.bsky.feed.defs#interactionQuote',
+              'app.bsky.feed.defs#interactionShare',
+            ],
+          },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton.',
+            maxLength: 2000,
+          },
+        },
+      },
+      requestLess: {
+        type: 'token',
+        description:
+          'Request that less content like the given feed item be shown in the feed',
+      },
+      requestMore: {
+        type: 'token',
+        description:
+          'Request that more content like the given feed item be shown in the feed',
+      },
+      clickthroughItem: {
+        type: 'token',
+        description: 'User clicked through to the feed item',
+      },
+      clickthroughAuthor: {
+        type: 'token',
+        description: 'User clicked through to the author of the feed item',
+      },
+      clickthroughReposter: {
+        type: 'token',
+        description: 'User clicked through to the reposter of the feed item',
+      },
+      clickthroughEmbed: {
+        type: 'token',
+        description:
+          'User clicked through to the embedded content of the feed item',
+      },
+      interactionSeen: {
+        type: 'token',
+        description: 'Feed item was seen by user',
+      },
+      interactionLike: {
+        type: 'token',
+        description: 'User liked the feed item',
+      },
+      interactionRepost: {
+        type: 'token',
+        description: 'User reposted the feed item',
+      },
+      interactionReply: {
+        type: 'token',
+        description: 'User replied to the feed item',
+      },
+      interactionQuote: {
+        type: 'token',
+        description: 'User quoted the feed item',
+      },
+      interactionShare: {
+        type: 'token',
+        description: 'User shared the feed item',
       },
     },
   },
@@ -5082,6 +5180,11 @@ export const schemaDict = {
               type: 'blob',
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
+            },
+            acceptsInteractions: {
+              type: 'boolean',
+              description:
+                'Declaration that a feed accepts feedback interactions from a client through app.bsky.feed.sendInteractions',
             },
             labels: {
               type: 'union',
@@ -6106,6 +6209,40 @@ export const schemaDict = {
             name: 'BadQueryString',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedSendInteractions: {
+    lexicon: 1,
+    id: 'app.bsky.feed.sendInteractions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Send information about interactions with feed items back to the feed generator that served them.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['interactions'],
+            properties: {
+              interactions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#interaction',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -7950,6 +8087,7 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
+  AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',
   AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
