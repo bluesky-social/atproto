@@ -1,13 +1,29 @@
+import { fetchFailureHandler } from '@atproto/fetch'
+import { dpopFetchWrapper } from '@atproto/fetch-dpop'
 import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthServer, TokenSet } from './oauth-server.js'
 import { SessionGetter } from './session-getter.js'
 
 export class OAuthClient {
+  readonly dpopFetch: (request: Request) => Promise<Response>
+
   constructor(
     private readonly server: OAuthServer,
     public readonly sessionId: string,
     private readonly sessionGetter: SessionGetter,
-  ) {}
+  ) {
+    const dpopFetch = dpopFetchWrapper({
+      fetch,
+      iss: server.clientMetadata.client_id,
+      key: server.dpopKey,
+      alg: server.dpopAlg,
+      sha256: async (v) => server.crypto.sha256(v),
+      nonceCache: server.dpopNonceCache,
+      isAuthServer: false,
+    })
+
+    this.dpopFetch = (request) => dpopFetch(request).catch(fetchFailureHandler)
+  }
 
   /**
    * @param refresh See {@link SessionGetter.getSession}
@@ -70,7 +86,7 @@ export class OAuthClient {
       headers,
     })
 
-    return this.server.dpopFetch(request).catch((err) => {
+    return this.dpopFetch(request).catch((err) => {
       if (!refreshCredentials && isTokenExpiredError(err)) {
         return this.request(pathname, init, true)
       }

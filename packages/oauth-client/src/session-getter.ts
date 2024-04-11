@@ -1,6 +1,6 @@
 import { CachedGetter, GenericStore } from '@atproto/caching'
-import { FetchResponseError } from '@atproto/fetch'
 import { Key } from '@atproto/jwk'
+import { OAuthResponseError } from './oauth-response-error.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { TokenSet } from './oauth-server.js'
 
@@ -122,19 +122,9 @@ export class SessionGetter extends CachedGetter<string, Session> {
 }
 
 async function isRefreshDeniedError(err: unknown) {
-  if (err instanceof FetchResponseError && err.statusCode === 400) {
-    if (err.response?.bodyUsed === false) {
-      try {
-        const json = await err.response.clone().json()
-        return (
-          json.error === 'invalid_request' &&
-          json.error_description === 'Invalid refresh token'
-        )
-      } catch {
-        // falls through
-      }
-    }
-  }
-
-  return false
+  return (
+    err instanceof OAuthResponseError &&
+    err.status === 400 &&
+    err.error === 'invalid_grant'
+  )
 }
