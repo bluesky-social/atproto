@@ -329,30 +329,42 @@ export class OAuthProvider extends OAuthVerifier {
     input: PushedAuthorizationRequest,
     dpopJkt: null | string,
   ) {
-    const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(
-      client,
-      'pushed_authorization_request',
-      input,
-    )
-
-    // TODO (?) should we allow using signed JAR for client authentication?
-    const { payload: parameters } =
-      'request' in input // Handle JAR
-        ? await this.decodeJAR(client, input)
-        : { payload: input }
-
-    const { uri, expiresAt } =
-      await this.requestManager.pushedAuthorizationRequest(
+    try {
+      const client = await this.clientManager.getClient(input.client_id)
+      const clientAuth = await this.authenticateClient(
         client,
-        clientAuth,
-        parameters,
-        dpopJkt,
+        'pushed_authorization_request',
+        input,
       )
 
-    return {
-      request_uri: uri,
-      expires_in: dateToRelativeSeconds(expiresAt),
+      // TODO (?) should we allow using signed JAR for client authentication?
+      const { payload: parameters } =
+        'request' in input // Handle JAR
+          ? await this.decodeJAR(client, input)
+          : { payload: input }
+
+      const { uri, expiresAt } =
+        await this.requestManager.pushedAuthorizationRequest(
+          client,
+          clientAuth,
+          parameters,
+          dpopJkt,
+        )
+
+      return {
+        request_uri: uri,
+        expires_in: dateToRelativeSeconds(expiresAt),
+      }
+    } catch (err) {
+      // https://datatracker.ietf.org/doc/html/rfc9126#section-2.3-1
+      // > Since initial processing of the pushed authorization request does not
+      // > involve resource owner interaction, error codes related to user
+      // > interaction, such as consent_required defined by [OIDC], are never
+      // > returned.
+      if (err instanceof AccessDeniedError) {
+        throw new InvalidRequestError(err.error_description, err)
+      }
+      throw err
     }
   }
 
