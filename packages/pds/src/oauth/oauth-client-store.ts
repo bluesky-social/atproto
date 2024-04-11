@@ -34,8 +34,8 @@ function loopbackMetadata({ href }: URL): Partial<OAuthClientMetadata> {
     client_name: 'Loopback ATPROTO client',
     client_uri: href,
     response_types: ['code', 'code id_token'],
-    grant_types: ['authorization_code', 'refresh_token'],
-    scope: 'openid profile offline_access',
+    grant_types: ['authorization_code'],
+    scope: 'openid profile',
     redirect_uris: ['127.0.0.1', '[::1]'].map(
       (ip) => Object.assign(new URL(href), { hostname: ip }).href,
     ) as [string, string],
