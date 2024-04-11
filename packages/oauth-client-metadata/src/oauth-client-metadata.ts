@@ -13,45 +13,51 @@ export const endpointAuthMethod = z.enum([
   'tls_client_auth',
 ])
 
+export const oauthResponseTypeSchema = z.enum([
+  // OAuth
+  'code',
+  'token',
+
+  // OpenID
+  'none',
+  'code id_token token',
+  'code id_token',
+  'code token',
+  'id_token token',
+  'id_token',
+])
+
+export type OAuthResponseType = z.infer<typeof oauthResponseTypeSchema>
+
+export const oauthGrantTypeSchema = z.enum([
+  'authorization_code',
+  'implicit',
+  'refresh_token',
+  'password', // Not part of OAuth 2.1
+  'client_credentials',
+  'urn:ietf:params:oauth:grant-type:jwt-bearer',
+  'urn:ietf:params:oauth:grant-type:saml2-bearer',
+])
+
+export type OAuthGrantType = z.infer<typeof oauthGrantTypeSchema>
+
 // https://openid.net/specs/openid-connect-registration-1_0.html
 // https://datatracker.ietf.org/doc/html/rfc7591
 export const oauthClientMetadataSchema = z
   .object({
     redirect_uris: z.array(z.string().url()).nonempty().readonly(),
     response_types: z
-      .array(
-        z.enum([
-          // OAuth
-          'code',
-          'token',
-
-          // OpenID
-          'none',
-          'code id_token token',
-          'code id_token',
-          'code token',
-          'id_token token',
-          'id_token',
-        ]),
-      )
+      .array(oauthResponseTypeSchema)
       .nonempty()
+      // > If omitted, the default is that the client will use only the "code"
+      // > response type.
       .default(['code'])
       .readonly(),
     grant_types: z
-      .array(
-        z.enum([
-          'authorization_code',
-          'implicit',
-          'refresh_token',
-          'password',
-          'client_credentials',
-          'urn:ietf:params:oauth:grant-type:jwt-bearer',
-          'urn:ietf:params:oauth:grant-type:saml2-bearer',
-        ]),
-      )
+      .array(oauthGrantTypeSchema)
       .nonempty()
-      // "If omitted, the default behavior is that the client will use only the
-      // "authorization_code" Grant Type." [RFC7591]
+      // > If omitted, the default behavior is that the client will use only the
+      // > "authorization_code" Grant Type.
       .default(['authorization_code'])
       .readonly(),
     scope: z.string().optional(),
