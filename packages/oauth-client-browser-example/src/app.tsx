@@ -9,8 +9,8 @@ export const oauthFactory = new BrowserOAuthClientFactory({
   clientMetadata: oauthClientMetadataSchema.parse({
     client_id: 'http://localhost/',
     redirect_uris: ['http://127.0.0.1:5173/'],
+    response_types: ['code id_token', 'code'],
   }),
-  responseType: 'code id_token',
   responseMode: 'fragment',
   plcDirectoryUrl: 'http://localhost:2582', // dev-env
   atprotoLexiconUrl: 'http://localhost:2584', // dev-env (bsky appview)
