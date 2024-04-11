@@ -60,6 +60,11 @@
             },
             "description": "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix. Multiple tags can be specified, with 'AND' matching."
           },
+          "viewer": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the account making the request (not included for public/unauthenticated queries). Used for 'from:me' queries."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
