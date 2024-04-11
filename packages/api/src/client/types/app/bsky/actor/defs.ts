@@ -128,6 +128,23 @@ export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
 }
 
+export interface SkeletonActor {
+  did: string
+  [k: string]: unknown
+}
+
+export function isSkeletonActor(v: unknown): v is SkeletonActor {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#skeletonActor'
+  )
+}
+
+export function validateSkeletonActor(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#skeletonActor', v)
+}
+
 export type Preferences = (
   | AdultContentPref
   | ContentLabelPref

@@ -3799,6 +3799,16 @@ export const schemaDict = {
           },
         },
       },
+      skeletonActor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
       preferences: {
         type: 'array',
         items: {
