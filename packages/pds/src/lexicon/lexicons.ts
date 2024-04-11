@@ -4561,6 +4561,15 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          replyCount: {
+            type: 'integer',
+          },
+          repostCount: {
+            type: 'integer',
+          },
+          likeCount: {
+            type: 'integer',
+          },
           embeds: {
             type: 'array',
             items: {

@@ -44,6 +44,20 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.feed.searchPosts({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res = await ctx.appviewAgent.api.app.bsky.feed.searchPosts(
+        request.params,
+        await ctx.appviewAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {

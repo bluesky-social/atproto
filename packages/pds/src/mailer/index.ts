@@ -60,7 +60,7 @@ export class ServerMailer {
 
   private async sendTemplate<K extends keyof typeof templates>(
     templateName: K,
-    params: Parameters<typeof templates[K]>[0],
+    params: Parameters<(typeof templates)[K]>[0],
     mailOpts: Mail.Options,
   ) {
     const html = templates[templateName]({

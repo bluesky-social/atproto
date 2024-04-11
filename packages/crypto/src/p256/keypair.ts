@@ -18,7 +18,10 @@ export class P256Keypair implements Keypair {
   jwtAlg = P256_JWT_ALG
   private publicKey: Uint8Array
 
-  constructor(private privateKey: Uint8Array, private exportable: boolean) {
+  constructor(
+    private privateKey: Uint8Array,
+    private exportable: boolean,
+  ) {
     this.publicKey = p256.getPublicKey(privateKey)
   }
 

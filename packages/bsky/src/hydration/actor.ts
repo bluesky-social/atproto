@@ -61,13 +61,16 @@ export class ActorHydrator {
     const res = handles.length
       ? await this.dataplane.getDidsByHandles({ handles })
       : { dids: [] }
-    const didByHandle = handles.reduce((acc, cur, i) => {
-      const did = res.dids[i]
-      if (did && did.length > 0) {
-        return acc.set(cur, did)
-      }
-      return acc
-    }, new Map() as Map<string, string>)
+    const didByHandle = handles.reduce(
+      (acc, cur, i) => {
+        const did = res.dids[i]
+        if (did && did.length > 0) {
+          return acc.set(cur, did)
+        }
+        return acc
+      },
+      new Map() as Map<string, string>,
+    )
     return handleOrDids.map((id) =>
       id.startsWith('did:') ? id : didByHandle.get(id),
     )

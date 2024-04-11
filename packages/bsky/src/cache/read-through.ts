@@ -14,7 +14,10 @@ export type CacheOptions<T> = {
 }
 
 export class ReadThroughCache<T> {
-  constructor(public redis: Redis, public opts: CacheOptions<T>) {}
+  constructor(
+    public redis: Redis,
+    public opts: CacheOptions<T>,
+  ) {}
 
   private async _fetchMany(keys: string[]): Promise<Record<string, T | null>> {
     let result: Record<string, T | null> = {}
@@ -142,10 +145,13 @@ export class ReadThroughCache<T> {
 }
 
 const removeNulls = <T>(obj: Record<string, T | null>): Record<string, T> => {
-  return Object.entries(obj).reduce((acc, [key, val]) => {
-    if (val !== null) {
-      acc[key] = val
-    }
-    return acc
-  }, {} as Record<string, T>)
+  return Object.entries(obj).reduce(
+    (acc, [key, val]) => {
+      if (val !== null) {
+        acc[key] = val
+      }
+      return acc
+    },
+    {} as Record<string, T>,
+  )
 }

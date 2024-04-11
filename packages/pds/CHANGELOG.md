@@ -1,5 +1,18 @@
 # @atproto/pds
 
+## 0.4.13
+
+### Patch Changes
+
+- Updated dependencies [[`cd4fcc709`](https://github.com/bluesky-social/atproto/commit/cd4fcc709fe8d725a4af769ce21f53711fe5622a)]:
+  - @atproto/xrpc-server@0.5.1
+
+## 0.4.12
+
+### Patch Changes
+
+- [`d77ac35d4`](https://github.com/bluesky-social/atproto/commit/d77ac35d484925d90169e6a1047cddfbe90923bc) Thanks [@devinivy](https://github.com/devinivy)! - Fix to blob deletion w/ disk store (see #2381)
+
 ## 0.4.11
 
 ### Patch Changes

@@ -60,7 +60,10 @@ export class AuthVerifier {
   triage: string[]
   private adminPassword: string
 
-  constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
+  constructor(
+    public idResolver: IdResolver,
+    opts: AuthVerifierOpts,
+  ) {
     this.serviceDid = opts.serviceDid
     this.admins = opts.admins
     this.moderators = opts.moderators

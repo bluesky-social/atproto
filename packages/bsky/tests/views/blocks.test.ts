@@ -516,6 +516,7 @@ describe('pds views with blocking', () => {
   it('applies third-party blocking rules in feeds.', async () => {
     // alice follows carol and dan, block exists between carol and dan.
     const replyBlockedUri = carolReplyToDan.ref.uriStr
+    const replyBlockedParentUri = sc.posts[dan][0].ref.uriStr
     const embedBlockedUri = sc.posts[dan][1].ref.uriStr
     const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
@@ -524,8 +525,16 @@ describe('pds views with blocking', () => {
     const replyBlockedPost = timeline.feed.find(
       (item) => item.post.uri === replyBlockedUri,
     )
-    assert(replyBlockedPost)
-    expect(replyBlockedPost.reply?.parent).toBeUndefined()
+    expect(replyBlockedPost?.reply).toMatchObject({
+      root: {
+        $type: 'app.bsky.feed.defs#blockedPost',
+        uri: replyBlockedParentUri,
+      },
+      parent: {
+        $type: 'app.bsky.feed.defs#blockedPost',
+        uri: replyBlockedParentUri,
+      },
+    })
     const embedBlockedPost = timeline.feed.find(
       (item) => item.post.uri === embedBlockedUri,
     )
