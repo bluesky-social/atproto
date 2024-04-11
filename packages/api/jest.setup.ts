@@ -5,7 +5,7 @@ expect.extend({
   toBeModerationResult(
     actual: ModerationUI,
     expected: ModerationTestSuiteResultFlag[] | undefined,
-    context: string = '',
+    context = '',
     stringifiedResult: string | undefined = undefined,
     _ignoreCause = false,
   ) {
