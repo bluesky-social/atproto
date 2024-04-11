@@ -1,8 +1,9 @@
 import { Jwt } from '@atproto/jwk'
 import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
 
+export type { OAuthResponseType } from '@atproto/oauth-client-metadata'
+
 export type OAuthResponseMode = 'query' | 'fragment' | 'form_post'
-export type OAuthResponseType = 'code' | 'code id_token'
 
 export type OAuthEndpointName =
   | 'token'
