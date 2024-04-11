@@ -1,40 +1,36 @@
 import { z } from 'zod'
 
+export const oauthServerIssuerSchema = z
+  .string()
+  .url()
+  .superRefine((value, ctx) => {
+    const url = new URL(value)
+
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Issuer must be an HTTP or HTTPS URL',
+      })
+      return false
+    }
+
+    if (value !== `${url.origin}/`) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'Issuer URL must not contain a path, username, password, query, or fragment',
+      })
+      return false
+    }
+
+    return true
+  })
+
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414}
  */
 export const oauthServerMetadataSchema = z.object({
-  issuer: z.string().superRefine((value, ctx) => {
-    try {
-      const url = new URL(value)
-
-      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Issuer URL must use "https" or "http"',
-        })
-        return false
-      }
-
-      if (value !== `${url.origin}/`) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            'Issuer URL must not contain a path, username, password, query, or fragment',
-        })
-        return false
-      }
-
-      return true
-    } catch {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Issuer must be a valid URL',
-      })
-
-      return false
-    }
-  }),
+  issuer: oauthServerIssuerSchema,
 
   claims_supported: z.array(z.string()).optional(),
   claims_locales_supported: z.array(z.string()).optional(),
