@@ -19,10 +19,11 @@ import { OIDC_SCOPE_CLAIMS } from '../oidc/claims.js'
 import { Sub } from '../oidc/sub.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { Signer } from '../signer/signer.js'
-import { Awaitable } from '../util/awaitable.js'
 import { matchRedirectUri } from '../util/redirect-uri.js'
 import { Code, generateCode } from './code.js'
-import { RequestId, generateRequestId } from './request-id.js'
+import { RequestHooks } from './request-hooks.js'
+import { generateRequestId } from './request-id.js'
+import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
   RequestUri,
@@ -30,37 +31,12 @@ import {
   encodeRequestUri,
 } from './request-uri.js'
 
-export type RequestInfo = {
-  id: RequestId
-  uri: RequestUri
-  parameters: AuthorizationParameters
-  expiresAt: Date
-  clientAuth: ClientAuth
-}
-
-/**
- * Allows validating and modifying the authorization parameters before the
- * authorization request is processed.
- *
- * @throws {InvalidAuthorizationDetailsError}
- */
-export type AuthorizationRequestHook = (
-  this: null,
-  parameters: AuthorizationParameters,
-  data: {
-    client: Client
-    clientAuth: ClientAuth
-  },
-) => Awaitable<void>
-
 export class RequestManager {
   constructor(
     protected readonly store: RequestStore,
     protected readonly signer: Signer,
     protected readonly metadata: OAuthServerMetadata,
-    protected readonly hooks: {
-      onAuthorizationRequest?: AuthorizationRequestHook
-    },
+    protected readonly hooks: RequestHooks,
     protected readonly pkceRequired = true,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}
