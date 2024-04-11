@@ -8,11 +8,7 @@ import {
   OAuthServerFactoryOptions,
 } from './oauth-server-factory.js'
 import { OAuthServer } from './oauth-server.js'
-import {
-  OAuthAuthorizeOptions,
-  OAuthResponseMode,
-  OAuthResponseType,
-} from './oauth-types.js'
+import { OAuthAuthorizeOptions, OAuthResponseMode } from './oauth-types.js'
 import { Session, SessionGetter } from './session-getter.js'
 
 export type InternalStateData = {
