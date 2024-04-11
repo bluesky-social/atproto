@@ -9,7 +9,6 @@ import {
   OAuthClientFactory,
   OAuthCallbackError,
   OAuthResponseMode,
-  OAuthResponseType,
   Session,
 } from '@atproto/oauth-client'
 import {
@@ -27,7 +26,6 @@ import { LoginContinuedInParentWindowError } from './errors.js'
 
 export type BrowserOauthClientFactoryOptions = {
   responseMode?: OAuthResponseMode
-  responseType?: OAuthResponseType
   clientMetadata: OAuthClientMetadata
   plcDirectoryUrl?: UniversalIdentityResolverOptions['plcDirectoryUrl']
   atprotoLexiconUrl?: UniversalIdentityResolverOptions['atprotoLexiconUrl']
@@ -61,7 +59,6 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
     clientMetadata,
     // "fragment" is safer as it is not sent to the server
     responseMode = 'fragment',
-    responseType,
     plcDirectoryUrl,
     atprotoLexiconUrl,
     crypto = globalThis.crypto,
@@ -72,7 +69,6 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
     super({
       clientMetadata,
       responseMode,
-      responseType,
       fetch,
       cryptoImplementation: new CryptoSubtle(crypto),
       sessionStore: database.getSessionStore(),

@@ -36,7 +36,6 @@ export type OAuthClientOptions = OAuthServerFactoryOptions & {
    * "form_post" will typically be used for server-side applications.
    */
   responseMode?: OAuthResponseMode
-  responseType?: OAuthResponseType
 }
 
 export class OAuthClientFactory {
@@ -46,11 +45,9 @@ export class OAuthClientFactory {
   readonly sessionGetter: SessionGetter
 
   readonly responseMode?: OAuthResponseMode
-  readonly responseType?: OAuthResponseType
 
   constructor(options: OAuthClientOptions) {
     this.responseMode = options?.responseMode
-    this.responseType = options?.responseType
     this.serverFactory = new OAuthServerFactory(options)
     this.stateStore = options.stateStore
     this.sessionGetter = new SessionGetter(
@@ -95,10 +92,10 @@ export class OAuthClientFactory {
       login_hint: did || undefined,
       response_mode: this.responseMode,
       response_type:
-        this.responseType != null &&
-        metadata['response_types_supported']?.includes(this.responseType)
-          ? this.responseType
-          : 'code',
+        // Negotiate by using the order in the client metadata
+        (this.clientMetadata.response_types || ['code id_token'])?.find((t) =>
+          metadata['response_types_supported']?.includes(t),
+        ) ?? 'code',
 
       display: options?.display,
       id_token_hint: options?.id_token_hint,
