@@ -4,6 +4,7 @@ export const oauthServerIssuerSchema = z
   .string()
   .url()
   .superRefine((value, ctx) => {
+    // Validate the issuer (MIX-UP attacks)
     const url = new URL(value)
 
     if (url.protocol !== 'https:' && url.protocol !== 'http:') {
@@ -100,23 +101,31 @@ export const oauthServerMetadataSchema = z.object({
 export type OAuthServerMetadata = z.infer<typeof oauthServerMetadataSchema>
 
 export const oauthServerMetadataValidator = oauthServerMetadataSchema
-  .refinement(
-    (data) =>
-      !data.require_pushed_authorization_requests ||
-      data.pushed_authorization_request_endpoint != null,
-    {
-      code: z.ZodIssueCode.custom,
-      message:
-        '"pushed_authorization_request_endpoint" required when "require_pushed_authorization_requests" is true',
-    },
-  )
-  .refinement(
-    (data) => {
-      // Validate the issuer (MIX-UP attacks)
-      return new URL(data.issuer).pathname === '/'
-    },
-    {
-      code: z.ZodIssueCode.custom,
-      message: 'Invalid issuer',
-    },
-  )
+  .superRefine((data, ctx) => {
+    if (
+      data.require_pushed_authorization_requests &&
+      !data.pushed_authorization_request_endpoint
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          '"pushed_authorization_request_endpoint" required when "require_pushed_authorization_requests" is true',
+      })
+      return false
+    }
+
+    return true
+  })
+  .superRefine((data, ctx) => {
+    if (data.response_types_supported) {
+      if (!data.response_types_supported.includes('code')) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Response type "code" is required',
+        })
+        return false
+      }
+    }
+
+    return true
+  })
