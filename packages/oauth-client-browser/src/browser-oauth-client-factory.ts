@@ -16,7 +16,7 @@ import {
   OAuthClientMetadata,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-client-metadata'
-import IsomorphicOAuthServerMetadataResolver from '@atproto/oauth-server-metadata-resolver'
+import { IsomorphicOAuthServerMetadataResolver } from '@atproto/oauth-server-metadata-resolver'
 import {
   BrowserOAuthDatabase,
   DatabaseStore,
