@@ -24,6 +24,7 @@ export function buildMetadata(
     issuer: issuer,
 
     scopes_supported: [
+      'offline_access',
       'openid',
       'email',
       'phone',
