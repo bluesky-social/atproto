@@ -19,15 +19,15 @@ export type IsomorphicOAuthServerMetadataResolverOptions = {
 export class IsomorphicOAuthServerMetadataResolver
   implements OAuthServerMetadataResolver
 {
-  readonly #fetch: Fetch
-  readonly #getter: CachedGetter<string, OAuthServerMetadata>
+  private readonly fetch: Fetch
+  private readonly getter: CachedGetter<string, OAuthServerMetadata>
 
   constructor({
     fetch = globalThis.fetch,
     cache,
   }: IsomorphicOAuthServerMetadataResolverOptions = {}) {
-    this.#fetch = fetch
-    this.#getter = new CachedGetter<string, OAuthServerMetadata>(
+    this.fetch = fetch
+    this.getter = new CachedGetter<string, OAuthServerMetadata>(
       async (origin, options) =>
         this.fetchServerMetadata(origin, 'oauth-authorization-server', options),
       cache,
@@ -35,7 +35,7 @@ export class IsomorphicOAuthServerMetadataResolver
   }
 
   async resolve(origin: string): Promise<OAuthServerMetadata> {
-    return this.#getter.get(origin)
+    return this.getter.get(origin)
   }
 
   async fetchServerMetadata(
@@ -72,7 +72,7 @@ export class IsomorphicOAuthServerMetadataResolver
       redirect: 'follow',
     })
 
-    const response = await this.#fetch.call(globalThis, request)
+    const response = await (0, this.fetch)(request)
 
     if (!response.ok) {
       // Fallback to openid-configuration endpoint
