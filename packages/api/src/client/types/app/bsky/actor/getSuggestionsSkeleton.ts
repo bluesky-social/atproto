@@ -9,6 +9,8 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
+  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
+  viewer?: string
   limit?: number
   cursor?: string
 }
