@@ -3,9 +3,11 @@ import { RequiredKey } from './util.js'
 
 export type VerifyOptions<C extends string = string> = {
   audience?: string | readonly string[]
-  clockTolerance?: string | number
+  /** in seconds */
+  clockTolerance?: number
   issuer?: string | readonly string[]
-  maxTokenAge?: string | number
+  /** in seconds */
+  maxTokenAge?: number
   subject?: string
   typ?: string
   currentDate?: Date
