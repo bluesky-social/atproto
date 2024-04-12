@@ -6,14 +6,12 @@ import { Json, ifObject, ifString } from './util.js'
 import { TransformedResponse } from './transformed-response.js'
 
 export type ResponseTranformer = Transformer<Response>
+export type ResponseMessageGetter = Transformer<Response, string | undefined>
 
-async function extractResponseMessage(
-  headers: Headers,
-  body?: Blob | null,
-): Promise<string | undefined> {
-  if (!body) return undefined
+const extractResponseMessage: ResponseMessageGetter = async (response) => {
+  if (!response.body) return undefined
 
-  const contentType = headers.get('content-type')
+  const contentType = response.headers.get('content-type')
   if (!contentType) return undefined
 
   const mimeType = contentType.split(';')[0].trim()
@@ -21,9 +19,9 @@ async function extractResponseMessage(
 
   try {
     if (mimeType === 'text/plain') {
-      return await body.text()
+      return await response.text()
     } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
-      const json = await body.text().then(JSON.parse)
+      const json = await response.json()
 
       if (typeof json === 'string') return json
 
@@ -45,45 +43,41 @@ async function extractResponseMessage(
 
 export class FetchResponseError extends FetchError {
   constructor(
-    statusCode: number,
-    message?: string,
-    readonly body?: Blob | null,
-    options?: FetchErrorOptions,
+    response: Response,
+    statusCode: number = response.status,
+    message: string = response.statusText,
+    options?: Omit<FetchErrorOptions, 'response'>,
   ) {
-    super(statusCode, message, options)
+    super(statusCode, message, { response, ...options })
   }
 
   static async from(
     response: Response,
-    status = response.status,
-    customMessage?: string,
-    options?: FetchErrorOptions,
+    statusCode = response.status,
+    customMessage: string | ResponseMessageGetter = extractResponseMessage,
+    options?: Omit<FetchErrorOptions, 'response'>,
   ) {
-    // Make sure the body gets consumed as, in some environments (Node 👀), the
-    // response will not be GC'd.
-    const body = response.body
-      ? !response.bodyUsed
-        ? await response.blob()
-        : undefined
-      : null
-
     const message =
-      customMessage ??
-      (await extractResponseMessage(response.headers, body)) ??
-      response.statusText
+      typeof customMessage === 'string'
+        ? customMessage
+        : typeof customMessage === 'function'
+          ? await customMessage(response)
+          : undefined
 
-    return new FetchResponseError(status, message, body, {
-      ...options,
-      response,
-    })
+    // Make sure the body gets consumed as, in some environments (Node 👀), the
+    // response will not automatically be GC'd.
+    await response.body?.cancel()
+
+    return new FetchResponseError(response, statusCode, message, options)
   }
 }
 
-export function fetchOkProcessor(): ResponseTranformer {
+export function fetchOkProcessor(
+  customMessage?: string | ResponseMessageGetter,
+): ResponseTranformer {
   return async (response) => {
     if (response.ok) return response
-
-    throw await FetchResponseError.from(response)
+    throw await FetchResponseError.from(response, undefined, customMessage)
   }
 }
 
@@ -106,9 +100,7 @@ export async function fetchResponseMaxSize(
   if (contentLength) {
     const length = Number(contentLength)
     if (!(length < maxBytes)) {
-      const err = new FetchResponseError(502, 'Response too large', undefined, {
-        response,
-      })
+      const err = new FetchResponseError(response, 502, 'Response too large')
       await response.body.cancel(err)
       throw err
     }
@@ -124,11 +116,7 @@ export async function fetchResponseMaxSize(
       if ((bytesRead += chunk.length) <= maxBytes) {
         ctrl.enqueue(chunk)
       } else {
-        ctrl.error(
-          new FetchResponseError(502, 'Response too large', undefined, {
-            response,
-          }),
-        )
+        ctrl.error(new FetchResponseError(response, 502, 'Response too large'))
       }
     },
   })
@@ -185,35 +173,23 @@ export async function jsonTranformer<T = Json>(
   response: Response,
 ): Promise<ParsedJsonResponse<T>> {
   if (response.body === null) {
-    throw new FetchResponseError(502, 'No response body', null, {
-      response,
-    })
+    throw new FetchResponseError(response, 502, 'No response body')
   }
 
   if (response.bodyUsed) {
-    throw new FetchResponseError(502, 'Response body already used', undefined, {
-      response,
-    })
+    throw new FetchResponseError(response, 500, 'Response body already used')
   }
 
-  // Read as blob to allow throwing with the body in case on invalid JSON (for debugging/logging purposes mainly)
-  const body = await response.blob().catch(async (cause) => {
-    throw new FetchResponseError(
-      502,
-      'Failed to read response body',
-      undefined,
-      { response, cause },
-    )
-  })
-
   try {
-    const json = (await body.text().then(JSON.parse)) as T
+    const json = (await response.json()) as T
     return { response, json }
   } catch (cause) {
-    throw new FetchResponseError(502, 'Unable to parse response JSON', body, {
+    throw new FetchResponseError(
       response,
-      cause,
-    })
+      502,
+      'Unable to parse response as JSON',
+      { cause },
+    )
   }
 }
 
