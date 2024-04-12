@@ -14,6 +14,8 @@ export interface QueryParams {
   term?: string
   /** Search query prefix; not a full query string. */
   q?: string
+  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
+  viewer?: string
   limit: number
 }
 
