@@ -136,8 +136,7 @@ export const jwkSchema = z.union([
 
 export type Jwk = z.infer<typeof jwkSchema>
 
-export const jwkPubSchema = jwkSchema
-  .refine((k) => k.kid != null, 'kid is required')
+export const jwkValidator = jwkSchema
   .refine((k) => k.use != null || k.key_ops != null, 'use or key_ops required')
   .refine(
     (k) =>
@@ -150,4 +149,7 @@ export const jwkPubSchema = jwkSchema
       ),
     'use and key_ops must be consistent',
   )
+
+export const jwkPubSchema = jwkValidator
+  .refine((k) => k.kid != null, 'kid is required')
   .refine((k) => !('k' in k) && !('d' in k), 'private key not allowed')
