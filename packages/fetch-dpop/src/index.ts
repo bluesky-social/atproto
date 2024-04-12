@@ -112,18 +112,18 @@ export async function dpopFetch(
 
       // If the response was not returned to the caller, make sure the body is
       // consumed.
-      await response.body?.cancel()
+      if (!response.bodyUsed) await response.body?.cancel()
 
       const dpopProof = await buildProof(key, alg, iss, method, url, nonce, ath)
       clonedRequest.headers.set('DPoP', dpopProof)
 
       return await fetch(clonedRequest)
     } catch (err) {
-      await response.body?.cancel(err)
+      if (!response.bodyUsed) await response.body?.cancel(err)
       throw err
     }
   } finally {
-    await clonedRequest.body?.cancel()
+    if (!clonedRequest.bodyUsed) await clonedRequest.body?.cancel()
   }
 }
 
