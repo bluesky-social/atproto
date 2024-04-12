@@ -1,7 +1,6 @@
 import { Jwk, jwkSchema } from '@atproto/jwk'
 import { JoseKey } from '@atproto/jwk-jose'
-// XXX TODO: remove "./db.ts" file
-// import { loadCryptoKeyPair } from './db.js'
+
 import {
   generateKeypair,
   fromSubtleAlgorithm,
@@ -9,14 +8,9 @@ import {
 } from './util.js'
 
 export class WebcryptoKey extends JoseKey {
-  // static async fromIndexedDB(kid: string, allowedAlgos: string[] = ['ES384']) {
-  //   const cryptoKeyPair = await loadCryptoKeyPair(kid, allowedAlgos)
-  //   return this.fromKeypair(kid, cryptoKeyPair)
-  // }
-
   static async generate(
     kid: string = crypto.randomUUID(),
-    allowedAlgos: string[] = ['ES384'],
+    allowedAlgos: string[] = ['ES256'],
     exportable = false,
   ) {
     const cryptoKeyPair = await generateKeypair(allowedAlgos, exportable)
