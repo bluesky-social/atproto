@@ -9,7 +9,8 @@ export class CryptoWrapper {
   constructor(protected implementation: CryptoImplementation) {}
 
   public async generateKey(algs: string[]): Promise<Key> {
-    return this.implementation.createKey(algs)
+    const algsSorted = Array.from(algs).sort(compareAlgos)
+    return this.implementation.createKey(algsSorted)
   }
 
   public async sha256(text: string): Promise<string> {
@@ -161,4 +162,30 @@ function extractJktComponents(jwk) {
     default:
       throw new TypeError('"kty" (Key Type) Parameter missing or unsupported')
   }
+}
+
+/**
+ * 256K > ES (256 > 384 > 512) > PS (256 > 384 > 512) > RS (256 > 384 > 512) > other (in original order)
+ */
+function compareAlgos(a: string, b: string): number {
+  if (a === 'ES256K') return -1
+  if (b === 'ES256K') return 1
+
+  for (const prefix of ['ES', 'PS', 'RS']) {
+    if (a.startsWith(prefix)) {
+      if (b.startsWith(prefix)) {
+        const aLen = parseInt(a.slice(2, 5))
+        const bLen = parseInt(b.slice(2, 5))
+
+        // Prefer shorter key lengths
+        return aLen - bLen
+      }
+      return -1
+    } else if (b.startsWith(prefix)) {
+      return 1
+    }
+  }
+
+  // Don't know how to compare, keep original order
+  return 0
 }
