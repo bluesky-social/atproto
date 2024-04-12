@@ -107,9 +107,8 @@ export class JoseKey extends Key {
     )
 
     const kid = either(jwk.kid, inputKid)
-    const alg = jwk.alg
     const use = jwk.use || 'sig'
 
-    return new JoseKey({ ...jwk, kid, alg, use })
+    return new JoseKey({ ...jwk, kid, use })
   }
 }
