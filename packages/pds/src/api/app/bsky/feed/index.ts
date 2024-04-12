@@ -14,6 +14,7 @@ import getRepostedBy from './getRepostedBy'
 import getSuggestedFeeds from './getSuggestedFeeds'
 import getTimeline from './getTimeline'
 import searchPosts from './searchPosts'
+import sendInteractions from './sendInteractions'
 
 export default function (server: Server, ctx: AppContext) {
   getActorFeeds(server, ctx)
@@ -30,4 +31,5 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestedFeeds(server, ctx)
   getTimeline(server, ctx)
   searchPosts(server, ctx)
+  sendInteractions(server, ctx)
 }
