@@ -10,6 +10,12 @@ import UniversalHandleResolver, {
 } from '@atproto/handle-resolver'
 import { IdentityResolver } from './identity-resolver.js'
 
+export type { DidCache, DidDocument } from '@atproto/did'
+export type {
+  HandleResolverCache,
+  ResolvedHandle,
+} from '@atproto/handle-resolver'
+
 export type UniversalIdentityResolverOptions = {
   fetch?: Fetch
 
