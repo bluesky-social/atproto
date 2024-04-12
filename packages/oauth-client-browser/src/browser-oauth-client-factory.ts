@@ -24,7 +24,7 @@ import {
 import { CryptoSubtle } from './crypto-subtle.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
 
-export type BrowserOauthClientFactoryOptions = {
+export type BrowserOAuthClientFactoryOptions = {
   responseMode?: OAuthResponseMode
   clientMetadata: OAuthClientMetadata
   plcDirectoryUrl?: UniversalIdentityResolverOptions['plcDirectoryUrl']
@@ -37,7 +37,7 @@ const POPUP_STATE_PREFIX = '@@oauth-popup-callback:'
 
 export class BrowserOAuthClientFactory extends OAuthClientFactory {
   static async load(
-    options?: Omit<BrowserOauthClientFactoryOptions, 'clientMetadata'>,
+    options?: Omit<BrowserOAuthClientFactoryOptions, 'clientMetadata'>,
   ) {
     const fetch = options?.fetch ?? globalThis.fetch
     const request = new Request('/.well-known/oauth-client-metadata', {
@@ -63,7 +63,7 @@ export class BrowserOAuthClientFactory extends OAuthClientFactory {
     atprotoLexiconUrl,
     crypto = globalThis.crypto,
     fetch = globalThis.fetch,
-  }: BrowserOauthClientFactoryOptions) {
+  }: BrowserOAuthClientFactoryOptions) {
     const database = new BrowserOAuthDatabase()
 
     super({
