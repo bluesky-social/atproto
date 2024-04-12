@@ -1,5 +1,4 @@
 import {
-  Jwk,
   Jwt,
   JwtHeader,
   JwtPayload,
@@ -7,6 +6,7 @@ import {
   VerifyOptions,
   VerifyPayload,
   VerifyResult,
+  jwkValidator,
 } from '@atproto/jwk'
 
 import { OauthClientReactNative } from './oauth-client-react-native.js'
@@ -14,12 +14,21 @@ import { OauthClientReactNative } from './oauth-client-react-native.js'
 export class ReactNativeKey extends Key {
   static async generate(
     kid: string,
-    allowedAlgos: string[] = ['ES256'],
+    allowedAlgos: string[],
   ): Promise<ReactNativeKey> {
-    // Note: OauthClientReactNative.createJwk should throw if it supports none
-    // of the allowed algorithms
-    const privateJwk: Jwk = await OauthClientReactNative.createJwk(allowedAlgos)
-    return new ReactNativeKey({ ...privateJwk, kid })
+    for (const algo of allowedAlgos) {
+      try {
+        // Note: OauthClientReactNative.generatePrivateJwk should throw if it
+        // doesn't support the algorithm.
+        const jwk = await OauthClientReactNative.generatePrivateJwk(algo)
+        const use = jwk.use || 'sig'
+        return new ReactNativeKey(jwkValidator.parse({ ...jwk, use, kid }))
+      } catch {
+        // Ignore, try next one
+      }
+    }
+
+    throw new Error('No supported algorithms')
   }
 
   async createJwt(header: JwtHeader, payload: JwtPayload): Promise<Jwt> {
