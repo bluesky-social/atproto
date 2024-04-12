@@ -17,11 +17,20 @@ export const OauthClientReactNative =
       throw new Error(LINKING_ERROR)
     },
 
+    /**
+     * @throws if the algorithm is not supported ("sha256" must be supported)
+     */
     digest(_bytes: Uint8Array, _algorithm: string): Awaitable<Uint8Array> {
       throw new Error(LINKING_ERROR)
     },
 
-    generatePrivateJwk(_algo: string): Awaitable<Jwk> {
+    /**
+     * Create a private JWK for the given algorithm. The JWK should have a "use"
+     * an does not need a "kid" property.
+     *
+     * @throws if the algorithm is not supported ("ES256" must be supported)
+     */
+    generateJwk(_algo: string): Awaitable<Jwk> {
       throw new Error(LINKING_ERROR)
     },
 
