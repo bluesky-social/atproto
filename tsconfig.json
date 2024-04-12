@@ -33,6 +33,7 @@
     { "path": "./packages/oauth-client" },
     { "path": "./packages/oauth-client-browser" },
     { "path": "./packages/oauth-client-metadata" },
+    { "path": "./packages/oauth-client-react-native" },
     { "path": "./packages/oauth-provider" },
     { "path": "./packages/oauth-provider-client-uri" },
     { "path": "./packages/oauth-provider-client-fqdn" },
