@@ -66,7 +66,7 @@ export class FetchResponseError extends FetchError {
 
     // Make sure the body gets consumed as, in some environments (Node 👀), the
     // response will not automatically be GC'd.
-    await response.body?.cancel()
+    if (!response.bodyUsed) await response.body?.cancel()
 
     return new FetchResponseError(response, statusCode, message, options)
   }
