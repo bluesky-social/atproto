@@ -1139,7 +1139,7 @@ export class OAuthProvider extends OAuthVerifier {
     const signInPayloadSchema = z.object({
       csrf_token: z.string(),
       request_uri: requestUriSchema,
-      // client_id: clientIdSchema,
+      client_id: oauthClientIdSchema,
       credentials: z.object({
         username: z.string(),
         password: z.string(),
@@ -1171,7 +1171,10 @@ export class OAuthProvider extends OAuthVerifier {
       // Prevent fixation attacks
       await sessionManager.rotate(req, res, deviceId)
 
-      return writeJson(res, { account, info })
+      return writeJson(res, {
+        account,
+        consentRequired: !info.authorizedClients.includes(input.client_id),
+      })
     })
 
     const acceptQuerySchema = z.object({

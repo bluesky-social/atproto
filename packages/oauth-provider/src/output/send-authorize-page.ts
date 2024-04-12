@@ -42,7 +42,13 @@ function buildAuthorizeData(data: AuthorizationResultAuthorize) {
     newSessionsRequireConsent:
       data.parameters.prompt === 'login' ||
       data.parameters.prompt === 'consent',
-    sessions: data.authorize.sessions,
+    sessions: data.authorize.sessions.map((session) => ({
+      account: session.account,
+
+      selected: session.selected,
+      loginRequired: session.loginRequired,
+      consentRequired: session.consentRequired,
+    })),
   }
 }
 
