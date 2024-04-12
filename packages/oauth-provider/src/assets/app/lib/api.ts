@@ -4,7 +4,7 @@ import {
   fetchOkProcessor,
 } from '@atproto/fetch'
 
-import { Account, Info, Session } from '../types'
+import { Account, Session } from '../types'
 
 export class Api {
   constructor(
@@ -31,17 +31,19 @@ export class Api {
       }),
     })
       .then(fetchOkProcessor(), fetchFailureHandler)
-      .then(fetchJsonProcessor<{ account: Account; info: Info }>())
+      .then(
+        fetchJsonProcessor<{
+          account: Account
+          consentRequired: boolean
+        }>(),
+      )
 
     return {
       account: json.account,
-      info: json.info,
 
       selected: true,
-      consentRequired:
-        this.newSessionsRequireConsent ||
-        !json.info.authorizedClients.includes(this.clientId),
       loginRequired: false,
+      consentRequired: this.newSessionsRequireConsent || json.consentRequired,
     }
   }
 
