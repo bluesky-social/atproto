@@ -231,7 +231,7 @@ const skeletonFromFeedGen = async (
   const feedItems = feedSkele.map((item) => ({
     post: { uri: item.post },
     repost:
-      item.reason?.repost === 'string'
+      typeof item.reason?.repost === 'string'
         ? { uri: item.reason.repost }
         : undefined,
     feedContext: item.feedContext,
