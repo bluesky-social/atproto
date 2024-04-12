@@ -126,8 +126,7 @@ export async function generateKeypair(
   extractable = false,
 ): Promise<CryptoKeyPair> {
   const errors: unknown[] = []
-  const algsSorted = Array.from(algs).sort(compareAlgos)
-  for (const alg of algsSorted) {
+  for (const alg of algs) {
     try {
       return await crypto.subtle.generateKey(
         toSubtleAlgorithm(alg),
@@ -140,30 +139,4 @@ export async function generateKeypair(
   }
 
   throw new AggregateError(errors, 'Failed to generate keypair')
-}
-
-/**
- * 256K > ES (256 > 384 > 512) > PS (256 > 384 > 512) > RS (256 > 384 > 512) > other (in original order)
- */
-function compareAlgos(a: string, b: string): number {
-  if (a === 'ES256K') return -1
-  if (b === 'ES256K') return 1
-
-  for (const prefix of ['ES', 'PS', 'RS']) {
-    if (a.startsWith(prefix)) {
-      if (b.startsWith(prefix)) {
-        const aLen = parseInt(a.slice(2, 5))
-        const bLen = parseInt(b.slice(2, 5))
-
-        // Prefer shorter key lengths
-        return aLen - bLen
-      }
-      return -1
-    } else if (b.startsWith(prefix)) {
-      return 1
-    }
-  }
-
-  // Don't know how to compare, keep original order
-  return 0
 }
