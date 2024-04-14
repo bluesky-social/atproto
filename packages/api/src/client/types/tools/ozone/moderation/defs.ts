@@ -238,6 +238,8 @@ export function validateModEventComment(v: unknown): ValidationResult {
 /** Report a subject */
 export interface ModEventReport {
   comment?: string
+  /** Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject. */
+  isReporterMuted?: boolean
   reportType: ComAtprotoModerationDefs.ReasonType
   [k: string]: unknown
 }

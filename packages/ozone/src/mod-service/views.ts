@@ -118,6 +118,18 @@ export class ModerationViews {
       }
     }
 
+    if (
+      [
+        'tools.ozone.moderation.defs#modEventUnmute',
+        'tools.ozone.moderation.defs#modEventMute',
+      ].includes(event.action)
+    ) {
+      eventView.event = {
+        ...eventView.event,
+        reportingOnly: !!event.meta?.reportingOnly,
+      }
+    }
+
     if (event.action === 'tools.ozone.moderation.defs#modEventLabel') {
       eventView.event = {
         ...eventView.event,
@@ -157,6 +169,7 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         reportType: event.meta?.reportType ?? undefined,
+        isReporterMuted: !!event.meta?.isReporterMuted,
       }
     }
 

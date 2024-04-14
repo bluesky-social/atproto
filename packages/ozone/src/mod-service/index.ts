@@ -318,6 +318,14 @@ export class ModerationService {
       }
     }
 
+    // Keep trace of reports that came in while the reporter was in muted stated
+    if (isModEventReport(event)) {
+      const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
+      if (isReportingMuted) {
+        meta.isReporterMuted = true
+      }
+    }
+
     const subjectInfo = subject.info()
 
     const modEvent = await this.db.db
@@ -350,14 +358,11 @@ export class ModerationService {
       .executeTakeFirstOrThrow()
 
     // If reporting is muted for this reporter, we don't want to create a subject status
-    if (isModEventReport(event)) {
-      const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
-      if (isReportingMuted) {
-        const subjectStatus = await this.getStatus(subject)
-        return {
-          event: modEvent,
-          subjectStatus,
-        }
+    if (meta.isReporterMuted) {
+      const subjectStatus = await this.getStatus(subject)
+      return {
+        event: modEvent,
+        subjectStatus,
       }
     }
 
