@@ -92,7 +92,10 @@ export class SeedClient<
   >
   dids: Record<string, string>
 
-  constructor(public network: Network, public agent: AtpAgent) {
+  constructor(
+    public network: Network,
+    public agent: AtpAgent,
+  ) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
@@ -281,8 +284,8 @@ export class SeedClient<
             media: imageEmbed,
           }
         : recordEmbed
-        ? { $type: 'app.bsky.embed.record', ...recordEmbed }
-        : imageEmbed
+          ? { $type: 'app.bsky.embed.record', ...recordEmbed }
+          : imageEmbed
     const res = await this.agent.api.app.bsky.feed.post.create(
       { repo: by },
       {
