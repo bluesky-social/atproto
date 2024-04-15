@@ -2,11 +2,11 @@ import { IncomingMessage } from 'node:http'
 
 import { z } from 'zod'
 
-export const devideDetailsSchema = z.object({
+export const deviceDetailsSchema = z.object({
   userAgent: z.string().nullable(),
   ipAddress: z.string(),
 })
-export type DeviceDetails = z.infer<typeof devideDetailsSchema>
+export type DeviceDetails = z.infer<typeof deviceDetailsSchema>
 
 export function extractDeviceDetails(
   req: IncomingMessage,
