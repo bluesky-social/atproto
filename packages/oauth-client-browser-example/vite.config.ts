@@ -16,11 +16,5 @@ export default defineConfig({
       '@atproto/oauth-server-metadata',
     ],
   },
-  plugins: [
-    react({
-      babel: {
-        plugins: ['@babel/plugin-syntax-import-assertions'],
-      },
-    }),
-  ],
+  plugins: [react()],
 })

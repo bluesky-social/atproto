@@ -924,9 +924,6 @@ importers:
       '@atproto/oauth-server-metadata':
         specifier: workspace:*
         version: link:../oauth-server-metadata
-      '@babel/plugin-syntax-import-assertions':
-        specifier: ^7.23.3
-        version: 7.24.1(@babel/core@7.24.4)
       '@types/react':
         specifier: ^18.2.50
         version: 18.2.75
