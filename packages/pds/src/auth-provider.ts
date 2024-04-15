@@ -75,7 +75,7 @@ export class AuthProvider extends OAuthProvider {
         new BasicProfileGetterCached(actorStore, localViewer),
       ),
       requestStore: accountManager,
-      sessionStore: accountManager,
+      deviceStore: accountManager,
       tokenStore: accountManager,
       replayStore: redis
         ? new OAuthReplayStoreRedis(redis)
