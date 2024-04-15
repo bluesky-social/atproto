@@ -1,10 +1,10 @@
 import { KeyObject } from 'node:crypto'
 import { HOUR, wait } from '@atproto/common'
 import {
-  Account,
   AccountInfo,
   AccountStore,
   Code,
+  DeviceData,
   DeviceId,
   FoundRequestResult,
   LoginCredentials,
@@ -13,8 +13,7 @@ import {
   RequestData,
   RequestId,
   RequestStore,
-  SessionData,
-  SessionStore,
+  DeviceStore,
   TokenData,
   TokenId,
   TokenInfo,
@@ -43,7 +42,7 @@ import * as token from './helpers/token.js'
 import * as usedRefreshToken from './helpers/used-refresh-token.js'
 
 export class AccountManager
-  implements AccountStore, RequestStore, SessionStore, TokenStore
+  implements AccountStore, RequestStore, DeviceStore, TokenStore
 {
   db: AccountDb
 
@@ -553,27 +552,24 @@ export class AccountManager
     return authorizationRequest.findByCode(this.db, code)
   }
 
-  // SessionStore
+  // DeviceStore
 
-  async createDeviceSession(
-    deviceId: DeviceId,
-    data: SessionData,
-  ): Promise<void> {
+  async createDevice(deviceId: DeviceId, data: DeviceData): Promise<void> {
     await device.create(this.db, deviceId, data)
   }
 
-  async readDeviceSession(deviceId: DeviceId): Promise<null | SessionData> {
+  async readDevice(deviceId: DeviceId): Promise<null | DeviceData> {
     return device.getById(this.db, deviceId)
   }
 
-  async updateDeviceSession(
+  async updateDevice(
     deviceId: DeviceId,
-    data: Partial<SessionData>,
+    data: Partial<DeviceData>,
   ): Promise<void> {
     await device.update(this.db, deviceId, data)
   }
 
-  async deleteDeviceSession(deviceId: DeviceId): Promise<void> {
+  async deleteDevice(deviceId: DeviceId): Promise<void> {
     await device.remove(this.db, deviceId)
 
     // TODO: can use use foreign key constraint to delete this row ?

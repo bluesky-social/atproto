@@ -1,9 +1,9 @@
-import { DeviceId, SessionData } from '@atproto/oauth-provider'
+import { DeviceId, DeviceData } from '@atproto/oauth-provider'
 import { AccountDb, Device } from '../db'
 import { fromDateISO, toDateISO } from '../../db'
 import { Selectable } from 'kysely'
 
-const rowToSessionData = (row: Selectable<Device>): SessionData => ({
+const rowToDeviceData = (row: Selectable<Device>): DeviceData => ({
   sessionId: row.sessionId,
   userAgent: row.userAgent,
   ipAddress: row.ipAddress,
@@ -13,9 +13,9 @@ const rowToSessionData = (row: Selectable<Device>): SessionData => ({
 /**
  * Future-proofs the session data by ensuring that only the expected fields are
  * present. If the @atproto/oauth-provider package adds new fields to the
- * SessionData type, this function will throw an error.
+ * DeviceData type, this function will throw an error.
  */
-const futureProof = <T extends Partial<SessionData>>(data: T): T => {
+const futureProof = <T extends Partial<DeviceData>>(data: T): T => {
   const { sessionId, userAgent, ipAddress, lastSeenAt, ...rest } = data
   if (Object.keys(rest).length > 0) throw new Error('Unexpected fields')
   return { sessionId, userAgent, ipAddress, lastSeenAt } as T
@@ -24,7 +24,7 @@ const futureProof = <T extends Partial<SessionData>>(data: T): T => {
 export const create = async (
   db: AccountDb,
   deviceId: DeviceId,
-  data: SessionData,
+  data: DeviceData,
 ) => {
   const { sessionId, userAgent, ipAddress, lastSeenAt } = futureProof(data)
 
@@ -49,13 +49,13 @@ export const getById = async (db: AccountDb, deviceId: DeviceId) => {
 
   if (row == null) return null
 
-  return rowToSessionData(row)
+  return rowToDeviceData(row)
 }
 
 export const update = async (
   db: AccountDb,
   deviceId: DeviceId,
-  data: Partial<SessionData>,
+  data: Partial<DeviceData>,
 ) => {
   const { sessionId, userAgent, ipAddress, lastSeenAt } = futureProof(data)
 
