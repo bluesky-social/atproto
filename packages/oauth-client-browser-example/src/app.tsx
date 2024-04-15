@@ -83,11 +83,7 @@ function App() {
       <button onClick={signOut}>Logout</button>
     </div>
   ) : (
-    <LoginForm
-      error={error}
-      loading={loading}
-      onLogin={(input) => void signIn(input)}
-    />
+    <LoginForm error={error} loading={loading} onLogin={signIn} />
   )
 }
 
