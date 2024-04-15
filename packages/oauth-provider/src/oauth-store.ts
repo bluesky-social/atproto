@@ -5,7 +5,7 @@
 
 export type * from './account/account-store.js'
 export type * from './client/client-store.js'
+export type * from './device/device-store.js'
 export type * from './replay/replay-store.js'
 export type * from './request/request-store.js'
-export type * from './session/session-store.js'
 export type * from './token/token-store.js'

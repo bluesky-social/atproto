@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 import { SESSION_ID_BYTES_LENGTH, SESSION_ID_PREFIX } from '../constants.js'
-import { devideDetailsSchema } from '../device/device-details.js'
 import { randomHexId } from '../util/crypto.js'
+import { deviceDetailsSchema } from './device-details.js'
 
 export const sessionIdSchema = z
   .string()
@@ -21,9 +21,9 @@ export const generateSessionId = async (): Promise<SessionId> => {
   return `${SESSION_ID_PREFIX}${await randomHexId(SESSION_ID_BYTES_LENGTH)}`
 }
 
-export const deviceSessionDataSchema = devideDetailsSchema.extend({
+export const deviceDataSchema = deviceDetailsSchema.extend({
   sessionId: sessionIdSchema,
   lastSeenAt: z.date(),
 })
 
-export type SessionData = z.infer<typeof deviceSessionDataSchema>
+export type DeviceData = z.infer<typeof deviceDataSchema>
