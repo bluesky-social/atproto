@@ -261,6 +261,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -289,6 +292,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -319,6 +325,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -347,6 +356,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -380,6 +392,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -417,6 +432,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -452,6 +470,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -489,6 +510,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -525,6 +549,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -560,6 +587,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -603,6 +633,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -638,6 +671,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -675,6 +711,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -711,6 +750,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -746,6 +788,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -790,6 +835,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -832,6 +880,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -876,6 +927,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -918,6 +972,9 @@ describe('agent', () => {
         },
         interests: {
           tags: ['foo', 'bar'],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
     })
@@ -1080,6 +1137,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -1124,6 +1184,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -1171,6 +1234,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.removeLabeler('did:plc:other')
@@ -1212,6 +1278,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -1255,6 +1324,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        homeAlgo: {
+          enabled: undefined,
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1296,6 +1368,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -1349,6 +1424,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        homeAlgo: {
+          enabled: undefined,
         },
       })
 
@@ -1671,6 +1749,26 @@ describe('agent', () => {
           'moderationPrefs.hiddenPosts',
           [],
         )
+      })
+    })
+
+    describe('home algo prefs', () => {
+      let agent: BskyAgent
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user9.test',
+          email: 'user9@test.com',
+          password: 'password',
+        })
+      })
+
+      it('getPreferences', async () => {
+        const prefs = await agent.getPreferences()
+        expect('enabled' in prefs.homeAlgo).toBe(true)
+        expect(prefs.homeAlgo.enabled).toBe(undefined)
+        expect(prefs.homeAlgo.uri).toBe(undefined)
       })
     })
 

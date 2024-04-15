@@ -382,6 +382,9 @@ export class BskyAgent extends AtpAgent {
       interests: {
         tags: [],
       },
+      homeAlgo: {
+        enabled: undefined,
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -464,6 +467,12 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.moderationPrefs.hiddenPosts = v.items
+      } else if (
+        AppBskyActorDefs.isHomeAlgoPref(pref) &&
+        AppBskyActorDefs.validateHomeAlgoPref(pref).success
+      ) {
+        prefs.homeAlgo.enabled = pref.enabled
+        prefs.homeAlgo.uri = pref.uri
       }
     }
 
