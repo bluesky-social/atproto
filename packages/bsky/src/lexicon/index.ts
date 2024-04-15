@@ -104,6 +104,7 @@ import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -136,6 +137,20 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
+}
+export const APP_BSKY_FEED = {
+  DefsRequestLess: 'app.bsky.feed.defs#requestLess',
+  DefsRequestMore: 'app.bsky.feed.defs#requestMore',
+  DefsClickthroughItem: 'app.bsky.feed.defs#clickthroughItem',
+  DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
+  DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
+  DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
+  DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
+  DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
+  DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
+  DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
+  DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -1359,6 +1374,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.searchPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendInteractions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedSendInteractions.Handler<ExtractAuth<AV>>,
+      AppBskyFeedSendInteractions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.sendInteractions' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

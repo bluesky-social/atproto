@@ -6,27 +6,23 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from './defs'
+import * as AppBskyFeedDefs from './defs'
 
-export interface QueryParams {
-  /** DEPRECATED: use 'q' instead. */
-  term?: string
-  /** Search query prefix; not a full query string. */
-  q?: string
-  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
-  viewer?: string
-  limit?: number
+export interface QueryParams {}
+
+export interface InputSchema {
+  interactions: AppBskyFeedDefs.Interaction[]
+  [k: string]: unknown
 }
 
-export type InputSchema = undefined
-
 export interface OutputSchema {
-  actors: AppBskyActorDefs.ProfileViewBasic[]
   [k: string]: unknown
 }
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {

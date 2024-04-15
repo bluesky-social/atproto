@@ -7,26 +7,23 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from './defs'
+import * as AppBskyFeedDefs from './defs'
 
-export interface QueryParams {
-  /** DEPRECATED: use 'q' instead. */
-  term?: string
-  /** Search query prefix; not a full query string. */
-  q?: string
-  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
-  viewer?: string
-  limit: number
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  actors: AppBskyActorDefs.ProfileViewBasic[]
+export interface InputSchema {
+  interactions: AppBskyFeedDefs.Interaction[]
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

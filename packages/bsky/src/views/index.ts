@@ -753,6 +753,9 @@ export class Views {
       author: postView.author,
       value: postView.record,
       labels: postView.labels,
+      likeCount: postView.likeCount,
+      replyCount: postView.replyCount,
+      repostCount: postView.repostCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }
