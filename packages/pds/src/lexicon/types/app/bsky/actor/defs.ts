@@ -138,6 +138,7 @@ export type Preferences = (
   | InterestsPref
   | MutedWordsPref
   | HiddenPostsPref
+  | HomeAlgoPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -213,6 +214,24 @@ export function isPersonalDetailsPref(v: unknown): v is PersonalDetailsPref {
 
 export function validatePersonalDetailsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#personalDetailsPref', v)
+}
+
+export interface HomeAlgoPref {
+  enabled: boolean
+  uri?: string
+  [k: string]: unknown
+}
+
+export function isHomeAlgoPref(v: unknown): v is HomeAlgoPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#homeAlgoPref'
+  )
+}
+
+export function validateHomeAlgoPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#homeAlgoPref', v)
 }
 
 export interface FeedViewPref {

@@ -3813,6 +3813,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#interestsPref',
             'lex:app.bsky.actor.defs#mutedWordsPref',
             'lex:app.bsky.actor.defs#hiddenPostsPref',
+            'lex:app.bsky.actor.defs#homeAlgoPref',
           ],
         },
       },
@@ -3875,6 +3876,19 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of account owner.',
+          },
+        },
+      },
+      homeAlgoPref: {
+        type: 'object',
+        required: ['enabled'],
+        properties: {
+          enabled: {
+            type: 'boolean',
+          },
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
