@@ -21,6 +21,7 @@ export type TokenData = {
   createdAt: Date
   updatedAt: Date
   expiresAt: Date
+  authTime: Date
   clientId: OAuthClientId
   clientAuth: ClientAuth
   deviceId: DeviceId | null

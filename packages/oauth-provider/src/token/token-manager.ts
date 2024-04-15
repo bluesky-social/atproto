@@ -4,7 +4,6 @@ import { isJwt } from '@atproto/jwk'
 
 import { AccessTokenType } from '../access-token/access-token-type.js'
 import { AccessToken } from '../access-token/access-token.js'
-import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
@@ -35,6 +34,7 @@ import {
   isTokenId,
   tokenIdSchema,
 } from './token-id.js'
+import { TokenResponse } from './token-response.js'
 import { TokenInfo, TokenStore } from './token-store.js'
 import { TokenType } from './token-type.js'
 import { CodeGrantRequest, RefreshGrantRequest } from './types.js'
@@ -43,7 +43,6 @@ import {
   VerifyTokenClaimsResult,
   verifyTokenClaims,
 } from './verify-token-claims.js'
-import { TokenResponse } from './token-response.js'
 
 export type AuthenticateTokenIdResult = VerifyTokenClaimsResult & {
   tokenInfo: TokenInfo
@@ -73,11 +72,12 @@ export class TokenManager {
   async create(
     client: Client,
     clientAuth: ClientAuth,
+    deviceId: DeviceId,
     account: Account,
-    device: null | { id: DeviceId; info: DeviceAccountInfo },
     parameters: AuthorizationParameters,
     input: CodeGrantRequest,
     dpopJkt: null | string,
+    authTime: Date,
   ): Promise<TokenResponse> {
     if (client.metadata.dpop_bound_access_tokens && !dpopJkt) {
       throw new InvalidDpopProofError('DPoP proof required')
@@ -198,9 +198,10 @@ export class TokenManager {
       createdAt: now,
       updatedAt: now,
       expiresAt,
+      authTime,
       clientId: client.id,
       clientAuth,
-      deviceId: device?.id ?? null,
+      deviceId,
       sub: account.sub,
       parameters,
       details: authorizationDetails ?? null,
@@ -228,7 +229,7 @@ export class TokenManager {
           exp: expiresAt,
           iat: now,
           // If there is no deviceInfo, we are in a "password_grant" context
-          auth_time: device?.info.authenticatedAt || new Date(),
+          auth_time: authTime,
           access_token: accessToken,
           code,
         })
@@ -264,10 +265,6 @@ export class TokenManager {
       throw new InvalidGrantError(`Token was not issued to this client`)
     }
 
-    if (tokenInfo.info?.authorizedClients.includes(client.id) === false) {
-      throw new InvalidGrantError(`Client no longer trusted by user`)
-    }
-
     if (tokenInfo.data.clientAuth.method !== clientAuth.method) {
       throw new InvalidGrantError(`Client authentication method mismatch`)
     }
@@ -290,7 +287,7 @@ export class TokenManager {
       throw new InvalidGrantError(`Invalid refresh token`)
     }
 
-    const { account, info, data } = tokenInfo
+    const { account, data } = tokenInfo
     const { parameters } = data
 
     try {
@@ -375,7 +372,7 @@ export class TokenManager {
         ? await this.signer.idToken(client, parameters, account, {
             exp: expiresAt,
             iat: now,
-            auth_time: info?.authenticatedAt,
+            auth_time: data.authTime,
             access_token: accessToken,
           })
         : undefined

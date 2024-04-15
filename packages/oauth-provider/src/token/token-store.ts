@@ -1,4 +1,3 @@
-import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { Code } from '../request/code.js'
 import { Awaitable } from '../util/awaitable.js'
@@ -8,13 +7,12 @@ import { TokenId } from './token-id.js'
 
 // Export all types needed to implement the TokenStore interface
 export type * from './token-data.js'
-export type { Awaitable, TokenId, TokenData, RefreshToken }
+export type { Awaitable, RefreshToken, TokenData, TokenId }
 
 export type TokenInfo = {
   id: TokenId
   data: TokenData
   account: Account
-  info?: DeviceAccountInfo
   currentRefreshToken: null | RefreshToken
 }
 

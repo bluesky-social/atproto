@@ -1,5 +1,4 @@
-import { ClientAuth } from '../client/client-auth.js'
-import { Client } from '../client/client.js'
+import { OAuthClientId } from '@atproto/oauth-client-metadata'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
@@ -10,7 +9,6 @@ import {
   DeviceAccount,
   LoginCredentials,
 } from './account-store.js'
-import { Account } from './account.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 
@@ -36,7 +34,7 @@ export class AccountManager {
     )
 
     const current = await this.store.readDeviceAccount(deviceId, account.sub)
-    if (current && !current.data.secondFactorRequired) {
+    if (current && !current.data.secondFactor) {
       return this.store.updateDeviceAccount(deviceId, account.sub, {
         remembered: remember,
         authenticatedAt: new Date(),
@@ -45,49 +43,52 @@ export class AccountManager {
 
     if (!secondFactors?.length) {
       return this.store.upsertDeviceAccount(deviceId, account.sub, {
-        ...current?.data,
         remembered: remember,
         authenticatedAt: new Date(),
-        secondFactorRequired: false,
-        authorizedClients: [],
+        secondFactor: null,
+        authorizedClients: current?.data.authorizedClients || [],
       })
     }
 
-    throw new Error('2FA not implemented')
+    return this.store.upsertDeviceAccount(deviceId, account.sub, {
+      remembered: remember,
+      authenticatedAt: new Date(),
+      secondFactor: {
+        methods: secondFactors,
+      },
+      authorizedClients: current?.data.authorizedClients || [],
+    })
   }
 
-  public async get(deviceId: DeviceId, sub: Sub): Promise<DeviceAccount> {
-    const result = await this.store.readDeviceAccount(deviceId, sub)
-    if (result) return result
-
-    throw new InvalidRequestError(`Account not found`)
-  }
-
-  public async addAuthorizedClient(
+  public async getAuthenticated(
     deviceId: DeviceId,
-    account: Account,
-    client: Client,
-    clientAuth: ClientAuth,
-  ): Promise<void> {
-    if (this.hooks.onAccountAddAuthorizedClient) {
-      const shouldAdd = await this.hooks.onAccountAddAuthorizedClient(
-        deviceId,
-        account.sub,
-        client.id,
-        { client, clientAuth },
-      )
-      if (!shouldAdd) return
+    sub: Sub,
+  ): Promise<DeviceAccount> {
+    const result = await this.store.readDeviceAccount(deviceId, sub)
+
+    if (!result) {
+      throw new InvalidRequestError(`Account not found`)
     }
 
-    // TODO: refactor to use "updateDeviceAccount"
+    if (result.data.secondFactor) {
+      throw new InvalidRequestError(`Second factor required`)
+    }
 
-    // await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
+    return result
+  }
+
+  public async setAuthorizedClients(
+    deviceId: DeviceId,
+    sub: Sub,
+    authorizedClients: OAuthClientId[],
+  ): Promise<void> {
+    await this.store.updateDeviceAccount(deviceId, sub, { authorizedClients })
   }
 
   public async listActiveSessions(deviceId: DeviceId) {
     const results = await this.store.listDeviceAccounts(deviceId)
     return results.filter(
-      (result) => result.data.authenticatedAt != null && result.data.remembered,
+      (result) => result.data.remembered && result.data.secondFactor === null,
     )
   }
 }

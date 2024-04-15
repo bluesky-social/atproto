@@ -28,7 +28,6 @@ import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccessToken } from './access-token/access-token.js'
 import { AccountManager } from './account/account-manager.js'
 import {
-  AccountInfo,
   AccountStore,
   DeviceAccount,
   LoginCredentials,
@@ -467,7 +466,7 @@ export class OAuthProvider extends OAuthVerifier {
             uri,
             deviceId,
             ssoSession.account,
-            ssoSession.info,
+            ssoSession.authenticatedAt,
           )
 
           return { issuer, client, parameters, redirect }
@@ -484,7 +483,7 @@ export class OAuthProvider extends OAuthVerifier {
                 uri,
                 deviceId,
                 ssoSession.account,
-                ssoSession.info,
+                ssoSession.authenticatedAt,
               )
 
               return { issuer, client, parameters, redirect }
@@ -523,6 +522,8 @@ export class OAuthProvider extends OAuthVerifier {
     {
       account: Account
 
+      authenticatedAt: Date
+
       selected: boolean
       loginRequired: boolean
       consentRequired: boolean
@@ -533,6 +534,8 @@ export class OAuthProvider extends OAuthVerifier {
     const sessions = await this.accountManager.listActiveSessions(deviceId)
     return sessions.map(({ account, data }) => ({
       account,
+
+      authenticatedAt: data.authenticatedAt,
 
       selected:
         parameters.prompt !== 'select_account' &&
@@ -566,14 +569,17 @@ export class OAuthProvider extends OAuthVerifier {
     const client = await this.clientManager.getClient(clientId)
 
     try {
-      const { parameters, clientAuth } = await this.requestManager.get(
+      const { parameters } = await this.requestManager.get(
         uri,
         clientId,
         deviceId,
       )
 
       try {
-        const { account, data } = await this.accountManager.get(deviceId, sub)
+        const { account, data } = await this.accountManager.getAuthenticated(
+          deviceId,
+          sub,
+        )
 
         // The user is trying to authorize without a fresh login
         if (this.loginRequired(client, parameters, data.authenticatedAt)) {
@@ -588,15 +594,16 @@ export class OAuthProvider extends OAuthVerifier {
           uri,
           deviceId,
           account,
-          data,
+          data.authenticatedAt,
         )
 
-        await this.accountManager.addAuthorizedClient(
-          deviceId,
-          account,
-          client,
-          clientAuth,
-        )
+        if (data.remembered && !data.authorizedClients.includes(clientId)) {
+          await this.accountManager.setAuthorizedClients(
+            deviceId,
+            account.sub,
+            [...data.authorizedClients, clientId],
+          )
+        }
 
         return { issuer, client, parameters, redirect }
       } catch (err) {
@@ -684,22 +691,20 @@ export class OAuthProvider extends OAuthVerifier {
         input.code,
       )
 
-      const { account, info } = await this.accountManager.get(deviceId, sub)
-
-      // User revoked consent while client was asking for a token (or store
-      // failed to persist the consent)
-      if (!info.authorizedClients.includes(client.id)) {
-        throw new AccessDeniedError(parameters, 'Client not trusted anymore')
-      }
+      const { account, data } = await this.accountManager.getAuthenticated(
+        deviceId,
+        sub,
+      )
 
       return await this.tokenManager.create(
         client,
         clientAuth,
+        deviceId,
         account,
-        { id: deviceId, info },
         parameters,
         input,
         dpopJkt,
+        data.authenticatedAt,
       )
     } catch (err) {
       // If a token is replayed, requestManager.findCode will throw. In that

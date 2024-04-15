@@ -25,7 +25,9 @@ export type AuthenticationResult = {
 export type DeviceAccountData = {
   remembered: boolean
   authenticatedAt: Date
-  secondFactorRequired: boolean
+  secondFactor: null | {
+    methods: readonly SecondFactorMethod[]
+  }
   authorizedClients: readonly OAuthClientId[]
 }
 
