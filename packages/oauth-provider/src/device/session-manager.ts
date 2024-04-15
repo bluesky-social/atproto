@@ -6,18 +6,14 @@ import type Keygrip from 'keygrip'
 import { z } from 'zod'
 
 import { SESSION_FIXATION_MAX_AGE } from '../constants.js'
-import { extractDeviceDetails } from '../device/device-details.js'
 import {
-  DeviceId,
-  deviceIdSchema,
-  generateDeviceId,
-} from '../device/device-id.js'
-import {
-  SessionData,
+  DeviceData,
   generateSessionId,
   sessionIdSchema,
-} from './session-data.js'
-import { SessionStore } from './session-store.js'
+} from './device-data.js'
+import { extractDeviceDetails } from './device-details.js'
+import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
+import { DeviceStore } from './device-store.js'
 
 export const DEFAULT_OPTIONS = {
   /**
@@ -87,20 +83,20 @@ export const DEFAULT_OPTIONS = {
   },
 }
 
-export type DeviceSessionManagerOptions = typeof DEFAULT_OPTIONS
+export type DeviceDeviceManagerOptions = typeof DEFAULT_OPTIONS
 
 const cookieValueSchema = z.tuple([deviceIdSchema, sessionIdSchema])
 type CookieValue = z.infer<typeof cookieValueSchema>
 
 /**
  * This class provides an abstraction for keeping track of DEVICE sessions. It
- * relies on a {@link SessionStore} to persist session data and a cookie to
+ * relies on a {@link DeviceStore} to persist session data and a cookie to
  * identify the session.
  */
-export class SessionManager {
+export class DeviceManager {
   constructor(
-    private readonly store: SessionStore,
-    private readonly options: DeviceSessionManagerOptions = DEFAULT_OPTIONS,
+    private readonly store: DeviceStore,
+    private readonly options: DeviceDeviceManagerOptions = DEFAULT_OPTIONS,
   ) {}
 
   public async load(
@@ -126,7 +122,7 @@ export class SessionManager {
       generateSessionId(),
     ] as const)
 
-    await this.store.createDeviceSession(deviceId, {
+    await this.store.createDevice(deviceId, {
       sessionId,
       lastSeenAt: new Date(),
       userAgent,
@@ -144,7 +140,7 @@ export class SessionManager {
     [deviceId, sessionId]: CookieValue,
     forceRotate = false,
   ): Promise<{ deviceId: DeviceId }> {
-    const data = await this.store.readDeviceSession(deviceId)
+    const data = await this.store.readDevice(deviceId)
     if (!data) return this.create(req, res)
 
     const lastSeenAt = new Date(data.lastSeenAt)
@@ -157,7 +153,7 @@ export class SessionManager {
         forceRotate = true
       } else {
         // Something's wrong. Let's create a new session.
-        await this.store.deleteDeviceSession(deviceId)
+        await this.store.deleteDevice(deviceId)
         return this.create(req, res)
       }
     }
@@ -183,11 +179,11 @@ export class SessionManager {
     req: IncomingMessage,
     res: ServerResponse,
     deviceId: DeviceId,
-    data?: Partial<Omit<SessionData, 'sessionId' | 'lastSeenAt'>>,
+    data?: Partial<Omit<DeviceData, 'sessionId' | 'lastSeenAt'>>,
   ): Promise<void> {
     const sessionId = await generateSessionId()
 
-    await this.store.updateDeviceSession(deviceId, {
+    await this.store.updateDevice(deviceId, {
       ...data,
       sessionId,
       lastSeenAt: new Date(),
@@ -216,7 +212,7 @@ export class SessionManager {
     // Silently ignore invalid cookies
     if (!device || !session) {
       // If the device cookie is valid, let's cleanup the DB
-      if (device) await this.store.deleteDeviceSession(device.value)
+      if (device) await this.store.deleteDevice(device.value)
 
       return null
     }

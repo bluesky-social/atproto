@@ -46,6 +46,8 @@ import { ClientStore, asClientStore } from './client/client-store.js'
 import { AuthEndpoint, Client } from './client/client.js'
 import { AUTH_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { DeviceId } from './device/device-id.js'
+import { DeviceStore, asDeviceStore } from './device/device-store.js'
+import { DeviceManager } from './device/session-manager.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
@@ -91,8 +93,6 @@ import {
   authorizationRequestQuerySchema,
   pushedAuthorizationRequestSchema,
 } from './request/types.js'
-import { SessionManager } from './session/session-manager.js'
-import { SessionStore, asSessionStore } from './session/session-store.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
 import { TokenResponse } from './token/token-response.js'
@@ -116,7 +116,7 @@ import { Override } from './util/type.js'
 export type OAuthProviderStore = Partial<
   ClientStore &
     AccountStore &
-    SessionStore &
+    DeviceStore &
     TokenStore &
     RequestStore &
     ReplayStore
@@ -151,10 +151,10 @@ export type OAuthProviderOptions = Override<
     metadata?: CustomMetadata
 
     accountStore?: AccountStore
+    deviceStore?: DeviceStore
     clientStore?: ClientStore
     replayStore?: ReplayStore
     requestStore?: RequestStore
-    sessionStore?: SessionStore
     tokenStore?: TokenStore
 
     /**
@@ -173,9 +173,8 @@ export class OAuthProvider extends OAuthVerifier {
 
   public readonly defaultMaxAge: number
 
-  public readonly sessionStore: SessionStore
-
   public readonly accountManager: AccountManager
+  public readonly deviceStore: DeviceStore
   public readonly clientManager: ClientManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
@@ -193,7 +192,7 @@ export class OAuthProvider extends OAuthVerifier {
     requestStore = store && isRequestStore(store)
       ? store
       : new RequestStoreMemory(),
-    sessionStore = asSessionStore(store),
+    deviceStore = asDeviceStore(store),
     tokenStore = asTokenStore(store),
 
     ...rest
@@ -203,7 +202,7 @@ export class OAuthProvider extends OAuthVerifier {
     this.defaultMaxAge = defaultMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
 
-    this.sessionStore = sessionStore
+    this.deviceStore = deviceStore
 
     this.accountManager = new AccountManager(accountStore, rest)
     this.clientManager = new ClientManager(clientStore, this.keyset, rest)
@@ -852,7 +851,7 @@ export class OAuthProvider extends OAuthVerifier {
     customization?: Customization
     onError?: (req: Req, res: Res, err: unknown) => void
   }): Handler<T, Req, Res> {
-    const sessionManager = new SessionManager(this.sessionStore)
+    const deviceManager = new DeviceManager(this.deviceStore)
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const server = this
@@ -1111,7 +1110,7 @@ export class OAuthProvider extends OAuthVerifier {
           path: ['query'],
         })
 
-        const { deviceId } = await sessionManager.load(req, res)
+        const { deviceId } = await deviceManager.load(req, res)
         const data = await server.authorize(deviceId, input)
 
         switch (true) {
@@ -1164,12 +1163,12 @@ export class OAuthProvider extends OAuthVerifier {
         csrfCookie(input.request_uri),
       )
 
-      const { deviceId } = await sessionManager.load(req, res)
+      const { deviceId } = await deviceManager.load(req, res)
 
       const { account, info } = await server.signIn(deviceId, input.credentials)
 
       // Prevent fixation attacks
-      await sessionManager.rotate(req, res, deviceId)
+      await deviceManager.rotate(req, res, deviceId)
 
       return writeJson(res, {
         account,
@@ -1212,7 +1211,7 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId } = await sessionManager.load(req, res)
+        const { deviceId } = await deviceManager.load(req, res)
 
         const data = await server.acceptRequest(
           deviceId,
@@ -1265,7 +1264,7 @@ export class OAuthProvider extends OAuthVerifier {
           true,
         )
 
-        const { deviceId } = await sessionManager.load(req, res)
+        const { deviceId } = await deviceManager.load(req, res)
 
         const data = await server.rejectRequest(
           deviceId,
