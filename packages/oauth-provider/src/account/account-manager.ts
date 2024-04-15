@@ -1,16 +1,16 @@
+import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidRequestError } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
-import { ClientAuth } from '../token/token-store.js'
 import { constantTime } from '../util/time.js'
 import { AccountHooks } from './account-hooks.js'
 import {
-  Account,
-  AccountInfo,
   AccountStore,
+  DeviceAccount,
   LoginCredentials,
 } from './account-store.js'
+import { Account } from './account.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 
@@ -21,19 +21,43 @@ export class AccountManager {
   ) {}
 
   public async signIn(
-    credentials: LoginCredentials,
     deviceId: DeviceId,
-  ): Promise<AccountInfo> {
-    return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      const result = await this.store.authenticateAccount(credentials, deviceId)
-      if (result) return result
+    credentials: LoginCredentials,
+    remember: boolean,
+  ): Promise<DeviceAccount> {
+    const { account, secondFactors } = await constantTime(
+      TIMING_ATTACK_MITIGATION_DELAY,
+      async () => {
+        const result = await this.store.authenticateAccount(credentials)
+        if (result) return result
 
-      throw new InvalidRequestError('Invalid credentials')
-    })
+        throw new InvalidRequestError('Invalid credentials')
+      },
+    )
+
+    const current = await this.store.readDeviceAccount(deviceId, account.sub)
+    if (current && !current.data.secondFactorRequired) {
+      return this.store.updateDeviceAccount(deviceId, account.sub, {
+        remembered: remember,
+        authenticatedAt: new Date(),
+      })
+    }
+
+    if (!secondFactors?.length) {
+      return this.store.upsertDeviceAccount(deviceId, account.sub, {
+        ...current?.data,
+        remembered: remember,
+        authenticatedAt: new Date(),
+        secondFactorRequired: false,
+        authorizedClients: [],
+      })
+    }
+
+    throw new Error('2FA not implemented')
   }
 
-  public async get(deviceId: DeviceId, sub: Sub): Promise<AccountInfo> {
-    const result = await this.store.getDeviceAccount(deviceId, sub)
+  public async get(deviceId: DeviceId, sub: Sub): Promise<DeviceAccount> {
+    const result = await this.store.readDeviceAccount(deviceId, sub)
     if (result) return result
 
     throw new InvalidRequestError(`Account not found`)
@@ -46,19 +70,24 @@ export class AccountManager {
     clientAuth: ClientAuth,
   ): Promise<void> {
     if (this.hooks.onAccountAddAuthorizedClient) {
-      const shouldAdd = await this.hooks.onAccountAddAuthorizedClient(client, {
+      const shouldAdd = await this.hooks.onAccountAddAuthorizedClient(
         deviceId,
-        account,
-        clientAuth,
-      })
+        account.sub,
+        client.id,
+        { client, clientAuth },
+      )
       if (!shouldAdd) return
     }
 
-    await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
+    // TODO: refactor to use "updateDeviceAccount"
+
+    // await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
   }
 
-  public async list(deviceId: DeviceId): Promise<AccountInfo[]> {
+  public async listActiveSessions(deviceId: DeviceId) {
     const results = await this.store.listDeviceAccounts(deviceId)
-    return results.filter((result) => result.info.remembered)
+    return results.filter(
+      (result) => result.data.authenticatedAt != null && result.data.remembered,
+    )
   }
 }

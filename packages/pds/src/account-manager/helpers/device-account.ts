@@ -135,9 +135,7 @@ export const get = async (
 ) => {
   const row = await selectAccountInfoQB(db, deviceId)
     .where('actor.did', '=', did)
-    .executeTakeFirst()
-
-  if (!row) return null
+    .executeTakeFirstOrThrow()
 
   return {
     account: toAccount(row, audience),

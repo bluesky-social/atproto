@@ -1,7 +1,10 @@
 import { OAuthClientId } from '@atproto/oauth-client-metadata'
 import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
 
-import { DeviceAccountInfo } from '../account/account-store.js'
+import {
+  DeviceAccountData,
+  DeviceAccountInfo,
+} from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
@@ -353,7 +356,7 @@ export class RequestManager {
     uri: RequestUri,
     deviceId: DeviceId,
     account: Account,
-    info: DeviceAccountInfo,
+    deviceAccountData: DeviceAccountData,
   ): Promise<{ code?: Code; id_token?: string }> {
     const id = decodeRequestUri(uri)
 
@@ -399,7 +402,7 @@ export class RequestManager {
 
       const id_token = responseType.includes('id_token')
         ? await this.signer.idToken(client, data.parameters, account, {
-            auth_time: info.authenticatedAt,
+            auth_time: deviceAccountData.authenticatedAt,
             exp: this.createTokenExpiry(),
             code,
           })

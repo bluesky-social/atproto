@@ -30,7 +30,7 @@ import { AccountManager } from './account/account-manager.js'
 import {
   AccountInfo,
   AccountStore,
-  DeviceAccountInfo,
+  DeviceAccount,
   LoginCredentials,
   asAccountStore,
 } from './account/account-store.js'
@@ -228,11 +228,11 @@ export class OAuthProvider extends OAuthVerifier {
   protected loginRequired(
     client: Client,
     parameters: AuthorizationParameters,
-    info: DeviceAccountInfo,
+    authenticatedAt: Date,
   ) {
     const authAge = Math.max(
       0, // Prevent negative values (fool proof)
-      (Date.now() - info.authenticatedAt.getTime()) / 1e3,
+      (Date.now() - authenticatedAt.getTime()) / 1e3,
     )
     const maxAge = Math.max(
       0, // Prevent negative values (fool proof)
@@ -522,7 +522,6 @@ export class OAuthProvider extends OAuthVerifier {
   ): Promise<
     {
       account: Account
-      info: DeviceAccountInfo
 
       selected: boolean
       loginRequired: boolean
@@ -531,23 +530,19 @@ export class OAuthProvider extends OAuthVerifier {
       matchesHint: boolean
     }[]
   > {
-    const accounts = await this.accountManager.list(deviceId)
-
-    return accounts.map(({ account, info }) => ({
+    const sessions = await this.accountManager.listActiveSessions(deviceId)
+    return sessions.map(({ account, data }) => ({
       account,
-      info,
 
       selected:
         parameters.prompt !== 'select_account' &&
         parameters.login_hint === account.sub,
       loginRequired:
         parameters.prompt === 'login' ||
-        this.loginRequired(client, parameters, info),
+        this.loginRequired(client, parameters, data.authenticatedAt),
       consentRequired:
-        parameters.prompt === 'login' ||
         parameters.prompt === 'consent' ||
-        !info.authorizedClients.includes(client.id),
-
+        !data.authorizedClients.includes(client.id),
       matchesHint:
         parameters.login_hint === account.sub || parameters.login_hint == null,
     }))
@@ -556,8 +551,9 @@ export class OAuthProvider extends OAuthVerifier {
   protected async signIn(
     deviceId: DeviceId,
     credentials: LoginCredentials,
-  ): Promise<AccountInfo> {
-    return this.accountManager.signIn(credentials, deviceId)
+    remember: boolean,
+  ): Promise<DeviceAccount> {
+    return this.accountManager.signIn(deviceId, credentials, remember)
   }
 
   protected async acceptRequest(
@@ -577,10 +573,10 @@ export class OAuthProvider extends OAuthVerifier {
       )
 
       try {
-        const { account, info } = await this.accountManager.get(deviceId, sub)
+        const { account, data } = await this.accountManager.get(deviceId, sub)
 
         // The user is trying to authorize without a fresh login
-        if (this.loginRequired(client, parameters, info)) {
+        if (this.loginRequired(client, parameters, data.authenticatedAt)) {
           throw new LoginRequiredError(
             parameters,
             'Account authentication required.',
@@ -592,7 +588,7 @@ export class OAuthProvider extends OAuthVerifier {
           uri,
           deviceId,
           account,
-          info,
+          data,
         )
 
         await this.accountManager.addAuthorizedClient(
@@ -1165,14 +1161,18 @@ export class OAuthProvider extends OAuthVerifier {
 
       const { deviceId } = await deviceManager.load(req, res)
 
-      const { account, info } = await server.signIn(deviceId, input.credentials)
+      const { account, data } = await server.signIn(
+        deviceId,
+        input.credentials,
+        input.credentials.remember,
+      )
 
       // Prevent fixation attacks
       await deviceManager.rotate(req, res, deviceId)
 
       return writeJson(res, {
         account,
-        consentRequired: !info.authorizedClients.includes(input.client_id),
+        consentRequired: !data.authorizedClients.includes(input.client_id),
       })
     })
 

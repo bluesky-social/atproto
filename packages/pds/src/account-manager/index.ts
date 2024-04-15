@@ -1,11 +1,12 @@
-import { KeyObject } from 'node:crypto'
 import { HOUR, wait } from '@atproto/common'
 import {
   AccountInfo,
   AccountStore,
+  AuthenticationResult,
   Code,
   DeviceData,
   DeviceId,
+  DeviceStore,
   FoundRequestResult,
   LoginCredentials,
   NewTokenData,
@@ -13,7 +14,6 @@ import {
   RequestData,
   RequestId,
   RequestStore,
-  DeviceStore,
   TokenData,
   TokenId,
   TokenInfo,
@@ -22,6 +22,7 @@ import {
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
+import { KeyObject } from 'node:crypto'
 
 import { AuthScope } from '../auth-verifier'
 import { softDeleted } from '../db'
@@ -31,8 +32,8 @@ import * as account from './helpers/account'
 import { ActorAccount } from './helpers/account'
 import * as auth from './helpers/auth'
 import * as authorizationRequest from './helpers/authorization-request.js'
-import * as device from './helpers/device.js'
 import * as deviceAccount from './helpers/device-account.js'
+import * as device from './helpers/device.js'
 import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
 import * as password from './helpers/password'
@@ -470,20 +471,36 @@ export class AccountManager
 
   // AccountStore
 
-  async authenticateAccount(
-    { username: identifier, password, remember = false }: LoginCredentials,
-    deviceId: DeviceId,
-  ): Promise<AccountInfo | null> {
+  async authenticateAccount({
+    username: identifier,
+    password,
+  }: LoginCredentials): Promise<AuthenticationResult | null> {
     try {
       const { user } = await this.login({ identifier, password }, false)
 
-      await deviceAccount.createOrUpdate(this.db, deviceId, user.did, remember)
-
-      return deviceAccount.get(this.db, deviceId, user.did, this.serviceDid)
+      return {
+        account: deviceAccount.toAccount(user, this.serviceDid),
+        secondFactors: [
+          {
+            id: '1',
+            type: 'email',
+            data: { email: user.email },
+          },
+        ],
+      }
     } catch (err) {
       if (err instanceof AuthRequiredError) return null
       throw err
     }
+  }
+
+  async upsertDeviceAccount(
+    deviceId: DeviceId,
+    sub: string,
+    remember: boolean,
+  ): Promise<AccountInfo> {
+    await deviceAccount.createOrUpdate(this.db, deviceId, sub, remember)
+    return deviceAccount.get(this.db, deviceId, sub, this.serviceDid)
   }
 
   async addAuthorizedClient(
@@ -506,7 +523,7 @@ export class AccountManager
     })
   }
 
-  async getDeviceAccount(
+  async readDeviceAccount(
     deviceId: DeviceId,
     sub: string,
   ): Promise<AccountInfo | null> {
@@ -517,7 +534,7 @@ export class AccountManager
     return deviceAccount.listRemembered(this.db, deviceId, this.serviceDid)
   }
 
-  async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+  async deleteDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
     return deviceAccount.remove(this.db, deviceId, sub)
   }
 

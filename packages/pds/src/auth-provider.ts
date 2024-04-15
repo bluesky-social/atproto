@@ -1,8 +1,10 @@
 import { safeFetchWrap } from '@atproto/fetch-node'
 import {
   AccessTokenType,
+  Account,
   AccountInfo,
   AccountStore,
+  AuthenticationResult,
   Client,
   ClientAuth,
   ConsentRequiredError,
@@ -163,9 +165,9 @@ class DetailedAccountStore implements AccountStore {
     private basicProfileGetter: BasicProfileGetter,
   ) {}
 
-  private async enrichAccountInfo(
-    accountInfo: AccountInfo,
-  ): Promise<AccountInfo> {
+  private async enrichAccount<A extends { account: Account }>(
+    accountInfo: A,
+  ): Promise<A> {
     const { account } = accountInfo
     if (!account.picture || !account.name) {
       const profile = await this.basicProfileGetter.get(account.sub)
@@ -180,14 +182,18 @@ class DetailedAccountStore implements AccountStore {
 
   async authenticateAccount(
     credentials: LoginCredentials,
-    deviceId: DeviceId,
-  ): Promise<AccountInfo | null> {
-    const accountInfo = await this.store.authenticateAccount(
-      credentials,
-      deviceId,
-    )
+  ): Promise<AuthenticationResult | null> {
+    const accountInfo = await this.store.authenticateAccount(credentials)
     if (!accountInfo) return null
-    return this.enrichAccountInfo(accountInfo)
+    return this.enrichAccount(accountInfo)
+  }
+
+  async upsertDeviceAccount(
+    deviceId: DeviceId,
+    sub: string,
+    remember: boolean,
+  ) {
+    return this.store.upsertDeviceAccount(deviceId, sub, remember)
   }
 
   async addAuthorizedClient(
@@ -198,26 +204,24 @@ class DetailedAccountStore implements AccountStore {
     return this.store.addAuthorizedClient(deviceId, sub, clientId)
   }
 
-  async getDeviceAccount(
+  async readDeviceAccount(
     deviceId: DeviceId,
     sub: string,
   ): Promise<AccountInfo | null> {
-    const accountInfo = await this.store.getDeviceAccount(deviceId, sub)
+    const accountInfo = await this.store.readDeviceAccount(deviceId, sub)
     if (!accountInfo) return null
-    return this.enrichAccountInfo(accountInfo)
+    return this.enrichAccount(accountInfo)
   }
 
   async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
     const accountInfos = await this.store.listDeviceAccounts(deviceId)
     return Promise.all(
-      accountInfos.map(async (accountInfo) =>
-        this.enrichAccountInfo(accountInfo),
-      ),
+      accountInfos.map(async (accountInfo) => this.enrichAccount(accountInfo)),
     )
   }
 
-  async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
-    return this.store.removeDeviceAccount(deviceId, sub)
+  async deleteDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
+    return this.store.deleteDeviceAccount(deviceId, sub)
   }
 }
 

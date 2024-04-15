@@ -1,6 +1,7 @@
 import { OAuthClientId } from '@atproto/oauth-client-metadata'
 
 import { DeviceId } from '../device/device-id.js'
+import { DeviceData } from '../device/device-data.js'
 import { Sub } from '../oidc/sub.js'
 import { Awaitable } from '../util/awaitable.js'
 import { Account } from './account.js'
@@ -8,49 +9,61 @@ import { Account } from './account.js'
 export type LoginCredentials = {
   username: string
   password: string
-
-  /**
-   * If false, the account must not be returned from
-   * {@link AccountStore.listDeviceAccounts}. Note that this only makes sense when
-   * used with a device ID.
-   */
-  remember?: boolean
 }
 
-export type DeviceAccountInfo = {
+export type SecondFactorMethod = {
+  id: string
+  type: 'email' | 'totp' | 'webauthn'
+  data?: unknown
+}
+
+export type AuthenticationResult = {
+  account: Account
+  secondFactors?: readonly SecondFactorMethod[]
+}
+
+export type DeviceAccountData = {
   remembered: boolean
   authenticatedAt: Date
+  secondFactorRequired: boolean
   authorizedClients: readonly OAuthClientId[]
 }
 
 // Export all types needed to implement the AccountStore interface
-export type { Account, DeviceId, Sub }
+export type { Account, DeviceId, DeviceData, Sub }
 
-export type AccountInfo = {
+export type DeviceAccount = {
+  device: DeviceData
   account: Account
-  info: DeviceAccountInfo
+
+  data: DeviceAccountData
 }
 
 export interface AccountStore {
   authenticateAccount(
     credentials: LoginCredentials,
-    deviceId: DeviceId,
-  ): Awaitable<AccountInfo | null>
+  ): Awaitable<AuthenticationResult | null>
 
-  addAuthorizedClient(
+  upsertDeviceAccount(
     deviceId: DeviceId,
     sub: Sub,
-    clientId: OAuthClientId,
-  ): Awaitable<void>
+    data: DeviceAccountData,
+  ): Awaitable<DeviceAccount>
 
-  getDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<AccountInfo | null>
-  removeDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+  readDeviceAccount(
+    deviceId: DeviceId,
+    sub: Sub,
+  ): Awaitable<DeviceAccount | null>
 
-  /**
-   * @note Only the accounts that where logged in with `remember: true` need to
-   * be returned. The others will be ignored.
-   */
-  listDeviceAccounts(deviceId: DeviceId): Awaitable<AccountInfo[]>
+  updateDeviceAccount(
+    deviceId: DeviceId,
+    sub: Sub,
+    data: Partial<DeviceAccountData>,
+  ): Awaitable<DeviceAccount>
+
+  deleteDeviceAccount(deviceId: DeviceId, sub: Sub): Awaitable<void>
+
+  listDeviceAccounts(deviceId: DeviceId): Awaitable<DeviceAccount[]>
 }
 
 export function isAccountStore(
@@ -58,10 +71,10 @@ export function isAccountStore(
 ): implementation is Record<string, unknown> & AccountStore {
   return (
     typeof implementation.authenticateAccount === 'function' &&
-    typeof implementation.getDeviceAccount === 'function' &&
+    typeof implementation.readDeviceAccount === 'function' &&
     typeof implementation.addAuthorizedClient === 'function' &&
     typeof implementation.listDeviceAccounts === 'function' &&
-    typeof implementation.removeDeviceAccount === 'function'
+    typeof implementation.deleteDeviceAccount === 'function'
   )
 }
 

@@ -1,8 +1,8 @@
 import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
-import { ClientAuth } from '../token/token-store.js'
+import { ClientAuth, OAuthClientId } from '../token/token-store.js'
 import { Awaitable } from '../util/awaitable.js'
-import { Account } from './account-store.js'
+import { Sub } from './account-store.js'
 // https://github.com/typescript-eslint/typescript-eslint/issues/8902
 // eslint-disable-next-line
 import { AccountStore } from './account-store.js'
@@ -13,10 +13,11 @@ import { AccountStore } from './account-store.js'
  * the store method).
  */
 export type AccountAddAuthorizedClient = (
-  client: Client,
+  deviceId: DeviceId,
+  account: Sub,
+  clientId: OAuthClientId,
   data: {
-    deviceId: DeviceId
-    account: Account
+    client: Client
     clientAuth: ClientAuth
   },
 ) => Awaitable<boolean>
