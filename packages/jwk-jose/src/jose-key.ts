@@ -1,9 +1,11 @@
 import {
+  GenerateKeyPairOptions,
   JWK,
   JWTVerifyOptions,
   KeyLike,
   SignJWT,
   exportJWK,
+  generateKeyPair,
   importJWK,
   importPKCS8,
   jwtVerify,
@@ -18,7 +20,7 @@ import {
   VerifyOptions,
   VerifyPayload,
   VerifyResult,
-  jwkSchema,
+  jwkValidator,
 } from '@atproto/jwk'
 import { either } from './util'
 
@@ -62,6 +64,15 @@ export class JoseKey extends Key {
     return result as VerifyResult<P, C>
   }
 
+  static async generate(
+    kid: string,
+    alg: string,
+    options?: GenerateKeyPairOptions,
+  ) {
+    const { privateKey } = await generateKeyPair(alg, options)
+    return this.fromImportable(privateKey, kid)
+  }
+
   static async fromImportable(
     input: Importable,
     kid?: string,
@@ -69,6 +80,7 @@ export class JoseKey extends Key {
     if (typeof input === 'string') {
       // PKCS8
       if (input.startsWith('-----')) {
+        if (!kid) throw new TypeError('Missing "kid" for PKCS8 key')
         return this.fromPKCS8(input, kid)
       }
 
@@ -87,13 +99,14 @@ export class JoseKey extends Key {
       }
 
       // KeyLike
+      if (!kid) throw new TypeError('Missing "kid" for KeyLike key')
       return this.fromJWK(await exportJWK(input), kid)
     }
 
     throw new TypeError('Invalid input')
   }
 
-  static async fromPKCS8(pem: string, kid?: string): Promise<JoseKey> {
+  static async fromPKCS8(pem: string, kid: string): Promise<JoseKey> {
     const keyLike = await importPKCS8(pem, '', { extractable: true })
     return this.fromJWK(await exportJWK(keyLike), kid)
   }
@@ -102,7 +115,7 @@ export class JoseKey extends Key {
     input: string | Record<string, unknown>,
     inputKid?: string,
   ): Promise<JoseKey> {
-    const jwk = jwkSchema.parse(
+    const jwk = jwkValidator.parse(
       typeof input === 'string' ? JSON.parse(input) : input,
     )
 
