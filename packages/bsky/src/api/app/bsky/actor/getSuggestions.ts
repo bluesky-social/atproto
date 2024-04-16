@@ -46,7 +46,7 @@ const skeleton = async (input: {
   const viewer = params.hydrateCtx.viewer
   if (ctx.suggestionsAgent) {
     const res =
-      await ctx.suggestionsAgent.api.app.bsky.actor.getSuggestionsSkeleton({
+      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton({
         viewer: viewer ?? undefined,
         limit: params.limit,
         cursor: params.cursor,
