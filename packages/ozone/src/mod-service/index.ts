@@ -759,7 +759,9 @@ export class ModerationService {
 
     if (tags.length) {
       builder = builder.where(
-        sql`${ref('moderation_subject_status.tags')} @> ${jsonb(tags)}`,
+        sql`${ref('moderation_subject_status.tags')} ?| array[${sql.join(
+          tags,
+        )}]::TEXT[]`,
       )
     }
 
@@ -767,9 +769,9 @@ export class ModerationService {
       builder = builder.where((qb) =>
         qb
           .where(
-            sql`NOT(${ref('moderation_subject_status.tags')} @> ${jsonb(
-              excludeTags,
-            )})`,
+            sql`NOT(${ref(
+              'moderation_subject_status.tags',
+            )} ?| array[${sql.join(excludeTags)}]::TEXT[])`,
           )
           .orWhere('tags', 'is', null),
       )
@@ -787,7 +789,6 @@ export class ModerationService {
       tryIndex: true,
       nullsLast: true,
     })
-
     const results = await paginatedBuilder.execute()
 
     const infos = await this.views.getAccoutInfosByDid(
