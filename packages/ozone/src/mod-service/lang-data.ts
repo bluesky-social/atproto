@@ -1,3 +1,4 @@
+// Also used in the client app https://github.com/bluesky-social/social-app/blob/main/src/locale/languages.ts
 interface Language {
   code3: string
   code2: string

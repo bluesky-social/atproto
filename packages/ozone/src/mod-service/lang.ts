@@ -5,14 +5,11 @@ import { ModSubject } from './subject'
 import { ModerationSubjectStatusRow } from './types'
 import { langLogger as log } from '../logger'
 import { code3ToCode2 } from './lang-data'
-import { AtUri } from '@atproto/syntax'
-import { ids } from '../lexicon/lexicons'
 import {
   AppBskyActorProfile,
   AppBskyFeedGenerator,
   AppBskyFeedPost,
   AppBskyGraphList,
-  AppBskyLabelerService,
 } from '@atproto/api'
 
 export class ModerationLangService {
