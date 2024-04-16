@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "temp.dm.sendMessage",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["roomId", "message"],
+          "properties": {
+            "roomId": { "type": "string" },
+            "message": {
+              "type": "ref",
+              "ref": "temp.dm.defs#message"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["messageId"],
+          "properties": {
+            "messageId": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

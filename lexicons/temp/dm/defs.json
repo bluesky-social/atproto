@@ -1,0 +1,69 @@
+{
+  "lexicon": 1,
+  "id": "temp.dm.defs",
+  "defs": {
+    "message": {
+      "type": "object",
+      "required": ["text", "facets", "embed"],
+      "properties": {
+        "id": { "type": "string" },
+        "text": {
+          "type": "string",
+          "maxLength": 10000,
+          "maxGraphemes": 1000
+        },
+        "facets": {
+          "type": "array",
+          "description": "Annotations of text (mentions, URLs, hashtags, etc)",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "embed": {
+          "type": "union",
+          "refs": [
+            "app.bsky.embed.record"
+          ]
+        }
+      }
+    },
+    "messageView": {
+      "type": "object",
+      "required": ["id", "text", "facets", "embed", "sentAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "text": {
+          "type": "string",
+          "maxLength": 10000,
+          "maxGraphemes": 1000
+        },
+        "facets": {
+          "type": "array",
+          "description": "Annotations of text (mentions, URLs, hashtags, etc)",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "embed": {
+          "type": "union",
+          "refs": [
+            "app.bsky.embed.record#view"
+          ]
+        },
+        "sentAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "roomView": {
+      "type": "object",
+      "required": ["id", "participants", "unreadCount"],
+      "properties": {
+        "id": { "type": "string" },
+        "participants": {
+          "type": "array",
+          "items": { "type": "string", "format": "did" }
+        },
+        "lastMessage": {
+          "type": "ref",
+          "ref": "#message"
+        },
+        "unreadCount": { "type": "integer" }
+      }
+    }
+  }
+}

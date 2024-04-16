@@ -139,6 +139,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
+import * as TempDmGetRoomForMembers from './types/temp/dm/getRoomForMembers'
+import * as TempDmListRooms from './types/temp/dm/listRooms'
+import * as TempDmSendMessage from './types/temp/dm/sendMessage'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -183,12 +187,14 @@ export class Server {
   com: ComNS
   app: AppNS
   tools: ToolsNS
+  temp: TempNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.tools = new ToolsNS(this)
+    this.temp = new TempNS(this)
   }
 }
 
@@ -1856,6 +1862,68 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class TempNS {
+  _server: Server
+  dm: TempDmNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.dm = new TempDmNS(server)
+  }
+}
+
+export class TempDmNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteMessage<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmDeleteMessage.Handler<ExtractAuth<AV>>,
+      TempDmDeleteMessage.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.deleteMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRoomForMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmGetRoomForMembers.Handler<ExtractAuth<AV>>,
+      TempDmGetRoomForMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.getRoomForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listRooms<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmListRooms.Handler<ExtractAuth<AV>>,
+      TempDmListRooms.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.listRooms' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessage<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmSendMessage.Handler<ExtractAuth<AV>>,
+      TempDmSendMessage.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.sendMessage' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

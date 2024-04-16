@@ -9467,6 +9467,237 @@ export const schemaDict = {
       },
     },
   },
+  TempDmDefs: {
+    lexicon: 1,
+    id: 'temp.dm.defs',
+    defs: {
+      message: {
+        type: 'object',
+        required: ['text', 'facets', 'embed'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          text: {
+            type: 'string',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+          },
+          facets: {
+            type: 'array',
+            description: 'Annotations of text (mentions, URLs, hashtags, etc)',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          embed: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.record'],
+          },
+        },
+      },
+      messageView: {
+        type: 'object',
+        required: ['id', 'text', 'facets', 'embed', 'sentAt'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          text: {
+            type: 'string',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+          },
+          facets: {
+            type: 'array',
+            description: 'Annotations of text (mentions, URLs, hashtags, etc)',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          embed: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.record#view'],
+          },
+          sentAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      roomView: {
+        type: 'object',
+        required: ['id', 'participants', 'unreadCount'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          participants: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+          lastMessage: {
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#message',
+          },
+          unreadCount: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  TempDmDeleteMessage: {
+    lexicon: 1,
+    id: 'temp.dm.deleteMessage',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['roomId', 'messageId'],
+            properties: {
+              roomId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  TempDmGetRoomForMembers: {
+    lexicon: 1,
+    id: 'temp.dm.getRoomForMembers',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            members: {
+              type: 'array',
+              minLength: 1,
+              maxLength: 10,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['room'],
+            properties: {
+              room: {
+                type: 'ref',
+                ref: 'lex:temp.dm.defs#roomView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  TempDmListRooms: {
+    lexicon: 1,
+    id: 'temp.dm.listRooms',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['rooms'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              rooms: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:temp.dm.defs#roomView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  TempDmSendMessage: {
+    lexicon: 1,
+    id: 'temp.dm.sendMessage',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['roomId', 'message'],
+            properties: {
+              roomId: {
+                type: 'string',
+              },
+              message: {
+                type: 'ref',
+                ref: 'lex:temp.dm.defs#message',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['messageId'],
+            properties: {
+              messageId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -9649,4 +9880,9 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  TempDmDefs: 'temp.dm.defs',
+  TempDmDeleteMessage: 'temp.dm.deleteMessage',
+  TempDmGetRoomForMembers: 'temp.dm.getRoomForMembers',
+  TempDmListRooms: 'temp.dm.listRooms',
+  TempDmSendMessage: 'temp.dm.sendMessage',
 }
