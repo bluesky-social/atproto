@@ -99,6 +99,33 @@ describe('moderation-statuses', () => {
       expect(nonKlingonQueue.subjectStatuses.map((s) => s.id)).not.toContain(
         klingonQueue.subjectStatuses[0].id,
       )
+
+      // Verify multi lang tag exclusion
+      Promise.all(
+        nonKlingonQueue.subjectStatuses.map((s, i) => {
+          return modClient.emitEvent({
+            subject: s.subject,
+            event: {
+              $type: 'tools.ozone.moderation.defs#modEventTag',
+              add: [i % 2 ? 'lang:jp' : 'lang:it'],
+              remove: [],
+              comment: 'Adding custom lang tag',
+            },
+            createdBy: sc.dids.alice,
+          })
+        }),
+      )
+
+      const queueWithoutKlingonAndItalian = await modClient.queryStatuses({
+        excludeTags: ['lang:i', 'lang:it'],
+      })
+
+      queueWithoutKlingonAndItalian.subjectStatuses
+        .map((s) => s.tags)
+        .flat()
+        .forEach((tag) => {
+          expect(['lang:it', 'lang:i']).not.toContain(tag)
+        })
     })
 
     it('returns paginated statuses', async () => {

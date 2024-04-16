@@ -86,7 +86,7 @@ export const ensureHandleServiceConstraints = (
   if (front.length < 3) {
     throw new InvalidRequestError('Handle too short', 'InvalidHandle')
   }
-  if (handle.length > 30) {
+  if (front.length > 18) {
     throw new InvalidRequestError('Handle too long', 'InvalidHandle')
   }
   if (!allowReserved && reservedSubdomains[front]) {
