@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyActorDefs from './defs'
+import * as AppBskyUnspeccedDefs from './defs'
 
 export interface QueryParams {
   /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
@@ -19,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  actors: AppBskyActorDefs.SkeletonActor[]
+  actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
   [k: string]: unknown
 }
 
