@@ -115,13 +115,12 @@ export class JoseKey extends Key {
     input: string | Record<string, unknown>,
     inputKid?: string,
   ): Promise<JoseKey> {
-    const jwk = jwkValidator.parse(
-      typeof input === 'string' ? JSON.parse(input) : input,
-    )
+    const jwk = typeof input === 'string' ? JSON.parse(input) : input
+    if (!jwk || typeof jwk !== 'object') throw new TypeError('Invalid JWK')
 
     const kid = either(jwk.kid, inputKid)
     const use = jwk.use || 'sig'
 
-    return new JoseKey({ ...jwk, kid, use })
+    return new JoseKey(jwkValidator.parse({ ...jwk, kid, use }))
   }
 }
