@@ -7,6 +7,13 @@ import { langLogger as log } from '../logger'
 import { code3ToCode2 } from './lang-data'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
+import {
+  AppBskyActorProfile,
+  AppBskyFeedGenerator,
+  AppBskyFeedPost,
+  AppBskyGraphList,
+  AppBskyLabelerService,
+} from '@atproto/api'
 
 export class ModerationLangService {
   constructor(private moderationService: ModerationService) {}
@@ -45,22 +52,18 @@ export class ModerationLangService {
     }
   }
 
-  getTextFromRecord(
-    uri: string,
-    recordValue?: Record<string, unknown>,
-  ): string | undefined {
-    const atUri = new AtUri(uri)
+  getTextFromRecord(recordValue?: Record<string, unknown>): string | undefined {
     let text: string | undefined
-    if (
-      [ids.AppBskyGraphList, ids.AppBskyFeedGenerator].includes(
-        atUri.collection,
-      )
-    ) {
-      text = (recordValue?.description || recordValue?.name) as string
-    }
 
-    if (!text && recordValue?.text) {
-      text = recordValue.text as string
+    if (AppBskyGraphList.isRecord(recordValue)) {
+      text = recordValue.description || recordValue.name
+    } else if (
+      AppBskyFeedGenerator.isRecord(recordValue) ||
+      AppBskyActorProfile.isRecord(recordValue)
+    ) {
+      text = recordValue.description || recordValue.displayName
+    } else if (AppBskyFeedPost.isRecord(recordValue)) {
+      text = recordValue.text
     }
 
     return text?.trim()
