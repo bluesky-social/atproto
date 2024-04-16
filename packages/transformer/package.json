@@ -1,13 +1,25 @@
 {
   "name": "@atproto/transformer",
   "version": "0.0.1",
+  "license": "MIT",
+  "description": "Library for combining multiple functions into a single function.",
+  "keywords": [
+    "atproto",
+    "transformer"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/transformer"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {

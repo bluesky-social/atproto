@@ -15,15 +15,22 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth-server-metadata"
   },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
   }
 }

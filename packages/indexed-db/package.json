@@ -2,10 +2,12 @@
   "name": "@atproto/indexed-db",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Isomorphic wrapper utilities for indexed-db API",
+  "description": "Wrapper utilities for Browser's indexed-db API",
   "keywords": [
     "atproto",
-    "indexed-db"
+    "browser",
+    "indexed",
+    "db"
   ],
   "homepage": "https://atproto.com",
   "repository": {
@@ -18,8 +20,8 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {

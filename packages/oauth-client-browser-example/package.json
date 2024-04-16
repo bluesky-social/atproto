@@ -18,10 +18,11 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "dev": "vite --force --host --clearScreen false",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "devDependencies": {
     "@atproto/oauth-client": "workspace:*",
@@ -38,5 +39,10 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.12"
+  },
+  "scripts": {
+    "dev": "vite --force --host --clearScreen false",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   }
 }

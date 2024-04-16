@@ -2,12 +2,14 @@
   "name": "@atproto/handle-resolver",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Isomorphic ATProto handle resolver",
+  "description": "Isomorphic ATProto handle to DID resolver",
   "keywords": [
     "atproto",
     "oauth",
     "handle",
     "identity",
+    "browser",
+    "node",
     "isomorphic"
   ],
   "homepage": "https://atproto.com",
@@ -16,10 +18,14 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/handle-resolver"
   },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@atproto/caching": "workspace:*",
@@ -30,5 +36,8 @@
   },
   "devDependencies": {
     "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
   }
 }

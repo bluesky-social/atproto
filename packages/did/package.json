@@ -15,10 +15,14 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/did"
   },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@atproto/caching": "workspace:*",
@@ -26,5 +30,8 @@
     "@atproto/jwk": "workspace:*",
     "@atproto/transformer": "workspace:*",
     "zod": "^3.22.4"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
   }
 }

@@ -2,12 +2,11 @@
   "name": "@atproto/jwk-jose",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "NodeJS implementation of Keypair from @atproto/jwk",
+  "description": "`jose` based implementation of @atproto/jwk Key's",
   "keywords": [
     "atproto",
     "jwk",
-    "jose",
-    "keypair"
+    "jose"
   ],
   "homepage": "https://atproto.com",
   "repository": {
@@ -18,6 +17,12 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
     "@atproto/jwk": "workspace:*",
     "jose": "^5.2.0",
