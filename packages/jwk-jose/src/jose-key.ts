@@ -26,6 +26,8 @@ import { either } from './util'
 
 export type Importable = string | KeyLike | Jwk
 
+export type { GenerateKeyPairOptions }
+
 export class JoseKey extends Key {
   #keyObj?: KeyLike | Uint8Array
 
@@ -64,13 +66,28 @@ export class JoseKey extends Key {
     return result as VerifyResult<P, C>
   }
 
-  static async generate(
-    kid: string,
-    alg: string,
+  static async generateKeyPair(
+    allowedAlgos: string[] = ['ES256'],
     options?: GenerateKeyPairOptions,
   ) {
-    const { privateKey } = await generateKeyPair(alg, options)
-    return this.fromImportable(privateKey, kid)
+    const errors: unknown[] = []
+    for (const alg of allowedAlgos) {
+      try {
+        return await generateKeyPair(alg, options)
+      } catch (err) {
+        errors.push(err)
+      }
+    }
+    throw new AggregateError(errors, 'Failed to generate key pair')
+  }
+
+  static async generate(
+    kid: string,
+    allowedAlgos: string[] = ['ES256'],
+    options?: GenerateKeyPairOptions,
+  ) {
+    const kp = await this.generateKeyPair(allowedAlgos, options)
+    return this.fromImportable(kp.privateKey, kid)
   }
 
   static async fromImportable(
