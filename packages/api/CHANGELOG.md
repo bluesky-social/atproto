@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.12.3
+
+### Patch Changes
+
+- [#2383](https://github.com/bluesky-social/atproto/pull/2383) [`0edef0ec0`](https://github.com/bluesky-social/atproto/commit/0edef0ec01403fd6097a4d2875b68313f2f1261f) Thanks [@dholms](https://github.com/dholms)! - Added feed generator interaction lexicons
+
+- [#2409](https://github.com/bluesky-social/atproto/pull/2409) [`c6d758b8b`](https://github.com/bluesky-social/atproto/commit/c6d758b8b63f4ef50b2ab9afc62164e92a53e7f0) Thanks [@devinivy](https://github.com/devinivy)! - Support for upcoming post search params
+
 ## 0.12.2
 
 ### Patch Changes
