@@ -150,6 +150,7 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -310,6 +311,7 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -2632,6 +2634,22 @@ export class AppBskyUnspeccedNS {
       )
       .catch((e) => {
         throw AppBskyUnspeccedGetPopularFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getSuggestionsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestionsSkeleton.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.unspecced.getSuggestionsSkeleton',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedGetSuggestionsSkeleton.toKnownErr(e)
       })
   }
 

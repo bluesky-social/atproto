@@ -7843,6 +7843,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestionsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestionsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested actors. Intended to be called and then hydrated through app.bsky.actor.getSuggestions',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetTaggedSuggestions: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getTaggedSuggestions',
@@ -8244,6 +8294,8 @@ export const ids = {
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetSuggestionsSkeleton:
+    'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
   AppBskyUnspeccedSearchActorsSkeleton:
