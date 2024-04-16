@@ -1,6 +1,7 @@
 import { Transformer } from '@atproto/transformer'
 
 import { FetchError } from './fetch-error.js'
+import { isIp } from './util.js'
 
 export type RequestTranformer = Transformer<Request>
 
@@ -25,15 +26,14 @@ export function requireHostHeaderTranform(): RequestTranformer {
     // Note that fetch() will automatically add the Host header from the URL and
     // discard any Host header manually set in the request.
 
-    const { hostname } = new URL(request.url)
+    const { protocol, hostname } = new URL(request.url)
 
-    // IPv4
-    if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-      throw new FetchError(400, 'Invalid hostname', { request })
+    // "Host" header only makes sense in the context of an HTTP request
+    if (protocol !== 'http:' && protocol !== 'https') {
+      throw new FetchError(400, `Forbidden protocol ${protocol}`, { request })
     }
 
-    // IPv6
-    if (hostname.startsWith('[') || hostname.endsWith(']')) {
+    if (!hostname || isIp(hostname)) {
       throw new FetchError(400, 'Invalid hostname', { request })
     }
 

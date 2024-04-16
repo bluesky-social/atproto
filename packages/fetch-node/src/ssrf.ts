@@ -12,31 +12,40 @@ export const ssrfFetchWrap = ({
   fetch = globalThis.fetch as Fetch,
 } = {}): Fetch => {
   const ssrfSafeFetch: Fetch = async (request) => {
-    if (request.redirect === 'follow') {
-      // TODO: actually implement by calling ssrfSafeFetch recursively
-      throw new Error(
-        'Request redirect must be "error" or "manual" when SSRF is enabled',
-      )
-    }
+    const { protocol, hostname } = new URL(request.url)
 
-    const { hostname } = new URL(request.url)
+    if (protocol === 'http:' || protocol === 'https:') {
+      if (request.redirect === 'follow') {
+        // TODO: actually implement by calling ssrfSafeFetch recursively (?)
+        throw new FetchError(
+          500,
+          'Request redirect must be "error" or "manual" when SSRF is enabled',
+          { request },
+        )
+      }
 
-    // Make sure the hostname is a unicast IP address
-    const ip = await hostnameLookup(hostname).catch((cause) => {
-      throw cause?.code === 'ENOTFOUND'
-        ? new FetchError(400, `Invalid hostname ${hostname}`, {
-            request,
-            cause,
-          })
-        : new FetchError(500, `Unable resolve DNS for ${hostname}`, {
-            request,
-            cause,
-          })
-    })
-    if (ip.range() !== 'unicast') {
-      throw new FetchError(400, `Invalid hostname IP address ${ip}`, {
-        request,
+      // Make sure the hostname is a unicast IP address
+      const ip = await hostnameLookup(hostname).catch((cause) => {
+        throw cause?.code === 'ENOTFOUND'
+          ? new FetchError(400, `Invalid hostname ${hostname}`, {
+              request,
+              cause,
+            })
+          : new FetchError(500, `Unable resolve DNS for ${hostname}`, {
+              request,
+              cause,
+            })
       })
+      if (ip.range() !== 'unicast') {
+        throw new FetchError(400, `Invalid hostname IP address ${ip}`, {
+          request,
+        })
+      }
+    } else if (protocol === 'data:') {
+      // No SSRF issue
+    } else {
+      // blob: about: file: all should be rejected
+      throw new FetchError(400, `Forbidden protocol ${protocol}`, { request })
     }
 
     return fetch(request)
