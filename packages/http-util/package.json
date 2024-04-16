@@ -26,6 +26,7 @@
     }
   },
   "dependencies": {
+    "@atproto/html": "workspace:*",
     "@hapi/accept": "^6.0.3",
     "@hapi/bourne": "^3.0.0",
     "cookie": "^0.6.0",
