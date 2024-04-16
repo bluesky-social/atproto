@@ -74,7 +74,10 @@ export function checkDidMethod(
       (c < 0x61 || c > 0x7a) && // a-z
       (c < 0x30 || c > 0x39) // 0-9
     ) {
-      throw new InvalidDidError(input, `Invalid character at position ${i}`)
+      throw new InvalidDidError(
+        input,
+        `Invalid character at position ${i} in DID method name`,
+      )
     }
   }
 }
@@ -103,7 +106,7 @@ export function checkDidMsid(
     throw new TypeError('end < start')
   }
   if (end === start) {
-    throw new InvalidDidError(input, `Empty method-specific id`)
+    throw new InvalidDidError(input, `DID method-specific id must not be empty`)
   }
 
   let c: number
@@ -160,7 +163,7 @@ export function checkDidMsid(
 
       throw new InvalidDidError(
         input,
-        `Disallowed characters in DID at position ${i}`,
+        `Disallowed character in DID at position ${i}`,
       )
     }
   }

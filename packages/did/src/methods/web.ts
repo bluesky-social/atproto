@@ -51,11 +51,6 @@ export function urlToDidWeb(url: URL): Did<'web'> {
   return `did:web:${encodeURIComponent(url.host)}${path ? `:${path}` : ''}`
 }
 
-export function didWebDocumentUrl(did: Did<'web'>): URL {
-  const url = didWebToUrl(did)
-  return wellKnownUrl(url, 'did.json')
-}
-
 const didWebDocumentTransformer = compose(
   fetchOkProcessor(),
   fetchJsonProcessor(/^application\/(did\+ld\+)?json$/),
@@ -74,18 +69,16 @@ export class DidWebMethod implements DidMethod<'web'> {
   }
 
   async resolve(did: Did<'web'>, options?: ResolveOptions) {
-    didWebToUrl(did)
+    const url = didWebToUrl(did) // Will throw if the DID is invalid
+    const didDocumentUrl = wellKnownUrl(url, 'did.json')
 
-    const url = didWebDocumentUrl(did)
-
-    const request = new Request(url, {
+    const request = new Request(didDocumentUrl, {
       redirect: 'error',
       headers: { accept: 'application/did+ld+json,application/json' },
       signal: options?.signal,
     })
 
-    return this.fetch
-      .call(globalThis, request)
-      .then(didWebDocumentTransformer, fetchFailureHandler)
+    const { fetch } = this
+    return fetch(request).then(didWebDocumentTransformer, fetchFailureHandler)
   }
 }
