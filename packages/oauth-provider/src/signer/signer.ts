@@ -37,7 +37,7 @@ export class Signer {
     token: Jwt,
     options?: VerifyOptions,
   ) {
-    return this.keyset.verify<P>(token, {
+    return this.keyset.verifyJwt<P>(token, {
       ...options,
       issuer: [this.issuer],
     })
@@ -47,7 +47,7 @@ export class Signer {
     signHeader: JwtSignHeader,
     payload: SignPayload | JwtPayloadGetter<SignPayload>,
   ): Promise<Jwt> {
-    return this.keyset.sign(signHeader, async (protectedHeader, key) => ({
+    return this.keyset.createJwt(signHeader, async (protectedHeader, key) => ({
       ...(typeof payload === 'function'
         ? await payload(protectedHeader, key)
         : payload),

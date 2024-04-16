@@ -165,7 +165,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     return this.keys.values()
   }
 
-  async sign(
+  async createJwt(
     { alg: sAlg, kid: sKid, ...header }: JwtSignHeader,
     payload: JwtPayload | JwtPayloadGetter,
   ) {
@@ -179,7 +179,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     return key.createJwt(protectedHeader, payload)
   }
 
-  async verify<
+  async verifyJwt<
     P extends Record<string, unknown> = JwtPayload,
     C extends string = string,
   >(token: Jwt, options?: VerifyOptions<C>) {

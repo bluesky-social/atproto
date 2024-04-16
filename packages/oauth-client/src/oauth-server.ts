@@ -255,7 +255,7 @@ export class OAuthServer {
             client_id: this.clientMetadata.client_id,
             client_assertion_type:
               'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            client_assertion: await this.keyset.sign(
+            client_assertion: await this.keyset.createJwt(
               { alg, kid },
               {
                 iss: this.clientMetadata.client_id,
