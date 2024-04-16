@@ -85,7 +85,6 @@ import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
-import * as AppBskyActorGetSuggestionsSkeleton from './types/app/bsky/actor/getSuggestionsSkeleton'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
@@ -126,6 +125,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -1172,17 +1172,6 @@ export class AppBskyActorNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getSuggestionsSkeleton<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyActorGetSuggestionsSkeleton.Handler<ExtractAuth<AV>>,
-      AppBskyActorGetSuggestionsSkeleton.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.actor.getSuggestionsSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   putPreferences<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1676,6 +1665,17 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getPopularFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestionsSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestionsSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestionsSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestionsSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

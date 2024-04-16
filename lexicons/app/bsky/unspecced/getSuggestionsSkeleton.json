@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.actor.getSuggestionsSkeleton",
+  "id": "app.bsky.unspecced.getSuggestionsSkeleton",
   "defs": {
     "main": {
       "type": "query",
