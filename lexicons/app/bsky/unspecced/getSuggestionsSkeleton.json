@@ -33,7 +33,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.actor.defs#skeletonActor"
+                "ref": "app.bsky.unspecced.defs#skeletonSearchActor"
               }
             }
           }

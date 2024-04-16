@@ -3799,16 +3799,6 @@ export const schemaDict = {
           },
         },
       },
-      skeletonActor: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
       preferences: {
         type: 'array',
         items: {
@@ -7900,7 +7890,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#skeletonActor',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
                 },
               },
             },
