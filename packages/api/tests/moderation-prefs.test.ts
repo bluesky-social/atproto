@@ -54,6 +54,7 @@ describe('agent', () => {
         saved: undefined,
       },
       interests: { tags: [] },
+      homeAlgo: { enabled: undefined },
       moderationPrefs: {
         adultContentEnabled: false,
         labels: {
@@ -99,6 +100,7 @@ describe('agent', () => {
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       interests: { tags: [] },
+      homeAlgo: { enabled: undefined },
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
@@ -134,6 +136,7 @@ describe('agent', () => {
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       interests: { tags: [] },
+      homeAlgo: { enabled: undefined },
       moderationPrefs: {
         adultContentEnabled: false,
         labels: DEFAULT_LABEL_SETTINGS,
@@ -178,6 +181,7 @@ describe('agent', () => {
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       interests: { tags: [] },
+      homeAlgo: { enabled: undefined },
       moderationPrefs: {
         adultContentEnabled: false,
         labels: { ...DEFAULT_LABEL_SETTINGS, porn: 'ignore', nsfw: 'ignore' },
