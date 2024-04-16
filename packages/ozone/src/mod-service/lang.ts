@@ -99,7 +99,7 @@ export class ModerationLangService {
       ])
       const record = recordByUri.get(subject.uri)
       const recordLang = record?.value.langs as string[] | null
-      const recordText = this.getTextFromRecord(subject.uri, record?.value)
+      const recordText = this.getTextFromRecord(record?.value)
       if (recordLang?.length) {
         recordLang
           .map((lang) => lang.split('-')[0])

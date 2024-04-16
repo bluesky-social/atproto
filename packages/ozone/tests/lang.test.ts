@@ -43,8 +43,7 @@ describe('moderation status language tagging', () => {
   it('Adds language tag to post from text', async () => {
     const createPostAndReport = async (text: string) => {
       const post = await sc.post(sc.dids.carol, text)
-      // Without this delay, it seems like from time to time, the appview `getRecord` does not find the record
-      await new Promise((res) => setTimeout(res, 1000))
+      await network.processAll()
       const report = await sc.createReport({
         reasonType: REASONSPAM,
         subject: {
@@ -78,7 +77,7 @@ describe('moderation status language tagging', () => {
       const list = await sc.createList(sc.dids.carol, name, 'mod', {
         description,
       })
-      await new Promise((res) => setTimeout(res, 1000))
+      await network.processAll()
       const report = await sc.createReport({
         reasonType: REASONSPAM,
         subject: {
