@@ -106,7 +106,7 @@ export interface BskyInterestsPreference {
   [key: string]: any
 }
 
-export interface HomeAlgo {
+export interface BskyHomeAlgoPreference {
   enabled: boolean | undefined
   uri?: string
   [key: string]: any
@@ -125,5 +125,5 @@ export interface BskyPreferences {
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
-  homeAlgo: HomeAlgo
+  homeAlgo: BskyHomeAlgoPreference
 }

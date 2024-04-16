@@ -12,6 +12,7 @@ import {
   BskyFeedViewPreference,
   BskyThreadViewPreference,
   BskyInterestsPreference,
+  BskyHomeAlgoPreference,
 } from './types'
 import {
   InterpretedLabelValueDefinition,
@@ -890,6 +891,33 @@ export class BskyAgent extends AtpAgent {
 
   async unhidePost(postUri: string) {
     await updateHiddenPost(this, postUri, 'unhide')
+  }
+
+  async setHomeAlgoPref(pref: Partial<BskyHomeAlgoPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isHomeAlgoPref(pref) &&
+          AppBskyActorDefs.validateHomeAlgoPref(pref).success,
+      )
+
+      let next: BskyHomeAlgoPreference = { enabled: undefined }
+
+      if (existing && AppBskyActorDefs.isHomeAlgoPref(existing)) {
+        next = { ...existing }
+      }
+
+      if (pref.enabled !== undefined) {
+        next.enabled = pref.enabled
+      }
+      if (pref.uri) {
+        next.uri = pref.uri
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isHomeAlgoPref(p))
+        .concat([{ ...next, $type: 'app.bsky.actor.defs#homeAlgoPref' }])
+    })
   }
 }
 

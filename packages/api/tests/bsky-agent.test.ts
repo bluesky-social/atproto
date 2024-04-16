@@ -4,7 +4,7 @@ import {
   ComAtprotoRepoPutRecord,
   AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
-} from '..'
+} from '../src'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -1764,11 +1764,39 @@ describe('agent', () => {
         })
       })
 
-      it('getPreferences', async () => {
+      it('returns defaults', async () => {
         const prefs = await agent.getPreferences()
         expect('enabled' in prefs.homeAlgo).toBe(true)
+        expect('uri' in prefs.homeAlgo).toBe(false)
         expect(prefs.homeAlgo.enabled).toBe(undefined)
         expect(prefs.homeAlgo.uri).toBe(undefined)
+      })
+
+      it(`setHomeAlgoPref: enable with URI`, async () => {
+        await agent.setHomeAlgoPref({ enabled: true, uri: 'at://did:plc:fake' })
+        const prefs = await agent.getPreferences()
+        expect(prefs.homeAlgo.enabled).toBe(true)
+        expect(prefs.homeAlgo.uri).toBe('at://did:plc:fake')
+      })
+
+      it(`setHomeAlgoPref: disable, retain URI`, async () => {
+        await agent.setHomeAlgoPref({ enabled: false })
+        const prefs = await agent.getPreferences()
+        expect(prefs.homeAlgo.enabled).toBe(false)
+        expect(prefs.homeAlgo.uri).toBe('at://did:plc:fake')
+      })
+
+      it(`setHomeAlgoPref: cannot unset URI`, async () => {
+        await agent.setHomeAlgoPref({ uri: undefined })
+        const prefs = await agent.getPreferences()
+        expect(prefs.homeAlgo.uri).toBe('at://did:plc:fake')
+      })
+
+      it(`setHomeAlgoPref: cannot unset enabled, only boolean`, async () => {
+        await agent.setHomeAlgoPref({ enabled: undefined })
+        const prefs = await agent.getPreferences()
+        // last valid value still set
+        expect(prefs.homeAlgo.enabled).toBe(false)
       })
     })
 
