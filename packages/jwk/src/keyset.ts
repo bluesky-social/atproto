@@ -124,13 +124,12 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     }
   }
 
-  findSigningKey(search: Omit<KeySearch, 'use'>): [key: Key, alg: string] {
-    const { kid, alg } = search
+  findKey({ kid, alg, use }: KeySearch): [key: Key, alg: string] {
     const matchingKeys: Key[] = []
 
-    for (const key of this.list({ kid, alg, use: 'sig' })) {
+    for (const key of this.list({ kid, alg, use })) {
       // Not a signing key
-      if (!key.canSign) continue
+      if (!key.isPrivate) continue
 
       // Skip negotiation if a specific "alg" was provided
       if (typeof alg === 'string') return [key, alg]
@@ -157,7 +156,9 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
       }
     }
 
-    throw new TypeError(`No singing key found for ${kid || alg || '<unknown>'}`)
+    throw new TypeError(
+      `No singing key found for ${kid || alg || use || '<unknown>'}`,
+    )
   }
 
   [Symbol.iterator](): IterableIterator<K> {
@@ -165,10 +166,10 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   }
 
   async sign(
-    { alg: searchAlg, kid: searchKid, ...header }: JwtSignHeader,
+    { alg: sAlg, kid: sKid, ...header }: JwtSignHeader,
     payload: JwtPayload | JwtPayloadGetter,
   ) {
-    const [key, alg] = this.findSigningKey({ alg: searchAlg, kid: searchKid })
+    const [key, alg] = this.findKey({ alg: sAlg, kid: sKid, use: 'sig' })
     const protectedHeader = { ...header, alg, kid: key.kid }
 
     if (typeof payload === 'function') {
@@ -187,9 +188,10 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
 
     const errors: unknown[] = []
 
-    for (const key of this.list({ use: 'sig', kid, alg })) {
+    for (const key of this.list({ kid, alg })) {
       try {
-        return await key.verifyJwt<P, C>(token, options)
+        const result = await key.verifyJwt<P, C>(token, options)
+        return { ...result, key }
       } catch (err) {
         errors.push(err)
       }

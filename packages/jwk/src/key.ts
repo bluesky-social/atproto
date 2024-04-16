@@ -13,7 +13,8 @@ export abstract class Key {
   get isPrivate(): boolean {
     const { jwk } = this
     if ('d' in jwk && jwk.d !== undefined) return true
-    return this.isSymetric
+    if ('k' in jwk && jwk.k !== undefined) return true
+    return false
   }
 
   get isSymetric(): boolean {
@@ -61,14 +62,6 @@ export abstract class Key {
 
   get crv() {
     return (this.jwk as undefined | Extract<Jwk, { crv: unknown }>)?.crv
-  }
-
-  get canVerify() {
-    return this.use === 'sig'
-  }
-
-  get canSign() {
-    return this.use === 'sig' && this.isPrivate && !this.isSymetric
   }
 
   /**
