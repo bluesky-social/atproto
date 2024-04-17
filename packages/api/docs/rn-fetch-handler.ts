@@ -16,7 +16,7 @@ export function doPolyfill() {
 interface FetchHandlerResponse {
   status: number
   headers: Record<string, string>
-  body: ArrayBuffer | undefined
+  body: any
 }
 
 async function fetchHandler(
@@ -74,7 +74,7 @@ async function fetchHandler(
     } else if (resMimeType.startsWith('text/')) {
       resBody = await res.text()
     } else {
-      resBody = await res.blob()
+      throw new Error('TODO: non-textual response body')
     }
   }
 
