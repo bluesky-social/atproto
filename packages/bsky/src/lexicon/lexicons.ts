@@ -3881,7 +3881,6 @@ export const schemaDict = {
       },
       homeAlgoPref: {
         type: 'object',
-        required: ['enabled'],
         properties: {
           enabled: {
             type: 'boolean',

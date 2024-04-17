@@ -217,7 +217,7 @@ export function validatePersonalDetailsPref(v: unknown): ValidationResult {
 }
 
 export interface HomeAlgoPref {
-  enabled: boolean
+  enabled?: boolean
   uri?: string
   [k: string]: unknown
 }

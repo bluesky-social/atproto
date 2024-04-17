@@ -107,7 +107,7 @@ export interface BskyInterestsPreference {
 }
 
 export interface BskyHomeAlgoPreference {
-  enabled: boolean | undefined
+  enabled?: boolean
   uri?: string
   [key: string]: any
 }
