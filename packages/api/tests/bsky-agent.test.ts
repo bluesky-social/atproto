@@ -1829,6 +1829,26 @@ describe('agent', () => {
           uri: 'at://bob.com/app.bsky.feed.generator/fake',
         })
       })
+
+      it(`setPrimaryAlgorithm: does not unset pinned feed if disabled`, async () => {
+        // we aim to guard against this in the client, but it's possible in 3p apps
+        await agent.setPrimaryAlgorithm({
+          enabled: true,
+          uri: 'at://bob.com/app.bsky.feed.generator/fake',
+        })
+        await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
+        await agent.setPrimaryAlgorithm({
+          enabled: false,
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds.pinned).toStrictEqual([
+          'at://bob.com/app.bsky.feed.generator/fake',
+        ])
+        expect(prefs.primaryAlgorithm).toStrictEqual({
+          enabled: false,
+          uri: 'at://bob.com/app.bsky.feed.generator/fake',
+        })
+      })
     })
 
     // end
