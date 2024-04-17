@@ -4,7 +4,7 @@ import {
   ComAtprotoRepoPutRecord,
   AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
-} from '../src'
+} from '..'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
