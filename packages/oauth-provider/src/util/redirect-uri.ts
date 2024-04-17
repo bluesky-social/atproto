@@ -15,31 +15,30 @@ export function matchRedirectUri(
   // > an exact match is required except for the port URI component.
   if (allowed_uri === request_uri) return true
 
-  const allowed_uri_parsed = new URL(allowed_uri)
-
   // https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
+  const allowedUri = new URL(allowed_uri)
   if (
-    allowed_uri_parsed.hostname !== 'localhost' &&
-    allowed_uri_parsed.hostname !== '127.0.0.1' &&
-    allowed_uri_parsed.hostname !== '[::1]'
+    allowedUri.hostname === 'localhost' ||
+    allowedUri.hostname === '127.0.0.1' ||
+    allowedUri.hostname === '[::1]'
   ) {
-    return false
+    const requestUri = new URL(request_uri)
+
+    // > The authorization server MUST allow any port to be specified at the
+    // > time of the request for loopback IP redirect URIs, to accommodate
+    // > clients that obtain an available ephemeral port from the operating
+    // > system at the time of the request.
+    return (
+      // allowed_uri_parsed.port === request_uri_parsed.port &&
+      allowedUri.hostname === requestUri.hostname &&
+      allowedUri.pathname === requestUri.pathname &&
+      allowedUri.protocol === requestUri.protocol &&
+      allowedUri.search === requestUri.search &&
+      allowedUri.hash === requestUri.hash &&
+      allowedUri.username === requestUri.username &&
+      allowedUri.password === requestUri.password
+    )
   }
 
-  const request_uri_parsed = new URL(request_uri)
-
-  // > The authorization server MUST allow any port to be specified at the
-  // > time of the request for loopback IP redirect URIs, to accommodate
-  // > clients that obtain an available ephemeral port from the operating
-  // > system at the time of the request.
-  return (
-    // allowed_uri_parsed.port === request_uri_parsed.port &&
-    allowed_uri_parsed.hostname === request_uri_parsed.hostname &&
-    allowed_uri_parsed.pathname === request_uri_parsed.pathname &&
-    allowed_uri_parsed.protocol === request_uri_parsed.protocol &&
-    allowed_uri_parsed.search === request_uri_parsed.search &&
-    allowed_uri_parsed.hash === request_uri_parsed.hash &&
-    allowed_uri_parsed.username === request_uri_parsed.username &&
-    allowed_uri_parsed.password === request_uri_parsed.password
-  )
+  return false
 }
