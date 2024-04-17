@@ -29,7 +29,7 @@ export function matchRedirectUri(
     // > clients that obtain an available ephemeral port from the operating
     // > system at the time of the request.
     return (
-      // allowed_uri_parsed.port === request_uri_parsed.port &&
+      // allowedUri.port === requestUri.port &&
       allowedUri.hostname === requestUri.hostname &&
       allowedUri.pathname === requestUri.pathname &&
       allowedUri.protocol === requestUri.protocol &&
