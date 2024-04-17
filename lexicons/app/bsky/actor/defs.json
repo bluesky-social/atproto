@@ -128,7 +128,7 @@
           "#interestsPref",
           "#mutedWordsPref",
           "#hiddenPostsPref",
-          "#homeAlgoPref"
+          "#primaryAlgoPref"
         ]
       }
     },
@@ -188,7 +188,7 @@
         }
       }
     },
-    "homeAlgoPref": {
+    "primaryAlgoPref": {
       "type": "object",
       "properties": {
         "enabled": {

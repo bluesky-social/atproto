@@ -3813,7 +3813,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#interestsPref',
             'lex:app.bsky.actor.defs#mutedWordsPref',
             'lex:app.bsky.actor.defs#hiddenPostsPref',
-            'lex:app.bsky.actor.defs#homeAlgoPref',
+            'lex:app.bsky.actor.defs#primaryAlgoPref',
           ],
         },
       },
@@ -3879,7 +3879,7 @@ export const schemaDict = {
           },
         },
       },
-      homeAlgoPref: {
+      primaryAlgoPref: {
         type: 'object',
         properties: {
           enabled: {

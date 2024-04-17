@@ -261,7 +261,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -293,7 +293,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -325,7 +325,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -357,7 +357,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -393,7 +393,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -432,7 +432,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -471,7 +471,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -510,7 +510,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -549,7 +549,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -588,7 +588,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -633,7 +633,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -672,7 +672,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -711,7 +711,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -750,7 +750,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -789,7 +789,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -835,7 +835,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -881,7 +881,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -927,7 +927,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -973,7 +973,7 @@ describe('agent', () => {
         interests: {
           tags: ['foo', 'bar'],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1137,7 +1137,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1185,7 +1185,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1234,7 +1234,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1279,7 +1279,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1324,7 +1324,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1369,7 +1369,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1425,7 +1425,7 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
-        homeAlgo: {
+        primaryAlgorithm: {
           enabled: undefined,
         },
       })
@@ -1752,7 +1752,7 @@ describe('agent', () => {
       })
     })
 
-    describe('home algo prefs', () => {
+    describe('primary algorithm prefs', () => {
       let agent: BskyAgent
 
       beforeAll(async () => {
@@ -1766,62 +1766,65 @@ describe('agent', () => {
 
       it('returns defaults', async () => {
         const prefs = await agent.getPreferences()
-        expect('enabled' in prefs.homeAlgo).toBe(true)
-        expect('uri' in prefs.homeAlgo).toBe(false)
-        expect(prefs.homeAlgo.enabled).toBe(undefined)
-        expect(prefs.homeAlgo.uri).toBe(undefined)
+        expect('enabled' in prefs.primaryAlgorithm).toBe(true)
+        expect('uri' in prefs.primaryAlgorithm).toBe(false)
+        expect(prefs.primaryAlgorithm.enabled).toBe(undefined)
+        expect(prefs.primaryAlgorithm.uri).toBe(undefined)
       })
 
-      it(`setHomeAlgoPref: enable with URI`, async () => {
-        await agent.setHomeAlgoPref({ enabled: true, uri: 'at://did:plc:fake' })
+      it(`setPrimaryAlgorithm: enable with URI`, async () => {
+        await agent.setPrimaryAlgorithm({
+          enabled: true,
+          uri: 'at://did:plc:fake',
+        })
         const prefs = await agent.getPreferences()
-        expect(prefs.homeAlgo.enabled).toBe(true)
-        expect(prefs.homeAlgo.uri).toBe('at://did:plc:fake')
+        expect(prefs.primaryAlgorithm.enabled).toBe(true)
+        expect(prefs.primaryAlgorithm.uri).toBe('at://did:plc:fake')
       })
 
-      it(`setHomeAlgoPref: disable, retain URI`, async () => {
-        await agent.setHomeAlgoPref({ enabled: false })
+      it(`setPrimaryAlgorithm: disable, retain URI`, async () => {
+        await agent.setPrimaryAlgorithm({ enabled: false })
         const prefs = await agent.getPreferences()
-        expect(prefs.homeAlgo.enabled).toBe(false)
-        expect(prefs.homeAlgo.uri).toBe('at://did:plc:fake')
+        expect(prefs.primaryAlgorithm.enabled).toBe(false)
+        expect(prefs.primaryAlgorithm.uri).toBe('at://did:plc:fake')
       })
 
-      it(`setHomeAlgoPref: cannot unset URI`, async () => {
-        await agent.setHomeAlgoPref({ uri: undefined })
+      it(`setPrimaryAlgorithm: cannot unset URI`, async () => {
+        await agent.setPrimaryAlgorithm({ uri: undefined })
         const prefs = await agent.getPreferences()
-        expect(prefs.homeAlgo.uri).toBe('at://did:plc:fake')
+        expect(prefs.primaryAlgorithm.uri).toBe('at://did:plc:fake')
       })
 
-      it(`setHomeAlgoPref: cannot unset enabled, only boolean`, async () => {
-        await agent.setHomeAlgoPref({ enabled: undefined })
+      it(`setPrimaryAlgorithm: cannot unset enabled, only boolean`, async () => {
+        await agent.setPrimaryAlgorithm({ enabled: undefined })
         const prefs = await agent.getPreferences()
         // last valid value still set
-        expect(prefs.homeAlgo.enabled).toBe(false)
+        expect(prefs.primaryAlgorithm.enabled).toBe(false)
       })
 
-      it(`setHomeAlgoPref: unsets pinned feed`, async () => {
+      it(`setPrimaryAlgorithm: unsets pinned feed`, async () => {
         await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
-        await agent.setHomeAlgoPref({
+        await agent.setPrimaryAlgorithm({
           enabled: true,
           uri: 'at://bob.com/app.bsky.feed.generator/fake',
         })
         const prefs = await agent.getPreferences()
         expect(prefs.feeds.pinned).toStrictEqual([])
-        expect(prefs.homeAlgo).toStrictEqual({
+        expect(prefs.primaryAlgorithm).toStrictEqual({
           enabled: true,
           uri: 'at://bob.com/app.bsky.feed.generator/fake',
         })
       })
 
-      it(`setHomeAlgoPref: unsets saved feed`, async () => {
+      it(`setPrimaryAlgorithm: unsets saved feed`, async () => {
         await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
-        await agent.setHomeAlgoPref({
+        await agent.setPrimaryAlgorithm({
           enabled: true,
           uri: 'at://bob.com/app.bsky.feed.generator/fake',
         })
         const prefs = await agent.getPreferences()
         expect(prefs.feeds.saved).toStrictEqual([])
-        expect(prefs.homeAlgo).toStrictEqual({
+        expect(prefs.primaryAlgorithm).toStrictEqual({
           enabled: true,
           uri: 'at://bob.com/app.bsky.feed.generator/fake',
         })

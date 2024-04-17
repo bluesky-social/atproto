@@ -138,7 +138,7 @@ export type Preferences = (
   | InterestsPref
   | MutedWordsPref
   | HiddenPostsPref
-  | HomeAlgoPref
+  | PrimaryAlgoPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -216,22 +216,22 @@ export function validatePersonalDetailsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#personalDetailsPref', v)
 }
 
-export interface HomeAlgoPref {
+export interface PrimaryAlgoPref {
   enabled?: boolean
   uri?: string
   [k: string]: unknown
 }
 
-export function isHomeAlgoPref(v: unknown): v is HomeAlgoPref {
+export function isPrimaryAlgoPref(v: unknown): v is PrimaryAlgoPref {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#homeAlgoPref'
+    v.$type === 'app.bsky.actor.defs#primaryAlgoPref'
   )
 }
 
-export function validateHomeAlgoPref(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#homeAlgoPref', v)
+export function validatePrimaryAlgoPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#primaryAlgoPref', v)
 }
 
 export interface FeedViewPref {

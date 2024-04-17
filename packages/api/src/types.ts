@@ -106,12 +106,6 @@ export interface BskyInterestsPreference {
   [key: string]: any
 }
 
-export interface BskyHomeAlgoPreference {
-  enabled?: boolean
-  uri?: string
-  [key: string]: any
-}
-
 /**
  * Bluesky preferences
  */
@@ -125,5 +119,5 @@ export interface BskyPreferences {
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
-  homeAlgo: BskyHomeAlgoPreference
+  primaryAlgorithm: AppBskyActorDefs.PrimaryAlgoPref
 }

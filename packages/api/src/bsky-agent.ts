@@ -12,7 +12,6 @@ import {
   BskyFeedViewPreference,
   BskyThreadViewPreference,
   BskyInterestsPreference,
-  BskyHomeAlgoPreference,
 } from './types'
 import {
   InterpretedLabelValueDefinition,
@@ -383,7 +382,7 @@ export class BskyAgent extends AtpAgent {
       interests: {
         tags: [],
       },
-      homeAlgo: {
+      primaryAlgorithm: {
         enabled: undefined,
       },
     }
@@ -469,11 +468,11 @@ export class BskyAgent extends AtpAgent {
         const { $type, ...v } = pref
         prefs.moderationPrefs.hiddenPosts = v.items
       } else if (
-        AppBskyActorDefs.isHomeAlgoPref(pref) &&
-        AppBskyActorDefs.validateHomeAlgoPref(pref).success
+        AppBskyActorDefs.isPrimaryAlgoPref(pref) &&
+        AppBskyActorDefs.validatePrimaryAlgoPref(pref).success
       ) {
-        prefs.homeAlgo.enabled = pref.enabled
-        prefs.homeAlgo.uri = pref.uri
+        prefs.primaryAlgorithm.enabled = pref.enabled
+        prefs.primaryAlgorithm.uri = pref.uri
       }
     }
 
@@ -893,19 +892,19 @@ export class BskyAgent extends AtpAgent {
     await updateHiddenPost(this, postUri, 'unhide')
   }
 
-  async setHomeAlgoPref(pref: Partial<BskyHomeAlgoPreference>) {
+  async setPrimaryAlgorithm(pref: Partial<AppBskyActorDefs.PrimaryAlgoPref>) {
     const newPrefs = await updatePreferences(
       this,
       (prefs: AppBskyActorDefs.Preferences) => {
         const existing = prefs.findLast(
           (pref) =>
-            AppBskyActorDefs.isHomeAlgoPref(pref) &&
-            AppBskyActorDefs.validateHomeAlgoPref(pref).success,
+            AppBskyActorDefs.isPrimaryAlgoPref(pref) &&
+            AppBskyActorDefs.validatePrimaryAlgoPref(pref).success,
         )
 
-        let next: BskyHomeAlgoPreference = { enabled: undefined }
+        let next: AppBskyActorDefs.PrimaryAlgoPref = { enabled: undefined }
 
-        if (existing && AppBskyActorDefs.isHomeAlgoPref(existing)) {
+        if (existing && AppBskyActorDefs.isPrimaryAlgoPref(existing)) {
           next = { ...existing }
         }
 
@@ -917,19 +916,22 @@ export class BskyAgent extends AtpAgent {
         }
 
         return prefs
-          .filter((p) => !AppBskyActorDefs.isHomeAlgoPref(p))
-          .concat([{ ...next, $type: 'app.bsky.actor.defs#homeAlgoPref' }])
+          .filter((p) => !AppBskyActorDefs.isPrimaryAlgoPref(p))
+          .concat([{ ...next, $type: 'app.bsky.actor.defs#primaryAlgoPref' }])
       },
     )
 
-    const homeAlgoPref = newPrefs.findLast(
+    const primaryAlgorithm = newPrefs.findLast(
       (pref) =>
-        AppBskyActorDefs.isHomeAlgoPref(pref) &&
-        AppBskyActorDefs.validateHomeAlgoPref(pref).success,
+        AppBskyActorDefs.isPrimaryAlgoPref(pref) &&
+        AppBskyActorDefs.validatePrimaryAlgoPref(pref).success,
     )
 
-    if (homeAlgoPref && AppBskyActorDefs.isHomeAlgoPref(homeAlgoPref)) {
-      const { enabled, uri } = homeAlgoPref
+    if (
+      primaryAlgorithm &&
+      AppBskyActorDefs.isPrimaryAlgoPref(primaryAlgorithm)
+    ) {
+      const { enabled, uri } = primaryAlgorithm
       if (enabled && uri) {
         await this.removeSavedFeed(uri)
       }
