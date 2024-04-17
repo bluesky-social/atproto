@@ -1798,6 +1798,34 @@ describe('agent', () => {
         // last valid value still set
         expect(prefs.homeAlgo.enabled).toBe(false)
       })
+
+      it(`setHomeAlgoPref: unsets pinned feed`, async () => {
+        await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
+        await agent.setHomeAlgoPref({
+          enabled: true,
+          uri: 'at://bob.com/app.bsky.feed.generator/fake',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds.pinned).toStrictEqual([])
+        expect(prefs.homeAlgo).toStrictEqual({
+          enabled: true,
+          uri: 'at://bob.com/app.bsky.feed.generator/fake',
+        })
+      })
+
+      it(`setHomeAlgoPref: unsets saved feed`, async () => {
+        await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
+        await agent.setHomeAlgoPref({
+          enabled: true,
+          uri: 'at://bob.com/app.bsky.feed.generator/fake',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds.saved).toStrictEqual([])
+        expect(prefs.homeAlgo).toStrictEqual({
+          enabled: true,
+          uri: 'at://bob.com/app.bsky.feed.generator/fake',
+        })
+      })
     })
 
     // end
