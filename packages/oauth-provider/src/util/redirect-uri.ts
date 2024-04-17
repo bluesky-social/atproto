@@ -2,7 +2,7 @@
  *
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8252#section-8.4}
  */
-export function matchRedirectUri(
+export function compareRedirectUri(
   allowed_uri: string,
   request_uri: string,
 ): boolean {

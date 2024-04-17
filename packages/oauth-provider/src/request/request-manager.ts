@@ -19,7 +19,7 @@ import { OIDC_SCOPE_CLAIMS } from '../oidc/claims.js'
 import { Sub } from '../oidc/sub.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { Signer } from '../signer/signer.js'
-import { matchRedirectUri } from '../util/redirect-uri.js'
+import { compareRedirectUri } from '../util/redirect-uri.js'
 import { Code, generateCode } from './code.js'
 import { RequestHooks } from './request-hooks.js'
 import { generateRequestId } from './request-id.js'
@@ -163,7 +163,7 @@ export class RequestManager {
     if (
       redirect_uri &&
       !client.metadata.redirect_uris.some((uri) =>
-        matchRedirectUri(uri, redirect_uri),
+        compareRedirectUri(uri, redirect_uri),
       )
     ) {
       throw new InvalidParametersError(
