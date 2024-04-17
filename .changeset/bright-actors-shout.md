@@ -2,4 +2,4 @@
 "@atproto/api": patch
 ---
 
-Adds `homeAlgoPref` lexicons and related method to `BskyAgent`
+Adds `primaryAlgoPref` lexicons and `setPrimaryAlgorithm` method to `BskyAgent`
