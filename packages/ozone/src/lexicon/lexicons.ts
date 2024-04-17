@@ -2209,6 +2209,9 @@ export const schemaDict = {
               password: {
                 type: 'string',
               },
+              authFactorToken: {
+                type: 'string',
+              },
             },
           },
         },
@@ -2241,12 +2244,18 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
             },
           },
         },
         errors: [
           {
             name: 'AccountTakedown',
+          },
+          {
+            name: 'AuthFactorTokenRequired',
           },
         ],
       },
@@ -2568,6 +2577,9 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
               didDoc: {
                 type: 'unknown',
               },
@@ -2836,6 +2848,9 @@ export const schemaDict = {
             properties: {
               email: {
                 type: 'string',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
               },
               token: {
                 type: 'string',
