@@ -16,6 +16,7 @@ export interface OutputSchema {
   did: string
   email?: string
   emailConfirmed?: boolean
+  emailAuthFactor?: boolean
   didDoc?: {}
   [k: string]: unknown
 }
