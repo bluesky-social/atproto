@@ -68,7 +68,7 @@ export const createUrlAndHeaders = async (
   audOverride?: string,
 ): Promise<{ url: URL; headers: { authorization?: string } }> => {
   const proxyTo = await parseProxyHeader(ctx, req)
-  const defaultProxy = defaultService(ctx, req.path)
+  const defaultProxy = defaultService(ctx, req.baseUrl)
   const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
   const aud = audOverride ?? proxyTo?.did ?? defaultProxy?.did
   if (!serviceUrl || !aud) {
