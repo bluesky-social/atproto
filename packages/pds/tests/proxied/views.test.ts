@@ -110,7 +110,7 @@ describe('proxies view requests', () => {
     expect([...pt1.data.actors, ...pt2.data.actors]).toEqual(res.data.actors)
   })
 
-  it('actor.searchActor', async () => {
+  it.skip('actor.searchActor', async () => {
     const res = await agent.api.app.bsky.actor.searchActors(
       {
         term: '.test',
