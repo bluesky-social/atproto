@@ -4,7 +4,7 @@ exports[`proxies admin requests creates reports of a repo. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 13,
+    "id": 1,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
     "subject": Object {
@@ -14,7 +14,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 15,
+    "id": 3,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",
@@ -35,7 +35,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
     },
-    "id": 18,
+    "id": 6,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -53,7 +53,7 @@ Array [
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonOther",
     },
-    "id": 15,
+    "id": 3,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -72,7 +72,7 @@ Array [
       ],
       "remove": Array [],
     },
-    "id": 14,
+    "id": 2,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -89,7 +89,7 @@ Array [
       "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 13,
+    "id": 1,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -116,7 +116,7 @@ Object {
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoView",
     "did": "user(0)",
-    "handle": "handle.invalid",
+    "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "subjectStatus": Object {
@@ -131,7 +131,7 @@ Object {
           "did": "user(0)",
         },
         "subjectBlobCids": Array [],
-        "subjectRepoHandle": "handle.invalid",
+        "subjectRepoHandle": "bob.test",
         "tags": Array [
           "lang:en",
           "lang:i",
@@ -173,7 +173,7 @@ Array [
       ],
       "remove": Array [],
     },
-    "id": 17,
+    "id": 5,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -189,7 +189,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
     },
-    "id": 16,
+    "id": 4,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -211,7 +211,7 @@ Object {
   "moderation": Object {
     "subjectStatus": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "id": 16,
+      "id": 4,
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedBy": "user(1)",
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
@@ -268,7 +268,7 @@ Object {
     "moderation": Object {
       "subjectStatus": Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "id": 13,
+        "id": 1,
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
@@ -384,7 +384,7 @@ Object {
   "event": Object {
     "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
   },
-  "id": 16,
+  "id": 4,
   "subject": Object {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
@@ -401,7 +401,7 @@ Object {
   "event": Object {
     "$type": "tools.ozone.moderation.defs#modEventAcknowledge",
   },
-  "id": 18,
+  "id": 6,
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoRef",
     "did": "user(0)",
