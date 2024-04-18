@@ -2,6 +2,7 @@ import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { AccountDb, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { DAY } from '@atproto/common'
+import { sql } from 'kysely'
 
 export class UserAlreadyExistsError extends Error {}
 
@@ -250,4 +251,35 @@ export const activateAccount = async (db: AccountDb, did: string) => {
       })
       .where('did', '=', did),
   )
+}
+
+export const searchAccounts = async (
+  db: AccountDb,
+  {
+    email,
+    includeDeactivated,
+    includeTakenDown,
+  }: { email?: string } & AvailabilityFlags,
+): Promise<ActorAccount[]> => {
+  const { ref } = db.db.dynamic
+  const query = selectAccountQB(db, {
+    includeDeactivated,
+    includeTakenDown,
+  }).if(!!email, (qb) => {
+    if (email?.startsWith('@')) {
+      return qb.where('account.email', 'like', `%${email.toLowerCase()}`)
+    }
+    // TODO: This is where we would want to search from a separate normalized email table
+    return qb.where(
+      'account.did',
+      'in',
+      db.db
+        .selectFrom('account')
+        .where('email', 'like', `%${email}%`)
+        .select('did'),
+    )
+  })
+
+  const results = await query.execute()
+  return results || []
 }

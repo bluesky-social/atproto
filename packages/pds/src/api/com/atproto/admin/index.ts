@@ -12,6 +12,7 @@ import updateAccountEmail from './updateAccountEmail'
 import updateAccountPassword from './updateAccountPassword'
 import sendEmail from './sendEmail'
 import deleteAccount from './deleteAccount'
+import searchAccounts from './searchAccounts'
 
 export default function (server: Server, ctx: AppContext) {
   updateSubjectStatus(server, ctx)
@@ -26,4 +27,5 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountPassword(server, ctx)
   sendEmail(server, ctx)
   deleteAccount(server, ctx)
+  searchAccounts(server, ctx)
 }
