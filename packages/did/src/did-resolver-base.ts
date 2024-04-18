@@ -1,4 +1,4 @@
-import { FetchError } from '@atproto/fetch'
+import { FetchError } from '@atproto-labs/fetch'
 import { ZodError } from 'zod'
 
 import { DidDocument, DidService } from './did-document.js'

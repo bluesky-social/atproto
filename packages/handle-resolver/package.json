@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/handle-resolver",
+  "name": "@atproto-labs/handle-resolver",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Isomorphic ATProto handle to DID resolver",
@@ -28,9 +28,9 @@
     }
   },
   "dependencies": {
-    "@atproto/caching": "workspace:*",
-    "@atproto/did": "workspace:*",
-    "@atproto/fetch": "workspace:*",
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/did": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
     "lru-cache": "^10.2.0",
     "zod": "^3.22.4"
   },

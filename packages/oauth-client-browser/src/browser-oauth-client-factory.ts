@@ -1,8 +1,8 @@
-import { Fetch } from '@atproto/fetch'
+import { Fetch } from '@atproto-labs/fetch'
 import {
   UniversalIdentityResolver,
   UniversalIdentityResolverOptions,
-} from '@atproto/identity-resolver'
+} from '@atproto-labs/identity-resolver'
 import {
   OAuthAuthorizeOptions,
   OAuthClient,
@@ -10,12 +10,12 @@ import {
   OAuthCallbackError,
   OAuthResponseMode,
   Session,
-} from '@atproto/oauth-client'
+} from '@atproto-labs/oauth-client'
 import {
   OAuthClientMetadata,
   oauthClientMetadataSchema,
-} from '@atproto/oauth-client-metadata'
-import { IsomorphicOAuthServerMetadataResolver } from '@atproto/oauth-server-metadata-resolver'
+} from '@atproto-labs/oauth-client-metadata'
+import { IsomorphicOAuthServerMetadataResolver } from '@atproto-labs/oauth-server-metadata-resolver'
 import {
   BrowserOAuthDatabase,
   DatabaseStore,

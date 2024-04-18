@@ -1,14 +1,14 @@
-import { GenericStore } from '@atproto/caching'
+import { GenericStore } from '@atproto-labs/caching'
 import {
   Fetch,
   Json,
   fetchFailureHandler,
   fetchJsonProcessor,
-} from '@atproto/fetch'
-import { dpopFetchWrapper } from '@atproto/fetch-dpop'
-import { Jwt, Key, Keyset } from '@atproto/jwk'
-import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
-import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
+} from '@atproto-labs/fetch'
+import { dpopFetchWrapper } from '@atproto-labs/fetch-dpop'
+import { Jwt, Key, Keyset } from '@atproto-labs/jwk'
+import { OAuthClientMetadata } from '@atproto-labs/oauth-client-metadata'
+import { OAuthServerMetadata } from '@atproto-labs/oauth-server-metadata'
 import { FALLBACK_ALG } from './constants.js'
 import { CryptoWrapper } from './crypto-wrapper.js'
 import { OAuthResolver } from './oauth-resolver.js'

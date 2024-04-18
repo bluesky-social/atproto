@@ -1,4 +1,4 @@
-import { oauthClientIdSchema } from '@atproto/oauth-client-metadata'
+import { oauthClientIdSchema } from '@atproto-labs/oauth-client-metadata'
 import { z } from 'zod'
 
 import { accessTokenSchema } from '../access-token/access-token.js'

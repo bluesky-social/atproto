@@ -1,4 +1,4 @@
-import { Key, Keyset } from '@atproto/jwk'
+import { Key, Keyset } from '@atproto-labs/jwk'
 import { Importable, JoseKey } from './jose-key.js'
 
 export class JoseKeyset<K extends Key = Key> extends Keyset<K> {

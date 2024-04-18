@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { isJwt } from '@atproto/jwk'
+import { isJwt } from '@atproto-labs/jwk'
 
 import { AccessTokenType } from '../access-token/access-token-type.js'
 import { AccessToken } from '../access-token/access-token.js'

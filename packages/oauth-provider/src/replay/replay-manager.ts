@@ -1,4 +1,4 @@
-import { OAuthClientId } from '@atproto/oauth-client-metadata'
+import { OAuthClientId } from '@atproto-labs/oauth-client-metadata'
 
 import {
   CLIENT_ASSERTION_MAX_AGE,

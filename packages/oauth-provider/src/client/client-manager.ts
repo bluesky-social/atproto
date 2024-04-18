@@ -1,5 +1,5 @@
-import { Keyset } from '@atproto/jwk'
-import { OAuthClientId } from '@atproto/oauth-client-metadata'
+import { Keyset } from '@atproto-labs/jwk'
+import { OAuthClientId } from '@atproto-labs/oauth-client-metadata'
 
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'

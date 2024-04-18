@@ -1,6 +1,6 @@
 import dns, { promises as dnsPromises } from 'node:dns'
 
-import { Fetch, FetchError } from '@atproto/fetch'
+import { Fetch, FetchError } from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
 
 const { IPv4, IPv6 } = ipaddr

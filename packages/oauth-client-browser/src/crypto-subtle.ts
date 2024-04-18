@@ -1,9 +1,9 @@
-import { WebcryptoKey } from '@atproto/jwk-webcrypto'
+import { WebcryptoKey } from '@atproto-labs/jwk-webcrypto'
 import {
   Key,
   CryptoImplementation,
   DigestAlgorithm,
-} from '@atproto/oauth-client'
+} from '@atproto-labs/oauth-client'
 
 export class CryptoSubtle implements CryptoImplementation {
   constructor(private crypto: Crypto = globalThis.crypto) {

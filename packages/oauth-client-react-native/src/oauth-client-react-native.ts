@@ -1,4 +1,4 @@
-import { Jwk, Jwt } from '@atproto/jwk'
+import { Jwk, Jwt } from '@atproto-labs/jwk'
 import { NativeModules, Platform } from 'react-native'
 
 const LINKING_ERROR =

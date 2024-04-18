@@ -1,8 +1,8 @@
-import { Jwks } from '@atproto/jwk'
+import { Jwks } from '@atproto-labs/jwk'
 import {
   OAuthClientId,
   OAuthClientMetadata,
-} from '@atproto/oauth-client-metadata'
+} from '@atproto-labs/oauth-client-metadata'
 import { Awaitable } from '../util/awaitable.js'
 
 /**

@@ -1,4 +1,4 @@
-import type { ManifestItem } from '@atproto/rollup-plugin-bundle-manifest'
+import type { ManifestItem } from '@atproto-labs/rollup-plugin-bundle-manifest'
 
 // If this library is used as a regular dependency (e.g. from node_modules), the
 // assets will simply be referenced from the node_modules directory. However, if
@@ -26,7 +26,7 @@ const appBundleManifest: Map<string, ManifestItem> = new Map(
   Object.entries(appBundleManifestJson),
 )
 
-export const ASSETS_URL_PREFIX = '/@atproto/oauth-provider/~assets/'
+export const ASSETS_URL_PREFIX = '/@atproto-labs/oauth-provider/~assets/'
 
 export async function getAsset(inputFilename: string): Promise<Asset> {
   const filename = posix.normalize(inputFilename)
@@ -47,7 +47,7 @@ export async function getAsset(inputFilename: string): Promise<Asset> {
   // directory. In case the bundler does not support copying assets from the
   // "dist/assets/app" folder, this package's build system can be modified to
   // embed the asset data directly into the bundle-manifest.json (see the `data`
-  // option of "@atproto/rollup-plugin-bundle-manifest" in rollup.config.js).
+  // option of "@atproto-labs/rollup-plugin-bundle-manifest" in rollup.config.js).
 
   const { data } = manifest
 

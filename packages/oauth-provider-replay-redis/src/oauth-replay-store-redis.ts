@@ -1,4 +1,4 @@
-import type { ReplayStore } from '@atproto/oauth-provider'
+import type { ReplayStore } from '@atproto-labs/oauth-provider'
 import { Redis, type RedisOptions } from 'ioredis'
 
 export type { RedisOptions, Redis }

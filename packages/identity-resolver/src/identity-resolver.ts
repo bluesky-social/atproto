@@ -1,9 +1,9 @@
-import { DidResolver } from '@atproto/did'
+import { DidResolver } from '@atproto-labs/did'
 import {
   HandleResolver,
   ResolvedHandle,
   isResolvedHandle,
-} from '@atproto/handle-resolver'
+} from '@atproto-labs/handle-resolver'
 import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
 export type ResolvedIdentity = {

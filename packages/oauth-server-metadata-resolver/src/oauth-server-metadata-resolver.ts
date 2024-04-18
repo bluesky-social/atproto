@@ -1,5 +1,5 @@
-import { GetOptions } from '@atproto/caching'
-import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
+import { GetOptions } from '@atproto-labs/caching'
+import { OAuthServerMetadata } from '@atproto-labs/oauth-server-metadata'
 
 export type ResolveOptions = GetOptions
 export type { OAuthServerMetadata }

@@ -1,5 +1,5 @@
-import { Keyset } from '@atproto/jwk'
-import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
+import { Keyset } from '@atproto-labs/jwk'
+import { OAuthClientMetadata } from '@atproto-labs/oauth-client-metadata'
 
 export function validateClientMetadata(
   metadata: OAuthClientMetadata,

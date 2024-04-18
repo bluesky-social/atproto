@@ -19,7 +19,7 @@ import {
   TokenInfo,
   TokenStore,
   UpdateRequestData,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
 

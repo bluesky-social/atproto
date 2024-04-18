@@ -1,4 +1,4 @@
-import { RefreshToken } from '@atproto/oauth-provider'
+import { RefreshToken } from '@atproto-labs/oauth-provider'
 import { AccountDb } from '../db'
 
 export const insert = async (

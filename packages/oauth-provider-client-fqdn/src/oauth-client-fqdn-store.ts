@@ -2,11 +2,11 @@ import {
   ClientStore,
   InvalidClientMetadataError,
   OAuthClientId,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import {
   OAuthClientUriStore,
   OAuthClientUriStoreConfig,
-} from '@atproto/oauth-provider-client-uri'
+} from '@atproto-labs/oauth-provider-client-uri'
 
 /**
  * @see {@link https://regexr.com/3g5j0}

@@ -11,10 +11,10 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       '@atproto/api',
-      '@atproto/oauth-client',
-      '@atproto/oauth-client-browser',
-      '@atproto/oauth-client-metadata',
-      '@atproto/oauth-server-metadata',
+      '@atproto-labs/oauth-client',
+      '@atproto-labs/oauth-client-browser',
+      '@atproto-labs/oauth-client-metadata',
+      '@atproto-labs/oauth-server-metadata',
       '@atproto/xrpc',
     ],
   },

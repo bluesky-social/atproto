@@ -1,4 +1,4 @@
-import { jwksPubSchema } from '@atproto/jwk'
+import { jwksPubSchema } from '@atproto-labs/jwk'
 import { z } from 'zod'
 
 import { oauthClientIdSchema } from './oauth-client-id.js'

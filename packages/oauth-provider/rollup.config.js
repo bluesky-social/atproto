@@ -2,7 +2,9 @@
 
 const { defineConfig } = require('rollup')
 
-const { default: manifest } = require('@atproto/rollup-plugin-bundle-manifest')
+const {
+  default: manifest,
+} = require('@atproto-labs/rollup-plugin-bundle-manifest')
 const { default: commonjs } = require('@rollup/plugin-commonjs')
 const { default: nodeResolve } = require('@rollup/plugin-node-resolve')
 const { default: replace } = require('@rollup/plugin-replace')

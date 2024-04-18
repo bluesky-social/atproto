@@ -1,4 +1,4 @@
-import { jwtSchema } from '@atproto/jwk'
+import { jwtSchema } from '@atproto-labs/jwk'
 import { z } from 'zod'
 
 import { clientIdentificationSchema } from '../client/client-credentials.js'

@@ -1,8 +1,8 @@
 {
-  "name": "@atproto/jwk-webcrypto",
+  "name": "@atproto-labs/jwk-webcrypto",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Webcrypto based implementation of @atproto/jwk Key's",
+  "description": "Webcrypto based implementation of @atproto-labs/jwk Key's",
   "keywords": [
     "atproto",
     "jwk",
@@ -24,8 +24,8 @@
     }
   },
   "dependencies": {
-    "@atproto/jwk": "workspace:*",
-    "@atproto/jwk-jose": "workspace:*"
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/jwk-jose": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

@@ -1,4 +1,4 @@
-import { Transformer } from '@atproto/transformer'
+import { Transformer } from '@atproto-labs/transformer'
 
 export type FetchErrorOptions = {
   cause?: unknown

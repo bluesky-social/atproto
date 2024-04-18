@@ -1,5 +1,5 @@
-import { BrowserOAuthClientFactory } from '@atproto/oauth-client-browser'
-import { oauthClientMetadataSchema } from '@atproto/oauth-client-metadata'
+import { BrowserOAuthClientFactory } from '@atproto-labs/oauth-client-browser'
+import { oauthClientMetadataSchema } from '@atproto-labs/oauth-client-metadata'
 import { useCallback, useState } from 'react'
 
 import LoginForm from './login-form'

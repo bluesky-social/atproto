@@ -4,8 +4,8 @@ import {
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
-} from '@atproto/fetch'
-import { compose } from '@atproto/transformer'
+} from '@atproto-labs/fetch'
+import { compose } from '@atproto-labs/transformer'
 
 import { didDocumentValidator } from '../did-document.js'
 import { InvalidDidError } from '../did-error.js'

@@ -1,4 +1,4 @@
-import { Keyset, jwtSchema } from '@atproto/jwk'
+import { Keyset, jwtSchema } from '@atproto-labs/jwk'
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccessToken } from './access-token/access-token.js'
 import { DpopManager, DpopManagerOptions } from './dpop/dpop-manager.js'

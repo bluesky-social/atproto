@@ -1,9 +1,9 @@
 import { AtpClient, schemas } from '@atproto/api'
-import { OAuthAuthorizeOptions, OAuthClient } from '@atproto/oauth-client'
+import { OAuthAuthorizeOptions, OAuthClient } from '@atproto-labs/oauth-client'
 import {
   BrowserOAuthClientFactory,
   LoginContinuedInParentWindowError,
-} from '@atproto/oauth-client-browser'
+} from '@atproto-labs/oauth-client-browser'
 import { XrpcAgent, XrpcClient } from '@atproto/xrpc'
 
 import { useCallback, useEffect, useRef, useState } from 'react'

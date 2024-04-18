@@ -5,7 +5,7 @@ import {
   HandleResolver,
   ResolvedHandle,
   isResolvedHandle,
-} from '@atproto/handle-resolver'
+} from '@atproto-labs/handle-resolver'
 
 const SUBDOMAIN = '_atproto'
 const PREFIX = 'did='

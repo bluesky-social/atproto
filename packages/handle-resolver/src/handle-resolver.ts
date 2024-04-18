@@ -1,4 +1,4 @@
-import { Did, isDid } from '@atproto/did'
+import { Did, isDid } from '@atproto-labs/did'
 
 export type HandleResolveOptions = {
   signal?: AbortSignal

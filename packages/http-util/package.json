@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/http-util",
+  "name": "@atproto-labs/http-util",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Lightweight utilities to create request handlers to use with the standard library's `node:http` module and that can be used as middleware with `express`/`connect` like frameworks.",
@@ -26,7 +26,7 @@
     }
   },
   "dependencies": {
-    "@atproto/html": "workspace:*",
+    "@atproto-labs/html": "workspace:*",
     "@hapi/accept": "^6.0.3",
     "@hapi/bourne": "^3.0.0",
     "cookie": "^0.6.0",

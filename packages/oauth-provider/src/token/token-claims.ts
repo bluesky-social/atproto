@@ -1,5 +1,5 @@
-import { jwtPayloadSchema } from '@atproto/jwk'
-import { oauthClientIdSchema } from '@atproto/oauth-client-metadata'
+import { jwtPayloadSchema } from '@atproto-labs/jwk'
+import { oauthClientIdSchema } from '@atproto-labs/oauth-client-metadata'
 import z from 'zod'
 
 import { subSchema } from '../oidc/sub.js'

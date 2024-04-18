@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/oauth-server-metadata-resolver",
+  "name": "@atproto-labs/oauth-server-metadata-resolver",
   "version": "0.0.1",
   "license": "MIT",
   "description": "OAuth Server Metadata Resolver",
@@ -25,9 +25,9 @@
     }
   },
   "dependencies": {
-    "@atproto/caching": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/oauth-server-metadata": "workspace:*",
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/oauth-server-metadata": "workspace:*",
     "zod": "^3.22.4"
   },
   "devDependencies": {

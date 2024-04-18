@@ -1,4 +1,4 @@
-import { Transformer } from '@atproto/transformer'
+import { Transformer } from '@atproto-labs/transformer'
 
 import { FetchError } from './fetch-error.js'
 import { isIp } from './util.js'

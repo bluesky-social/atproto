@@ -1,8 +1,8 @@
 {
-  "name": "@atproto/jwk-jose",
+  "name": "@atproto-labs/jwk-jose",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "`jose` based implementation of @atproto/jwk Key's",
+  "description": "`jose` based implementation of @atproto-labs/jwk Key's",
   "keywords": [
     "atproto",
     "jwk",
@@ -24,7 +24,7 @@
     }
   },
   "dependencies": {
-    "@atproto/jwk": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
     "jose": "^5.2.0",
     "tslib": "^2.6.2"
   },

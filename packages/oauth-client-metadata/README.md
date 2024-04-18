@@ -1,1 +1,1 @@
-# @atproto/oauth-client-metadata
+# @atproto-labs/oauth-client-metadata

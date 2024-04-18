@@ -3,7 +3,7 @@ import {
   RequestData,
   RequestId,
   UpdateRequestData,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import { AccountDb, AuthorizationRequest } from '../db'
 import { fromDateISO, fromJsonObject, toDateISO, toJsonObject } from '../../db'
 import { Insertable, Selectable } from 'kysely'

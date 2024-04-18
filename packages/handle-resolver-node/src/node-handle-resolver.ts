@@ -1,11 +1,11 @@
-import { Fetch } from '@atproto/fetch'
-import { SafeFetchWrapOptions, safeFetchWrap } from '@atproto/fetch-node'
+import { Fetch } from '@atproto-labs/fetch'
+import { SafeFetchWrapOptions, safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
   CachedHandleResolver,
   CachedHandleResolverOptions,
   HandleResolver,
   WellKnownHandleResolver,
-} from '@atproto/handle-resolver'
+} from '@atproto-labs/handle-resolver'
 
 import {
   DnsHandleResolver,

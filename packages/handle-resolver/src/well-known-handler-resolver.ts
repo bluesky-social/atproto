@@ -1,4 +1,4 @@
-import { Fetch } from '@atproto/fetch'
+import { Fetch } from '@atproto-labs/fetch'
 
 import {
   HandleResolveOptions,

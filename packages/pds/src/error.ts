@@ -1,7 +1,7 @@
 import { XRPCError } from '@atproto/xrpc-server'
 import { ErrorRequestHandler } from 'express'
 import { httpLogger as log } from './logger'
-import { OAuthError } from '@atproto/oauth-provider'
+import { OAuthError } from '@atproto-labs/oauth-provider'
 
 export const handler: ErrorRequestHandler = (err, _req, res, next) => {
   log.error(err, 'unexpected internal server error')

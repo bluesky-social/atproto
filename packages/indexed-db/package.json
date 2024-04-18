@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/indexed-db",
+  "name": "@atproto-labs/indexed-db",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Wrapper utilities for Browser's indexed-db API",
@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "@atproto/disposable-polyfill": "workspace:*",
+    "@atproto-labs/disposable-polyfill": "workspace:*",
     "tslib": "^2.6.2"
   },
   "devDependencies": {

@@ -3,7 +3,7 @@ import {
   DeviceAccountInfo,
   DeviceId,
   OAuthClientId,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import { Insertable, Selectable } from 'kysely'
 
 import { fromDateISO, fromJsonArray, toDateISO, toJsonArray } from '../../db'

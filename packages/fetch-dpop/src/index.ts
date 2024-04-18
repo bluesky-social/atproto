@@ -1,7 +1,7 @@
-import { b64uEncode } from '@atproto/b64'
-import { GenericStore } from '@atproto/caching'
-import { Fetch, Json } from '@atproto/fetch'
-import { Key } from '@atproto/jwk'
+import { b64uEncode } from '@atproto-labs/b64'
+import { GenericStore } from '@atproto-labs/caching'
+import { Fetch, Json } from '@atproto-labs/fetch'
+import { Key } from '@atproto-labs/jwk'
 
 export type DpopFetchWrapperOptions = {
   key: Key

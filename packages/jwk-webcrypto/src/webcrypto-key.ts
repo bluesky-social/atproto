@@ -1,5 +1,5 @@
-import { Jwk, jwkSchema } from '@atproto/jwk'
-import { GenerateKeyPairOptions, JoseKey } from '@atproto/jwk-jose'
+import { Jwk, jwkSchema } from '@atproto-labs/jwk'
+import { GenerateKeyPairOptions, JoseKey } from '@atproto-labs/jwk-jose'
 
 import { fromSubtleAlgorithm, isSignatureKeyPair } from './util.js'
 

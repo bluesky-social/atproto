@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { jwtSchema } from '@atproto/jwk'
+import { jwtSchema } from '@atproto-labs/jwk'
 
 import { authorizationDetailsSchema } from '../parameters/authorization-details.js'
 

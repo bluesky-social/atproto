@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/fetch-dpop",
+  "name": "@atproto-labs/fetch-dpop",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Utility to perform DPoP authenticated fetch requests",
@@ -18,10 +18,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@atproto/b64": "workspace:*",
-    "@atproto/caching": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/fetch": "workspace:*"
+    "@atproto-labs/b64": "workspace:*",
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

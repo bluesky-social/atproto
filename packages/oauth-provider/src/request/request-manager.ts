@@ -1,5 +1,5 @@
-import { OAuthClientId } from '@atproto/oauth-client-metadata'
-import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
+import { OAuthClientId } from '@atproto-labs/oauth-client-metadata'
+import { OAuthServerMetadata } from '@atproto-labs/oauth-server-metadata'
 
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'

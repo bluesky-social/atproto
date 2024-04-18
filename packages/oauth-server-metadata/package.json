@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/oauth-server-metadata",
+  "name": "@atproto-labs/oauth-server-metadata",
   "version": "0.0.1",
   "license": "MIT",
   "description": "OAuth Server Metadata Lib",

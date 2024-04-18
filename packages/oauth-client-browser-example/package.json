@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/oauth-client-browser-example",
+  "name": "@atproto-labs/oauth-client-browser-example",
   "version": "0.0.1",
   "license": "MIT",
   "keywords": [
@@ -26,10 +26,10 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
-    "@atproto/oauth-client-browser": "workspace:*",
-    "@atproto/oauth-client-metadata": "workspace:*",
-    "@atproto/oauth-server-metadata": "workspace:*",
+    "@atproto-labs/oauth-client": "workspace:*",
+    "@atproto-labs/oauth-client-browser": "workspace:*",
+    "@atproto-labs/oauth-client-metadata": "workspace:*",
+    "@atproto-labs/oauth-server-metadata": "workspace:*",
     "@atproto/xrpc": "workspace:*",
     "@types/react": "^18.2.50",
     "@types/react-dom": "^18.2.18",

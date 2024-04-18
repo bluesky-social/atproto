@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { cssCode, html } from '@atproto/html'
+import { cssCode, html } from '@atproto-labs/html'
 
 import { getAsset } from '../assets/index.js'
 import {
@@ -9,7 +9,7 @@ import {
   buildCustomizationData,
 } from './customization.js'
 import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
-import { declareBrowserGlobalVar, sendWebPage } from '@atproto/http-util'
+import { declareBrowserGlobalVar, sendWebPage } from '@atproto-labs/http-util'
 
 export async function sendErrorPage(
   req: IncomingMessage,

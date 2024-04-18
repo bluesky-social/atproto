@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/fetch",
+  "name": "@atproto-labs/fetch",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Isomorphic wrapper utilities for fetch API",
@@ -23,7 +23,7 @@
     }
   },
   "dependencies": {
-    "@atproto/transformer": "workspace:*",
+    "@atproto-labs/transformer": "workspace:*",
     "tslib": "^2.6.2",
     "zod": "^3.22.4"
   },

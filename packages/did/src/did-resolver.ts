@@ -1,4 +1,4 @@
-import { CachedGetter } from '@atproto/caching'
+import { CachedGetter } from '@atproto-labs/caching'
 import { DidCacheMemory } from './did-cache-memory.js'
 import { DidCache } from './did-cache.js'
 import { DidDocument } from './did-document.js'

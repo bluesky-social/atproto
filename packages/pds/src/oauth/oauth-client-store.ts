@@ -5,11 +5,11 @@ import {
   OAuthClientId,
   OAuthClientMetadata,
   parseRedirectUri,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import {
   OAuthClientUriStore,
   OAuthClientUriStoreConfig,
-} from '@atproto/oauth-provider-client-uri'
+} from '@atproto-labs/oauth-provider-client-uri'
 import { isAbsolute, relative } from 'node:path'
 
 export class OauthClientStore
@@ -100,8 +100,8 @@ function validateMetadata(
 
       // Custom URI schemes are allowed by ATPROTO, following the rules
       // defined in the spec & current best practices. These are already
-      // enforced by the @atproto/oauth-provider &
-      // @atproto/oauth-provider-client-uri packages.
+      // enforced by the @atproto-labs/oauth-provider &
+      // @atproto-labs/oauth-provider-client-uri packages.
       default:
         continue
     }

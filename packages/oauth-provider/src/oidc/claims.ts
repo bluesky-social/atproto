@@ -1,4 +1,4 @@
-import { JwtPayload } from '@atproto/jwk'
+import { JwtPayload } from '@atproto-labs/jwk'
 
 /**
  * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims | OpenID Connect Core 1.0, 5.4. Requesting Claims using Scope Values}

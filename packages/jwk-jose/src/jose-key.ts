@@ -21,7 +21,7 @@ import {
   VerifyPayload,
   VerifyResult,
   jwkValidator,
-} from '@atproto/jwk'
+} from '@atproto-labs/jwk'
 import { either } from './util'
 
 export type Importable = string | KeyLike | Jwk

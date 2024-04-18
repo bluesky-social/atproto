@@ -1,5 +1,5 @@
-import { GenericStore, Value } from '@atproto/caching'
-import { Jwk } from '@atproto/jwk'
+import { GenericStore, Value } from '@atproto-labs/caching'
+import { Jwk } from '@atproto-labs/jwk'
 import { ReactNativeKey } from './react-native-key.js'
 import { ReactNativeStore } from './react-native-store.js'
 

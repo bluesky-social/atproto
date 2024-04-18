@@ -1,8 +1,8 @@
 {
-  "name": "@atproto/did-node",
+  "name": "@atproto-labs/did-node",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "@atproto/did DID implementation for use in NodeJS with did input from end-users. This lib will prevent specially forged DIDs / servers from affecting Node's process (SSRF, memory starvation, etc.).",
+  "description": "@atproto-labs/did DID implementation for use in NodeJS with did input from end-users. This lib will prevent specially forged DIDs / servers from affecting Node's process (SSRF, memory starvation, etc.).",
   "keywords": [
     "atproto",
     "oauth",
@@ -25,8 +25,8 @@
     }
   },
   "dependencies": {
-    "@atproto/did": "workspace:*",
-    "@atproto/fetch-node": "workspace:*"
+    "@atproto-labs/did": "workspace:*",
+    "@atproto-labs/fetch-node": "workspace:*"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

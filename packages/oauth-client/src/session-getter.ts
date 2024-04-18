@@ -1,5 +1,5 @@
-import { CachedGetter, GenericStore } from '@atproto/caching'
-import { Key } from '@atproto/jwk'
+import { CachedGetter, GenericStore } from '@atproto-labs/caching'
+import { Key } from '@atproto-labs/jwk'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { TokenSet } from './oauth-server.js'

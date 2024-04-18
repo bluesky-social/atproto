@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { oauthClientIdSchema } from '@atproto/oauth-client-metadata'
+import { oauthClientIdSchema } from '@atproto-labs/oauth-client-metadata'
 
 export const CLIENT_ASSERTION_TYPE_JWT_BEARER =
   'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'

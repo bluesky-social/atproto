@@ -477,16 +477,16 @@ importers:
 
   packages/did:
     dependencies:
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/transformer':
+      '@atproto-labs/transformer':
         specifier: workspace:*
         version: link:../transformer
       zod:
@@ -495,10 +495,10 @@ importers:
 
   packages/did-node:
     dependencies:
-      '@atproto/did':
+      '@atproto-labs/did':
         specifier: workspace:*
         version: link:../did
-      '@atproto/fetch-node':
+      '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../fetch-node
 
@@ -514,7 +514,7 @@ importers:
 
   packages/fetch:
     dependencies:
-      '@atproto/transformer':
+      '@atproto-labs/transformer':
         specifier: workspace:*
         version: link:../transformer
       tslib:
@@ -530,16 +530,16 @@ importers:
 
   packages/fetch-dpop:
     dependencies:
-      '@atproto/b64':
+      '@atproto-labs/b64':
         specifier: workspace:*
         version: link:../b64
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
     devDependencies:
@@ -549,10 +549,10 @@ importers:
 
   packages/fetch-node:
     dependencies:
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/transformer':
+      '@atproto-labs/transformer':
         specifier: workspace:*
         version: link:../transformer
       ipaddr.js:
@@ -568,13 +568,13 @@ importers:
 
   packages/handle-resolver:
     dependencies:
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/did':
+      '@atproto-labs/did':
         specifier: workspace:*
         version: link:../did
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
       lru-cache:
@@ -590,16 +590,16 @@ importers:
 
   packages/handle-resolver-node:
     dependencies:
-      '@atproto/did':
+      '@atproto-labs/did':
         specifier: workspace:*
         version: link:../did
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/fetch-node':
+      '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../fetch-node
-      '@atproto/handle-resolver':
+      '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../handle-resolver
     devDependencies:
@@ -619,7 +619,7 @@ importers:
 
   packages/http-util:
     dependencies:
-      '@atproto/html':
+      '@atproto-labs/html':
         specifier: workspace:*
         version: link:../html
       '@hapi/accept':
@@ -684,13 +684,13 @@ importers:
 
   packages/identity-resolver:
     dependencies:
-      '@atproto/did':
+      '@atproto-labs/did':
         specifier: workspace:*
         version: link:../did
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/handle-resolver':
+      '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../handle-resolver
       '@atproto/syntax':
@@ -703,7 +703,7 @@ importers:
 
   packages/indexed-db:
     dependencies:
-      '@atproto/disposable-polyfill':
+      '@atproto-labs/disposable-polyfill':
         specifier: workspace:*
         version: link:../disposable-polyfill
       tslib:
@@ -716,7 +716,7 @@ importers:
 
   packages/jwk:
     dependencies:
-      '@atproto/b64':
+      '@atproto-labs/b64':
         specifier: workspace:*
         version: link:../b64
       tslib:
@@ -732,7 +732,7 @@ importers:
 
   packages/jwk-jose:
     dependencies:
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
       jose:
@@ -748,10 +748,10 @@ importers:
 
   packages/jwk-node:
     dependencies:
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/jwk-jose':
+      '@atproto-labs/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
       tslib:
@@ -764,10 +764,10 @@ importers:
 
   packages/jwk-webcrypto:
     dependencies:
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/jwk-jose':
+      '@atproto-labs/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
     devDependencies:
@@ -826,37 +826,37 @@ importers:
 
   packages/oauth-client:
     dependencies:
-      '@atproto/b64':
+      '@atproto-labs/b64':
         specifier: workspace:*
         version: link:../b64
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/did':
+      '@atproto-labs/did':
         specifier: workspace:*
         version: link:../did
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/fetch-dpop':
+      '@atproto-labs/fetch-dpop':
         specifier: workspace:*
         version: link:../fetch-dpop
-      '@atproto/handle-resolver':
+      '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../handle-resolver
-      '@atproto/identity-resolver':
+      '@atproto-labs/identity-resolver':
         specifier: workspace:*
         version: link:../identity-resolver
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/oauth-client-metadata':
+      '@atproto-labs/oauth-client-metadata':
         specifier: workspace:*
         version: link:../oauth-client-metadata
-      '@atproto/oauth-server-metadata':
+      '@atproto-labs/oauth-server-metadata':
         specifier: workspace:*
         version: link:../oauth-server-metadata
-      '@atproto/oauth-server-metadata-resolver':
+      '@atproto-labs/oauth-server-metadata-resolver':
         specifier: workspace:*
         version: link:../oauth-server-metadata-resolver
     devDependencies:
@@ -866,46 +866,46 @@ importers:
 
   packages/oauth-client-browser:
     dependencies:
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/did':
+      '@atproto-labs/did':
         specifier: workspace:*
         version: link:../did
-      '@atproto/disposable-polyfill':
+      '@atproto-labs/disposable-polyfill':
         specifier: workspace:*
         version: link:../disposable-polyfill
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/handle-resolver':
+      '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../handle-resolver
-      '@atproto/identity-resolver':
+      '@atproto-labs/identity-resolver':
         specifier: workspace:*
         version: link:../identity-resolver
-      '@atproto/indexed-db':
+      '@atproto-labs/indexed-db':
         specifier: workspace:*
         version: link:../indexed-db
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/jwk-jose':
+      '@atproto-labs/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
-      '@atproto/jwk-webcrypto':
+      '@atproto-labs/jwk-webcrypto':
         specifier: workspace:*
         version: link:../jwk-webcrypto
-      '@atproto/oauth-client':
+      '@atproto-labs/oauth-client':
         specifier: workspace:*
         version: link:../oauth-client
-      '@atproto/oauth-client-metadata':
+      '@atproto-labs/oauth-client-metadata':
         specifier: workspace:*
         version: link:../oauth-client-metadata
-      '@atproto/oauth-server-metadata':
+      '@atproto-labs/oauth-server-metadata':
         specifier: workspace:*
         version: link:../oauth-server-metadata
-      '@atproto/oauth-server-metadata-resolver':
+      '@atproto-labs/oauth-server-metadata-resolver':
         specifier: workspace:*
         version: link:../oauth-server-metadata-resolver
     devDependencies:
@@ -915,21 +915,21 @@ importers:
 
   packages/oauth-client-browser-example:
     devDependencies:
+      '@atproto-labs/oauth-client':
+        specifier: workspace:*
+        version: link:../oauth-client
+      '@atproto-labs/oauth-client-browser':
+        specifier: workspace:*
+        version: link:../oauth-client-browser
+      '@atproto-labs/oauth-client-metadata':
+        specifier: workspace:*
+        version: link:../oauth-client-metadata
+      '@atproto-labs/oauth-server-metadata':
+        specifier: workspace:*
+        version: link:../oauth-server-metadata
       '@atproto/api':
         specifier: workspace:*
         version: link:../api
-      '@atproto/oauth-client':
-        specifier: workspace:*
-        version: link:../oauth-client
-      '@atproto/oauth-client-browser':
-        specifier: workspace:*
-        version: link:../oauth-client-browser
-      '@atproto/oauth-client-metadata':
-        specifier: workspace:*
-        version: link:../oauth-client-metadata
-      '@atproto/oauth-server-metadata':
-        specifier: workspace:*
-        version: link:../oauth-server-metadata
       '@atproto/xrpc':
         specifier: workspace:*
         version: link:../xrpc
@@ -966,7 +966,7 @@ importers:
 
   packages/oauth-client-metadata:
     dependencies:
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
       zod:
@@ -979,28 +979,28 @@ importers:
 
   packages/oauth-client-react-native:
     dependencies:
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/handle-resolver':
+      '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../handle-resolver
-      '@atproto/identity-resolver':
+      '@atproto-labs/identity-resolver':
         specifier: workspace:*
         version: link:../identity-resolver
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/oauth-client':
+      '@atproto-labs/oauth-client':
         specifier: workspace:*
         version: link:../oauth-client
-      '@atproto/oauth-client-metadata':
+      '@atproto-labs/oauth-client-metadata':
         specifier: workspace:*
         version: link:../oauth-client-metadata
-      '@atproto/oauth-server-metadata-resolver':
+      '@atproto-labs/oauth-server-metadata-resolver':
         specifier: workspace:*
         version: link:../oauth-server-metadata-resolver
       react:
@@ -1016,28 +1016,28 @@ importers:
 
   packages/oauth-provider:
     dependencies:
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/fetch-node':
+      '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../fetch-node
-      '@atproto/html':
+      '@atproto-labs/html':
         specifier: workspace:*
         version: link:../html
-      '@atproto/http-util':
+      '@atproto-labs/http-util':
         specifier: workspace:*
         version: link:../http-util
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/jwk-node':
+      '@atproto-labs/jwk-node':
         specifier: workspace:*
         version: link:../jwk-node
-      '@atproto/oauth-client-metadata':
+      '@atproto-labs/oauth-client-metadata':
         specifier: workspace:*
         version: link:../oauth-client-metadata
-      '@atproto/oauth-server-metadata':
+      '@atproto-labs/oauth-server-metadata':
         specifier: workspace:*
         version: link:../oauth-server-metadata
       cookie:
@@ -1060,7 +1060,7 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
     devDependencies:
-      '@atproto/rollup-plugin-bundle-manifest':
+      '@atproto-labs/rollup-plugin-bundle-manifest':
         specifier: workspace:*
         version: link:../rollup-plugin-bundle-manifest
       '@rollup/plugin-commonjs':
@@ -1123,10 +1123,10 @@ importers:
 
   packages/oauth-provider-client-fqdn:
     dependencies:
-      '@atproto/oauth-provider':
+      '@atproto-labs/oauth-provider':
         specifier: workspace:*
         version: link:../oauth-provider
-      '@atproto/oauth-provider-client-uri':
+      '@atproto-labs/oauth-provider-client-uri':
         specifier: workspace:*
         version: link:../oauth-provider-client-uri
       tslib:
@@ -1135,19 +1135,19 @@ importers:
 
   packages/oauth-provider-client-uri:
     dependencies:
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/jwk':
+      '@atproto-labs/jwk':
         specifier: workspace:*
         version: link:../jwk
-      '@atproto/oauth-provider':
+      '@atproto-labs/oauth-provider':
         specifier: workspace:*
         version: link:../oauth-provider
-      '@atproto/transformer':
+      '@atproto-labs/transformer':
         specifier: workspace:*
         version: link:../transformer
       psl:
@@ -1163,7 +1163,7 @@ importers:
 
   packages/oauth-provider-replay-memory:
     dependencies:
-      '@atproto/oauth-provider':
+      '@atproto-labs/oauth-provider':
         specifier: workspace:*
         version: link:../oauth-provider
       tslib:
@@ -1172,7 +1172,7 @@ importers:
 
   packages/oauth-provider-replay-redis:
     dependencies:
-      '@atproto/oauth-provider':
+      '@atproto-labs/oauth-provider':
         specifier: workspace:*
         version: link:../oauth-provider
       ioredis:
@@ -1194,13 +1194,13 @@ importers:
 
   packages/oauth-server-metadata-resolver:
     dependencies:
-      '@atproto/caching':
+      '@atproto-labs/caching':
         specifier: workspace:*
         version: link:../caching
-      '@atproto/fetch':
+      '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@atproto/oauth-server-metadata':
+      '@atproto-labs/oauth-server-metadata':
         specifier: workspace:*
         version: link:../oauth-server-metadata
       zod:
@@ -1310,54 +1310,54 @@ importers:
 
   packages/pds:
     dependencies:
+      '@atproto-labs/caching':
+        specifier: workspace:^
+        version: link:../caching
+      '@atproto-labs/fetch':
+        specifier: workspace:*
+        version: link:../fetch
+      '@atproto-labs/fetch-node':
+        specifier: workspace:*
+        version: link:../fetch-node
+      '@atproto-labs/jwk':
+        specifier: workspace:^
+        version: link:../jwk
+      '@atproto-labs/jwk-node':
+        specifier: workspace:^
+        version: link:../jwk-node
+      '@atproto-labs/oauth-provider':
+        specifier: workspace:^
+        version: link:../oauth-provider
+      '@atproto-labs/oauth-provider-client-fqdn':
+        specifier: workspace:^
+        version: link:../oauth-provider-client-fqdn
+      '@atproto-labs/oauth-provider-client-uri':
+        specifier: workspace:^
+        version: link:../oauth-provider-client-uri
+      '@atproto-labs/oauth-provider-replay-memory':
+        specifier: workspace:^
+        version: link:../oauth-provider-replay-memory
+      '@atproto-labs/oauth-provider-replay-redis':
+        specifier: workspace:^
+        version: link:../oauth-provider-replay-redis
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
       '@atproto/aws':
         specifier: workspace:^
         version: link:../aws
-      '@atproto/caching':
-        specifier: workspace:^
-        version: link:../caching
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
-      '@atproto/fetch':
-        specifier: workspace:*
-        version: link:../fetch
-      '@atproto/fetch-node':
-        specifier: workspace:*
-        version: link:../fetch-node
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
-      '@atproto/jwk':
-        specifier: workspace:^
-        version: link:../jwk
-      '@atproto/jwk-node':
-        specifier: workspace:^
-        version: link:../jwk-node
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/oauth-provider':
-        specifier: workspace:^
-        version: link:../oauth-provider
-      '@atproto/oauth-provider-client-fqdn':
-        specifier: workspace:^
-        version: link:../oauth-provider-client-fqdn
-      '@atproto/oauth-provider-client-uri':
-        specifier: workspace:^
-        version: link:../oauth-provider-client-uri
-      '@atproto/oauth-provider-replay-memory':
-        specifier: workspace:^
-        version: link:../oauth-provider-replay-memory
-      '@atproto/oauth-provider-replay-redis':
-        specifier: workspace:^
-        version: link:../oauth-provider-replay-redis
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo

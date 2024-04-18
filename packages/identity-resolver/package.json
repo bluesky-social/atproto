@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/identity-resolver",
+  "name": "@atproto-labs/identity-resolver",
   "version": "0.0.1",
   "license": "MIT",
   "description": "A library resolving ATPROTO identities",
@@ -25,9 +25,9 @@
     }
   },
   "dependencies": {
-    "@atproto/did": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/handle-resolver": "workspace:*",
+    "@atproto-labs/did": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/handle-resolver": "workspace:*",
     "@atproto/syntax": "workspace:*"
   },
   "devDependencies": {

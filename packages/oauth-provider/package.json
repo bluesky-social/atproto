@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/oauth-provider",
+  "name": "@atproto-labs/oauth-provider",
   "version": "0.0.0",
   "license": "MIT",
   "description": "Generic OAuth2 and OpenID Connect provider for Node.js. Currently only supports features needed for Atproto.",
@@ -28,14 +28,14 @@
     }
   },
   "dependencies": {
-    "@atproto/fetch": "workspace:*",
-    "@atproto/fetch-node": "workspace:*",
-    "@atproto/html": "workspace:*",
-    "@atproto/http-util": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/jwk-node": "workspace:*",
-    "@atproto/oauth-client-metadata": "workspace:*",
-    "@atproto/oauth-server-metadata": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/fetch-node": "workspace:*",
+    "@atproto-labs/html": "workspace:*",
+    "@atproto-labs/http-util": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/jwk-node": "workspace:*",
+    "@atproto-labs/oauth-client-metadata": "workspace:*",
+    "@atproto-labs/oauth-server-metadata": "workspace:*",
     "cookie": "^0.6.0",
     "jose": "^5.2.0",
     "keygrip": "^1.1.0",
@@ -44,7 +44,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@atproto/rollup-plugin-bundle-manifest": "workspace:*",
+    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",

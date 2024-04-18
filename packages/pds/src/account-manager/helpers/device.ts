@@ -1,4 +1,4 @@
-import { DeviceId, DeviceData } from '@atproto/oauth-provider'
+import { DeviceId, DeviceData } from '@atproto-labs/oauth-provider'
 import { AccountDb, Device } from '../db'
 import { fromDateISO, toDateISO } from '../../db'
 import { Selectable } from 'kysely'
@@ -12,7 +12,7 @@ const rowToDeviceData = (row: Selectable<Device>): DeviceData => ({
 
 /**
  * Future-proofs the session data by ensuring that only the expected fields are
- * present. If the @atproto/oauth-provider package adds new fields to the
+ * present. If the @atproto-labs/oauth-provider package adds new fields to the
  * DeviceData type, this function will throw an error.
  */
 const futureProof = <T extends Partial<DeviceData>>(data: T): T => {

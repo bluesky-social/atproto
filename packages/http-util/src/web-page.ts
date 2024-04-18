@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { ServerResponse } from 'node:http'
 
-import { html, Html, jsonCode } from '@atproto/html'
+import { html, Html, jsonCode } from '@atproto-labs/html'
 import { writeHtml } from './response.js'
 
 export type AssetRef = {

@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/oauth-client-browser",
+  "name": "@atproto-labs/oauth-client-browser",
   "version": "0.0.1",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the browser (relies on WebCrypto & Indexed DB)",
@@ -28,20 +28,20 @@
     }
   },
   "dependencies": {
-    "@atproto/caching": "workspace:*",
-    "@atproto/did": "workspace:*",
-    "@atproto/disposable-polyfill": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/handle-resolver": "workspace:*",
-    "@atproto/identity-resolver": "workspace:*",
-    "@atproto/indexed-db": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/jwk-jose": "workspace:*",
-    "@atproto/jwk-webcrypto": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
-    "@atproto/oauth-client-metadata": "workspace:*",
-    "@atproto/oauth-server-metadata": "workspace:*",
-    "@atproto/oauth-server-metadata-resolver": "workspace:*"
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/did": "workspace:*",
+    "@atproto-labs/disposable-polyfill": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/handle-resolver": "workspace:*",
+    "@atproto-labs/identity-resolver": "workspace:*",
+    "@atproto-labs/indexed-db": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/jwk-jose": "workspace:*",
+    "@atproto-labs/jwk-webcrypto": "workspace:*",
+    "@atproto-labs/oauth-client": "workspace:*",
+    "@atproto-labs/oauth-client-metadata": "workspace:*",
+    "@atproto-labs/oauth-server-metadata": "workspace:*",
+    "@atproto-labs/oauth-server-metadata-resolver": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

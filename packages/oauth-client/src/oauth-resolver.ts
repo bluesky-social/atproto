@@ -1,8 +1,11 @@
-import { IdentityResolver, ResolvedIdentity } from '@atproto/identity-resolver'
+import {
+  IdentityResolver,
+  ResolvedIdentity,
+} from '@atproto-labs/identity-resolver'
 import {
   OAuthServerMetadata,
   OAuthServerMetadataResolver,
-} from '@atproto/oauth-server-metadata-resolver'
+} from '@atproto-labs/oauth-server-metadata-resolver'
 
 export class OAuthResolver {
   constructor(

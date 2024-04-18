@@ -7,7 +7,7 @@ import {
   JwtPayloadGetter,
   JwtSignHeader,
   Keyset,
-} from '@atproto/jwk'
+} from '@atproto-labs/jwk'
 import { generate as hash } from 'oidc-token-hash'
 
 import { Account } from '../account/account.js'

@@ -1,5 +1,5 @@
-import { Keyset } from '@atproto/jwk'
-import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
+import { Keyset } from '@atproto-labs/jwk'
+import { OAuthServerMetadata } from '@atproto-labs/oauth-server-metadata'
 
 import { Client } from '../client/client.js'
 import { OIDC_STANDARD_CLAIMS } from '../oidc/claims.js'

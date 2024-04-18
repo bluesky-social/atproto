@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/did",
+  "name": "@atproto-labs/did",
   "version": "0.0.1",
   "license": "MIT",
   "description": "DID resolution and verification library",
@@ -25,10 +25,10 @@
     }
   },
   "dependencies": {
-    "@atproto/caching": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/transformer": "workspace:*",
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/transformer": "workspace:*",
     "zod": "^3.22.4"
   },
   "scripts": {

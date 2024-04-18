@@ -1,4 +1,4 @@
-import { RefreshToken } from '@atproto/oauth-provider'
+import { RefreshToken } from '@atproto-labs/oauth-provider'
 import { Selectable } from 'kysely'
 
 export interface UsedRefreshToken {

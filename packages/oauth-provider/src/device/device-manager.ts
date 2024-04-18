@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { appendHeader, parseHttpCookies } from '@atproto/http-util'
+import { appendHeader, parseHttpCookies } from '@atproto-labs/http-util'
 import { serialize as serializeCookie } from 'cookie'
 import type Keygrip from 'keygrip'
 import { z } from 'zod'

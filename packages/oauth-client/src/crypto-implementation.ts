@@ -1,4 +1,4 @@
-import { Key } from '@atproto/jwk'
+import { Key } from '@atproto-labs/jwk'
 
 export type DigestAlgorithm = {
   name: 'sha256' | 'sha384' | 'sha512'

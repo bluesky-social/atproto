@@ -1,9 +1,9 @@
-import { CachedGetter, GenericStore } from '@atproto/caching'
-import { Fetch, FetchError } from '@atproto/fetch'
+import { CachedGetter, GenericStore } from '@atproto-labs/caching'
+import { Fetch, FetchError } from '@atproto-labs/fetch'
 import {
   OAuthServerMetadata,
   oauthServerMetadataValidator,
-} from '@atproto/oauth-server-metadata'
+} from '@atproto-labs/oauth-server-metadata'
 import {
   OAuthServerMetadataResolver,
   ResolveOptions,

@@ -1,8 +1,8 @@
 import {
   IsomorphicDidResolver,
   IsomorphicDidResolverOptions,
-} from '@atproto/did'
-import { safeFetchWrap } from '@atproto/fetch-node'
+} from '@atproto-labs/did'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
 
 export type NodeDidResolverOptions = IsomorphicDidResolverOptions & {
   dangerouslyDisableSafeFetch?: boolean

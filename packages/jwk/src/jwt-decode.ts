@@ -1,4 +1,4 @@
-import { b64uDecode } from '@atproto/b64'
+import { b64uDecode } from '@atproto-labs/b64'
 
 import { ui8ToString } from './util.js'
 import {

@@ -1,8 +1,8 @@
 {
-  "name": "@atproto/oauth-provider-client-uri",
+  "name": "@atproto-labs/oauth-provider-client-uri",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Client Store implementation for @atproto/oauth-provider. This implementation interprets client_id as a URI and uses the URI to retrieve Client Metadata.",
+  "description": "Client Store implementation for @atproto-labs/oauth-provider. This implementation interprets client_id as a URI and uses the URI to retrieve Client Metadata.",
   "keywords": [
     "atproto",
     "oauth",
@@ -28,11 +28,11 @@
     }
   },
   "dependencies": {
-    "@atproto/caching": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/oauth-provider": "workspace:*",
-    "@atproto/transformer": "workspace:*",
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/oauth-provider": "workspace:*",
+    "@atproto-labs/transformer": "workspace:*",
     "psl": "^1.9.0",
     "tslib": "^2.6.2"
   },

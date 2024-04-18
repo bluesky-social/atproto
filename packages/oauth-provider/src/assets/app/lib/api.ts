@@ -2,7 +2,7 @@ import {
   fetchFailureHandler,
   fetchJsonProcessor,
   fetchOkProcessor,
-} from '@atproto/fetch'
+} from '@atproto-labs/fetch'
 
 import { Account, Session } from '../types'
 

@@ -1,1 +1,1 @@
-# @atproto/oauth-client: atproto flavoured OAuth client
+# @atproto-labs/oauth-client: atproto flavoured OAuth client

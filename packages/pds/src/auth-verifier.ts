@@ -5,7 +5,7 @@ import {
   OAuthError,
   OAuthVerifier,
   WWWAuthenticateError,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import {
   AuthRequiredError,
   ForbiddenError,

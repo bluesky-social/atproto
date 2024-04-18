@@ -1,4 +1,4 @@
-import { GenericStore } from '@atproto/caching'
+import { GenericStore } from '@atproto-labs/caching'
 
 import { DidDocument } from './did-document.js'
 import { Did } from './did.js'

@@ -1,7 +1,7 @@
-import { Jwt } from '@atproto/jwk'
-import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
+import { Jwt } from '@atproto-labs/jwk'
+import { OAuthClientMetadata } from '@atproto-labs/oauth-client-metadata'
 
-export type { OAuthResponseType } from '@atproto/oauth-client-metadata'
+export type { OAuthResponseType } from '@atproto-labs/oauth-client-metadata'
 
 export type OAuthResponseMode = 'query' | 'fragment' | 'form_post'
 

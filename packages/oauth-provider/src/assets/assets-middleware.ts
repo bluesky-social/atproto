@@ -1,4 +1,4 @@
-import { writeStream } from '@atproto/http-util'
+import { writeStream } from '@atproto-labs/http-util'
 
 import { ASSETS_URL_PREFIX, getAsset } from './index.js'
 

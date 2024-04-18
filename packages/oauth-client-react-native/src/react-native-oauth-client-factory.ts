@@ -1,21 +1,21 @@
-import { Fetch } from '@atproto/fetch'
+import { Fetch } from '@atproto-labs/fetch'
 import {
   DidDocument,
   ResolvedHandle,
   UniversalIdentityResolver,
   UniversalIdentityResolverOptions,
-} from '@atproto/identity-resolver'
+} from '@atproto-labs/identity-resolver'
 import {
   InternalStateData,
   OAuthAuthorizeOptions,
   OAuthClientFactory,
   Session,
-} from '@atproto/oauth-client'
-import { OAuthClientMetadata } from '@atproto/oauth-client-metadata'
+} from '@atproto-labs/oauth-client'
+import { OAuthClientMetadata } from '@atproto-labs/oauth-client-metadata'
 import {
   IsomorphicOAuthServerMetadataResolver,
   OAuthServerMetadata,
-} from '@atproto/oauth-server-metadata-resolver'
+} from '@atproto-labs/oauth-server-metadata-resolver'
 
 import { ReactNativeCryptoImplementation } from './react-native-crypto-implementation.js'
 import { ReactNativeStoreWithKey } from './react-native-store-with-key.js'

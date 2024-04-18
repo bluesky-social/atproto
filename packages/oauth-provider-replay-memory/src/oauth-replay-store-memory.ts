@@ -1,4 +1,4 @@
-import type { ReplayStore } from '@atproto/oauth-provider'
+import type { ReplayStore } from '@atproto-labs/oauth-provider'
 
 export class OAuthReplayStoreMemory implements ReplayStore {
   private lastCleanup = Date.now()

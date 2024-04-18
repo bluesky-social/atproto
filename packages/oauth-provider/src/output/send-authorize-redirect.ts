@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { html, javascriptCode } from '@atproto/html'
-import { sendWebPage } from '@atproto/http-util'
+import { html, javascriptCode } from '@atproto-labs/html'
+import { sendWebPage } from '@atproto-labs/http-util'
 
 import { Client } from '../client/client.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'

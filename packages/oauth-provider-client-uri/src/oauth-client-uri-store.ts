@@ -1,11 +1,11 @@
-import { CachedGetter, GenericStore, MemoryStore } from '@atproto/caching'
+import { CachedGetter, GenericStore, MemoryStore } from '@atproto-labs/caching'
 import {
   Fetch,
   fetchFailureHandler,
   fetchJsonProcessor,
   fetchOkProcessor,
-} from '@atproto/fetch'
-import { Jwks, jwksSchema } from '@atproto/jwk'
+} from '@atproto-labs/fetch'
+import { Jwks, jwksSchema } from '@atproto-labs/jwk'
 import {
   Awaitable,
   ClientData,
@@ -16,8 +16,8 @@ import {
   OAuthClientMetadata,
   oauthClientMetadataSchema,
   parseRedirectUri,
-} from '@atproto/oauth-provider'
-import { compose } from '@atproto/transformer'
+} from '@atproto-labs/oauth-provider'
+import { compose } from '@atproto-labs/transformer'
 
 import { buildWellknownUrl, isInternetHost, isLoopbackHost } from './util.js'
 

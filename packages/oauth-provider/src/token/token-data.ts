@@ -1,4 +1,4 @@
-import { OAuthClientId } from '@atproto/oauth-client-metadata'
+import { OAuthClientId } from '@atproto-labs/oauth-client-metadata'
 
 import { ClientAuth } from '../client/client-auth.js'
 import { DeviceId } from '../device/device-id.js'

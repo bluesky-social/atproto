@@ -14,13 +14,13 @@ import {
   validateRequestPayload,
   validateSameOrigin,
   writeJson,
-} from '@atproto/http-util'
-import { Jwks, Jwt, Keyset, jwtSchema } from '@atproto/jwk'
+} from '@atproto-labs/http-util'
+import { Jwks, Jwt, Keyset, jwtSchema } from '@atproto-labs/jwk'
 import {
   OAuthClientId,
   oauthClientIdSchema,
-} from '@atproto/oauth-client-metadata'
-import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
+} from '@atproto-labs/oauth-client-metadata'
+import { OAuthServerMetadata } from '@atproto-labs/oauth-server-metadata'
 import { JWTHeaderParameters, ResolvedKey } from 'jose'
 import { z } from 'zod'
 

@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/handle-resolver-node",
+  "name": "@atproto-labs/handle-resolver-node",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Node specific ATProto handle to DID resolver",
@@ -26,10 +26,10 @@
     }
   },
   "dependencies": {
-    "@atproto/did": "workspace:*",
-    "@atproto/handle-resolver": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/fetch-node": "workspace:*"
+    "@atproto-labs/did": "workspace:*",
+    "@atproto-labs/handle-resolver": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/fetch-node": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

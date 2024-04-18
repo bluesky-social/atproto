@@ -1,4 +1,4 @@
-import { GenericStore, Value } from '@atproto/caching'
+import { GenericStore, Value } from '@atproto-labs/caching'
 
 // TODO: implement this using the app's safe storage
 export class ReactNativeStore<V extends Value>

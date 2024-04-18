@@ -1,4 +1,4 @@
-import '@atproto/disposable-polyfill'
+import '@atproto-labs/disposable-polyfill'
 
 export * from './db.js'
 export * from './db-index.js'

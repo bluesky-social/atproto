@@ -1,4 +1,4 @@
-import { DeviceId, SessionId } from '@atproto/oauth-provider'
+import { DeviceId, SessionId } from '@atproto-labs/oauth-provider'
 import { Selectable } from 'kysely'
 import { DateISO } from '../../../db'
 

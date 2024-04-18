@@ -1,4 +1,4 @@
-import { Transformer, compose } from '@atproto/transformer'
+import { Transformer, compose } from '@atproto-labs/transformer'
 import { z } from 'zod'
 
 import { FetchError, FetchErrorOptions } from './fetch-error.js'

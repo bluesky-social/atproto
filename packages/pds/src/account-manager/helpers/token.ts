@@ -6,7 +6,7 @@ import {
   TokenData,
   TokenId,
   TokenInfo,
-} from '@atproto/oauth-provider'
+} from '@atproto-labs/oauth-provider'
 import { Insertable, Selectable } from 'kysely'
 import {
   fromDateISO,

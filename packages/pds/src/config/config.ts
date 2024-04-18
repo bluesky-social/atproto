@@ -1,7 +1,7 @@
 import path from 'node:path'
 import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import { Customization } from '@atproto/oauth-provider'
+import { Customization } from '@atproto-labs/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:

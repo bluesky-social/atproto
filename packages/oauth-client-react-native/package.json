@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/oauth-client-react-native",
+  "name": "@atproto-labs/oauth-client-react-native",
   "version": "0.0.1",
   "license": "MIT",
   "description": "Implementation of ATPROTO OAuth client for react-native",
@@ -19,14 +19,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@atproto/caching": "workspace:*",
-    "@atproto/fetch": "workspace:*",
-    "@atproto/handle-resolver": "workspace:*",
-    "@atproto/identity-resolver": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
-    "@atproto/oauth-client-metadata": "workspace:*",
-    "@atproto/oauth-server-metadata-resolver": "workspace:*"
+    "@atproto-labs/caching": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/handle-resolver": "workspace:*",
+    "@atproto-labs/identity-resolver": "workspace:*",
+    "@atproto-labs/jwk": "workspace:*",
+    "@atproto-labs/oauth-client": "workspace:*",
+    "@atproto-labs/oauth-client-metadata": "workspace:*",
+    "@atproto-labs/oauth-server-metadata-resolver": "workspace:*"
   },
   "devDependencies": {
     "react-native": "0.73.6",

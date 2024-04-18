@@ -1,4 +1,4 @@
-import { MemoryStore, MemoryStoreOptions } from '@atproto/caching'
+import { MemoryStore, MemoryStoreOptions } from '@atproto-labs/caching'
 
 import { DidCache } from './did-cache.js'
 import { DidDocument } from './did-document.js'

@@ -1,11 +1,15 @@
-import { GenericStore, Value } from '@atproto/caching'
-import { DidDocument } from '@atproto/did'
-import { ResolvedHandle } from '@atproto/handle-resolver'
-import { DB, DBObjectStore } from '@atproto/indexed-db'
-import { Key } from '@atproto/jwk'
-import { WebcryptoKey } from '@atproto/jwk-webcrypto'
-import { InternalStateData, Session, TokenSet } from '@atproto/oauth-client'
-import { OAuthServerMetadata } from '@atproto/oauth-server-metadata'
+import { GenericStore, Value } from '@atproto-labs/caching'
+import { DidDocument } from '@atproto-labs/did'
+import { ResolvedHandle } from '@atproto-labs/handle-resolver'
+import { DB, DBObjectStore } from '@atproto-labs/indexed-db'
+import { Key } from '@atproto-labs/jwk'
+import { WebcryptoKey } from '@atproto-labs/jwk-webcrypto'
+import {
+  InternalStateData,
+  Session,
+  TokenSet,
+} from '@atproto-labs/oauth-client'
+import { OAuthServerMetadata } from '@atproto-labs/oauth-server-metadata'
 
 type Item<V> = {
   value: V

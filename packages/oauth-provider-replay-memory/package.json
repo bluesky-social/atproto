@@ -1,8 +1,8 @@
 {
-  "name": "@atproto/oauth-provider-replay-memory",
+  "name": "@atproto-labs/oauth-provider-replay-memory",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "REplay Store implementation for @atproto/oauth-provider. This implementation uses the app's memory to store seen nonces. This implementation could lead in DoS attacks (e.g. if there is no rate limiting).",
+  "description": "REplay Store implementation for @atproto-labs/oauth-provider. This implementation uses the app's memory to store seen nonces. This implementation could lead in DoS attacks (e.g. if there is no rate limiting).",
   "keywords": [
     "atproto",
     "oauth",
@@ -27,7 +27,7 @@
     }
   },
   "dependencies": {
-    "@atproto/oauth-provider": "workspace:*",
+    "@atproto-labs/oauth-provider": "workspace:*",
     "tslib": "^2.6.2"
   },
   "scripts": {

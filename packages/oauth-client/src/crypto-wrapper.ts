@@ -1,5 +1,5 @@
-import { b64uEncode } from '@atproto/b64'
-import { JwtHeader, JwtPayload, Key, unsafeDecodeJwt } from '@atproto/jwk'
+import { b64uEncode } from '@atproto-labs/b64'
+import { JwtHeader, JwtPayload, Key, unsafeDecodeJwt } from '@atproto-labs/jwk'
 import {
   CryptoImplementation,
   DigestAlgorithm,

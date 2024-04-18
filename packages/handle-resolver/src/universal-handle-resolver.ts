@@ -1,5 +1,5 @@
-import { GenericStore } from '@atproto/caching'
-import { Fetch } from '@atproto/fetch'
+import { GenericStore } from '@atproto-labs/caching'
+import { Fetch } from '@atproto-labs/fetch'
 
 import { CachedHandleResolver } from './cached-handle-resolver.js'
 import { HandleResolver, ResolvedHandle } from './handle-resolver.js'
@@ -20,7 +20,7 @@ export type UniversalHandleResolverOptions = {
    * behavior, e.g. adding headers, setting a timeout, mocking, etc.
    *
    * When using this library from a Node.js environment, you may want to use
-   * `safeFetchWrap()` from `@atproto/fetch-node` to add SSRF protection.
+   * `safeFetchWrap()` from `@atproto-labs/fetch-node` to add SSRF protection.
    *
    * @default `globalThis.fetch`
    */

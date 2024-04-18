@@ -6,8 +6,8 @@ import {
   protocolCheckRequestTransform,
   requireHostHeaderTranform,
   timeoutFetchWrap,
-} from '@atproto/fetch'
-import { compose } from '@atproto/transformer'
+} from '@atproto-labs/fetch'
+import { compose } from '@atproto-labs/transformer'
 
 import { ssrfFetchWrap } from './ssrf.js'
 

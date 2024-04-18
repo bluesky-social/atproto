@@ -1,4 +1,4 @@
-import { safeFetchWrap } from '@atproto/fetch-node'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
   AccessTokenType,
   AccountInfo,
@@ -13,12 +13,12 @@ import {
   Keyset,
   LoginCredentials,
   OAuthProvider,
-} from '@atproto/oauth-provider'
-import { OAuthReplayStoreMemory } from '@atproto/oauth-provider-replay-memory'
-import { OAuthReplayStoreRedis } from '@atproto/oauth-provider-replay-redis'
+} from '@atproto-labs/oauth-provider'
+import { OAuthReplayStoreMemory } from '@atproto-labs/oauth-provider-replay-memory'
+import { OAuthReplayStoreRedis } from '@atproto-labs/oauth-provider-replay-redis'
 import { Redis } from 'ioredis'
 
-import { CachedGetter } from '@atproto/caching'
+import { CachedGetter } from '@atproto-labs/caching'
 import { AccountManager } from './account-manager'
 import { ActorStore } from './actor-store'
 import { ProfileViewBasic } from './lexicon/types/app/bsky/actor/defs'

@@ -1,4 +1,4 @@
-import { CachedGetter, GenericStore, MemoryStore } from '@atproto/caching'
+import { CachedGetter, GenericStore, MemoryStore } from '@atproto-labs/caching'
 import {
   HandleResolveOptions,
   HandleResolver,

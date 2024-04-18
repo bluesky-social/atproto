@@ -1,6 +1,6 @@
-import { Fetch, fetchFailureHandler } from '@atproto/fetch'
-import { dpopFetchWrapper } from '@atproto/fetch-dpop'
-import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
+import { Fetch, fetchFailureHandler } from '@atproto-labs/fetch'
+import { dpopFetchWrapper } from '@atproto-labs/fetch-dpop'
+import { JwtPayload, unsafeDecodeJwt } from '@atproto-labs/jwk'
 import { OAuthServer, TokenSet } from './oauth-server.js'
 import { SessionGetter } from './session-getter.js'
 

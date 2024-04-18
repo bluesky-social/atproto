@@ -1,7 +1,7 @@
 import { KeyObject } from 'node:crypto'
 
-import { jwkSchema } from '@atproto/jwk'
-import { Importable as JoseImportable, JoseKey } from '@atproto/jwk-jose'
+import { jwkSchema } from '@atproto-labs/jwk'
+import { Importable as JoseImportable, JoseKey } from '@atproto-labs/jwk-jose'
 
 export type Importable = KeyObject | JoseImportable
 

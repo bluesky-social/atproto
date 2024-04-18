@@ -9,7 +9,7 @@ import {
   jwkValidator,
   jwtHeaderSchema,
   jwtPayloadSchema,
-} from '@atproto/jwk'
+} from '@atproto-labs/jwk'
 
 import { OauthClientReactNative } from './oauth-client-react-native.js'
 

@@ -2,19 +2,19 @@ import {
   DidCache,
   IsomorphicDidResolver,
   IsomorphicDidResolverOptions,
-} from '@atproto/did'
-import { Fetch } from '@atproto/fetch'
+} from '@atproto-labs/did'
+import { Fetch } from '@atproto-labs/fetch'
 import UniversalHandleResolver, {
   HandleResolverCache,
   UniversalHandleResolverOptions,
-} from '@atproto/handle-resolver'
+} from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from './identity-resolver.js'
 
-export type { DidCache, DidDocument } from '@atproto/did'
+export type { DidCache, DidDocument } from '@atproto-labs/did'
 export type {
   HandleResolverCache,
   ResolvedHandle,
-} from '@atproto/handle-resolver'
+} from '@atproto-labs/handle-resolver'
 
 export type UniversalIdentityResolverOptions = {
   fetch?: Fetch

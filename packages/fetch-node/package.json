@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/fetch-node",
+  "name": "@atproto-labs/fetch-node",
   "version": "0.0.1",
   "license": "MIT",
   "description": "SSRF protection for fetch() in Node.js",
@@ -24,8 +24,8 @@
     }
   },
   "dependencies": {
-    "@atproto/fetch": "workspace:*",
-    "@atproto/transformer": "workspace:*",
+    "@atproto-labs/fetch": "workspace:*",
+    "@atproto-labs/transformer": "workspace:*",
     "ipaddr.js": "^2.1.0",
     "tslib": "^2.6.2"
   },

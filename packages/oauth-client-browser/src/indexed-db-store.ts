@@ -1,5 +1,5 @@
-import { GenericStore, Key, Value } from '@atproto/caching'
-import { DB, DBObjectStore } from '@atproto/indexed-db'
+import { GenericStore, Key, Value } from '@atproto-labs/caching'
+import { DB, DBObjectStore } from '@atproto-labs/indexed-db'
 
 const storeName = 'store'
 type Item<V> = {

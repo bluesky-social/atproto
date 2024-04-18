@@ -1,4 +1,4 @@
-import { jwkSchema } from '@atproto/jwk'
+import { jwkSchema } from '@atproto-labs/jwk'
 import { z } from 'zod'
 
 import { Did, didSchema } from './did.js'

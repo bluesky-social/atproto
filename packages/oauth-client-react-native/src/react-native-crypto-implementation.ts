@@ -2,7 +2,7 @@ import {
   CryptoImplementation,
   DigestAlgorithm,
   Key,
-} from '@atproto/oauth-client'
+} from '@atproto-labs/oauth-client'
 
 import { OauthClientReactNative } from './oauth-client-react-native.js'
 import { ReactNativeKey } from './react-native-key.js'

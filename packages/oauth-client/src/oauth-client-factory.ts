@@ -1,5 +1,5 @@
-import { GenericStore } from '@atproto/caching'
-import { Key } from '@atproto/jwk'
+import { GenericStore } from '@atproto-labs/caching'
+import { Key } from '@atproto-labs/jwk'
 import { FALLBACK_ALG } from './constants.js'
 import { OAuthCallbackError } from './oauth-callback-error.js'
 import { OAuthClient } from './oauth-client.js'

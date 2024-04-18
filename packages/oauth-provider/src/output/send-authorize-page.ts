@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
-import { cssCode, html } from '@atproto/html'
-import { declareBrowserGlobalVar, sendWebPage } from '@atproto/http-util'
+import { cssCode, html } from '@atproto-labs/html'
+import { declareBrowserGlobalVar, sendWebPage } from '@atproto-labs/http-util'
 
 import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
