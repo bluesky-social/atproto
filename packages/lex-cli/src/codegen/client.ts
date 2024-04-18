@@ -1,6 +1,7 @@
 import {
   IndentationText,
   Project,
+  Scope,
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
@@ -61,12 +62,13 @@ const indexTs = (
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
-    //= import {Client as XrpcClient, AtpServiceClient as XrpcServiceClient} from '@atproto/xrpc'
+    //= import { XrpcClient, Client as XrpcBaseClient, ServiceClient as XrpcServiceClient } from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([
-      { name: 'Client', alias: 'XrpcClient' },
+      { name: 'XrpcClient' },
+      { name: 'Client', alias: 'XrpcBaseClient' },
       { name: 'ServiceClient', alias: 'XrpcServiceClient' },
     ])
     //= import {schemas} from './lexicons'
@@ -115,79 +117,34 @@ const indexTs = (
       })
     }
 
-    //= export class AtpBaseClient {...}
-    const clientCls = file.addClass({
-      name: 'AtpBaseClient',
+    //= export class AtpClient {...}
+    const atpClientCls = file.addClass({
+      name: 'AtpClient',
       isExported: true,
-    })
-    //= xrpc: XrpcClient = new XrpcClient()
-    clientCls.addProperty({
-      name: 'xrpc',
-      type: 'XrpcClient',
-      initializer: 'new XrpcClient()',
-    })
-    //= constructor () {
-    //=   this.xrpc.addLexicons(schemas)
-    //= }
-    clientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(schemas)`)
-    //= service(serviceUri: string | URL): AtpServiceClient {
-    //=   return new AtpServiceClient(this, this.xrpc.service(serviceUri))
-    //= }
-    clientCls
-      .addMethod({
-        name: 'service',
-        parameters: [{ name: 'serviceUri', type: 'string | URL' }],
-        returnType: 'AtpServiceClient',
-      })
-      .setBodyText(
-        `return new AtpServiceClient(this, this.xrpc.service(serviceUri))`,
-      )
-
-    //= export class AtpServiceClient {...}
-    const serviceClientCls = file.addClass({
-      name: 'AtpServiceClient',
-      isExported: true,
-    })
-    //= _baseClient: AtpBaseClient
-    serviceClientCls.addProperty({ name: '_baseClient', type: 'AtpBaseClient' })
-    //= xrpc: XrpcServiceClient
-    serviceClientCls.addProperty({
-      name: 'xrpc',
-      type: 'XrpcServiceClient',
     })
     for (const ns of nsidTree) {
       //= ns: NS
-      serviceClientCls.addProperty({
+      atpClientCls.addProperty({
         name: ns.propName,
         type: ns.className,
       })
     }
-    //= constructor (baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
-    //=   this.baseClient = baseClient
-    //=   this.xrpcService = xrpcService
+    //= constructor (public xrpc: XrpcClient) {
     //=   {namespace declarations}
     //= }
-    serviceClientCls
+    atpClientCls
       .addConstructor({
-        parameters: [
-          { name: 'baseClient', type: 'AtpBaseClient' },
-          { name: 'xrpcService', type: 'XrpcServiceClient' },
-        ],
+        parameters: [{ name: 'xrpc', type: 'XrpcClient', scope: Scope.Public }],
       })
       .setBodyText(
-        [
-          `this._baseClient = baseClient`,
-          `this.xrpc = xrpcService`,
-          ...nsidTree.map(
-            (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
-          ),
-        ].join('\n'),
+        nsidTree
+          .map((ns) => `this.${ns.propName} = new ${ns.className}(this)`)
+          .join('\n'),
       )
-
     //= setHeader(key: string, value: string): void {
     //=   this.xrpc.setHeader(key, value)
     //= }
-    const setHeaderMethod = serviceClientCls.addMethod({
+    const setHeaderMethod = atpClientCls.addMethod({
       name: 'setHeader',
       returnType: 'void',
     })
@@ -201,6 +158,60 @@ const indexTs = (
     })
     setHeaderMethod.setBodyText('this.xrpc.setHeader(key, value)')
 
+    //= export class AtpBaseClient {...}
+    const baseClientCls = file.addClass({
+      name: 'AtpBaseClient',
+      isExported: true,
+    })
+    //= /** @deprecated Use {@link AtpBaseClient} instead */
+    baseClientCls.addJsDoc('@deprecated Use {@link AtpClient} instead')
+    //= xrpc: XrpcBaseClient = new XrpcBaseClient()
+    baseClientCls.addProperty({
+      name: 'xrpc',
+      type: 'XrpcBaseClient',
+      initializer: 'new XrpcBaseClient()',
+    })
+    //= constructor () {
+    //=   this.xrpc.addLexicons(schemas)
+    //= }
+    baseClientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(schemas)`)
+    //= service(serviceUri: string | URL): AtpServiceClient {
+    //=   return new AtpServiceClient(this, this.xrpc.service(serviceUri))
+    //= }
+    baseClientCls
+      .addMethod({
+        name: 'service',
+        parameters: [{ name: 'serviceUri', type: 'string | URL' }],
+        returnType: 'AtpServiceClient',
+      })
+      .setBodyText(
+        `return new AtpServiceClient(this, this.xrpc.service(serviceUri))`,
+      )
+
+    //= export class AtpServiceClient {...}
+    const serviceClientCls = file.addClass({
+      name: 'AtpServiceClient',
+      extends: 'AtpClient',
+      isExported: true,
+    })
+    //= /** @deprecated Use {@link AtpBaseClient} instead */
+    serviceClientCls.addJsDoc('@deprecated Use {@link AtpClient} instead')
+    //= _baseClient: AtpBaseClient
+    serviceClientCls.addProperty({ name: '_baseClient', type: 'AtpBaseClient' })
+    //= constructor (baseClient: AtpBaseClient, override xrpc: XrpcServiceClient) {
+    //=   super(xrpc)
+    //=   this.xrpcService = xrpcService
+    //= }
+    serviceClientCls.addConstructor({
+      parameters: [
+        { name: 'baseClient', type: 'AtpBaseClient' },
+        { name: 'xrpc', type: 'XrpcServiceClient', hasOverrideKeyword: true },
+      ],
+      statements: ['super(xrpc)', 'this._baseClient = baseClient'],
+    })
+    // XXX
+    // .setBodyText([`super(xrpc)`, `this._baseClient = baseClient`].join('\n'))
+
     // generate classes for the schemas
     for (const ns of nsidTree) {
       genNamespaceCls(file, ns)
@@ -213,10 +224,10 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     name: ns.className,
     isExported: true,
   })
-  //= _service: AtpServiceClient
+  //= _service: AtpClient
   cls.addProperty({
     name: '_service',
-    type: 'AtpServiceClient',
+    type: 'AtpClient',
   })
 
   for (const userType of ns.userTypes) {
@@ -242,7 +253,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     genNamespaceCls(file, child)
   }
 
-  //= constructor(service: AtpServiceClient) {
+  //= constructor(service: AtpClient) {
   //=  this._service = service
   //=  {child namespace prop declarations}
   //=  {record prop declarations}
@@ -250,7 +261,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
   const cons = cls.addConstructor()
   cons.addParameter({
     name: 'service',
-    type: 'AtpServiceClient',
+    type: 'AtpClient',
   })
   cons.setBodyText(
     [
@@ -325,19 +336,19 @@ function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
     name: `${toTitleCase(name)}Record`,
     isExported: true,
   })
-  //= _service: AtpServiceClient
+  //= _service: AtpClient
   cls.addProperty({
     name: '_service',
-    type: 'AtpServiceClient',
+    type: 'AtpClient',
   })
 
-  //= constructor(service: AtpServiceClient) {
+  //= constructor(service: AtpClient) {
   //=  this._service = service
   //= }
   const cons = cls.addConstructor()
   cons.addParameter({
     name: 'service',
-    type: 'AtpServiceClient',
+    type: 'AtpClient',
   })
   cons.setBodyText(`this._service = service`)
 

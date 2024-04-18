@@ -2,7 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import {
-  Client as XrpcClient,
+  XrpcClient,
+  Client as XrpcBaseClient,
   ServiceClient as XrpcServiceClient,
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
@@ -361,28 +362,12 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
 }
 
-export class AtpBaseClient {
-  xrpc: XrpcClient = new XrpcClient()
-
-  constructor() {
-    this.xrpc.addLexicons(schemas)
-  }
-
-  service(serviceUri: string | URL): AtpServiceClient {
-    return new AtpServiceClient(this, this.xrpc.service(serviceUri))
-  }
-}
-
-export class AtpServiceClient {
-  _baseClient: AtpBaseClient
-  xrpc: XrpcServiceClient
+export class AtpClient {
   com: ComNS
   app: AppNS
   tools: ToolsNS
 
-  constructor(baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
-    this._baseClient = baseClient
-    this.xrpc = xrpcService
+  constructor(public xrpc: XrpcClient) {
     this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.tools = new ToolsNS(this)
@@ -393,18 +378,44 @@ export class AtpServiceClient {
   }
 }
 
+/** @deprecated Use {@link AtpClient} instead */
+export class AtpBaseClient {
+  xrpc: XrpcBaseClient = new XrpcBaseClient()
+
+  constructor() {
+    this.xrpc.addLexicons(schemas)
+  }
+
+  service(serviceUri: string | URL): AtpServiceClient {
+    return new AtpServiceClient(this, this.xrpc.service(serviceUri))
+  }
+}
+
+/** @deprecated Use {@link AtpClient} instead */
+export class AtpServiceClient extends AtpClient {
+  _baseClient: AtpBaseClient
+
+  constructor(
+    baseClient: AtpBaseClient,
+    override xrpc: XrpcServiceClient,
+  ) {
+    super(xrpc)
+    this._baseClient = baseClient
+  }
+}
+
 export class ComNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   atproto: ComAtprotoNS
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.atproto = new ComAtprotoNS(service)
   }
 }
 
 export class ComAtprotoNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   admin: ComAtprotoAdminNS
   identity: ComAtprotoIdentityNS
   label: ComAtprotoLabelNS
@@ -414,7 +425,7 @@ export class ComAtprotoNS {
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.admin = new ComAtprotoAdminNS(service)
     this.identity = new ComAtprotoIdentityNS(service)
@@ -428,9 +439,9 @@ export class ComAtprotoNS {
 }
 
 export class ComAtprotoAdminNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -579,9 +590,9 @@ export class ComAtprotoAdminNS {
 }
 
 export class ComAtprotoIdentityNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -663,9 +674,9 @@ export class ComAtprotoIdentityNS {
 }
 
 export class ComAtprotoLabelNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -682,9 +693,9 @@ export class ComAtprotoLabelNS {
 }
 
 export class ComAtprotoModerationNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -701,9 +712,9 @@ export class ComAtprotoModerationNS {
 }
 
 export class ComAtprotoRepoNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -819,9 +830,9 @@ export class ComAtprotoRepoNS {
 }
 
 export class ComAtprotoServerNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1102,9 +1113,9 @@ export class ComAtprotoServerNS {
 }
 
 export class ComAtprotoSyncNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1231,9 +1242,9 @@ export class ComAtprotoSyncNS {
 }
 
 export class ComAtprotoTempNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1272,17 +1283,17 @@ export class ComAtprotoTempNS {
 }
 
 export class AppNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   bsky: AppBskyNS
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.bsky = new AppBskyNS(service)
   }
 }
 
 export class AppBskyNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   actor: AppBskyActorNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
@@ -1292,7 +1303,7 @@ export class AppBskyNS {
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.actor = new AppBskyActorNS(service)
     this.embed = new AppBskyEmbedNS(service)
@@ -1306,10 +1317,10 @@ export class AppBskyNS {
 }
 
 export class AppBskyActorNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   profile: ProfileRecord
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.profile = new ProfileRecord(service)
   }
@@ -1393,9 +1404,9 @@ export class AppBskyActorNS {
 }
 
 export class ProfileRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1454,22 +1465,22 @@ export class ProfileRecord {
 }
 
 export class AppBskyEmbedNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 }
 
 export class AppBskyFeedNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   generator: GeneratorRecord
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
   threadgate: ThreadgateRecord
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.generator = new GeneratorRecord(service)
     this.like = new LikeRecord(service)
@@ -1667,9 +1678,9 @@ export class AppBskyFeedNS {
 }
 
 export class GeneratorRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1728,9 +1739,9 @@ export class GeneratorRecord {
 }
 
 export class LikeRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1789,9 +1800,9 @@ export class LikeRecord {
 }
 
 export class PostRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1850,9 +1861,9 @@ export class PostRecord {
 }
 
 export class RepostRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1911,9 +1922,9 @@ export class RepostRecord {
 }
 
 export class ThreadgateRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -1976,14 +1987,14 @@ export class ThreadgateRecord {
 }
 
 export class AppBskyGraphNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   block: BlockRecord
   follow: FollowRecord
   list: ListRecord
   listblock: ListblockRecord
   listitem: ListitemRecord
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.block = new BlockRecord(service)
     this.follow = new FollowRecord(service)
@@ -2153,9 +2164,9 @@ export class AppBskyGraphNS {
 }
 
 export class BlockRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2214,9 +2225,9 @@ export class BlockRecord {
 }
 
 export class FollowRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2275,9 +2286,9 @@ export class FollowRecord {
 }
 
 export class ListRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2336,9 +2347,9 @@ export class ListRecord {
 }
 
 export class ListblockRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2401,9 +2412,9 @@ export class ListblockRecord {
 }
 
 export class ListitemRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2462,10 +2473,10 @@ export class ListitemRecord {
 }
 
 export class AppBskyLabelerNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   service: ServiceRecord
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.service = new ServiceRecord(service)
   }
@@ -2483,9 +2494,9 @@ export class AppBskyLabelerNS {
 }
 
 export class ServiceRecord {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2553,9 +2564,9 @@ export class ServiceRecord {
 }
 
 export class AppBskyNotificationNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2605,17 +2616,17 @@ export class AppBskyNotificationNS {
 }
 
 export class AppBskyRichtextNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 }
 
 export class AppBskyUnspeccedNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2670,21 +2681,21 @@ export class AppBskyUnspeccedNS {
 }
 
 export class ToolsNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   ozone: ToolsOzoneNS
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.ozone = new ToolsOzoneNS(service)
   }
 }
 
 export class ToolsOzoneNS {
-  _service: AtpServiceClient
+  _service: AtpClient
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
@@ -2692,9 +2703,9 @@ export class ToolsOzoneNS {
 }
 
 export class ToolsOzoneCommunicationNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
@@ -2744,9 +2755,9 @@ export class ToolsOzoneCommunicationNS {
 }
 
 export class ToolsOzoneModerationNS {
-  _service: AtpServiceClient
+  _service: AtpClient
 
-  constructor(service: AtpServiceClient) {
+  constructor(service: AtpClient) {
     this._service = service
   }
 
