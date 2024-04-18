@@ -41,6 +41,7 @@
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
     "kysely": "^0.22.0",
+    "lande": "^1.0.10",
     "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
