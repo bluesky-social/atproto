@@ -170,8 +170,9 @@ export const makeRequest = async (
 // -------------------
 
 const RES_HEADERS_TO_FORWARD = [
-  'atproto-repo-rev',
+  'content-type',
   'content-language',
+  'atproto-repo-rev',
   'atproto-content-labelers',
 ]
 
