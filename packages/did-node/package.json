@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/did-node",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "@atproto-labs/did DID implementation for use in NodeJS with did input from end-users. This lib will prevent specially forged DIDs / servers from affecting Node's process (SSRF, memory starvation, etc.).",
   "keywords": [

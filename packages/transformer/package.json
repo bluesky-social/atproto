@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/transformer",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Library for combining multiple functions into a single function.",
   "keywords": [

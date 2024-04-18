@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/oauth-provider-client-uri",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Client Store implementation for @atproto-labs/oauth-provider. This implementation interprets client_id as a URI and uses the URI to retrieve Client Metadata.",
   "keywords": [

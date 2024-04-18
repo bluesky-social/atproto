@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/oauth-server-metadata-resolver",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "OAuth Server Metadata Resolver",
   "keywords": [

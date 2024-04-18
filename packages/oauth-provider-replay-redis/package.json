@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/oauth-provider-replay-redis",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Replay Store implementation for @atproto-labs/oauth-provider. This implementation uses an ioredis Redis connection in order to store nonces.",
   "keywords": [

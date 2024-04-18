@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/fetch-dpop",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Utility to perform DPoP authenticated fetch requests",
   "keywords": [

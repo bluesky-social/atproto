@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/b64",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Isomorphic library for encoding/decoding bytes into base64-url in any JS environment.",
   "keywords": [

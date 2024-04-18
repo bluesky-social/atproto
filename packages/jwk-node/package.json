@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/jwk-node",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "NodeJs based implementation of @atproto-labs/jwk Key's",
   "keywords": [

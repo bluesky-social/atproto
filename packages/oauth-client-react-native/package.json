@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/oauth-client-react-native",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Implementation of ATPROTO OAuth client for react-native",
   "keywords": [
