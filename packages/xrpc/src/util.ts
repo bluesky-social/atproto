@@ -6,11 +6,17 @@ import {
 } from '@atproto/lexicon'
 import {
   CallOptions,
+  errorResponseBody,
+  ErrorResponseBody,
   Headers,
   QueryParams,
   ResponseType,
   XRPCError,
 } from './types'
+
+export function isErrorResponseBody(v: unknown): v is ErrorResponseBody {
+  return errorResponseBody.safeParse(v).success
+}
 
 export function getMethodSchemaHTTPMethod(
   schema: LexXrpcProcedure | LexXrpcQuery,

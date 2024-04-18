@@ -7,6 +7,7 @@ import {
   httpResponseCodeToEnum,
   httpResponseBodyParse,
   normalizeHeaders,
+  isErrorResponseBody,
 } from './util'
 import {
   FetchHandler,
@@ -15,8 +16,6 @@ import {
   CallOptions,
   QueryParams,
   ResponseType,
-  errorResponseBody,
-  ErrorResponseBody,
   XRPCResponse,
   XRPCError,
   XRPCInvalidResponseError,
@@ -162,8 +161,4 @@ export async function defaultFetchHandler(
   } catch (e) {
     throw new XRPCError(ResponseType.Unknown, String(e))
   }
-}
-
-function isErrorResponseBody(v: unknown): v is ErrorResponseBody {
-  return errorResponseBody.safeParse(v).success
 }
