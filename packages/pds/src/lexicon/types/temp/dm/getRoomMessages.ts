@@ -10,13 +10,16 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as TempDmDefs from './defs'
 
 export interface QueryParams {
-  members: string[]
+  roomId: string
+  limit: number
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  room: TempDmDefs.RoomView
+  cursor?: string
+  messages: TempDmDefs.MessageView[]
   [k: string]: unknown
 }
 

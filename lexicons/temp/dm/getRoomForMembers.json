@@ -6,6 +6,7 @@
       "type": "query",
       "parameters": {
         "type": "params",
+        "required": ["members"],
         "properties": {
           "members": {
             "type": "array",

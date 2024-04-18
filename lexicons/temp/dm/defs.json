@@ -4,7 +4,7 @@
   "defs": {
     "message": {
       "type": "object",
-      "required": ["text", "facets", "embed"],
+      "required": ["text"],
       "properties": {
         "id": { "type": "string" },
         "text": {
@@ -27,7 +27,7 @@
     },
     "messageView": {
       "type": "object",
-      "required": ["id", "text", "facets", "embed", "sentAt"],
+      "required": ["id", "text", "sentAt"],
       "properties": {
         "id": { "type": "string" },
         "text": {
@@ -43,7 +43,7 @@
         "embed": {
           "type": "union",
           "refs": [
-            "app.bsky.embed.record#view"
+            "app.bsky.embed.record"
           ]
         },
         "sentAt": { "type": "string", "format": "datetime" }

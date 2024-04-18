@@ -141,6 +141,7 @@ import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderati
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
 import * as TempDmGetRoomForMembers from './types/temp/dm/getRoomForMembers'
+import * as TempDmGetRoomMessages from './types/temp/dm/getRoomMessages'
 import * as TempDmListRooms from './types/temp/dm/listRooms'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
 
@@ -1902,6 +1903,17 @@ export class TempDmNS {
     >,
   ) {
     const nsid = 'temp.dm.getRoomForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRoomMessages<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmGetRoomMessages.Handler<ExtractAuth<AV>>,
+      TempDmGetRoomMessages.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.getRoomMessages' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -12,8 +12,8 @@ export interface Message {
   id?: string
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
-  facets: AppBskyRichtextFacet.Main[]
-  embed: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
+  facets?: AppBskyRichtextFacet.Main[]
+  embed?: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -29,8 +29,8 @@ export interface MessageView {
   id: string
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
-  facets: AppBskyRichtextFacet.Main[]
-  embed: AppBskyEmbedRecord.View | { $type: string; [k: string]: unknown }
+  facets?: AppBskyRichtextFacet.Main[]
+  embed?: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
   sentAt: string
   [k: string]: unknown
 }

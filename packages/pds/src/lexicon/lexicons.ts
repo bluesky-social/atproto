@@ -9473,7 +9473,7 @@ export const schemaDict = {
     defs: {
       message: {
         type: 'object',
-        required: ['text', 'facets', 'embed'],
+        required: ['text'],
         properties: {
           id: {
             type: 'string',
@@ -9499,7 +9499,7 @@ export const schemaDict = {
       },
       messageView: {
         type: 'object',
-        required: ['id', 'text', 'facets', 'embed', 'sentAt'],
+        required: ['id', 'text', 'sentAt'],
         properties: {
           id: {
             type: 'string',
@@ -9519,7 +9519,7 @@ export const schemaDict = {
           },
           embed: {
             type: 'union',
-            refs: ['lex:app.bsky.embed.record#view'],
+            refs: ['lex:app.bsky.embed.record'],
           },
           sentAt: {
             type: 'string',
@@ -9591,6 +9591,7 @@ export const schemaDict = {
         type: 'query',
         parameters: {
           type: 'params',
+          required: ['members'],
           properties: {
             members: {
               type: 'array',
@@ -9612,6 +9613,52 @@ export const schemaDict = {
               room: {
                 type: 'ref',
                 ref: 'lex:temp.dm.defs#roomView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  TempDmGetRoomMessages: {
+    lexicon: 1,
+    id: 'temp.dm.getRoomMessages',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['roomId'],
+          properties: {
+            roomId: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['messages'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              messages: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:temp.dm.defs#messageView',
+                },
               },
             },
           },
@@ -9883,6 +9930,7 @@ export const ids = {
   TempDmDefs: 'temp.dm.defs',
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
   TempDmGetRoomForMembers: 'temp.dm.getRoomForMembers',
+  TempDmGetRoomMessages: 'temp.dm.getRoomMessages',
   TempDmListRooms: 'temp.dm.listRooms',
   TempDmSendMessage: 'temp.dm.sendMessage',
 }
