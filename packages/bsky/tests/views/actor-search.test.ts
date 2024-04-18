@@ -61,7 +61,7 @@ describe.skip('pds actor search views', () => {
       'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
-      'carolina-mcdermott77.test',
+      'carolina-mcderm77.test',
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
@@ -150,7 +150,7 @@ describe.skip('pds actor search views', () => {
       'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
-      'carolina-mcdermott77.test',
+      'carolina-mcderm77.test',
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
@@ -246,7 +246,7 @@ describe.skip('pds actor search views', () => {
     )
     const handles = result.data.actors.map((u) => u.handle)
     expect(handles).toContain('carlos6.test')
-    expect(handles).toContain('carolina-mcdermott77.test')
+    expect(handles).toContain('carolina-mcderm77.test')
     expect(handles).not.toContain('cara-wiegand69.test')
   })
 })

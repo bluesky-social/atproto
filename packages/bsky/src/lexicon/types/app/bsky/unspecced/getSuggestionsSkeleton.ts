@@ -7,20 +7,20 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from './defs'
+import * as AppBskyUnspeccedDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead. */
-  term?: string
-  /** Search query prefix; not a full query string. */
-  q?: string
+  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
+  viewer?: string
   limit: number
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  actors: AppBskyActorDefs.ProfileViewBasic[]
+  cursor?: string
+  actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
   [k: string]: unknown
 }
 

@@ -26,6 +26,7 @@ export interface AtpSessionData {
   did: string
   email?: string
   emailConfirmed?: boolean
+  emailAuthFactor?: boolean
 }
 
 /**
@@ -50,6 +51,7 @@ export interface AtpAgentOpts {
 export interface AtpAgentLoginOpts {
   identifier: string
   password: string
+  authFactorToken?: string | undefined
 }
 
 /**

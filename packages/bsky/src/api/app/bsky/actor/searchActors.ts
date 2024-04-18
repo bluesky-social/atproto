@@ -57,6 +57,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         q: term,
         cursor: params.cursor,
         limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),
