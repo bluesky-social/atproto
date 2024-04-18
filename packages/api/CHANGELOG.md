@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.5
+
+### Patch Changes
+
+- [#2419](https://github.com/bluesky-social/atproto/pull/2419) [`3424a1770`](https://github.com/bluesky-social/atproto/commit/3424a17703891f5678ec76ef97e696afb3288b22) Thanks [@pfrazee](https://github.com/pfrazee)! - Add authFactorToken to session objects
+
 ## 0.12.4
 
 ### Patch Changes
