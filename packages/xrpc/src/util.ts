@@ -101,7 +101,7 @@ export function encodeQueryParam(
   throw new Error(`Unsupported query param type: ${type}`)
 }
 
-export function normalizeHeaders(headers: Headers): Headers {
+function normalizeHeaders(headers: Headers): Headers {
   const normalized: Headers = {}
   for (const [header, value] of Object.entries(headers)) {
     normalized[header.toLowerCase()] = value
@@ -115,15 +115,12 @@ export function constructMethodCallHeaders(
   data?: any,
   opts?: CallOptions,
 ): Headers {
-  const headers: Headers = opts?.headers || {}
+  const headers: Headers = opts?.headers ? normalizeHeaders(opts.headers) : {}
   if (schema.type === 'procedure') {
     if (opts?.encoding) {
-      headers['Content-Type'] = opts.encoding
-    }
-    if (data && typeof data === 'object') {
-      if (!headers['Content-Type']) {
-        headers['Content-Type'] = 'application/json'
-      }
+      headers['content-type'] = opts.encoding
+    } else if (!headers['content-type'] && data && typeof data === 'object') {
+      headers['content-type'] = 'application/json'
     }
   }
   return headers
