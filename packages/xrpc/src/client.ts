@@ -1,25 +1,18 @@
-import { LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
+import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 import {
-  getMethodSchemaHTTPMethod,
-  constructMethodCallUri,
-  constructMethodCallHeaders,
-  encodeMethodCallBody,
-  httpResponseCodeToEnum,
-  httpResponseBodyParse,
-  isErrorResponseBody,
-} from './util'
-import {
+  CallOptions,
+  FetchAgent,
   FetchHandler,
   FetchHandlerResponse,
   Headers,
-  CallOptions,
   QueryParams,
   ResponseType,
-  XRPCResponse,
   XRPCError,
-  XRPCInvalidResponseError,
 } from './types'
+import { encodeMethodCallBody, httpResponseBodyParse } from './util'
+import { XrpcClient } from './xrpc-client'
 
+/** @deprecated Use {@link XrpcClient} instead */
 export class Client {
   fetch: FetchHandler = defaultFetchHandler
   lex = new Lexicons()
@@ -59,78 +52,34 @@ export class Client {
   }
 }
 
-export class ServiceClient {
-  baseClient: Client
+/** @deprecated Use {@link XrpcClient} instead */
+export class ServiceClient extends XrpcClient {
   uri: URL
-  headers: Record<string, string> = {}
 
-  constructor(baseClient: Client, serviceUri: string | URL) {
-    this.baseClient = baseClient
-    this.uri = typeof serviceUri === 'string' ? new URL(serviceUri) : serviceUri
-  }
-
-  setHeader(key: string, value: string): void {
-    this.headers[key] = value
-  }
-
-  unsetHeader(key: string): void {
-    delete this.headers[key]
-  }
-
-  async call(
-    methodNsid: string,
-    params?: QueryParams,
-    data?: unknown,
-    opts?: CallOptions,
+  constructor(
+    public baseClient: Client,
+    serviceUri: string | URL,
   ) {
-    const def = this.baseClient.lex.getDefOrThrow(methodNsid)
-    if (!def || (def.type !== 'query' && def.type !== 'procedure')) {
-      throw new Error(
-        `Invalid lexicon: ${methodNsid}. Must be a query or procedure.`,
-      )
-    }
-
-    const httpMethod = getMethodSchemaHTTPMethod(def)
-    const httpUri = constructMethodCallUri(methodNsid, def, this.uri, params)
-    const httpHeaders = constructMethodCallHeaders(def, data, {
-      headers: {
-        ...this.headers,
-        ...opts?.headers,
+    super(
+      <FetchAgent>{
+        fetch: (
+          httpUrl: string,
+          httpMethod: string,
+          httpHeaders: Headers,
+          httpReqBody: unknown,
+        ): Promise<FetchHandlerResponse> => {
+          const uri = new URL(httpUrl, this.uri).toString()
+          return this.baseClient.fetch(
+            uri,
+            httpMethod,
+            httpHeaders,
+            httpReqBody,
+          )
+        },
       },
-      encoding: opts?.encoding,
-    })
-
-    const res = await this.baseClient.fetch(
-      httpUri,
-      httpMethod,
-      httpHeaders,
-      data,
+      baseClient.lex,
     )
-
-    const resCode = httpResponseCodeToEnum(res.status)
-    if (resCode === ResponseType.Success) {
-      try {
-        this.baseClient.lex.assertValidXrpcOutput(methodNsid, res.body)
-      } catch (e: any) {
-        if (e instanceof ValidationError) {
-          throw new XRPCInvalidResponseError(methodNsid, e, res.body)
-        } else {
-          throw e
-        }
-      }
-      return new XRPCResponse(res.body, res.headers)
-    } else {
-      if (res.body && isErrorResponseBody(res.body)) {
-        throw new XRPCError(
-          resCode,
-          res.body.error,
-          res.body.message,
-          res.headers,
-        )
-      } else {
-        throw new XRPCError(resCode)
-      }
-    }
+    this.uri = typeof serviceUri === 'string' ? new URL(serviceUri) : serviceUri
   }
 }
 
