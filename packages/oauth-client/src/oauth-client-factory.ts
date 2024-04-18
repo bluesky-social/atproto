@@ -43,7 +43,7 @@ export class OAuthClientFactory {
   readonly responseMode?: OAuthResponseMode
 
   constructor(options: OAuthClientOptions) {
-    this.responseMode = options?.responseMode
+    this.responseMode = options.responseMode
     this.serverFactory = new OAuthServerFactory(options)
     this.stateStore = options.stateStore
     this.sessionGetter = new SessionGetter(
@@ -56,19 +56,31 @@ export class OAuthClientFactory {
     return this.serverFactory.clientMetadata
   }
 
+  get crypto() {
+    return this.serverFactory.crypto
+  }
+
+  get fetch() {
+    return this.serverFactory.fetch
+  }
+
+  get resolver() {
+    return this.serverFactory.resolver
+  }
+
   async authorize(
     input: string,
     options?: OAuthAuthorizeOptions,
   ): Promise<URL> {
-    const { did, metadata } = await this.serverFactory.resolver.resolve(input)
+    const { did, metadata } = await this.resolver.resolve(input)
 
-    const nonce = await this.serverFactory.crypto.generateNonce()
-    const pkce = await this.serverFactory.crypto.generatePKCE()
-    const dpopKey = await this.serverFactory.crypto.generateKey(
+    const nonce = await this.crypto.generateNonce()
+    const pkce = await this.crypto.generatePKCE()
+    const dpopKey = await this.crypto.generateKey(
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
     )
 
-    const state = await this.serverFactory.crypto.generateNonce()
+    const state = await this.crypto.generateNonce()
 
     await this.stateStore.set(state, {
       iss: metadata.issuer,
@@ -215,7 +227,7 @@ export class OAuthClientFactory {
       const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
       try {
         if (tokenSet.id_token) {
-          await this.serverFactory.crypto.validateIdTokenClaims(
+          await this.crypto.validateIdTokenClaims(
             tokenSet.id_token,
             stateParam,
             stateData.nonce,
@@ -224,7 +236,7 @@ export class OAuthClientFactory {
           )
         }
 
-        const sessionId = await this.serverFactory.crypto.generateNonce(4)
+        const sessionId = await this.crypto.generateNonce(4)
 
         await this.sessionGetter.setStored(sessionId, {
           dpopKey: stateData.dpopKey,
@@ -275,6 +287,6 @@ export class OAuthClientFactory {
   }
 
   createClient(server: OAuthServer, sessionId: string): OAuthClient {
-    return new OAuthClient(server, sessionId, this.sessionGetter)
+    return new OAuthClient(server, sessionId, this.sessionGetter, this.fetch)
   }
 }

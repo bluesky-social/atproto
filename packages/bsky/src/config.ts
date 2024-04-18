@@ -20,6 +20,8 @@ export interface ServerConfigValues {
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
   searchUrl?: string
+  suggestionsUrl?: string
+  suggestionsApiKey?: string
   cdnUrl?: string
   blobRateLimitBypassKey?: string
   blobRateLimitBypassHostname?: string
@@ -55,6 +57,8 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
+    const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -104,6 +108,8 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      suggestionsUrl,
+      suggestionsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -204,6 +210,14 @@ export class ServerConfig {
 
   get searchUrl() {
     return this.cfg.searchUrl
+  }
+
+  get suggestionsUrl() {
+    return this.cfg.suggestionsUrl
+  }
+
+  get suggestionsApiKey() {
+    return this.cfg.suggestionsApiKey
   }
 
   get cdnUrl() {

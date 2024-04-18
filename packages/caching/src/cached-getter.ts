@@ -13,12 +13,6 @@ export type Getter<K, V> = (
   storedValue?: V,
 ) => Awaitable<V>
 
-export type PendingItem<V> = {
-  promise: Promise<V>
-  allowCached: boolean
-  signal?: AbortSignal
-}
-
 export type CachedGetterOptions<K, V> = {
   isStale?: (key: K, value: V) => boolean | PromiseLike<boolean>
   onStoreError?: (err: unknown, key: K, value: V) => void | PromiseLike<void>
@@ -27,6 +21,12 @@ export type CachedGetterOptions<K, V> = {
     key: K,
     value: V,
   ) => boolean | PromiseLike<boolean>
+}
+
+type PendingItem<V> = {
+  promise: Promise<V>
+  allowCached: boolean
+  signal?: AbortSignal
 }
 
 /**

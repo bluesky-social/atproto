@@ -1,4 +1,4 @@
-import { fetchFailureHandler } from '@atproto/fetch'
+import { Fetch, fetchFailureHandler } from '@atproto/fetch'
 import { dpopFetchWrapper } from '@atproto/fetch-dpop'
 import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthServer, TokenSet } from './oauth-server.js'
@@ -11,6 +11,7 @@ export class OAuthClient {
     private readonly server: OAuthServer,
     public readonly sessionId: string,
     private readonly sessionGetter: SessionGetter,
+    fetch = globalThis.fetch as Fetch,
   ) {
     const dpopFetch = dpopFetchWrapper({
       fetch,
@@ -70,29 +71,36 @@ export class OAuthClient {
     }
   }
 
-  async request(
-    pathname: string,
-    init?: RequestInit,
-    refreshCredentials?: boolean,
-  ): Promise<Response> {
-    const tokenSet = await this.getTokenSet(refreshCredentials)
-    const headers = new Headers(init?.headers)
-    headers.set(
+  async request(pathname: string, init?: RequestInit): Promise<Response> {
+    const tokenSet = await this.getTokenSet()
+
+    const request = new Request(new URL(pathname, tokenSet.aud), init)
+
+    request.headers.set(
       'Authorization',
       `${tokenSet.token_type} ${tokenSet.access_token}`,
     )
-    const request = new Request(new URL(pathname, tokenSet.aud), {
-      ...init,
-      headers,
-    })
 
-    return this.dpopFetch(request).catch((err) => {
-      if (!refreshCredentials && isTokenExpiredError(err)) {
-        return this.request(pathname, init, true)
+    // Clone request for potential retry
+    const requestClone = request.clone()
+
+    try {
+      return await this.dpopFetch(request)
+    } catch (err) {
+      if (isTokenExpiredError(err)) {
+        const tokenSetFresh = await this.getTokenSet(true)
+        if (tokenSetFresh.aud !== tokenSet.aud) throw err
+        requestClone.headers.set(
+          'Authorization',
+          `${tokenSetFresh.token_type} ${tokenSetFresh.access_token}`,
+        )
+        return this.dpopFetch(requestClone)
+      } else {
+        throw err
       }
-
-      throw err
-    })
+    } finally {
+      if (!requestClone.bodyUsed) await requestClone.body?.cancel()
+    }
   }
 }
 

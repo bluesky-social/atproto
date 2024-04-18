@@ -1,12 +1,12 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
 import { html, javascriptCode } from '@atproto/html'
+import { sendWebPage } from '@atproto/http-util'
 
 import { Client } from '../client/client.js'
 import { AuthorizationParameters } from '../parameters/authorization-parameters.js'
 import { Code } from '../request/code.js'
 import { TokenType } from '../token/token-type.js'
-import { sendWebPage } from './send-web-page.js'
 
 export type AuthorizationResponseParameters = {
   // Will be added from AuthorizationResultRedirect['issuer']
@@ -109,6 +109,8 @@ async function writeFormPost(
   // Prevent the Chrome from caching this page
   // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
   res.setHeader('Set-Cookie', `bfCacheBypass=foo; max-age=1; SameSite=Lax`)
+  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
 
   return sendWebPage(res, {
     body: html`

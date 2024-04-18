@@ -6,11 +6,17 @@ import {
 } from '@atproto/lexicon'
 import {
   CallOptions,
+  errorResponseBody,
+  ErrorResponseBody,
   Headers,
   QueryParams,
   ResponseType,
   XRPCError,
 } from './types'
+
+export function isErrorResponseBody(v: unknown): v is ErrorResponseBody {
+  return errorResponseBody.safeParse(v).success
+}
 
 export function getMethodSchemaHTTPMethod(
   schema: LexXrpcProcedure | LexXrpcQuery,
@@ -27,33 +33,43 @@ export function constructMethodCallUri(
   serviceUri: URL,
   params?: QueryParams,
 ): string {
-  const uri = new URL(serviceUri)
-  uri.pathname = `/xrpc/${nsid}`
+  const uri = new URL(constructMethodCallUrl(nsid, schema, params), serviceUri)
+  return uri.toString()
+}
 
-  // given parameters
-  if (params) {
-    for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.properties?.[key]
-      if (!paramSchema) {
-        throw new Error(`Invalid query parameter: ${key}`)
-      }
-      if (value !== undefined) {
-        if (paramSchema.type === 'array') {
-          const vals: (typeof value)[] = []
-          vals.concat(value).forEach((val) => {
-            uri.searchParams.append(
-              key,
-              encodeQueryParam(paramSchema.items.type, val),
-            )
-          })
-        } else {
-          uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+export function constructMethodCallUrl(
+  nsid: string,
+  schema: LexXrpcProcedure | LexXrpcQuery,
+  params?: QueryParams,
+): string {
+  const pathname = `/xrpc/${encodeURIComponent(nsid)}`
+  if (!params) return pathname
+
+  const searchParams: [string, string][] = []
+
+  for (const [key, value] of Object.entries(params)) {
+    const paramSchema = schema.parameters?.properties?.[key]
+    if (!paramSchema) {
+      throw new Error(`Invalid query parameter: ${key}`)
+    }
+    if (value !== undefined) {
+      if (paramSchema.type === 'array') {
+        const values = Array.isArray(value) ? value : [value]
+        for (const val of values) {
+          searchParams.push([
+            key,
+            encodeQueryParam(paramSchema.items.type, val),
+          ])
         }
+      } else {
+        searchParams.push([key, encodeQueryParam(paramSchema.type, value)])
       }
     }
   }
 
-  return uri.toString()
+  if (!searchParams.length) return pathname
+
+  return `${pathname}?${new URLSearchParams(searchParams).toString()}`
 }
 
 export function encodeQueryParam(
@@ -85,7 +101,7 @@ export function encodeQueryParam(
   throw new Error(`Unsupported query param type: ${type}`)
 }
 
-export function normalizeHeaders(headers: Headers): Headers {
+function normalizeHeaders(headers: Headers): Headers {
   const normalized: Headers = {}
   for (const [header, value] of Object.entries(headers)) {
     normalized[header.toLowerCase()] = value
@@ -99,15 +115,12 @@ export function constructMethodCallHeaders(
   data?: any,
   opts?: CallOptions,
 ): Headers {
-  const headers: Headers = opts?.headers || {}
+  const headers: Headers = opts?.headers ? normalizeHeaders(opts.headers) : {}
   if (schema.type === 'procedure') {
     if (opts?.encoding) {
-      headers['Content-Type'] = opts.encoding
-    }
-    if (data && typeof data === 'object') {
-      if (!headers['Content-Type']) {
-        headers['Content-Type'] = 'application/json'
-      }
+      headers['content-type'] = opts.encoding
+    } else if (!headers['content-type'] && data && typeof data === 'object') {
+      headers['content-type'] = 'application/json'
     }
   }
   return headers

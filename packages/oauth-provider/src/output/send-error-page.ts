@@ -9,7 +9,7 @@ import {
   buildCustomizationData,
 } from './customization.js'
 import { buildErrorPayload, buildErrorStatus } from './build-error-payload.js'
-import { declareBrowserGlobalVar, sendWebPage } from './send-web-page.js'
+import { declareBrowserGlobalVar, sendWebPage } from '@atproto/http-util'
 
 export async function sendErrorPage(
   req: IncomingMessage,

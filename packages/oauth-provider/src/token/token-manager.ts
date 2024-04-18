@@ -23,7 +23,7 @@ import { AuthorizationParameters } from '../parameters/authorization-parameters.
 import { isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../util/date.js'
-import { matchRedirectUri } from '../util/redirect-uri.js'
+import { compareRedirectUri } from '../util/redirect-uri.js'
 import { generateRefreshToken, isRefreshToken } from './refresh-token.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
@@ -117,7 +117,7 @@ export class TokenManager {
 
         if (!parameters.redirect_uri) {
           const redirect_uri = client.metadata.redirect_uris.find((uri) =>
-            matchRedirectUri(uri, input.redirect_uri),
+            compareRedirectUri(uri, input.redirect_uri),
           )
           if (redirect_uri) {
             parameters = { ...parameters, redirect_uri }

@@ -120,23 +120,3 @@ export function isSignatureKeyPair(
     v.publicKey.usages.includes('verify')
   )
 }
-
-export async function generateKeypair(
-  algs: string[],
-  extractable = false,
-): Promise<CryptoKeyPair> {
-  const errors: unknown[] = []
-  for (const alg of algs) {
-    try {
-      return await crypto.subtle.generateKey(
-        toSubtleAlgorithm(alg),
-        extractable,
-        ['sign', 'verify'],
-      )
-    } catch (err) {
-      errors.push(err)
-    }
-  }
-
-  throw new AggregateError(errors, 'Failed to generate keypair')
-}

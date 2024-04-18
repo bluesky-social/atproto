@@ -619,6 +619,9 @@ importers:
 
   packages/http-util:
     dependencies:
+      '@atproto/html':
+        specifier: workspace:*
+        version: link:../html
       '@hapi/accept':
         specifier: ^6.0.3
         version: 6.0.3
@@ -912,6 +915,9 @@ importers:
 
   packages/oauth-client-browser-example:
     devDependencies:
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../api
       '@atproto/oauth-client':
         specifier: workspace:*
         version: link:../oauth-client
@@ -924,9 +930,9 @@ importers:
       '@atproto/oauth-server-metadata':
         specifier: workspace:*
         version: link:../oauth-server-metadata
-      '@babel/plugin-syntax-import-assertions':
-        specifier: ^7.23.3
-        version: 7.24.1(@babel/core@7.24.4)
+      '@atproto/xrpc':
+        specifier: workspace:*
+        version: link:../xrpc
       '@types/react':
         specifier: ^18.2.50
         version: 18.2.75

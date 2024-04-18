@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { ServerResponse } from 'node:http'
 
 import { html, Html, jsonCode } from '@atproto/html'
-import { writeHtml } from '@atproto/http-util'
+import { writeHtml } from './response.js'
 
 export type AssetRef = {
   url: string
@@ -77,6 +77,7 @@ export function sendWebPage(
   res: ServerResponse,
   { status = 200, ...options }: WebPageOptions & { status?: number },
 ): void {
+  // TODO: make these headers configurable (?)
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
@@ -84,9 +85,8 @@ export function sendWebPage(
   res.setHeader('X-Frame-Options', 'DENY')
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-XSS-Protection', '0')
-  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
   res.setHeader('Strict-Transport-Security', 'max-age=63072000')
-  res.setHeader('Cache-Control', 'no-store')
+  // TODO: use CSP rule builder (?)
   res.setHeader(
     'Content-Security-Policy',
     [

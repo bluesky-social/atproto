@@ -18,17 +18,19 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "dev": "vite --force --host --clearScreen false",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "devDependencies": {
+    "@atproto/api": "workspace:*",
     "@atproto/oauth-client": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
     "@atproto/oauth-client-metadata": "workspace:*",
     "@atproto/oauth-server-metadata": "workspace:*",
-    "@babel/plugin-syntax-import-assertions": "^7.23.3",
+    "@atproto/xrpc": "workspace:*",
     "@types/react": "^18.2.50",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
@@ -39,5 +41,10 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.12"
+  },
+  "scripts": {
+    "dev": "vite --force --host --clearScreen false",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   }
 }

@@ -1,13 +1,26 @@
 {
   "name": "@atproto/rollup-plugin-bundle-manifest",
   "version": "0.0.1",
+  "license": "MIT",
+  "description": "Library for generating a manifest of bundled files from a Rollup build",
+  "keywords": [
+    "atproto",
+    "rollup",
+    "manifest"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/rollup-plugin-bundle-manifest"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {

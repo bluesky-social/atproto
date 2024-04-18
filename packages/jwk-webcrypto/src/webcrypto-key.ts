@@ -1,20 +1,28 @@
 import { Jwk, jwkSchema } from '@atproto/jwk'
-import { JoseKey } from '@atproto/jwk-jose'
+import { GenerateKeyPairOptions, JoseKey } from '@atproto/jwk-jose'
 
-import {
-  generateKeypair,
-  fromSubtleAlgorithm,
-  isSignatureKeyPair,
-} from './util.js'
+import { fromSubtleAlgorithm, isSignatureKeyPair } from './util.js'
 
 export class WebcryptoKey extends JoseKey {
-  static async generate(
+  // We need to override the static method generate from JoseKey because
+  // the browser needs both the private and public keys
+  static override async generate(
     kid: string = crypto.randomUUID(),
     allowedAlgos: string[] = ['ES256'],
-    exportable = false,
+    options?: GenerateKeyPairOptions,
   ) {
-    const cryptoKeyPair = await generateKeypair(allowedAlgos, exportable)
-    return this.fromKeypair(kid, cryptoKeyPair)
+    const { privateKey, publicKey } = await this.generateKeyPair(
+      allowedAlgos,
+      options,
+    )
+    // Type safety only: in the browser, "jose" generates a CryptoKeyPair
+    if (
+      !(privateKey instanceof CryptoKey) ||
+      !(publicKey instanceof CryptoKey)
+    ) {
+      throw new TypeError('Invalid CryptoKeyPair')
+    }
+    return this.fromKeypair(kid, { privateKey, publicKey })
   }
 
   static async fromKeypair(kid: string, cryptoKeyPair: CryptoKeyPair) {
@@ -63,7 +71,7 @@ export class WebcryptoKey extends JoseKey {
     throw new Error('Private Webcrypto Key not exportable')
   }
 
-  protected async getKey() {
+  protected override async getKey() {
     return this.cryptoKeyPair.privateKey
   }
 }

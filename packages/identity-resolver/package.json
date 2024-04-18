@@ -2,10 +2,11 @@
   "name": "@atproto/identity-resolver",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "A library resolving atproto identities",
+  "description": "A library resolving ATPROTO identities",
   "keywords": [
     "atproto",
     "identity",
+    "isomorphic",
     "resolver"
   ],
   "homepage": "https://atproto.com",
@@ -17,6 +18,12 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
     "@atproto/did": "workspace:*",
     "@atproto/fetch": "workspace:*",

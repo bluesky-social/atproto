@@ -258,7 +258,7 @@ export class ClientManager {
 
             if (!metadata.client_uri) {
               throw new InvalidRedirectUriError(
-                `Private-Use URI Scheme redirect URI requires a client_uri`,
+                `Private-Use URI Scheme redirect URI requires a client_uri metadata field`,
               )
             }
 
@@ -276,18 +276,17 @@ export class ClientManager {
               )
             }
 
-            if (
-              url.protocol !==
-              `${clientUri.hostname.split('.').reverse().join('.')}:`
-            ) {
+            const protocol = `${clientUri.hostname.split('.').reverse().join('.')}:`
+            if (url.protocol !== protocol) {
               throw new InvalidRedirectUriError(
-                `Private-Use URI Scheme redirect URI be the reversed client URI domain`,
+                `Private-Use URI Scheme redirect URI must be the client_uri domain name, in reverse order (${protocol})`,
               )
             }
 
-            // > Following the requirements of Section 3.2 of [RFC3986], as there
-            // > is no naming authority for private-use URI scheme redirects, only
-            // > a single slash ("/") appears after the scheme component.
+            // > Following the requirements of Section 3.2 of [RFC3986], as
+            // > there is no naming authority for private-use URI scheme
+            // > redirects, only a single slash ("/") appears after the scheme
+            // > component.
             if (
               url.href.startsWith(`${url.protocol}//`) ||
               url.username ||

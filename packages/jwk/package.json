@@ -2,7 +2,7 @@
   "name": "@atproto/jwk",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "A library for working with JSON Web Keys (JWKs) in TypeScript",
+  "description": "A library for working with JSON Web Keys (JWKs) in TypeScript. This is meant to be extended by environment-specific libraries like @atproto/jwk-node.",
   "keywords": [
     "atproto",
     "jwk",
@@ -19,6 +19,12 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
     "@atproto/b64": "workspace:*",
     "tslib": "^2.6.2",

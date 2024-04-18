@@ -28,8 +28,9 @@ export function dpopFetchWrapper({
   sha256 = typeof crypto !== 'undefined' && crypto.subtle != null
     ? subtleSha256
     : undefined,
-  isAuthServer,
   nonceCache,
+  isAuthServer,
+  fetch,
 }: DpopFetchWrapperOptions): Fetch {
   if (!sha256) {
     throw new Error(

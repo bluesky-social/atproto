@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 
 import { cssCode, html } from '@atproto/html'
+import { declareBrowserGlobalVar, sendWebPage } from '@atproto/http-util'
 
 import { Account } from '../account/account.js'
 import { getAsset } from '../assets/index.js'
@@ -12,7 +13,6 @@ import {
   buildCustomizationCss,
   buildCustomizationData,
 } from './customization.js'
-import { declareBrowserGlobalVar, sendWebPage } from './send-web-page.js'
 
 export type AuthorizationResultAuthorize = {
   issuer: string
@@ -56,6 +56,9 @@ export async function sendAuthorizePage(
   data: AuthorizationResultAuthorize,
   customization?: Customization,
 ): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
+
   return sendWebPage(res, {
     scripts: [
       declareBrowserGlobalVar(

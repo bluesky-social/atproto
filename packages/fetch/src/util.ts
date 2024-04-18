@@ -11,6 +11,16 @@ declare global {
   }
 }
 
+export function isIp(hostname: string) {
+  // IPv4
+  if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) return true
+
+  // IPv6
+  if (hostname.startsWith('[') && hostname.endsWith(']')) return true
+
+  return false
+}
+
 // TODO: Move to a shared package ?
 
 const plainObjectProto = Object.prototype
