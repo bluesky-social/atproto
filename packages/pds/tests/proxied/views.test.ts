@@ -110,7 +110,7 @@ describe('proxies view requests', () => {
     expect([...pt1.data.actors, ...pt2.data.actors]).toEqual(res.data.actors)
   })
 
-  it.skip('actor.searchActor', async () => {
+  it('actor.searchActor', async () => {
     const res = await agent.api.app.bsky.actor.searchActors(
       {
         term: '.test',
@@ -148,7 +148,7 @@ describe('proxies view requests', () => {
     expect(sortedPaginated).toEqual(sortedFull)
   })
 
-  it.skip('actor.searchActorTypeahead', async () => {
+  it('actor.searchActorTypeahead', async () => {
     const res = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
         term: '.test',
