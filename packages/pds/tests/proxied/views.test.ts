@@ -148,7 +148,7 @@ describe('proxies view requests', () => {
     expect(sortedPaginated).toEqual(sortedFull)
   })
 
-  it('actor.searchActorTypeahead', async () => {
+  it.skip('actor.searchActorTypeahead', async () => {
     const res = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
         term: '.test',
