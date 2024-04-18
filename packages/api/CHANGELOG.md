@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.4
+
+### Patch Changes
+
+- [#2416](https://github.com/bluesky-social/atproto/pull/2416) [`93a4a4df9`](https://github.com/bluesky-social/atproto/commit/93a4a4df9ce38f89a5d05e300d247b85fb007e05) Thanks [@devinivy](https://github.com/devinivy)! - Support for email auth factor lexicons
+
 ## 0.12.3
 
 ### Patch Changes
