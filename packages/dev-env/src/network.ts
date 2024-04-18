@@ -42,13 +42,13 @@ export class TestNetwork extends TestNetworkNoAppView {
     const pdsPort = params.pds?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
-    const pdsProps = {
+    const thirdPartyPdsProps = {
       didPlcUrl: plc.url,
       ...params.pds,
       inviteRequired: false,
       port: await getPort(),
     }
-    const thirdPartyPds = await TestPds.create(pdsProps)
+    const thirdPartyPds = await TestPds.create(thirdPartyPdsProps)
     const ozoneServiceProfile = new OzoneServiceProfile(thirdPartyPds)
     const { did: ozoneDid, key: ozoneKey } =
       await ozoneServiceProfile.createDidAndKey()
@@ -67,7 +67,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
 
     const modServiceUrl = `http://localhost:${ozonePort}`
-    const pds = await TestPds.create({
+    const pdsProps = {
       port: pdsPort,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
@@ -75,7 +75,9 @@ export class TestNetwork extends TestNetworkNoAppView {
       modServiceUrl,
       modServiceDid: ozoneDid,
       ...params.pds,
-    })
+    }
+
+    const pds = await TestPds.create(pdsProps)
 
     const ozone = await TestOzone.create({
       port: ozonePort,
@@ -92,7 +94,22 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.ozone,
     })
 
-    await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl)
+    let inviteCode: string | undefined
+    if (pdsProps.inviteRequired) {
+      const { data: invite } = await pds
+        .getClient()
+        .api.com.atproto.server.createInviteCode(
+          { useCount: 1 },
+          {
+            encoding: 'application/json',
+            headers: pds.adminAuthHeaders(),
+          },
+        )
+      inviteCode = invite.code
+    }
+    await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl, {
+      inviteCode,
+    })
     await thirdPartyPds.close()
 
     ozone.addAdminDid(ozoneDid)

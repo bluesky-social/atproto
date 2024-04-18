@@ -32,7 +32,11 @@ export class OzoneServiceProfile {
     return { did: this.did, key: this.key }
   }
 
-  async createServiceDetails(pds: TestPds, ozoneUrl: string) {
+  async createServiceDetails(
+    pds: TestPds,
+    ozoneUrl: string,
+    userDetails: { inviteCode?: string } = {},
+  ) {
     if (!this.did || !this.key) {
       throw new Error('No DID/key found!')
     }
@@ -50,6 +54,7 @@ export class OzoneServiceProfile {
       await pdsClient.api.com.atproto.server.createAccount(
         {
           ...this.modUserDetails,
+          ...userDetails,
           did: this.did,
         },
         {
