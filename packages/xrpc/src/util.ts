@@ -27,33 +27,43 @@ export function constructMethodCallUri(
   serviceUri: URL,
   params?: QueryParams,
 ): string {
-  const uri = new URL(serviceUri)
-  uri.pathname = `/xrpc/${nsid}`
+  const uri = new URL(constructMethodCallUrl(nsid, schema, params), serviceUri)
+  return uri.toString()
+}
 
-  // given parameters
-  if (params) {
-    for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.properties?.[key]
-      if (!paramSchema) {
-        throw new Error(`Invalid query parameter: ${key}`)
-      }
-      if (value !== undefined) {
-        if (paramSchema.type === 'array') {
-          const vals: (typeof value)[] = []
-          vals.concat(value).forEach((val) => {
-            uri.searchParams.append(
-              key,
-              encodeQueryParam(paramSchema.items.type, val),
-            )
-          })
-        } else {
-          uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+export function constructMethodCallUrl(
+  nsid: string,
+  schema: LexXrpcProcedure | LexXrpcQuery,
+  params?: QueryParams,
+): string {
+  const pathname = `/xrpc/${encodeURIComponent(nsid)}`
+  if (!params) return pathname
+
+  const searchParams: [string, string][] = []
+
+  for (const [key, value] of Object.entries(params)) {
+    const paramSchema = schema.parameters?.properties?.[key]
+    if (!paramSchema) {
+      throw new Error(`Invalid query parameter: ${key}`)
+    }
+    if (value !== undefined) {
+      if (paramSchema.type === 'array') {
+        const values = Array.isArray(value) ? value : [value]
+        for (const val of values) {
+          searchParams.push([
+            key,
+            encodeQueryParam(paramSchema.items.type, val),
+          ])
         }
+      } else {
+        searchParams.push([key, encodeQueryParam(paramSchema.type, value)])
       }
     }
   }
 
-  return uri.toString()
+  if (!searchParams.length) return pathname
+
+  return `${pathname}?${new URLSearchParams(searchParams).toString()}`
 }
 
 export function encodeQueryParam(
