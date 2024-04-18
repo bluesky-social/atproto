@@ -13,6 +13,7 @@ export interface InputSchema {
   /** Handle or other identifier supported by the server for the authenticating user. */
   identifier: string
   password: string
+  authFactorToken?: string
   [k: string]: unknown
 }
 
@@ -24,6 +25,7 @@ export interface OutputSchema {
   didDoc?: {}
   email?: string
   emailConfirmed?: boolean
+  emailAuthFactor?: boolean
   [k: string]: unknown
 }
 
@@ -45,9 +47,17 @@ export class AccountTakedownError extends XRPCError {
   }
 }
 
+export class AuthFactorTokenRequiredError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
+    if (e.error === 'AuthFactorTokenRequired')
+      return new AuthFactorTokenRequiredError(e)
   }
   return e
 }

@@ -74,6 +74,17 @@ export class BskyAppView {
     const searchAgent = config.searchUrl
       ? new AtpAgent({ service: config.searchUrl })
       : undefined
+
+    const suggestionsAgent = config.suggestionsUrl
+      ? new AtpAgent({ service: config.suggestionsUrl })
+      : undefined
+    if (suggestionsAgent && config.suggestionsApiKey) {
+      suggestionsAgent.api.setHeader(
+        'authorization',
+        `Bearer ${config.suggestionsApiKey}`,
+      )
+    }
+
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
@@ -107,6 +118,7 @@ export class BskyAppView {
       cfg: config,
       dataplane,
       searchAgent,
+      suggestionsAgent,
       hydrator,
       views,
       signingKey,
