@@ -148,6 +148,7 @@ export class AtpAgent {
         did: res.data.did,
         email: opts.email,
         emailConfirmed: false,
+        emailAuthFactor: false,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -173,6 +174,7 @@ export class AtpAgent {
       const res = await this.api.com.atproto.server.createSession({
         identifier: opts.identifier,
         password: opts.password,
+        authFactorToken: opts.authFactorToken,
       })
       this.session = {
         accessJwt: res.data.accessJwt,
@@ -181,6 +183,7 @@ export class AtpAgent {
         did: res.data.did,
         email: res.data.email,
         emailConfirmed: res.data.emailConfirmed,
+        emailAuthFactor: res.data.emailAuthFactor,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -215,6 +218,7 @@ export class AtpAgent {
       this.session.email = res.data.email
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
+      this.session.emailAuthFactor = res.data.emailAuthFactor
       this._updateApiEndpoint(res.data.didDoc)
       this._persistSession?.('update', this.session)
       return res
