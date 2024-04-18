@@ -12,6 +12,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { resHeaders } from '../../../util'
+import AtpAgent from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
@@ -43,21 +44,34 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   const viewer = params.hydrateCtx.viewer
-  // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
-  const suggestions = await ctx.dataplane.getFollowSuggestions({
-    actorDid: viewer ?? undefined,
-    cursor: params.cursor,
-    limit: params.limit,
-  })
-  let dids = suggestions.dids
-  if (viewer !== null) {
-    const follows = await ctx.dataplane.getActorFollowsActors({
-      actorDid: viewer,
-      targetDids: dids,
+  if (ctx.suggestionsAgent) {
+    const res =
+      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton({
+        viewer: viewer ?? undefined,
+        limit: params.limit,
+        cursor: params.cursor,
+      })
+    return {
+      dids: res.data.actors.map((a) => a.did),
+      cursor: res.data.cursor,
+    }
+  } else {
+    // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
+    const suggestions = await ctx.dataplane.getFollowSuggestions({
+      actorDid: viewer ?? undefined,
+      cursor: params.cursor,
+      limit: params.limit,
     })
-    dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
+    let dids = suggestions.dids
+    if (viewer !== null) {
+      const follows = await ctx.dataplane.getActorFollowsActors({
+        actorDid: viewer,
+        targetDids: dids,
+      })
+      dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
+    }
+    return { dids, cursor: parseString(suggestions.cursor) }
   }
-  return { dids, cursor: parseString(suggestions.cursor) }
 }
 
 const hydration = async (input: {
@@ -101,6 +115,7 @@ const presentation = (input: {
 }
 
 type Context = {
+  suggestionsAgent: AtpAgent | undefined
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views

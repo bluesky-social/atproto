@@ -15,6 +15,7 @@
             "did": { "type": "string", "format": "did" },
             "email": { "type": "string" },
             "emailConfirmed": { "type": "boolean" },
+            "emailAuthFactor": { "type": "boolean" },
             "didDoc": { "type": "unknown" }
           }
         }

@@ -50,6 +50,16 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         q: params.q,
         cursor: params.cursor,
         limit: params.limit,
+        author: params.author,
+        domain: params.domain,
+        lang: params.lang,
+        mentions: params.mentions,
+        since: params.since,
+        sort: params.sort,
+        tag: params.tag,
+        until: params.until,
+        url: params.url,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       })
     return {
       posts: res.posts.map(({ uri }) => uri),
