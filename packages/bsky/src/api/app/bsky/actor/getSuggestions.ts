@@ -1,4 +1,4 @@
-import { mapDefined } from '@atproto/common'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
@@ -27,12 +27,23 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
-      const result = await getSuggestions({ ...params, hydrateCtx }, ctx)
-
+      const headers = noUndefinedVals({
+        'accept-language': req.headers['accept-language'],
+      })
+      const { resHeaders: resultHeaders, ...result } = await getSuggestions(
+        { ...params, hydrateCtx, headers },
+        ctx,
+      )
+      const suggestionsResHeaders = noUndefinedVals({
+        'content-language': resultHeaders?.['content-language'],
+      })
       return {
         encoding: 'application/json',
         body: result,
-        headers: resHeaders({ labelers: hydrateCtx.labelers }),
+        headers: {
+          ...suggestionsResHeaders,
+          ...resHeaders({ labelers: hydrateCtx.labelers }),
+        },
       }
     },
   })
@@ -46,14 +57,18 @@ const skeleton = async (input: {
   const viewer = params.hydrateCtx.viewer
   if (ctx.suggestionsAgent) {
     const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton({
-        viewer: viewer ?? undefined,
-        limit: params.limit,
-        cursor: params.cursor,
-      })
+      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
+        {
+          viewer: viewer ?? undefined,
+          limit: params.limit,
+          cursor: params.cursor,
+        },
+        { headers: params.headers },
+      )
     return {
       dids: res.data.actors.map((a) => a.did),
       cursor: res.data.cursor,
+      resHeaders: res.headers,
     }
   } else {
     // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
@@ -111,6 +126,7 @@ const presentation = (input: {
   return {
     actors,
     cursor: skeleton.cursor,
+    resHeaders: skeleton.resHeaders,
   }
 }
 
@@ -123,6 +139,11 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
+  headers: Record<string, string>
 }
 
-type Skeleton = { dids: string[]; cursor?: string }
+type Skeleton = {
+  dids: string[]
+  cursor?: string
+  resHeaders?: Record<string, string>
+}
