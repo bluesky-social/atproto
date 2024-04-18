@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/html",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "description": "Safe HTML encoding",
   "keywords": [

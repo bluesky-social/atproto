@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/indexed-db",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "description": "Wrapper utilities for Browser's indexed-db API",
   "keywords": [

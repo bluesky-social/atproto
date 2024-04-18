@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/http-util",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "description": "Lightweight utilities to create request handlers to use with the standard library's `node:http` module and that can be used as middleware with `express`/`connect` like frameworks.",
   "keywords": [

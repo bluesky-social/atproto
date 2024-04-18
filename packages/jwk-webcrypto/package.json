@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/jwk-webcrypto",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "description": "Webcrypto based implementation of @atproto-labs/jwk Key's",
   "keywords": [

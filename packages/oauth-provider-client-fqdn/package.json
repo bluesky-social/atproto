@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/oauth-provider-client-fqdn",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "description": "Client Store implementation for @atproto-labs/oauth-provider. This implementation interprets client_id as Fully Qualified Domain Name (FQDN) in order to retrieve Client Metadata.",
   "keywords": [

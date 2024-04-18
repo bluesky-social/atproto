@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/oauth-provider-replay-memory",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "description": "REplay Store implementation for @atproto-labs/oauth-provider. This implementation uses the app's memory to store seen nonces. This implementation could lead in DoS attacks (e.g. if there is no rate limiting).",
   "keywords": [
