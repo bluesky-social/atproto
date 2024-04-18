@@ -25,10 +25,12 @@
     }
   },
   "devDependencies": {
+    "@atproto/api": "workspace:*",
     "@atproto/oauth-client": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
     "@atproto/oauth-client-metadata": "workspace:*",
     "@atproto/oauth-server-metadata": "workspace:*",
+    "@atproto/xrpc": "workspace:*",
     "@types/react": "^18.2.50",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",

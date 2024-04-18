@@ -1,8 +1,11 @@
+import { AtpClient, schemas } from '@atproto/api'
 import { OAuthAuthorizeOptions, OAuthClient } from '@atproto/oauth-client'
 import {
   BrowserOAuthClientFactory,
   LoginContinuedInParentWindowError,
 } from '@atproto/oauth-client-browser'
+import { XrpcAgent, XrpcClient } from '@atproto/xrpc'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const CURRENT_SESSION_ID_KEY = 'CURRENT_SESSION_ID_KEY'
@@ -11,6 +14,7 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
   const [initialized, setInitialized] = useState(false)
   const [client, setClient] = useState<undefined | null | OAuthClient>(void 0)
   const [clients, setClients] = useState<{ [_: string]: OAuthClient }>({})
+  const [atpClient, setAtpClient] = useState<AtpClient | null>(null)
   const [error, setError] = useState<null | string>(null)
   const [loading, setLoading] = useState(true)
   const [state, setState] = useState<undefined | string>(undefined)
@@ -23,6 +27,19 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
     } else if (client === null) {
       localStorage.removeItem(CURRENT_SESSION_ID_KEY)
     }
+  }, [client])
+
+  useEffect(() => {
+    const atpClient = client
+      ? new AtpClient(
+          new XrpcClient(
+            new XrpcAgent((url, init) => client.request(url, init)),
+            schemas,
+          ),
+        )
+      : null
+
+    setAtpClient(atpClient)
   }, [client])
 
   useEffect(() => {
@@ -109,6 +126,7 @@ export function useOAuth(factory: BrowserOAuthClientFactory) {
     initialized,
     clients,
     client: client ?? null,
+    atpClient,
     state,
     loading,
     error,

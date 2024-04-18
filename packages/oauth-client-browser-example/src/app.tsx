@@ -32,8 +32,16 @@ export type AppState = {
  */
 
 function App() {
-  const { initialized, client, signedIn, signOut, error, loading, signIn } =
-    useOAuth(oauthFactory)
+  const {
+    initialized,
+    atpClient,
+    client,
+    signedIn,
+    signOut,
+    error,
+    loading,
+    signIn,
+  } = useOAuth(oauthFactory)
   const [profile, setProfile] = useState<{
     value: { displayName?: string }
   } | null>(null)
@@ -44,29 +52,26 @@ function App() {
     const info = await client.getUserinfo()
     console.log('info', info)
 
-    const get = async (method: string, params: Record<string, string>) => {
-      const response = await client.request(
-        `/xrpc/${method}?${new URLSearchParams(params).toString()}`,
-      )
-      return response.json()
-    }
+    if (!atpClient) return
 
     // A call that requires to be authenticated
     console.log(
-      await get('com.atproto.server.getServiceAuth', { aud: info.sub }),
+      await atpClient.com.atproto.server.getServiceAuth({
+        aud: info.sub,
+      }),
     )
 
     // This call does not require authentication
-    const profile = await get('com.atproto.repo.getRecord', {
+    const profile = await atpClient.com.atproto.repo.getRecord({
       repo: info.sub,
       collection: 'app.bsky.actor.profile',
       rkey: 'self',
     })
 
-    setProfile(profile)
-
     console.log(profile)
-  }, [client])
+
+    setProfile(profile.data)
+  }, [client, atpClient])
 
   if (!initialized) {
     return <p>{error || 'Loading...'}</p>

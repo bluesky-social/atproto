@@ -10,10 +10,12 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
+      '@atproto/api',
       '@atproto/oauth-client',
       '@atproto/oauth-client-browser',
       '@atproto/oauth-client-metadata',
       '@atproto/oauth-server-metadata',
+      '@atproto/xrpc',
     ],
   },
   plugins: [react()],
