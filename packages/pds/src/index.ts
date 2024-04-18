@@ -25,6 +25,7 @@ import { createServer } from './lexicon'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext, { AppContextOptions } from './context'
 import compression from './util/compression'
+import { proxyHandler } from './pipethrough'
 
 export * from './config'
 export { Database } from './db'
@@ -71,6 +72,7 @@ export class PDS {
         textLimit: 100 * 1024, // 100kb
         blobLimit: cfg.service.blobUploadLimit,
       },
+      catchall: proxyHandler(ctx),
     }
     if (cfg.rateLimits.enabled) {
       const bypassSecret = cfg.rateLimits.bypassKey

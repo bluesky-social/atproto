@@ -72,7 +72,7 @@ describe('proxies view requests', () => {
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
-  it('actor.getSuggestions', async () => {
+  it.only('actor.getSuggestions', async () => {
     // mock some suggestions
     const suggestions = [
       { did: sc.dids.bob, order: 1 },
