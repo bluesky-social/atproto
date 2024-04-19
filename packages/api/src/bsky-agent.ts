@@ -19,7 +19,13 @@ import {
   ModerationPrefs,
 } from './moderation/types'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
-import { sanitizeMutedWordValue } from './util'
+import {
+  sanitizeMutedWordValue,
+  validateSavedFeed,
+  savedFeedsV2ToV1,
+  getSavedFeedType,
+  uriToSavedFeed,
+} from './util'
 import { interpretLabelValueDefinitions } from './moderation'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -413,12 +419,10 @@ export class BskyAgent extends AtpAgent {
             })),
           )
       } else if (
-        AppBskyActorDefs.isSavedFeedsPref(pref) &&
-        AppBskyActorDefs.validateSavedFeedsPref(pref).success
+        AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success
       ) {
-        // saved and pinned feeds
-        prefs.feeds.saved = pref.saved
-        prefs.feeds.pinned = pref.pinned
+        prefs.feeds = savedFeedsV2ToV1(pref.items)
       } else if (
         AppBskyActorDefs.isPersonalDetailsPref(pref) &&
         AppBskyActorDefs.validatePersonalDetailsPref(pref).success
@@ -467,6 +471,31 @@ export class BskyAgent extends AtpAgent {
       }
     }
 
+    // there was no v2 saved feeds pref, so we need to check for the legacy pref
+    if (prefs.feeds.saved === undefined && prefs.feeds.pinned === undefined) {
+      const legacySavedFeedsPref = res.data.preferences.findLast((pref) => {
+        return (
+          AppBskyActorDefs.isSavedFeedsPref(pref) &&
+          AppBskyActorDefs.validateSavedFeedsPref(pref).success
+        )
+      }) as AppBskyActorDefs.SavedFeedsPref | undefined
+
+      if (legacySavedFeedsPref) {
+        const migratedSavedFeeds: AppBskyActorDefs.SavedFeed[] = [
+          ...legacySavedFeedsPref.saved.map((uri) =>
+            uriToSavedFeed(uri, { pinned: false }),
+          ),
+          ...legacySavedFeedsPref.pinned.map((uri) =>
+            uriToSavedFeed(uri, { pinned: true }),
+          ),
+        ]
+        await updateFeedPreferences(this, () => migratedSavedFeeds, {
+          removeLegacySavedFeedsPref: true,
+        })
+        prefs.feeds = savedFeedsV2ToV1(migratedSavedFeeds)
+      }
+    }
+
     // apply the label prefs
     for (const pref of labelPrefs) {
       if (pref.labelerDid) {
@@ -491,39 +520,93 @@ export class BskyAgent extends AtpAgent {
     return prefs
   }
 
+  async updateSavedFeeds(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
+    savedFeeds.forEach(validateSavedFeed)
+    return updateFeedPreferences(this, () => savedFeeds)
+  }
+
+  async upsertSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
+    validateSavedFeed(savedFeed)
+    return updateFeedPreferences(this, (savedFeeds) => [
+      savedFeed,
+      ...savedFeeds.filter((feed) => feed.value !== savedFeed.value),
+    ])
+  }
+
+  async deleteSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
+    validateSavedFeed(savedFeed)
+    return updateFeedPreferences(this, (savedFeeds) => [
+      ...savedFeeds.filter((feed) => feed.value !== savedFeed.value),
+    ])
+  }
+
+  /**
+   * @deprecated use `updateSavedFeeds`
+   */
   async setSavedFeeds(saved: string[], pinned: string[]) {
-    return updateFeedPreferences(this, () => ({
-      saved,
-      pinned,
-    }))
+    const savedFeeds: AppBskyActorDefs.SavedFeed[] = []
+
+    for (const uri of saved) {
+      savedFeeds.push({
+        type: getSavedFeedType(uri),
+        value: uri,
+        pinned: false,
+      })
+    }
+
+    for (const uri of pinned) {
+      savedFeeds.push({
+        type: getSavedFeedType(uri),
+        value: uri,
+        pinned: true,
+      })
+    }
+
+    return this.updateSavedFeeds(savedFeeds)
   }
 
+  /**
+   * @deprecated use `upsertSavedFeed`
+   */
   async addSavedFeed(v: string) {
-    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
-      saved: [...saved.filter((uri) => uri !== v), v],
-      pinned,
-    }))
+    return this.upsertSavedFeed({
+      type: getSavedFeedType(v),
+      value: v,
+      pinned: false,
+    })
   }
 
+  /**
+   * @deprecated use `deleteSavedFeed`
+   */
   async removeSavedFeed(v: string) {
-    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
-      saved: saved.filter((uri) => uri !== v),
-      pinned: pinned.filter((uri) => uri !== v),
-    }))
+    return this.deleteSavedFeed({
+      type: getSavedFeedType(v),
+      value: v,
+      pinned: false,
+    })
   }
 
+  /**
+   * @deprecated use `upsertSavedFeed`
+   */
   async addPinnedFeed(v: string) {
-    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
-      saved: [...saved.filter((uri) => uri !== v), v],
-      pinned: [...pinned.filter((uri) => uri !== v), v],
-    }))
+    return this.upsertSavedFeed({
+      type: getSavedFeedType(v),
+      value: v,
+      pinned: true,
+    })
   }
 
+  /**
+   * @deprecated use `upsertSavedFeed`
+   */
   async removePinnedFeed(v: string) {
-    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
-      saved,
-      pinned: pinned.filter((uri) => uri !== v),
-    }))
+    return this.upsertSavedFeed({
+      type: getSavedFeedType(v),
+      value: v,
+      pinned: false,
+    })
   }
 
   async setAdultContentEnabled(v: boolean) {
@@ -915,34 +998,50 @@ async function updatePreferences(
 async function updateFeedPreferences(
   agent: BskyAgent,
   cb: (
-    saved: string[],
-    pinned: string[],
-  ) => { saved: string[]; pinned: string[] },
+    savedFeedsPref: AppBskyActorDefs.SavedFeed[],
+  ) => AppBskyActorDefs.SavedFeed[],
+  options?: {
+    removeLegacySavedFeedsPref?: boolean
+  },
 ): Promise<{ saved: string[]; pinned: string[] }> {
-  let res
+  let maybeMutatedSavedFeeds: AppBskyActorDefs.SavedFeed[] = []
+
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
-    let feedsPref = prefs.findLast(
+    let existingFeedsPref = prefs.findLast(
       (pref) =>
-        AppBskyActorDefs.isSavedFeedsPref(pref) &&
-        AppBskyActorDefs.validateSavedFeedsPref(pref).success,
-    ) as AppBskyActorDefs.SavedFeedsPref | undefined
-    if (feedsPref) {
-      res = cb(feedsPref.saved, feedsPref.pinned)
-      feedsPref.saved = res.saved
-      feedsPref.pinned = res.pinned
+        AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success,
+    ) as AppBskyActorDefs.SavedFeedsPrefV2 | undefined
+
+    if (existingFeedsPref) {
+      maybeMutatedSavedFeeds = cb(existingFeedsPref.items)
+      existingFeedsPref = {
+        ...existingFeedsPref,
+        items: maybeMutatedSavedFeeds,
+      }
     } else {
-      res = cb([], [])
-      feedsPref = {
-        $type: 'app.bsky.actor.defs#savedFeedsPref',
-        saved: res.saved,
-        pinned: res.pinned,
+      maybeMutatedSavedFeeds = cb([])
+      existingFeedsPref = {
+        $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
+        items: maybeMutatedSavedFeeds,
       }
     }
-    return prefs
-      .filter((pref) => !AppBskyActorDefs.isSavedFeedsPref(pref))
-      .concat([feedsPref])
+
+    let updatedPrefs = prefs
+      .filter((pref) => !AppBskyActorDefs.isSavedFeedsPrefV2(pref))
+      .concat(existingFeedsPref)
+
+    if (options?.removeLegacySavedFeedsPref) {
+      // remove the legacy saved feeds pref
+      updatedPrefs = updatedPrefs.filter(
+        (pref) => !AppBskyActorDefs.isSavedFeedsPref(pref),
+      )
+    }
+
+    return updatedPrefs
   })
-  return res
+
+  return savedFeedsV2ToV1(maybeMutatedSavedFeeds)
 }
 
 /**

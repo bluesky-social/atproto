@@ -4,7 +4,7 @@ import {
   ComAtprotoRepoPutRecord,
   AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
-} from '..'
+} from '../src'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -567,12 +567,12 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: [
-            'at://bob.com/app.bsky.feed.generator/fake',
             'at://bob.com/app.bsky.feed.generator/fake2',
+            'at://bob.com/app.bsky.feed.generator/fake',
           ],
           saved: [
-            'at://bob.com/app.bsky.feed.generator/fake',
             'at://bob.com/app.bsky.feed.generator/fake2',
+            'at://bob.com/app.bsky.feed.generator/fake',
           ],
         },
         moderationPrefs: {
@@ -1353,7 +1353,7 @@ describe('agent', () => {
       })
 
       const res = await agent.app.bsky.actor.getPreferences()
-      await expect(res.data.preferences.sort(byType)).toStrictEqual(
+      expect(res.data.preferences.sort(byType)).toStrictEqual(
         [
           {
             $type: 'app.bsky.actor.defs#adultContentPref',
@@ -1378,9 +1378,14 @@ describe('agent', () => {
             ],
           },
           {
-            $type: 'app.bsky.actor.defs#savedFeedsPref',
-            pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
-            saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+            $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
+            items: [
+              {
+                pinned: true,
+                type: 'feed',
+                value: 'at://bob.com/app.bsky.feed.generator/fake',
+              },
+            ],
           },
           {
             $type: 'app.bsky.actor.defs#personalDetailsPref',
@@ -1671,6 +1676,134 @@ describe('agent', () => {
           'moderationPrefs.hiddenPosts',
           [],
         )
+      })
+    })
+
+    describe(`savedFeedsPrefV2`, () => {
+      let agent: BskyAgent
+      let i = 0
+      const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
+      const listUri = () => `at://bob.com/app.bsky.graph.list/${i++}`
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user9.test',
+          email: 'user9@test.com',
+          password: 'password',
+        })
+      })
+
+      it('upsertSavedFeed: feed, unpinned', async () => {
+        const feed = feedUri()
+        await agent.upsertSavedFeed({
+          type: 'feed',
+          value: feed,
+          pinned: false,
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds.saved).toContain(feed)
+        expect(prefs.feeds.pinned).not.toContain(feed)
+      })
+
+      it('upsertSavedFeed: feed, pinned', async () => {
+        const feed = feedUri()
+        await agent.upsertSavedFeed({
+          type: 'feed',
+          value: feed,
+          pinned: true,
+        })
+        const prefs = await agent.getPreferences()
+        // also in saved, backwards compat
+        expect(prefs.feeds.saved).toContain(feed)
+        expect(prefs.feeds.pinned).toContain(feed)
+      })
+
+      it('upsertSavedFeed: throws if feed is specified and list provided', async () => {
+        const list = listUri()
+        expect(() =>
+          agent.upsertSavedFeed({
+            type: 'feed',
+            value: list,
+            pinned: true,
+          }),
+        ).rejects.toThrow()
+      })
+
+      it('upsertSavedFeed: throws if list is specified and feed provided', async () => {
+        const feed = feedUri()
+        expect(() =>
+          agent.upsertSavedFeed({
+            type: 'list',
+            value: feed,
+            pinned: true,
+          }),
+        ).rejects.toThrow()
+      })
+
+      it('deleteSavedFeed: feed, pinned', async () => {
+        const feed = feedUri()
+        await agent.upsertSavedFeed({
+          type: 'feed',
+          value: feed,
+          pinned: true,
+        })
+        await agent.deleteSavedFeed({
+          type: 'feed',
+          value: feed,
+          pinned: true,
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds.saved).not.toContain(feed)
+      })
+    })
+
+    describe(`savedFeedsPrefV2 migration scenarios`, () => {
+      let agent: BskyAgent
+      let i = 0
+      const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user10.test',
+          email: 'user10@test.com',
+          password: 'password',
+        })
+      })
+
+      it('squashes duplicates', async () => {
+        const one = feedUri()
+        const two = feedUri()
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: [one, two],
+              saved: [one, two],
+            },
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: [],
+              saved: [],
+            },
+          ],
+        })
+
+        // performs migration
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds).toStrictEqual({
+          pinned: [],
+          saved: [],
+        })
+
+        const res = await agent.app.bsky.actor.getPreferences()
+        expect(res.data.preferences).toStrictEqual([
+          {
+            $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
+            items: [],
+          },
+        ])
       })
     })
 
