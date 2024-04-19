@@ -35,7 +35,12 @@ export class AtpAgent {
   session?: AtpSessionData
   labelersHeader: string[] = []
   proxyHeader: string | undefined
-  pdsUrl: URL | undefined // The PDS URL, driven by the did doc. May be undefined.
+
+  // The PDS URL, driven by the did doc. May be undefined.
+  get pdsUrl(): URL | undefined {
+    const rawUrl = this.session?.pdsUrl
+    return rawUrl ? new URL(rawUrl) : undefined
+  }
 
   protected _baseClient: AtpBaseClient
   protected _persistSession?: AtpPersistSessionHandler
@@ -76,6 +81,15 @@ export class AtpAgent {
     this._baseClient = new AtpBaseClient()
     this._baseClient.xrpc.fetch = this._fetch.bind(this) // patch its fetch implementation
     this.api = this._baseClient.service(opts.service)
+
+    const _this = this
+
+    // Monkey-patch the `uri` property so it'll grab the PDS URL when available.
+    Object.defineProperty(this.api.xrpc, 'uri', {
+      get(): URL {
+        return _this.pdsUrl || _this.service
+      },
+    })
   }
 
   clone() {
@@ -90,8 +104,6 @@ export class AtpAgent {
     inst.session = this.session
     inst.labelersHeader = this.labelersHeader
     inst.proxyHeader = this.proxyHeader
-    inst.pdsUrl = this.pdsUrl
-    inst.api.xrpc.uri = this.pdsUrl || this.service
   }
 
   withProxy(serviceType: AtprotoServiceType, did: string) {
@@ -141,16 +153,7 @@ export class AtpAgent {
   ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
       const res = await this.api.com.atproto.server.createAccount(opts)
-      this.session = {
-        accessJwt: res.data.accessJwt,
-        refreshJwt: res.data.refreshJwt,
-        handle: res.data.handle,
-        did: res.data.did,
-        email: opts.email,
-        emailConfirmed: false,
-        emailAuthFactor: false,
-      }
-      this._updateApiEndpoint(res.data.didDoc)
+      this._updateSession(res.data)
       return res
     } catch (e) {
       this.session = undefined
@@ -176,16 +179,7 @@ export class AtpAgent {
         password: opts.password,
         authFactorToken: opts.authFactorToken,
       })
-      this.session = {
-        accessJwt: res.data.accessJwt,
-        refreshJwt: res.data.refreshJwt,
-        handle: res.data.handle,
-        did: res.data.did,
-        email: res.data.email,
-        emailConfirmed: res.data.emailConfirmed,
-        emailAuthFactor: res.data.emailAuthFactor,
-      }
-      this._updateApiEndpoint(res.data.didDoc)
+      this._updateSession(res.data)
       return res
     } catch (e) {
       this.session = undefined
@@ -215,11 +209,7 @@ export class AtpAgent {
           'InvalidDID',
         )
       }
-      this.session.email = res.data.email
-      this.session.handle = res.data.handle
-      this.session.emailConfirmed = res.data.emailConfirmed
-      this.session.emailAuthFactor = res.data.emailAuthFactor
-      this._updateApiEndpoint(res.data.didDoc)
+      this._updateSession({ ...this.session, ...res.data })
       this._persistSession?.('update', this.session)
       return res
     } catch (e) {
@@ -361,14 +351,7 @@ export class AtpAgent {
       this._persistSession?.('expired', undefined)
     } else if (isNewSessionObject(this._baseClient, res.body)) {
       // succeeded, update the session
-      this.session = {
-        ...(this.session || {}),
-        accessJwt: res.body.accessJwt,
-        refreshJwt: res.body.refreshJwt,
-        handle: res.body.handle,
-        did: res.body.did,
-      }
-      this._updateApiEndpoint(res.body.didDoc)
+      this._updateSession({ ...this.session, ...res.body })
       this._persistSession?.('update', this.session)
     }
     // else: other failures should be ignored - the issue will
@@ -404,22 +387,25 @@ export class AtpAgent {
   createModerationReport: typeof this.api.com.atproto.moderation.createReport =
     (data, opts) => this.api.com.atproto.moderation.createReport(data, opts)
 
-  /**
-   * Helper to update the pds endpoint dynamically.
-   *
-   * The session methods (create, resume, refresh) may respond with the user's
-   * did document which contains the user's canonical PDS endpoint. That endpoint
-   * may differ from the endpoint used to contact the server. We capture that
-   * PDS endpoint and update the client to use that given endpoint for future
-   * requests. (This helps ensure smooth migrations between PDSes, especially
-   * when the PDSes are operated by a single org.)
-   */
-  private _updateApiEndpoint(didDoc: unknown) {
-    if (isValidDidDoc(didDoc)) {
-      const endpoint = getPdsEndpoint(didDoc)
-      this.pdsUrl = endpoint ? new URL(endpoint) : undefined
+  private _updateSession(
+    raw: ComAtprotoServerCreateSession.OutputSchema,
+  ): void {
+    let pdsUri: string | undefined
+    if (isValidDidDoc(raw.didDoc)) {
+      const endpoint = getPdsEndpoint(raw.didDoc)
+      pdsUri = endpoint
     }
-    this.api.xrpc.uri = this.pdsUrl || this.service
+
+    this.session = {
+      accessJwt: raw.accessJwt,
+      refreshJwt: raw.refreshJwt,
+      handle: raw.handle,
+      did: raw.did,
+      email: raw.email,
+      emailConfirmed: raw.emailConfirmed,
+      emailAuthFactor: raw.emailAuthFactor,
+      pdsUrl: pdsUri,
+    }
   }
 }
 
