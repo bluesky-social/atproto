@@ -55,12 +55,13 @@ export class S3BlobStore implements BlobStore {
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
+    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
     const abortController = new AbortController()
     const timeout = setTimeout(
-      () => abortController.abort('upload timed out'),
+      () => abortController.abort(),
       this.uploadTimeoutMs,
     )
-    await new Upload({
+    const upload = new Upload({
       client: this.client,
       params: {
         Bucket: this.bucket,
@@ -69,8 +70,8 @@ export class S3BlobStore implements BlobStore {
       },
       // @ts-ignore native implementation fine in node >=15
       abortController,
-    }).done()
-    clearTimeout(timeout)
+    })
+    await upload.done().finally(() => clearTimeout(timeout))
     return key
   }
 
@@ -91,14 +92,23 @@ export class S3BlobStore implements BlobStore {
     cid: CID,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
-    await new Upload({
+    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
+    const abortController = new AbortController()
+    const timeout = setTimeout(
+      () => abortController.abort(),
+      this.uploadTimeoutMs,
+    )
+    const upload = new Upload({
       client: this.client,
       params: {
         Bucket: this.bucket,
         Body: bytes,
         Key: this.getStoredPath(cid),
       },
-    }).done()
+      // @ts-ignore native implementation fine in node >=15
+      abortController,
+    })
+    await upload.done().finally(() => clearTimeout(timeout))
   }
 
   async quarantine(cid: CID): Promise<void> {
