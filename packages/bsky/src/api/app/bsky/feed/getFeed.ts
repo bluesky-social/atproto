@@ -111,7 +111,8 @@ const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
       !bam.authorBlocked &&
       !bam.authorMuted &&
       !bam.originatorBlocked &&
-      !bam.originatorMuted
+      !bam.originatorMuted &&
+      !bam.parentAuthorBlocked
     )
   })
   return skeleton
