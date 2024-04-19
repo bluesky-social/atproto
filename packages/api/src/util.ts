@@ -21,6 +21,8 @@ export function savedFeedsToUriArrays(
   for (const feed of savedFeeds) {
     if (feed.pinned) {
       pinned.push(feed.value)
+      // saved in v1 includes pinned
+      saved.push(feed.value)
     } else {
       saved.push(feed.value)
     }
@@ -28,8 +30,7 @@ export function savedFeedsToUriArrays(
 
   return {
     pinned,
-    // saved is a concatenation of pinned and saved in v1
-    saved: pinned.concat(saved),
+    saved,
   }
 }
 

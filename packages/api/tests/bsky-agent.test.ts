@@ -237,8 +237,14 @@ describe('agent', () => {
       }))
 
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: undefined, saved: undefined },
-        savedFeeds: [],
+        feeds: { pinned: ['home'], saved: ['home'] },
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+        ],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
@@ -267,8 +273,14 @@ describe('agent', () => {
 
       await agent.setAdultContentEnabled(true)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: undefined, saved: undefined },
-        savedFeeds: [],
+        feeds: { pinned: ['home'], saved: ['home'] },
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+        ],
         moderationPrefs: {
           adultContentEnabled: true,
           labels: DEFAULT_LABEL_SETTINGS,
@@ -297,8 +309,14 @@ describe('agent', () => {
 
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: undefined, saved: undefined },
-        savedFeeds: [],
+        feeds: { pinned: ['home'], saved: ['home'] },
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+        ],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
@@ -327,8 +345,14 @@ describe('agent', () => {
 
       await agent.setContentLabelPref('misinfo', 'hide')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: undefined, saved: undefined },
-        savedFeeds: [],
+        feeds: { pinned: ['home'], saved: ['home'] },
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+        ],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
@@ -357,8 +381,14 @@ describe('agent', () => {
 
       await agent.setContentLabelPref('spam', 'ignore')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: undefined, saved: undefined },
-        savedFeeds: [],
+        feeds: { pinned: ['home'], saved: ['home'] },
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+        ],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: {
@@ -393,14 +423,19 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
             pinned: false,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         feeds: {
-          pinned: [],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['home'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -437,13 +472,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -479,14 +519,19 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
             pinned: false,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         feeds: {
-          pinned: [],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['home'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -520,10 +565,16 @@ describe('agent', () => {
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        savedFeeds: [],
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+        ],
         feeds: {
-          pinned: [],
-          saved: [],
+          pinned: ['home'],
+          saved: ['home'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -560,13 +611,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -603,23 +659,30 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+            type: 'timeline',
+            value: 'home',
           },
           {
             pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
         ],
         feeds: {
           pinned: [
-            'at://bob.com/app.bsky.feed.generator/fake2',
+            'home',
             'at://bob.com/app.bsky.feed.generator/fake',
+            'at://bob.com/app.bsky.feed.generator/fake2',
           ],
           saved: [
-            'at://bob.com/app.bsky.feed.generator/fake2',
+            'home',
             'at://bob.com/app.bsky.feed.generator/fake',
+            'at://bob.com/app.bsky.feed.generator/fake2',
           ],
         },
         moderationPrefs: {
@@ -657,13 +720,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -700,13 +768,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -743,13 +816,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -786,13 +864,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -829,13 +912,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -879,13 +967,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -929,13 +1022,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -979,13 +1077,18 @@ describe('agent', () => {
         savedFeeds: [
           {
             pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
+          {
+            pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake2',
           },
         ],
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1142,10 +1245,16 @@ describe('agent', () => {
         ],
       })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        savedFeeds: [],
+        savedFeeds: [
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ],
         feeds: {
-          pinned: [],
-          saved: [],
+          pinned: ['home'],
+          saved: ['home'],
         },
         moderationPrefs: {
           adultContentEnabled: true,
@@ -1188,10 +1297,16 @@ describe('agent', () => {
 
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        savedFeeds: [],
+        savedFeeds: [
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ],
         feeds: {
-          pinned: [],
-          saved: [],
+          pinned: ['home'],
+          saved: ['home'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1234,10 +1349,16 @@ describe('agent', () => {
 
       await agent.setContentLabelPref('porn', 'ignore')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        savedFeeds: [],
+        savedFeeds: [
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ],
         feeds: {
-          pinned: [],
-          saved: [],
+          pinned: ['home'],
+          saved: ['home'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1281,10 +1402,16 @@ describe('agent', () => {
 
       await agent.removeLabeler('did:plc:other')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        savedFeeds: [],
+        savedFeeds: [
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ],
         feeds: {
-          pinned: [],
-          saved: [],
+          pinned: ['home'],
+          saved: ['home'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1325,10 +1452,15 @@ describe('agent', () => {
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
         },
         savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
           {
             pinned: true,
             type: 'feed',
@@ -1373,17 +1505,22 @@ describe('agent', () => {
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+        },
         savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
           {
             pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
-        feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
-        },
         moderationPrefs: {
           adultContentEnabled: false,
           labels: {
@@ -1433,17 +1570,22 @@ describe('agent', () => {
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+        },
         savedFeeds: [
+          {
+            pinned: true,
+            type: 'timeline',
+            value: 'home',
+          },
           {
             pinned: true,
             type: 'feed',
             value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
-        feeds: {
-          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
-        },
         moderationPrefs: {
           adultContentEnabled: false,
           labels: {
@@ -1513,6 +1655,11 @@ describe('agent', () => {
           {
             $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
             items: [
+              {
+                pinned: true,
+                type: 'timeline',
+                value: 'home',
+              },
               {
                 pinned: true,
                 type: 'feed',
@@ -1916,6 +2063,91 @@ describe('agent', () => {
         expect(prefs.feeds.pinned).not.toContain(a)
         expect(prefs.feeds.pinned).toContain(b)
       })
+
+      it(`upsertSavedFeed: timeline`, async () => {
+        await agent.upsertSavedFeed({
+          type: 'timeline',
+          value: 'home',
+          pinned: true,
+        })
+        const prefs = await agent.getPreferences()
+        expect(
+          prefs.savedFeeds.find((f) => f.type === 'timeline'),
+        ).toStrictEqual({
+          type: 'timeline',
+          value: 'home',
+          pinned: true,
+        })
+      })
+
+      it(`updateSavedFeeds: preserves order`, async () => {
+        const a = feedUri()
+        const b = feedUri()
+        const c = feedUri()
+        const d = feedUri()
+
+        await agent.updateSavedFeeds([
+          {
+            type: 'timeline',
+            value: a,
+            pinned: true,
+          },
+          {
+            type: 'feed',
+            value: b,
+            pinned: false,
+          },
+          {
+            type: 'feed',
+            value: c,
+            pinned: true,
+          },
+          {
+            type: 'feed',
+            value: d,
+            pinned: false,
+          },
+        ])
+
+        const { savedFeeds, feeds } = await agent.getPreferences()
+        expect(JSON.stringify(savedFeeds.filter((f) => f.pinned))).toEqual(
+          JSON.stringify([
+            {
+              type: 'timeline',
+              value: a,
+              pinned: true,
+            },
+            {
+              type: 'feed',
+              value: c,
+              pinned: true,
+            },
+          ]),
+        )
+        expect(JSON.stringify(feeds.pinned)).toEqual(JSON.stringify([a, c]))
+        expect(JSON.stringify(savedFeeds.filter((f) => !f.pinned))).toEqual(
+          JSON.stringify([
+            {
+              type: 'feed',
+              value: b,
+              pinned: false,
+            },
+            {
+              type: 'feed',
+              value: d,
+              pinned: false,
+            },
+          ]),
+        )
+        expect(JSON.stringify(feeds.saved)).toEqual(JSON.stringify([a, b, c, d]))
+      })
+
+      /*
+       * Old methods can't handle `timeline` or types other than `feed` or
+       * `list`
+       */
+      it(`deprecated methods write only to v1`, async () => {
+      })
     })
 
     describe(`saved feeds v2: migration scenarios`, () => {
@@ -1936,6 +2168,85 @@ describe('agent', () => {
         await agent.app.bsky.actor.putPreferences({
           preferences: [],
         })
+      })
+
+      // fresh account OR an old account with no v1 prefs to migrate from
+      it(`migrates on startup for new/old users`, async () => {
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.feeds).toStrictEqual({
+          saved: ['home'],
+          pinned: ['home'],
+        })
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          }
+        ])
+      })
+
+      it(`migrates pinned & saved feed`, async () => {
+        const one = feedUri()
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: [one],
+              saved: [one],
+            },
+          ],
+        })
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.feeds).toStrictEqual({
+          saved: ['home', one],
+          pinned: ['home', one],
+        })
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+          {
+            type: 'feed',
+            value: one,
+            pinned: true,
+          }
+        ])
+      })
+
+      it(`migrates saved feed`, async () => {
+        const one = feedUri()
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: [],
+              saved: [one],
+            },
+          ],
+        })
+        const prefs = await agent.getPreferences()
+
+        expect(prefs.feeds).toStrictEqual({
+          saved: ['home', one],
+          pinned: ['home'],
+        })
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+          {
+            type: 'feed',
+            value: one,
+            pinned: false,
+          }
+        ])
       })
 
       it('squashes duplicates', async () => {
@@ -1959,15 +2270,21 @@ describe('agent', () => {
         // performs migration
         const prefs = await agent.getPreferences()
         expect(prefs.feeds).toStrictEqual({
-          pinned: [],
-          saved: [],
+          pinned: ['home'],
+          saved: ['home'],
         })
 
         const res = await agent.app.bsky.actor.getPreferences()
         expect(res.data.preferences).toStrictEqual([
           {
             $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
-            items: [],
+            items: [
+              {
+                type: 'timeline',
+                value: 'home',
+                pinned: true,
+              },
+            ],
           },
           {
             $type: 'app.bsky.actor.defs#savedFeedsPref',
@@ -1977,7 +2294,7 @@ describe('agent', () => {
         ])
       })
 
-      it('writes to v2 persist to v1, writes to v1 persist but not to v2', async () => {
+      it('writes to v2 persist to v1, writes to v1 (from v1 client) persist to v1 but not to v2', async () => {
         const a = feedUri()
         const b = feedUri()
         const c = feedUri()
@@ -2042,8 +2359,8 @@ describe('agent', () => {
         // v2 reads, not updated with v1 write
         const prefs = await agent.getPreferences()
         expect(prefs.feeds).toStrictEqual({
-          pinned: [a, b],
-          saved: [a, b, c],
+          pinned: ['home', a, b],
+          saved: ['home', a, b, c],
         })
 
         // another new write to v2
@@ -2064,6 +2381,10 @@ describe('agent', () => {
         })
       })
     })
+
+    // TODO
+    // [ ] updating timeline is based on uri, will duplicate
+    // [ ] should v1 methods write to v2
 
     // end
   })
