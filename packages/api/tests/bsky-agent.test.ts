@@ -238,6 +238,7 @@ describe('agent', () => {
 
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
+        savedFeeds: [],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
@@ -267,6 +268,7 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(true)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
+        savedFeeds: [],
         moderationPrefs: {
           adultContentEnabled: true,
           labels: DEFAULT_LABEL_SETTINGS,
@@ -296,6 +298,7 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
+        savedFeeds: [],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: DEFAULT_LABEL_SETTINGS,
@@ -325,6 +328,7 @@ describe('agent', () => {
       await agent.setContentLabelPref('misinfo', 'hide')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
+        savedFeeds: [],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: { ...DEFAULT_LABEL_SETTINGS, misinfo: 'hide' },
@@ -354,6 +358,7 @@ describe('agent', () => {
       await agent.setContentLabelPref('spam', 'ignore')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
+        savedFeeds: [],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: {
@@ -386,6 +391,13 @@ describe('agent', () => {
 
       await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: false,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -422,6 +434,13 @@ describe('agent', () => {
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -458,6 +477,13 @@ describe('agent', () => {
 
       await agent.removePinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: false,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -494,6 +520,7 @@ describe('agent', () => {
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [],
         feeds: {
           pinned: [],
           saved: [],
@@ -530,6 +557,13 @@ describe('agent', () => {
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -566,6 +600,18 @@ describe('agent', () => {
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake2')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: [
             'at://bob.com/app.bsky.feed.generator/fake2',
@@ -608,6 +654,13 @@ describe('agent', () => {
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -644,6 +697,13 @@ describe('agent', () => {
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -680,6 +740,13 @@ describe('agent', () => {
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -716,6 +783,13 @@ describe('agent', () => {
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -752,6 +826,13 @@ describe('agent', () => {
 
       await agent.setFeedViewPrefs('other', { hideReplies: true })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -795,6 +876,13 @@ describe('agent', () => {
 
       await agent.setThreadViewPrefs({ sort: 'random' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -838,6 +926,13 @@ describe('agent', () => {
 
       await agent.setThreadViewPrefs({ sort: 'oldest' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -881,6 +976,13 @@ describe('agent', () => {
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake2',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -1040,6 +1142,7 @@ describe('agent', () => {
         ],
       })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [],
         feeds: {
           pinned: [],
           saved: [],
@@ -1085,6 +1188,7 @@ describe('agent', () => {
 
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [],
         feeds: {
           pinned: [],
           saved: [],
@@ -1130,6 +1234,7 @@ describe('agent', () => {
 
       await agent.setContentLabelPref('porn', 'ignore')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [],
         feeds: {
           pinned: [],
           saved: [],
@@ -1176,6 +1281,7 @@ describe('agent', () => {
 
       await agent.removeLabeler('did:plc:other')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [],
         feeds: {
           pinned: [],
           saved: [],
@@ -1222,6 +1328,13 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         moderationPrefs: {
           adultContentEnabled: false,
           labels: {
@@ -1260,6 +1373,13 @@ describe('agent', () => {
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -1313,6 +1433,13 @@ describe('agent', () => {
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
+        savedFeeds: [
+          {
+            pinned: true,
+            type: 'feed',
+            value: 'at://bob.com/app.bsky.feed.generator/fake',
+          },
+        ],
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -1685,7 +1812,7 @@ describe('agent', () => {
       })
     })
 
-    describe(`savedFeedsPrefV2`, () => {
+    describe(`saved feeds v2`, () => {
       let agent: BskyAgent
       let i = 0
       const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
@@ -1791,7 +1918,7 @@ describe('agent', () => {
       })
     })
 
-    describe(`savedFeedsPrefV2 migration scenarios`, () => {
+    describe(`saved feeds v2: migration scenarios`, () => {
       let agent: BskyAgent
       let i = 0
       const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
@@ -1887,9 +2014,6 @@ describe('agent', () => {
           pinned: [a, b],
           saved: [a, b, c],
         })
-        // const temp = await agent.app.bsky.actor.getPreferences()
-        // console.log(JSON.stringify(temp.data.preferences, null, '  '))
-        // return
 
         // v1 write occurs
         const res2 = await agent.app.bsky.actor.getPreferences()

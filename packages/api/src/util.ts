@@ -9,7 +9,9 @@ export function sanitizeMutedWordValue(value: string) {
     .replace(/[\r\n\u00AD\u2060\u200D\u200C\u200B]+/, '')
 }
 
-export function savedFeedsV2ToV1(savedFeeds: AppBskyActorDefs.SavedFeed[]): {
+export function savedFeedsToUriArrays(
+  savedFeeds: AppBskyActorDefs.SavedFeed[],
+): {
   pinned: string[]
   saved: string[]
 } {
@@ -49,18 +51,6 @@ export function getSavedFeedType(
       return 'list'
     default:
       return 'unknown'
-  }
-}
-
-export function uriToSavedFeed(
-  uri: string,
-  partialSavedFeed: Partial<AppBskyActorDefs.SavedFeed>,
-): AppBskyActorDefs.SavedFeed {
-  return {
-    pinned: false,
-    ...partialSavedFeed,
-    type: getSavedFeedType(uri),
-    value: uri,
   }
 }
 

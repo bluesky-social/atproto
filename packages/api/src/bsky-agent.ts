@@ -22,9 +22,8 @@ import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 import {
   sanitizeMutedWordValue,
   validateSavedFeed,
-  savedFeedsV2ToV1,
+  savedFeedsToUriArrays,
   getSavedFeedType,
-  uriToSavedFeed,
 } from './util'
 import { interpretLabelValueDefinitions } from './moderation'
 
@@ -371,6 +370,7 @@ export class BskyAgent extends AtpAgent {
         saved: undefined,
         pinned: undefined,
       },
+      savedFeeds: [],
       feedViewPrefs: {
         home: {
           ...FEED_VIEW_PREF_DEFAULTS,
@@ -422,7 +422,8 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
         AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success
       ) {
-        prefs.feeds = savedFeedsV2ToV1(pref.items)
+        prefs.feeds = savedFeedsToUriArrays(pref.items)
+        prefs.savedFeeds = pref.items
       } else if (
         AppBskyActorDefs.isPersonalDetailsPref(pref) &&
         AppBskyActorDefs.validatePersonalDetailsPref(pref).success
@@ -471,7 +472,12 @@ export class BskyAgent extends AtpAgent {
       }
     }
 
-    // there was no v2 saved feeds pref, so we need to check for the legacy pref
+    /*
+     * If `prefs.feeds` values are undefined, it means there is no
+     * `savedFeedsPrefV2` prefs saved, so we should check for v1 prefs and
+     * migrate them if they exist. If they don't exist, it's an entirely new
+     * user.
+     */
     if (prefs.feeds.saved === undefined && prefs.feeds.pinned === undefined) {
       const legacySavedFeedsPref = res.data.preferences.findLast((pref) => {
         return (
@@ -1032,15 +1038,19 @@ async function updateFeedPreferences(
       .filter((pref) => !AppBskyActorDefs.isSavedFeedsPrefV2(pref))
       .concat(existingV2Pref)
 
+    /*
+     * If there's a v2 pref present, it means this account was migrated from v1
+     * to v2. During the transition period, we double write v2 prefs back to
+     * v1, but NOT the other way around.
+     */
     if (existingV1Pref) {
       const { saved, pinned } = existingV1Pref
-      const v2Compat = savedFeedsV2ToV1(existingV2Pref.items)
+      const v2Compat = savedFeedsToUriArrays(existingV2Pref.items)
       existingV1Pref = {
         ...existingV1Pref,
         saved: Array.from(new Set([...saved, ...v2Compat.saved])),
         pinned: Array.from(new Set([...pinned, ...v2Compat.pinned])),
       }
-
       updatedPrefs = updatedPrefs
         .filter((pref) => !AppBskyActorDefs.isSavedFeedsPref(pref))
         .concat(existingV1Pref)
@@ -1049,7 +1059,7 @@ async function updateFeedPreferences(
     return updatedPrefs
   })
 
-  return savedFeedsV2ToV1(maybeMutatedSavedFeeds)
+  return savedFeedsToUriArrays(maybeMutatedSavedFeeds)
 }
 
 /**
