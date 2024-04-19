@@ -22,10 +22,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Recipient not found')
       }
 
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         assert(ctx.cfg.entryway)
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.admin.sendEmail(input.body, {
+          await ctx.entrywayApi.com.atproto.admin.sendEmail(input.body, {
             encoding: 'application/json',
             ...(await ctx.serviceAuthHeaders(
               recipientDid,

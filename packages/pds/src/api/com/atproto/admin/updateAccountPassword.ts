@@ -6,8 +6,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountPassword({
     auth: ctx.authVerifier.adminToken,
     handler: async ({ input, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.admin.updateAccountPassword(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.admin.updateAccountPassword(
           input.body,
           authPassthru(req, true),
         )

@@ -7,8 +7,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
     auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ auth, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.identity.requestPlcOperationSignature(
           undefined,
           authPassthru(req),
         )

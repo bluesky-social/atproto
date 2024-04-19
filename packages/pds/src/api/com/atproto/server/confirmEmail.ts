@@ -16,8 +16,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('user not found', 'AccountNotFound')
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.confirmEmail(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.server.confirmEmail(
           input.body,
           authPassthru(req, true),
         )

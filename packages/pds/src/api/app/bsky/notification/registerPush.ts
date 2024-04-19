@@ -2,12 +2,12 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtpAgent } from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
-  const { appViewAgent } = ctx
-  if (!appViewAgent) return
+  const { appViewApi } = ctx
+  if (!appViewApi) return
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.accessDeactived,
     handler: async ({ auth, input }) => {
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
 
       if (ctx.cfg.bskyAppView?.did === serviceDid) {
-        await appViewAgent.api.app.bsky.notification.registerPush(input.body, {
+        await appViewApi.app.bsky.notification.registerPush(input.body, {
           ...authHeaders,
           encoding: 'application/json',
         })
@@ -27,8 +27,8 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const notifEndpoint = await getEndpoint(ctx, serviceDid)
-      const agent = new AtpAgent({ service: notifEndpoint })
-      await agent.api.app.bsky.notification.registerPush(input.body, {
+      const api = new AtpClient(notifEndpoint)
+      await api.app.bsky.notification.registerPush(input.body, {
         ...authHeaders,
         encoding: 'application/json',
       })

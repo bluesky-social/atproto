@@ -112,15 +112,37 @@ function normalizeHeaders(headers: Headers): Headers {
 
 export function constructMethodCallHeaders(
   schema: LexXrpcProcedure | LexXrpcQuery,
-  data?: any,
+  data?: unknown,
   opts?: CallOptions,
 ): Headers {
   const headers: Headers = opts?.headers ? normalizeHeaders(opts.headers) : {}
   if (schema.type === 'procedure') {
     if (opts?.encoding) {
       headers['content-type'] = opts.encoding
-    } else if (!headers['content-type'] && data && typeof data === 'object') {
-      headers['content-type'] = 'application/json'
+    } else if (!headers['content-type']) {
+      if (data instanceof URLSearchParams || data instanceof FormData) {
+        // This can be worked around by setting the "encoding" option or
+        // "content-type" header, or by using a blob.
+        const className = data.constructor?.name ?? 'FormData'
+        throw new TypeError(`XRPC does not allow ${className} as request body`)
+      } else if (
+        data instanceof ReadableStream ||
+        data instanceof ArrayBuffer ||
+        ArrayBuffer.isView(data)
+      ) {
+        const className = data.constructor?.name ?? 'Object'
+        throw new TypeError(
+          `Usage of ${className} as request body requires setting the "encoding" option`,
+        )
+      } else if (data instanceof Blob) {
+        if (!data.type) {
+          throw new TypeError('Blob requires a MIME type')
+        }
+        headers['content-type'] = data.type
+      } else if (typeof data === 'object' && data !== null) {
+        // All other object BodyInit types have been ruled out, so this must be JSON
+        headers['content-type'] = 'application/json'
+      }
     }
   }
   return headers
@@ -128,21 +150,33 @@ export function constructMethodCallHeaders(
 
 export function encodeMethodCallBody(
   headers: Headers,
-  data?: any,
-): ArrayBuffer | undefined {
+  data?: unknown,
+): BodyInit | undefined {
   if (!headers['content-type'] || typeof data === 'undefined') {
     return undefined
   }
-  if (data instanceof ArrayBuffer) {
+
+  if (
+    data instanceof URLSearchParams ||
+    data instanceof FormData ||
+    data instanceof Blob ||
+    data instanceof ReadableStream ||
+    data instanceof ArrayBuffer ||
+    ArrayBuffer.isView(data)
+  ) {
     return data
   }
   if (headers['content-type'].startsWith('text/')) {
-    return new TextEncoder().encode(data.toString())
+    return new TextEncoder().encode(String(data))
   }
   if (headers['content-type'].startsWith('application/json')) {
     return new TextEncoder().encode(stringifyLex(data))
   }
-  return data
+  if (data === null) {
+    // After json so that null can be encoded as "null" json string.
+    return undefined
+  }
+  throw new TypeError(`Unsupported content-type: ${headers['content-type']}`)
 }
 
 export function httpResponseCodeToEnum(status: number): ResponseType {

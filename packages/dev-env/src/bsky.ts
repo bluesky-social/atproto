@@ -1,7 +1,7 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { AtpAgent } from '@atproto/api'
+import { BskyAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { BackgroundQueue } from '@atproto/bsky'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -105,7 +105,7 @@ export class TestBsky {
   }
 
   getClient() {
-    const agent = new AtpAgent({ service: this.url })
+    const agent = new BskyAgent({ service: this.url })
     agent.configureLabelersHeader([EXAMPLE_LABELER])
     return agent
   }

@@ -6,8 +6,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.revokeAppPassword({
     auth: ctx.authVerifier.access,
     handler: async ({ auth, input, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.revokeAppPassword(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.server.revokeAppPassword(
           input.body,
           authPassthru(req, true),
         )

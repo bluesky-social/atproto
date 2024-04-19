@@ -6,7 +6,7 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+import { AppBskyFeedGetFeedSkeleton, AtpClient } from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
@@ -182,13 +182,13 @@ const skeletonFromFeedGen = async (
     )
   }
 
-  const agent = new AtpAgent({ service: fgEndpoint })
+  const api = new AtpClient(fgEndpoint)
 
   let skeleton: SkeletonOutput
   let resHeaders: Record<string, string> | undefined = undefined
   try {
     // @TODO currently passthrough auth headers from pds
-    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
+    const result = await api.app.bsky.feed.getFeedSkeleton(
       {
         feed: params.feed,
         limit: params.limit,

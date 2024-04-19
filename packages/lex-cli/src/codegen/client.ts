@@ -1,7 +1,6 @@
 import {
   IndentationText,
   Project,
-  Scope,
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
@@ -62,14 +61,14 @@ const indexTs = (
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
-    //= import { XrpcClient, Client as XrpcBaseClient, ServiceClient as XrpcServiceClient } from '@atproto/xrpc'
+    //= import { XrpcClient, XrpcAgent, XrpcFetchAgentOptions } from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([
       { name: 'XrpcClient' },
-      { name: 'Client', alias: 'XrpcBaseClient' },
-      { name: 'ServiceClient', alias: 'XrpcServiceClient' },
+      { name: 'XrpcAgent' },
+      { name: 'XrpcFetchAgentOptions' },
     ])
     //= import {schemas} from './lexicons'
     file
@@ -122,6 +121,11 @@ const indexTs = (
       name: 'AtpClient',
       isExported: true,
     })
+    //= xrpc: XrpcClient
+    atpClientCls.addProperty({
+      name: 'xrpc',
+      type: 'XrpcClient',
+    })
     for (const ns of nsidTree) {
       //= ns: NS
       atpClientCls.addProperty({
@@ -129,18 +133,25 @@ const indexTs = (
         type: ns.className,
       })
     }
-    //= constructor (public xrpc: XrpcClient) {
+    //= constructor (options: XrpcClient | XrpcAgent | XrpcFetchAgentOptions) {
+    //=   this.xrpc =
+    //=     options instanceof XrpcClient ? options : new XrpcClient(options, schemas)
     //=   {namespace declarations}
     //= }
-    atpClientCls
-      .addConstructor({
-        parameters: [{ name: 'xrpc', type: 'XrpcClient', scope: Scope.Public }],
-      })
-      .setBodyText(
-        nsidTree
-          .map((ns) => `this.${ns.propName} = new ${ns.className}(this)`)
-          .join('\n'),
-      )
+    atpClientCls.addConstructor({
+      parameters: [
+        {
+          name: 'options',
+          type: 'XrpcClient | XrpcAgent | XrpcFetchAgentOptions',
+        },
+      ],
+      statements: [
+        'this.xrpc = options instanceof XrpcClient ? options : new XrpcClient(options, schemas)',
+        ...nsidTree.map(
+          (ns) => `this.${ns.propName} = new ${ns.className}(this)`,
+        ),
+      ],
+    })
     //= setHeader(key: string, value: string): void {
     //=   this.xrpc.setHeader(key, value)
     //= }
@@ -158,59 +169,18 @@ const indexTs = (
     })
     setHeaderMethod.setBodyText('this.xrpc.setHeader(key, value)')
 
-    //= export class AtpBaseClient {...}
-    const baseClientCls = file.addClass({
-      name: 'AtpBaseClient',
-      isExported: true,
-    })
-    //= /** @deprecated Use {@link AtpBaseClient} instead */
-    baseClientCls.addJsDoc('@deprecated Use {@link AtpClient} instead')
-    //= xrpc: XrpcBaseClient = new XrpcBaseClient()
-    baseClientCls.addProperty({
-      name: 'xrpc',
-      type: 'XrpcBaseClient',
-      initializer: 'new XrpcBaseClient()',
-    })
-    //= constructor () {
-    //=   this.xrpc.addLexicons(schemas)
+    //= unsetHeader(key: string): void {
+    //=   this.xrpc.unsetHeader(key)
     //= }
-    baseClientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(schemas)`)
-    //= service(serviceUri: string | URL): AtpServiceClient {
-    //=   return new AtpServiceClient(this, this.xrpc.service(serviceUri))
-    //= }
-    baseClientCls
-      .addMethod({
-        name: 'service',
-        parameters: [{ name: 'serviceUri', type: 'string | URL' }],
-        returnType: 'AtpServiceClient',
-      })
-      .setBodyText(
-        `return new AtpServiceClient(this, this.xrpc.service(serviceUri))`,
-      )
-
-    //= export class AtpServiceClient {...}
-    const serviceClientCls = file.addClass({
-      name: 'AtpServiceClient',
-      extends: 'AtpClient',
-      isExported: true,
+    const unsetHeaderMethod = atpClientCls.addMethod({
+      name: 'unsetHeader',
+      returnType: 'void',
     })
-    //= /** @deprecated Use {@link AtpBaseClient} instead */
-    serviceClientCls.addJsDoc('@deprecated Use {@link AtpClient} instead')
-    //= _baseClient: AtpBaseClient
-    serviceClientCls.addProperty({ name: '_baseClient', type: 'AtpBaseClient' })
-    //= constructor (baseClient: AtpBaseClient, override xrpc: XrpcServiceClient) {
-    //=   super(xrpc)
-    //=   this.xrpcService = xrpcService
-    //= }
-    serviceClientCls.addConstructor({
-      parameters: [
-        { name: 'baseClient', type: 'AtpBaseClient' },
-        { name: 'xrpc', type: 'XrpcServiceClient', hasOverrideKeyword: true },
-      ],
-      statements: ['super(xrpc)', 'this._baseClient = baseClient'],
+    unsetHeaderMethod.addParameter({
+      name: 'key',
+      type: 'string',
     })
-    // XXX
-    // .setBodyText([`super(xrpc)`, `this._baseClient = baseClient`].join('\n'))
+    unsetHeaderMethod.setBodyText('this.xrpc.unsetHeader(key)')
 
     // generate classes for the schemas
     for (const ns of nsidTree) {

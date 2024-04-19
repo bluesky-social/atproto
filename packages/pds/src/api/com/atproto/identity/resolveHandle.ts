@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
@@ -33,8 +33,8 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-    if (!did && ctx.appViewAgent) {
-      did = await tryResolveFromAppView(ctx.appViewAgent, handle)
+    if (!did && ctx.appViewApi) {
+      did = await tryResolveFromAppView(ctx.appViewApi, handle)
     }
 
     if (!did) {
@@ -52,9 +52,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-async function tryResolveFromAppView(agent: AtpAgent, handle: string) {
+async function tryResolveFromAppView(api: AtpClient, handle: string) {
   try {
-    const result = await agent.api.com.atproto.identity.resolveHandle({
+    const result = await api.com.atproto.identity.resolveHandle({
       handle,
     })
     return result.data.did

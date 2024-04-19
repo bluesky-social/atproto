@@ -1,11 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import {
-  XrpcClient,
-  Client as XrpcBaseClient,
-  ServiceClient as XrpcServiceClient,
-} from '@atproto/xrpc'
+import { XrpcClient, XrpcAgent, XrpcFetchAgentOptions } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
@@ -365,11 +361,14 @@ export const TOOLS_OZONE_MODERATION = {
 }
 
 export class AtpClient {
+  xrpc: XrpcClient
   com: ComNS
   app: AppNS
   tools: ToolsNS
 
-  constructor(public xrpc: XrpcClient) {
+  constructor(options: XrpcClient | XrpcAgent | XrpcFetchAgentOptions) {
+    this.xrpc =
+      options instanceof XrpcClient ? options : new XrpcClient(options, schemas)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.tools = new ToolsNS(this)
@@ -378,31 +377,9 @@ export class AtpClient {
   setHeader(key: string, value: string): void {
     this.xrpc.setHeader(key, value)
   }
-}
 
-/** @deprecated Use {@link AtpClient} instead */
-export class AtpBaseClient {
-  xrpc: XrpcBaseClient = new XrpcBaseClient()
-
-  constructor() {
-    this.xrpc.addLexicons(schemas)
-  }
-
-  service(serviceUri: string | URL): AtpServiceClient {
-    return new AtpServiceClient(this, this.xrpc.service(serviceUri))
-  }
-}
-
-/** @deprecated Use {@link AtpClient} instead */
-export class AtpServiceClient extends AtpClient {
-  _baseClient: AtpBaseClient
-
-  constructor(
-    baseClient: AtpBaseClient,
-    override xrpc: XrpcServiceClient,
-  ) {
-    super(xrpc)
-    this._baseClient = baseClient
+  unsetHeader(key: string): void {
+    this.xrpc.unsetHeader(key)
   }
 }
 

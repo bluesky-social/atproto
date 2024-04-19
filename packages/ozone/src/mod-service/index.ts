@@ -6,7 +6,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { Database } from '../db'
 import { AuthHeaders, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
@@ -60,7 +60,7 @@ export class ModerationService {
     public backgroundQueue: BackgroundQueue,
     public idResolver: IdResolver,
     public eventPusher: EventPusher,
-    public appviewAgent: AtpAgent,
+    public appviewApi: AtpClient,
     private createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
     public imgInvalidator?: ImageInvalidator,
   ) {}
@@ -72,7 +72,7 @@ export class ModerationService {
     backgroundQueue: BackgroundQueue,
     idResolver: IdResolver,
     eventPusher: EventPusher,
-    appviewAgent: AtpAgent,
+    appviewApi: AtpClient,
     createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
     imgInvalidator?: ImageInvalidator,
   ) {
@@ -85,7 +85,7 @@ export class ModerationService {
         backgroundQueue,
         idResolver,
         eventPusher,
-        appviewAgent,
+        appviewApi,
         createAuthHeaders,
         imgInvalidator,
       )
@@ -95,7 +95,7 @@ export class ModerationService {
     this.db,
     this.signingKey,
     this.signingKeyId,
-    this.appviewAgent,
+    this.appviewApi,
     () => this.createAuthHeaders(this.cfg.appview.did),
   )
 
@@ -880,15 +880,14 @@ export class ModerationService {
     if (!this.cfg.service.devMode && !isSafeUrl(url)) {
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const agent = new AtpAgent({ service: url })
-    const { data: serverInfo } =
-      await agent.api.com.atproto.server.describeServer()
+    const api = new AtpClient(url)
+    const { data: serverInfo } = await api.com.atproto.server.describeServer()
     if (serverInfo.did !== `did:web:${url.hostname}`) {
       // @TODO do bidirectional check once implemented. in the meantime,
       // matching did to hostname we're talking to is pretty good.
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: delivery } = await agent.api.com.atproto.admin.sendEmail(
+    const { data: delivery } = await api.com.atproto.admin.sendEmail(
       {
         subject,
         content,

@@ -12,8 +12,8 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     handler: async ({ input, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.resetPassword(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.server.resetPassword(
           input.body,
           authPassthru(req, true),
         )

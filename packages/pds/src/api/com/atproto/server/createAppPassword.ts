@@ -6,9 +6,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
     auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ auth, input, req }) => {
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.createAppPassword(
+          await ctx.entrywayApi.com.atproto.server.createAppPassword(
             input.body,
             authPassthru(req, true),
           ),

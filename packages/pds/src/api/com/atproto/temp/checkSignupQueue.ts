@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.checkSignupQueue({
     auth: ctx.authVerifier.accessDeactived,
     handler: async ({ req }) => {
-      if (!ctx.entrywayAgent) {
+      if (!ctx.entrywayApi) {
         return {
           encoding: 'application/json',
           body: {
@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
       return resultPassthru(
-        await ctx.entrywayAgent.com.atproto.temp.checkSignupQueue(
+        await ctx.entrywayApi.com.atproto.temp.checkSignupQueue(
           undefined,
           authPassthru(req),
         ),

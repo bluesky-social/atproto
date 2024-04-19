@@ -12,7 +12,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { resHeaders } from '../../../util'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
@@ -44,9 +44,9 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   const viewer = params.hydrateCtx.viewer
-  if (ctx.suggestionsAgent) {
+  if (ctx.suggestionsApi) {
     const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton({
+      await ctx.suggestionsApi.app.bsky.unspecced.getSuggestionsSkeleton({
         viewer: viewer ?? undefined,
         limit: params.limit,
         cursor: params.cursor,
@@ -115,7 +115,7 @@ const presentation = (input: {
 }
 
 type Context = {
-  suggestionsAgent: AtpAgent | undefined
+  suggestionsApi: AtpClient | undefined
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views

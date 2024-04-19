@@ -9,9 +9,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.signPlcOperation({
     auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ auth, input, req }) => {
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.identity.signPlcOperation(
+          await ctx.entrywayApi.com.atproto.identity.signPlcOperation(
             input.body,
             authPassthru(req, true),
           ),

@@ -6,43 +6,19 @@ export type Headers = Record<string, string>
 
 export interface CallOptions {
   encoding?: string
+  signal?: AbortSignal
   headers?: Headers
 }
 
-export interface FetchHandlerResponse {
-  status: number
-  headers: Headers
-  body: ArrayBuffer | undefined
-}
-
 export type FetchHandler = (
-  httpUri: string,
-  httpMethod: string,
-  httpHeaders: Headers,
-  httpReqBody: any,
-) => Promise<FetchHandlerResponse>
-
-/**
- * A {@link FetchAgent} is responsible for making HTTP requests to the right
- * service. It will typically be a wrapper around the browser's `fetch` API or
- * Node.js's `http` module. It will also handle any necessary authentication
- * parameters on the request. This can also be used to make the service's URL
- * dynamic, based on authentication for example.
- */
-export interface FetchAgent {
-  fetch: (
-    /**
-     * The URL (pathname + query parameters) to make the request to, without the
-     * origin. The origin (protocol, hostname, and port) must be added by this
-     * method, typically based on authentication or other factors. That logic will
-     * be handled by the {@link FetchAgent} implementation.
-     */
-    httpUrl: string,
-    httpMethod: string,
-    httpHeaders: Headers,
-    httpBody: unknown,
-  ) => Promise<FetchHandlerResponse>
-}
+  /**
+   * The URL (pathname + query parameters) to make the request to, without the
+   * origin. The origin (protocol, hostname, and port) must be added by this
+   * {@link FetchHandler}, typically based on authentication or other factors.
+   */
+  url: string,
+  init: RequestInit,
+) => Promise<Response>
 
 export const errorResponseBody = z.object({
   error: z.string().optional(),

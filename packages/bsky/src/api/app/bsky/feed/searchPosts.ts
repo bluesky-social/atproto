@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import {
@@ -43,10 +43,10 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
 
-  if (ctx.searchAgent) {
+  if (ctx.searchApi) {
     // @NOTE cursors wont change on appview swap
     const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
+      await ctx.searchApi.app.bsky.unspecced.searchPostsSkeleton({
         q: params.q,
         cursor: params.cursor,
         limit: params.limit,
@@ -115,7 +115,7 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchApi?: AtpClient
 }
 
 type Params = QueryParams & { hydrateCtx: HydrateCtx }

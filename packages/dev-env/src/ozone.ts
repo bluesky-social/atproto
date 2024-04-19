@@ -2,7 +2,7 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as plc from '@did-plc/lib'
 import * as ozone from '@atproto/ozone'
-import { AtpAgent } from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidAndKey, OzoneConfig } from './types'
@@ -103,8 +103,8 @@ export class TestOzone {
     return this.server.ctx
   }
 
-  getClient() {
-    return new AtpAgent({ service: this.url })
+  getApi() {
+    return new AtpClient(this.url)
   }
 
   getModClient() {

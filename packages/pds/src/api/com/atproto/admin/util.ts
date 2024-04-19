@@ -1,7 +1,7 @@
 import express from 'express'
 
-// Output designed to passed as second arg to AtpAgent methods.
-// The encoding field here is a quirk of the AtpAgent.
+// Output designed to passed as second arg to AtpClient methods.
+// The encoding field here is a quirk of the AtpClient.
 export function authPassthru(
   req: express.Request,
   withEncoding?: false,

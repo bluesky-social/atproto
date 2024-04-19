@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import AtpAgent, { AppBskyFeedDefs } from '@atproto/api'
+import { AppBskyFeedDefs, AtpClient } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Keypair } from '@atproto/crypto'
@@ -40,7 +40,7 @@ export class ModerationViews {
     private db: Database,
     private signingKey: Keypair,
     private signingKeyId: number,
-    private appviewAgent: AtpAgent,
+    private appviewApi: AtpClient,
     private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
 
@@ -49,7 +49,7 @@ export class ModerationViews {
     const auth = await this.appviewAuth()
     if (!auth) return new Map()
     try {
-      const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
+      const res = await this.appviewApi.com.atproto.admin.getAccountInfos(
         {
           dids: dedupeStrs(dids),
         },
@@ -234,7 +234,7 @@ export class ModerationViews {
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
         try {
-          const record = await this.appviewAgent.api.com.atproto.repo.getRecord(
+          const record = await this.appviewApi.com.atproto.repo.getRecord(
             {
               repo: uri.hostname,
               collection: uri.collection,
@@ -517,7 +517,7 @@ export class ModerationViews {
     if (!auth) return []
     const {
       data: { feed },
-    } = await this.appviewAgent.api.app.bsky.feed.getAuthorFeed({ actor }, auth)
+    } = await this.appviewApi.app.bsky.feed.getAuthorFeed({ actor }, auth)
 
     return feed
   }

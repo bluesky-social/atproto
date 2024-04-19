@@ -17,8 +17,8 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.admin.updateAccountEmail(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.admin.updateAccountEmail(
           input.body,
           authPassthru(req, true),
         )

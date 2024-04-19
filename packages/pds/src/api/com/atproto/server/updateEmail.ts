@@ -23,8 +23,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('account not found')
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.updateEmail(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.server.updateEmail(
           input.body,
           authPassthru(req, true),
         )

@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { SECOND } from '@atproto/common'
 import Database from '../db'
 import { RepoPushEventType } from '../db/schema/repo_push_event'
@@ -23,7 +23,7 @@ type AuthHeaders = {
 }
 
 type Service = {
-  agent: AtpAgent
+  api: AtpClient
   did: string
 }
 
@@ -59,13 +59,13 @@ export class EventPusher {
   ) {
     if (services.appview) {
       this.appview = {
-        agent: new AtpAgent({ service: services.appview.url }),
+        api: new AtpClient(services.appview.url),
         did: services.appview.did,
       }
     }
     if (services.pds) {
       this.pds = {
-        agent: new AtpAgent({ service: services.pds.url }),
+        api: new AtpClient(services.pds.url),
         did: services.pds.did,
       }
     }
@@ -165,7 +165,7 @@ export class EventPusher {
     const auth = await this.createAuthHeaders(service.did)
     try {
       await retryHttp(() =>
-        service.agent.com.atproto.admin.updateSubjectStatus(
+        service.api.com.atproto.admin.updateSubjectStatus(
           {
             subject,
             takedown: {

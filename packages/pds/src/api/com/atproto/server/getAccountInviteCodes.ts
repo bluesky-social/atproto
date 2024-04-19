@@ -9,9 +9,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
     auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ params, auth, req }) => {
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
+          await ctx.entrywayApi.com.atproto.server.getAccountInviteCodes(
             params,
             authPassthru(req),
           ),

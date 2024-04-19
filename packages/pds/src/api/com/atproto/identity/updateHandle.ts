@@ -24,11 +24,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input, req }) => {
       const requester = auth.credentials.did
 
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         // the full flow is:
         // -> entryway(identity.updateHandle) [update handle, submit plc op]
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
-        await ctx.entrywayAgent.com.atproto.identity.updateHandle(
+        await ctx.entrywayApi.com.atproto.identity.updateHandle(
           { did: requester, handle: input.body.handle },
           authPassthru(req, true),
         )

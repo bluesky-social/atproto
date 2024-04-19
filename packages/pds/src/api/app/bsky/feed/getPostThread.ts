@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
 import { Headers, XRPCError } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
@@ -184,10 +183,9 @@ const readAfterWriteNotFound = async (
   const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
   thread = await addPostsToThread(localViewer, thread, rest)
   const highestParent = getHighestParent(thread)
-  if (highestParent) {
+  if (highestParent && ctx.appViewApi) {
     try {
-      assert(ctx.appViewAgent)
-      const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
+      const parentsRes = await ctx.appViewApi.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
         await ctx.appviewAuthHeaders(requester),
       )

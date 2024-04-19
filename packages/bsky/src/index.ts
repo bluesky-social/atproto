@@ -5,7 +5,7 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
@@ -71,15 +71,15 @@ export class BskyAppView {
       )
     }
 
-    const searchAgent = config.searchUrl
-      ? new AtpAgent({ service: config.searchUrl })
+    const searchApi = config.searchUrl
+      ? new AtpClient(config.searchUrl)
       : undefined
 
-    const suggestionsAgent = config.suggestionsUrl
-      ? new AtpAgent({ service: config.suggestionsUrl })
+    const suggestionsApi = config.suggestionsUrl
+      ? new AtpClient(config.suggestionsUrl)
       : undefined
-    if (suggestionsAgent && config.suggestionsApiKey) {
-      suggestionsAgent.api.setHeader(
+    if (suggestionsApi && config.suggestionsApiKey) {
+      suggestionsApi.setHeader(
         'authorization',
         `Bearer ${config.suggestionsApiKey}`,
       )
@@ -117,8 +117,8 @@ export class BskyAppView {
     const ctx = new AppContext({
       cfg: config,
       dataplane,
-      searchAgent,
-      suggestionsAgent,
+      searchApi,
+      suggestionsApi,
       hydrator,
       views,
       signingKey,

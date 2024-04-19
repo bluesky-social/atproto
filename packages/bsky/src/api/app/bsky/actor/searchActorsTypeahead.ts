@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
@@ -50,9 +50,9 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   // add typeahead option
   // add hits total
 
-  if (ctx.searchAgent) {
+  if (ctx.searchApi) {
     const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+      await ctx.searchApi.app.bsky.unspecced.searchActorsSkeleton({
         typeahead: true,
         q: term,
         limit: params.limit,
@@ -105,7 +105,7 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchApi?: AtpClient
 }
 
 type Params = QueryParams & { hydrateCtx: HydrateCtx }

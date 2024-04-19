@@ -1,5 +1,9 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { BskyAgent, DEFAULT_LABEL_SETTINGS } from '..'
+import {
+  BskyAgent,
+  ComAtprotoServerXrpcAgent,
+  DEFAULT_LABEL_SETTINGS,
+} from '..'
 import './util/moderation-behavior'
 
 describe('agent', () => {
@@ -16,13 +20,17 @@ describe('agent', () => {
   })
 
   it('migrates legacy content-label prefs (no mutations)', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user1.test',
       email: 'user1@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.app.bsky.actor.putPreferences({
       preferences: [
@@ -86,13 +94,17 @@ describe('agent', () => {
   })
 
   it('adds/removes moderation services', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user5.test',
       email: 'user5@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.addLabeler('did:plc:other')
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
@@ -162,13 +174,17 @@ describe('agent', () => {
   })
 
   it('sets label preferences globally and per-moderator', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user7.test',
       email: 'user7@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.addLabeler('did:plc:other')
     await agent.setContentLabelPref('porn', 'ignore')
@@ -212,13 +228,17 @@ describe('agent', () => {
   })
 
   it(`updates label pref`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user8.test',
       email: 'user8@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.addLabeler('did:plc:other')
     await agent.setContentLabelPref('porn', 'ignore')
@@ -236,13 +256,17 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'graphic-media' in sync with 'gore'`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user9.test',
       email: 'user9@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.setContentLabelPref('graphic-media', 'hide')
     const a = await agent.getPreferences()
@@ -258,13 +282,17 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'porn' in sync with 'nsfw'`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user10.test',
       email: 'user10@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.setContentLabelPref('porn', 'hide')
     const a = await agent.getPreferences()
@@ -280,13 +308,17 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'sexual' in sync with 'suggestive'`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user11.test',
       email: 'user11@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.setContentLabelPref('sexual', 'hide')
     const a = await agent.getPreferences()
@@ -302,13 +334,17 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: filters out existing old label pref if double-written`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user12.test',
       email: 'user12@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.setContentLabelPref('nsfw', 'hide')
     await agent.setContentLabelPref('porn', 'hide')
@@ -321,13 +357,17 @@ describe('agent', () => {
   })
 
   it(`remaps old values to new on read`, async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
+    const xrpcAgent = new ComAtprotoServerXrpcAgent({
+      service: network.pds.url,
+    })
 
-    await agent.createAccount({
+    await xrpcAgent.createAccount({
       handle: 'user13.test',
       email: 'user13@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(xrpcAgent)
 
     await agent.setContentLabelPref('nsfw', 'hide')
     await agent.setContentLabelPref('gore', 'hide')

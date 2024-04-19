@@ -5,7 +5,7 @@ import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { AtpAgent } from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { NodeKeyset } from '@atproto/jwk-node'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
@@ -47,10 +47,10 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
   crawlers: Crawlers
-  appViewAgent?: AtpAgent
-  moderationAgent?: AtpAgent
-  reportingAgent?: AtpAgent
-  entrywayAgent?: AtpAgent
+  appViewApi?: AtpClient
+  moderationApi?: AtpClient
+  reportingApi?: AtpClient
+  entrywayApi?: AtpClient
   authProvider?: AuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -71,10 +71,10 @@ export class AppContext {
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent | undefined
-  public moderationAgent: AtpAgent | undefined
-  public reportingAgent: AtpAgent | undefined
-  public entrywayAgent: AtpAgent | undefined
+  public appViewApi: AtpClient | undefined
+  public moderationApi: AtpClient | undefined
+  public reportingApi: AtpClient | undefined
+  public entrywayApi: AtpClient | undefined
   public authVerifier: AuthVerifier
   public authProvider?: AuthProvider
   public plcRotationKey: crypto.Keypair
@@ -94,10 +94,10 @@ export class AppContext {
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
-    this.appViewAgent = opts.appViewAgent
-    this.moderationAgent = opts.moderationAgent
-    this.reportingAgent = opts.reportingAgent
-    this.entrywayAgent = opts.entrywayAgent
+    this.appViewApi = opts.appViewApi
+    this.moderationApi = opts.moderationApi
+    this.reportingApi = opts.reportingApi
+    this.entrywayApi = opts.entrywayApi
     this.authVerifier = opts.authVerifier
     this.authProvider = opts.authProvider
     this.plcRotationKey = opts.plcRotationKey
@@ -169,17 +169,17 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
-    const appViewAgent = cfg.bskyAppView
-      ? new AtpAgent({ service: cfg.bskyAppView.url })
+    const appViewApi = cfg.bskyAppView
+      ? new AtpClient({ service: cfg.bskyAppView.url })
       : undefined
-    const moderationAgent = cfg.modService
-      ? new AtpAgent({ service: cfg.modService.url })
+    const moderationApi = cfg.modService
+      ? new AtpClient({ service: cfg.modService.url })
       : undefined
-    const reportingAgent = cfg.reportService
-      ? new AtpAgent({ service: cfg.reportService.url })
+    const reportingApi = cfg.reportService
+      ? new AtpClient({ service: cfg.reportService.url })
       : undefined
-    const entrywayAgent = cfg.entryway
-      ? new AtpAgent({ service: cfg.entryway.url })
+    const entrywayApi = cfg.entryway
+      ? new AtpClient({ service: cfg.entryway.url })
       : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
@@ -207,7 +207,7 @@ export class AppContext {
 
     const localViewer = LocalViewer.creator({
       accountManager,
-      appViewAgent,
+      appViewApi,
       pdsHostname: cfg.service.hostname,
       appviewDid: cfg.bskyAppView?.did,
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
@@ -282,10 +282,10 @@ export class AppContext {
       backgroundQueue,
       redisScratch,
       crawlers,
-      appViewAgent,
-      moderationAgent,
-      reportingAgent,
-      entrywayAgent,
+      appViewApi,
+      moderationApi,
+      reportingApi,
+      entrywayApi,
       authVerifier,
       authProvider,
       plcRotationKey,

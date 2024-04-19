@@ -1,26 +1,26 @@
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import { AtpAgent } from './agent'
+import { AtpAgent } from './atp-agent'
 import {
-  AppBskyFeedPost,
-  AppBskyActorProfile,
   AppBskyActorDefs,
+  AppBskyActorProfile,
+  AppBskyFeedPost,
   AppBskyLabelerDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
-import {
-  BskyPreferences,
-  BskyFeedViewPreference,
-  BskyThreadViewPreference,
-  BskyInterestsPreference,
-} from './types'
+import { interpretLabelValueDefinitions } from './moderation'
+import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 import {
   InterpretedLabelValueDefinition,
   LabelPreference,
   ModerationPrefs,
 } from './moderation/types'
-import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
+import {
+  BskyFeedViewPreference,
+  BskyInterestsPreference,
+  BskyPreferences,
+  BskyThreadViewPreference,
+} from './types'
 import { sanitizeMutedWordValue } from './util'
-import { interpretLabelValueDefinitions } from './moderation'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -44,14 +44,6 @@ declare global {
 }
 
 export class BskyAgent extends AtpAgent {
-  clone() {
-    const inst = new BskyAgent({
-      service: this.service,
-    })
-    this.copyInto(inst)
-    return inst
-  }
-
   get app() {
     return this.api.app
   }
@@ -120,13 +112,13 @@ export class BskyAgent extends AtpAgent {
     prefs: BskyPreferences | ModerationPrefs | string[],
   ): Promise<Record<string, InterpretedLabelValueDefinition[]>> {
     // collect the labeler dids
-    let dids: string[] = BskyAgent.appLabelers
+    const dids = [...BskyAgent.appLabelers]
     if (isBskyPrefs(prefs)) {
-      dids = dids.concat(prefs.moderationPrefs.labelers.map((l) => l.did))
+      dids.push(...prefs.moderationPrefs.labelers.map((l) => l.did))
     } else if (isModPrefs(prefs)) {
-      dids = dids.concat(prefs.labelers.map((l) => l.did))
+      dids.push(...prefs.labelers.map((l) => l.did))
     } else {
-      dids = dids.concat(prefs)
+      dids.push(...prefs)
     }
 
     // fetch their definitions
@@ -151,20 +143,18 @@ export class BskyAgent extends AtpAgent {
     record: Partial<AppBskyFeedPost.Record> &
       Omit<AppBskyFeedPost.Record, 'createdAt'>,
   ) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
+
     record.createdAt = record.createdAt || new Date().toISOString()
     return this.api.app.bsky.feed.post.create(
-      { repo: this.session.did },
+      { repo },
       record as AppBskyFeedPost.Record,
     )
   }
 
   async deletePost(postUri: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    await this.ownDid()
+
     const postUrip = new AtUri(postUri)
     return await this.api.app.bsky.feed.post.delete({
       repo: postUrip.hostname,
@@ -173,11 +163,10 @@ export class BskyAgent extends AtpAgent {
   }
 
   async like(uri: string, cid: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
+
     return await this.api.app.bsky.feed.like.create(
-      { repo: this.session.did },
+      { repo },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
@@ -186,9 +175,8 @@ export class BskyAgent extends AtpAgent {
   }
 
   async deleteLike(likeUri: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    await this.ownDid()
+
     const likeUrip = new AtUri(likeUri)
     return await this.api.app.bsky.feed.like.delete({
       repo: likeUrip.hostname,
@@ -197,11 +185,10 @@ export class BskyAgent extends AtpAgent {
   }
 
   async repost(uri: string, cid: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
+
     return await this.api.app.bsky.feed.repost.create(
-      { repo: this.session.did },
+      { repo },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
@@ -210,9 +197,8 @@ export class BskyAgent extends AtpAgent {
   }
 
   async deleteRepost(repostUri: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    await this.ownDid()
+
     const repostUrip = new AtUri(repostUri)
     return await this.api.app.bsky.feed.repost.delete({
       repo: repostUrip.hostname,
@@ -221,11 +207,10 @@ export class BskyAgent extends AtpAgent {
   }
 
   async follow(subjectDid: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
+
     return await this.api.app.bsky.graph.follow.create(
-      { repo: this.session.did },
+      { repo },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
@@ -234,9 +219,8 @@ export class BskyAgent extends AtpAgent {
   }
 
   async deleteFollow(followUri: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    await this.ownDid()
+
     const followUrip = new AtUri(followUri)
     return await this.api.app.bsky.graph.follow.delete({
       repo: followUrip.hostname,
@@ -249,16 +233,14 @@ export class BskyAgent extends AtpAgent {
       existing: AppBskyActorProfile.Record | undefined,
     ) => AppBskyActorProfile.Record | Promise<AppBskyActorProfile.Record>,
   ) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
 
     let retriesRemaining = 5
     while (retriesRemaining >= 0) {
       // fetch existing
       const existing = await this.com.atproto.repo
         .getRecord({
-          repo: this.session.did,
+          repo,
           collection: 'app.bsky.actor.profile',
           rkey: 'self',
         })
@@ -279,7 +261,7 @@ export class BskyAgent extends AtpAgent {
       try {
         // attempt the put
         await this.com.atproto.repo.putRecord({
-          repo: this.session.did,
+          repo,
           collection: 'app.bsky.actor.profile',
           rkey: 'self',
           record: updated,
@@ -322,11 +304,10 @@ export class BskyAgent extends AtpAgent {
   }
 
   async blockModList(uri: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
+
     return await this.api.app.bsky.graph.listblock.create(
-      { repo: this.session.did },
+      { repo },
       {
         subject: uri,
         createdAt: new Date().toISOString(),
@@ -335,9 +316,8 @@ export class BskyAgent extends AtpAgent {
   }
 
   async unblockModList(uri: string) {
-    if (!this.session) {
-      throw new Error('Not logged in')
-    }
+    const repo = await this.ownDid()
+
     const listInfo = await this.api.app.bsky.graph.getList({
       list: uri,
       limit: 1,
@@ -347,7 +327,7 @@ export class BskyAgent extends AtpAgent {
     }
     const { rkey } = new AtUri(listInfo.data.list.viewer.blocked)
     return await this.api.app.bsky.graph.listblock.delete({
-      repo: this.session.did,
+      repo,
       rkey,
     })
   }

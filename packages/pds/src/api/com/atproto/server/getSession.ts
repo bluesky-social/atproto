@@ -9,9 +9,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
     auth: ctx.authVerifier.accessDeactived,
     handler: async ({ auth, req }) => {
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.getSession(
+          await ctx.entrywayApi.com.atproto.server.getSession(
             undefined,
             authPassthru(req),
           ),

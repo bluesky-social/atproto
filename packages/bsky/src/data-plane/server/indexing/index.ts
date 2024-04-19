@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent, { ComAtprotoSyncGetLatestCommit } from '@atproto/api'
+import { AtpClient, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import {
   readCarWithRoot,
   WriteOpAction,
@@ -155,7 +155,7 @@ export class IndexingService {
       did,
       true,
     )
-    const { api } = new AtpAgent({ service: pds })
+    const api = new AtpClient(pds)
 
     const { data: car } = await retryHttp(() =>
       api.com.atproto.sync.getRepo({ did }),
@@ -281,7 +281,7 @@ export class IndexingService {
     const doc = await this.idResolver.did.resolve(did, true)
     const pds = doc && getPds(doc)
     if (!pds) return false
-    const { api } = new AtpAgent({ service: pds })
+    const api = new AtpClient(pds)
     try {
       await retryHttp(() => api.com.atproto.sync.getLatestCommit({ did }))
       return true

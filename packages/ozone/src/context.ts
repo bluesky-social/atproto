@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { AtpAgent } from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
@@ -24,8 +24,8 @@ export type AppContextOptions = {
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
-  appviewAgent: AtpAgent
-  pdsAgent: AtpAgent | undefined
+  appviewApi: AtpClient
+  pdsApi: AtpClient | undefined
   blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
@@ -56,10 +56,8 @@ export class AppContext {
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
     const signingKeyId = await getSigningKeyId(db, signingKey.did())
-    const appviewAgent = new AtpAgent({ service: cfg.appview.url })
-    const pdsAgent = cfg.pds
-      ? new AtpAgent({ service: cfg.pds.url })
-      : undefined
+    const appviewApi = new AtpClient(cfg.appview.url)
+    const pdsApi = cfg.pds ? new AtpClient(cfg.pds.url) : undefined
 
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
@@ -90,7 +88,7 @@ export class AppContext {
       backgroundQueue,
       idResolver,
       eventPusher,
-      appviewAgent,
+      appviewApi,
       createAuthHeaders,
       overrides?.imgInvalidator,
     )
@@ -113,8 +111,8 @@ export class AppContext {
         cfg,
         modService,
         communicationTemplateService,
-        appviewAgent,
-        pdsAgent,
+        appviewApi,
+        pdsApi,
         signingKey,
         signingKeyId,
         idResolver,
@@ -156,12 +154,12 @@ export class AppContext {
     return this.opts.communicationTemplateService
   }
 
-  get appviewAgent(): AtpAgent {
-    return this.opts.appviewAgent
+  get appviewApi(): AtpClient {
+    return this.opts.appviewApi
   }
 
-  get pdsAgent(): AtpAgent | undefined {
-    return this.opts.pdsAgent
+  get pdsApi(): AtpClient | undefined {
+    return this.opts.pdsApi
   }
 
   get signingKey(): Keypair {

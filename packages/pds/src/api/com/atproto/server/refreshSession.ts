@@ -27,9 +27,9 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.refreshSession(
+          await ctx.entrywayApi.com.atproto.server.refreshSession(
             undefined,
             authPassthru(req),
           ),

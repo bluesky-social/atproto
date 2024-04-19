@@ -2,7 +2,7 @@ import util from 'util'
 import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
-import { AtpAgent } from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -49,7 +49,7 @@ export class LocalViewer {
   actorStore: ActorStoreReader
   accountManager: AccountManager
   pdsHostname: string
-  appViewAgent?: AtpAgent
+  appViewApi?: AtpClient
   appviewDid?: string
   appviewCdnUrlPattern?: string
 
@@ -57,7 +57,7 @@ export class LocalViewer {
     actorStore: ActorStoreReader
     accountManager: AccountManager
     pdsHostname: string
-    appViewAgent?: AtpAgent
+    appViewApi?: AtpClient
     appviewDid?: string
     appviewCdnUrlPattern?: string
   }) {
@@ -65,7 +65,7 @@ export class LocalViewer {
     this.actorStore = params.actorStore
     this.accountManager = params.accountManager
     this.pdsHostname = params.pdsHostname
-    this.appViewAgent = params.appViewAgent
+    this.appViewApi = params.appViewApi
     this.appviewDid = params.appviewDid
     this.appviewCdnUrlPattern = params.appviewCdnUrlPattern
   }
@@ -73,7 +73,7 @@ export class LocalViewer {
   static creator(params: {
     accountManager: AccountManager
     pdsHostname: string
-    appViewAgent?: AtpAgent
+    appViewApi?: AtpClient
     appviewDid?: string
     appviewCdnUrlPattern?: string
   }): LocalViewerCreator {
@@ -237,12 +237,12 @@ export class LocalViewer {
   private async formatRecordEmbedInternal(
     embed: EmbedRecord,
   ): Promise<null | ViewRecord | GeneratorView | ListView> {
-    if (!this.appViewAgent || !this.appviewDid) {
+    if (!this.appViewApi || !this.appviewDid) {
       return null
     }
     const collection = new AtUri(embed.record.uri).collection
     if (collection === ids.AppBskyFeedPost) {
-      const res = await this.appViewAgent.api.app.bsky.feed.getPosts(
+      const res = await this.appViewApi.app.bsky.feed.getPosts(
         { uris: [embed.record.uri] },
         await this.serviceAuthHeaders(this.did),
       )
@@ -259,7 +259,7 @@ export class LocalViewer {
         indexedAt: post.indexedAt,
       }
     } else if (collection === ids.AppBskyFeedGenerator) {
-      const res = await this.appViewAgent.api.app.bsky.feed.getFeedGenerator(
+      const res = await this.appViewApi.app.bsky.feed.getFeedGenerator(
         { feed: embed.record.uri },
         await this.serviceAuthHeaders(this.did),
       )
@@ -268,7 +268,7 @@ export class LocalViewer {
         ...res.data.view,
       }
     } else if (collection === ids.AppBskyGraphList) {
-      const res = await this.appViewAgent.api.app.bsky.graph.getList(
+      const res = await this.appViewApi.app.bsky.graph.getList(
         { list: embed.record.uri },
         await this.serviceAuthHeaders(this.did),
       )

@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
         plcOp,
         deactivated,
-      } = ctx.entrywayAgent
+      } = ctx.entrywayApi
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 

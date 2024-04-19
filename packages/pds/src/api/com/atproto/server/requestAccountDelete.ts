@@ -29,8 +29,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('account not found')
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.requestAccountDelete(
+      if (ctx.entrywayApi) {
+        await ctx.entrywayApi.com.atproto.server.requestAccountDelete(
           undefined,
           authPassthru(req),
         )

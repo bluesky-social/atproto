@@ -1,7 +1,7 @@
 import express from 'express'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ServerConfig } from './config'
@@ -23,8 +23,8 @@ export class AppContext {
     private opts: {
       cfg: ServerConfig
       dataplane: DataPlaneClient
-      searchAgent: AtpAgent | undefined
-      suggestionsAgent: AtpAgent | undefined
+      searchApi: AtpClient | undefined
+      suggestionsApi: AtpClient | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -43,12 +43,12 @@ export class AppContext {
     return this.opts.dataplane
   }
 
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
+  get searchApi(): AtpClient | undefined {
+    return this.opts.searchApi
   }
 
-  get suggestionsAgent(): AtpAgent | undefined {
-    return this.opts.suggestionsAgent
+  get suggestionsApi(): AtpClient | undefined {
+    return this.opts.suggestionsApi
   }
 
   get hydrator(): Hydrator {

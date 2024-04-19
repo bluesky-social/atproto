@@ -1,7 +1,7 @@
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { IdResolver } from '@atproto/identity'
-import AtpAgent from '@atproto/api'
+import { AtpClient } from '@atproto/api'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { EventPusher } from './event-pusher'
@@ -38,7 +38,7 @@ export class DaemonContext {
       plcUrl: cfg.identity.plcUrl,
     })
 
-    const appviewAgent = new AtpAgent({ service: cfg.appview.url })
+    const appviewApi = new AtpClient(cfg.appview.url)
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
@@ -60,7 +60,7 @@ export class DaemonContext {
       backgroundQueue,
       idResolver,
       eventPusher,
-      appviewAgent,
+      appviewApi,
       createAuthHeaders,
     )
 

@@ -10,8 +10,8 @@ export const resultPassthru = <T>(result: { headers: Headers; data: T }) => {
   }
 }
 
-// Output designed to passed as second arg to AtpAgent methods.
-// The encoding field here is a quirk of the AtpAgent.
+// Output designed to passed as second arg to AtpClient methods.
+// The encoding field here is a quirk of the AtpClient.
 export function authPassthru(
   req: IncomingMessage,
   withEncoding?: false,

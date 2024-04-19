@@ -25,8 +25,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (!account?.email) {
-        if (ctx.entrywayAgent) {
-          await ctx.entrywayAgent.com.atproto.server.requestPasswordReset(
+        if (ctx.entrywayApi) {
+          await ctx.entrywayApi.com.atproto.server.requestPasswordReset(
             input.body,
             authPassthru(req, true),
           )

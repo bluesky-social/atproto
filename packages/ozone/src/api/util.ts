@@ -25,12 +25,12 @@ export const getPdsAccountInfo = async (
   ctx: AppContext,
   did: string,
 ): Promise<AccountView | null> => {
-  const agent = ctx.pdsAgent
-  if (!agent) return null
+  const api = ctx.pdsApi
+  if (!api) return null
   const auth = await ctx.pdsAuth()
   if (!auth) return null
   try {
-    const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
+    const res = await api.com.atproto.admin.getAccountInfo({ did }, auth)
     return res.data
   } catch {
     return null

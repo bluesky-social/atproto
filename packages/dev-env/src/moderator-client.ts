@@ -1,7 +1,8 @@
-import AtpAgent, {
+import {
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
+  AtpClient,
 } from '@atproto/api'
 import { TestOzone } from './ozone'
 
@@ -11,13 +12,13 @@ type QueryEventsParams = QueryModerationEvents.QueryParams
 type ModLevel = 'admin' | 'moderator' | 'triage'
 
 export class ModeratorClient {
-  agent: AtpAgent
+  api: AtpClient
   constructor(public ozone: TestOzone) {
-    this.agent = ozone.getClient()
+    this.api = ozone.getApi()
   }
 
   async getEvent(id: number, role?: ModLevel) {
-    const result = await this.agent.api.tools.ozone.moderation.getEvent(
+    const result = await this.api.tools.ozone.moderation.getEvent(
       { id },
       {
         headers: await this.ozone.modHeaders(role),
@@ -27,22 +28,16 @@ export class ModeratorClient {
   }
 
   async queryStatuses(input: QueryStatusesParams, role?: ModLevel) {
-    const result = await this.agent.api.tools.ozone.moderation.queryStatuses(
-      input,
-      {
-        headers: await this.ozone.modHeaders(role),
-      },
-    )
+    const result = await this.api.tools.ozone.moderation.queryStatuses(input, {
+      headers: await this.ozone.modHeaders(role),
+    })
     return result.data
   }
 
   async queryEvents(input: QueryEventsParams, role?: ModLevel) {
-    const result = await this.agent.api.tools.ozone.moderation.queryEvents(
-      input,
-      {
-        headers: await this.ozone.modHeaders(role),
-      },
-    )
+    const result = await this.api.tools.ozone.moderation.queryEvents(input, {
+      headers: await this.ozone.modHeaders(role),
+    })
     return result.data
   }
 
@@ -64,7 +59,7 @@ export class ModeratorClient {
       reason = 'X',
       createdBy = 'did:example:admin',
     } = opts
-    const result = await this.agent.api.tools.ozone.moderation.emitEvent(
+    const result = await this.api.tools.ozone.moderation.emitEvent(
       { event, subject, subjectBlobCids, createdBy, reason },
       {
         encoding: 'application/json',
@@ -84,7 +79,7 @@ export class ModeratorClient {
     role?: ModLevel,
   ) {
     const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.tools.ozone.moderation.emitEvent(
+    const result = await this.api.tools.ozone.moderation.emitEvent(
       {
         subject,
         event: {

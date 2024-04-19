@@ -31,10 +31,10 @@ export async function generateMockSetup(env: TestNetwork) {
   }
 
   const clients = {
-    loggedout: env.pds.getClient(),
-    alice: env.pds.getClient(),
-    bob: env.pds.getClient(),
-    carla: env.pds.getClient(),
+    loggedout: env.pds.buildAgent(),
+    alice: env.pds.buildAgent(),
+    bob: env.pds.buildAgent(),
+    carla: env.pds.buildAgent(),
   }
   interface User {
     email: string
@@ -357,7 +357,7 @@ export async function generateMockSetup(env: TestNetwork) {
       handle: 'mod-authority.test',
       password: 'hunter2',
     })
-    const agent = env.pds.getClient()
+    const agent = env.pds.buildAgent()
     agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     await agent.api.app.bsky.actor.profile.create(
       { repo: res.data.did },
@@ -679,7 +679,7 @@ export async function generateMockSetup(env: TestNetwork) {
       handle: 'labeler.test',
       password: 'hunter2',
     })
-    const agent = env.pds.getClient()
+    const agent = env.pds.buildAgent()
     agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     await agent.api.app.bsky.actor.profile.create(
       { repo: res.data.did },

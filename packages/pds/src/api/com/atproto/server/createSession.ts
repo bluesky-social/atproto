@@ -7,7 +7,7 @@ import { authPassthru, resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  const { entrywayAgent } = ctx
+  const { entrywayApi } = ctx
 
   server.com.atproto.server.createSession({
     rateLimit: [
@@ -22,10 +22,10 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
-    handler: entrywayAgent
+    handler: entrywayApi
       ? async ({ input, req }) => {
           return resultPassthru(
-            await entrywayAgent.com.atproto.server.createSession(
+            await entrywayApi.com.atproto.server.createSession(
               input.body,
               authPassthru(req, true),
             ),

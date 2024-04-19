@@ -6,9 +6,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.listAppPasswords({
     auth: ctx.authVerifier.access,
     handler: async ({ auth, req }) => {
-      if (ctx.entrywayAgent) {
+      if (ctx.entrywayApi) {
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.listAppPasswords(
+          await ctx.entrywayApi.com.atproto.server.listAppPasswords(
             undefined,
             authPassthru(req),
           ),

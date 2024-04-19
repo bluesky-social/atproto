@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const res = await ctx.appviewAgent.api.app.bsky.actor.searchActors(
+      const res = await ctx.appviewApi.app.bsky.actor.searchActors(
         params,
         await ctx.appviewAuth(),
       )
