@@ -5,7 +5,7 @@ import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import stream from 'stream'
 
-export type S3Config = { bucket: string } & Omit<
+export type S3Config = { bucket: string; uploadTimeoutMs?: number } & Omit<
   aws.S3ClientConfig,
   'apiVersion'
 >
@@ -16,13 +16,15 @@ export type S3Config = { bucket: string } & Omit<
 export class S3BlobStore implements BlobStore {
   private client: aws.S3
   private bucket: string
+  private uploadTimeoutMs: number
 
   constructor(
     public did: string,
     cfg: S3Config,
   ) {
-    const { bucket, ...rest } = cfg
+    const { bucket, uploadTimeoutMs, ...rest } = cfg
     this.bucket = bucket
+    this.uploadTimeoutMs = uploadTimeoutMs ?? 10000
     this.client = new aws.S3({
       ...rest,
       apiVersion: '2006-03-01',
@@ -53,12 +55,13 @@ export class S3BlobStore implements BlobStore {
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
     const key = this.genKey()
+    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
     const abortController = new AbortController()
     const timeout = setTimeout(
-      () => abortController.abort('upload timed out'),
-      10000,
+      () => abortController.abort(),
+      this.uploadTimeoutMs,
     )
-    await new Upload({
+    const upload = new Upload({
       client: this.client,
       params: {
         Bucket: this.bucket,
@@ -67,8 +70,12 @@ export class S3BlobStore implements BlobStore {
       },
       // @ts-ignore native implementation fine in node >=15
       abortController,
-    }).done()
-    clearTimeout(timeout)
+    })
+    try {
+      await upload.done()
+    } finally {
+      clearTimeout(timeout)
+    }
     return key
   }
 
@@ -89,14 +96,27 @@ export class S3BlobStore implements BlobStore {
     cid: CID,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
-    await new Upload({
+    // @NOTE abort results in error from aws-sdk "Upload aborted." with name "AbortError"
+    const abortController = new AbortController()
+    const timeout = setTimeout(
+      () => abortController.abort(),
+      this.uploadTimeoutMs,
+    )
+    const upload = new Upload({
       client: this.client,
       params: {
         Bucket: this.bucket,
         Body: bytes,
         Key: this.getStoredPath(cid),
       },
-    }).done()
+      // @ts-ignore native implementation fine in node >=15
+      abortController,
+    })
+    try {
+      await upload.done()
+    } finally {
+      clearTimeout(timeout)
+    }
   }
 
   async quarantine(cid: CID): Promise<void> {
