@@ -5,6 +5,7 @@ import {
   AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
+import { AppBskyActorDefs } from '../dist'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -1378,6 +1379,11 @@ describe('agent', () => {
             ],
           },
           {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+            saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          },
+          {
             $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
             items: [
               {
@@ -1756,6 +1762,33 @@ describe('agent', () => {
         const prefs = await agent.getPreferences()
         expect(prefs.feeds.saved).not.toContain(feed)
       })
+
+      it(`updateSavedFeeds: dedupes, takes last`, async () => {
+        const a = feedUri()
+        const b = feedUri()
+        await agent.updateSavedFeeds([
+          {
+            type: 'feed',
+            value: a,
+            pinned: true,
+          },
+          {
+            type: 'feed',
+            value: a,
+            pinned: false,
+          },
+          {
+            type: 'feed',
+            value: b,
+            pinned: true,
+          },
+        ])
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds.saved).toContain(a)
+        expect(prefs.feeds.saved).toContain(b)
+        expect(prefs.feeds.pinned).not.toContain(a)
+        expect(prefs.feeds.pinned).toContain(b)
+      })
     })
 
     describe(`savedFeedsPrefV2 migration scenarios`, () => {
@@ -1769,6 +1802,12 @@ describe('agent', () => {
           handle: 'user10.test',
           email: 'user10@test.com',
           password: 'password',
+        })
+      })
+
+      beforeEach(async () => {
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [],
         })
       })
 
@@ -1803,7 +1842,102 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
             items: [],
           },
+          {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            pinned: [],
+            saved: [],
+          },
         ])
+      })
+
+      it('writes to v2 persist to v1, writes to v1 persist but not to v2', async () => {
+        const a = feedUri()
+        const b = feedUri()
+        const c = feedUri()
+        const d = feedUri()
+        const e = feedUri()
+
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: [a, b],
+              saved: [a, b],
+            },
+          ],
+        })
+
+        // client updates, migrates to v2
+        await agent.getPreferences()
+
+        // new write to v2
+        await agent.upsertSavedFeed({
+          type: 'feed',
+          value: c,
+          pinned: false,
+        })
+
+        // v2 write wrote to v1 also
+        const res1 = await agent.app.bsky.actor.getPreferences()
+        const v1Pref = res1.data.preferences.find((p) =>
+          AppBskyActorDefs.isSavedFeedsPref(p),
+        )
+        expect(v1Pref).toStrictEqual({
+          $type: 'app.bsky.actor.defs#savedFeedsPref',
+          pinned: [a, b],
+          saved: [a, b, c],
+        })
+        // const temp = await agent.app.bsky.actor.getPreferences()
+        // console.log(JSON.stringify(temp.data.preferences, null, '  '))
+        // return
+
+        // v1 write occurs
+        const res2 = await agent.app.bsky.actor.getPreferences()
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [
+            ...res2.data.preferences.filter(
+              (p) => !AppBskyActorDefs.isSavedFeedsPref(p),
+            ),
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: [a, b],
+              saved: [a, b, c, d],
+            },
+          ],
+        })
+
+        const res3 = await agent.app.bsky.actor.getPreferences()
+        const v1Pref3 = res3.data.preferences.find((p) =>
+          AppBskyActorDefs.isSavedFeedsPref(p),
+        )
+        expect(v1Pref3).toStrictEqual({
+          $type: 'app.bsky.actor.defs#savedFeedsPref',
+          pinned: [a, b],
+          saved: [a, b, c, d],
+        })
+        // v2 reads, not updated with v1 write
+        const prefs = await agent.getPreferences()
+        expect(prefs.feeds).toStrictEqual({
+          pinned: [a, b],
+          saved: [a, b, c],
+        })
+
+        // another new write to v2
+        await agent.upsertSavedFeed({
+          type: 'feed',
+          value: e,
+          pinned: true,
+        })
+
+        const res4 = await agent.app.bsky.actor.getPreferences()
+        const v1Pref4 = res4.data.preferences.find((p) =>
+          AppBskyActorDefs.isSavedFeedsPref(p),
+        )
+        expect(v1Pref4).toStrictEqual({
+          $type: 'app.bsky.actor.defs#savedFeedsPref',
+          pinned: [a, b, e],
+          saved: [a, b, c, d, e],
+        })
       })
     })
 

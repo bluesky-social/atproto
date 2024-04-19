@@ -481,18 +481,11 @@ export class BskyAgent extends AtpAgent {
       }) as AppBskyActorDefs.SavedFeedsPref | undefined
 
       if (legacySavedFeedsPref) {
-        const migratedSavedFeeds: AppBskyActorDefs.SavedFeed[] = [
-          ...legacySavedFeedsPref.saved.map((uri) =>
-            uriToSavedFeed(uri, { pinned: false }),
-          ),
-          ...legacySavedFeedsPref.pinned.map((uri) =>
-            uriToSavedFeed(uri, { pinned: true }),
-          ),
-        ]
-        await updateFeedPreferences(this, () => migratedSavedFeeds, {
-          removeLegacySavedFeedsPref: true,
-        })
-        prefs.feeds = savedFeedsV2ToV1(migratedSavedFeeds)
+        const migratedSavedFeeds = await this.setSavedFeeds(
+          legacySavedFeedsPref.saved,
+          legacySavedFeedsPref.pinned,
+        )
+        prefs.feeds = migratedSavedFeeds
       }
     }
 
@@ -522,7 +515,13 @@ export class BskyAgent extends AtpAgent {
 
   async updateSavedFeeds(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
     savedFeeds.forEach(validateSavedFeed)
-    return updateFeedPreferences(this, () => savedFeeds)
+    const uniqueSavedFeeds = new Map<string, AppBskyActorDefs.SavedFeed>()
+    savedFeeds.forEach((feed) => {
+      uniqueSavedFeeds.set(feed.value, feed)
+    })
+    return updateFeedPreferences(this, () =>
+      Array.from(uniqueSavedFeeds.values()),
+    )
   }
 
   async upsertSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
@@ -544,10 +543,10 @@ export class BskyAgent extends AtpAgent {
    * @deprecated use `updateSavedFeeds`
    */
   async setSavedFeeds(saved: string[], pinned: string[]) {
-    const savedFeeds: AppBskyActorDefs.SavedFeed[] = []
+    const savedFeeds: Map<string, AppBskyActorDefs.SavedFeed> = new Map()
 
     for (const uri of saved) {
-      savedFeeds.push({
+      savedFeeds.set(uri, {
         type: getSavedFeedType(uri),
         value: uri,
         pinned: false,
@@ -555,14 +554,14 @@ export class BskyAgent extends AtpAgent {
     }
 
     for (const uri of pinned) {
-      savedFeeds.push({
+      savedFeeds.set(uri, {
         type: getSavedFeedType(uri),
         value: uri,
         pinned: true,
       })
     }
 
-    return this.updateSavedFeeds(savedFeeds)
+    return this.updateSavedFeeds(Array.from(savedFeeds.values()))
   }
 
   /**
@@ -1000,28 +999,30 @@ async function updateFeedPreferences(
   cb: (
     savedFeedsPref: AppBskyActorDefs.SavedFeed[],
   ) => AppBskyActorDefs.SavedFeed[],
-  options?: {
-    removeLegacySavedFeedsPref?: boolean
-  },
 ): Promise<{ saved: string[]; pinned: string[] }> {
   let maybeMutatedSavedFeeds: AppBskyActorDefs.SavedFeed[] = []
 
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
-    let existingFeedsPref = prefs.findLast(
+    let existingV2Pref = prefs.findLast(
       (pref) =>
         AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
         AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success,
     ) as AppBskyActorDefs.SavedFeedsPrefV2 | undefined
+    let existingV1Pref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isSavedFeedsPref(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPref(pref).success,
+    ) as AppBskyActorDefs.SavedFeedsPref | undefined
 
-    if (existingFeedsPref) {
-      maybeMutatedSavedFeeds = cb(existingFeedsPref.items)
-      existingFeedsPref = {
-        ...existingFeedsPref,
+    if (existingV2Pref) {
+      maybeMutatedSavedFeeds = cb(existingV2Pref.items)
+      existingV2Pref = {
+        ...existingV2Pref,
         items: maybeMutatedSavedFeeds,
       }
     } else {
       maybeMutatedSavedFeeds = cb([])
-      existingFeedsPref = {
+      existingV2Pref = {
         $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
         items: maybeMutatedSavedFeeds,
       }
@@ -1029,13 +1030,20 @@ async function updateFeedPreferences(
 
     let updatedPrefs = prefs
       .filter((pref) => !AppBskyActorDefs.isSavedFeedsPrefV2(pref))
-      .concat(existingFeedsPref)
+      .concat(existingV2Pref)
 
-    if (options?.removeLegacySavedFeedsPref) {
-      // remove the legacy saved feeds pref
-      updatedPrefs = updatedPrefs.filter(
-        (pref) => !AppBskyActorDefs.isSavedFeedsPref(pref),
-      )
+    if (existingV1Pref) {
+      const { saved, pinned } = existingV1Pref
+      const v2Compat = savedFeedsV2ToV1(existingV2Pref.items)
+      existingV1Pref = {
+        ...existingV1Pref,
+        saved: Array.from(new Set([...saved, ...v2Compat.saved])),
+        pinned: Array.from(new Set([...pinned, ...v2Compat.pinned])),
+      }
+
+      updatedPrefs = updatedPrefs
+        .filter((pref) => !AppBskyActorDefs.isSavedFeedsPref(pref))
+        .concat(existingV1Pref)
     }
 
     return updatedPrefs
