@@ -71,7 +71,11 @@ export class S3BlobStore implements BlobStore {
       // @ts-ignore native implementation fine in node >=15
       abortController,
     })
-    await upload.done().finally(() => clearTimeout(timeout))
+    try {
+      await upload.done()
+    } finally {
+      clearTimeout(timeout)
+    }
     return key
   }
 
@@ -108,7 +112,11 @@ export class S3BlobStore implements BlobStore {
       // @ts-ignore native implementation fine in node >=15
       abortController,
     })
-    await upload.done().finally(() => clearTimeout(timeout))
+    try {
+      await upload.done()
+    } finally {
+      clearTimeout(timeout)
+    }
   }
 
   async quarantine(cid: CID): Promise<void> {
