@@ -5,7 +5,7 @@ import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import stream from 'stream'
 
-export type S3Config = { bucket: string } & Omit<
+export type S3Config = { bucket: string; uploadTimeoutMs?: number } & Omit<
   aws.S3ClientConfig,
   'apiVersion'
 >
@@ -16,13 +16,15 @@ export type S3Config = { bucket: string } & Omit<
 export class S3BlobStore implements BlobStore {
   private client: aws.S3
   private bucket: string
+  private uploadTimeoutMs: number
 
   constructor(
     public did: string,
     cfg: S3Config,
   ) {
-    const { bucket, ...rest } = cfg
+    const { bucket, uploadTimeoutMs, ...rest } = cfg
     this.bucket = bucket
+    this.uploadTimeoutMs = uploadTimeoutMs ?? 10000
     this.client = new aws.S3({
       ...rest,
       apiVersion: '2006-03-01',
@@ -56,7 +58,7 @@ export class S3BlobStore implements BlobStore {
     const abortController = new AbortController()
     const timeout = setTimeout(
       () => abortController.abort('upload timed out'),
-      10000,
+      this.uploadTimeoutMs,
     )
     await new Upload({
       client: this.client,
