@@ -38,19 +38,19 @@ export class AtpAgent {
 
   // Caches the URL instance so it doesn't have to keep recreating it every time
   protected _pdsUrl?: URL
+  protected _pdsUrlRaw?: string
 
   // The PDS URL, driven by the did doc. May be undefined.
   get pdsUrl(): URL | undefined {
     const rawUrl = this.session?.pdsUrl
 
-    // Check if our cached URL instance matches, `this._pdsUrl?.href` can
-    // return undefined as it's doing an optional chain, which works for our
-    // use case if `session?.pdsUrl` is returning undefined as well.
-    if (rawUrl === this._pdsUrl?.href) {
+    if (rawUrl === this._pdsUrlRaw) {
       return this._pdsUrl
     }
 
-    return (this._pdsUrl = rawUrl ? new URL(rawUrl) : undefined)
+    this._pdsUrlRaw = rawUrl
+    this._pdsUrl = rawUrl ? new URL(rawUrl) : undefined
+    return this._pdsUrl
   }
 
   protected _baseClient: AtpBaseClient
