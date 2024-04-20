@@ -36,10 +36,17 @@ export class AtpAgent {
   labelersHeader: string[] = []
   proxyHeader: string | undefined
 
+  // Caches the URL instance so it doesn't have to keep recreating it every time
+  protected _pdsUrl?: URL
+
   // The PDS URL, driven by the did doc. May be undefined.
   get pdsUrl(): URL | undefined {
     const rawUrl = this.session?.pdsUrl
-    return rawUrl ? new URL(rawUrl) : undefined
+    if (rawUrl === this._pdsUrl?.href) {
+      return this._pdsUrl
+    }
+
+    return (this._pdsUrl = rawUrl ? new URL(rawUrl) : undefined)
   }
 
   protected _baseClient: AtpBaseClient
