@@ -93,6 +93,8 @@ export class AtpAgent {
     this._baseClient.xrpc.fetch = this._fetch.bind(this) // patch its fetch implementation
     this.api = this._baseClient.service(opts.service)
 
+    // Disable `no-this-alias` because we're pulling in a getter
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const _this = this
 
     // Monkey-patch the `uri` property so it'll grab the PDS URL when available.
