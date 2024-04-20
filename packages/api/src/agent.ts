@@ -164,7 +164,12 @@ export class AtpAgent {
   ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
       const res = await this.api.com.atproto.server.createAccount(opts)
-      this._updateSession(res.data)
+      this._updateSession({
+        ...res.data,
+        email: opts.email,
+        emailConfirmed: false,
+        emailAuthFactor: false,
+      })
       return res
     } catch (e) {
       this.session = undefined
