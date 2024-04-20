@@ -42,6 +42,10 @@ export class AtpAgent {
   // The PDS URL, driven by the did doc. May be undefined.
   get pdsUrl(): URL | undefined {
     const rawUrl = this.session?.pdsUrl
+
+    // Check if our cached URL instance matches, `this._pdsUrl?.href` can
+    // return undefined as it's doing an optional chain, which works for our
+    // use case if `session?.pdsUrl` is returning undefined as well.
     if (rawUrl === this._pdsUrl?.href) {
       return this._pdsUrl
     }
