@@ -38,6 +38,7 @@ describe('admin repo search view', () => {
         did: sc.dids['cara-wiegand69.test'],
       },
     })
+    await network.ozone.processAll()
   })
 
   it('gives relevant results', async () => {
@@ -51,7 +52,7 @@ describe('admin repo search view', () => {
     const shouldContain = [
       'cara-wiegand69.test', // Present despite repo takedown
       'carlos6.test',
-      'carolina-mcdermott77.test',
+      'carolina-mcderm77.test',
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))

@@ -8,11 +8,25 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import { AppBskyFeedGetPostThread } from '@atproto/api'
 import {
   LabelerView,
   isLabelerView,
   isLabelerViewDetailed,
 } from '../src/lexicon/types/app/bsky/labeler/defs'
+
+type ThreadViewPost = Extract<
+  AppBskyFeedGetPostThread.OutputSchema['thread'],
+  { post: { uri: string } }
+>
+
+export function assertIsThreadViewPost(
+  value: unknown,
+): asserts value is ThreadViewPost {
+  expect(value).toMatchObject({
+    $type: 'app.bsky.feed.defs#threadViewPost',
+  })
+}
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -164,16 +178,16 @@ export const stripViewerFromPost = (postUnknown: unknown): PostView => {
     post.embed && isViewRecord(post.embed.record)
       ? post.embed.record // Record from record embed
       : post.embed?.['record'] && isViewRecord(post.embed['record']['record'])
-      ? post.embed['record']['record'] // Record from record-with-media embed
-      : undefined
+        ? post.embed['record']['record'] // Record from record-with-media embed
+        : undefined
   if (recordEmbed) {
     recordEmbed.author = stripViewer(recordEmbed.author)
     recordEmbed.embeds?.forEach((deepEmbed) => {
       const deepRecordEmbed = isViewRecord(deepEmbed.record)
         ? deepEmbed.record // Record from record embed
         : deepEmbed['record'] && isViewRecord(deepEmbed['record']['record'])
-        ? deepEmbed['record']['record'] // Record from record-with-media embed
-        : undefined
+          ? deepEmbed['record']['record'] // Record from record-with-media embed
+          : undefined
       if (deepRecordEmbed) {
         deepRecordEmbed.author = stripViewer(deepRecordEmbed.author)
       }

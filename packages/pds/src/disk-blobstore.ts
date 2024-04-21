@@ -141,7 +141,9 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async deleteAll(): Promise<void> {
-    await rmIfExists(this.location, true)
+    await rmIfExists(path.join(this.location, this.did), true)
+    await rmIfExists(path.join(this.tmpLocation, this.did), true)
+    await rmIfExists(path.join(this.quarantineLocation, this.did), true)
   }
 }
 

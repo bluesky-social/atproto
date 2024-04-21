@@ -7,7 +7,10 @@ import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobReader {
-  constructor(public db: ActorDb, public blobstore: BlobStore) {}
+  constructor(
+    public db: ActorDb,
+    public blobstore: BlobStore,
+  ) {}
 
   async getBlob(
     cid: CID,

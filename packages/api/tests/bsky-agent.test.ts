@@ -1582,6 +1582,13 @@ describe('agent', () => {
         expect(end.mutedWords.find((m) => m.value === '##️⃣')).toBeFalsy()
       })
 
+      it(`apostrophe: Bluesky's`, async () => {
+        await agent.upsertMutedWords([{ value: `Bluesky's`, targets: [] }])
+        const { mutedWords } = (await agent.getPreferences()).moderationPrefs
+
+        expect(mutedWords.find((m) => m.value === `Bluesky's`)).toBeTruthy()
+      })
+
       describe(`invalid characters`, () => {
         it('zero width space', async () => {
           const prev = (await agent.getPreferences()).moderationPrefs

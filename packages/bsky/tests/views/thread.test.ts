@@ -1,8 +1,10 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, stripViewerFromThread } from '../_util'
-import assert from 'assert'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import {
+  assertIsThreadViewPost,
+  forSnapshot,
+  stripViewerFromThread,
+} from '../_util'
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -164,12 +166,12 @@ describe('pds thread views', () => {
         { uri: goodReply1.ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    assert(isThreadViewPost(goodReply1Thread.thread))
-    assert(isThreadViewPost(goodReply1Thread.thread.parent))
+    assertIsThreadViewPost(goodReply1Thread.thread)
+    assertIsThreadViewPost(goodReply1Thread.thread.parent)
     expect(goodReply1Thread.thread.parent.post.uri).toEqual(goodRoot.ref.uriStr)
     expect(
       goodReply1Thread.thread.replies?.map((r) => {
-        assert(isThreadViewPost(r))
+        assertIsThreadViewPost(r)
         return r.post.uri
       }),
     ).toEqual([
@@ -182,7 +184,7 @@ describe('pds thread views', () => {
         { uri: badReply.ref.uriStr },
         { headers: await network.serviceHeaders(alice) },
       )
-    assert(isThreadViewPost(badReplyThread.thread))
+    assertIsThreadViewPost(badReplyThread.thread)
     expect(badReplyThread.thread.parent).toBeUndefined() // is not goodReply1
   })
 
@@ -192,7 +194,8 @@ describe('pds thread views', () => {
       { headers: await network.serviceHeaders(bob) },
     )
 
-    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    assertIsThreadViewPost(thread.thread)
+
     const post = thread.thread.post
 
     const postSelfLabels = post.labels

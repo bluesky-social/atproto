@@ -19,6 +19,7 @@ describe('account', () => {
         inviteEpoch: Date.now() - 3 * DAY,
       },
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getClient()
   })

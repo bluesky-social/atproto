@@ -18,6 +18,7 @@ import {
   ReasonRepost,
   ThreadViewPost,
   ThreadgateView,
+  isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
@@ -101,9 +102,9 @@ export class Views {
             cidFromBlobJson(actor.profile.banner),
           )
         : undefined,
-      followersCount: profileAggs?.followers,
-      followsCount: profileAggs?.follows,
-      postsCount: profileAggs?.posts,
+      followersCount: profileAggs?.followers ?? 0,
+      followsCount: profileAggs?.follows ?? 0,
+      postsCount: profileAggs?.posts ?? 0,
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
@@ -155,6 +156,9 @@ export class Views {
             cidFromBlobJson(actor.profile.avatar),
           )
         : undefined,
+      // associated.feedgens and associated.lists info not necessarily included
+      // on profile and profile-basic views, but should be on profile-detailed.
+      associated: actor?.isLabeler ? { labeler: true } : undefined,
       viewer: this.profileViewer(did, state),
       labels,
     }
@@ -293,7 +297,7 @@ export class Views {
       uri,
       cid: labeler.cid.toString(),
       creator,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
       viewer: viewer
         ? {
             like: viewer.like,
@@ -330,16 +334,23 @@ export class Views {
     originatorBlocked: boolean
     authorMuted: boolean
     authorBlocked: boolean
+    parentAuthorBlocked: boolean
   } {
     const authorDid = creatorFromUri(item.post.uri)
     const originatorDid = item.repost
       ? creatorFromUri(item.repost.uri)
       : authorDid
+    const post = state.posts?.get(item.post.uri)
+    const parentUri = post?.record.reply?.parent.uri
+    const parentAuthorDid = parentUri && creatorFromUri(parentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
+      parentAuthorBlocked: parentAuthorDid
+        ? this.viewerBlockExists(parentAuthorDid, state)
+        : false,
     }
   }
 
@@ -368,7 +379,7 @@ export class Views {
             cidFromBlobJson(feedgen.record.avatar),
           )
         : undefined,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
       labels,
       viewer: viewer
         ? {
@@ -424,9 +435,9 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
-      replyCount: aggs?.replies,
-      repostCount: aggs?.reposts,
-      likeCount: aggs?.likes,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
       indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {
@@ -466,35 +477,28 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
-    // don't hydrate reply if there isn't it violates a block
-    if (state.postBlocks?.get(uri)?.reply) return undefined
+  replyRef(uri: string, state: HydrationState) {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
-    const root = this.maybePost(
-      postRecord.reply.root.uri,
-      state,
-      usePostViewUnion,
-    )
-    const parent = this.maybePost(
-      postRecord.reply.parent.uri,
-      state,
-      usePostViewUnion,
-    )
+    let root = this.maybePost(postRecord.reply.root.uri, state)
+    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
+      parent = this.blockedPost(parent.uri, parent.author.did, state)
+      // in a reply to the root of a thread, parent and root are the same post.
+      if (root.uri === parent.uri) {
+        root = parent
+      }
+    }
     return root && parent ? { root, parent } : undefined
   }
 
-  maybePost(
-    uri: string,
-    state: HydrationState,
-    usePostViewUnion = false,
-  ): MaybePostView | undefined {
+  maybePost(uri: string, state: HydrationState): MaybePostView {
     const post = this.post(uri, state)
-    if (!post) return usePostViewUnion ? this.notFoundPost(uri) : undefined
+    if (!post) {
+      return this.notFoundPost(uri)
+    }
     if (this.viewerBlockExists(post.author.did, state)) {
-      return usePostViewUnion
-        ? this.blockedPost(uri, post.author.did, state)
-        : undefined
+      return this.blockedPost(uri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
@@ -756,6 +760,9 @@ export class Views {
       author: postView.author,
       value: postView.record,
       labels: postView.labels,
+      likeCount: postView.likeCount,
+      replyCount: postView.replyCount,
+      repostCount: postView.repostCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }

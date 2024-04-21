@@ -151,12 +151,14 @@ describe('ozone query labels', () => {
     const newSigningKey = await Secp256k1Keypair.create()
     const newSigningKeyId = await getSigningKeyId(ctx.db, newSigningKey.did())
     ctx.devOverride({
+      // @ts-ignore
       modService: ModerationService.creator(
         newSigningKey,
         newSigningKeyId,
         ctx.cfg,
         modSrvc.backgroundQueue,
         ctx.idResolver,
+        // @ts-ignore
         modSrvc.eventPusher,
         modSrvc.appviewAgent,
         ctx.serviceAuthHeaders,

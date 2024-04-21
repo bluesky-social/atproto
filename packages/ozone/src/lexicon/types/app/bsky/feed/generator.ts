@@ -14,6 +14,8 @@ export interface Record {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: BlobRef
+  /** Declaration that a feed accepts feedback interactions from a client through app.bsky.feed.sendInteractions */
+  acceptsInteractions?: boolean
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }

@@ -29,12 +29,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const results = await searchPosts({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: results,
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -50,6 +50,16 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         q: params.q,
         cursor: params.cursor,
         limit: params.limit,
+        author: params.author,
+        domain: params.domain,
+        lang: params.lang,
+        mentions: params.mentions,
+        since: params.since,
+        sort: params.sort,
+        tag: params.tag,
+        until: params.until,
+        url: params.url,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       })
     return {
       posts: res.posts.map(({ uri }) => uri),

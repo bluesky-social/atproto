@@ -80,7 +80,7 @@ export class WebSocketKeepAlive {
 
   startHeartbeat(ws: WebSocket) {
     let isAlive = true
-    let heartbeatInterval: NodeJS.Timer | null = null
+    let heartbeatInterval: NodeJS.Timeout | null = null
 
     const checkAlive = () => {
       if (!isAlive) {
@@ -145,6 +145,7 @@ function forwardSignal(signal: AbortSignal, ac: AbortController) {
     return ac.abort(signal.reason)
   } else {
     signal.addEventListener('abort', () => ac.abort(signal.reason), {
+      // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
       signal: ac.signal,
     })
   }

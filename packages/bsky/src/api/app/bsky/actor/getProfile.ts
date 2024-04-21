@@ -18,7 +18,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer, includeTakedowns }
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
 
@@ -29,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
         body: result,
         headers: resHeaders({
           repoRev,
-          labelers,
+          labelers: hydrateCtx.labelers,
         }),
       }
     },
@@ -54,10 +58,10 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed([skeleton.did], {
-    ...params.hydrateCtx,
-    includeTakedowns: true,
-  })
+  return ctx.hydrator.hydrateProfilesDetailed(
+    [skeleton.did],
+    params.hydrateCtx.copy({ includeTakedowns: true }),
+  )
 }
 
 const presentation = (input: {

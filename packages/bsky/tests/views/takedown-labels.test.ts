@@ -1,5 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky takedown labels', () => {
   let network: TestNetwork
@@ -40,6 +41,48 @@ describe('bsky takedown labels', () => {
       'carol generator',
     )
 
+    // labelers
+    await sc.createAccount('labeler1', {
+      email: 'lab1@test.com',
+      handle: 'lab1.test',
+      password: 'lab1',
+    })
+    await sc.agent.api.com.atproto.repo.createRecord(
+      {
+        repo: sc.dids.labeler1,
+        collection: ids.AppBskyLabelerService,
+        rkey: 'self',
+        record: {
+          policies: { labelValues: ['spam'] },
+          createdAt: new Date().toISOString(),
+        },
+      },
+      {
+        headers: sc.getHeaders(sc.dids.labeler1),
+        encoding: 'application/json',
+      },
+    )
+    await sc.createAccount('labeler2', {
+      email: 'lab2@test.com',
+      handle: 'lab2.test',
+      password: 'lab2',
+    })
+    await sc.agent.api.com.atproto.repo.createRecord(
+      {
+        repo: sc.dids.labeler2,
+        collection: ids.AppBskyLabelerService,
+        rkey: 'self',
+        record: {
+          policies: { labelValues: ['spam'] },
+          createdAt: new Date().toISOString(),
+        },
+      },
+      {
+        headers: sc.getHeaders(sc.dids.labeler2),
+        encoding: 'application/json',
+      },
+    )
+
     await network.processAll()
 
     takendownSubjects = [
@@ -47,6 +90,7 @@ describe('bsky takedown labels', () => {
       sc.dids.carol,
       aliceListRef.uriStr,
       aliceGenRef.uriStr,
+      sc.dids.labeler1,
     ]
     const src = network.ozone.ctx.cfg.service.did
     const cts = new Date().toISOString()
@@ -121,6 +165,14 @@ describe('bsky takedown labels', () => {
     })
     expect(res.data.feeds.length).toBe(1)
     expect(res.data.feeds.at(0)?.uri).toEqual(bobGenRef.uriStr)
+  })
+
+  it('takesdown labelers', async () => {
+    const res = await agent.api.app.bsky.labeler.getServices({
+      dids: [sc.dids.labeler1, sc.dids.labeler2],
+    })
+    expect(res.data.views.length).toBe(1)
+    expect(res.data.views[0].creator?.['did']).toBe(sc.dids.labeler2)
   })
 
   it('only applies if the relevant labeler is configured', async () => {

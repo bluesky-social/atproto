@@ -1,10 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
-import {
-  REASONOTHER,
-  REASONSPAM,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { forSnapshot } from '../_util'
 
 describe('proxies admin requests', () => {
@@ -77,7 +73,7 @@ describe('proxies admin requests', () => {
     const { data: reportA } =
       await agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: REASONSPAM,
+          reasonType: 'com.atproto.moderation.defs#reasonSpam',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.bob,
@@ -91,7 +87,7 @@ describe('proxies admin requests', () => {
     const { data: reportB } =
       await agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: REASONOTHER,
+          reasonType: 'com.atproto.moderation.defs#reasonOther',
           reason: 'impersonation',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',

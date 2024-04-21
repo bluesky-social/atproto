@@ -3,7 +3,7 @@ import { CID } from 'multiformats'
 
 import { ReadableBlockstore } from '../storage'
 import { schema as common, cidForCbor, dataToCborBlock } from '@atproto/common'
-import { BlockWriter } from '@ipld/car/api'
+import { BlockWriter } from '@ipld/car/writer'
 import * as util from './util'
 import BlockMap from '../block-map'
 import CidSet from '../cid-set'
@@ -776,7 +776,10 @@ export class MST {
 }
 
 export class Leaf {
-  constructor(public key: string, public value: CID) {}
+  constructor(
+    public key: string,
+    public value: CID,
+  ) {}
 
   isTree(): this is MST {
     return false
