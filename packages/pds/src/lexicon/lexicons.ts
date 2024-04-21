@@ -3822,6 +3822,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
+            'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
@@ -3857,6 +3858,38 @@ export const schemaDict = {
           visibility: {
             type: 'string',
             knownValues: ['ignore', 'show', 'warn', 'hide'],
+          },
+        },
+      },
+      savedFeed: {
+        type: 'object',
+        required: ['id', 'type', 'value', 'pinned'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          type: {
+            type: 'string',
+            knownValues: ['feed', 'list', 'timeline'],
+          },
+          value: {
+            type: 'string',
+          },
+          pinned: {
+            type: 'boolean',
+          },
+        },
+      },
+      savedFeedsPrefV2: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#savedFeed',
+            },
           },
         },
       },
