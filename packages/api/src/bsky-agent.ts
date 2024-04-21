@@ -1,4 +1,5 @@
 import { AtUri, ensureValidDid } from '@atproto/syntax'
+import { TID } from '@atproto/common-web'
 import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,
@@ -370,7 +371,8 @@ export class BskyAgent extends AtpAgent {
         saved: undefined,
         pinned: undefined,
       },
-      savedFeeds: [],
+      // @ts-ignore populating below
+      savedFeeds: undefined,
       feedViewPrefs: {
         home: {
           ...FEED_VIEW_PREF_DEFAULTS,
@@ -422,8 +424,14 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isSavedFeedsPrefV2(pref) &&
         AppBskyActorDefs.validateSavedFeedsPrefV2(pref).success
       ) {
-        prefs.feeds = savedFeedsToUriArrays(pref.items)
         prefs.savedFeeds = pref.items
+      } else if (
+        AppBskyActorDefs.isSavedFeedsPref(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPref(pref).success
+      ) {
+        // saved and pinned feeds
+        prefs.feeds.saved = pref.saved
+        prefs.feeds.pinned = pref.pinned
       } else if (
         AppBskyActorDefs.isPersonalDetailsPref(pref) &&
         AppBskyActorDefs.validatePersonalDetailsPref(pref).success
@@ -473,66 +481,66 @@ export class BskyAgent extends AtpAgent {
     }
 
     /*
-     * If `prefs.feeds` values are undefined, it means there is no
-     * `savedFeedsPrefV2` prefs saved, so we should check for v1 prefs and
-     * migrate them if they exist. If they don't exist, it's an entirely new
-     * user OR an exist user who's never touched their feed prefs.
+     * If `prefs.savedFeeds` is undefined, no `savedFeedsPrefV2` exists, which
+     * means we want to try to migrate if needed.
+     *
+     * If v1 prefs exist, they will be migrated to v2.
+     *
+     * If no v1 prefs exist, the user is either new, or could be old and has
+     * never edited their feeds.
      */
-    if (prefs.feeds.saved === undefined && prefs.feeds.pinned === undefined) {
-      const legacySavedFeedsPref = res.data.preferences.findLast((pref) => {
-        return (
-          AppBskyActorDefs.isSavedFeedsPref(pref) &&
-          AppBskyActorDefs.validateSavedFeedsPref(pref).success
-        )
-      }) as AppBskyActorDefs.SavedFeedsPref | undefined
+    if (prefs.savedFeeds === undefined) {
+      const { saved, pinned } = prefs.feeds
 
-      if (legacySavedFeedsPref) {
-        const {saved, pinned} = legacySavedFeedsPref
-        const savedFeeds: Map<string, AppBskyActorDefs.SavedFeed> = new Map()
+      if (saved && pinned) {
+        const uniqueMigratedSavedFeeds: Map<
+          string,
+          AppBskyActorDefs.SavedFeed
+        > = new Map()
 
         // insert Following feed first
-        savedFeeds.set('home', {
+        uniqueMigratedSavedFeeds.set('home', {
+          id: TID.nextStr(),
           type: 'timeline',
-          value: 'home', // `home` is how the app refers to Following atm
+          value: 'home',
           pinned: true,
         })
 
-        for (const uri of saved) {
-          savedFeeds.set(uri, {
-            type: getSavedFeedType(uri),
-            value: uri,
-            pinned: false,
-          })
-        }
-
+        // use pinned as source of truth for feed order
         for (const uri of pinned) {
-          if (savedFeeds.has(uri)) {
-            savedFeeds.delete(uri)
-          }
-
-          savedFeeds.set(uri, {
+          uniqueMigratedSavedFeeds.set(uri, {
+            id: TID.nextStr(),
             type: getSavedFeedType(uri),
             value: uri,
             pinned: true,
           })
         }
 
-        const savedFeedsArr = Array.from(savedFeeds.values())
-        const migratedSavedFeeds = await this.updateSavedFeeds(savedFeedsArr)
+        for (const uri of saved) {
+          if (!uniqueMigratedSavedFeeds.has(uri)) {
+            uniqueMigratedSavedFeeds.set(uri, {
+              id: TID.nextStr(),
+              type: getSavedFeedType(uri),
+              value: uri,
+              pinned: false,
+            })
+          }
+        }
 
-        prefs.feeds = migratedSavedFeeds
-        prefs.savedFeeds = savedFeedsArr
+        prefs.savedFeeds = Array.from(uniqueMigratedSavedFeeds.values())
       } else {
-        // new user OR user who's never touched their feed prefs
         prefs.savedFeeds = [
           {
+            id: TID.nextStr(),
             type: 'timeline',
             value: 'home',
             pinned: true,
-          }
+          },
         ]
-        prefs.feeds = await this.updateSavedFeeds(prefs.savedFeeds)
       }
+
+      // save to user preferences so this migration doesn't re-occur
+      await this.setSavedFeedsV2(prefs.savedFeeds)
     }
 
     // apply the label prefs
@@ -559,106 +567,108 @@ export class BskyAgent extends AtpAgent {
     return prefs
   }
 
-  async updateSavedFeeds(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
+  async setSavedFeedsV2(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
     savedFeeds.forEach(validateSavedFeed)
     const uniqueSavedFeeds = new Map<string, AppBskyActorDefs.SavedFeed>()
-    savedFeeds.forEach((feed) => {
-      if (uniqueSavedFeeds.has(feed.value)) {
-        uniqueSavedFeeds.delete(feed.value)
-      }
-      uniqueSavedFeeds.set(feed.value, feed)
-    })
+    savedFeeds.forEach((feed) => uniqueSavedFeeds.set(feed.id, feed))
     return updateFeedPreferences(this, () =>
       Array.from(uniqueSavedFeeds.values()),
     )
   }
 
-  async upsertSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
+  async updateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
     validateSavedFeed(savedFeed)
     return updateFeedPreferences(this, (savedFeeds) => [
-      ...savedFeeds.filter((feed) => feed.value !== savedFeed.value),
-      savedFeed,
+      ...savedFeeds.map((feed) => {
+        if (feed.id === savedFeed.id) {
+          return {
+            ...savedFeed,
+            id: feed.id, // never allow overwriting
+          }
+        }
+
+        return feed
+      }),
     ])
   }
 
-  async deleteSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
-    validateSavedFeed(savedFeed)
+  async addSavedFeedV2(
+    savedFeed: Pick<AppBskyActorDefs.SavedFeed, 'type' | 'value' | 'pinned'>,
+  ) {
+    const toSave: AppBskyActorDefs.SavedFeed = {
+      ...savedFeed,
+      id: TID.nextStr(),
+    }
+    validateSavedFeed(toSave)
+    return updateFeedPreferences(this, (savedFeeds) => [...savedFeeds, toSave])
+  }
+
+  async removeSavedFeedV2(id: string) {
     return updateFeedPreferences(this, (savedFeeds) => [
-      ...savedFeeds.filter((feed) => feed.value !== savedFeed.value),
+      ...savedFeeds.filter((feed) => feed.id !== id),
     ])
   }
 
   /**
-   * @deprecated use `updateSavedFeeds`
+   * @deprecated use `setSavedFeedsV2`
    */
   async setSavedFeeds(saved: string[], pinned: string[]) {
-    const savedFeeds: Map<string, AppBskyActorDefs.SavedFeed> = new Map()
-
-    for (const uri of saved) {
-      savedFeeds.set(uri, {
-        type: getSavedFeedType(uri),
-        value: uri,
-        pinned: false,
-      })
-    }
-
-    for (const uri of pinned) {
-      if (savedFeeds.has(uri)) {
-        savedFeeds.delete(uri)
-      }
-
-      savedFeeds.set(uri, {
-        type: getSavedFeedType(uri),
-        value: uri,
-        pinned: true,
-      })
-    }
-
-    return this.updateSavedFeeds(Array.from(savedFeeds.values()))
+    return legacyUpdateFeedPreferences(this, () => ({
+      saved,
+      pinned,
+    }))
   }
 
   /**
-   * @deprecated use `upsertSavedFeed`
+   * @deprecated use `addSavedFeedV2`
    */
   async addSavedFeed(v: string) {
-    return this.upsertSavedFeed({
-      type: getSavedFeedType(v),
-      value: v,
-      pinned: false,
-    })
+    return legacyUpdateFeedPreferences(
+      this,
+      (saved: string[], pinned: string[]) => ({
+        saved: [...saved.filter((uri) => uri !== v), v],
+        pinned,
+      }),
+    )
   }
 
   /**
-   * @deprecated use `deleteSavedFeed`
+   * @deprecated use `removeSavedFeedV2`
    */
   async removeSavedFeed(v: string) {
-    return this.deleteSavedFeed({
-      type: getSavedFeedType(v),
-      value: v,
-      pinned: false,
-    })
+    return legacyUpdateFeedPreferences(
+      this,
+      (saved: string[], pinned: string[]) => ({
+        saved: saved.filter((uri) => uri !== v),
+        pinned: pinned.filter((uri) => uri !== v),
+      }),
+    )
   }
 
   /**
-   * @deprecated use `upsertSavedFeed`
+   * @deprecated use `addSavedFeedV2` or `updatedSavedFeed`
    */
   async addPinnedFeed(v: string) {
-    return this.upsertSavedFeed({
-      type: getSavedFeedType(v),
-      value: v,
-      pinned: true,
-    })
+    return legacyUpdateFeedPreferences(
+      this,
+      (saved: string[], pinned: string[]) => ({
+        saved: [...saved.filter((uri) => uri !== v), v],
+        pinned: [...pinned.filter((uri) => uri !== v), v],
+      }),
+    )
   }
 
   /**
-   * @deprecated use `upsertSavedFeed`
+   * @deprecated use `updatedPinnedFeed`
    */
   async removePinnedFeed(v: string) {
-    return this.upsertSavedFeed({
-      type: getSavedFeedType(v),
-      value: v,
-      pinned: false,
-    })
+    return legacyUpdateFeedPreferences(
+      this,
+      (saved: string[], pinned: string[]) => ({
+        saved,
+        pinned: pinned.filter((uri) => uri !== v),
+      }),
+    )
   }
 
   async setAdultContentEnabled(v: boolean) {
@@ -1052,7 +1062,7 @@ async function updateFeedPreferences(
   cb: (
     savedFeedsPref: AppBskyActorDefs.SavedFeed[],
   ) => AppBskyActorDefs.SavedFeed[],
-): Promise<{ saved: string[]; pinned: string[] }> {
+): Promise<AppBskyActorDefs.SavedFeed[]> {
   let maybeMutatedSavedFeeds: AppBskyActorDefs.SavedFeed[] = []
 
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
@@ -1094,7 +1104,7 @@ async function updateFeedPreferences(
       const { saved, pinned } = existingV1Pref
       const v2Compat = savedFeedsToUriArrays(
         // v1 only supports feeds and lists
-        existingV2Pref.items.filter(i => ['feed', 'list'].includes(i.type))
+        existingV2Pref.items.filter((i) => ['feed', 'list'].includes(i.type)),
       )
       existingV1Pref = {
         ...existingV1Pref,
@@ -1109,7 +1119,40 @@ async function updateFeedPreferences(
     return updatedPrefs
   })
 
-  return savedFeedsToUriArrays(maybeMutatedSavedFeeds)
+  return maybeMutatedSavedFeeds
+}
+
+async function legacyUpdateFeedPreferences(
+  agent: BskyAgent,
+  cb: (
+    saved: string[],
+    pinned: string[],
+  ) => { saved: string[]; pinned: string[] },
+): Promise<{ saved: string[]; pinned: string[] }> {
+  let res
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let feedsPref = prefs.findLast(
+      (pref) =>
+        AppBskyActorDefs.isSavedFeedsPref(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPref(pref).success,
+    ) as AppBskyActorDefs.SavedFeedsPref | undefined
+    if (feedsPref) {
+      res = cb(feedsPref.saved, feedsPref.pinned)
+      feedsPref.saved = res.saved
+      feedsPref.pinned = res.pinned
+    } else {
+      res = cb([], [])
+      feedsPref = {
+        $type: 'app.bsky.actor.defs#savedFeedsPref',
+        saved: res.saved,
+        pinned: res.pinned,
+      }
+    }
+    return prefs
+      .filter((pref) => !AppBskyActorDefs.isSavedFeedsPref(pref))
+      .concat([feedsPref])
+  })
+  return res
 }
 
 /**

@@ -1,4 +1,5 @@
 import { AtUri } from '@atproto/syntax'
+import { TID } from '@atproto/common-web'
 
 import { AppBskyActorDefs } from './client'
 
@@ -56,6 +57,8 @@ export function getSavedFeedType(
 }
 
 export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
+  new TID(savedFeed.id)
+
   const uri = new AtUri(savedFeed.value)
   const isFeed = uri.collection === 'app.bsky.feed.generator'
   const isList = uri.collection === 'app.bsky.graph.list'

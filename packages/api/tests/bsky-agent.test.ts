@@ -1,4 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TID } from '@atproto/common-web'
 import {
   BskyAgent,
   ComAtprotoRepoPutRecord,
@@ -237,9 +238,10 @@ describe('agent', () => {
       }))
 
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: ['home'], saved: ['home'] },
+        feeds: { pinned: undefined, saved: undefined },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
@@ -273,9 +275,10 @@ describe('agent', () => {
 
       await agent.setAdultContentEnabled(true)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: ['home'], saved: ['home'] },
+        feeds: { pinned: undefined, saved: undefined },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
@@ -309,9 +312,10 @@ describe('agent', () => {
 
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: ['home'], saved: ['home'] },
+        feeds: { pinned: undefined, saved: undefined },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
@@ -345,9 +349,10 @@ describe('agent', () => {
 
       await agent.setContentLabelPref('misinfo', 'hide')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: ['home'], saved: ['home'] },
+        feeds: { pinned: undefined, saved: undefined },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
@@ -381,9 +386,10 @@ describe('agent', () => {
 
       await agent.setContentLabelPref('spam', 'ignore')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: ['home'], saved: ['home'] },
+        feeds: { pinned: undefined, saved: undefined },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
@@ -423,19 +429,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: false,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
-          },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: [],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -471,19 +473,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -519,19 +517,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: false,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
-          },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: [],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -567,14 +561,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home'],
+          pinned: [],
+          saved: [],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -610,19 +605,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -658,29 +649,18 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
-          },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
           pinned: [
-            'home',
             'at://bob.com/app.bsky.feed.generator/fake',
             'at://bob.com/app.bsky.feed.generator/fake2',
           ],
           saved: [
-            'home',
             'at://bob.com/app.bsky.feed.generator/fake',
             'at://bob.com/app.bsky.feed.generator/fake2',
           ],
@@ -719,19 +699,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -767,19 +743,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -815,19 +787,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -863,19 +831,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -911,19 +875,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -966,19 +926,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1021,19 +977,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1076,19 +1028,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
           },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake2',
-          },
         ],
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake2'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1247,14 +1195,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             type: 'timeline',
             value: 'home',
             pinned: true,
           },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home'],
+          pinned: [],
+          saved: [],
         },
         moderationPrefs: {
           adultContentEnabled: true,
@@ -1299,14 +1248,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             type: 'timeline',
             value: 'home',
             pinned: true,
           },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home'],
+          pinned: [],
+          saved: [],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1351,14 +1301,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             type: 'timeline',
             value: 'home',
             pinned: true,
           },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home'],
+          pinned: [],
+          saved: [],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1404,14 +1355,15 @@ describe('agent', () => {
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         savedFeeds: [
           {
+            id: expect.any(String),
             type: 'timeline',
             value: 'home',
             pinned: true,
           },
         ],
         feeds: {
-          pinned: ['home'],
-          saved: ['home'],
+          pinned: [],
+          saved: [],
         },
         moderationPrefs: {
           adultContentEnabled: false,
@@ -1452,19 +1404,15 @@ describe('agent', () => {
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
-          },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         moderationPrefs: {
@@ -1506,19 +1454,15 @@ describe('agent', () => {
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
-          },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         moderationPrefs: {
@@ -1571,19 +1515,15 @@ describe('agent', () => {
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
-          pinned: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
-          saved: ['home', 'at://bob.com/app.bsky.feed.generator/fake'],
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
         savedFeeds: [
           {
+            id: expect.any(String),
             pinned: true,
             type: 'timeline',
             value: 'home',
-          },
-          {
-            pinned: true,
-            type: 'feed',
-            value: 'at://bob.com/app.bsky.feed.generator/fake',
           },
         ],
         moderationPrefs: {
@@ -1656,14 +1596,10 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
             items: [
               {
+                id: expect.any(String),
                 pinned: true,
                 type: 'timeline',
                 value: 'home',
-              },
-              {
-                pinned: true,
-                type: 'feed',
-                value: 'at://bob.com/app.bsky.feed.generator/fake',
               },
             ],
           },
@@ -1974,179 +1910,235 @@ describe('agent', () => {
         })
       })
 
-      it('upsertSavedFeed: feed, unpinned', async () => {
-        const feed = feedUri()
-        await agent.upsertSavedFeed({
-          type: 'feed',
-          value: feed,
-          pinned: false,
+      beforeEach(async () => {
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [],
         })
-        const prefs = await agent.getPreferences()
-        expect(prefs.feeds.saved).toContain(feed)
-        expect(prefs.feeds.pinned).not.toContain(feed)
       })
 
-      it('upsertSavedFeed: feed, pinned', async () => {
-        const feed = feedUri()
-        await agent.upsertSavedFeed({
-          type: 'feed',
-          value: feed,
-          pinned: true,
-        })
-        const prefs = await agent.getPreferences()
-        // also in saved, backwards compat
-        expect(prefs.feeds.saved).toContain(feed)
-        expect(prefs.feeds.pinned).toContain(feed)
-      })
-
-      it('upsertSavedFeed: throws if feed is specified and list provided', async () => {
-        const list = listUri()
-        expect(() =>
-          agent.upsertSavedFeed({
+      describe(`addSavedFeedV2`, () => {
+        it('works', async () => {
+          const feed = {
             type: 'feed',
-            value: list,
-            pinned: true,
-          }),
-        ).rejects.toThrow()
-      })
-
-      it('upsertSavedFeed: throws if list is specified and feed provided', async () => {
-        const feed = feedUri()
-        expect(() =>
-          agent.upsertSavedFeed({
-            type: 'list',
-            value: feed,
-            pinned: true,
-          }),
-        ).rejects.toThrow()
-      })
-
-      it('deleteSavedFeed: feed, pinned', async () => {
-        const feed = feedUri()
-        await agent.upsertSavedFeed({
-          type: 'feed',
-          value: feed,
-          pinned: true,
-        })
-        await agent.deleteSavedFeed({
-          type: 'feed',
-          value: feed,
-          pinned: true,
-        })
-        const prefs = await agent.getPreferences()
-        expect(prefs.feeds.saved).not.toContain(feed)
-      })
-
-      it(`updateSavedFeeds: dedupes, takes last`, async () => {
-        const a = feedUri()
-        const b = feedUri()
-        await agent.updateSavedFeeds([
-          {
-            type: 'feed',
-            value: a,
-            pinned: true,
-          },
-          {
-            type: 'feed',
-            value: a,
+            value: feedUri(),
             pinned: false,
-          },
-          {
-            type: 'feed',
-            value: b,
-            pinned: true,
-          },
-        ])
-        const prefs = await agent.getPreferences()
-        expect(prefs.feeds.saved).toContain(a)
-        expect(prefs.feeds.saved).toContain(b)
-        expect(prefs.feeds.pinned).not.toContain(a)
-        expect(prefs.feeds.pinned).toContain(b)
-      })
-
-      it(`upsertSavedFeed: timeline`, async () => {
-        await agent.upsertSavedFeed({
-          type: 'timeline',
-          value: 'home',
-          pinned: true,
-        })
-        const prefs = await agent.getPreferences()
-        expect(
-          prefs.savedFeeds.find((f) => f.type === 'timeline'),
-        ).toStrictEqual({
-          type: 'timeline',
-          value: 'home',
-          pinned: true,
-        })
-      })
-
-      it(`updateSavedFeeds: preserves order`, async () => {
-        const a = feedUri()
-        const b = feedUri()
-        const c = feedUri()
-        const d = feedUri()
-
-        await agent.updateSavedFeeds([
-          {
-            type: 'timeline',
-            value: a,
-            pinned: true,
-          },
-          {
-            type: 'feed',
-            value: b,
-            pinned: false,
-          },
-          {
-            type: 'feed',
-            value: c,
-            pinned: true,
-          },
-          {
-            type: 'feed',
-            value: d,
-            pinned: false,
-          },
-        ])
-
-        const { savedFeeds, feeds } = await agent.getPreferences()
-        expect(JSON.stringify(savedFeeds.filter((f) => f.pinned))).toEqual(
-          JSON.stringify([
+          }
+          await agent.addSavedFeedV2(feed)
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
             {
+              ...feed,
+              id: expect.any(String),
+            },
+          ])
+        })
+
+        it('throws if feed is specified and list provided', async () => {
+          const list = listUri()
+          await expect(() =>
+            agent.addSavedFeedV2({
+              type: 'feed',
+              value: list,
+              pinned: true,
+            }),
+          ).rejects.toThrow()
+        })
+
+        it('throws if list is specified and feed provided', async () => {
+          const feed = feedUri()
+          await expect(() =>
+            agent.addSavedFeedV2({
+              type: 'list',
+              value: feed,
+              pinned: true,
+            }),
+          ).rejects.toThrow()
+        })
+
+        it(`timeline`, async () => {
+          const feeds = await agent.addSavedFeedV2({
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          })
+          const prefs = await agent.getPreferences()
+          expect(
+            prefs.savedFeeds.filter((f) => f.type === 'timeline'),
+          ).toStrictEqual(feeds)
+        })
+
+        it(`allows duplicates`, async () => {
+          const feed = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          await agent.addSavedFeedV2(feed)
+          await agent.addSavedFeedV2(feed)
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
+            {
+              ...feed,
+              id: expect.any(String),
+            },
+            {
+              ...feed,
+              id: expect.any(String),
+            },
+          ])
+        })
+      })
+
+      describe(`removeSavedFeedV2`, () => {
+        it('removeSavedFeedV2: feed, pinned', async () => {
+          const feed = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const savedFeeds = await agent.addSavedFeedV2(feed)
+          await agent.removeSavedFeedV2(savedFeeds[0].id)
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([])
+        })
+      })
+
+      describe(`setSavedFeedsV2`, () => {
+        it(`dedupes by id, takes last`, async () => {
+          const a = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          await agent.setSavedFeedsV2([a, a, b])
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([a, b])
+        })
+
+        it(`preserves order`, async () => {
+          const a = feedUri()
+          const b = feedUri()
+          const c = feedUri()
+          const d = feedUri()
+
+          await agent.setSavedFeedsV2([
+            {
+              id: TID.nextStr(),
               type: 'timeline',
               value: a,
               pinned: true,
             },
             {
-              type: 'feed',
-              value: c,
-              pinned: true,
-            },
-          ]),
-        )
-        expect(JSON.stringify(feeds.pinned)).toEqual(JSON.stringify([a, c]))
-        expect(JSON.stringify(savedFeeds.filter((f) => !f.pinned))).toEqual(
-          JSON.stringify([
-            {
+              id: TID.nextStr(),
               type: 'feed',
               value: b,
               pinned: false,
             },
             {
+              id: TID.nextStr(),
+              type: 'feed',
+              value: c,
+              pinned: true,
+            },
+            {
+              id: TID.nextStr(),
               type: 'feed',
               value: d,
               pinned: false,
             },
-          ]),
-        )
-        expect(JSON.stringify(feeds.saved)).toEqual(JSON.stringify([a, b, c, d]))
+          ])
+
+          const { savedFeeds } = await agent.getPreferences()
+          expect(savedFeeds.filter((f) => f.pinned)).toStrictEqual([
+            {
+              id: expect.any(String),
+              type: 'timeline',
+              value: a,
+              pinned: true,
+            },
+            {
+              id: expect.any(String),
+              type: 'feed',
+              value: c,
+              pinned: true,
+            },
+          ])
+          expect(savedFeeds.filter((f) => !f.pinned)).toEqual([
+            {
+              id: expect.any(String),
+              type: 'feed',
+              value: b,
+              pinned: false,
+            },
+            {
+              id: expect.any(String),
+              type: 'feed',
+              value: d,
+              pinned: false,
+            },
+          ])
+        })
       })
 
-      /*
-       * Old methods can't handle `timeline` or types other than `feed` or
-       * `list`
-       */
-      it(`deprecated methods write only to v1`, async () => {
+      describe(`updateSavedFeed`, () => {
+        it(`updates in situ and preserves order`, async () => {
+          const a = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const c = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          await agent.setSavedFeedsV2([a, b, c])
+          await agent.updateSavedFeed({
+            ...b,
+            pinned: false,
+          })
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
+            a,
+            {
+              ...b,
+              pinned: false,
+            },
+            c,
+          ])
+        })
+
+        it(`cannot override original id`, async () => {
+          const a = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          await agent.setSavedFeedsV2([a])
+          await agent.updateSavedFeed({
+            ...a,
+            pinned: false,
+            id: TID.nextStr(),
+          })
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([a])
+        })
       })
     })
 
@@ -2170,86 +2162,137 @@ describe('agent', () => {
         })
       })
 
-      // fresh account OR an old account with no v1 prefs to migrate from
-      it(`migrates on startup for new/old users`, async () => {
+      it('CRUD action before migration, no timeline inserted', async () => {
+        const feed = {
+          type: 'feed',
+          value: feedUri(),
+          pinned: false,
+        }
+        await agent.addSavedFeedV2(feed)
         const prefs = await agent.getPreferences()
-
-        expect(prefs.feeds).toStrictEqual({
-          saved: ['home'],
-          pinned: ['home'],
-        })
         expect(prefs.savedFeeds).toStrictEqual([
           {
-            type: 'timeline',
-            value: 'home',
-            pinned: true,
-          }
+            ...feed,
+            id: expect.any(String),
+          },
         ])
       })
 
-      it(`migrates pinned & saved feed`, async () => {
+      it('CRUD action AFTER migration, timeline was inserted', async () => {
+        await agent.getPreferences()
+        const feed = {
+          type: 'feed',
+          value: feedUri(),
+          pinned: false,
+        }
+        await agent.addSavedFeedV2(feed)
+        const prefs = await agent.getPreferences()
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            id: expect.any(String),
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+          {
+            ...feed,
+            id: expect.any(String),
+          },
+        ])
+      })
+
+      // fresh account OR an old account with no v1 prefs to migrate from
+      it(`brand new user, v1 remains undefined`, async () => {
+        const prefs = await agent.getPreferences()
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            id: expect.any(String),
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ])
+        // no v1 prefs to populate from
+        expect(prefs.feeds).toStrictEqual({
+          saved: undefined,
+          pinned: undefined,
+        })
+      })
+
+      it(`brand new user, v2 does not write to v1`, async () => {
+        const a = feedUri()
+        // migration happens
+        await agent.getPreferences()
+        await agent.addSavedFeedV2({
+          type: 'feed',
+          value: a,
+          pinned: false,
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            id: expect.any(String),
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+          {
+            id: expect.any(String),
+            type: 'feed',
+            value: a,
+            pinned: false,
+          },
+        ])
+        // no v1 prefs to populate from
+        expect(prefs.feeds).toStrictEqual({
+          saved: undefined,
+          pinned: undefined,
+        })
+      })
+
+      it(`existing user with v1 prefs, migrates`, async () => {
         const one = feedUri()
+        const two = feedUri()
         await agent.app.bsky.actor.putPreferences({
           preferences: [
             {
               $type: 'app.bsky.actor.defs#savedFeedsPref',
               pinned: [one],
-              saved: [one],
+              saved: [one, two],
             },
           ],
         })
         const prefs = await agent.getPreferences()
 
+        // deprecated interface receives what it normally would
         expect(prefs.feeds).toStrictEqual({
-          saved: ['home', one],
-          pinned: ['home', one],
+          pinned: [one],
+          saved: [one, two],
         })
+        // new interface gets new timeline + old pinned feed
         expect(prefs.savedFeeds).toStrictEqual([
           {
+            id: expect.any(String),
             type: 'timeline',
             value: 'home',
             pinned: true,
           },
           {
+            id: expect.any(String),
             type: 'feed',
             value: one,
-            pinned: true,
-          }
-        ])
-      })
-
-      it(`migrates saved feed`, async () => {
-        const one = feedUri()
-        await agent.app.bsky.actor.putPreferences({
-          preferences: [
-            {
-              $type: 'app.bsky.actor.defs#savedFeedsPref',
-              pinned: [],
-              saved: [one],
-            },
-          ],
-        })
-        const prefs = await agent.getPreferences()
-
-        expect(prefs.feeds).toStrictEqual({
-          saved: ['home', one],
-          pinned: ['home'],
-        })
-        expect(prefs.savedFeeds).toStrictEqual([
-          {
-            type: 'timeline',
-            value: 'home',
             pinned: true,
           },
           {
+            id: expect.any(String),
             type: 'feed',
-            value: one,
+            value: two,
             pinned: false,
-          }
+          },
         ])
       })
 
-      it('squashes duplicates', async () => {
+      it('squashes duplicates during migration', async () => {
         const one = feedUri()
         const two = feedUri()
         await agent.app.bsky.actor.putPreferences({
@@ -2270,9 +2313,17 @@ describe('agent', () => {
         // performs migration
         const prefs = await agent.getPreferences()
         expect(prefs.feeds).toStrictEqual({
-          pinned: ['home'],
-          saved: ['home'],
+          pinned: [],
+          saved: [],
         })
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            id: expect.any(String),
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ])
 
         const res = await agent.app.bsky.actor.getPreferences()
         expect(res.data.preferences).toStrictEqual([
@@ -2280,6 +2331,7 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#savedFeedsPrefV2',
             items: [
               {
+                id: expect.any(String),
                 type: 'timeline',
                 value: 'home',
                 pinned: true,
@@ -2294,7 +2346,7 @@ describe('agent', () => {
         ])
       })
 
-      it('writes to v2 persist to v1, writes to v1 (from v1 client) persist to v1 but not to v2', async () => {
+      it('v2 writes persist to v1, not the inverse', async () => {
         const a = feedUri()
         const b = feedUri()
         const c = feedUri()
@@ -2312,10 +2364,11 @@ describe('agent', () => {
         })
 
         // client updates, migrates to v2
+        // a and b are both pinned
         await agent.getPreferences()
 
-        // new write to v2
-        await agent.upsertSavedFeed({
+        // new write to v2, c is saved
+        await agent.addSavedFeedV2({
           type: 'feed',
           value: c,
           pinned: false,
@@ -2332,20 +2385,8 @@ describe('agent', () => {
           saved: [a, b, c],
         })
 
-        // v1 write occurs
-        const res2 = await agent.app.bsky.actor.getPreferences()
-        await agent.app.bsky.actor.putPreferences({
-          preferences: [
-            ...res2.data.preferences.filter(
-              (p) => !AppBskyActorDefs.isSavedFeedsPref(p),
-            ),
-            {
-              $type: 'app.bsky.actor.defs#savedFeedsPref',
-              pinned: [a, b],
-              saved: [a, b, c, d],
-            },
-          ],
-        })
+        // v1 write occurs, d is added but not to v2
+        await agent.addSavedFeed(d)
 
         const res3 = await agent.app.bsky.actor.getPreferences()
         const v1Pref3 = res3.data.preferences.find((p) =>
@@ -2356,15 +2397,9 @@ describe('agent', () => {
           pinned: [a, b],
           saved: [a, b, c, d],
         })
-        // v2 reads, not updated with v1 write
-        const prefs = await agent.getPreferences()
-        expect(prefs.feeds).toStrictEqual({
-          pinned: ['home', a, b],
-          saved: ['home', a, b, c],
-        })
 
-        // another new write to v2
-        await agent.upsertSavedFeed({
+        // another new write to v2, pins e
+        await agent.addSavedFeedV2({
           type: 'feed',
           value: e,
           pinned: true,
@@ -2374,17 +2409,29 @@ describe('agent', () => {
         const v1Pref4 = res4.data.preferences.find((p) =>
           AppBskyActorDefs.isSavedFeedsPref(p),
         )
+        // v1 pref got v2 write
         expect(v1Pref4).toStrictEqual({
           $type: 'app.bsky.actor.defs#savedFeedsPref',
           pinned: [a, b, e],
           saved: [a, b, c, d, e],
         })
+
+        const final = await agent.getPreferences()
+        // d not here bc it was written with v1
+        expect(final.savedFeeds).toStrictEqual([
+          {
+            id: expect.any(String),
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+          { id: expect.any(String), type: 'feed', value: a, pinned: true },
+          { id: expect.any(String), type: 'feed', value: b, pinned: true },
+          { id: expect.any(String), type: 'feed', value: c, pinned: false },
+          { id: expect.any(String), type: 'feed', value: e, pinned: true },
+        ])
       })
     })
-
-    // TODO
-    // [ ] updating timeline is based on uri, will duplicate
-    // [ ] should v1 methods write to v2
 
     // end
   })
