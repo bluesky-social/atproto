@@ -1091,6 +1091,11 @@ async function updateFeedPreferences(
       }
     }
 
+    // enforce ordering, pinned then saved
+    const pinned = existingV2Pref.items.filter((i) => i.pinned)
+    const saved = existingV2Pref.items.filter((i) => !i.pinned)
+    existingV2Pref.items = pinned.concat(saved)
+
     let updatedPrefs = prefs
       .filter((pref) => !AppBskyActorDefs.isSavedFeedsPrefV2(pref))
       .concat(existingV2Pref)

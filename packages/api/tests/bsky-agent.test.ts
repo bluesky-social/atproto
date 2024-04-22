@@ -2115,11 +2115,11 @@ describe('agent', () => {
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([
             a,
+            c,
             {
               ...b,
               pinned: false,
             },
-            c,
           ])
         })
 
@@ -2138,6 +2138,53 @@ describe('agent', () => {
           })
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([a])
+        })
+      })
+
+      describe(`misc`, () => {
+        it(`sorts by pinned, appends new pins to end`, async () => {
+          const a = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const c = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+
+          await agent.setSavedFeedsV2([a, b, c])
+          await agent.updateSavedFeed({
+            ...b,
+            pinned: false,
+          })
+
+          const prefs1 = await agent.getPreferences()
+          expect(prefs1.savedFeeds).toStrictEqual([
+            a,
+            c,
+            {
+              ...b,
+              pinned: false,
+            },
+          ])
+
+          await agent.updateSavedFeed({
+            ...b,
+            pinned: true,
+          })
+
+          const prefs2 = await agent.getPreferences()
+          expect(prefs2.savedFeeds).toStrictEqual([a, c, b])
         })
       })
     })
@@ -2427,8 +2474,8 @@ describe('agent', () => {
           },
           { id: expect.any(String), type: 'feed', value: a, pinned: true },
           { id: expect.any(String), type: 'feed', value: b, pinned: true },
-          { id: expect.any(String), type: 'feed', value: c, pinned: false },
           { id: expect.any(String), type: 'feed', value: e, pinned: true },
+          { id: expect.any(String), type: 'feed', value: c, pinned: false },
         ])
       })
     })
