@@ -1077,7 +1077,7 @@ describe('crud operations', () => {
       const result = await defaultFetchHandler(
         aliceAgent.service.origin + `/xrpc/com.atproto.repo.createRecord`,
         'post',
-        { ...aliceAgent.api.xrpc.headers, 'Content-Type': 'application/json' },
+        { ...aliceAgent.api.xrpc.headers, 'content-type': 'application/json' },
         passthroughBody({
           repo: alice.did,
           collection: 'app.bsky.feed.post',

@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 
 export interface QueryParams {}
 
-export type InputSchema = string | Uint8Array
+export type InputSchema = string | Uint8Array | Blob
 
 export interface CallOptions {
   headers?: Headers
