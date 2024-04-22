@@ -5,12 +5,6 @@ export type Json = JsonScalar | Json[] | { [key: string]: undefined | Json }
 export type JsonObject = { [key: string]: Json }
 export type JsonArray = Json[]
 
-declare global {
-  interface JSON {
-    parse(text: string, reviver?: (key: any, value: any) => any): Json
-  }
-}
-
 export function isIp(hostname: string) {
   // IPv4
   if (hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) return true
