@@ -6,7 +6,6 @@ import {
   encodeMethodCallBody,
   httpResponseCodeToEnum,
   httpResponseBodyParse,
-  normalizeHeaders,
 } from './util'
 import {
   FetchHandler,
@@ -72,11 +71,11 @@ export class ServiceClient {
   }
 
   setHeader(key: string, value: string): void {
-    this.headers[key] = value
+    this.headers[key.toLowerCase()] = value
   }
 
   unsetHeader(key: string): void {
-    delete this.headers[key]
+    delete this.headers[key.toLowerCase()]
   }
 
   async call(
@@ -94,13 +93,13 @@ export class ServiceClient {
 
     const httpMethod = getMethodSchemaHTTPMethod(def)
     const httpUri = constructMethodCallUri(methodNsid, def, this.uri, params)
-    const httpHeaders = constructMethodCallHeaders(def, data, {
-      headers: {
-        ...this.headers,
-        ...opts?.headers,
-      },
-      encoding: opts?.encoding,
-    })
+    const httpHeaders = constructMethodCallHeaders(def, data, opts)
+
+    for (const [k, v] of Object.entries(this.headers)) {
+      if (v != null && !Object.hasOwn(httpHeaders, k)) {
+        httpHeaders[k] = v
+      }
+    }
 
     const res = await this.baseClient.fetch(
       httpUri,
@@ -145,11 +144,10 @@ export async function defaultFetchHandler(
   try {
     // The duplex field is now required for streaming bodies, but not yet reflected
     // anywhere in docs or types. See whatwg/fetch#1438, nodejs/node#46221.
-    const headers = normalizeHeaders(httpHeaders)
     const reqInit: RequestInit & { duplex: string } = {
       method: httpMethod,
-      headers,
-      body: encodeMethodCallBody(headers, httpReqBody),
+      headers: httpHeaders,
+      body: encodeMethodCallBody(httpHeaders, httpReqBody),
       duplex: 'half',
     }
     const res = await fetch(httpUri, reqInit)
@@ -160,7 +158,10 @@ export async function defaultFetchHandler(
       body: httpResponseBodyParse(res.headers.get('content-type'), resBody),
     }
   } catch (e) {
-    throw new XRPCError(ResponseType.Unknown, String(e))
+    if (e instanceof XRPCError) throw e
+    const err = new XRPCError(ResponseType.Unknown, String(e))
+    err.cause = e
+    throw err
   }
 }
 

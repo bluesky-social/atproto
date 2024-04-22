@@ -11,7 +11,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
-export type InputSchema = string | Uint8Array
+export type InputSchema = string | Uint8Array | Blob
 
 export interface OutputSchema {
   blob: BlobRef
