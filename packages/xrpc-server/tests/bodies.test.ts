@@ -3,6 +3,7 @@ import { Readable } from 'stream'
 import { gzipSync } from 'zlib'
 import getPort from 'get-port'
 import { LexiconDoc } from '@atproto/lexicon'
+import { ReadableStream } from 'stream/web'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { bytesToStream, cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
@@ -88,6 +89,20 @@ const LEXICONS: LexiconDoc[] = [
 
 const BLOB_LIMIT = 5000
 
+async function consumeInput(
+  input: Readable | string | object,
+): Promise<Buffer> {
+  if (typeof input === 'string') return Buffer.from(input)
+  if (input instanceof Readable) {
+    const buffers: Buffer[] = []
+    for await (const data of input) {
+      buffers.push(data)
+    }
+    return Buffer.concat(buffers)
+  }
+  throw new Error('Invalid input')
+}
+
 describe('Bodies', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
@@ -109,13 +124,8 @@ describe('Bodies', () => {
   server.method(
     'io.example.blobTest',
     async (ctx: { input?: xrpcServer.HandlerInput }) => {
-      if (!(ctx.input?.body instanceof Readable))
-        throw new Error('Input not readable')
-      const buffers: Buffer[] = []
-      for await (const data of ctx.input.body) {
-        buffers.push(data)
-      }
-      const cid = await cidForCbor(Buffer.concat(buffers))
+      const buffer = await consumeInput(ctx.input?.body)
+      const cid = await cidForCbor(buffer)
       return {
         encoding: 'json',
         body: { cid: cid.toString() },
@@ -165,7 +175,65 @@ describe('Bodies', () => {
         { foo: 'hello', bar: 123 },
         { encoding: 'image/jpeg' },
       ),
+    ).rejects.toThrow(`Unable to encode object as image/jpeg data`)
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        // Does not need to be a valid jpeg
+        new Blob([randomBytes(123)], { type: 'image/jpeg' }),
+      ),
     ).rejects.toThrow(`Wrong request encoding (Content-Type): image/jpeg`)
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        (() => {
+          const formData = new FormData()
+          formData.append('foo', 'bar')
+          return formData
+        })(),
+      ),
+    ).rejects.toThrow(
+      `Wrong request encoding (Content-Type): multipart/form-data`,
+    )
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        new URLSearchParams([['foo', 'bar']]),
+      ),
+    ).rejects.toThrow(
+      `Wrong request encoding (Content-Type): application/x-www-form-urlencoded`,
+    )
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        new Blob([new Uint8Array([1])]),
+      ),
+    ).rejects.toThrow(
+      `Wrong request encoding (Content-Type): application/octet-stream`,
+    )
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        new ReadableStream({
+          pull(ctrl) {
+            ctrl.enqueue(new Uint8Array([1]))
+            ctrl.close()
+          },
+        }),
+      ),
+    ).rejects.toThrow(
+      `Wrong request encoding (Content-Type): application/octet-stream`,
+    )
+    await expect(
+      client.call('io.example.validationTest', {}, new Uint8Array([1])),
+    ).rejects.toThrow(
+      `Wrong request encoding (Content-Type): application/octet-stream`,
+    )
 
     // 500 responses don't include details, so we nab details from the logger.
     let error: string | undefined
@@ -180,6 +248,96 @@ describe('Bodies', () => {
       'Internal Server Error',
     )
     expect(error).toEqual(`Output must have the property "foo"`)
+  })
+
+  it('supports ArrayBuffers', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const bytesResponse = await client.call('io.example.blobTest', {}, bytes, {
+      encoding: 'application/octet-stream',
+    })
+    expect(bytesResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports empty payload on procedues with encoding', async () => {
+    const bytes = new Uint8Array(0)
+    const expectedCid = await cidForCbor(bytes)
+    const bytesResponse = await client.call('io.example.blobTest', {}, bytes)
+    expect(bytesResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports upload of empty txt file', async () => {
+    const txtFile = new Blob([], { type: 'text/plain' })
+    const expectedCid = await cidForCbor(await txtFile.arrayBuffer())
+    const fileResponse = await client.call('io.example.blobTest', {}, txtFile)
+    expect(fileResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  // This does not work because the xrpc-server will add a json middleware
+  // regardless of the "input" definition. This is probably a behavior that
+  // should be fixed in the xrpc-server.
+  it.skip('supports upload of json data', async () => {
+    const jsonFile = new Blob([Buffer.from(`{"foo":"bar","baz":[3, null]}`)], {
+      type: 'application/json',
+    })
+    const expectedCid = await cidForCbor(await jsonFile.arrayBuffer())
+    const fileResponse = await client.call('io.example.blobTest', {}, jsonFile)
+    expect(fileResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports ArrayBufferView', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const bufferResponse = await client.call(
+      'io.example.blobTest',
+      {},
+      Buffer.from(bytes),
+    )
+    expect(bufferResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports Blob', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const blobResponse = await client.call(
+      'io.example.blobTest',
+      {},
+      new Blob([bytes], { type: 'application/octet-stream' }),
+    )
+    expect(blobResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports Blob without explicit type', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const blobResponse = await client.call(
+      'io.example.blobTest',
+      {},
+      new Blob([bytes]),
+    )
+    expect(blobResponse.data.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports ReadableStream', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const streamResponse = await client.call(
+      'io.example.blobTest',
+      {},
+      // ReadableStream.from not available in node < 20
+      new ReadableStream({
+        pull(ctrl) {
+          ctrl.enqueue(bytes)
+          ctrl.close()
+        },
+      }),
+    )
+    expect(streamResponse.data.cid).toEqual(expectedCid.toString())
   })
 
   it('supports blobs and compression', async () => {
