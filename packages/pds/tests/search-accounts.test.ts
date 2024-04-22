@@ -25,24 +25,38 @@ describe('search accounts', () => {
     const [{ data: firstAccount }, { data: secondAccount }] = await Promise.all(
       [
         agent.createAccount({
-          email: 'o+ne@email.com',
+          email: 'o.n.e@email.com',
           password: 'password',
           handle: 'one1.test',
         }),
         agent.createAccount({
-          email: 'on+e@email.com',
+          email: 'one+test@email.com',
           password: 'password',
           handle: 'one2.test',
         }),
       ],
     )
-    const { data } = await agent.api.com.atproto.admin.searchAccounts(
-      { email: '@email.com' },
-      { headers: network.pds.adminAuthHeaders() },
+    const [{ data: byDomain }, { data: byNormalizedAddress }] =
+      await Promise.all([
+        agent.api.com.atproto.admin.searchAccounts(
+          { email: '@email.com' },
+          { headers: network.pds.adminAuthHeaders() },
+        ),
+        agent.api.com.atproto.admin.searchAccounts(
+          { email: 'one@email.com' },
+          { headers: network.pds.adminAuthHeaders() },
+        ),
+      ])
+    const accountDidsByDomain = byDomain.accounts.map((account) => account.did)
+    const accountDidsByNormalizedAddress = byNormalizedAddress.accounts.map(
+      (account) => account.did,
     )
-    const accountDids = data.accounts.map((account) => account.did)
-    expect(accountDids.length).toBe(2)
-    expect(accountDids).toContain(firstAccount.did)
-    expect(accountDids).toContain(secondAccount.did)
+    expect(accountDidsByDomain.length).toBe(2)
+    expect(accountDidsByNormalizedAddress.length).toBe(2)
+
+    expect(accountDidsByDomain).toContain(firstAccount.did)
+    expect(accountDidsByDomain).toContain(secondAccount.did)
+    expect(accountDidsByNormalizedAddress).toContain(firstAccount.did)
+    expect(accountDidsByNormalizedAddress).toContain(secondAccount.did)
   })
 })

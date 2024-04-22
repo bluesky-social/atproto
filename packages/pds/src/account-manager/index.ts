@@ -51,11 +51,10 @@ export class AccountManager {
     return account.getAccountByEmail(this.db, email, flags)
   }
 
-  async searchAccounts(
-    params: {
-      email?: string
-    } & account.AvailabilityFlags,
-  ): Promise<ActorAccount[]> {
+  async searchAccounts(params: {
+    email?: string
+    cursor?: string
+  }): Promise<{ accounts: account.AccountSearchResult[]; cursor?: string }> {
     return account.searchAccounts(this.db, params)
   }
 

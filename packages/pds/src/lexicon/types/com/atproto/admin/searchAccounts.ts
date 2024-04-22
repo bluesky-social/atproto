@@ -7,17 +7,17 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   email?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor: string
-  accounts: ComAtprotoAdminDefs.AccountView[]
+  cursor?: string
+  accounts: AccountSearchResult[]
   [k: string]: unknown
 }
 
@@ -45,3 +45,26 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
+
+export interface AccountSearchResult {
+  did: string
+  email: string
+  normalizedEmail?: string
+  handle?: string
+  [k: string]: unknown
+}
+
+export function isAccountSearchResult(v: unknown): v is AccountSearchResult {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.searchAccounts#accountSearchResult'
+  )
+}
+
+export function validateAccountSearchResult(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'com.atproto.admin.searchAccounts#accountSearchResult',
+    v,
+  )
+}

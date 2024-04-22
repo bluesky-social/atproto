@@ -383,13 +383,16 @@ export const schemaDict = {
             email: {
               type: 'string',
             },
+            cursor: {
+              type: 'string',
+            },
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['cursor', 'accounts'],
+            required: ['accounts'],
             properties: {
               cursor: {
                 type: 'string',
@@ -398,10 +401,28 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#accountView',
+                  ref: 'lex:com.atproto.admin.searchAccounts#accountSearchResult',
                 },
               },
             },
+          },
+        },
+      },
+      accountSearchResult: {
+        type: 'object',
+        required: ['did', 'email'],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          email: {
+            type: 'string',
+          },
+          normalizedEmail: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
           },
         },
       },

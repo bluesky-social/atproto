@@ -1,10 +1,23 @@
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { AccountDb, ActorEntry } from '../db'
+import { AccountDb, AccountEntry, Actor, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { DAY } from '@atproto/common'
-import { sql } from 'kysely'
+import { normalizeEmail } from './normalize-email'
+import {
+  Cursor,
+  GenericKeyset,
+  LabeledResult,
+  paginate,
+} from '../../db/pagination'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class UserAlreadyExistsError extends Error {}
+
+export type AccountSearchResult = Pick<
+  AccountEntry,
+  'did' | 'email' | 'normalizedEmail'
+> &
+  Pick<ActorEntry, 'handle'>
 
 export type ActorAccount = ActorEntry & {
   email: string | null
@@ -112,6 +125,7 @@ export const registerAccount = async (
       .values({
         did,
         email: email.toLowerCase(),
+        normalizedEmail: normalizeEmail(email),
         passwordScrypt,
       })
       .onConflict((oc) => oc.doNothing())
@@ -173,7 +187,11 @@ export const updateEmail = async (
     await db.executeWithRetry(
       db.db
         .updateTable('account')
-        .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+        .set({
+          email: email.toLowerCase(),
+          normalizedEmail: normalizeEmail(email),
+          emailConfirmedAt: null,
+        })
         .where('did', '=', did),
     )
   } catch (err) {
@@ -257,29 +275,69 @@ export const searchAccounts = async (
   db: AccountDb,
   {
     email,
-    includeDeactivated,
-    includeTakenDown,
-  }: { email?: string } & AvailabilityFlags,
-): Promise<ActorAccount[]> => {
-  const { ref } = db.db.dynamic
-  const query = selectAccountQB(db, {
-    includeDeactivated,
-    includeTakenDown,
-  }).if(!!email, (qb) => {
-    if (email?.startsWith('@')) {
-      return qb.where('account.email', 'like', `%${email.toLowerCase()}`)
-    }
-    // TODO: This is where we would want to search from a separate normalized email table
-    return qb.where(
+    cursor,
+    limit = 30,
+  }: { email?: string; cursor?: string; limit?: number },
+): Promise<{ accounts: AccountSearchResult[]; cursor?: string }> => {
+  const query = db.db
+    .selectFrom('account')
+    .innerJoin('actor', 'account.did', 'actor.did')
+    .select([
       'account.did',
-      'in',
-      db.db
-        .selectFrom('account')
-        .where('email', 'like', `%${email}%`)
-        .select('did'),
-    )
+      'account.email',
+      'account.normalizedEmail',
+      'actor.handle',
+    ])
+    .if(!!email, (qb) => {
+      if (email?.startsWith('@')) {
+        return qb.where(
+          'account.normalizedEmail',
+          'like',
+          `%${email.toLowerCase()}`,
+        )
+      }
+      // TODO: This is where we would want to search from a separate normalized email table
+      return qb.where(
+        'account.did',
+        'in',
+        db.db
+          .selectFrom('account')
+          .where('normalizedEmail', 'like', `%${email}%`)
+          .select('did'),
+      )
+    })
+  const { ref } = db.db.dynamic
+
+  const keyset = new DidEmailKeyset(ref('account.did'), ref('account.email'))
+  const paginatedQuery = paginate(query, {
+    limit,
+    cursor,
+    keyset,
   })
 
-  const results = await query.execute()
-  return results || []
+  const results = await paginatedQuery.execute()
+  return {
+    accounts: results,
+    cursor: keyset.packFromResult(results),
+  }
+}
+
+type SearchAccountResult = { email: string; did: string }
+export class DidEmailKeyset extends GenericKeyset<
+  SearchAccountResult,
+  LabeledResult
+> {
+  labelResult(result: SearchAccountResult): LabeledResult {
+    return { primary: result.email, secondary: result.did }
+  }
+  labeledResultToCursor(labeled: Cursor) {
+    return labeled
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    const { primary } = cursor
+    if (!primary) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return cursor
+  }
 }
