@@ -49,6 +49,14 @@
         "sentAt": { "type": "string", "format": "datetime" }
       }
     },
+    "deletedMessage": {
+      "type": "object",
+      "required": ["id", "sentAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "sentAt": { "type": "string", "format": "datetime" }
+      }
+    },
     "chatView": {
       "type": "object",
       "required": ["id", "members", "unreadCount"],
@@ -59,11 +67,22 @@
           "items": { "type": "string", "format": "did" }
         },
         "lastMessage": {
-          "type": "ref",
-          "ref": "#message"
+          "type": "union",
+          "refs": [
+            "#messageView",
+            "#deletedMessage"
+          ]
         },
         "unreadCount": { "type": "integer" }
       }
+    },
+    "incomingMessageSetting": {
+      "type": "string",
+      "knownValues": [
+        "all",
+        "none",
+        "following"
+      ]
     }
   }
 }

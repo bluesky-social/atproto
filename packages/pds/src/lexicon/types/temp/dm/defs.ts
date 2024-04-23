@@ -45,10 +45,29 @@ export function validateMessageView(v: unknown): ValidationResult {
   return lexicons.validate('temp.dm.defs#messageView', v)
 }
 
+export interface DeletedMessage {
+  id: string
+  sentAt: string
+  [k: string]: unknown
+}
+
+export function isDeletedMessage(v: unknown): v is DeletedMessage {
+  return (
+    isObj(v) && hasProp(v, '$type') && v.$type === 'temp.dm.defs#deletedMessage'
+  )
+}
+
+export function validateDeletedMessage(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#deletedMessage', v)
+}
+
 export interface ChatView {
   id: string
   members: string[]
-  lastMessage?: Message
+  lastMessage?:
+    | MessageView
+    | DeletedMessage
+    | { $type: string; [k: string]: unknown }
   unreadCount: number
   [k: string]: unknown
 }
@@ -60,3 +79,9 @@ export function isChatView(v: unknown): v is ChatView {
 export function validateChatView(v: unknown): ValidationResult {
   return lexicons.validate('temp.dm.defs#chatView', v)
 }
+
+export type IncomingMessageSetting =
+  | 'all'
+  | 'none'
+  | 'following'
+  | (string & {})

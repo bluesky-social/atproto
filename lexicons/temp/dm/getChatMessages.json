@@ -28,8 +28,11 @@
             "messages": {
               "type": "array",
               "items": {
-                "type": "ref",
-                "ref": "temp.dm.defs#messageView"
+                "type": "union",
+                "refs": [
+                  "#messageView",
+                  "#deletedMessage"
+                ]
               }
             }
           }

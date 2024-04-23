@@ -9527,6 +9527,19 @@ export const schemaDict = {
           },
         },
       },
+      deletedMessage: {
+        type: 'object',
+        required: ['id', 'sentAt'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          sentAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       chatView: {
         type: 'object',
         required: ['id', 'members', 'unreadCount'],
@@ -9542,13 +9555,20 @@ export const schemaDict = {
             },
           },
           lastMessage: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#message',
+            type: 'union',
+            refs: [
+              'lex:temp.dm.defs#messageView',
+              'lex:temp.dm.defs#deletedMessage',
+            ],
           },
           unreadCount: {
             type: 'integer',
           },
         },
+      },
+      incomingMessageSetting: {
+        type: 'string',
+        knownValues: ['all', 'none', 'following'],
       },
     },
   },
@@ -9656,9 +9676,38 @@ export const schemaDict = {
               messages: {
                 type: 'array',
                 items: {
-                  type: 'ref',
-                  ref: 'lex:temp.dm.defs#messageView',
+                  type: 'union',
+                  refs: [
+                    'lex:temp.dm.getChatMessages#messageView',
+                    'lex:temp.dm.getChatMessages#deletedMessage',
+                  ],
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  TempDmGetUserSettings: {
+    lexicon: 1,
+    id: 'temp.dm.getUserSettings',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['allowIncoming'],
+            properties: {
+              allowIncoming: {
+                type: 'ref',
+                ref: 'lex:temp.dm.defs#incomingMessageSetting',
               },
             },
           },
@@ -9740,6 +9789,35 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  TempDmUpdateIncomingMessageSetting: {
+    lexicon: 1,
+    id: 'temp.dm.updateIncomingMessageSetting',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['allowIncoming'],
+            properties: {
+              allowIncoming: {
+                type: 'ref',
+                ref: 'lex:temp.dm.defs#incomingMessageSetting',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -9931,6 +10009,8 @@ export const ids = {
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
   TempDmGetChatForMembers: 'temp.dm.getChatForMembers',
   TempDmGetChatMessages: 'temp.dm.getChatMessages',
+  TempDmGetUserSettings: 'temp.dm.getUserSettings',
   TempDmListChats: 'temp.dm.listChats',
   TempDmSendMessage: 'temp.dm.sendMessage',
+  TempDmUpdateIncomingMessageSetting: 'temp.dm.updateIncomingMessageSetting',
 }

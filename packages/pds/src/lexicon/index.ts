@@ -142,8 +142,10 @@ import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation
 import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
 import * as TempDmGetChatForMembers from './types/temp/dm/getChatForMembers'
 import * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
+import * as TempDmGetUserSettings from './types/temp/dm/getUserSettings'
 import * as TempDmListChats from './types/temp/dm/listChats'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
+import * as TempDmUpdateIncomingMessageSetting from './types/temp/dm/updateIncomingMessageSetting'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -1917,6 +1919,17 @@ export class TempDmNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getUserSettings<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmGetUserSettings.Handler<ExtractAuth<AV>>,
+      TempDmGetUserSettings.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.getUserSettings' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listChats<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1936,6 +1949,17 @@ export class TempDmNS {
     >,
   ) {
     const nsid = 'temp.dm.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateIncomingMessageSetting<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmUpdateIncomingMessageSetting.Handler<ExtractAuth<AV>>,
+      TempDmUpdateIncomingMessageSetting.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.updateIncomingMessageSetting' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

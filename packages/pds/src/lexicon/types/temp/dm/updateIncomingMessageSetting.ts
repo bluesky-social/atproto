@@ -7,26 +7,23 @@ import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as TempDmDefs from './defs'
 
-export interface QueryParams {
-  chatId: string
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  messages: (
-    | MessageView
-    | DeletedMessage
-    | { $type: string; [k: string]: unknown }
-  )[]
+export interface InputSchema {
+  allowIncoming: TempDmDefs.IncomingMessageSetting
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'
