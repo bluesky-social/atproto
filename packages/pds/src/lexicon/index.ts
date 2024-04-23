@@ -139,17 +139,17 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
-import * as TempDmBlockUser from './types/temp/dm/blockUser'
 import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
 import * as TempDmGetChat from './types/temp/dm/getChat'
 import * as TempDmGetChatForMembers from './types/temp/dm/getChatForMembers'
 import * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
 import * as TempDmGetChatUpdates from './types/temp/dm/getChatUpdates'
 import * as TempDmGetUserSettings from './types/temp/dm/getUserSettings'
-import * as TempDmListBlockedUsers from './types/temp/dm/listBlockedUsers'
+import * as TempDmLeaveChat from './types/temp/dm/leaveChat'
 import * as TempDmListChats from './types/temp/dm/listChats'
+import * as TempDmMuteChat from './types/temp/dm/muteChat'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
-import * as TempDmUnblockUser from './types/temp/dm/unblockUser'
+import * as TempDmUnmuteChat from './types/temp/dm/unmuteChat'
 import * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
 
 export const COM_ATPROTO_MODERATION = {
@@ -1891,17 +1891,6 @@ export class TempDmNS {
     this._server = server
   }
 
-  blockUser<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmBlockUser.Handler<ExtractAuth<AV>>,
-      TempDmBlockUser.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.blockUser' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   deleteMessage<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1968,14 +1957,14 @@ export class TempDmNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  listBlockedUsers<AV extends AuthVerifier>(
+  leaveChat<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      TempDmListBlockedUsers.Handler<ExtractAuth<AV>>,
-      TempDmListBlockedUsers.HandlerReqCtx<ExtractAuth<AV>>
+      TempDmLeaveChat.Handler<ExtractAuth<AV>>,
+      TempDmLeaveChat.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'temp.dm.listBlockedUsers' // @ts-ignore
+    const nsid = 'temp.dm.leaveChat' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1990,6 +1979,17 @@ export class TempDmNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  muteChat<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmMuteChat.Handler<ExtractAuth<AV>>,
+      TempDmMuteChat.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.muteChat' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   sendMessage<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -2001,14 +2001,14 @@ export class TempDmNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  unblockUser<AV extends AuthVerifier>(
+  unmuteChat<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      TempDmUnblockUser.Handler<ExtractAuth<AV>>,
-      TempDmUnblockUser.HandlerReqCtx<ExtractAuth<AV>>
+      TempDmUnmuteChat.Handler<ExtractAuth<AV>>,
+      TempDmUnmuteChat.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'temp.dm.unblockUser' // @ts-ignore
+    const nsid = 'temp.dm.unmuteChat' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -9467,35 +9467,6 @@ export const schemaDict = {
       },
     },
   },
-  TempDmBlockUser: {
-    lexicon: 1,
-    id: 'temp.dm.blockUser',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['user'],
-            properties: {
-              user: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
   TempDmDefs: {
     lexicon: 1,
     id: 'temp.dm.defs',
@@ -9859,23 +9830,21 @@ export const schemaDict = {
       },
     },
   },
-  TempDmListBlockedUsers: {
+  TempDmLeaveChat: {
     lexicon: 1,
-    id: 'temp.dm.listBlockedUsers',
+    id: 'temp.dm.leaveChat',
     defs: {
       main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
             },
           },
         },
@@ -9883,19 +9852,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['users'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              users: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
-                },
-              },
-            },
+            properties: {},
           },
         },
       },
@@ -9943,6 +9900,34 @@ export const schemaDict = {
       },
     },
   },
+  TempDmMuteChat: {
+    lexicon: 1,
+    id: 'temp.dm.muteChat',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   TempDmSendMessage: {
     lexicon: 1,
     id: 'temp.dm.sendMessage',
@@ -9980,9 +9965,9 @@ export const schemaDict = {
       },
     },
   },
-  TempDmUnblockUser: {
+  TempDmUnmuteChat: {
     lexicon: 1,
-    id: 'temp.dm.unblockUser',
+    id: 'temp.dm.unmuteChat',
     defs: {
       main: {
         type: 'procedure',
@@ -9990,11 +9975,10 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['user'],
+            required: ['chatId'],
             properties: {
-              user: {
+              chatId: {
                 type: 'string',
-                format: 'did',
               },
             },
           },
@@ -10225,7 +10209,6 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
-  TempDmBlockUser: 'temp.dm.blockUser',
   TempDmDefs: 'temp.dm.defs',
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
   TempDmGetChat: 'temp.dm.getChat',
@@ -10233,9 +10216,10 @@ export const ids = {
   TempDmGetChatMessages: 'temp.dm.getChatMessages',
   TempDmGetChatUpdates: 'temp.dm.getChatUpdates',
   TempDmGetUserSettings: 'temp.dm.getUserSettings',
-  TempDmListBlockedUsers: 'temp.dm.listBlockedUsers',
+  TempDmLeaveChat: 'temp.dm.leaveChat',
   TempDmListChats: 'temp.dm.listChats',
+  TempDmMuteChat: 'temp.dm.muteChat',
   TempDmSendMessage: 'temp.dm.sendMessage',
-  TempDmUnblockUser: 'temp.dm.unblockUser',
+  TempDmUnmuteChat: 'temp.dm.unmuteChat',
   TempDmUpdateUserSettings: 'temp.dm.updateUserSettings',
 }

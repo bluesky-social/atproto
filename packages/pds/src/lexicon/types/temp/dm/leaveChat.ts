@@ -7,22 +7,22 @@ import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from '../../app/bsky/actor/defs'
 
-export interface QueryParams {
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  users: AppBskyActorDefs.ProfileViewBasic[]
+export interface InputSchema {
+  chatId: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

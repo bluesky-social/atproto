@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.blockUser",
+  "id": "temp.dm.unmuteChat",
   "defs": {
     "main": {
       "type": "procedure",
@@ -8,12 +8,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["user"],
+          "required": ["chatId"],
           "properties": {
-            "user": {
-              "type": "string",
-              "format": "did"
-            }
+            "chatId": { "type": "string" }
           }
         }
       },
