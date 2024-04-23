@@ -9583,9 +9583,9 @@ export const schemaDict = {
       },
     },
   },
-  TempDmGetRoomForMembers: {
+  TempDmGetChatForMembers: {
     lexicon: 1,
-    id: 'temp.dm.getRoomForMembers',
+    id: 'temp.dm.getChatForMembers',
     defs: {
       main: {
         type: 'query',
@@ -9929,7 +9929,7 @@ export const ids = {
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   TempDmDefs: 'temp.dm.defs',
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
-  TempDmGetRoomForMembers: 'temp.dm.getRoomForMembers',
+  TempDmGetChatForMembers: 'temp.dm.getChatForMembers',
   TempDmGetChatMessages: 'temp.dm.getChatMessages',
   TempDmListChats: 'temp.dm.listChats',
   TempDmSendMessage: 'temp.dm.sendMessage',
