@@ -2004,7 +2004,7 @@ describe('agent', () => {
       })
 
       describe(`setSavedFeedsV2`, () => {
-        it(`dedupes by id, takes last`, async () => {
+        it(`dedupes by id, takes last, preserves order based on last found`, async () => {
           const a = {
             id: TID.nextStr(),
             type: 'feed',
@@ -2017,9 +2017,9 @@ describe('agent', () => {
             value: feedUri(),
             pinned: true,
           }
-          await agent.setSavedFeedsV2([a, a, b])
+          await agent.setSavedFeedsV2([a, b, a])
           const prefs = await agent.getPreferences()
-          expect(prefs.savedFeeds).toStrictEqual([a, b])
+          expect(prefs.savedFeeds).toStrictEqual([b, a])
         })
 
         it(`preserves order`, async () => {

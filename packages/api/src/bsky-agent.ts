@@ -570,7 +570,13 @@ export class BskyAgent extends AtpAgent {
   async setSavedFeedsV2(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
     savedFeeds.forEach(validateSavedFeed)
     const uniqueSavedFeeds = new Map<string, AppBskyActorDefs.SavedFeed>()
-    savedFeeds.forEach((feed) => uniqueSavedFeeds.set(feed.id, feed))
+    savedFeeds.forEach((feed) => {
+      // remove and re-insert to preserve order
+      if (uniqueSavedFeeds.has(feed.id)) {
+        uniqueSavedFeeds.delete(feed.id)
+      }
+      uniqueSavedFeeds.set(feed.id, feed)
+    })
     return updateSavedFeedsV2Preferences(this, () =>
       Array.from(uniqueSavedFeeds.values()),
     )
