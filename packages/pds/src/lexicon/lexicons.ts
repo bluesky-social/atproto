@@ -9822,8 +9822,8 @@ export const schemaDict = {
                 items: {
                   type: 'union',
                   refs: [
-                    'lex:temp.dm.getChatUpdates#updateMessageCreated',
-                    'lex:temp.dm.getChatUpdates#updateMessageDeleted',
+                    'lex:temp.dm.defs#updateMessageCreated',
+                    'lex:temp.dm.defs#updateMessageDeleted',
                   ],
                 },
               },

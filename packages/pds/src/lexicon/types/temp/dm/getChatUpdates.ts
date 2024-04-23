@@ -7,6 +7,7 @@ import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as TempDmDefs from './defs'
 
 export interface QueryParams {
   rev?: string
@@ -16,8 +17,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   updates: (
-    | UpdateMessageCreated
-    | UpdateMessageDeleted
+    | TempDmDefs.UpdateMessageCreated
+    | TempDmDefs.UpdateMessageDeleted
     | { $type: string; [k: string]: unknown }
   )[]
   [k: string]: unknown

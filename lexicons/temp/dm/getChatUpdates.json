@@ -21,7 +21,10 @@
               "type": "array",
               "items": {
                 "type": "union",
-                "refs": ["#updateMessageCreated", "#updateMessageDeleted"]
+                "refs": [
+                  "temp.dm.defs#updateMessageCreated",
+                  "temp.dm.defs#updateMessageDeleted"
+                ]
               }
             }
           }
