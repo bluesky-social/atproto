@@ -9527,14 +9527,14 @@ export const schemaDict = {
           },
         },
       },
-      roomView: {
+      chatView: {
         type: 'object',
-        required: ['id', 'participants', 'unreadCount'],
+        required: ['id', 'members', 'unreadCount'],
         properties: {
           id: {
             type: 'string',
           },
-          participants: {
+          members: {
             type: 'array',
             items: {
               type: 'string',
@@ -9562,9 +9562,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['roomId', 'messageId'],
+            required: ['chatId', 'messageId'],
             properties: {
-              roomId: {
+              chatId: {
                 type: 'string',
               },
               messageId: {
@@ -9620,17 +9620,17 @@ export const schemaDict = {
       },
     },
   },
-  TempDmGetRoomMessages: {
+  TempDmGetChatMessages: {
     lexicon: 1,
-    id: 'temp.dm.getRoomMessages',
+    id: 'temp.dm.getChatMessages',
     defs: {
       main: {
         type: 'query',
         parameters: {
           type: 'params',
-          required: ['roomId'],
+          required: ['chatId'],
           properties: {
-            roomId: {
+            chatId: {
               type: 'string',
             },
             limit: {
@@ -9666,9 +9666,9 @@ export const schemaDict = {
       },
     },
   },
-  TempDmListRooms: {
+  TempDmListChats: {
     lexicon: 1,
-    id: 'temp.dm.listRooms',
+    id: 'temp.dm.listChats',
     defs: {
       main: {
         type: 'query',
@@ -9690,16 +9690,16 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['rooms'],
+            required: ['chats'],
             properties: {
               cursor: {
                 type: 'string',
               },
-              rooms: {
+              chats: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:temp.dm.defs#roomView',
+                  ref: 'lex:temp.dm.defs#chatView',
                 },
               },
             },
@@ -9718,9 +9718,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['roomId', 'message'],
+            required: ['chatId', 'message'],
             properties: {
-              roomId: {
+              chatId: {
                 type: 'string',
               },
               message: {
@@ -9930,7 +9930,7 @@ export const ids = {
   TempDmDefs: 'temp.dm.defs',
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
   TempDmGetRoomForMembers: 'temp.dm.getRoomForMembers',
-  TempDmGetRoomMessages: 'temp.dm.getRoomMessages',
-  TempDmListRooms: 'temp.dm.listRooms',
+  TempDmGetChatMessages: 'temp.dm.getChatMessages',
+  TempDmListChats: 'temp.dm.listChats',
   TempDmSendMessage: 'temp.dm.sendMessage',
 }

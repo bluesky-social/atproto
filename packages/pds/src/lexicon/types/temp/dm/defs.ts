@@ -45,18 +45,18 @@ export function validateMessageView(v: unknown): ValidationResult {
   return lexicons.validate('temp.dm.defs#messageView', v)
 }
 
-export interface RoomView {
+export interface ChatView {
   id: string
-  participants: string[]
+  members: string[]
   lastMessage?: Message
   unreadCount: number
   [k: string]: unknown
 }
 
-export function isRoomView(v: unknown): v is RoomView {
-  return isObj(v) && hasProp(v, '$type') && v.$type === 'temp.dm.defs#roomView'
+export function isChatView(v: unknown): v is ChatView {
+  return isObj(v) && hasProp(v, '$type') && v.$type === 'temp.dm.defs#chatView'
 }
 
-export function validateRoomView(v: unknown): ValidationResult {
-  return lexicons.validate('temp.dm.defs#roomView', v)
+export function validateChatView(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#chatView', v)
 }

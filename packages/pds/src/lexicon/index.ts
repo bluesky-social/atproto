@@ -141,8 +141,8 @@ import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderati
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
 import * as TempDmGetRoomForMembers from './types/temp/dm/getRoomForMembers'
-import * as TempDmGetRoomMessages from './types/temp/dm/getRoomMessages'
-import * as TempDmListRooms from './types/temp/dm/listRooms'
+import * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
+import * as TempDmListChats from './types/temp/dm/listChats'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
 
 export const COM_ATPROTO_MODERATION = {
@@ -1906,25 +1906,25 @@ export class TempDmNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getRoomMessages<AV extends AuthVerifier>(
+  getChatMessages<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      TempDmGetRoomMessages.Handler<ExtractAuth<AV>>,
-      TempDmGetRoomMessages.HandlerReqCtx<ExtractAuth<AV>>
+      TempDmGetChatMessages.Handler<ExtractAuth<AV>>,
+      TempDmGetChatMessages.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'temp.dm.getRoomMessages' // @ts-ignore
+    const nsid = 'temp.dm.getChatMessages' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  listRooms<AV extends AuthVerifier>(
+  listChats<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      TempDmListRooms.Handler<ExtractAuth<AV>>,
-      TempDmListRooms.HandlerReqCtx<ExtractAuth<AV>>
+      TempDmListChats.Handler<ExtractAuth<AV>>,
+      TempDmListChats.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'temp.dm.listRooms' // @ts-ignore
+    const nsid = 'temp.dm.listChats' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

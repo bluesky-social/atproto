@@ -10,7 +10,6 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as TempDmDefs from './defs'
 
 export interface QueryParams {
-  roomId: string
   limit: number
   cursor?: string
 }
@@ -19,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  messages: TempDmDefs.MessageView[]
+  chats: TempDmDefs.ChatView[]
   [k: string]: unknown
 }
 

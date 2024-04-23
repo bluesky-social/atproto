@@ -49,12 +49,12 @@
         "sentAt": { "type": "string", "format": "datetime" }
       }
     },
-    "roomView": {
+    "chatView": {
       "type": "object",
-      "required": ["id", "participants", "unreadCount"],
+      "required": ["id", "members", "unreadCount"],
       "properties": {
         "id": { "type": "string" },
-        "participants": {
+        "members": {
           "type": "array",
           "items": { "type": "string", "format": "did" }
         },

@@ -12,7 +12,7 @@ import * as TempDmDefs from './defs'
 export interface QueryParams {}
 
 export interface InputSchema {
-  roomId: string
+  chatId: string
   message: TempDmDefs.Message
   [k: string]: unknown
 }

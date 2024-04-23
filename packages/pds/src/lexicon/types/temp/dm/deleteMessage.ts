@@ -11,7 +11,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  roomId: string
+  chatId: string
   messageId: string
   [k: string]: unknown
 }
