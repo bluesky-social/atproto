@@ -12,11 +12,12 @@ import * as TempDmDefs from './defs'
 export interface QueryParams {}
 
 export interface InputSchema {
-  allowIncoming: TempDmDefs.IncomingMessageSetting
+  allowIncoming?: TempDmDefs.IncomingMessageSetting
   [k: string]: unknown
 }
 
 export interface OutputSchema {
+  allowIncoming: TempDmDefs.IncomingMessageSetting
   [k: string]: unknown
 }
 

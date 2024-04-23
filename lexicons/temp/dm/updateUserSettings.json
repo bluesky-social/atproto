@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.updateIncomingMessageSetting",
+  "id": "temp.dm.updateUserSettings",
   "defs": {
     "main": {
       "type": "procedure",
@@ -8,7 +8,6 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["allowIncoming"],
           "properties": {
             "allowIncoming": {
               "type": "ref",
@@ -21,7 +20,13 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "properties": {}
+          "required": ["allowIncoming"],
+          "properties": {
+            "allowIncoming": {
+              "type": "ref",
+              "ref": "temp.dm.defs#incomingMessageSetting"
+            }
+          }
         }
       }
     }

@@ -10009,9 +10009,9 @@ export const schemaDict = {
       },
     },
   },
-  TempDmUpdateIncomingMessageSetting: {
+  TempDmUpdateUserSettings: {
     lexicon: 1,
-    id: 'temp.dm.updateIncomingMessageSetting',
+    id: 'temp.dm.updateUserSettings',
     defs: {
       main: {
         type: 'procedure',
@@ -10019,7 +10019,6 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['allowIncoming'],
             properties: {
               allowIncoming: {
                 type: 'ref',
@@ -10032,7 +10031,13 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            properties: {},
+            required: ['allowIncoming'],
+            properties: {
+              allowIncoming: {
+                type: 'ref',
+                ref: 'lex:temp.dm.defs#incomingMessageSetting',
+              },
+            },
           },
         },
       },
@@ -10232,5 +10237,5 @@ export const ids = {
   TempDmListChats: 'temp.dm.listChats',
   TempDmSendMessage: 'temp.dm.sendMessage',
   TempDmUnblockUser: 'temp.dm.unblockUser',
-  TempDmUpdateIncomingMessageSetting: 'temp.dm.updateIncomingMessageSetting',
+  TempDmUpdateUserSettings: 'temp.dm.updateUserSettings',
 }

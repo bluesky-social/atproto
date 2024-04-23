@@ -150,7 +150,7 @@ import * as TempDmListBlockedUsers from './types/temp/dm/listBlockedUsers'
 import * as TempDmListChats from './types/temp/dm/listChats'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
 import * as TempDmUnblockUser from './types/temp/dm/unblockUser'
-import * as TempDmUpdateIncomingMessageSetting from './types/temp/dm/updateIncomingMessageSetting'
+import * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -2012,14 +2012,14 @@ export class TempDmNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  updateIncomingMessageSetting<AV extends AuthVerifier>(
+  updateUserSettings<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      TempDmUpdateIncomingMessageSetting.Handler<ExtractAuth<AV>>,
-      TempDmUpdateIncomingMessageSetting.HandlerReqCtx<ExtractAuth<AV>>
+      TempDmUpdateUserSettings.Handler<ExtractAuth<AV>>,
+      TempDmUpdateUserSettings.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'temp.dm.updateIncomingMessageSetting' // @ts-ignore
+    const nsid = 'temp.dm.updateUserSettings' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
