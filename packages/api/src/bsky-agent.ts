@@ -612,6 +612,20 @@ export class BskyAgent extends AtpAgent {
     ])
   }
 
+  async addSavedFeeds(
+    savedFeeds: Pick<AppBskyActorDefs.SavedFeed, 'type' | 'value' | 'pinned'>[],
+  ) {
+    const toSave: AppBskyActorDefs.SavedFeed[] = savedFeeds.map((f) => ({
+      ...f,
+      id: TID.nextStr(),
+    }))
+    toSave.forEach(validateSavedFeed)
+    return updateSavedFeedsV2Preferences(this, (savedFeeds) => [
+      ...savedFeeds,
+      ...toSave,
+    ])
+  }
+
   async removeSavedFeedV2(id: string) {
     return updateSavedFeedsV2Preferences(this, (savedFeeds) => [
       ...savedFeeds.filter((feed) => feed.id !== id),

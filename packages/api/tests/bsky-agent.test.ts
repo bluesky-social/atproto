@@ -2150,6 +2150,77 @@ describe('agent', () => {
           expect(prefs.savedFeeds).toStrictEqual([a])
         })
       })
+
+      describe('addSavedFeeds', () => {
+        it(`adds multiple`, async () => {
+          const a = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          await agent.addSavedFeeds([a, b])
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
+            {
+              ...a,
+              id: expect.any(String),
+            },
+            {
+              ...b,
+              id: expect.any(String),
+            },
+          ])
+        })
+
+        it(`appends multiple`, async () => {
+          const a = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          const c = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const d = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          await agent.addSavedFeeds([a, b])
+          await agent.addSavedFeeds([c, d])
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
+            {
+              ...a,
+              id: expect.any(String),
+            },
+            {
+              ...c,
+              id: expect.any(String),
+            },
+            {
+              ...b,
+              id: expect.any(String),
+            },
+            {
+              ...d,
+              id: expect.any(String),
+            },
+          ])
+        })
+      })
     })
 
     describe(`saved feeds v2: migration scenarios`, () => {
