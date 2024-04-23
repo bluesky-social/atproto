@@ -9785,8 +9785,8 @@ export const schemaDict = {
                 items: {
                   type: 'union',
                   refs: [
-                    'lex:temp.dm.getChatMessages#messageView',
-                    'lex:temp.dm.getChatMessages#deletedMessage',
+                    'lex:temp.dm.defs#messageView',
+                    'lex:temp.dm.defs#deletedMessage',
                   ],
                 },
               },

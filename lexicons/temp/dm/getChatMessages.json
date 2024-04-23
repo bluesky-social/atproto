@@ -29,7 +29,10 @@
               "type": "array",
               "items": {
                 "type": "union",
-                "refs": ["#messageView", "#deletedMessage"]
+                "refs": [
+                  "temp.dm.defs#messageView",
+                  "temp.dm.defs#deletedMessage"
+                ]
               }
             }
           }

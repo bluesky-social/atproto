@@ -7,6 +7,7 @@ import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as TempDmDefs from './defs'
 
 export interface QueryParams {
   chatId: string
@@ -19,8 +20,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   messages: (
-    | MessageView
-    | DeletedMessage
+    | TempDmDefs.MessageView
+    | TempDmDefs.DeletedMessage
     | { $type: string; [k: string]: unknown }
   )[]
   [k: string]: unknown
