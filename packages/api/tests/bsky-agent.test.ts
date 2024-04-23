@@ -1916,14 +1916,14 @@ describe('agent', () => {
         })
       })
 
-      describe(`addSavedFeedV2`, () => {
+      describe(`addSavedFeeds`, () => {
         it('works', async () => {
           const feed = {
             type: 'feed',
             value: feedUri(),
             pinned: false,
           }
-          await agent.addSavedFeedV2(feed)
+          await agent.addSavedFeeds([feed])
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([
             {
@@ -1936,31 +1936,37 @@ describe('agent', () => {
         it('throws if feed is specified and list provided', async () => {
           const list = listUri()
           await expect(() =>
-            agent.addSavedFeedV2({
-              type: 'feed',
-              value: list,
-              pinned: true,
-            }),
+            agent.addSavedFeeds([
+              {
+                type: 'feed',
+                value: list,
+                pinned: true,
+              },
+            ]),
           ).rejects.toThrow()
         })
 
         it('throws if list is specified and feed provided', async () => {
           const feed = feedUri()
           await expect(() =>
-            agent.addSavedFeedV2({
-              type: 'list',
-              value: feed,
-              pinned: true,
-            }),
+            agent.addSavedFeeds([
+              {
+                type: 'list',
+                value: feed,
+                pinned: true,
+              },
+            ]),
           ).rejects.toThrow()
         })
 
         it(`timeline`, async () => {
-          const feeds = await agent.addSavedFeedV2({
-            type: 'timeline',
-            value: 'home',
-            pinned: true,
-          })
+          const feeds = await agent.addSavedFeeds([
+            {
+              type: 'timeline',
+              value: 'home',
+              pinned: true,
+            },
+          ])
           const prefs = await agent.getPreferences()
           expect(
             prefs.savedFeeds.filter((f) => f.type === 'timeline'),
@@ -1973,8 +1979,8 @@ describe('agent', () => {
             value: feedUri(),
             pinned: false,
           }
-          await agent.addSavedFeedV2(feed)
-          await agent.addSavedFeedV2(feed)
+          await agent.addSavedFeeds([feed])
+          await agent.addSavedFeeds([feed])
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([
             {
@@ -1987,17 +1993,86 @@ describe('agent', () => {
             },
           ])
         })
+
+        it(`adds multiple`, async () => {
+          const a = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          await agent.addSavedFeeds([a, b])
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
+            {
+              ...a,
+              id: expect.any(String),
+            },
+            {
+              ...b,
+              id: expect.any(String),
+            },
+          ])
+        })
+
+        it(`appends multiple`, async () => {
+          const a = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const b = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          const c = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          const d = {
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          await agent.addSavedFeeds([a, b])
+          await agent.addSavedFeeds([c, d])
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([
+            {
+              ...a,
+              id: expect.any(String),
+            },
+            {
+              ...c,
+              id: expect.any(String),
+            },
+            {
+              ...b,
+              id: expect.any(String),
+            },
+            {
+              ...d,
+              id: expect.any(String),
+            },
+          ])
+        })
       })
 
-      describe(`removeSavedFeedV2`, () => {
+      describe(`removeSavedFeeds`, () => {
         it('works', async () => {
           const feed = {
             type: 'feed',
             value: feedUri(),
             pinned: true,
           }
-          const savedFeeds = await agent.addSavedFeedV2(feed)
-          await agent.removeSavedFeedV2(savedFeeds[0].id)
+          const savedFeeds = await agent.addSavedFeeds([feed])
+          await agent.removeSavedFeeds([savedFeeds[0].id])
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([])
         })
@@ -2150,77 +2225,6 @@ describe('agent', () => {
           expect(prefs.savedFeeds).toStrictEqual([a])
         })
       })
-
-      describe('addSavedFeeds', () => {
-        it(`adds multiple`, async () => {
-          const a = {
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          const b = {
-            type: 'feed',
-            value: feedUri(),
-            pinned: false,
-          }
-          await agent.addSavedFeeds([a, b])
-          const prefs = await agent.getPreferences()
-          expect(prefs.savedFeeds).toStrictEqual([
-            {
-              ...a,
-              id: expect.any(String),
-            },
-            {
-              ...b,
-              id: expect.any(String),
-            },
-          ])
-        })
-
-        it(`appends multiple`, async () => {
-          const a = {
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          const b = {
-            type: 'feed',
-            value: feedUri(),
-            pinned: false,
-          }
-          const c = {
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          const d = {
-            type: 'feed',
-            value: feedUri(),
-            pinned: false,
-          }
-          await agent.addSavedFeeds([a, b])
-          await agent.addSavedFeeds([c, d])
-          const prefs = await agent.getPreferences()
-          expect(prefs.savedFeeds).toStrictEqual([
-            {
-              ...a,
-              id: expect.any(String),
-            },
-            {
-              ...c,
-              id: expect.any(String),
-            },
-            {
-              ...b,
-              id: expect.any(String),
-            },
-            {
-              ...d,
-              id: expect.any(String),
-            },
-          ])
-        })
-      })
     })
 
     describe(`saved feeds v2: migration scenarios`, () => {
@@ -2249,7 +2253,7 @@ describe('agent', () => {
           value: feedUri(),
           pinned: false,
         }
-        await agent.addSavedFeedV2(feed)
+        await agent.addSavedFeeds([feed])
         const prefs = await agent.getPreferences()
         expect(prefs.savedFeeds).toStrictEqual([
           {
@@ -2266,7 +2270,7 @@ describe('agent', () => {
           value: feedUri(),
           pinned: false,
         }
-        await agent.addSavedFeedV2(feed)
+        await agent.addSavedFeeds([feed])
         const prefs = await agent.getPreferences()
         expect(prefs.savedFeeds).toStrictEqual([
           {
@@ -2304,11 +2308,13 @@ describe('agent', () => {
         const a = feedUri()
         // migration happens
         await agent.getPreferences()
-        await agent.addSavedFeedV2({
-          type: 'feed',
-          value: a,
-          pinned: false,
-        })
+        await agent.addSavedFeeds([
+          {
+            type: 'feed',
+            value: a,
+            pinned: false,
+          },
+        ])
         const prefs = await agent.getPreferences()
         expect(prefs.savedFeeds).toStrictEqual([
           {
@@ -2449,11 +2455,13 @@ describe('agent', () => {
         await agent.getPreferences()
 
         // new write to v2, c is saved
-        await agent.addSavedFeedV2({
-          type: 'feed',
-          value: c,
-          pinned: false,
-        })
+        await agent.addSavedFeeds([
+          {
+            type: 'feed',
+            value: c,
+            pinned: false,
+          },
+        ])
 
         // v2 write wrote to v1 also
         const res1 = await agent.app.bsky.actor.getPreferences()
@@ -2480,11 +2488,13 @@ describe('agent', () => {
         })
 
         // another new write to v2, pins e
-        await agent.addSavedFeedV2({
-          type: 'feed',
-          value: e,
-          pinned: true,
-        })
+        await agent.addSavedFeeds([
+          {
+            type: 'feed',
+            value: e,
+            pinned: true,
+          },
+        ])
 
         const res4 = await agent.app.bsky.actor.getPreferences()
         const v1Pref4 = res4.data.preferences.find((p) =>
