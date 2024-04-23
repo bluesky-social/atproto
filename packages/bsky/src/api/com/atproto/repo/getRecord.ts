@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ params }) => {
+  server.com.atproto.repo.getRecord(async ({ params, req }) => {
     const { repo, collection, rkey, cid } = params
     const [did] = await ctx.hydrator.actor.getDids([repo])
     if (!did) {
@@ -18,12 +18,22 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
 
+    const labelers = ctx.reqLabelers(req)
+    const labelMap = await ctx.hydrator.label.getLabelsForSubjects(
+      [uri],
+      labelers,
+    )
+    const labels = Array.from(labelMap.get(uri)?.labels?.values() || [])
+
     return {
       encoding: 'application/json' as const,
       body: {
         uri: uri,
         cid: result.cid,
-        value: result.record,
+        value: {
+          ...result.record,
+        },
+        labels,
       },
     }
   })

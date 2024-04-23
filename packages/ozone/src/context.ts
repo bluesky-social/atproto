@@ -1,3 +1,4 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
@@ -17,7 +18,13 @@ import {
 import { BlobDiverter } from './daemon/blob-diverter'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
-import { getSigningKeyId } from './util'
+import {
+  defaultLabelerHeader,
+  getSigningKeyId,
+  LABELER_HEADER_NAME,
+  ParsedLabelers,
+  parseLabelerHeader,
+} from './util'
 
 export type AppContextOptions = {
   db: Database
@@ -208,8 +215,12 @@ export class AppContext {
     return this.serviceAuthHeaders(this.cfg.pds.did)
   }
 
-  async appviewAuth() {
-    return this.serviceAuthHeaders(this.cfg.appview.did)
+  async appviewAuth(labelers?: ParsedLabelers) {
+    const auth = await this.serviceAuthHeaders(this.cfg.appview.did)
+    if (auth && labelers?.dids?.length) {
+      auth.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
+    }
+    return auth
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {
@@ -217,6 +228,18 @@ export class AppContext {
       ...this.opts,
       ...overrides,
     }
+  }
+
+  reqLabelers(req: express.Request): ParsedLabelers {
+    const val = req.header(LABELER_HEADER_NAME)
+    let parsed: ParsedLabelers | null
+    try {
+      parsed = parseLabelerHeader(val, this.cfg.service.did)
+    } catch (err) {
+      parsed = null
+    }
+    if (!parsed) return defaultLabelerHeader([])
+    return parsed
   }
 }
 export default AppContext

@@ -435,7 +435,11 @@
         },
         "indexedAt": { "type": "string", "format": "datetime" },
         "moderation": { "type": "ref", "ref": "#moderation" },
-        "repo": { "type": "ref", "ref": "#repoView" }
+        "repo": { "type": "ref", "ref": "#repoView" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        }
       }
     },
     "recordViewDetail": {

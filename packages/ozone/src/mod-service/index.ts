@@ -48,6 +48,7 @@ import { formatLabel, formatLabelRow, signLabel } from './util'
 import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
+import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -96,7 +97,13 @@ export class ModerationService {
     this.signingKey,
     this.signingKeyId,
     this.appviewAgent,
-    () => this.createAuthHeaders(this.cfg.appview.did),
+    async (labelers?: ParsedLabelers) => {
+      const authHeaders = await this.createAuthHeaders(this.cfg.appview.did)
+      if (labelers?.dids?.length) {
+        authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
+      }
+      return authHeaders
+    },
   )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {

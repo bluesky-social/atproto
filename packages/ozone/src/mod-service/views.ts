@@ -28,10 +28,12 @@ import { formatLabel, signLabel } from './util'
 import { LabelRow } from '../db/schema/label'
 import { dbLogger } from '../logger'
 import { httpLogger } from '../logger'
+import { ParsedLabelers } from '../util'
 
 export type AuthHeaders = {
   headers: {
     authorization: string
+    'atproto-accept-labelers'?: string
   }
 }
 
@@ -41,7 +43,7 @@ export class ModerationViews {
     private signingKey: Keypair,
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
-    private appviewAuth: () => Promise<AuthHeaders>,
+    private appviewAuth: (labelers?: ParsedLabelers) => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
@@ -227,8 +229,9 @@ export class ModerationViews {
 
   async fetchRecords(
     subjects: RecordSubject[],
+    labelers?: ParsedLabelers,
   ): Promise<Map<string, RecordInfo>> {
-    const auth = await this.appviewAuth()
+    const auth = await this.appviewAuth(labelers)
     if (!auth) return new Map()
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
@@ -257,14 +260,17 @@ export class ModerationViews {
     }, new Map<string, RecordInfo>())
   }
 
-  async records(subjects: RecordSubject[]): Promise<Map<string, RecordView>> {
+  async records(
+    subjects: RecordSubject[],
+    labelers?: ParsedLabelers,
+  ): Promise<Map<string, RecordView>> {
     const uris = subjects.map((record) => new AtUri(record.uri))
     const dids = uris.map((u) => u.hostname)
 
     const [repos, subjectStatuses, records] = await Promise.all([
       this.repos(dids),
       this.getSubjectStatus(subjects.map((s) => s.uri)),
-      this.fetchRecords(subjects),
+      this.fetchRecords(subjects, labelers),
     ])
 
     return uris.reduce((acc, uri) => {
@@ -278,6 +284,7 @@ export class ModerationViews {
         cid: record.cid,
         value: record.value,
         blobCids: findBlobRefs(record.value).map((blob) => blob.ref.toString()),
+        labels: record.labels,
         indexedAt: record.indexedAt,
         repo,
         moderation: {
@@ -291,9 +298,10 @@ export class ModerationViews {
 
   async recordDetail(
     subject: RecordSubject,
+    labelers?: ParsedLabelers,
   ): Promise<RecordViewDetail | undefined> {
     const [records, subjectStatusesResult] = await Promise.all([
-      this.records([subject]),
+      this.records([subject], labelers),
       this.getSubjectStatus([subject.uri]),
     ])
     const record = records.get(subject.uri)
@@ -311,6 +319,7 @@ export class ModerationViews {
       cid: record.cid,
       record: record.value,
     })
+
     return {
       ...record,
       blobs,
@@ -318,7 +327,7 @@ export class ModerationViews {
         ...record.moderation,
         subjectStatus,
       },
-      labels: [...labels, ...selfLabels],
+      labels: [...labels, ...selfLabels, ...(record['labels'] || [])],
     }
   }
 
@@ -533,6 +542,7 @@ type RecordInfo = {
   uri: string
   cid: string
   value: Record<string, unknown>
+  labels?: Label[]
   indexedAt: string
 }
 

@@ -488,6 +488,7 @@ export interface RecordView {
   indexedAt: string
   moderation: Moderation
   repo: RepoView
+  labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 

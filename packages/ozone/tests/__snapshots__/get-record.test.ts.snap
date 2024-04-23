@@ -13,7 +13,7 @@ Object {
       "sig": Object {
         "$bytes": "sig(0)",
       },
-      "src": "user(2)",
+      "src": "user(0)",
       "uri": "record(0)",
       "val": "!takedown",
       "ver": 1,
@@ -21,7 +21,7 @@ Object {
     Object {
       "cid": "cids(0)",
       "cts": "1970-01-01T00:00:00.000Z",
-      "src": "user(0)",
+      "src": "user(1)",
       "uri": "record(0)",
       "val": "self-label",
     },
@@ -32,7 +32,7 @@ Object {
       "id": 1,
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
-      "lastReviewedBy": "user(1)",
+      "lastReviewedBy": "user(2)",
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -49,7 +49,7 @@ Object {
     },
   },
   "repo": Object {
-    "did": "user(0)",
+    "did": "user(1)",
     "email": "alice@test.com",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -112,7 +112,7 @@ Object {
       "sig": Object {
         "$bytes": "sig(0)",
       },
-      "src": "user(2)",
+      "src": "user(0)",
       "uri": "record(0)",
       "val": "!takedown",
       "ver": 1,
@@ -120,7 +120,7 @@ Object {
     Object {
       "cid": "cids(0)",
       "cts": "1970-01-01T00:00:00.000Z",
-      "src": "user(0)",
+      "src": "user(1)",
       "uri": "record(0)",
       "val": "self-label",
     },
@@ -131,7 +131,7 @@ Object {
       "id": 1,
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
-      "lastReviewedBy": "user(1)",
+      "lastReviewedBy": "user(2)",
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -148,7 +148,7 @@ Object {
     },
   },
   "repo": Object {
-    "did": "user(0)",
+    "did": "user(1)",
     "email": "alice@test.com",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",

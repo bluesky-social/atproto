@@ -8924,6 +8924,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#repoView',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
         },
       },
       recordViewDetail: {
