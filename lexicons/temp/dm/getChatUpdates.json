@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "temp.dm.getChatUpdates",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": [],
+        "properties": {
+          "rev": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["updates"],
+          "properties": {
+            "updates": {
+              "type": "array",
+              "items": {
+                "type": "union",
+                "refs": ["#updateMessageCreated", "#updateMessageDeleted"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

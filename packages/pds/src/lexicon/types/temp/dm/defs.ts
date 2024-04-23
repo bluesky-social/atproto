@@ -27,6 +27,7 @@ export function validateMessage(v: unknown): ValidationResult {
 
 export interface MessageView {
   id: string
+  rev: string
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
@@ -47,6 +48,7 @@ export function validateMessageView(v: unknown): ValidationResult {
 
 export interface DeletedMessage {
   id: string
+  rev?: string
   sentAt: string
   [k: string]: unknown
 }
@@ -63,6 +65,7 @@ export function validateDeletedMessage(v: unknown): ValidationResult {
 
 export interface ChatView {
   id: string
+  rev: string
   members: string[]
   lastMessage?:
     | MessageView
@@ -85,3 +88,47 @@ export type IncomingMessageSetting =
   | 'none'
   | 'following'
   | (string & {})
+
+export interface UpdateMessageCreated {
+  rev?: string
+  chatId?: string
+  message?:
+    | MessageView
+    | DeletedMessage
+    | { $type: string; [k: string]: unknown }
+  [k: string]: unknown
+}
+
+export function isUpdateMessageCreated(v: unknown): v is UpdateMessageCreated {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'temp.dm.defs#updateMessageCreated'
+  )
+}
+
+export function validateUpdateMessageCreated(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#updateMessageCreated', v)
+}
+
+export interface UpdateMessageDeleted {
+  rev?: string
+  chatId?: string
+  message?:
+    | MessageView
+    | DeletedMessage
+    | { $type: string; [k: string]: unknown }
+  [k: string]: unknown
+}
+
+export function isUpdateMessageDeleted(v: unknown): v is UpdateMessageDeleted {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'temp.dm.defs#updateMessageDeleted'
+  )
+}
+
+export function validateUpdateMessageDeleted(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#updateMessageDeleted', v)
+}

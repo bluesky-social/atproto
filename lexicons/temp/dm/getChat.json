@@ -1,22 +1,25 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.getUserSettings",
+  "id": "temp.dm.getChat",
   "defs": {
     "main": {
       "type": "query",
       "parameters": {
         "type": "params",
-        "properties": {}
+        "required": ["chatId"],
+        "properties": {
+          "chatId": { "type": "string" }
+        }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["allowIncoming"],
+          "required": ["chat"],
           "properties": {
-            "allowIncoming": {
+            "chat": {
               "type": "ref",
-              "ref": "temp.dm.defs#incomingMessageSetting"
+              "ref": "temp.dm.defs#chatView"
             }
           }
         }

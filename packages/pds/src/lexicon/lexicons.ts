@@ -9528,9 +9528,12 @@ export const schemaDict = {
       },
       messageView: {
         type: 'object',
-        required: ['id', 'text', 'sentAt'],
+        required: ['id', 'rev', 'text', 'sentAt'],
         properties: {
           id: {
+            type: 'string',
+          },
+          rev: {
             type: 'string',
           },
           text: {
@@ -9563,6 +9566,9 @@ export const schemaDict = {
           id: {
             type: 'string',
           },
+          rev: {
+            type: 'string',
+          },
           sentAt: {
             type: 'string',
             format: 'datetime',
@@ -9571,9 +9577,12 @@ export const schemaDict = {
       },
       chatView: {
         type: 'object',
-        required: ['id', 'members', 'unreadCount'],
+        required: ['id', 'rev', 'members', 'unreadCount'],
         properties: {
           id: {
+            type: 'string',
+          },
+          rev: {
             type: 'string',
           },
           members: {
@@ -9598,6 +9607,44 @@ export const schemaDict = {
       incomingMessageSetting: {
         type: 'string',
         knownValues: ['all', 'none', 'following'],
+      },
+      updateMessageCreated: {
+        type: 'object',
+        required: [],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:temp.dm.defs#messageView',
+              'lex:temp.dm.defs#deletedMessage',
+            ],
+          },
+        },
+      },
+      updateMessageDeleted: {
+        type: 'object',
+        required: [],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:temp.dm.defs#messageView',
+              'lex:temp.dm.defs#deletedMessage',
+            ],
+          },
+        },
       },
     },
   },
@@ -9627,6 +9674,37 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {},
+          },
+        },
+      },
+    },
+  },
+  TempDmGetChat: {
+    lexicon: 1,
+    id: 'temp.dm.getChat',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['chatId'],
+          properties: {
+            chatId: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chat'],
+            properties: {
+              chat: {
+                type: 'ref',
+                ref: 'lex:temp.dm.defs#chatView',
+              },
+            },
           },
         },
       },
@@ -9709,6 +9787,43 @@ export const schemaDict = {
                   refs: [
                     'lex:temp.dm.getChatMessages#messageView',
                     'lex:temp.dm.getChatMessages#deletedMessage',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  TempDmGetChatUpdates: {
+    lexicon: 1,
+    id: 'temp.dm.getChatUpdates',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: [],
+          properties: {
+            rev: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['updates'],
+            properties: {
+              updates: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:temp.dm.getChatUpdates#updateMessageCreated',
+                    'lex:temp.dm.getChatUpdates#updateMessageDeleted',
                   ],
                 },
               },
@@ -10108,8 +10223,10 @@ export const ids = {
   TempDmBlockUser: 'temp.dm.blockUser',
   TempDmDefs: 'temp.dm.defs',
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
+  TempDmGetChat: 'temp.dm.getChat',
   TempDmGetChatForMembers: 'temp.dm.getChatForMembers',
   TempDmGetChatMessages: 'temp.dm.getChatMessages',
+  TempDmGetChatUpdates: 'temp.dm.getChatUpdates',
   TempDmGetUserSettings: 'temp.dm.getUserSettings',
   TempDmListBlockedUsers: 'temp.dm.listBlockedUsers',
   TempDmListChats: 'temp.dm.listChats',

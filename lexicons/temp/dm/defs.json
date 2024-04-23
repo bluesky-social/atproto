@@ -19,17 +19,16 @@
         },
         "embed": {
           "type": "union",
-          "refs": [
-            "app.bsky.embed.record"
-          ]
+          "refs": ["app.bsky.embed.record"]
         }
       }
     },
     "messageView": {
       "type": "object",
-      "required": ["id", "text", "sentAt"],
+      "required": ["id", "rev", "text", "sentAt"],
       "properties": {
         "id": { "type": "string" },
+        "rev": { "type": "string" },
         "text": {
           "type": "string",
           "maxLength": 10000,
@@ -42,9 +41,7 @@
         },
         "embed": {
           "type": "union",
-          "refs": [
-            "app.bsky.embed.record"
-          ]
+          "refs": ["app.bsky.embed.record"]
         },
         "sentAt": { "type": "string", "format": "datetime" }
       }
@@ -54,35 +51,54 @@
       "required": ["id", "sentAt"],
       "properties": {
         "id": { "type": "string" },
+        "rev": { "type": "string" },
         "sentAt": { "type": "string", "format": "datetime" }
       }
     },
     "chatView": {
       "type": "object",
-      "required": ["id", "members", "unreadCount"],
+      "required": ["id", "rev", "members", "unreadCount"],
       "properties": {
         "id": { "type": "string" },
+        "rev": { "type": "string" },
         "members": {
           "type": "array",
           "items": { "type": "string", "format": "did" }
         },
         "lastMessage": {
           "type": "union",
-          "refs": [
-            "#messageView",
-            "#deletedMessage"
-          ]
+          "refs": ["#messageView", "#deletedMessage"]
         },
         "unreadCount": { "type": "integer" }
       }
     },
     "incomingMessageSetting": {
       "type": "string",
-      "knownValues": [
-        "all",
-        "none",
-        "following"
-      ]
+      "knownValues": ["all", "none", "following"]
+    },
+    "updateMessageCreated": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "rev": { "type": "string" },
+        "chatId": { "type": "string" },
+        "message": {
+          "type": "union",
+          "refs": ["#messageView", "#deletedMessage"]
+        }
+      }
+    },
+    "updateMessageDeleted": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "rev": { "type": "string" },
+        "chatId": { "type": "string" },
+        "message": {
+          "type": "union",
+          "refs": ["#messageView", "#deletedMessage"]
+        }
+      }
     }
   }
 }

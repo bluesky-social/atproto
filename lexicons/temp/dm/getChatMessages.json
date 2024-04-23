@@ -29,10 +29,7 @@
               "type": "array",
               "items": {
                 "type": "union",
-                "refs": [
-                  "#messageView",
-                  "#deletedMessage"
-                ]
+                "refs": ["#messageView", "#deletedMessage"]
               }
             }
           }
