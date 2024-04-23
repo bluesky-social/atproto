@@ -16,7 +16,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  room: TempDmDefs.RoomView
+  chat: TempDmDefs.ChatView
   [k: string]: unknown
 }
 

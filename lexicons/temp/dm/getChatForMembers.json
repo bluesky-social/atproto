@@ -23,11 +23,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["room"],
+          "required": ["chat"],
           "properties": {
-            "room": {
+            "chat": {
               "type": "ref",
-              "ref": "temp.dm.defs#roomView"
+              "ref": "temp.dm.defs#chatView"
             }
           }
         }

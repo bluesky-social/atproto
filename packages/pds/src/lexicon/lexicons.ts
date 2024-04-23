@@ -9608,11 +9608,11 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['room'],
+            required: ['chat'],
             properties: {
-              room: {
+              chat: {
                 type: 'ref',
-                ref: 'lex:temp.dm.defs#roomView',
+                ref: 'lex:temp.dm.defs#chatView',
               },
             },
           },
