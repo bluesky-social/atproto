@@ -357,15 +357,6 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    // If reporting is muted for this reporter, we don't want to create a subject status
-    if (meta.isReporterMuted) {
-      const subjectStatus = await this.getStatus(subject)
-      return {
-        event: modEvent,
-        subjectStatus,
-      }
-    }
-
     const subjectStatus = await adjustModerationSubjectStatus(
       this.db,
       modEvent,

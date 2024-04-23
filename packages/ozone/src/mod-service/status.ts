@@ -144,6 +144,11 @@ export const adjustModerationSubjectStatus = async (
     .selectAll()
     .executeTakeFirst()
 
+  // If reporting is muted for this reporter, we don't want to update the subject status
+  if (meta?.isReporterMuted) {
+    return currentStatus || null
+  }
+
   const isAppealEvent =
     action === 'tools.ozone.moderation.defs#modEventReport' &&
     meta?.reportType === REASONAPPEAL
