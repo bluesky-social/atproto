@@ -1990,7 +1990,7 @@ describe('agent', () => {
       })
 
       describe(`removeSavedFeedV2`, () => {
-        it('removeSavedFeedV2: feed, pinned', async () => {
+        it('works', async () => {
           const feed = {
             type: 'feed',
             value: feedUri(),
@@ -2088,61 +2088,7 @@ describe('agent', () => {
       })
 
       describe(`updateSavedFeed`, () => {
-        it(`updates in situ and preserves order`, async () => {
-          const a = {
-            id: TID.nextStr(),
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          const b = {
-            id: TID.nextStr(),
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          const c = {
-            id: TID.nextStr(),
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          await agent.setSavedFeedsV2([a, b, c])
-          await agent.updateSavedFeed({
-            ...b,
-            pinned: false,
-          })
-          const prefs = await agent.getPreferences()
-          expect(prefs.savedFeeds).toStrictEqual([
-            a,
-            c,
-            {
-              ...b,
-              pinned: false,
-            },
-          ])
-        })
-
-        it(`cannot override original id`, async () => {
-          const a = {
-            id: TID.nextStr(),
-            type: 'feed',
-            value: feedUri(),
-            pinned: true,
-          }
-          await agent.setSavedFeedsV2([a])
-          await agent.updateSavedFeed({
-            ...a,
-            pinned: false,
-            id: TID.nextStr(),
-          })
-          const prefs = await agent.getPreferences()
-          expect(prefs.savedFeeds).toStrictEqual([a])
-        })
-      })
-
-      describe(`misc`, () => {
-        it(`sorts by pinned, appends new pins to end`, async () => {
+        it(`updates affect order, saved last, new pins last`, async () => {
           const a = {
             id: TID.nextStr(),
             type: 'feed',
@@ -2185,6 +2131,23 @@ describe('agent', () => {
 
           const prefs2 = await agent.getPreferences()
           expect(prefs2.savedFeeds).toStrictEqual([a, c, b])
+        })
+
+        it(`cannot override original id`, async () => {
+          const a = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: true,
+          }
+          await agent.setSavedFeedsV2([a])
+          await agent.updateSavedFeed({
+            ...a,
+            pinned: false,
+            id: TID.nextStr(),
+          })
+          const prefs = await agent.getPreferences()
+          expect(prefs.savedFeeds).toStrictEqual([a])
         })
       })
     })
