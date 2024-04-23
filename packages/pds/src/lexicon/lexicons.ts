@@ -9467,6 +9467,35 @@ export const schemaDict = {
       },
     },
   },
+  TempDmBlockUser: {
+    lexicon: 1,
+    id: 'temp.dm.blockUser',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['user'],
+            properties: {
+              user: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   TempDmDefs: {
     lexicon: 1,
     id: 'temp.dm.defs',
@@ -9715,6 +9744,48 @@ export const schemaDict = {
       },
     },
   },
+  TempDmListBlockedUsers: {
+    lexicon: 1,
+    id: 'temp.dm.listBlockedUsers',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['users'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              users: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   TempDmListChats: {
     lexicon: 1,
     id: 'temp.dm.listChats',
@@ -9789,6 +9860,35 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  TempDmUnblockUser: {
+    lexicon: 1,
+    id: 'temp.dm.unblockUser',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['user'],
+            properties: {
+              user: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -10005,12 +10105,15 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  TempDmBlockUser: 'temp.dm.blockUser',
   TempDmDefs: 'temp.dm.defs',
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
   TempDmGetChatForMembers: 'temp.dm.getChatForMembers',
   TempDmGetChatMessages: 'temp.dm.getChatMessages',
   TempDmGetUserSettings: 'temp.dm.getUserSettings',
+  TempDmListBlockedUsers: 'temp.dm.listBlockedUsers',
   TempDmListChats: 'temp.dm.listChats',
   TempDmSendMessage: 'temp.dm.sendMessage',
+  TempDmUnblockUser: 'temp.dm.unblockUser',
   TempDmUpdateIncomingMessageSetting: 'temp.dm.updateIncomingMessageSetting',
 }
