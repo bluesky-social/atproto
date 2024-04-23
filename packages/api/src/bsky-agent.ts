@@ -629,7 +629,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `addSavedFeedV2`
+   * @deprecated use `addSavedFeeds`
    */
   async addSavedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
@@ -639,7 +639,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `removeSavedFeedV2`
+   * @deprecated use `removeSavedFeeds`
    */
   async removeSavedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
@@ -649,7 +649,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `addSavedFeedV2` or `updatedSavedFeed`
+   * @deprecated use `addSavedFeeds` or `updatedSavedFeed`
    */
   async addPinnedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
@@ -659,7 +659,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `updatedPinnedFeed`
+   * @deprecated use `updateSavedFeed` or `removeSavedFeeds`
    */
   async removePinnedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
