@@ -2078,7 +2078,7 @@ describe('agent', () => {
         })
       })
 
-      describe(`setSavedFeedsV2`, () => {
+      describe(`overwriteSavedFeeds`, () => {
         it(`dedupes by id, takes last, preserves order based on last found`, async () => {
           const a = {
             id: TID.nextStr(),
@@ -2092,7 +2092,7 @@ describe('agent', () => {
             value: feedUri(),
             pinned: true,
           }
-          await agent.setSavedFeedsV2([a, b, a])
+          await agent.overwriteSavedFeeds([a, b, a])
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([b, a])
         })
@@ -2103,7 +2103,7 @@ describe('agent', () => {
           const c = feedUri()
           const d = feedUri()
 
-          await agent.setSavedFeedsV2([
+          await agent.overwriteSavedFeeds([
             {
               id: TID.nextStr(),
               type: 'timeline',
@@ -2162,7 +2162,7 @@ describe('agent', () => {
         })
       })
 
-      describe(`updateSavedFeed`, () => {
+      describe(`updateSavedFeeds`, () => {
         it(`updates affect order, saved last, new pins last`, async () => {
           const a = {
             id: TID.nextStr(),
@@ -2183,11 +2183,13 @@ describe('agent', () => {
             pinned: true,
           }
 
-          await agent.setSavedFeedsV2([a, b, c])
-          await agent.updateSavedFeed({
-            ...b,
-            pinned: false,
-          })
+          await agent.overwriteSavedFeeds([a, b, c])
+          await agent.updateSavedFeeds([
+            {
+              ...b,
+              pinned: false,
+            },
+          ])
 
           const prefs1 = await agent.getPreferences()
           expect(prefs1.savedFeeds).toStrictEqual([
@@ -2199,10 +2201,12 @@ describe('agent', () => {
             },
           ])
 
-          await agent.updateSavedFeed({
-            ...b,
-            pinned: true,
-          })
+          await agent.updateSavedFeeds([
+            {
+              ...b,
+              pinned: true,
+            },
+          ])
 
           const prefs2 = await agent.getPreferences()
           expect(prefs2.savedFeeds).toStrictEqual([a, c, b])
@@ -2215,14 +2219,62 @@ describe('agent', () => {
             value: feedUri(),
             pinned: true,
           }
-          await agent.setSavedFeedsV2([a])
-          await agent.updateSavedFeed({
-            ...a,
-            pinned: false,
-            id: TID.nextStr(),
-          })
+          await agent.overwriteSavedFeeds([a])
+          await agent.updateSavedFeeds([
+            {
+              ...a,
+              pinned: false,
+              id: TID.nextStr(),
+            },
+          ])
           const prefs = await agent.getPreferences()
           expect(prefs.savedFeeds).toStrictEqual([a])
+        })
+
+        it(`updates multiple`, async () => {
+          const a = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          const b = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+          const c = {
+            id: TID.nextStr(),
+            type: 'feed',
+            value: feedUri(),
+            pinned: false,
+          }
+
+          await agent.overwriteSavedFeeds([a, b, c])
+          await agent.updateSavedFeeds([
+            {
+              ...b,
+              pinned: true,
+            },
+            {
+              ...c,
+              pinned: true,
+            },
+          ])
+
+          const prefs1 = await agent.getPreferences()
+          expect(prefs1.savedFeeds).toStrictEqual([
+            {
+              ...b,
+              pinned: true,
+            },
+            {
+              ...c,
+              pinned: true,
+            },
+            a,
+          ])
         })
       })
     })

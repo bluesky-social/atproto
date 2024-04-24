@@ -540,7 +540,7 @@ export class BskyAgent extends AtpAgent {
       }
 
       // save to user preferences so this migration doesn't re-occur
-      await this.setSavedFeedsV2(prefs.savedFeeds)
+      await this.overwriteSavedFeeds(prefs.savedFeeds)
     }
 
     // apply the label prefs
@@ -567,7 +567,7 @@ export class BskyAgent extends AtpAgent {
     return prefs
   }
 
-  async setSavedFeedsV2(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
+  async overwriteSavedFeeds(savedFeeds: AppBskyActorDefs.SavedFeed[]) {
     savedFeeds.forEach(validateSavedFeed)
     const uniqueSavedFeeds = new Map<string, AppBskyActorDefs.SavedFeed>()
     savedFeeds.forEach((feed) => {
@@ -582,20 +582,23 @@ export class BskyAgent extends AtpAgent {
     )
   }
 
-  async updateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
-    validateSavedFeed(savedFeed)
-    return updateSavedFeedsV2Preferences(this, (savedFeeds) => [
-      ...savedFeeds.map((feed) => {
-        if (feed.id === savedFeed.id) {
+  async updateSavedFeeds(savedFeedsToUpdate: AppBskyActorDefs.SavedFeed[]) {
+    savedFeedsToUpdate.map(validateSavedFeed)
+    return updateSavedFeedsV2Preferences(this, (savedFeeds) => {
+      return savedFeeds.map((savedFeed) => {
+        const updatedVersion = savedFeedsToUpdate.find(
+          (updated) => savedFeed.id === updated.id,
+        )
+        if (updatedVersion) {
           return {
             ...savedFeed,
-            id: feed.id, // never allow overwriting
+            // only update pinned
+            pinned: updatedVersion.pinned,
           }
         }
-
-        return feed
-      }),
-    ])
+        return savedFeed
+      })
+    })
   }
 
   async addSavedFeeds(
@@ -619,7 +622,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `setSavedFeedsV2`
+   * @deprecated use `overwriteSavedFeeds`
    */
   async setSavedFeeds(saved: string[], pinned: string[]) {
     return updateFeedPreferences(this, () => ({
