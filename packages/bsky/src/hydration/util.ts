@@ -67,9 +67,7 @@ export const parseRecordBytes = <T>(
   return parseJsonBytes(bytes) as T
 }
 
-export const parseJsonBytes = (
-  bytes: Uint8Array | undefined,
-): JSON | undefined => {
+export const parseJsonBytes = (bytes: Uint8Array | undefined): unknown => {
   if (!bytes || bytes.byteLength === 0) return
   const parsed = JSON.parse(ui8.toString(bytes, 'utf8'))
   return parsed ?? undefined
