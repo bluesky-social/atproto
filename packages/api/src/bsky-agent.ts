@@ -658,7 +658,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `addSavedFeeds` or `updatedSavedFeeds`
+   * @deprecated use `addSavedFeeds` or `updateSavedFeeds`
    */
   async addPinnedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
