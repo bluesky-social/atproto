@@ -11,7 +11,7 @@ export class PreferenceReader {
       .execute()
     return prefsRes
       .filter((pref) => !namespace || prefMatchNamespace(namespace, pref.name))
-      .map((pref) => JSON.parse(pref.valueJson))
+      .map((pref) => JSON.parse(pref.valueJson) as AccountPreference)
   }
 }
 
