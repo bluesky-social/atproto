@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -6,18 +7,24 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import { safeFetchWrap } from '@atproto/fetch-node'
+import { JoseKeyset } from '@atproto/jwk-jose'
 import {
   RateLimiter,
   RateLimiterCreator,
   RateLimiterOpts,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
+import { OAuthVerifier } from '@atproto/oauth-provider'
+import { Fetch } from '@atproto/fetch'
 import { ServerConfig, ServerSecrets } from './config'
+import { PdsOAuthProvider } from './oauth/provider'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier'
+import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
@@ -50,6 +57,8 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  safeFetch: Fetch
+  authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -74,7 +83,9 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public safeFetch: Fetch
   public authVerifier: AuthVerifier
+  public authProvider?: PdsOAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -97,7 +108,9 @@ export class AppContext {
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
+    this.authProvider = opts.authProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -214,20 +227,6 @@ export class AppContext {
     )
     await accountManager.migrateOrThrow()
 
-    const jwtKey = cfg.entryway
-      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
-      : jwtSecretKey
-
-    const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      jwtKey, // @TODO support multiple keys?
-      adminPass: secrets.adminPassword,
-      dids: {
-        pds: cfg.service.did,
-        entryway: cfg.entryway?.did,
-        modService: cfg.modService?.did,
-      },
-    })
-
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
@@ -250,6 +249,72 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
+    const keyset = await JoseKeyset.fromImportables({
+      // @TODO: load keys from config
+      ['kid-1']:
+        '-----BEGIN PRIVATE KEY-----\n' +
+        'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg4D4H8/CFAVuKMgQD\n' +
+        'BIK9m53AEUrCxQKrgtMNSTNV9A2hRANCAARAwyllCZOflLEQM0MaYujz7ITxqczZ\n' +
+        '6Vxhj4urrdXUN3MEliQcc14ImTWHt7h7+xbxIXETLj0kTzctAxSbtwZf\n' +
+        '-----END PRIVATE KEY-----\n',
+    })
+
+    // A Fetch function that protects against SSRF attacks, large responses &
+    // known bad domains. This function can safely be used to fetch user
+    // provided URLs (unless "disableSsrf" is true, of course).
+    const safeFetch = safeFetchWrap({
+      allowHttp: cfg.fetch.disableSsrf,
+      responseMaxSize: 512 * 1024, // 512kB
+      ssrfProtection: !cfg.fetch.disableSsrf,
+      fetch: async (request, init?: RequestInit) => {
+        fetchLogger.info({ method: request.method, uri: request.url }, 'fetch')
+        return globalThis.fetch(request, init)
+      },
+    })
+
+    const authProvider = cfg.oauth.provider
+      ? new PdsOAuthProvider({
+          issuer: cfg.oauth.issuer,
+          keyset,
+          accountManager,
+          actorStore,
+          localViewer,
+          redis: redisScratch,
+          dpopSecret: secrets.dpopSecret,
+          customization: cfg.oauth.provider.customization,
+          safeFetch,
+        })
+      : undefined
+
+    const oauthVerifier: OAuthVerifier =
+      authProvider ?? // OAuthProvider is an OAuthVerifier so let's use it
+      new OAuthVerifier({
+        issuer: cfg.oauth.issuer,
+        keyset,
+        dpopSecret: secrets.dpopSecret,
+        redis: redisScratch,
+      })
+
+    const jwtKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : jwtSecretKey
+
+    const authVerifier = new AuthVerifier(
+      accountManager,
+      idResolver,
+      oauthVerifier,
+      {
+        publicUrl: cfg.service.publicUrl,
+        jwtKey,
+        adminPass: secrets.adminPassword,
+        dids: {
+          pds: cfg.service.did,
+          entryway: cfg.entryway?.did,
+          modService: cfg.modService?.did,
+        },
+      },
+    )
+
     return new AppContext({
       actorStore,
       blobstore,
@@ -269,7 +334,9 @@ export class AppContext {
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      safeFetch,
       authVerifier,
+      authProvider,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),

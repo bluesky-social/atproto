@@ -1,6 +1,7 @@
 import path from 'node:path'
 import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
+import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -234,6 +235,105 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
+  const fetchCfg: ServerConfig['fetch'] = {
+    disableSsrf: env.fetchDisableSsrf ?? false,
+  }
+
+  const oauthCfg: ServerConfig['oauth'] = entrywayCfg
+    ? {
+        issuer: entrywayCfg.url,
+        provider: false,
+      }
+    : {
+        issuer: serviceCfg.publicUrl,
+        provider: {
+          customization: {
+            name: env.oauthProviderName ?? 'Personal PDS',
+            logo: env.oauthProviderLogo,
+            colors: {
+              primary: env.oauthProviderPrimaryColor,
+              error: env.oauthProviderErrorColor,
+            },
+            links: [
+              {
+                title: 'Home',
+                href: env.oauthProviderHomeLink,
+                rel: 'bookmark',
+              },
+              {
+                title: 'Terms of Service',
+                href: env.oauthProviderTosLink,
+                rel: 'terms-of-service',
+              },
+              {
+                title: 'Privacy Policy',
+                href: env.oauthProviderPrivacyPolicyLink,
+                rel: 'privacy-policy',
+              },
+              {
+                title: 'Support',
+                href: env.oauthProviderSupportLink,
+                rel: 'help',
+              },
+            ].filter(
+              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
+                f.href != null,
+            ),
+            signIn: {
+              fields: {
+                username: {
+                  label: 'Email address or handle',
+                },
+                password: {},
+              },
+            },
+            signUp: {
+              fields: {
+                username: {
+                  label: 'Email address',
+                  placeholder: 'Enter your email address',
+                  pattern:
+                    '[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}',
+                  title: 'An email address to identify your account.',
+                },
+                password: {
+                  placeholder: 'Choose your password',
+                  pattern:
+                    // '(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^0-9a-zA-Z]).{8,}'
+                    '.{8,}',
+                  title:
+                    // 'A strong password containing at least one uppercase, one lowercase, one number, and one special character, and at least 8 characters long.'
+                    'A strong password containing at least 8 characters.',
+                },
+              },
+              extraFields: {
+                handle: {
+                  label: 'Enter your user handle',
+                  placeholder: 'e.g. alice',
+                  type: 'text' as const,
+                  pattern: '[a-z0-9-]{3,20}',
+                },
+                birthdate: {
+                  label: 'Birth date',
+                  type: 'date' as const,
+                  required: true,
+                },
+                inviteCode: {
+                  label: 'Invite Code',
+                  type: 'text' as const,
+                  required: invitesCfg.required,
+                },
+                captcha: {
+                  label: 'Are you human?',
+                  type: 'captcha' as const,
+                  required: true,
+                },
+              },
+            },
+          },
+        },
+      }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -251,6 +351,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
+    fetch: fetchCfg,
+    oauth: oauthCfg,
   }
 }
 
@@ -271,6 +373,8 @@ export type ServerConfig = {
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
+  fetch: FetchConfig
+  oauth: OAuthConfig
 }
 
 export type ServiceConfig = {
@@ -335,6 +439,19 @@ export type EntrywayConfig = {
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+}
+
+export type FetchConfig = {
+  disableSsrf: boolean
+}
+
+export type OAuthConfig = {
+  issuer: string
+  provider:
+    | false
+    | {
+        customization: Customization
+      }
 }
 
 export type InvitesConfig =

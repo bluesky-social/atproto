@@ -97,6 +97,7 @@ export const readEnv = (): ServerEnvironment => {
     crawlers: envList('PDS_CRAWLERS'),
 
     // secrets
+    dpopSecret: envStr('PDS_DPOP_SECRET'),
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
 
@@ -106,6 +107,19 @@ export const readEnv = (): ServerEnvironment => {
     plcRotationKeyK256PrivateKeyHex: envStr(
       'PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX',
     ),
+
+    // fetch
+    fetchDisableSsrf: envBool('PDS_DISABLE_SSRF'),
+
+    // oauth
+    oauthProviderName: envStr('PDS_OAUTH_PROVIDER_NAME'),
+    oauthProviderLogo: envStr('PDS_OAUTH_PROVIDER_LOGO'),
+    oauthProviderPrimaryColor: envStr('PDS_OAUTH_PROVIDER_PRIMARY_COLOR'),
+    oauthProviderErrorColor: envStr('PDS_OAUTH_PROVIDER_ERROR_COLOR'),
+    oauthProviderHomeLink: envStr('PDS_OAUTH_PROVIDER_HOME_LINK'),
+    oauthProviderTosLink: envStr('PDS_OAUTH_PROVIDER_TOS_LINK'),
+    oauthProviderPrivacyPolicyLink: envStr('PDS_OAUTH_PROVIDER_POLICY_LINK'),
+    oauthProviderSupportLink: envStr('PDS_OAUTH_PROVIDER_SUPPORT_LINK'),
   }
 }
 
@@ -203,10 +217,24 @@ export type ServerEnvironment = {
   crawlers?: string[]
 
   // secrets
+  dpopSecret?: string
   jwtSecret?: string
   adminPassword?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
+
+  // fetch
+  fetchDisableSsrf?: boolean
+
+  // oauth
+  oauthProviderName?: string
+  oauthProviderLogo?: string
+  oauthProviderPrimaryColor?: string
+  oauthProviderErrorColor?: string
+  oauthProviderHomeLink?: string
+  oauthProviderTosLink?: string
+  oauthProviderPrivacyPolicyLink?: string
+  oauthProviderSupportLink?: string
 }

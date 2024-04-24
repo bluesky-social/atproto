@@ -1188,15 +1188,36 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/fetch':
+        specifier: workspace:*
+        version: link:../fetch
+      '@atproto/fetch-node':
+        specifier: workspace:*
+        version: link:../fetch-node
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../jwk
+      '@atproto/jwk-jose':
+        specifier: workspace:^
+        version: link:../jwk-jose
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/oauth-provider':
+        specifier: workspace:^
+        version: link:../oauth-provider
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
+      '@atproto/simple-store':
+        specifier: workspace:^
+        version: link:../simple-store
+      '@atproto/simple-store-memory':
+        specifier: workspace:^
+        version: link:../simple-store-memory
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
