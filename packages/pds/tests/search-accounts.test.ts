@@ -1,6 +1,7 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import basicSeed from './seeds/basic'
+import { forSnapshot } from './_util'
 
 describe('search accounts', () => {
   let network: TestNetworkNoAppView
@@ -21,7 +22,7 @@ describe('search accounts', () => {
     await network.close()
   })
 
-  it('allows searching for accounts with email address from a domain', async () => {
+  it('allows searching for accounts with email address', async () => {
     const [{ data: firstAccount }, { data: secondAccount }] = await Promise.all(
       [
         agent.createAccount({
@@ -58,5 +59,43 @@ describe('search accounts', () => {
     expect(accountDidsByDomain).toContain(secondAccount.did)
     expect(accountDidsByNormalizedAddress).toContain(firstAccount.did)
     expect(accountDidsByNormalizedAddress).toContain(secondAccount.did)
+  })
+
+  it('paginates search results', async () => {
+    await Promise.all([
+      network.pds.getClient().createAccount({
+        email: 'two@email.com',
+        password: 'password',
+        handle: 'two1.test',
+      }),
+      network.pds.getClient().createAccount({
+        email: 'two+test@email.com',
+        password: 'password',
+        handle: 'two2.test',
+      }),
+    ])
+
+    const { data: pageOne } = await agent.api.com.atproto.admin.searchAccounts(
+      { email: '@email.com', limit: 2 },
+      { headers: network.pds.adminAuthHeaders() },
+    )
+    const { data: pageTwo } = await agent.api.com.atproto.admin.searchAccounts(
+      { email: '@email.com', limit: 2, cursor: pageOne.cursor },
+      { headers: network.pds.adminAuthHeaders() },
+    )
+    const { data: pageThree } =
+      await agent.api.com.atproto.admin.searchAccounts(
+        { email: '@email.com', limit: 2, cursor: pageTwo.cursor },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+
+    const allAccounts = [...pageOne.accounts, ...pageTwo.accounts]
+    const allEmails = allAccounts.map((account) => account.email)
+    expect(forSnapshot(allAccounts)).toMatchSnapshot()
+    expect(allEmails).toContain('o.n.e@email.com')
+    expect(allEmails).toContain('one+test@email.com')
+    expect(allEmails).toContain('two@email.com')
+    expect(allEmails).toContain('two+test@email.com')
+    expect(pageThree.accounts.length).toBe(0)
   })
 })

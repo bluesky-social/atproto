@@ -10,6 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   email?: string
+  limit?: number
   cursor?: string
 }
 

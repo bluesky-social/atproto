@@ -302,13 +302,13 @@ export const searchAccounts = async (
         'in',
         db.db
           .selectFrom('account')
-          .where('normalizedEmail', 'like', `%${email}%`)
+          .where('normalizedEmail', 'like', `%${email?.toLowerCase()}%`)
           .select('did'),
       )
     })
   const { ref } = db.db.dynamic
 
-  const keyset = new DidEmailKeyset(ref('account.did'), ref('account.email'))
+  const keyset = new DidEmailKeyset(ref('account.email'), ref('account.did'))
   const paginatedQuery = paginate(query, {
     limit,
     cursor,

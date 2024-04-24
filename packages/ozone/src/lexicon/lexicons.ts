@@ -383,6 +383,9 @@ export const schemaDict = {
             email: {
               type: 'string',
             },
+            limit: {
+              type: 'integer',
+            },
             cursor: {
               type: 'string',
             },

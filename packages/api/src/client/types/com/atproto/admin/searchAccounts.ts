@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
   email?: string
+  limit?: number
   cursor?: string
 }
 

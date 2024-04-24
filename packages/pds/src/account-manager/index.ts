@@ -54,6 +54,7 @@ export class AccountManager {
   async searchAccounts(params: {
     email?: string
     cursor?: string
+    limit?: number
   }): Promise<{ accounts: account.AccountSearchResult[]; cursor?: string }> {
     return account.searchAccounts(this.db, params)
   }
