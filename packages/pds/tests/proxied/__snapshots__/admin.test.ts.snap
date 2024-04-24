@@ -116,6 +116,7 @@ Object {
     "did": "user(0)",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "moderation": Object {
       "subjectStatus": Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -263,6 +264,7 @@ Object {
       ],
     },
     "invitesDisabled": true,
+    "labels": Array [],
     "moderation": Object {
       "subjectStatus": Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -344,6 +346,7 @@ Array [
     "did": "user(0)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
