@@ -10004,6 +10004,37 @@ export const schemaDict = {
       },
     },
   },
+  TempDmUpdateChatRead: {
+    lexicon: 1,
+    id: 'temp.dm.updateChatRead',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#chatView',
+          },
+        },
+      },
+    },
+  },
   TempDmUpdateUserSettings: {
     lexicon: 1,
     id: 'temp.dm.updateUserSettings',
@@ -10232,5 +10263,6 @@ export const ids = {
   TempDmMuteChat: 'temp.dm.muteChat',
   TempDmSendMessage: 'temp.dm.sendMessage',
   TempDmUnmuteChat: 'temp.dm.unmuteChat',
+  TempDmUpdateChatRead: 'temp.dm.updateChatRead',
   TempDmUpdateUserSettings: 'temp.dm.updateUserSettings',
 }

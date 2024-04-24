@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "temp.dm.updateChatRead",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["chatId"],
+          "properties": {
+            "chatId": { "type": "string" },
+            "messageId": { "type": "string" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": { "type": "ref", "ref": "temp.dm.defs#chatView" }
+      }
+    }
+  }
+}

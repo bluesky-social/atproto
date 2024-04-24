@@ -150,6 +150,7 @@ import * as TempDmListChats from './types/temp/dm/listChats'
 import * as TempDmMuteChat from './types/temp/dm/muteChat'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
 import * as TempDmUnmuteChat from './types/temp/dm/unmuteChat'
+import * as TempDmUpdateChatRead from './types/temp/dm/updateChatRead'
 import * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
 
 export const COM_ATPROTO_MODERATION = {
@@ -2009,6 +2010,17 @@ export class TempDmNS {
     >,
   ) {
     const nsid = 'temp.dm.unmuteChat' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateChatRead<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmUpdateChatRead.Handler<ExtractAuth<AV>>,
+      TempDmUpdateChatRead.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.updateChatRead' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
