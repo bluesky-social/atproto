@@ -45,6 +45,17 @@ export class TestPds {
       modServiceDid: 'did:example:invalid',
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
+      fetchDisableSsrf: true,
+      oauthProviderName: 'PDS (dev)',
+      oauthProviderPrimaryColor: '#ffcb1e',
+      oauthProviderLogo:
+        'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
+      oauthProviderErrorColor: undefined,
+      oauthProviderHomeLink: 'https://bsky.social/',
+      oauthProviderTosLink: 'https://bsky.social/about/support/tos',
+      oauthProviderPrivacyPolicyLink:
+        'https://bsky.social/about/support/privacy-policy',
+      oauthProviderSupportLink: 'https://blueskyweb.zendesk.com/hc/en-us',
       ...config,
     }
     const cfg = pds.envToCfg(env)
