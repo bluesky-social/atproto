@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.12.6
+
+### Patch Changes
+
+- [#2427](https://github.com/bluesky-social/atproto/pull/2427) [`b9b7c5821`](https://github.com/bluesky-social/atproto/commit/b9b7c582199d57d2fe0af8af5c8c411ed34f5b9d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Introduces V2 of saved feeds preferences. V2 and v1 prefs are incompatible. v1
+  methods and preference objects are retained for backwards compatability, but are
+  considered deprecated. Developers should immediately migrate to v2 interfaces.
+
 ## 0.12.5
 
 ### Patch Changes
