@@ -1,0 +1,33 @@
+{
+  "name": "@atproto/fetch-dpop",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Utility to perform DPoP authenticated fetch requests",
+  "keywords": [
+    "atproto",
+    "fetch",
+    "dpop"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/fetch-dpop"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@atproto/b64": "workspace:*",
+    "@atproto/simple-store": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/fetch": "workspace:*",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}
