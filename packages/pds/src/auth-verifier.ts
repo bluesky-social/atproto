@@ -16,6 +16,8 @@ import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
+  // StreamAuthVerifier does not have "res"
+  res?: express.Response
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
