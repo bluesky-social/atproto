@@ -508,9 +508,12 @@ export class BskyAgent extends AtpAgent {
 
         // use pinned as source of truth for feed order
         for (const uri of pinned) {
+          const type = getSavedFeedType(uri)
+          // only want supported types
+          if (type === 'unknown') continue
           uniqueMigratedSavedFeeds.set(uri, {
             id: TID.nextStr(),
-            type: getSavedFeedType(uri),
+            type,
             value: uri,
             pinned: true,
           })
@@ -518,9 +521,12 @@ export class BskyAgent extends AtpAgent {
 
         for (const uri of saved) {
           if (!uniqueMigratedSavedFeeds.has(uri)) {
+            const type = getSavedFeedType(uri)
+            // only want supported types
+            if (type === 'unknown') continue
             uniqueMigratedSavedFeeds.set(uri, {
               id: TID.nextStr(),
-              type: getSavedFeedType(uri),
+              type,
               value: uri,
               pinned: false,
             })

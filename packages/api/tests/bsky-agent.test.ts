@@ -2574,6 +2574,28 @@ describe('agent', () => {
           { id: expect.any(String), type: 'feed', value: c, pinned: false },
         ])
       })
+
+      it(`filters out invalid values in v1 prefs`, async () => {
+        // v1 prefs must be valid AtUris, but they could be any type in theory
+        await agent.app.bsky.actor.putPreferences({
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              pinned: ['at://did:plc:fake/app.bsky.graph.follow/fake'],
+              saved: ['at://did:plc:fake/app.bsky.graph.follow/fake'],
+            },
+          ],
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.savedFeeds).toStrictEqual([
+          {
+            id: expect.any(String),
+            type: 'timeline',
+            value: 'home',
+            pinned: true,
+          },
+        ])
+      })
     })
 
     // end
