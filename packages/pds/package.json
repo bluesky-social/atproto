@@ -64,7 +64,7 @@
     "sharp": "^0.32.6",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
-    "zod": "^3.21.4"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",

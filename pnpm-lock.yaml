@@ -370,8 +370,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -515,8 +515,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
 
   packages/lexicon:
     dependencies:
@@ -533,8 +533,8 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -748,8 +748,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
     devDependencies:
       '@atproto/bsky':
         specifier: workspace:^
@@ -830,8 +830,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
     devDependencies:
       jest:
         specifier: ^28.1.2
@@ -849,8 +849,8 @@ importers:
         specifier: workspace:^
         version: link:../lexicon
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -892,8 +892,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       zod:
-        specifier: ^3.21.4
-        version: 3.21.4
+        specifier: ^3.22.4
+        version: 3.23.4
     devDependencies:
       '@types/express':
         specifier: ^4.17.13
@@ -992,7 +992,7 @@ packages:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
       pino: 8.15.0
-      zod: 3.21.4
+      zod: 3.23.4
 
   /@atproto/common@0.1.1:
     resolution: {integrity: sha512-GYwot5wF/z8iYGSPjrLHuratLc0CVgovmwfJss7+BUOB6y2/Vw8+1Vw0n9DDI0gb5vmx3UI8z0uJgC8aa8yuJg==}
@@ -1000,7 +1000,7 @@ packages:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
       pino: 8.15.0
-      zod: 3.21.4
+      zod: 3.23.4
 
   /@atproto/crypto@0.1.0:
     resolution: {integrity: sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==}
@@ -1056,7 +1056,7 @@ packages:
       twilio: 4.21.0
       typed-emitter: 2.1.0
       uint8arrays: 3.0.0
-      zod: 3.21.4
+      zod: 3.23.4
     transitivePeerDependencies:
       - debug
       - pg-native
@@ -4231,7 +4231,7 @@ packages:
       axios: 1.6.7
       multiformats: 9.9.0
       uint8arrays: 3.0.0
-      zod: 3.21.4
+      zod: 3.23.4
     transitivePeerDependencies:
       - debug
 
@@ -11086,3 +11086,6 @@ packages:
 
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
+
+  /zod@3.23.4:
+    resolution: {integrity: sha512-/AtWOKbBgjzEYYQRNfoGKHObgfAZag6qUJX1VbHo2PRBgS+wfWagEY2mizjfyAPcGesrJOcx/wcl0L9WnVrHFw==}
