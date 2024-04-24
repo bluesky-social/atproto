@@ -1,0 +1,41 @@
+{
+  "name": "@atproto/oauth-client-react-native",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Implementation of ATPROTO OAuth client for react-native",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "react-native"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth-client-react-native"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@atproto/simple-store": "workspace:*",
+    "@atproto/fetch": "workspace:*",
+    "@atproto/handle-resolver": "workspace:*",
+    "@atproto/identity-resolver": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-types": "workspace:*",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}

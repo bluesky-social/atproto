@@ -1,0 +1,37 @@
+{
+  "name": "@atproto/simple-store-memory",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Memory based simple-store implementation",
+  "keywords": [
+    "cache",
+    "isomorphic",
+    "memory"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/simple-store-memory"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto/simple-store": "workspace:*",
+    "lru-cache": "^10.2.0",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}

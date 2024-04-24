@@ -1,0 +1,42 @@
+{
+  "name": "@atproto/did",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "DID resolution and verification library",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "did",
+    "isomorphic"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/did"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto/simple-store": "workspace:*",
+    "@atproto/simple-store-memory": "workspace:*",
+    "@atproto/fetch": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/transformer": "workspace:*",
+    "tslib": "^2.6.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}

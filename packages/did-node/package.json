@@ -1,0 +1,38 @@
+{
+  "name": "@atproto/did-node",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "@atproto/did DID implementation for use in NodeJS with did input from end-users. This lib will prevent specially forged DIDs / servers from affecting Node's process (SSRF, memory starvation, etc.).",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "did",
+    "node"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/did-node"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto/did": "workspace:*",
+    "@atproto/fetch-node": "workspace:*",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}
