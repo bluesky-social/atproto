@@ -17,10 +17,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "properties": {}
-        }
+        "schema": { "type": "ref", "ref": "temp.dm.defs#deletedMessage" }
       }
     }
   }

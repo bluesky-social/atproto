@@ -9579,9 +9579,21 @@ export const schemaDict = {
         type: 'string',
         knownValues: ['all', 'none', 'following'],
       },
-      updateMessageCreated: {
+      logBeginChat: {
         type: 'object',
-        required: [],
+        required: ['rev', 'chatId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+        },
+      },
+      logCreateMessage: {
+        type: 'object',
+        required: ['rev', 'chatId', 'message'],
         properties: {
           rev: {
             type: 'string',
@@ -9598,9 +9610,9 @@ export const schemaDict = {
           },
         },
       },
-      updateMessageDeleted: {
+      logDeleteMessage: {
         type: 'object',
-        required: [],
+        required: ['rev', 'chatId', 'message'],
         properties: {
           rev: {
             type: 'string',
@@ -9643,8 +9655,8 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'object',
-            properties: {},
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#deletedMessage',
           },
         },
       },
@@ -9718,6 +9730,47 @@ export const schemaDict = {
       },
     },
   },
+  TempDmGetChatLog: {
+    lexicon: 1,
+    id: 'temp.dm.getChatLog',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: [],
+          properties: {
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['logs'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              logs: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:temp.dm.defs#logBeginChat',
+                    'lex:temp.dm.defs#logCreateMessage',
+                    'lex:temp.dm.defs#logDeleteMessage',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   TempDmGetChatMessages: {
     lexicon: 1,
     id: 'temp.dm.getChatMessages',
@@ -9758,43 +9811,6 @@ export const schemaDict = {
                   refs: [
                     'lex:temp.dm.defs#messageView',
                     'lex:temp.dm.defs#deletedMessage',
-                  ],
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmGetChatUpdates: {
-    lexicon: 1,
-    id: 'temp.dm.getChatUpdates',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: [],
-          properties: {
-            rev: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['updates'],
-            properties: {
-              updates: {
-                type: 'array',
-                items: {
-                  type: 'union',
-                  refs: [
-                    'lex:temp.dm.defs#updateMessageCreated',
-                    'lex:temp.dm.defs#updateMessageDeleted',
                   ],
                 },
               },
@@ -9953,13 +9969,8 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'object',
-            required: ['messageId'],
-            properties: {
-              messageId: {
-                type: 'string',
-              },
-            },
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#messageView',
           },
         },
       },
@@ -10213,8 +10224,8 @@ export const ids = {
   TempDmDeleteMessage: 'temp.dm.deleteMessage',
   TempDmGetChat: 'temp.dm.getChat',
   TempDmGetChatForMembers: 'temp.dm.getChatForMembers',
+  TempDmGetChatLog: 'temp.dm.getChatLog',
   TempDmGetChatMessages: 'temp.dm.getChatMessages',
-  TempDmGetChatUpdates: 'temp.dm.getChatUpdates',
   TempDmGetUserSettings: 'temp.dm.getUserSettings',
   TempDmLeaveChat: 'temp.dm.leaveChat',
   TempDmListChats: 'temp.dm.listChats',

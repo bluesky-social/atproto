@@ -10,15 +10,17 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as TempDmDefs from './defs'
 
 export interface QueryParams {
-  rev?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  updates: (
-    | TempDmDefs.UpdateMessageCreated
-    | TempDmDefs.UpdateMessageDeleted
+  cursor?: string
+  logs: (
+    | TempDmDefs.LogBeginChat
+    | TempDmDefs.LogCreateMessage
+    | TempDmDefs.LogDeleteMessage
     | { $type: string; [k: string]: unknown }
   )[]
   [k: string]: unknown

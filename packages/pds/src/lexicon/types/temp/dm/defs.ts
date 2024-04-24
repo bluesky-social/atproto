@@ -89,46 +89,62 @@ export type IncomingMessageSetting =
   | 'following'
   | (string & {})
 
-export interface UpdateMessageCreated {
-  rev?: string
-  chatId?: string
-  message?:
+export interface LogBeginChat {
+  rev: string
+  chatId: string
+  [k: string]: unknown
+}
+
+export function isLogBeginChat(v: unknown): v is LogBeginChat {
+  return (
+    isObj(v) && hasProp(v, '$type') && v.$type === 'temp.dm.defs#logBeginChat'
+  )
+}
+
+export function validateLogBeginChat(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#logBeginChat', v)
+}
+
+export interface LogCreateMessage {
+  rev: string
+  chatId: string
+  message:
     | MessageView
     | DeletedMessage
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
-export function isUpdateMessageCreated(v: unknown): v is UpdateMessageCreated {
+export function isLogCreateMessage(v: unknown): v is LogCreateMessage {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'temp.dm.defs#updateMessageCreated'
+    v.$type === 'temp.dm.defs#logCreateMessage'
   )
 }
 
-export function validateUpdateMessageCreated(v: unknown): ValidationResult {
-  return lexicons.validate('temp.dm.defs#updateMessageCreated', v)
+export function validateLogCreateMessage(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#logCreateMessage', v)
 }
 
-export interface UpdateMessageDeleted {
-  rev?: string
-  chatId?: string
-  message?:
+export interface LogDeleteMessage {
+  rev: string
+  chatId: string
+  message:
     | MessageView
     | DeletedMessage
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
-export function isUpdateMessageDeleted(v: unknown): v is UpdateMessageDeleted {
+export function isLogDeleteMessage(v: unknown): v is LogDeleteMessage {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'temp.dm.defs#updateMessageDeleted'
+    v.$type === 'temp.dm.defs#logDeleteMessage'
   )
 }
 
-export function validateUpdateMessageDeleted(v: unknown): ValidationResult {
-  return lexicons.validate('temp.dm.defs#updateMessageDeleted', v)
+export function validateLogDeleteMessage(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#logDeleteMessage', v)
 }

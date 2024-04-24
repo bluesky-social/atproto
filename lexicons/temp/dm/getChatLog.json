@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.getChatUpdates",
+  "id": "temp.dm.getChatLog",
   "defs": {
     "main": {
       "type": "query",
@@ -8,22 +8,24 @@
         "type": "params",
         "required": [],
         "properties": {
-          "rev": { "type": "string" }
+          "cursor": { "type": "string" }
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["updates"],
+          "required": ["logs"],
           "properties": {
-            "updates": {
+            "cursor": { "type": "string" },
+            "logs": {
               "type": "array",
               "items": {
                 "type": "union",
                 "refs": [
-                  "temp.dm.defs#updateMessageCreated",
-                  "temp.dm.defs#updateMessageDeleted"
+                  "temp.dm.defs#logBeginChat",
+                  "temp.dm.defs#logCreateMessage",
+                  "temp.dm.defs#logDeleteMessage"
                 ]
               }
             }

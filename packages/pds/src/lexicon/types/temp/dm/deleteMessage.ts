@@ -7,6 +7,7 @@ import { lexicons } from '../../../lexicons'
 import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as TempDmDefs from './defs'
 
 export interface QueryParams {}
 
@@ -16,9 +17,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export interface OutputSchema {
-  [k: string]: unknown
-}
+export type OutputSchema = TempDmDefs.DeletedMessage
 
 export interface HandlerInput {
   encoding: 'application/json'

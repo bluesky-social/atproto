@@ -17,10 +17,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export interface OutputSchema {
-  messageId: string
-  [k: string]: unknown
-}
+export type OutputSchema = TempDmDefs.MessageView
 
 export interface HandlerInput {
   encoding: 'application/json'

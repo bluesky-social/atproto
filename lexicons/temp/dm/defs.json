@@ -76,9 +76,17 @@
       "type": "string",
       "knownValues": ["all", "none", "following"]
     },
-    "updateMessageCreated": {
+    "logBeginChat": {
       "type": "object",
-      "required": [],
+      "required": ["rev", "chatId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "chatId": { "type": "string" }
+      }
+    },
+    "logCreateMessage": {
+      "type": "object",
+      "required": ["rev", "chatId", "message"],
       "properties": {
         "rev": { "type": "string" },
         "chatId": { "type": "string" },
@@ -88,9 +96,9 @@
         }
       }
     },
-    "updateMessageDeleted": {
+    "logDeleteMessage": {
       "type": "object",
-      "required": [],
+      "required": ["rev", "chatId", "message"],
       "properties": {
         "rev": { "type": "string" },
         "chatId": { "type": "string" },
