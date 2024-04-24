@@ -652,7 +652,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `addSavedFeeds` or `updatedSavedFeed`
+   * @deprecated use `addSavedFeeds` or `updatedSavedFeeds`
    */
   async addPinnedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
@@ -662,7 +662,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * @deprecated use `updateSavedFeed` or `removeSavedFeeds`
+   * @deprecated use `updateSavedFeeds` or `removeSavedFeeds`
    */
   async removePinnedFeed(v: string) {
     return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
