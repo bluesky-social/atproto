@@ -2,11 +2,11 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { Label } from '../../../../lexicon/types/com/atproto/label/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    // @ts-ignore
     handler: async ({ params, auth, req }) => {
       const { dids } = params
       const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -27,9 +27,12 @@ export default function (server: Server, ctx: AppContext) {
           !info.profileTakedownRef || includeTakedowns
             ? info.profile
             : undefined
-        const labels = Array.from(
-          labelMap.get(did)?.labels?.values() ?? [],
-        ).filter((label) => !!label)
+        const labels: Label[] = []
+        Array.from(labelMap.get(did)?.labels?.values() ?? []).forEach(
+          (label) => {
+            if (label) labels.push(label)
+          },
+        )
         return {
           did,
           labels,
