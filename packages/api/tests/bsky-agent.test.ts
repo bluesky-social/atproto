@@ -6,6 +6,11 @@ import {
   AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
+import {
+  savedFeedsToUriArrays,
+  getSavedFeedType,
+  validateSavedFeed,
+} from '../src/util'
 import { AppBskyActorDefs } from '../dist'
 
 describe('agent', () => {
@@ -244,7 +249,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -281,7 +286,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -318,7 +323,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -355,7 +360,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -392,7 +397,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -432,7 +437,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -476,7 +481,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -520,7 +525,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -564,7 +569,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -608,7 +613,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -652,7 +657,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -702,7 +707,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -746,7 +751,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -790,7 +795,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -834,7 +839,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -878,7 +883,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -929,7 +934,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -980,7 +985,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -1031,7 +1036,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         feeds: {
@@ -1197,7 +1202,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ],
@@ -1250,7 +1255,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ],
@@ -1303,7 +1308,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ],
@@ -1357,7 +1362,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ],
@@ -1412,7 +1417,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -1462,7 +1467,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -1523,7 +1528,7 @@ describe('agent', () => {
             id: expect.any(String),
             pinned: true,
             type: 'timeline',
-            value: 'home',
+            value: 'following',
           },
         ],
         moderationPrefs: {
@@ -1599,7 +1604,7 @@ describe('agent', () => {
                 id: expect.any(String),
                 pinned: true,
                 type: 'timeline',
-                value: 'home',
+                value: 'following',
               },
             ],
           },
@@ -1963,7 +1968,7 @@ describe('agent', () => {
           const feeds = await agent.addSavedFeeds([
             {
               type: 'timeline',
-              value: 'home',
+              value: 'following',
               pinned: true,
             },
           ])
@@ -2277,6 +2282,96 @@ describe('agent', () => {
           ])
         })
       })
+
+      describe(`utils`, () => {
+        describe(`savedFeedsToUriArrays`, () => {
+          const { saved, pinned } = savedFeedsToUriArrays([
+            {
+              id: '',
+              type: 'feed',
+              value: 'a',
+              pinned: true,
+            },
+            {
+              id: '',
+              type: 'feed',
+              value: 'b',
+              pinned: false,
+            },
+            {
+              id: '',
+              type: 'feed',
+              value: 'c',
+              pinned: true,
+            },
+          ])
+          expect(saved).toStrictEqual(['a', 'b', 'c'])
+          expect(pinned).toStrictEqual(['a', 'c'])
+        })
+
+        describe(`getSavedFeedType`, () => {
+          it(`works`, () => {
+            expect(getSavedFeedType('foo')).toBe('unknown')
+            expect(getSavedFeedType(feedUri())).toBe('feed')
+            expect(getSavedFeedType(listUri())).toBe('list')
+            expect(
+              getSavedFeedType('at://did:plc:fake/app.bsky.graph.follow/fake'),
+            ).toBe('unknown')
+          })
+        })
+
+        describe(`validateSavedFeed`, () => {
+          it(`throws if invalid TID`, () => {
+            // really only checks length at time of writing
+            expect(() =>
+              validateSavedFeed({
+                id: 'a',
+                type: 'feed',
+                value: feedUri(),
+                pinned: false,
+              }),
+            ).toThrow()
+          })
+
+          it(`throws if mismatched types`, () => {
+            expect(() =>
+              validateSavedFeed({
+                id: TID.nextStr(),
+                type: 'list',
+                value: feedUri(),
+                pinned: false,
+              }),
+            ).toThrow()
+            expect(() =>
+              validateSavedFeed({
+                id: TID.nextStr(),
+                type: 'feed',
+                value: listUri(),
+                pinned: false,
+              }),
+            ).toThrow()
+          })
+
+          it(`ignores values it can't validate`, () => {
+            expect(() =>
+              validateSavedFeed({
+                id: TID.nextStr(),
+                type: 'timeline',
+                value: 'following',
+                pinned: false,
+              }),
+            ).not.toThrow()
+            expect(() =>
+              validateSavedFeed({
+                id: TID.nextStr(),
+                type: 'unknown',
+                value: 'could be @nyt4!ng',
+                pinned: false,
+              }),
+            ).not.toThrow()
+          })
+        })
+      })
     })
 
     describe(`saved feeds v2: migration scenarios`, () => {
@@ -2328,7 +2423,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
           {
@@ -2345,7 +2440,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ])
@@ -2372,7 +2467,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
           {
@@ -2413,7 +2508,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
           {
@@ -2459,7 +2554,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ])
@@ -2472,7 +2567,7 @@ describe('agent', () => {
               {
                 id: expect.any(String),
                 type: 'timeline',
-                value: 'home',
+                value: 'following',
                 pinned: true,
               },
             ],
@@ -2565,7 +2660,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
           { id: expect.any(String), type: 'feed', value: a, pinned: true },
@@ -2591,7 +2686,7 @@ describe('agent', () => {
           {
             id: expect.any(String),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ])

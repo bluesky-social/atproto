@@ -59,18 +59,20 @@ export function getSavedFeedType(
 export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
   new TID(savedFeed.id)
 
-  const uri = new AtUri(savedFeed.value)
-  const isFeed = uri.collection === 'app.bsky.feed.generator'
-  const isList = uri.collection === 'app.bsky.graph.list'
+  if (['feed', 'list'].includes(savedFeed.type)) {
+    const uri = new AtUri(savedFeed.value)
+    const isFeed = uri.collection === 'app.bsky.feed.generator'
+    const isList = uri.collection === 'app.bsky.graph.list'
 
-  if (savedFeed.type === 'feed' && !isFeed) {
-    throw new Error(
-      `Saved feed of type 'feed' must be a feed, got ${uri.collection}`,
-    )
-  }
-  if (savedFeed.type === 'list' && !isList) {
-    throw new Error(
-      `Saved feed of type 'list' must be a list, got ${uri.collection}`,
-    )
+    if (savedFeed.type === 'feed' && !isFeed) {
+      throw new Error(
+        `Saved feed of type 'feed' must be a feed, got ${uri.collection}`,
+      )
+    }
+    if (savedFeed.type === 'list' && !isList) {
+      throw new Error(
+        `Saved feed of type 'list' must be a list, got ${uri.collection}`,
+      )
+    }
   }
 }

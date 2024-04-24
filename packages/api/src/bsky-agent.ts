@@ -499,10 +499,10 @@ export class BskyAgent extends AtpAgent {
         > = new Map()
 
         // insert Following feed first
-        uniqueMigratedSavedFeeds.set('home', {
+        uniqueMigratedSavedFeeds.set('timeline', {
           id: TID.nextStr(),
           type: 'timeline',
-          value: 'home',
+          value: 'following',
           pinned: true,
         })
 
@@ -539,7 +539,7 @@ export class BskyAgent extends AtpAgent {
           {
             id: TID.nextStr(),
             type: 'timeline',
-            value: 'home',
+            value: 'following',
             pinned: true,
           },
         ]
