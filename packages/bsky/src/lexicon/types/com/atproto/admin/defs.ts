@@ -6,6 +6,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoServerDefs from '../server/defs'
+import * as ComAtprotoLabelDefs from '../label/defs'
 
 export interface StatusAttr {
   applied: boolean
@@ -33,6 +34,7 @@ export interface AccountView {
   indexedAt: string
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
+  labels?: ComAtprotoLabelDefs.Label[]
   invitesDisabled?: boolean
   emailConfirmedAt?: string
   inviteNote?: string

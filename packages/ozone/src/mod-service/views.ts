@@ -46,9 +46,12 @@ export class ModerationViews {
     private appviewAuth: (labelers?: ParsedLabelers) => Promise<AuthHeaders>,
   ) {}
 
-  async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
+  async getAccoutInfosByDid(
+    dids: string[],
+    labelers?: ParsedLabelers,
+  ): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
-    const auth = await this.appviewAuth()
+    const auth = await this.appviewAuth(labelers)
     if (!auth) return new Map()
     try {
       const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
@@ -69,10 +72,13 @@ export class ModerationViews {
     }
   }
 
-  async repos(dids: string[]): Promise<Map<string, RepoView>> {
+  async repos(
+    dids: string[],
+    labelers?: ParsedLabelers,
+  ): Promise<Map<string, RepoView>> {
     if (dids.length === 0) return new Map()
     const [infos, subjectStatuses] = await Promise.all([
-      this.getAccoutInfosByDid(dids),
+      this.getAccoutInfosByDid(dids, labelers),
       this.getSubjectStatus(dids),
     ])
 
@@ -83,6 +89,7 @@ export class ModerationViews {
       return acc.set(did, {
         // No email or invite info on appview
         did,
+        labels: info.labels,
         handle: info.handle,
         relatedRecords: info.relatedRecords ?? [],
         indexedAt: info.indexedAt,
@@ -210,9 +217,12 @@ export class ModerationViews {
     }
   }
 
-  async repoDetail(did: string): Promise<RepoViewDetail | undefined> {
-    const [repos, labels] = await Promise.all([
-      this.repos([did]),
+  async repoDetail(
+    did: string,
+    labelers?: ParsedLabelers,
+  ): Promise<RepoViewDetail | undefined> {
+    const [repos, localLabels] = await Promise.all([
+      this.repos([did], labelers),
       this.labels(did),
     ])
     const repo = repos.get(did)
@@ -223,7 +233,7 @@ export class ModerationViews {
       moderation: {
         ...repo.moderation,
       },
-      labels,
+      labels: [...localLabels, ...(repo.labels || [])],
     }
   }
 
@@ -268,7 +278,7 @@ export class ModerationViews {
     const dids = uris.map((u) => u.hostname)
 
     const [repos, subjectStatuses, records] = await Promise.all([
-      this.repos(dids),
+      this.repos(dids, labelers),
       this.getSubjectStatus(subjects.map((s) => s.uri)),
       this.fetchRecords(subjects, labelers),
     ])

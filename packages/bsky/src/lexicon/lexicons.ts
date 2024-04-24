@@ -56,6 +56,13 @@ export const schemaDict = {
               ref: 'lex:com.atproto.server.defs#inviteCode',
             },
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           invitesDisabled: {
             type: 'boolean',
           },

@@ -62,6 +62,72 @@ describe('labels from 3p labelers', () => {
     cid: sc.posts[sc.dids.alice][0].ref.cidStr,
   })
 
+  const adjustLabels = async ({
+    uri,
+    cid,
+    src,
+    createLabelVals = [],
+    negateLabelVals = [],
+  }: {
+    uri: string
+    src: string
+    cid?: string
+    createLabelVals?: string[]
+    negateLabelVals?: string[]
+  }) => {
+    const labelEntries = createLabelVals.map((val) => ({
+      uri,
+      cid: cid || '',
+      val,
+      cts: new Date().toISOString(),
+      neg: false,
+      src,
+    }))
+
+    negateLabelVals.forEach((val) => {
+      labelEntries.push({
+        uri,
+        cid: cid || '',
+        val,
+        cts: new Date().toISOString(),
+        neg: true,
+        src,
+      })
+    })
+    await network.bsky.db.db.insertInto('label').values(labelEntries).execute()
+  }
+
+  const labelAccount = async (
+    client: ModeratorClient,
+    {
+      createLabelVals = [],
+      negateLabelVals = [],
+    }: { createLabelVals?: string[]; negateLabelVals?: string[] },
+  ) => {
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: sc.dids.alice,
+    }
+    await client.emitEvent(
+      {
+        subject,
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
+          createLabelVals,
+          negateLabelVals,
+        },
+        createdBy: sc.dids.carol,
+      },
+      'moderator',
+    )
+    await adjustLabels({
+      createLabelVals,
+      negateLabelVals,
+      uri: sc.dids.alice,
+      src: client.ozone.ctx.cfg.service.did,
+    })
+  }
+
   const labelPost = async (
     client: ModeratorClient,
     {
@@ -82,80 +148,124 @@ describe('labels from 3p labelers', () => {
       },
       'moderator',
     )
-    const labelEntries = createLabelVals.map((val) => ({
+    await adjustLabels({
+      createLabelVals,
+      negateLabelVals,
       uri: subject.uri,
       cid: subject.cid,
-      val,
-      cts: new Date().toISOString(),
-      neg: false,
       src: client.ozone.ctx.cfg.service.did,
-    }))
-
-    negateLabelVals.forEach((val) => {
-      labelEntries.push({
-        uri: subject.uri,
-        cid: subject.cid,
-        val,
-        cts: new Date().toISOString(),
-        neg: true,
-        src: client.ozone.ctx.cfg.service.did,
-      })
     })
-    await network.bsky.db.db.insertInto('label').values(labelEntries).execute()
   }
 
-  it('includes only labels from current authority by default', async () => {
-    await Promise.all([
-      labelPost(modClient, { createLabelVals: ['spam'] }),
-      labelPost(thirdPartyModClient, { createLabelVals: ['weird'] }),
-    ])
-    await thirdPartyLabeler.processAll()
-    await network.processAll()
+  describe('record labels', () => {
+    it('includes only labels from current authority by default', async () => {
+      await Promise.all([
+        labelPost(modClient, { createLabelVals: ['spam'] }),
+        labelPost(thirdPartyModClient, { createLabelVals: ['weird'] }),
+      ])
 
-    const [
-      { data: recordFromCurrentAuthority },
-      { data: recordFromThirdParty },
-    ] = await Promise.all([
-      agent.api.tools.ozone.moderation.getRecord(
-        { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-        { headers: await ozone.modHeaders() },
-      ),
-      thirdPartyAgent.api.tools.ozone.moderation.getRecord(
-        { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-        { headers: await thirdPartyLabeler.modHeaders() },
-      ),
-    ])
+      const [
+        { data: recordFromCurrentAuthority },
+        { data: recordFromThirdParty },
+      ] = await Promise.all([
+        agent.api.tools.ozone.moderation.getRecord(
+          { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
+          { headers: await ozone.modHeaders() },
+        ),
+        thirdPartyAgent.api.tools.ozone.moderation.getRecord(
+          { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
+          { headers: await thirdPartyLabeler.modHeaders() },
+        ),
+      ])
 
-    const currentAuthorityLabels = recordFromCurrentAuthority.labels?.map(
-      (l) => l.val,
-    )
-    const thirdPartyLabels = recordFromThirdParty.labels?.map((l) => l.val)
-    expect(currentAuthorityLabels).toContain('spam')
-    expect(currentAuthorityLabels).not.toContain('weird')
-    expect(thirdPartyLabels).toContain('weird')
-    expect(thirdPartyLabels).not.toContain('spam')
+      const currentAuthorityLabels = recordFromCurrentAuthority.labels?.map(
+        (l) => l.val,
+      )
+      const thirdPartyLabels = recordFromThirdParty.labels?.map((l) => l.val)
+      expect(currentAuthorityLabels).toContain('spam')
+      expect(currentAuthorityLabels).not.toContain('weird')
+      expect(thirdPartyLabels).toContain('weird')
+      expect(thirdPartyLabels).not.toContain('spam')
+    })
+
+    it('includes labels from all authorities requested via header', async () => {
+      const authHeaders = await ozone.modHeaders()
+      const { data: recordIncludingExternalLabels } =
+        await agent.api.tools.ozone.moderation.getRecord(
+          { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
+          {
+            headers: {
+              ...authHeaders,
+              [LABELER_HEADER_NAME]: [
+                thirdPartyLabeler.ctx.cfg.service.did,
+                ozone.ctx.cfg.service.did,
+              ].join(','),
+            },
+          },
+        )
+      const labelVals = recordIncludingExternalLabels.labels?.map((l) => l.val)
+      const labelSources = recordIncludingExternalLabels.labels?.map(
+        (l) => l.src,
+      )
+      expect(labelVals).toContain('weird')
+      expect(labelVals).toContain('spam')
+      expect(labelSources).toContain(thirdPartyLabeler.ctx.cfg.service.did)
+      expect(labelSources).toContain(ozone.ctx.cfg.service.did)
+    })
   })
 
-  it('includes labels from all authorities requested via header', async () => {
-    const authHeaders = await ozone.modHeaders()
-    const { data: recordIncludingExternalLabels } =
-      await agent.api.tools.ozone.moderation.getRecord(
-        { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-        {
-          headers: {
-            ...authHeaders,
-            [LABELER_HEADER_NAME]: [
-              thirdPartyLabeler.ctx.cfg.service.did,
-              ozone.ctx.cfg.service.did,
-            ].join(','),
-          },
-        },
+  describe('repo labels', () => {
+    it('includes only labels from current authority by default', async () => {
+      await Promise.all([
+        labelAccount(modClient, { createLabelVals: ['spam'] }),
+        labelAccount(thirdPartyModClient, { createLabelVals: ['weird'] }),
+      ])
+
+      const [{ data: repoFromCurrentAuthority }, { data: repoFromThirdParty }] =
+        await Promise.all([
+          agent.api.tools.ozone.moderation.getRepo(
+            { did: sc.dids.alice },
+            { headers: await ozone.modHeaders() },
+          ),
+          thirdPartyAgent.api.tools.ozone.moderation.getRepo(
+            { did: sc.dids.alice },
+            { headers: await thirdPartyLabeler.modHeaders() },
+          ),
+        ])
+
+      const currentAuthorityLabels = repoFromCurrentAuthority.labels?.map(
+        (l) => l.val,
       )
-    const labelVals = recordIncludingExternalLabels.labels?.map((l) => l.val)
-    const labelSources = recordIncludingExternalLabels.labels?.map((l) => l.src)
-    expect(labelVals).toContain('weird')
-    expect(labelVals).toContain('spam')
-    expect(labelSources).toContain(thirdPartyLabeler.ctx.cfg.service.did)
-    expect(labelSources).toContain(ozone.ctx.cfg.service.did)
+      const thirdPartyLabels = repoFromThirdParty.labels?.map((l) => l.val)
+      expect(currentAuthorityLabels).toContain('spam')
+      expect(currentAuthorityLabels).not.toContain('weird')
+      expect(thirdPartyLabels).toContain('weird')
+      expect(thirdPartyLabels).not.toContain('spam')
+    })
+
+    it('includes labels from all authorities requested via header', async () => {
+      const authHeaders = await ozone.modHeaders()
+      const { data: recordIncludingExternalLabels } =
+        await agent.api.tools.ozone.moderation.getRepo(
+          { did: sc.dids.alice },
+          {
+            headers: {
+              ...authHeaders,
+              [LABELER_HEADER_NAME]: [
+                thirdPartyLabeler.ctx.cfg.service.did,
+                ozone.ctx.cfg.service.did,
+              ].join(','),
+            },
+          },
+        )
+      const labelVals = recordIncludingExternalLabels.labels?.map((l) => l.val)
+      const labelSources = recordIncludingExternalLabels.labels?.map(
+        (l) => l.src,
+      )
+      expect(labelVals).toContain('weird')
+      expect(labelVals).toContain('spam')
+      expect(labelSources).toContain(thirdPartyLabeler.ctx.cfg.service.did)
+      expect(labelSources).toContain(ozone.ctx.cfg.service.did)
+    })
   })
 })

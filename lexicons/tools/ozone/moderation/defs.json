@@ -367,6 +367,10 @@
           "type": "ref",
           "ref": "com.atproto.server.defs#inviteCode"
         },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" }
       }
