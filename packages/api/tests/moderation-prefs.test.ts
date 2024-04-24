@@ -53,6 +53,7 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
+      savedFeeds: expect.any(Array),
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
@@ -98,6 +99,7 @@ describe('agent', () => {
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
+      savedFeeds: expect.any(Array),
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
@@ -133,6 +135,7 @@ describe('agent', () => {
     expect(agent.labelersHeader).toStrictEqual([])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
+      savedFeeds: expect.any(Array),
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
@@ -177,6 +180,7 @@ describe('agent', () => {
 
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
+      savedFeeds: expect.any(Array),
       interests: { tags: [] },
       moderationPrefs: {
         adultContentEnabled: false,
