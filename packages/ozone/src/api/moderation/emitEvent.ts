@@ -13,6 +13,7 @@ import { subjectFromInput } from '../../mod-service/subject'
 import { ModerationLangService } from '../../mod-service/lang'
 import { retryHttp } from '../../util'
 import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
+import { ModerationNotifierService } from '../../mod-service/notifier'
 
 const handleModerationEvent = async ({
   ctx,
@@ -123,11 +124,17 @@ const handleModerationEvent = async ({
     })
 
     const moderationLangService = new ModerationLangService(moderationTxn)
-    await moderationLangService.tagSubjectWithLang({
-      subject,
-      createdBy: ctx.cfg.service.did,
-      subjectStatus: result.subjectStatus,
-    })
+    const moderationNotifierService = new ModerationNotifierService(db, result)
+
+    // These two operations are not dependent on each other in any way so paralellizing them here
+    await Promise.all([
+      moderationLangService.tagSubjectWithLang({
+        subject,
+        createdBy: ctx.cfg.service.did,
+        subjectStatus: result.subjectStatus,
+      }),
+      moderationNotifierService.notifyReporters(),
+    ])
 
     if (subject.isRepo()) {
       if (isTakedownEvent) {
