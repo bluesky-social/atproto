@@ -48,6 +48,24 @@ export function validateMessageView(v: unknown): ValidationResult {
   return lexicons.validate('temp.dm.defs#messageView', v)
 }
 
+export interface DeletedMessage {
+  id: string
+  rev?: string
+  sender?: MessageViewSender
+  sentAt: string
+  [k: string]: unknown
+}
+
+export function isDeletedMessage(v: unknown): v is DeletedMessage {
+  return (
+    isObj(v) && hasProp(v, '$type') && v.$type === 'temp.dm.defs#deletedMessage'
+  )
+}
+
+export function validateDeletedMessage(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#deletedMessage', v)
+}
+
 export interface MessageViewSender {
   did: string
   [k: string]: unknown
@@ -63,23 +81,6 @@ export function isMessageViewSender(v: unknown): v is MessageViewSender {
 
 export function validateMessageViewSender(v: unknown): ValidationResult {
   return lexicons.validate('temp.dm.defs#messageViewSender', v)
-}
-
-export interface DeletedMessage {
-  id: string
-  rev?: string
-  sentAt: string
-  [k: string]: unknown
-}
-
-export function isDeletedMessage(v: unknown): v is DeletedMessage {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'temp.dm.defs#deletedMessage'
-  )
-}
-
-export function validateDeletedMessage(v: unknown): ValidationResult {
-  return lexicons.validate('temp.dm.defs#deletedMessage', v)
 }
 
 export interface ChatView {

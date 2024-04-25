@@ -47,20 +47,21 @@
         "sentAt": { "type": "string", "format": "datetime" }
       }
     },
-    "messageViewSender": {
-      "type": "object",
-      "required": ["did"],
-      "properties": {
-        "did": { "type": "string", "format": "did" }
-      }
-    },
     "deletedMessage": {
       "type": "object",
       "required": ["id", "sentAt"],
       "properties": {
         "id": { "type": "string" },
         "rev": { "type": "string" },
+        "sender": { "type": "ref", "ref": "#messageViewSender" },
         "sentAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "messageViewSender": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": { "type": "string", "format": "did" }
       }
     },
     "chatView": {

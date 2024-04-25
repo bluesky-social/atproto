@@ -9534,16 +9534,6 @@ export const schemaDict = {
           },
         },
       },
-      messageViewSender: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
       deletedMessage: {
         type: 'object',
         required: ['id', 'sentAt'],
@@ -9554,9 +9544,23 @@ export const schemaDict = {
           rev: {
             type: 'string',
           },
+          sender: {
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#messageViewSender',
+          },
           sentAt: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+      messageViewSender: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
           },
         },
       },
