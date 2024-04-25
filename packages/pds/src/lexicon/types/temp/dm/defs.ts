@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../util'
 import { CID } from 'multiformats/cid'
 import * as AppBskyRichtextFacet from '../../app/bsky/richtext/facet'
 import * as AppBskyEmbedRecord from '../../app/bsky/embed/record'
+import * as AppBskyActorDefs from '../../app/bsky/actor/defs'
 
 export interface Message {
   id?: string
@@ -32,6 +33,7 @@ export interface MessageView {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   embed?: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
+  sender?: MessageViewSender
   sentAt: string
   [k: string]: unknown
 }
@@ -44,6 +46,23 @@ export function isMessageView(v: unknown): v is MessageView {
 
 export function validateMessageView(v: unknown): ValidationResult {
   return lexicons.validate('temp.dm.defs#messageView', v)
+}
+
+export interface MessageViewSender {
+  did: string
+  [k: string]: unknown
+}
+
+export function isMessageViewSender(v: unknown): v is MessageViewSender {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'temp.dm.defs#messageViewSender'
+  )
+}
+
+export function validateMessageViewSender(v: unknown): ValidationResult {
+  return lexicons.validate('temp.dm.defs#messageViewSender', v)
 }
 
 export interface DeletedMessage {
@@ -66,7 +85,7 @@ export function validateDeletedMessage(v: unknown): ValidationResult {
 export interface ChatView {
   id: string
   rev: string
-  members: string[]
+  members: AppBskyActorDefs.ProfileViewBasic[]
   lastMessage?:
     | MessageView
     | DeletedMessage

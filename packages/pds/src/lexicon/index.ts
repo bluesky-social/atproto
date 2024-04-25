@@ -149,6 +149,7 @@ import * as TempDmLeaveChat from './types/temp/dm/leaveChat'
 import * as TempDmListChats from './types/temp/dm/listChats'
 import * as TempDmMuteChat from './types/temp/dm/muteChat'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
+import * as TempDmSendMessageBatch from './types/temp/dm/sendMessageBatch'
 import * as TempDmUnmuteChat from './types/temp/dm/unmuteChat'
 import * as TempDmUpdateChatRead from './types/temp/dm/updateChatRead'
 import * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
@@ -1999,6 +2000,17 @@ export class TempDmNS {
     >,
   ) {
     const nsid = 'temp.dm.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessageBatch<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmSendMessageBatch.Handler<ExtractAuth<AV>>,
+      TempDmSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.sendMessageBatch' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

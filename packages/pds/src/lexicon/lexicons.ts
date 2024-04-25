@@ -9524,9 +9524,23 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.embed.record'],
           },
+          sender: {
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#messageViewSender',
+          },
           sentAt: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+      messageViewSender: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
           },
         },
       },
@@ -9559,8 +9573,8 @@ export const schemaDict = {
           members: {
             type: 'array',
             items: {
-              type: 'string',
-              format: 'did',
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
             },
           },
           lastMessage: {
@@ -9976,6 +9990,60 @@ export const schemaDict = {
       },
     },
   },
+  TempDmSendMessageBatch: {
+    lexicon: 1,
+    id: 'temp.dm.sendMessageBatch',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['items'],
+            properties: {
+              items: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:temp.dm.sendMessageBatch#batchItem',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['items'],
+            properties: {
+              items: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:temp.dm.defs#messageView',
+                },
+              },
+            },
+          },
+        },
+      },
+      batchItem: {
+        type: 'object',
+        required: ['chatId', 'message'],
+        properties: {
+          chatId: {
+            type: 'string',
+          },
+          message: {
+            type: 'ref',
+            ref: 'lex:temp.dm.defs#message',
+          },
+        },
+      },
+    },
+  },
   TempDmUnmuteChat: {
     lexicon: 1,
     id: 'temp.dm.unmuteChat',
@@ -10262,6 +10330,7 @@ export const ids = {
   TempDmListChats: 'temp.dm.listChats',
   TempDmMuteChat: 'temp.dm.muteChat',
   TempDmSendMessage: 'temp.dm.sendMessage',
+  TempDmSendMessageBatch: 'temp.dm.sendMessageBatch',
   TempDmUnmuteChat: 'temp.dm.unmuteChat',
   TempDmUpdateChatRead: 'temp.dm.updateChatRead',
   TempDmUpdateUserSettings: 'temp.dm.updateUserSettings',

@@ -20,7 +20,10 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": { "type": "ref", "ref": "temp.dm.defs#messageView" }
+        "schema": {
+          "type": "ref",
+          "ref": "temp.dm.defs#messageView"
+        }
       }
     }
   }
