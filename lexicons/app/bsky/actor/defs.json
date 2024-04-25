@@ -122,6 +122,7 @@
           "#adultContentPref",
           "#contentLabelPref",
           "#savedFeedsPref",
+          "#savedFeedsPrefV2",
           "#personalDetailsPref",
           "#feedViewPref",
           "#threadViewPref",
@@ -151,6 +152,38 @@
         "visibility": {
           "type": "string",
           "knownValues": ["ignore", "show", "warn", "hide"]
+        }
+      }
+    },
+    "savedFeed": {
+      "type": "object",
+      "required": ["id", "type", "value", "pinned"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "knownValues": ["feed", "list", "timeline"]
+        },
+        "value": {
+          "type": "string"
+        },
+        "pinned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "savedFeedsPrefV2": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#savedFeed"
+          }
         }
       }
     },

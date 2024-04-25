@@ -132,6 +132,7 @@ export type Preferences = (
   | AdultContentPref
   | ContentLabelPref
   | SavedFeedsPref
+  | SavedFeedsPrefV2
   | PersonalDetailsPref
   | FeedViewPref
   | ThreadViewPref
@@ -176,6 +177,43 @@ export function isContentLabelPref(v: unknown): v is ContentLabelPref {
 
 export function validateContentLabelPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#contentLabelPref', v)
+}
+
+export interface SavedFeed {
+  id: string
+  type: 'feed' | 'list' | 'timeline' | (string & {})
+  value: string
+  pinned: boolean
+  [k: string]: unknown
+}
+
+export function isSavedFeed(v: unknown): v is SavedFeed {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#savedFeed'
+  )
+}
+
+export function validateSavedFeed(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#savedFeed', v)
+}
+
+export interface SavedFeedsPrefV2 {
+  items: SavedFeed[]
+  [k: string]: unknown
+}
+
+export function isSavedFeedsPrefV2(v: unknown): v is SavedFeedsPrefV2 {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#savedFeedsPrefV2'
+  )
+}
+
+export function validateSavedFeedsPrefV2(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#savedFeedsPrefV2', v)
 }
 
 export interface SavedFeedsPref {

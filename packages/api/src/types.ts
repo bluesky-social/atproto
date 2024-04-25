@@ -112,10 +112,14 @@ export interface BskyInterestsPreference {
  * Bluesky preferences
  */
 export interface BskyPreferences {
+  /**
+   * @deprecated use `savedFeeds`
+   */
   feeds: {
     saved?: string[]
     pinned?: string[]
   }
+  savedFeeds: AppBskyActorDefs.SavedFeed[]
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
   moderationPrefs: ModerationPrefs
