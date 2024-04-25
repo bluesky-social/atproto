@@ -25,6 +25,9 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventUnmute",
+            "#modEventMuteReporter",
+            "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert"
@@ -67,6 +70,9 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventUnmute",
+            "#modEventMuteReporter",
+            "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert"
@@ -292,10 +298,6 @@
       "required": ["durationInHours"],
       "properties": {
         "comment": { "type": "string" },
-        "reportingOnly": {
-          "type": "boolean",
-          "description": "Mute incoming reports from this subject. Only enabled when the subject is a DID"
-        },
         "durationInHours": {
           "type": "integer",
           "description": "Indicates how long the subject should remain muted."
@@ -306,10 +308,28 @@
       "type": "object",
       "description": "Unmute action on a subject",
       "properties": {
-        "reportingOnly": {
-          "type": "boolean",
-          "description": "Unmute incoming reports from this subject. Only enabled when the subject is a DID"
-        },
+        "comment": {
+          "type": "string",
+          "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventMuteReporter": {
+      "type": "object",
+      "description": "Mute incoming reports from an account",
+      "required": ["durationInHours"],
+      "properties": {
+        "comment": { "type": "string" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the account should remain muted."
+        }
+      }
+    },
+    "modEventUnmuteReporter": {
+      "type": "object",
+      "description": "Unmute incoming reports from an account",
+      "properties": {
         "comment": {
           "type": "string",
           "description": "Describe reasoning behind the reversal."

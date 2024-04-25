@@ -4,4 +4,4 @@
 "@atproto/pds": patch
 ---
 
-Allow muting reports from accounts via `#modEventMute` event
+Allow muting reports from accounts via `#modEventMuteReporter` event

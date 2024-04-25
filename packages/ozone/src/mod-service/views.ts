@@ -108,6 +108,7 @@ export class ModerationViews {
 
     if (
       [
+        'tools.ozone.moderation.defs#modEventMuteReporter',
         'tools.ozone.moderation.defs#modEventTakedown',
         'tools.ozone.moderation.defs#modEventMute',
       ].includes(event.action)
@@ -115,18 +116,6 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         durationInHours: event.durationInHours ?? undefined,
-      }
-    }
-
-    if (
-      [
-        'tools.ozone.moderation.defs#modEventUnmute',
-        'tools.ozone.moderation.defs#modEventMute',
-      ].includes(event.action)
-    ) {
-      eventView.event = {
-        ...eventView.event,
-        reportingOnly: !!event.meta?.reportingOnly,
       }
     }
 

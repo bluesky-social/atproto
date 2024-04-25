@@ -22,6 +22,9 @@ export interface ModEventView {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventUnmute
+    | ModEventMuteReporter
+    | ModEventUnmuteReporter
     | ModEventEmail
     | ModEventResolveAppeal
     | ModEventDivert
@@ -61,6 +64,9 @@ export interface ModEventViewDetail {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventUnmute
+    | ModEventMuteReporter
+    | ModEventUnmuteReporter
     | ModEventEmail
     | ModEventResolveAppeal
     | ModEventDivert
@@ -351,6 +357,53 @@ export function isModEventUnmute(v: unknown): v is ModEventUnmute {
 
 export function validateModEventUnmute(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventUnmute', v)
+}
+
+/** Mute incoming reports from an account */
+export interface ModEventMuteReporter {
+  comment?: string
+  /** Indicates how long the account should remain muted. */
+  durationInHours: number
+  [k: string]: unknown
+}
+
+export function isModEventMuteReporter(v: unknown): v is ModEventMuteReporter {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventMuteReporter'
+  )
+}
+
+export function validateModEventMuteReporter(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#modEventMuteReporter',
+    v,
+  )
+}
+
+/** Unmute incoming reports from an account */
+export interface ModEventUnmuteReporter {
+  /** Describe reasoning behind the reversal. */
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventUnmuteReporter(
+  v: unknown,
+): v is ModEventUnmuteReporter {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventUnmuteReporter'
+  )
+}
+
+export function validateModEventUnmuteReporter(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#modEventUnmuteReporter',
+    v,
+  )
 }
 
 /** Keep a log of outgoing email to a user */

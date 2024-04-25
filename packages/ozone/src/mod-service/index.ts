@@ -304,13 +304,6 @@ export class ModerationService {
       meta.sticky = event.sticky
     }
 
-    if (
-      (isModEventMute(event) || isModEventUnmute(event)) &&
-      event.reportingOnly
-    ) {
-      meta.reportingOnly = event.reportingOnly
-    }
-
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
       if (event.content) {

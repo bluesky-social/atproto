@@ -56,8 +56,7 @@ describe('report-muting', () => {
 
     await modClient.emitEvent({
       event: {
-        $type: 'tools.ozone.moderation.defs#modEventMute',
-        reportingOnly: true,
+        $type: 'tools.ozone.moderation.defs#modEventMuteReporter',
         durationInHours: 24,
       },
       subject: carolsAccountSubject,
@@ -84,8 +83,7 @@ describe('report-muting', () => {
 
     await modClient.emitEvent({
       event: {
-        $type: 'tools.ozone.moderation.defs#modEventUnmute',
-        reportingOnly: true,
+        $type: 'tools.ozone.moderation.defs#modEventUnmuteReporter',
       },
       subject: carolsAccountSubject,
     })

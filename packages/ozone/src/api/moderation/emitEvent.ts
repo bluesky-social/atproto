@@ -5,10 +5,10 @@ import {
   isModEventDivert,
   isModEventEmail,
   isModEventLabel,
-  isModEventMute,
+  isModEventMuteReporter,
   isModEventReverseTakedown,
   isModEventTakedown,
-  isModEventUnmute,
+  isModEventUnmuteReporter,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
@@ -116,13 +116,10 @@ const handleModerationEvent = async ({
   }
 
   if (
-    (isModEventMute(event) || isModEventUnmute(event)) &&
-    !subject.isRepo() &&
-    event.reportingOnly
+    (isModEventMuteReporter(event) || isModEventUnmuteReporter(event)) &&
+    !subject.isRepo()
   ) {
-    throw new InvalidRequestError(
-      'Subject must be a repo when muting reporting only',
-    )
+    throw new InvalidRequestError('Subject must be a repo when muting reporter')
   }
 
   const moderationEvent = await db.transaction(async (dbTxn) => {

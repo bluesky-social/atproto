@@ -8408,6 +8408,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventAcknowledge',
               'lex:tools.ozone.moderation.defs#modEventEscalate',
               'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventUnmute',
+              'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+              'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
@@ -8467,6 +8470,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventAcknowledge',
               'lex:tools.ozone.moderation.defs#modEventEscalate',
               'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventUnmute',
+              'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+              'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
@@ -8750,6 +8756,30 @@ export const schemaDict = {
             description:
               'Unmute incoming reports from this subject. Only enabled when the subject is a DID',
           },
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventMuteReporter: {
+        type: 'object',
+        description: 'Mute incoming reports from an account',
+        required: ['durationInHours'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description: 'Indicates how long the account should remain muted.',
+          },
+        },
+      },
+      modEventUnmuteReporter: {
+        type: 'object',
+        description: 'Unmute incoming reports from an account',
+        properties: {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
