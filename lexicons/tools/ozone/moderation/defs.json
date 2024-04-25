@@ -25,6 +25,9 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventUnmute",
+            "#modEventMuteReporter",
+            "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert"
@@ -67,6 +70,9 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventUnmute",
+            "#modEventMuteReporter",
+            "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert"
@@ -125,6 +131,10 @@
           "description": "Sticky comment on the subject."
         },
         "muteUntil": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "muteReportingUntil": {
           "type": "string",
           "format": "datetime"
         },
@@ -242,6 +252,10 @@
         "comment": {
           "type": "string"
         },
+        "isReporterMuted": {
+          "type": "boolean",
+          "description": "Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject."
+        },
         "reportType": {
           "type": "ref",
           "ref": "com.atproto.moderation.defs#reasonType"
@@ -293,6 +307,28 @@
     "modEventUnmute": {
       "type": "object",
       "description": "Unmute action on a subject",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventMuteReporter": {
+      "type": "object",
+      "description": "Mute incoming reports from an account",
+      "required": ["durationInHours"],
+      "properties": {
+        "comment": { "type": "string" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the account should remain muted."
+        }
+      }
+    },
+    "modEventUnmuteReporter": {
+      "type": "object",
+      "description": "Unmute incoming reports from an account",
       "properties": {
         "comment": {
           "type": "string",

@@ -50,6 +50,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "impersonation",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonOther",
     },
     "id": 3,
@@ -85,6 +86,7 @@ Array [
     "creatorHandle": "alice.test",
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventReport",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 1,

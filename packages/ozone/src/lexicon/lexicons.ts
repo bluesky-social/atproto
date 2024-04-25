@@ -8408,6 +8408,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventAcknowledge',
               'lex:tools.ozone.moderation.defs#modEventEscalate',
               'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventUnmute',
+              'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+              'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
@@ -8467,6 +8470,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventAcknowledge',
               'lex:tools.ozone.moderation.defs#modEventEscalate',
               'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventUnmute',
+              'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+              'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
@@ -8543,6 +8549,10 @@ export const schemaDict = {
             description: 'Sticky comment on the subject.',
           },
           muteUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          muteReportingUntil: {
             type: 'string',
             format: 'datetime',
           },
@@ -8669,6 +8679,11 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
+          isReporterMuted: {
+            type: 'boolean',
+            description:
+              "Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject.",
+          },
           reportType: {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#reasonType',
@@ -8730,6 +8745,30 @@ export const schemaDict = {
       modEventUnmute: {
         type: 'object',
         description: 'Unmute action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventMuteReporter: {
+        type: 'object',
+        description: 'Mute incoming reports from an account',
+        required: ['durationInHours'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description: 'Indicates how long the account should remain muted.',
+          },
+        },
+      },
+      modEventUnmuteReporter: {
+        type: 'object',
+        description: 'Unmute incoming reports from an account',
         properties: {
           comment: {
             type: 'string',
@@ -9121,6 +9160,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventLabel',
                   'lex:tools.ozone.moderation.defs#modEventReport',
                   'lex:tools.ozone.moderation.defs#modEventMute',
+                  'lex:tools.ozone.moderation.defs#modEventUnmute',
+                  'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+                  'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
                   'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
@@ -9428,6 +9470,11 @@ export const schemaDict = {
               type: 'boolean',
               description:
                 "By default, we don't include muted subjects in the results. Set this to true to include them.",
+            },
+            onlyMuted: {
+              type: 'boolean',
+              description:
+                'When set to true, only muted subjects and reporters will be returned.',
             },
             reviewState: {
               type: 'string',

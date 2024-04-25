@@ -18,6 +18,7 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
+  isModEventUnmute,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -307,6 +308,14 @@ export class ModerationService {
       meta.subjectLine = event.subjectLine
       if (event.content) {
         meta.content = event.content
+      }
+    }
+
+    // Keep trace of reports that came in while the reporter was in muted stated
+    if (isModEventReport(event)) {
+      const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
+      if (isReportingMuted) {
+        meta.isReporterMuted = true
       }
     }
 
@@ -668,6 +677,7 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
+    onlyMuted,
     ignoreSubjects,
     sortDirection,
     lastReviewedBy,
@@ -686,6 +696,7 @@ export class ModerationService {
     reportedAfter?: string
     reportedBefore?: string
     includeMuted?: boolean
+    onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
     sortDirection: 'asc' | 'desc'
@@ -757,6 +768,14 @@ export class ModerationService {
       )
     }
 
+    if (onlyMuted) {
+      builder = builder.where((qb) =>
+        qb
+          .where('muteUntil', '>', new Date().toISOString())
+          .orWhere('muteReportingUntil', '>', new Date().toISOString()),
+      )
+    }
+
     if (tags.length) {
       builder = builder.where(
         sql`${ref('moderation_subject_status.tags')} ?| array[${sql.join(
@@ -815,6 +834,20 @@ export class ModerationService {
       .selectAll()
       .executeTakeFirst()
     return result ?? null
+  }
+
+  // This is used to check if the reporter of an incoming report is muted from reporting
+  // so we want to make sure this look up is as fast as possible
+  async isReportingMutedForSubject(did: string) {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('muteReportingUntil', '>', new Date().toISOString())
+      .select(sql`true`.as('status'))
+      .executeTakeFirst()
+
+    return !!result
   }
 
   async formatAndCreateLabels(
