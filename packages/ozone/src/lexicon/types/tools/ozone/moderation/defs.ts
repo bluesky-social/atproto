@@ -319,8 +319,6 @@ export function validateModEventEscalate(v: unknown): ValidationResult {
 /** Mute incoming reports on a subject */
 export interface ModEventMute {
   comment?: string
-  /** Mute incoming reports from this subject. Only enabled when the subject is a DID */
-  reportingOnly?: boolean
   /** Indicates how long the subject should remain muted. */
   durationInHours: number
   [k: string]: unknown
@@ -340,8 +338,6 @@ export function validateModEventMute(v: unknown): ValidationResult {
 
 /** Unmute action on a subject */
 export interface ModEventUnmute {
-  /** Unmute incoming reports from this subject. Only enabled when the subject is a DID */
-  reportingOnly?: boolean
   /** Describe reasoning behind the reversal. */
   comment?: string
   [k: string]: unknown

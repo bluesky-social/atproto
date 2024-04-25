@@ -8736,11 +8736,6 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
-          reportingOnly: {
-            type: 'boolean',
-            description:
-              'Mute incoming reports from this subject. Only enabled when the subject is a DID',
-          },
           durationInHours: {
             type: 'integer',
             description: 'Indicates how long the subject should remain muted.',
@@ -8751,11 +8746,6 @@ export const schemaDict = {
         type: 'object',
         description: 'Unmute action on a subject',
         properties: {
-          reportingOnly: {
-            type: 'boolean',
-            description:
-              'Unmute incoming reports from this subject. Only enabled when the subject is a DID',
-          },
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
@@ -9170,6 +9160,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventLabel',
                   'lex:tools.ozone.moderation.defs#modEventReport',
                   'lex:tools.ozone.moderation.defs#modEventMute',
+                  'lex:tools.ozone.moderation.defs#modEventUnmute',
+                  'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+                  'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
                   'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
