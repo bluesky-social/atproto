@@ -46,6 +46,9 @@ export default function (server: Server, ctx: AppContext) {
       const headers = noUndefinedVals({
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
+        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+          ? req.headers['x-bsky-topics'].join(',')
+          : req.headers['x-bsky-topics'],
       })
       // @NOTE feed cursors should not be affected by appview swap
       const {
