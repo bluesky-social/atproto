@@ -44,6 +44,7 @@ describe('detectFacets', () => {
     'a trailing bsky.app: colon',
     'foo example.com" bar',
     "foo example.com' bar",
+    'start example.com?foo=bar end',
 
     'not.. a..url ..here',
     'e.g.',
@@ -168,6 +169,11 @@ describe('detectFacets', () => {
     [['a trailing '], ['bsky.app', 'https://bsky.app'], [': colon']],
     [['foo '], ['example.com', 'https://example.com'], ['" bar']],
     [['foo '], ['example.com', 'https://example.com'], ["' bar"]],
+    [
+      ['start '],
+      ['example.com?foo=bar', 'https://example.com?foo=bar'],
+      [' end'],
+    ],
 
     [['not.. a..url ..here']],
     [['e.g.']],

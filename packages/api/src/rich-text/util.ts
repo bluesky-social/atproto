@@ -1,6 +1,6 @@
 export const MENTION_REGEX = /(^|\s|\()(@)([a-zA-Z0-9.-]+)(\b)/g
 export const URL_REGEX =
-  /(?:^|\s|\()((https?:\/\/[\S]+)|([a-z0-9-]+(?:\.[a-z0-9-]+)*(?:\.[a-z]{2,}))(\/[\S]*)?)/gim
+  /(?:^|\s|\()((https?:\/\/[\S]+)|([a-z0-9-]+(?:\.[a-z0-9-]+)*(?:\.[a-z]{2,}))([/?][\S]*)?)/gim
 export const TRAILING_PUNCTUATION_REGEX = /\p{P}+$/gu
 
 /**
