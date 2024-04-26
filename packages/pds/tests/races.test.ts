@@ -1,6 +1,5 @@
-import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestAgent, TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot, verifyRepo } from '@atproto/repo'
 import AppContext from '../src/context'
 import { PreparedCreate, prepareCreate } from '../src/repo'
@@ -9,7 +8,7 @@ import { Keypair } from '@atproto/crypto'
 describe('races', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
-  let agent: AtpAgent
+  let agent: TestAgent
   let did: string
   let signingKey: Keypair
 
@@ -25,7 +24,7 @@ describe('races', () => {
       handle: 'alice.test',
       password: 'alice-pass',
     })
-    did = agent.session?.did || ''
+    did = await agent.getDid()
     signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 

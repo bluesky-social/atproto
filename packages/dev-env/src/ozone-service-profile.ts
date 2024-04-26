@@ -1,11 +1,11 @@
 import { TestPds } from './pds'
-import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { TestAgent } from './agent'
 
 export class OzoneServiceProfile {
   did?: string
   key?: Secp256k1Keypair
-  thirdPartyPdsClient: AtpAgent
+  thirdPartyPdsClient: TestAgent
 
   modUserDetails = {
     email: 'mod-authority@test.com',

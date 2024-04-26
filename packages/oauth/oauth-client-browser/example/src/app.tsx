@@ -1,5 +1,6 @@
+import { BskyAgent } from '@atproto/api'
 import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import LoginForm from './login-form'
 import { useOAuth } from './oauth'
@@ -15,37 +16,37 @@ function App() {
     value: { displayName?: string }
   } | null>(null)
 
+  const bskyAgent = useMemo(
+    () => (agent ? new BskyAgent(agent) : null),
+    [agent],
+  )
+
   const loadProfile = useCallback(async () => {
     if (!agent) return
 
     const info = await agent.getInfo()
     console.log('info', info)
 
+    if (!bskyAgent) return
+
     // A call that requires to be authenticated
     console.log(
-      await agent
-        .request(
-          '/xrpc/com.atproto.server.getServiceAuth?' +
-            new URLSearchParams({ aud: info.sub }).toString(),
-        )
-        .then((r) => r.json()),
+      await bskyAgent.com.atproto.server.getServiceAuth({
+        aud: agent.sub,
+      }),
     )
 
     // This call does not require authentication
-    const profile = await agent
-      .request(
-        '/xrpc/com.atproto.repo.getRecord?' +
-          new URLSearchParams({
-            repo: info.sub,
-            collection: 'app.bsky.actor.profile',
-            rkey: 'self',
-          }).toString(),
-      )
-      .then((r) => r.json())
+    const profile = await bskyAgent.com.atproto.repo.getRecord({
+      repo: agent.sub,
+      collection: 'app.bsky.actor.profile',
+      rkey: 'self',
+    })
+
     console.log(profile)
 
     setProfile(profile.data)
-  }, [agent])
+  }, [agent, bskyAgent])
 
   return signedIn ? (
     <div>

@@ -6,7 +6,9 @@ import {
 } from '@atproto/lexicon'
 import {
   CallOptions,
-  Headers,
+  errorResponseBody,
+  ErrorResponseBody,
+  HeaderGetter,
   QueryParams,
   ResponseType,
   XRPCError,
@@ -21,6 +23,10 @@ const ReadableStream =
       throw new Error('ReadableStream is not supported in this environment')
     }
   } as typeof globalThis.ReadableStream)
+
+export function isErrorResponseBody(v: unknown): v is ErrorResponseBody {
+  return errorResponseBody.safeParse(v).success
+}
 
 export function getMethodSchemaHTTPMethod(
   schema: LexXrpcProcedure | LexXrpcQuery,
@@ -37,33 +43,43 @@ export function constructMethodCallUri(
   serviceUri: URL,
   params?: QueryParams,
 ): string {
-  const uri = new URL(serviceUri)
-  uri.pathname = `/xrpc/${nsid}`
+  const uri = new URL(constructMethodCallUrl(nsid, schema, params), serviceUri)
+  return uri.toString()
+}
 
-  // given parameters
-  if (params) {
-    for (const [key, value] of Object.entries(params)) {
-      const paramSchema = schema.parameters?.properties?.[key]
-      if (!paramSchema) {
-        throw new Error(`Invalid query parameter: ${key}`)
-      }
-      if (value !== undefined) {
-        if (paramSchema.type === 'array') {
-          const vals: (typeof value)[] = []
-          vals.concat(value).forEach((val) => {
-            uri.searchParams.append(
-              key,
-              encodeQueryParam(paramSchema.items.type, val),
-            )
-          })
-        } else {
-          uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+export function constructMethodCallUrl(
+  nsid: string,
+  schema: LexXrpcProcedure | LexXrpcQuery,
+  params?: QueryParams,
+): string {
+  const pathname = `/xrpc/${encodeURIComponent(nsid)}`
+  if (!params) return pathname
+
+  const searchParams: [string, string][] = []
+
+  for (const [key, value] of Object.entries(params)) {
+    const paramSchema = schema.parameters?.properties?.[key]
+    if (!paramSchema) {
+      throw new Error(`Invalid query parameter: ${key}`)
+    }
+    if (value !== undefined) {
+      if (paramSchema.type === 'array') {
+        const values = Array.isArray(value) ? value : [value]
+        for (const val of values) {
+          searchParams.push([
+            key,
+            encodeQueryParam(paramSchema.items.type, val),
+          ])
         }
+      } else {
+        searchParams.push([key, encodeQueryParam(paramSchema.type, value)])
       }
     }
   }
 
-  return uri.toString()
+  if (!searchParams.length) return pathname
+
+  return `${pathname}?${new URLSearchParams(searchParams).toString()}`
 }
 
 export function encodeQueryParam(
@@ -95,55 +111,64 @@ export function encodeQueryParam(
   throw new Error(`Unsupported query param type: ${type}`)
 }
 
-function normalizeHeaders(headers: Headers): Headers {
-  const normalized: Headers = {}
-  for (const [header, value] of Object.entries(headers)) {
-    normalized[header.toLowerCase()] = value
-  }
-
-  return normalized
-}
-
 export function constructMethodCallHeaders(
   schema: LexXrpcProcedure | LexXrpcQuery,
   data?: unknown,
   opts?: CallOptions,
 ): Headers {
-  const headers: Headers = opts?.headers ? normalizeHeaders(opts.headers) : {}
+  // Not using `new Headers(opts?.headers)` to avoid duplicating headers values
+  // due to inconsistent casing in headers name. In case of multiple headers
+  // with the same name (but using a different case), the last one will be used.
+
+  // new Headers({ 'content-type': 'foo', 'Content-Type': 'bar' }).get('content-type')
+  // => 'foo, bar'
+  const headers = new Headers()
+
+  if (opts?.headers) {
+    for (const name in opts.headers) {
+      const value = opts.headers[name]
+      // headers.set is case-insensitive, this will override any existing header
+      // that was declared using a different case.
+      if (value != null) headers.set(name, value)
+    }
+  }
+
   if (schema.type === 'procedure') {
     if (opts?.encoding) {
-      headers['content-type'] = opts.encoding
-    } else if (!headers['content-type'] && typeof data !== 'undefined') {
+      headers.set('content-type', opts.encoding)
+    } else if (!headers.has('content-type') && typeof data !== 'undefined') {
       // Special handling of BodyInit types before falling back to JSON encoding
       if (
         data instanceof ArrayBuffer ||
         data instanceof ReadableStream ||
         ArrayBuffer.isView(data)
       ) {
-        headers['content-type'] = 'application/octet-stream'
+        headers.set('content-type', 'application/octet-stream')
       } else if (data instanceof FormData) {
         // Note: The multipart form data boundary is missing from the header
         // we set here, making that header invalid. This special case will be
         // handled in encodeMethodCallBody()
-        headers['content-type'] = 'multipart/form-data'
+        headers.set('content-type', 'multipart/form-data')
       } else if (data instanceof URLSearchParams) {
-        headers['content-type'] =
-          'application/x-www-form-urlencoded;charset=UTF-8'
+        headers.set(
+          'content-type',
+          'application/x-www-form-urlencoded;charset=UTF-8',
+        )
       } else if (isBlobLike(data)) {
-        headers['content-type'] = data.type || 'application/octet-stream'
+        headers.set('content-type', data.type || 'application/octet-stream')
       } else if (typeof data === 'string') {
-        headers['content-type'] = 'text/plain;charset=UTF-8'
+        headers.set('content-type', 'text/plain;charset=UTF-8')
       }
       // At this point, data is not a valid BodyInit type.
       else if (isIterable(data)) {
-        headers['content-type'] = 'application/octet-stream'
+        headers.set('content-type', 'application/octet-stream')
       } else if (
         typeof data === 'boolean' ||
         typeof data === 'number' ||
         typeof data === 'string' ||
         typeof data === 'object'
       ) {
-        headers['content-type'] = 'application/json'
+        headers.set('content-type', 'application/json')
       } else {
         // symbol, function, bigint
         throw new XRPCError(
@@ -154,6 +179,30 @@ export function constructMethodCallHeaders(
     }
   }
   return headers
+}
+
+export async function combineHeaders(
+  headersInit: undefined | HeadersInit,
+  extraHeaders: Iterable<[string, undefined | HeaderGetter]>,
+): Promise<undefined | HeadersInit> {
+  let headers: Headers | undefined = undefined
+
+  for (const [key, getter] of extraHeaders) {
+    // Ignore undefined values, only allowed for convenience
+    if (getter === undefined) continue
+
+    // Lazy initialization of the headers object
+    headers ??= new Headers(headersInit)
+
+    const value =
+      typeof getter === 'function' ? await getter(headers.get(key)) : getter
+
+    if (typeof value === 'string') headers.set(key, value)
+    else if (value === null) headers.delete(key)
+    else throw new TypeError(`Invalid "${key}" header value: ${typeof value}`)
+  }
+
+  return headers ?? headersInit
 }
 
 function isBlobLike(value: unknown): value is Blob {
@@ -206,7 +255,8 @@ export function encodeMethodCallBody(
   data?: unknown,
 ): BodyInit | undefined {
   // Silently ignore the body if there is no content-type header.
-  if (!headers['content-type']) {
+  const contentType = headers.get('content-type')
+  if (!contentType) {
     return undefined
   }
 
@@ -226,7 +276,7 @@ export function encodeMethodCallBody(
       // content-type header if already present. This would cause the boundary
       // to be missing from the content-type header, resulting in a 400 error.
       // Deleting the content-type header here to let fetch() re-create it.
-      delete headers['content-type']
+      headers.delete('content-type')
     }
 
     // Will be encoded by the fetch API.
@@ -239,10 +289,10 @@ export function encodeMethodCallBody(
     return iterableToReadableStream(data)
   }
 
-  if (headers['content-type'].startsWith('text/')) {
+  if (contentType.startsWith('text/')) {
     return new TextEncoder().encode(String(data))
   }
-  if (headers['content-type'].startsWith('application/json')) {
+  if (contentType.startsWith('application/json')) {
     const json = stringifyLex(data)
     // Server would return a 400 error if the JSON is invalid (e.g. trying to
     // JSONify a function, or an object that implements toJSON() poorly).
@@ -270,7 +320,7 @@ export function encodeMethodCallBody(
 
   throw new XRPCError(
     ResponseType.InvalidRequest,
-    `Unable to encode ${type} as ${headers['content-type']} data`,
+    `Unable to encode ${type} as ${contentType} data`,
   )
 }
 
@@ -365,53 +415,31 @@ const toUint8Array: (value: unknown) => Uint8Array | undefined = Buffer
       throw new TypeError(`Unsupported value type: ${typeof value}`)
     }
 
-export function httpResponseCodeToEnum(status: number): ResponseType {
-  let resCode: ResponseType
-  if (status in ResponseType) {
-    resCode = status
-  } else if (status >= 100 && status < 200) {
-    resCode = ResponseType.XRPCNotSupported
-  } else if (status >= 200 && status < 300) {
-    resCode = ResponseType.Success
-  } else if (status >= 300 && status < 400) {
-    resCode = ResponseType.XRPCNotSupported
-  } else if (status >= 400 && status < 500) {
-    resCode = ResponseType.InvalidRequest
-  } else {
-    resCode = ResponseType.InternalServerError
-  }
-  return resCode
-}
-
 export function httpResponseBodyParse(
   mimeType: string | null,
   data: ArrayBuffer | undefined,
 ): any {
-  if (mimeType) {
-    if (mimeType.includes('application/json') && data?.byteLength) {
-      try {
+  try {
+    if (mimeType) {
+      if (mimeType.includes('application/json')) {
         const str = new TextDecoder().decode(data)
         return jsonStringToLex(str)
-      } catch (e) {
-        throw new XRPCError(
-          ResponseType.InvalidResponse,
-          `Failed to parse response body: ${String(e)}`,
-        )
       }
-    }
-    if (mimeType.startsWith('text/') && data?.byteLength) {
-      try {
+      if (mimeType.startsWith('text/')) {
         return new TextDecoder().decode(data)
-      } catch (e) {
-        throw new XRPCError(
-          ResponseType.InvalidResponse,
-          `Failed to parse response body: ${String(e)}`,
-        )
       }
     }
+    if (data instanceof ArrayBuffer) {
+      return new Uint8Array(data)
+    }
+    return data
+  } catch (cause) {
+    throw new XRPCError(
+      ResponseType.InvalidResponse,
+      undefined,
+      `Failed to parse response body: ${String(cause)}`,
+      undefined,
+      { cause },
+    )
   }
-  if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data)
-  }
-  return data
 }

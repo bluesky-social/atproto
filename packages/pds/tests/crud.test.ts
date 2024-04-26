@@ -5,7 +5,6 @@ import { BlobRef } from '@atproto/lexicon'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
-import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { paginateAll } from './_util'
 import AppContext from '../src/context'
@@ -1074,10 +1073,10 @@ describe('crud operations', () => {
     it("writes fail on values that can't reliably transform between cbor to lex", async () => {
       const passthroughBody = (data: unknown) =>
         ui8ToArrayBuffer(new TextEncoder().encode(JSON.stringify(data)))
-      const result = await defaultFetchHandler(
-        aliceAgent.service.origin + `/xrpc/com.atproto.repo.createRecord`,
-        'post',
-        { ...aliceAgent.api.xrpc.headers, 'content-type': 'application/json' },
+
+      const result = aliceAgent.api.call(
+        'com.atproto.repo.createRecord',
+        {},
         passthroughBody({
           repo: alice.did,
           collection: 'app.bsky.feed.post',
@@ -1087,9 +1086,13 @@ describe('crud operations', () => {
             deepObject: createDeepObject(3000),
           },
         }),
+        {
+          encoding: 'application/json',
+        },
       )
-      expect(result.status).toEqual(400)
-      expect(result.body).toEqual({
+
+      await expect(result).rejects.toMatchObject({
+        status: 400,
         error: 'InvalidRequest',
         message: 'Bad record',
       })

@@ -1,17 +1,18 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TID } from '@atproto/common-web'
 import {
+  AppBskyActorDefs,
+  AppBskyActorProfile,
   BskyAgent,
   ComAtprotoRepoPutRecord,
-  AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
+  AtpSessionManager,
 } from '../src'
 import {
-  savedFeedsToUriArrays,
   getSavedFeedType,
+  savedFeedsToUriArrays,
   validateSavedFeed,
 } from '../src/util'
-import { AppBskyActorDefs } from '../dist'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -31,7 +32,7 @@ describe('agent', () => {
   ): Promise<string | undefined> => {
     try {
       const res = await agent.api.app.bsky.actor.profile.get({
-        repo: agent.session?.did || '',
+        repo: await agent.getDid(),
         rkey: 'self',
       })
       return res.value.displayName ?? ''
@@ -40,21 +41,16 @@ describe('agent', () => {
     }
   }
 
-  it('clones correctly', () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-    const agent2 = agent.clone()
-    expect(agent2 instanceof BskyAgent).toBeTruthy()
-    expect(agent.service).toEqual(agent2.service)
-  })
-
   it('upsertProfile correctly creates and updates profiles.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    await agent.createAccount({
+    const sessionMgr = new AtpSessionManager({ service: network.pds.url })
+    await sessionMgr.createAccount({
       handle: 'user1.test',
       email: 'user1@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(sessionMgr)
+
     const displayName1 = await getProfileDisplayName(agent)
     expect(displayName1).toBeFalsy()
 
@@ -80,13 +76,14 @@ describe('agent', () => {
   })
 
   it('upsertProfile correctly handles CAS failures.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    await agent.createAccount({
+    const sessionMgr = new AtpSessionManager({ service: network.pds.url })
+    await sessionMgr.createAccount({
       handle: 'user2.test',
       email: 'user2@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(sessionMgr)
 
     const displayName1 = await getProfileDisplayName(agent)
     expect(displayName1).toBeFalsy()
@@ -96,7 +93,7 @@ describe('agent', () => {
     await agent.upsertProfile(async (_existing) => {
       if (!hasConflicted) {
         await agent.com.atproto.repo.putRecord({
-          repo: agent.session?.did || '',
+          repo: await agent.getDid(),
           collection: 'app.bsky.actor.profile',
           rkey: 'self',
           record: {
@@ -119,20 +116,21 @@ describe('agent', () => {
   })
 
   it('upsertProfile wont endlessly retry CAS failures.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    await agent.createAccount({
+    const sessionMgr = new AtpSessionManager({ service: network.pds.url })
+    await sessionMgr.createAccount({
       handle: 'user3.test',
       email: 'user3@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(sessionMgr)
 
     const displayName1 = await getProfileDisplayName(agent)
     expect(displayName1).toBeFalsy()
 
     const p = agent.upsertProfile(async (_existing) => {
       await agent.com.atproto.repo.putRecord({
-        repo: agent.session?.did || '',
+        repo: await agent.getDid(),
         collection: 'app.bsky.actor.profile',
         rkey: 'self',
         record: {
@@ -148,13 +146,14 @@ describe('agent', () => {
   })
 
   it('upsertProfile validates the record.', async () => {
-    const agent = new BskyAgent({ service: network.pds.url })
-
-    await agent.createAccount({
+    const sessionMgr = new AtpSessionManager({ service: network.pds.url })
+    await sessionMgr.createAccount({
       handle: 'user4.test',
       email: 'user4@test.com',
       password: 'password',
     })
+
+    const agent = new BskyAgent(sessionMgr)
 
     const p = agent.upsertProfile((_existing) => {
       return {
@@ -229,13 +228,14 @@ describe('agent', () => {
 
   describe('preferences methods', () => {
     it('gets and sets preferences correctly', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
-
-      await agent.createAccount({
+      const sessionMgr = new AtpSessionManager({ service: network.pds.url })
+      await sessionMgr.createAccount({
         handle: 'user5.test',
         email: 'user5@test.com',
         password: 'password',
       })
+
+      const agent = new BskyAgent(sessionMgr)
 
       const DEFAULT_LABELERS = BskyAgent.appLabelers.map((did) => ({
         did,
@@ -1082,13 +1082,14 @@ describe('agent', () => {
     })
 
     it('resolves duplicates correctly', async () => {
-      const agent = new BskyAgent({ service: network.pds.url })
-
-      await agent.createAccount({
+      const sessionMgr = new AtpSessionManager({ service: network.pds.url })
+      await sessionMgr.createAccount({
         handle: 'user6.test',
         email: 'user6@test.com',
         password: 'password',
       })
+
+      const agent = new BskyAgent(sessionMgr)
 
       await agent.app.bsky.actor.putPreferences({
         preferences: [
@@ -1643,12 +1644,16 @@ describe('agent', () => {
       ]
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
-        await agent.createAccount({
+        const sessionMgr = new AtpSessionManager({
+          service: network.pds.url,
+        })
+        await sessionMgr.createAccount({
           handle: 'user7.test',
           email: 'user7@test.com',
           password: 'password',
         })
+
+        agent = new BskyAgent(sessionMgr)
       })
 
       it('upsertMutedWords', async () => {
@@ -1868,12 +1873,16 @@ describe('agent', () => {
       const postUri = 'at://did:plc:fake/app.bsky.feed.post/fake'
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
-        await agent.createAccount({
+        const sessionMgr = new AtpSessionManager({
+          service: network.pds.url,
+        })
+        await sessionMgr.createAccount({
           handle: 'user8.test',
           email: 'user8@test.com',
           password: 'password',
         })
+
+        agent = new BskyAgent(sessionMgr)
       })
 
       it('hidePost', async () => {
@@ -1907,12 +1916,16 @@ describe('agent', () => {
       const listUri = () => `at://bob.com/app.bsky.graph.list/${i++}`
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
-        await agent.createAccount({
+        const sessionMgr = new AtpSessionManager({
+          service: network.pds.url,
+        })
+        await sessionMgr.createAccount({
           handle: 'user9.test',
           email: 'user9@test.com',
           password: 'password',
         })
+
+        agent = new BskyAgent(sessionMgr)
       })
 
       beforeEach(async () => {
@@ -2380,12 +2393,16 @@ describe('agent', () => {
       const feedUri = () => `at://bob.com/app.bsky.feed.generator/${i++}`
 
       beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
-        await agent.createAccount({
+        const sessionMgr = new AtpSessionManager({
+          service: network.pds.url,
+        })
+        await sessionMgr.createAccount({
           handle: 'user10.test',
           email: 'user10@test.com',
           password: 'password',
         })
+
+        agent = new BskyAgent(sessionMgr)
       })
 
       beforeEach(async () => {

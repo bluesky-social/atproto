@@ -74,6 +74,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/oauth-client':
+        specifier: workspace:^
+        version: link:../oauth/oauth-client
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
