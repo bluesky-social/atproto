@@ -1,5 +1,4 @@
-import AtpAgent from '@atproto/api'
-import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
+import { EXAMPLE_LABELER, TestAgent, TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { ids, lexicons } from '../src/lexicon/lexicons'
 import { Label } from '../src/lexicon/types/com/atproto/label/defs'
@@ -14,7 +13,7 @@ import { getSigningKeyId } from '../src/util'
 
 describe('ozone query labels', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let agent: TestAgent
 
   let labels: Label[]
 

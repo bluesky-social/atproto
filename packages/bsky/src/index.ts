@@ -5,7 +5,7 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
@@ -76,14 +76,14 @@ export class BskyAppView {
       : undefined
 
     const suggestionsAgent = config.suggestionsUrl
-      ? new AtpAgent({ service: config.suggestionsUrl })
+      ? new AtpAgent({
+          service: config.suggestionsUrl,
+          headers: {
+            authorization:
+              config.suggestionsApiKey && `Bearer ${config.suggestionsApiKey}`,
+          },
+        })
       : undefined
-    if (suggestionsAgent && config.suggestionsApiKey) {
-      suggestionsAgent.api.setHeader(
-        'authorization',
-        `Bearer ${config.suggestionsApiKey}`,
-      )
-    }
 
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,

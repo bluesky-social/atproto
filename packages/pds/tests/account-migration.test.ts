@@ -1,6 +1,7 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import { AtUri } from '@atproto/api'
 import {
   SeedClient,
+  TestAgent,
   TestNetworkNoAppView,
   TestPds,
   mockNetworkUtilities,
@@ -13,8 +14,8 @@ describe('account migration', () => {
   let newPds: TestPds
 
   let sc: SeedClient
-  let oldAgent: AtpAgent
-  let newAgent: AtpAgent
+  let oldAgent: TestAgent
+  let newAgent: TestAgent
 
   let alice: string
 
