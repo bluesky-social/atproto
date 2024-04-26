@@ -1,11 +1,10 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { TestAgent, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as jose from 'jose'
 
 describe('app_passwords', () => {
   let network: TestNetworkNoAppView
-  let accntAgent: AtpAgent
-  let appAgent: AtpAgent
+  let accntAgent: TestAgent
+  let appAgent: TestAgent
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

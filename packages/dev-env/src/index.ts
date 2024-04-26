@@ -1,3 +1,4 @@
+export * from './agent'
 export * from './bsky'
 export * from './bsync'
 export * from './network'

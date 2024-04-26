@@ -2,13 +2,13 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as plc from '@did-plc/lib'
 import * as ozone from '@atproto/ozone'
-import { AtpAgent } from '@atproto/api'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidAndKey, OzoneConfig } from './types'
 import { ADMIN_PASSWORD } from './const'
 import { createDidAndKey } from './util'
 import { ModeratorClient } from './moderator-client'
+import { TestAgent } from './agent'
 
 export class TestOzone {
   constructor(
@@ -104,7 +104,7 @@ export class TestOzone {
   }
 
   getClient() {
-    return new AtpAgent({ service: this.url })
+    return new TestAgent({ service: this.url })
   }
 
   getModClient() {

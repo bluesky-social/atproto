@@ -3,24 +3,16 @@ import { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>
 export type Headers = Record<string, string>
+export type Awaitable<V> = V | PromiseLike<V>
+export type Gettable<V, GetterFallback = undefined> =
+  | V
+  | (() => Awaitable<V | GetterFallback>)
 
 export interface CallOptions {
   encoding?: string
+  signal?: AbortSignal
   headers?: Headers
 }
-
-export interface FetchHandlerResponse {
-  status: number
-  headers: Headers
-  body: ArrayBuffer | undefined
-}
-
-export type FetchHandler = (
-  httpUri: string,
-  httpMethod: string,
-  httpHeaders: Headers,
-  httpReqBody: any,
-) => Promise<FetchHandlerResponse>
 
 export const errorResponseBody = z.object({
   error: z.string().optional(),
