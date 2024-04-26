@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`moderation status language tagging gets server details with moderators 1`] = `
+Object {
+  "did": "user(4)",
+  "moderators": Array [
+    Object {
+      "did": "user(0)",
+      "handle": "admin.ozone",
+      "role": "admin",
+    },
+    Object {
+      "did": "user(1)",
+      "handle": "bsky.test",
+      "role": "moderator",
+    },
+    Object {
+      "did": "user(2)",
+      "handle": "moderator.ozone",
+      "role": "moderator",
+    },
+    Object {
+      "did": "user(3)",
+      "handle": "triage.ozone",
+      "role": "triage",
+    },
+  ],
+}
+`;

@@ -9606,6 +9606,65 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneServerDescribeServer: {
+    lexicon: 1,
+    id: 'tools.ozone.server.describeServer',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Describes the server's configuration.",
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'moderators'],
+            properties: {
+              moderators: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.server.describeServer#moderator',
+                },
+                description:
+                  'Users that have access to the service and their levels of access.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              plcUrl: {
+                type: 'string',
+                format: 'uri',
+                description: 'The URL of the PLC server.',
+              },
+              queueConfig: {
+                type: 'unknown',
+                description:
+                  'Configuration used to split subjects in multiple queues.',
+              },
+            },
+          },
+        },
+      },
+      moderator: {
+        type: 'object',
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          role: {
+            type: 'string',
+            enum: ['admin', 'moderator', 'triage'],
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -9790,4 +9849,5 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneServerDescribeServer: 'tools.ozone.server.describeServer',
 }
