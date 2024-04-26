@@ -34,7 +34,7 @@ export type AppState = {
 function App() {
   const {
     initialized,
-    atpClient,
+    agent,
     client,
     signedIn,
     signOut,
@@ -52,17 +52,17 @@ function App() {
     const info = await client.getUserinfo()
     console.log('info', info)
 
-    if (!atpClient) return
+    if (!agent) return
 
     // A call that requires to be authenticated
     console.log(
-      await atpClient.com.atproto.server.getServiceAuth({
+      await agent.com.atproto.server.getServiceAuth({
         aud: info.sub,
       }),
     )
 
     // This call does not require authentication
-    const profile = await atpClient.com.atproto.repo.getRecord({
+    const profile = await agent.com.atproto.repo.getRecord({
       repo: info.sub,
       collection: 'app.bsky.actor.profile',
       rkey: 'self',
@@ -71,7 +71,7 @@ function App() {
     console.log(profile)
 
     setProfile(profile.data)
-  }, [client, atpClient])
+  }, [client, agent])
 
   if (!initialized) {
     return <p>{error || 'Loading...'}</p>

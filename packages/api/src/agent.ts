@@ -1,3 +1,4 @@
+import { OAuthClient } from '@atproto/oauth-client'
 import { AtpClient } from './client'
 import { BSKY_LABELER_DID } from './const'
 import { SessionManager, isSessionManager } from './session/session-manager'
@@ -6,10 +7,14 @@ import {
   StatelessSessionManagerOptions,
 } from './session/stateless-session-handler'
 import { AtpAgentGlobalOpts, AtprotoServiceType } from './types'
+import { OAuthSessionManager } from './dispatcher/oauth-dispatcher'
 
 const MAX_LABELERS = 10
 
-export type AtpAgentOptions = SessionManager | StatelessSessionManagerOptions
+export type AtpAgentOptions =
+  | SessionManager
+  | OAuthClient
+  | StatelessSessionManagerOptions
 
 export class AtpAgent {
   /**
@@ -39,7 +44,9 @@ export class AtpAgent {
   constructor(options: AtpAgentOptions) {
     this.sessionManager = isSessionManager(options)
       ? options
-      : new StatelessSessionManager(options)
+      : options instanceof OAuthClient
+        ? new OAuthSessionManager(options)
+        : new StatelessSessionManager(options)
 
     this.api = new AtpClient((...args) =>
       // The function needs to be "bound" to the right context
