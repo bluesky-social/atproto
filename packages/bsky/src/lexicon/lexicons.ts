@@ -2209,6 +2209,9 @@ export const schemaDict = {
               password: {
                 type: 'string',
               },
+              authFactorToken: {
+                type: 'string',
+              },
             },
           },
         },
@@ -2241,12 +2244,18 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
             },
           },
         },
         errors: [
           {
             name: 'AccountTakedown',
+          },
+          {
+            name: 'AuthFactorTokenRequired',
           },
         ],
       },
@@ -2568,6 +2577,9 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
               didDoc: {
                 type: 'unknown',
               },
@@ -2836,6 +2848,9 @@ export const schemaDict = {
             properties: {
               email: {
                 type: 'string',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
               },
               token: {
                 type: 'string',
@@ -3807,6 +3822,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
+            'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
@@ -3842,6 +3858,38 @@ export const schemaDict = {
           visibility: {
             type: 'string',
             knownValues: ['ignore', 'show', 'warn', 'hide'],
+          },
+        },
+      },
+      savedFeed: {
+        type: 'object',
+        required: ['id', 'type', 'value', 'pinned'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          type: {
+            type: 'string',
+            knownValues: ['feed', 'list', 'timeline'],
+          },
+          value: {
+            type: 'string',
+          },
+          pinned: {
+            type: 'boolean',
+          },
+        },
+      },
+      savedFeedsPrefV2: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#savedFeed',
+            },
           },
         },
       },
@@ -4306,12 +4354,6 @@ export const schemaDict = {
             q: {
               type: 'string',
               description: 'Search query prefix; not a full query string.',
-            },
-            viewer: {
-              type: 'string',
-              format: 'did',
-              description:
-                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
             },
             limit: {
               type: 'integer',
@@ -7849,6 +7891,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestionsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestionsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested actors. Intended to be called and then hydrated through app.bsky.actor.getSuggestions',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetTaggedSuggestions: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getTaggedSuggestions',
@@ -8250,6 +8342,8 @@ export const ids = {
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetSuggestionsSkeleton:
+    'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
   AppBskyUnspeccedSearchActorsSkeleton:

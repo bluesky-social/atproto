@@ -1,6 +1,8 @@
+import { DAY } from '@atproto/common'
+import { UpstreamTimeoutError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { DAY } from '@atproto/common'
+import { BlobMetadata } from '../../../../actor-store/blob/transactor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
@@ -15,10 +17,20 @@ export default function (server: Server, ctx: AppContext) {
       const blob = await ctx.actorStore.writeNoTransaction(
         requester,
         async (store) => {
-          const metadata = await store.repo.blob.uploadBlobAndGetMetadata(
-            input.encoding,
-            input.body,
-          )
+          let metadata: BlobMetadata
+          try {
+            metadata = await store.repo.blob.uploadBlobAndGetMetadata(
+              input.encoding,
+              input.body,
+            )
+          } catch (err) {
+            if (err?.['name'] === 'AbortError') {
+              throw new UpstreamTimeoutError(
+                'Upload timed out, please try again.',
+              )
+            }
+            throw err
+          }
 
           return store.transact(async (actorTxn) => {
             const blobRef =

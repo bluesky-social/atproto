@@ -15,7 +15,8 @@
               "type": "string",
               "description": "Handle or other identifier supported by the server for the authenticating user."
             },
-            "password": { "type": "string" }
+            "password": { "type": "string" },
+            "authFactorToken": { "type": "string" }
           }
         }
       },
@@ -31,11 +32,15 @@
             "did": { "type": "string", "format": "did" },
             "didDoc": { "type": "unknown" },
             "email": { "type": "string" },
-            "emailConfirmed": { "type": "boolean" }
+            "emailConfirmed": { "type": "boolean" },
+            "emailAuthFactor": { "type": "boolean" }
           }
         }
       },
-      "errors": [{ "name": "AccountTakedown" }]
+      "errors": [
+        { "name": "AccountTakedown" },
+        { "name": "AuthFactorTokenRequired" }
+      ]
     }
   }
 }

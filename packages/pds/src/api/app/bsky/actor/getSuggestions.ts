@@ -9,7 +9,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ req, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(ctx, req, requester)
+      return pipethrough(ctx, req, requester, undefined, {
+        reqHeadersToForward: ['x-bsky-topics'],
+      })
     },
   })
 }

@@ -1,5 +1,42 @@
 # @atproto/ozone
 
+## 0.1.11
+
+### Patch Changes
+
+- [#2390](https://github.com/bluesky-social/atproto/pull/2390) [`58551bbe0`](https://github.com/bluesky-social/atproto/commit/58551bbe0595462c44fc3b6ab5b83e520f141933) Thanks [@foysalit](https://github.com/foysalit)! - Allow muting reports from accounts via `#modEventMuteReporter` event
+
+- Updated dependencies [[`58551bbe0`](https://github.com/bluesky-social/atproto/commit/58551bbe0595462c44fc3b6ab5b83e520f141933)]:
+  - @atproto/api@0.12.7
+
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [[`b9b7c5821`](https://github.com/bluesky-social/atproto/commit/b9b7c582199d57d2fe0af8af5c8c411ed34f5b9d)]:
+  - @atproto/api@0.12.6
+
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`3424a1770`](https://github.com/bluesky-social/atproto/commit/3424a17703891f5678ec76ef97e696afb3288b22)]:
+  - @atproto/api@0.12.5
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`93a4a4df9`](https://github.com/bluesky-social/atproto/commit/93a4a4df9ce38f89a5d05e300d247b85fb007e05)]:
+  - @atproto/api@0.12.4
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`0edef0ec0`](https://github.com/bluesky-social/atproto/commit/0edef0ec01403fd6097a4d2875b68313f2f1261f), [`c6d758b8b`](https://github.com/bluesky-social/atproto/commit/c6d758b8b63f4ef50b2ab9afc62164e92a53e7f0)]:
+  - @atproto/api@0.12.3
+
 ## 0.1.6
 
 ### Patch Changes
