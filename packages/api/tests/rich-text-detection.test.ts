@@ -42,6 +42,8 @@ describe('detectFacets', () => {
     'newline1.com\nnewline2.com',
     'a example.com/index.php php link',
     'a trailing bsky.app: colon',
+    'foo example.com" bar',
+    "foo example.com' bar",
 
     'not.. a..url ..here',
     'e.g.',
@@ -164,6 +166,8 @@ describe('detectFacets', () => {
       [' php link'],
     ],
     [['a trailing '], ['bsky.app', 'https://bsky.app'], [': colon']],
+    [['foo '], ['example.com', 'https://example.com'], ['" bar']],
+    [['foo '], ['example.com', 'https://example.com'], ["' bar"]],
 
     [['not.. a..url ..here']],
     [['e.g.']],
