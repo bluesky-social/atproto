@@ -122,6 +122,10 @@ export function object(
       if (value[key] === null && nullableProps.has(key)) {
         continue
       }
+      if (typeof value[key] === 'undefined' && !requiredProps.has(key)) {
+        // Fast path.
+        continue
+      }
       const propDef = def.properties[key]
       const propPath = `${path}/${key}`
       const validated = validateOneOf(lexicons, propPath, propDef, value[key])
