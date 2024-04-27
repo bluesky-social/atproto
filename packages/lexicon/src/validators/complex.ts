@@ -122,11 +122,22 @@ export function object(
       if (value[key] === null && nullableProps.has(key)) {
         continue
       }
-      if (typeof value[key] === 'undefined' && !requiredProps.has(key)) {
-        // Fast path.
-        continue
-      }
       const propDef = def.properties[key]
+      if (typeof value[key] === 'undefined' && !requiredProps.has(key)) {
+        // Fast path for non-required undefined props.
+        if (
+          propDef.type === 'integer' ||
+          propDef.type === 'boolean' ||
+          propDef.type === 'string'
+        ) {
+          if (typeof propDef.default === 'undefined') {
+            continue
+          }
+        } else {
+          // Other types have no defaults.
+          continue
+        }
+      }
       const propPath = `${path}/${key}`
       const validated = validateOneOf(lexicons, propPath, propDef, value[key])
       const propValue = validated.success ? validated.value : value[key]
