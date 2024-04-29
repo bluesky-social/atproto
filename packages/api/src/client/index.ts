@@ -167,6 +167,21 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as TempDmDefs from './types/temp/dm/defs'
+import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
+import * as TempDmGetChat from './types/temp/dm/getChat'
+import * as TempDmGetChatForMembers from './types/temp/dm/getChatForMembers'
+import * as TempDmGetChatLog from './types/temp/dm/getChatLog'
+import * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
+import * as TempDmGetUserSettings from './types/temp/dm/getUserSettings'
+import * as TempDmLeaveChat from './types/temp/dm/leaveChat'
+import * as TempDmListChats from './types/temp/dm/listChats'
+import * as TempDmMuteChat from './types/temp/dm/muteChat'
+import * as TempDmSendMessage from './types/temp/dm/sendMessage'
+import * as TempDmSendMessageBatch from './types/temp/dm/sendMessageBatch'
+import * as TempDmUnmuteChat from './types/temp/dm/unmuteChat'
+import * as TempDmUpdateChatRead from './types/temp/dm/updateChatRead'
+import * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -328,6 +343,21 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+export * as TempDmDefs from './types/temp/dm/defs'
+export * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
+export * as TempDmGetChat from './types/temp/dm/getChat'
+export * as TempDmGetChatForMembers from './types/temp/dm/getChatForMembers'
+export * as TempDmGetChatLog from './types/temp/dm/getChatLog'
+export * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
+export * as TempDmGetUserSettings from './types/temp/dm/getUserSettings'
+export * as TempDmLeaveChat from './types/temp/dm/leaveChat'
+export * as TempDmListChats from './types/temp/dm/listChats'
+export * as TempDmMuteChat from './types/temp/dm/muteChat'
+export * as TempDmSendMessage from './types/temp/dm/sendMessage'
+export * as TempDmSendMessageBatch from './types/temp/dm/sendMessageBatch'
+export * as TempDmUnmuteChat from './types/temp/dm/unmuteChat'
+export * as TempDmUpdateChatRead from './types/temp/dm/updateChatRead'
+export * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -381,6 +411,7 @@ export class AtpServiceClient {
   com: ComNS
   app: AppNS
   tools: ToolsNS
+  temp: TempNS
 
   constructor(baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
     this._baseClient = baseClient
@@ -388,6 +419,7 @@ export class AtpServiceClient {
     this.com = new ComNS(this)
     this.app = new AppNS(this)
     this.tools = new ToolsNS(this)
+    this.temp = new TempNS(this)
   }
 
   setHeader(key: string, value: string): void {
@@ -2842,6 +2874,178 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneModerationSearchRepos.toKnownErr(e)
+      })
+  }
+}
+
+export class TempNS {
+  _service: AtpServiceClient
+  dm: TempDmNS
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.dm = new TempDmNS(service)
+  }
+}
+
+export class TempDmNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  deleteMessage(
+    data?: TempDmDeleteMessage.InputSchema,
+    opts?: TempDmDeleteMessage.CallOptions,
+  ): Promise<TempDmDeleteMessage.Response> {
+    return this._service.xrpc
+      .call('temp.dm.deleteMessage', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmDeleteMessage.toKnownErr(e)
+      })
+  }
+
+  getChat(
+    params?: TempDmGetChat.QueryParams,
+    opts?: TempDmGetChat.CallOptions,
+  ): Promise<TempDmGetChat.Response> {
+    return this._service.xrpc
+      .call('temp.dm.getChat', params, undefined, opts)
+      .catch((e) => {
+        throw TempDmGetChat.toKnownErr(e)
+      })
+  }
+
+  getChatForMembers(
+    params?: TempDmGetChatForMembers.QueryParams,
+    opts?: TempDmGetChatForMembers.CallOptions,
+  ): Promise<TempDmGetChatForMembers.Response> {
+    return this._service.xrpc
+      .call('temp.dm.getChatForMembers', params, undefined, opts)
+      .catch((e) => {
+        throw TempDmGetChatForMembers.toKnownErr(e)
+      })
+  }
+
+  getChatLog(
+    params?: TempDmGetChatLog.QueryParams,
+    opts?: TempDmGetChatLog.CallOptions,
+  ): Promise<TempDmGetChatLog.Response> {
+    return this._service.xrpc
+      .call('temp.dm.getChatLog', params, undefined, opts)
+      .catch((e) => {
+        throw TempDmGetChatLog.toKnownErr(e)
+      })
+  }
+
+  getChatMessages(
+    params?: TempDmGetChatMessages.QueryParams,
+    opts?: TempDmGetChatMessages.CallOptions,
+  ): Promise<TempDmGetChatMessages.Response> {
+    return this._service.xrpc
+      .call('temp.dm.getChatMessages', params, undefined, opts)
+      .catch((e) => {
+        throw TempDmGetChatMessages.toKnownErr(e)
+      })
+  }
+
+  getUserSettings(
+    params?: TempDmGetUserSettings.QueryParams,
+    opts?: TempDmGetUserSettings.CallOptions,
+  ): Promise<TempDmGetUserSettings.Response> {
+    return this._service.xrpc
+      .call('temp.dm.getUserSettings', params, undefined, opts)
+      .catch((e) => {
+        throw TempDmGetUserSettings.toKnownErr(e)
+      })
+  }
+
+  leaveChat(
+    data?: TempDmLeaveChat.InputSchema,
+    opts?: TempDmLeaveChat.CallOptions,
+  ): Promise<TempDmLeaveChat.Response> {
+    return this._service.xrpc
+      .call('temp.dm.leaveChat', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmLeaveChat.toKnownErr(e)
+      })
+  }
+
+  listChats(
+    params?: TempDmListChats.QueryParams,
+    opts?: TempDmListChats.CallOptions,
+  ): Promise<TempDmListChats.Response> {
+    return this._service.xrpc
+      .call('temp.dm.listChats', params, undefined, opts)
+      .catch((e) => {
+        throw TempDmListChats.toKnownErr(e)
+      })
+  }
+
+  muteChat(
+    data?: TempDmMuteChat.InputSchema,
+    opts?: TempDmMuteChat.CallOptions,
+  ): Promise<TempDmMuteChat.Response> {
+    return this._service.xrpc
+      .call('temp.dm.muteChat', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmMuteChat.toKnownErr(e)
+      })
+  }
+
+  sendMessage(
+    data?: TempDmSendMessage.InputSchema,
+    opts?: TempDmSendMessage.CallOptions,
+  ): Promise<TempDmSendMessage.Response> {
+    return this._service.xrpc
+      .call('temp.dm.sendMessage', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmSendMessage.toKnownErr(e)
+      })
+  }
+
+  sendMessageBatch(
+    data?: TempDmSendMessageBatch.InputSchema,
+    opts?: TempDmSendMessageBatch.CallOptions,
+  ): Promise<TempDmSendMessageBatch.Response> {
+    return this._service.xrpc
+      .call('temp.dm.sendMessageBatch', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmSendMessageBatch.toKnownErr(e)
+      })
+  }
+
+  unmuteChat(
+    data?: TempDmUnmuteChat.InputSchema,
+    opts?: TempDmUnmuteChat.CallOptions,
+  ): Promise<TempDmUnmuteChat.Response> {
+    return this._service.xrpc
+      .call('temp.dm.unmuteChat', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmUnmuteChat.toKnownErr(e)
+      })
+  }
+
+  updateChatRead(
+    data?: TempDmUpdateChatRead.InputSchema,
+    opts?: TempDmUpdateChatRead.CallOptions,
+  ): Promise<TempDmUpdateChatRead.Response> {
+    return this._service.xrpc
+      .call('temp.dm.updateChatRead', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmUpdateChatRead.toKnownErr(e)
+      })
+  }
+
+  updateUserSettings(
+    data?: TempDmUpdateUserSettings.InputSchema,
+    opts?: TempDmUpdateUserSettings.CallOptions,
+  ): Promise<TempDmUpdateUserSettings.Response> {
+    return this._service.xrpc
+      .call('temp.dm.updateUserSettings', opts?.qp, data, opts)
+      .catch((e) => {
+        throw TempDmUpdateUserSettings.toKnownErr(e)
       })
   }
 }
