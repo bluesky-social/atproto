@@ -42,11 +42,11 @@ describe('communication-templates', () => {
         { ...templateOne, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('moderator'),
+          headers: await network.ozone.modHeaders('triage'),
         },
       )
       await expect(moderatorReq).rejects.toThrow(
-        'Must be an admin to create a communication template',
+        'Must be a moderator to create a communication template',
       )
       const modReq = await agent.api.tools.ozone.communication.createTemplate(
         { ...templateOne, createdBy: sc.dids.bob },
@@ -105,19 +105,19 @@ describe('communication-templates', () => {
         { id: '1' },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('moderator'),
+          headers: await network.ozone.modHeaders('triage'),
         },
       )
 
       await expect(modReq).rejects.toThrow(
-        'Must be an admin to delete a communication template',
+        'Must be a moderator to delete a communication template',
       )
 
       await agent.api.tools.ozone.communication.deleteTemplate(
         { id: '1' },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('admin'),
+          headers: await network.ozone.modHeaders('moderator'),
         },
       )
       const list = await listTemplates()

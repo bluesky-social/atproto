@@ -6,6 +6,7 @@ import AtpAgent, {
   AppBskyRichtextFacet,
   AppBskyFeedLike,
   AppBskyGraphFollow,
+  AppBskyGraphList,
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
@@ -399,7 +400,12 @@ export class SeedClient<
     return repost
   }
 
-  async createList(by: string, name: string, purpose: 'mod' | 'curate') {
+  async createList(
+    by: string,
+    name: string,
+    purpose: 'mod' | 'curate',
+    overrides?: Partial<AppBskyGraphList.Record>,
+  ) {
     const res = await this.agent.api.app.bsky.graph.list.create(
       { repo: by },
       {
@@ -409,6 +415,7 @@ export class SeedClient<
             ? 'app.bsky.graph.defs#modlist'
             : 'app.bsky.graph.defs#curatelist',
         createdAt: new Date().toISOString(),
+        ...(overrides || {}),
       },
       this.getHeaders(by),
     )

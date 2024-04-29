@@ -9,6 +9,14 @@ import { httpLogger } from './logger'
 import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
 
+type PipethroughOptions = {
+  /**
+   * Request headers to pass-through, in addition to those defined in
+   * {@link REQ_HEADERS_TO_FORWARD}
+   */
+  reqHeadersToForward?: string[]
+}
+
 const defaultService = (
   ctx: AppContext,
   path: string,
@@ -39,12 +47,14 @@ export const pipethrough = async (
   req: express.Request,
   requester?: string,
   audOverride?: string,
+  options?: PipethroughOptions,
 ): Promise<HandlerPipeThrough> => {
   const { url, headers } = await createUrlAndHeaders(
     ctx,
     req,
     requester,
     audOverride,
+    options,
   )
   const reqInit: RequestInit = {
     headers,
@@ -106,6 +116,7 @@ export const createUrlAndHeaders = async (
   req: express.Request,
   requester?: string,
   audOverride?: string,
+  options?: PipethroughOptions,
 ): Promise<{ url: URL; headers: { authorization?: string } }> => {
   const proxyTo = await parseProxyHeader(ctx, req)
   const defaultProxy = defaultService(ctx, req.path)
@@ -121,8 +132,11 @@ export const createUrlAndHeaders = async (
   const headers = requester
     ? (await ctx.serviceAuthHeaders(requester, aud)).headers
     : {}
+  const allowedHeaders = REQ_HEADERS_TO_FORWARD.concat(
+    options?.reqHeadersToForward ?? [],
+  )
   // forward select headers to upstream services
-  for (const header of REQ_HEADERS_TO_FORWARD) {
+  for (const header of allowedHeaders) {
     const val = req.headers[header]
     if (val) {
       headers[header] = val

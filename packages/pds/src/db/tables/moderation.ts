@@ -23,7 +23,13 @@ export interface ModerationAction {
     | 'tools.ozone.moderation.defs#modEventLabel'
     | 'tools.ozone.moderation.defs#modEventReport'
     | 'tools.ozone.moderation.defs#modEventMute'
+    | 'tools.ozone.moderation.defs#modEventUnmute'
+    | 'tools.ozone.moderation.defs#modEventMuteReporter'
+    | 'tools.ozone.moderation.defs#modEventUnmuteReporter'
     | 'tools.ozone.moderation.defs#modEventReverseTakedown'
+    | 'tools.ozone.moderation.defs#modEventEmail'
+    | 'tools.ozone.moderation.defs#modEventResolveAppeal'
+    | 'tools.ozone.moderation.defs#modEventDivert'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null

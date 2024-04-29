@@ -57,6 +57,15 @@ const getSubjectStatusForModerationEvent = ({
         suspendUntil: null,
         lastReviewedAt: createdAt,
       }
+    case 'tools.ozone.moderation.defs#modEventUnmuteReporter':
+      return {
+        lastReviewedBy: createdBy,
+        muteReportingUntil: null,
+        // It's not likely to receive an unmute event that does not already have a status row
+        // but if it does happen, default to unnecessary
+        reviewState: defaultReviewState,
+        lastReviewedAt: createdAt,
+      }
     case 'tools.ozone.moderation.defs#modEventUnmute':
       return {
         lastReviewedBy: createdBy,
@@ -75,6 +84,18 @@ const getSubjectStatusForModerationEvent = ({
         suspendUntil: durationInHours
           ? new Date(Date.now() + durationInHours * HOUR).toISOString()
           : null,
+      }
+    case 'tools.ozone.moderation.defs#modEventMuteReporter':
+      return {
+        lastReviewedBy: createdBy,
+        lastReviewedAt: createdAt,
+        // By default, mute for 24hrs
+        muteReportingUntil: new Date(
+          Date.now() + (durationInHours || 24) * HOUR,
+        ).toISOString(),
+        // It's not likely to receive a mute event on a subject that does not already have a status row
+        // but if it does happen, default to unnecessary
+        reviewState: defaultReviewState,
       }
     case 'tools.ozone.moderation.defs#modEventMute':
       return {
@@ -139,6 +160,11 @@ export const adjustModerationSubjectStatus = async (
     .forUpdate()
     .selectAll()
     .executeTakeFirst()
+
+  // If reporting is muted for this reporter, we don't want to update the subject status
+  if (meta?.isReporterMuted) {
+    return currentStatus || null
+  }
 
   const isAppealEvent =
     action === 'tools.ozone.moderation.defs#modEventReport' &&

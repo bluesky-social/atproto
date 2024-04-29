@@ -52,7 +52,7 @@ describe('admin repo search view', () => {
     const shouldContain = [
       'cara-wiegand69.test', // Present despite repo takedown
       'carlos6.test',
-      'carolina-mcdermott77.test',
+      'carolina-mcderm77.test',
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))

@@ -50,6 +50,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "impersonation",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonOther",
     },
     "id": 3,
@@ -85,6 +86,7 @@ Array [
     "creatorHandle": "alice.test",
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventReport",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 1,
@@ -167,7 +169,7 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
-        "lang:und",
+        "lang:en",
       ],
       "remove": Array [],
     },
@@ -221,7 +223,7 @@ Object {
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "bob.test",
       "tags": Array [
-        "lang:und",
+        "lang:en",
       ],
       "takendown": false,
       "updatedAt": "1970-01-01T00:00:00.000Z",
