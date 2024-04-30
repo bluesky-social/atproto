@@ -381,53 +381,31 @@ const toUint8Array: (value: unknown) => Uint8Array | undefined = Buffer
       throw new TypeError(`Unsupported value type: ${typeof value}`)
     }
 
-export function httpResponseCodeToEnum(status: number): ResponseType {
-  let resCode: ResponseType
-  if (status in ResponseType) {
-    resCode = status
-  } else if (status >= 100 && status < 200) {
-    resCode = ResponseType.XRPCNotSupported
-  } else if (status >= 200 && status < 300) {
-    resCode = ResponseType.Success
-  } else if (status >= 300 && status < 400) {
-    resCode = ResponseType.XRPCNotSupported
-  } else if (status >= 400 && status < 500) {
-    resCode = ResponseType.InvalidRequest
-  } else {
-    resCode = ResponseType.InternalServerError
-  }
-  return resCode
-}
-
 export function httpResponseBodyParse(
   mimeType: string | null,
   data: ArrayBuffer | undefined,
 ): any {
-  if (mimeType) {
-    if (mimeType.includes('application/json') && data?.byteLength) {
-      try {
+  try {
+    if (mimeType) {
+      if (mimeType.includes('application/json')) {
         const str = new TextDecoder().decode(data)
         return jsonStringToLex(str)
-      } catch (e) {
-        throw new XRPCError(
-          ResponseType.InvalidResponse,
-          `Failed to parse response body: ${String(e)}`,
-        )
       }
-    }
-    if (mimeType.startsWith('text/') && data?.byteLength) {
-      try {
+      if (mimeType.startsWith('text/')) {
         return new TextDecoder().decode(data)
-      } catch (e) {
-        throw new XRPCError(
-          ResponseType.InvalidResponse,
-          `Failed to parse response body: ${String(e)}`,
-        )
       }
     }
+    if (data instanceof ArrayBuffer) {
+      return new Uint8Array(data)
+    }
+    return data
+  } catch (cause) {
+    throw new XRPCError(
+      ResponseType.InvalidResponse,
+      undefined,
+      `Failed to parse response body: ${String(cause)}`,
+      undefined,
+      { cause },
+    )
   }
-  if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data)
-  }
-  return data
 }

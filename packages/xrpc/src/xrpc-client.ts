@@ -7,6 +7,7 @@ import {
   XRPCError,
   XRPCInvalidResponseError,
   XRPCResponse,
+  httpResponseCodeToEnum,
 } from './types'
 import {
   constructMethodCallHeaders,
@@ -14,7 +15,6 @@ import {
   encodeMethodCallBody,
   getMethodSchemaHTTPMethod,
   httpResponseBodyParse,
-  httpResponseCodeToEnum,
   isErrorResponseBody,
 } from './util'
 import { XrpcDispatcher, XrpcDispatcherOptions } from './xrpc-dispatcher'
@@ -114,11 +114,8 @@ export class XrpcClient {
           throw new XRPCError(resCode)
         }
       }
-    } catch (cause) {
-      if (cause instanceof XRPCError) throw cause
-      const error = new XRPCError(ResponseType.Unknown, String(cause))
-      error.cause = cause
-      throw error
+    } catch (err) {
+      throw XRPCError.from(err)
     }
   }
 }
