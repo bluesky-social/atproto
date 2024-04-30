@@ -40,6 +40,7 @@
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
         "like": { "type": "string", "format": "at-uri" },
+        "pinned": { "type": "boolean" },
         "replyDisabled": { "type": "boolean" }
       }
     },

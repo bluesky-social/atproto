@@ -92,7 +92,8 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
-        "labeler": { "type": "boolean" }
+        "labeler": { "type": "boolean" },
+        "pinned": { "type": "integer" }
       }
     },
     "viewerState": {
