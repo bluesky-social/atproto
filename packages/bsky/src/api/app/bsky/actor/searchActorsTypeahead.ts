@@ -56,6 +56,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         typeahead: true,
         q: term,
         limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),

@@ -14,6 +14,7 @@ export interface InputSchema {
   /** Handle or other identifier supported by the server for the authenticating user. */
   identifier: string
   password: string
+  authFactorToken?: string
   [k: string]: unknown
 }
 
@@ -25,6 +26,7 @@ export interface OutputSchema {
   didDoc?: {}
   email?: string
   emailConfirmed?: boolean
+  emailAuthFactor?: boolean
   [k: string]: unknown
 }
 
@@ -42,7 +44,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AccountTakedown'
+  error?: 'AccountTakedown' | 'AuthFactorTokenRequired'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

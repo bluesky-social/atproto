@@ -2209,6 +2209,9 @@ export const schemaDict = {
               password: {
                 type: 'string',
               },
+              authFactorToken: {
+                type: 'string',
+              },
             },
           },
         },
@@ -2241,12 +2244,18 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
             },
           },
         },
         errors: [
           {
             name: 'AccountTakedown',
+          },
+          {
+            name: 'AuthFactorTokenRequired',
           },
         ],
       },
@@ -2568,6 +2577,9 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
               didDoc: {
                 type: 'unknown',
               },
@@ -2836,6 +2848,9 @@ export const schemaDict = {
             properties: {
               email: {
                 type: 'string',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
               },
               token: {
                 type: 'string',
@@ -3807,6 +3822,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
+            'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
@@ -3842,6 +3858,38 @@ export const schemaDict = {
           visibility: {
             type: 'string',
             knownValues: ['ignore', 'show', 'warn', 'hide'],
+          },
+        },
+      },
+      savedFeed: {
+        type: 'object',
+        required: ['id', 'type', 'value', 'pinned'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          type: {
+            type: 'string',
+            knownValues: ['feed', 'list', 'timeline'],
+          },
+          value: {
+            type: 'string',
+          },
+          pinned: {
+            type: 'boolean',
+          },
+        },
+      },
+      savedFeedsPrefV2: {
+        type: 'object',
+        required: ['items'],
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#savedFeed',
+            },
           },
         },
       },
@@ -4561,6 +4609,15 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          replyCount: {
+            type: 'integer',
+          },
+          repostCount: {
+            type: 'integer',
+          },
+          likeCount: {
+            type: 'integer',
+          },
           embeds: {
             type: 'array',
             items: {
@@ -4748,6 +4805,12 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.feed.defs#reasonRepost'],
           },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context provided by feed generator that may be passed back alongside interactions.',
+            maxLength: 2000,
+          },
         },
       },
       replyRef: {
@@ -4904,6 +4967,9 @@ export const schemaDict = {
             type: 'integer',
             minimum: 0,
           },
+          acceptsInteractions: {
+            type: 'boolean',
+          },
           labels: {
             type: 'array',
             items: {
@@ -4942,6 +5008,12 @@ export const schemaDict = {
             type: 'union',
             refs: ['lex:app.bsky.feed.defs#skeletonReasonRepost'],
           },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context that will be passed through to client and may be passed to feed generator back alongside interactions.',
+            maxLength: 2000,
+          },
         },
       },
       skeletonReasonRepost: {
@@ -4976,6 +5048,89 @@ export const schemaDict = {
             },
           },
         },
+      },
+      interaction: {
+        type: 'object',
+        properties: {
+          item: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          event: {
+            type: 'string',
+            knownValues: [
+              'app.bsky.feed.defs#requestLess',
+              'app.bsky.feed.defs#requestMore',
+              'app.bsky.feed.defs#clickthroughItem',
+              'app.bsky.feed.defs#clickthroughAuthor',
+              'app.bsky.feed.defs#clickthroughReposter',
+              'app.bsky.feed.defs#clickthroughEmbed',
+              'app.bsky.feed.defs#interactionSeen',
+              'app.bsky.feed.defs#interactionLike',
+              'app.bsky.feed.defs#interactionRepost',
+              'app.bsky.feed.defs#interactionReply',
+              'app.bsky.feed.defs#interactionQuote',
+              'app.bsky.feed.defs#interactionShare',
+            ],
+          },
+          feedContext: {
+            type: 'string',
+            description:
+              'Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton.',
+            maxLength: 2000,
+          },
+        },
+      },
+      requestLess: {
+        type: 'token',
+        description:
+          'Request that less content like the given feed item be shown in the feed',
+      },
+      requestMore: {
+        type: 'token',
+        description:
+          'Request that more content like the given feed item be shown in the feed',
+      },
+      clickthroughItem: {
+        type: 'token',
+        description: 'User clicked through to the feed item',
+      },
+      clickthroughAuthor: {
+        type: 'token',
+        description: 'User clicked through to the author of the feed item',
+      },
+      clickthroughReposter: {
+        type: 'token',
+        description: 'User clicked through to the reposter of the feed item',
+      },
+      clickthroughEmbed: {
+        type: 'token',
+        description:
+          'User clicked through to the embedded content of the feed item',
+      },
+      interactionSeen: {
+        type: 'token',
+        description: 'Feed item was seen by user',
+      },
+      interactionLike: {
+        type: 'token',
+        description: 'User liked the feed item',
+      },
+      interactionRepost: {
+        type: 'token',
+        description: 'User reposted the feed item',
+      },
+      interactionReply: {
+        type: 'token',
+        description: 'User replied to the feed item',
+      },
+      interactionQuote: {
+        type: 'token',
+        description: 'User quoted the feed item',
+      },
+      interactionShare: {
+        type: 'token',
+        description: 'User shared the feed item',
       },
     },
   },
@@ -5073,6 +5228,11 @@ export const schemaDict = {
               type: 'blob',
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
+            },
+            acceptsInteractions: {
+              type: 'boolean',
+              description:
+                'Declaration that a feed accepts feedback interactions from a client through app.bsky.feed.sendInteractions',
             },
             labels: {
               type: 'union',
@@ -6055,6 +6215,61 @@ export const schemaDict = {
               description:
                 'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
             },
+            sort: {
+              type: 'string',
+              knownValues: ['top', 'latest'],
+              default: 'latest',
+              description: 'Specifies the ranking order of results.',
+            },
+            since: {
+              type: 'string',
+              description:
+                "Filter results for posts after the indicated datetime (inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'. Can be a datetime, or just an ISO date (YYYY-MM-DD).",
+            },
+            until: {
+              type: 'string',
+              description:
+                "Filter results for posts before the indicated datetime (not inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'. Can be a datetime, or just an ISO date (YYY-MM-DD).",
+            },
+            mentions: {
+              type: 'string',
+              format: 'at-identifier',
+              description:
+                'Filter to posts which mention the given account. Handles are resolved to DID before query-time. Only matches rich-text facet mentions.',
+            },
+            author: {
+              type: 'string',
+              format: 'at-identifier',
+              description:
+                'Filter to posts by the given account. Handles are resolved to DID before query-time.',
+            },
+            lang: {
+              type: 'string',
+              format: 'language',
+              description:
+                'Filter to posts in the given language. Expected to be based on post language field, though server may override language detection.',
+            },
+            domain: {
+              type: 'string',
+              description:
+                'Filter to posts with URLs (facet links or embeds) linking to the given domain (hostname). Server may apply hostname normalization.',
+            },
+            url: {
+              type: 'string',
+              format: 'uri',
+              description:
+                'Filter to posts with links (facet links or embeds) pointing to this URL. Server may apply URL normalization or fuzzy matching.',
+            },
+            tag: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+              description:
+                "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix. Multiple tags can be specified, with 'AND' matching.",
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -6097,6 +6312,40 @@ export const schemaDict = {
             name: 'BadQueryString',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedSendInteractions: {
+    lexicon: 1,
+    id: 'app.bsky.feed.sendInteractions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Send information about interactions with feed items back to the feed generator that served them.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['interactions'],
+            properties: {
+              interactions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#interaction',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -7642,6 +7891,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestionsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestionsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested actors. Intended to be called and then hydrated through app.bsky.actor.getSuggestions',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetTaggedSuggestions: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getTaggedSuggestions',
@@ -7705,6 +8004,12 @@ export const schemaDict = {
               type: 'string',
               description:
                 'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax.',
+            },
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking.',
             },
             typeahead: {
               type: 'boolean',
@@ -7770,6 +8075,67 @@ export const schemaDict = {
               type: 'string',
               description:
                 'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
+            },
+            sort: {
+              type: 'string',
+              knownValues: ['top', 'latest'],
+              default: 'latest',
+              description: 'Specifies the ranking order of results.',
+            },
+            since: {
+              type: 'string',
+              description:
+                "Filter results for posts after the indicated datetime (inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'. Can be a datetime, or just an ISO date (YYYY-MM-DD).",
+            },
+            until: {
+              type: 'string',
+              description:
+                "Filter results for posts before the indicated datetime (not inclusive). Expected to use 'sortAt' timestamp, which may not match 'createdAt'. Can be a datetime, or just an ISO date (YYY-MM-DD).",
+            },
+            mentions: {
+              type: 'string',
+              format: 'at-identifier',
+              description:
+                'Filter to posts which mention the given account. Handles are resolved to DID before query-time. Only matches rich-text facet mentions.',
+            },
+            author: {
+              type: 'string',
+              format: 'at-identifier',
+              description:
+                'Filter to posts by the given account. Handles are resolved to DID before query-time.',
+            },
+            lang: {
+              type: 'string',
+              format: 'language',
+              description:
+                'Filter to posts in the given language. Expected to be based on post language field, though server may override language detection.',
+            },
+            domain: {
+              type: 'string',
+              description:
+                'Filter to posts with URLs (facet links or embeds) linking to the given domain (hostname). Server may apply hostname normalization.',
+            },
+            url: {
+              type: 'string',
+              format: 'uri',
+              description:
+                'Filter to posts with links (facet links or embeds) pointing to this URL. Server may apply URL normalization or fuzzy matching.',
+            },
+            tag: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+              description:
+                "Filter to posts with the given tag (hashtag), based on rich-text facet or tag field. Do not include the hash (#) prefix. Multiple tags can be specified, with 'AND' matching.",
+            },
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                "DID of the account making the request (not included for public/unauthenticated queries). Used for 'from:me' queries.",
             },
             limit: {
               type: 'integer',
@@ -8042,6 +8408,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventAcknowledge',
               'lex:tools.ozone.moderation.defs#modEventEscalate',
               'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventUnmute',
+              'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+              'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
@@ -8101,6 +8470,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventAcknowledge',
               'lex:tools.ozone.moderation.defs#modEventEscalate',
               'lex:tools.ozone.moderation.defs#modEventMute',
+              'lex:tools.ozone.moderation.defs#modEventUnmute',
+              'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+              'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
@@ -8177,6 +8549,10 @@ export const schemaDict = {
             description: 'Sticky comment on the subject.',
           },
           muteUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          muteReportingUntil: {
             type: 'string',
             format: 'datetime',
           },
@@ -8303,6 +8679,11 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
+          isReporterMuted: {
+            type: 'boolean',
+            description:
+              "Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject.",
+          },
           reportType: {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#reasonType',
@@ -8364,6 +8745,30 @@ export const schemaDict = {
       modEventUnmute: {
         type: 'object',
         description: 'Unmute action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventMuteReporter: {
+        type: 'object',
+        description: 'Mute incoming reports from an account',
+        required: ['durationInHours'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description: 'Indicates how long the account should remain muted.',
+          },
+        },
+      },
+      modEventUnmuteReporter: {
+        type: 'object',
+        description: 'Unmute incoming reports from an account',
         properties: {
           comment: {
             type: 'string',
@@ -8755,6 +9160,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventLabel',
                   'lex:tools.ozone.moderation.defs#modEventReport',
                   'lex:tools.ozone.moderation.defs#modEventMute',
+                  'lex:tools.ozone.moderation.defs#modEventUnmute',
+                  'lex:tools.ozone.moderation.defs#modEventMuteReporter',
+                  'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
                   'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
@@ -9063,6 +9471,11 @@ export const schemaDict = {
               description:
                 "By default, we don't include muted subjects in the results. Set this to true to include them.",
             },
+            onlyMuted: {
+              type: 'boolean',
+              description:
+                'When set to true, only muted subjects and reporters will be returned.',
+            },
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
@@ -9318,6 +9731,7 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
+  AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',
   AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
@@ -9352,6 +9766,8 @@ export const ids = {
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetSuggestionsSkeleton:
+    'app.bsky.unspecced.getSuggestionsSkeleton',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
   AppBskyUnspeccedSearchActorsSkeleton:

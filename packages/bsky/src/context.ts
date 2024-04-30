@@ -24,6 +24,7 @@ export class AppContext {
       cfg: ServerConfig
       dataplane: DataPlaneClient
       searchAgent: AtpAgent | undefined
+      suggestionsAgent: AtpAgent | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -44,6 +45,10 @@ export class AppContext {
 
   get searchAgent(): AtpAgent | undefined {
     return this.opts.searchAgent
+  }
+
+  get suggestionsAgent(): AtpAgent | undefined {
+    return this.opts.suggestionsAgent
   }
 
   get hydrator(): Hydrator {

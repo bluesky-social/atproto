@@ -334,16 +334,23 @@ export class Views {
     originatorBlocked: boolean
     authorMuted: boolean
     authorBlocked: boolean
+    parentAuthorBlocked: boolean
   } {
     const authorDid = creatorFromUri(item.post.uri)
     const originatorDid = item.repost
       ? creatorFromUri(item.repost.uri)
       : authorDid
+    const post = state.posts?.get(item.post.uri)
+    const parentUri = post?.record.reply?.parent.uri
+    const parentAuthorDid = parentUri && creatorFromUri(parentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
+      parentAuthorBlocked: parentAuthorDid
+        ? this.viewerBlockExists(parentAuthorDid, state)
+        : false,
     }
   }
 
@@ -753,6 +760,9 @@ export class Views {
       author: postView.author,
       value: postView.record,
       labels: postView.labels,
+      likeCount: postView.likeCount,
+      replyCount: postView.replyCount,
+      repostCount: postView.repostCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }

@@ -1,7 +1,7 @@
 import { ModerationCause } from './types'
 
 export class ModerationUI {
-  noOverride: boolean = false
+  noOverride = false
   filters: ModerationCause[] = []
   blurs: ModerationCause[] = []
   alerts: ModerationCause[] = []

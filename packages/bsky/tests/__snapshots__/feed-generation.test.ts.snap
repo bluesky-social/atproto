@@ -342,6 +342,7 @@ Array [
 exports[`feed generation getFeed paginates, handling replies and reposts. 1`] = `
 Array [
   Object {
+    "feedContext": "item-0",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -401,6 +402,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-1",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -435,6 +437,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-2",
     "post": Object {
       "author": Object {
         "did": "user(4)",
@@ -485,6 +488,9 @@ Array [
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(2)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -551,6 +557,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-4",
     "post": Object {
       "author": Object {
         "did": "user(4)",
@@ -675,6 +682,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-5",
     "post": Object {
       "author": Object {
         "did": "user(6)",
@@ -740,6 +748,9 @@ Array [
                   "cid": "cids(3)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
                   "labels": Array [],
+                  "likeCount": 0,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(2)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -756,6 +767,9 @@ Array [
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 2,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(5)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -856,6 +870,7 @@ Array [
 exports[`feed generation getFeed resolves basic feed contents without auth. 1`] = `
 Array [
   Object {
+    "feedContext": "item-0",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -910,6 +925,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-2",
     "post": Object {
       "author": Object {
         "did": "user(2)",
@@ -948,6 +964,9 @@ Array [
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(3)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1011,6 +1030,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-4",
     "post": Object {
       "author": Object {
         "did": "user(2)",
@@ -1123,6 +1143,7 @@ Array [
 exports[`feed generation getFeed resolves basic feed contents. 1`] = `
 Array [
   Object {
+    "feedContext": "item-0",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -1182,6 +1203,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-2",
     "post": Object {
       "author": Object {
         "did": "user(2)",
@@ -1232,6 +1254,9 @@ Array [
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(5)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1298,6 +1323,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-4",
     "post": Object {
       "author": Object {
         "did": "user(2)",

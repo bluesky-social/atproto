@@ -55,7 +55,7 @@ import { ParsedLabelers } from '../util'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
-  viewer = this.vals.viewer
+  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
   constructor(private vals: HydrateCtxVals) {}
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
@@ -324,7 +324,11 @@ export class Hydrator {
       feedGenState,
       labelerState,
     ] = await Promise.all([
-      this.feed.getPostAggregates(refs),
+      this.feed.getPostAggregates([
+        ...refs,
+        ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
+        ...postUrisLayer2.map(uriToRef),
+      ]),
       ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
@@ -681,6 +685,12 @@ export class Hydrator {
   }
 }
 
+// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
+const serviceRefToDid = (serviceRef: string) => {
+  const idx = serviceRef.indexOf('#')
+  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
+}
+
 const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
   const listUris: string[] = []
   if (item?.mutedByList) {
@@ -842,4 +852,8 @@ const actionTakedownLabels = <T>(
       hydrationMap.set(key, null)
     }
   }
+}
+
+const uriToRef = (uri: string): ItemRef => {
+  return { uri }
 }

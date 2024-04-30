@@ -66,6 +66,9 @@ Object {
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(3)",
           "value": Object {
             "$type": "app.bsky.feed.post",
