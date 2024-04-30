@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderator.deleteUser",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a user from moderator's list in the ozone service.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ModeratorNotFound",
+          "description": "The user being deleted is not a moderator"
+        },
+        {
+          "name": "LastAdmin",
+          "description": "There must always be at least one moderator with admin access"
+        }
+      ]
+    }
+  }
+}

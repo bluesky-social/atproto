@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderator.updateUser",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update a moderator user in the ozone service.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "role", "isSuspended"],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "isSuspended": { "type": "boolean" },
+            "role": {
+              "type": "string",
+              "knownValues": [
+                "#modRoleAdmin",
+                "#modRoleModerator",
+                "#modRoleTriage"
+              ]
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.moderator.defs#user"
+        }
+      },
+      "errors": [
+        {
+          "name": "ModeratorAlreadyExists",
+          "description": "The user is already a moderator"
+        }
+      ]
+    }
+  }
+}

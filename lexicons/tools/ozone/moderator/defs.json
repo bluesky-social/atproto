@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderator.defs",
+  "defs": {
+    "user": {
+      "type": "object",
+      "required": ["did", "role"],
+      "properties": {
+        "handle": { "type": "string", "format": "handle" },
+        "did": { "type": "string", "format": "did" },
+        "isSuspended": { "type": "boolean" },
+        "role": {
+          "type": "string",
+          "knownValues": [
+            "#modRoleAdmin",
+            "#modRoleModerator",
+            "#modRoleTriage"
+          ]
+        }
+      }
+    },
+    "modRoleAdmin": {
+      "type": "token",
+      "description": "Admin role. Highest level of access, can perform all actions."
+    },
+    "modRoleModerator": {
+      "type": "token",
+      "description": "Moderator role. Can perform most actions."
+    },
+    "modRoleTriage": {
+      "type": "token",
+      "description": "Triage role. Mostly intended for monitoring and escalating issues."
+    }
+  }
+}

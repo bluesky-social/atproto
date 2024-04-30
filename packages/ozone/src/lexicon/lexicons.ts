@@ -9606,6 +9606,215 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModeratorAddUser: {
+    lexicon: 1,
+    id: 'tools.ozone.moderator.addUser',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a user as moderator in the ozone service.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'role'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              role: {
+                type: 'string',
+                knownValues: [
+                  'lex:tools.ozone.moderator.addUser#modRoleAdmin',
+                  'lex:tools.ozone.moderator.addUser#modRoleModerator',
+                  'lex:tools.ozone.moderator.addUser#modRoleTriage',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderator.defs#user',
+          },
+        },
+        errors: [
+          {
+            name: 'ModeratorAlreadyExists',
+            description: 'The user is already a moderator',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneModeratorDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.moderator.defs',
+    defs: {
+      user: {
+        type: 'object',
+        required: ['did', 'role'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          isSuspended: {
+            type: 'boolean',
+          },
+          role: {
+            type: 'string',
+            knownValues: [
+              'lex:tools.ozone.moderator.defs#modRoleAdmin',
+              'lex:tools.ozone.moderator.defs#modRoleModerator',
+              'lex:tools.ozone.moderator.defs#modRoleTriage',
+            ],
+          },
+        },
+      },
+      modRoleAdmin: {
+        type: 'token',
+        description:
+          'Admin role. Highest level of access, can perform all actions.',
+      },
+      modRoleModerator: {
+        type: 'token',
+        description: 'Moderator role. Can perform most actions.',
+      },
+      modRoleTriage: {
+        type: 'token',
+        description:
+          'Triage role. Mostly intended for monitoring and escalating issues.',
+      },
+    },
+  },
+  ToolsOzoneModeratorDeleteUser: {
+    lexicon: 1,
+    id: 'tools.ozone.moderator.deleteUser',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Delete a user from moderator's list in the ozone service.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ModeratorNotFound',
+            description: 'The user being deleted is not a moderator',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneModeratorListUsers: {
+    lexicon: 1,
+    id: 'tools.ozone.moderator.listUsers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all users with access to the ozone service.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['users'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              users: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderator.defs#user',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModeratorUpdateUser: {
+    lexicon: 1,
+    id: 'tools.ozone.moderator.updateUser',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update a moderator user in the ozone service.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'role', 'isSuspended'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              isSuspended: {
+                type: 'boolean',
+              },
+              role: {
+                type: 'string',
+                knownValues: [
+                  'lex:tools.ozone.moderator.updateUser#modRoleAdmin',
+                  'lex:tools.ozone.moderator.updateUser#modRoleModerator',
+                  'lex:tools.ozone.moderator.updateUser#modRoleTriage',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderator.defs#user',
+          },
+        },
+        errors: [
+          {
+            name: 'ModeratorAlreadyExists',
+            description: 'The user is already a moderator',
+          },
+        ],
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -9790,4 +9999,9 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneModeratorAddUser: 'tools.ozone.moderator.addUser',
+  ToolsOzoneModeratorDefs: 'tools.ozone.moderator.defs',
+  ToolsOzoneModeratorDeleteUser: 'tools.ozone.moderator.deleteUser',
+  ToolsOzoneModeratorListUsers: 'tools.ozone.moderator.listUsers',
+  ToolsOzoneModeratorUpdateUser: 'tools.ozone.moderator.updateUser',
 }

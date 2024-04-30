@@ -1,0 +1,41 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderator.addUser",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a user as moderator in the ozone service.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "role"],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "role": {
+              "type": "string",
+              "knownValues": [
+                "#modRoleAdmin",
+                "#modRoleModerator",
+                "#modRoleTriage"
+              ]
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.moderator.defs#user"
+        }
+      },
+      "errors": [
+        {
+          "name": "ModeratorAlreadyExists",
+          "description": "The user is already a moderator"
+        }
+      ]
+    }
+  }
+}

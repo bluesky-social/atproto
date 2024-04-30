@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderator.listUsers",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List all users with access to the ozone service.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["users"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "users": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.moderator.defs#user"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
