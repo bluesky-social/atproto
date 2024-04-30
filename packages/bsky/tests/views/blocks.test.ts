@@ -160,8 +160,14 @@ describe('pds views with blocking', () => {
       { limit: 100 },
       { headers: await network.serviceHeaders(carol) },
     )
+
+    // dan's posts don't appear, nor alice's reply to dan.
     expect(
-      resCarol.data.feed.some((post) => post.post.author.did === dan),
+      resCarol.data.feed.some(
+        (post) =>
+          post.post.author.did === dan ||
+          post.reply?.parent.author?.['did'] === dan,
+      ),
     ).toBeFalsy()
 
     const resDan = await agent.api.app.bsky.feed.getTimeline(
@@ -169,7 +175,11 @@ describe('pds views with blocking', () => {
       { headers: await network.serviceHeaders(dan) },
     )
     expect(
-      resDan.data.feed.some((post) => post.post.author.did === carol),
+      resDan.data.feed.some(
+        (post) =>
+          post.post.author.did === carol ||
+          post.reply?.parent.author?.['did'] === carol,
+      ),
     ).toBeFalsy()
   })
 

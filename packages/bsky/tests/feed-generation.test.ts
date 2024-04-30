@@ -543,7 +543,7 @@ describe('feed generation', () => {
             repost: sc.reposts[sc.dids.carol][0].uriStr,
           },
         },
-      ]
+      ].map((item, i) => ({ ...item, feedContext: `item-${i}` })) // add a deterministic context to test passthrough
       const offset = cursor ? parseInt(cursor, 10) : 0
       const fullFeed = candidates.filter((_, i) => {
         if (feedName === 'even') {

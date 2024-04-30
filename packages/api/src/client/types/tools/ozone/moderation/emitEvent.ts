@@ -21,6 +21,9 @@ export interface InputSchema {
     | ToolsOzoneModerationDefs.ModEventLabel
     | ToolsOzoneModerationDefs.ModEventReport
     | ToolsOzoneModerationDefs.ModEventMute
+    | ToolsOzoneModerationDefs.ModEventUnmute
+    | ToolsOzoneModerationDefs.ModEventMuteReporter
+    | ToolsOzoneModerationDefs.ModEventUnmuteReporter
     | ToolsOzoneModerationDefs.ModEventReverseTakedown
     | ToolsOzoneModerationDefs.ModEventUnmute
     | ToolsOzoneModerationDefs.ModEventEmail
