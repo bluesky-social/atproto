@@ -110,13 +110,13 @@ export class TestNetwork extends TestNetworkNoAppView {
     await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl, {
       inviteCode,
     })
-    await thirdPartyPds.close()
 
     ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
     await bsky.sub.background.processAll()
+    await thirdPartyPds.close()
 
     return new TestNetwork(plc, pds, bsky, ozone)
   }
