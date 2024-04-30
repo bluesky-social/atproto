@@ -8,9 +8,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId"],
+          "required": ["convoId"],
           "properties": {
-            "chatId": { "type": "string" }
+            "convoId": { "type": "string" }
           }
         }
       },
@@ -18,9 +18,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId", "rev"],
+          "required": ["convoId", "rev"],
           "properties": {
-            "chatId": { "type": "string" },
+            "convoId": { "type": "string" },
             "rev": { "type": "string" }
           }
         }

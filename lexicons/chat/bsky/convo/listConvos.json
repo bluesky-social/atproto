@@ -20,14 +20,14 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chats"],
+          "required": ["convos"],
           "properties": {
             "cursor": { "type": "string" },
-            "chats": {
+            "convos": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "chat.bsky.convo.defs#chatView"
+                "ref": "chat.bsky.convo.defs#convoView"
               }
             }
           }

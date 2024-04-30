@@ -8,9 +8,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId", "messageId"],
+          "required": ["convoId", "messageId"],
           "properties": {
-            "chatId": { "type": "string" },
+            "convoId": { "type": "string" },
             "messageId": { "type": "string" }
           }
         }

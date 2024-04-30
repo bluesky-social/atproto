@@ -8,16 +8,16 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId"],
+          "required": ["convoId"],
           "properties": {
-            "chatId": { "type": "string" },
+            "convoId": { "type": "string" },
             "messageId": { "type": "string" }
           }
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": { "type": "ref", "ref": "chat.bsky.convo.defs#chatView" }
+        "schema": { "type": "ref", "ref": "chat.bsky.convo.defs#convoView" }
       }
     }
   }

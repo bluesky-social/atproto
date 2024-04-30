@@ -8,9 +8,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId", "message"],
+          "required": ["convoId", "message"],
           "properties": {
-            "chatId": { "type": "string" },
+            "convoId": { "type": "string" },
             "message": {
               "type": "ref",
               "ref": "chat.bsky.convo.defs#message"

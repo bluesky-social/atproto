@@ -6,20 +6,20 @@
       "type": "query",
       "parameters": {
         "type": "params",
-        "required": ["chatId"],
+        "required": ["convoId"],
         "properties": {
-          "chatId": { "type": "string" }
+          "convoId": { "type": "string" }
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chat"],
+          "required": ["convo"],
           "properties": {
-            "chat": {
+            "convo": {
               "type": "ref",
-              "ref": "chat.bsky.convo.defs#chatView"
+              "ref": "chat.bsky.convo.defs#convoView"
             }
           }
         }

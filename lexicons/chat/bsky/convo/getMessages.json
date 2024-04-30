@@ -6,9 +6,9 @@
       "type": "query",
       "parameters": {
         "type": "params",
-        "required": ["chatId"],
+        "required": ["convoId"],
         "properties": {
-          "chatId": { "type": "string" },
+          "convoId": { "type": "string" },
           "limit": {
             "type": "integer",
             "minimum": 1,

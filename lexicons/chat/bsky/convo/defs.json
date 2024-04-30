@@ -64,7 +64,7 @@
         "did": { "type": "string", "format": "did" }
       }
     },
-    "chatView": {
+    "convoView": {
       "type": "object",
       "required": ["id", "rev", "members", "muted", "unreadCount"],
       "properties": {
@@ -87,26 +87,26 @@
     },
     "logBeginConvo": {
       "type": "object",
-      "required": ["rev", "chatId"],
+      "required": ["rev", "convoId"],
       "properties": {
         "rev": { "type": "string" },
-        "chatId": { "type": "string" }
+        "convoId": { "type": "string" }
       }
     },
     "logLeaveConvo": {
       "type": "object",
-      "required": ["rev", "chatId"],
+      "required": ["rev", "convoId"],
       "properties": {
         "rev": { "type": "string" },
-        "chatId": { "type": "string" }
+        "convoId": { "type": "string" }
       }
     },
     "logCreateMessage": {
       "type": "object",
-      "required": ["rev", "chatId", "message"],
+      "required": ["rev", "convoId", "message"],
       "properties": {
         "rev": { "type": "string" },
-        "chatId": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
@@ -115,10 +115,10 @@
     },
     "logDeleteMessage": {
       "type": "object",
-      "required": ["rev", "chatId", "message"],
+      "required": ["rev", "convoId", "message"],
       "properties": {
         "rev": { "type": "string" },
-        "chatId": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
