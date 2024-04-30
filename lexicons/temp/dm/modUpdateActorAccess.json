@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "temp.dm.modUpdateActorAccess",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["actor", "allowAccess"],
+          "properties": {
+            "actor": { "type": "string", "format": "did" },
+            "allowAccess": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
