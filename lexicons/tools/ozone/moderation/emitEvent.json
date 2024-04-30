@@ -27,7 +27,9 @@
                 "tools.ozone.moderation.defs#modEventReverseTakedown",
                 "tools.ozone.moderation.defs#modEventUnmute",
                 "tools.ozone.moderation.defs#modEventEmail",
-                "tools.ozone.moderation.defs#modEventTag"
+                "tools.ozone.moderation.defs#modEventTag",
+                "tools.ozone.moderation.defs#modEventDisableDms",
+                "tools.ozone.moderation.defs#modEventEnableDms"
               ]
             },
             "subject": {

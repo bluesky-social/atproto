@@ -8207,6 +8207,19 @@ export const schemaDict = {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
     defs: {
+      messageRef: {
+        type: 'object',
+        required: ['did', 'messageId'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          messageId: {
+            type: 'string',
+          },
+        },
+      },
       message: {
         type: 'object',
         required: ['text'],
@@ -8837,6 +8850,139 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyModerationGetActorMetadata: {
+    lexicon: 1,
+    id: 'chat.bsky.moderation.getActorMetadata',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['day', 'month', 'all'],
+            properties: {
+              day: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.moderation.getActorMetadata#metadata',
+              },
+              month: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.moderation.getActorMetadata#metadata',
+              },
+              all: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.moderation.getActorMetadata#metadata',
+              },
+            },
+          },
+        },
+      },
+      metadata: {
+        type: 'object',
+        required: [
+          'messagesSent',
+          'messagesReceived',
+          'convos',
+          'convosStarted',
+        ],
+        properties: {
+          messagesSent: {
+            type: 'integer',
+          },
+          messagesReceived: {
+            type: 'integer',
+          },
+          convos: {
+            type: 'integer',
+          },
+          convosStarted: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyModerationGetMessageContext: {
+    lexicon: 1,
+    id: 'chat.bsky.moderation.getMessageContext',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['messageId'],
+          properties: {
+            messageId: {
+              type: 'string',
+            },
+            before: {
+              type: 'integer',
+              default: 5,
+            },
+            after: {
+              type: 'integer',
+              default: 5,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['messages'],
+            properties: {
+              messages: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:chat.bsky.convo.defs#messageView',
+                    'lex:chat.bsky.convo.defs#deletedMessageView',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyModerationUpdateActorAccess: {
+    lexicon: 1,
+    id: 'chat.bsky.moderation.updateActorAccess',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actor', 'allowAccess'],
+            properties: {
+              actor: {
+                type: 'string',
+                format: 'did',
+              },
+              allowAccess: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneCommunicationCreateTemplate: {
     lexicon: 1,
     id: 'tools.ozone.communication.createTemplate',
@@ -9232,6 +9378,9 @@ export const schemaDict = {
           takendown: {
             type: 'boolean',
           },
+          dmsRevoked: {
+            type: 'boolean',
+          },
           appealed: {
             type: 'boolean',
             description:
@@ -9484,6 +9633,24 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      modEventDisableDms: {
+        type: 'object',
+        description: 'Revoke DM access for a subject',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventEnableDms: {
+        type: 'object',
+        description: 'Restore DM access for a subject',
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },
@@ -9822,6 +9989,8 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#modEventDisableDms',
+                  'lex:tools.ozone.moderation.defs#modEventEnableDms',
                 ],
               },
               subject: {
@@ -10442,6 +10611,9 @@ export const ids = {
   ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
   ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
   ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
+  ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
+  ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
+  ChatBskyModerationUpdateActorAccess: 'chat.bsky.moderation.updateActorAccess',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',

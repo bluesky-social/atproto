@@ -9,6 +9,24 @@ import * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
 import * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
 import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 
+export interface MessageRef {
+  did: string
+  messageId: string
+  [k: string]: unknown
+}
+
+export function isMessageRef(v: unknown): v is MessageRef {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'chat.bsky.convo.defs#messageRef'
+  )
+}
+
+export function validateMessageRef(v: unknown): ValidationResult {
+  return lexicons.validate('chat.bsky.convo.defs#messageRef', v)
+}
+
 export interface Message {
   id?: string
   text: string

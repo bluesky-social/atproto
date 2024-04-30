@@ -158,6 +158,9 @@
         "takendown": {
           "type": "boolean"
         },
+        "dmsRevoked": {
+          "type": "boolean"
+        },
         "appealed": {
           "type": "boolean",
           "description": "True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators."
@@ -380,6 +383,24 @@
         "comment": {
           "type": "string",
           "description": "Additional comment about added/removed tags."
+        }
+      }
+    },
+    "modEventDisableDms": {
+      "type": "object",
+      "description": "Revoke DM access for a subject",
+      "properties": {
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "modEventEnableDms": {
+      "type": "object",
+      "description": "Restore DM access for a subject",
+      "properties": {
+        "comment": {
+          "type": "string"
         }
       }
     },

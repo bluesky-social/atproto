@@ -141,6 +141,9 @@ import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
@@ -1741,11 +1744,13 @@ export class ChatBskyNS {
   _server: Server
   actor: ChatBskyActorNS
   convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
 
   constructor(server: Server) {
     this._server = server
     this.actor = new ChatBskyActorNS(server)
     this.convo = new ChatBskyConvoNS(server)
+    this.moderation = new ChatBskyModerationNS(server)
   }
 }
 
@@ -1893,6 +1898,47 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.updateRead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorMetadata<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationGetActorMetadata.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationGetActorMetadata.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getActorMetadata' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessageContext<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationGetMessageContext.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationGetMessageContext.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getMessageContext' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateActorAccess<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationUpdateActorAccess.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationUpdateActorAccess.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.updateActorAccess' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

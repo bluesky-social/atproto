@@ -168,6 +168,9 @@ import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
 import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
 import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
@@ -343,6 +346,9 @@ export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
 export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
 export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
 export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
@@ -2731,11 +2737,13 @@ export class ChatBskyNS {
   _service: AtpServiceClient
   actor: ChatBskyActorNS
   convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.actor = new ChatBskyActorNS(service)
     this.convo = new ChatBskyConvoNS(service)
+    this.moderation = new ChatBskyModerationNS(service)
   }
 }
 
@@ -2955,6 +2963,47 @@ export class ChatBskyConvoNS {
       .call('chat.bsky.convo.updateRead', opts?.qp, data, opts)
       .catch((e) => {
         throw ChatBskyConvoUpdateRead.toKnownErr(e)
+      })
+  }
+}
+
+export class ChatBskyModerationNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getActorMetadata(
+    params?: ChatBskyModerationGetActorMetadata.QueryParams,
+    opts?: ChatBskyModerationGetActorMetadata.CallOptions,
+  ): Promise<ChatBskyModerationGetActorMetadata.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.getActorMetadata', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyModerationGetActorMetadata.toKnownErr(e)
+      })
+  }
+
+  getMessageContext(
+    params?: ChatBskyModerationGetMessageContext.QueryParams,
+    opts?: ChatBskyModerationGetMessageContext.CallOptions,
+  ): Promise<ChatBskyModerationGetMessageContext.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.getMessageContext', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyModerationGetMessageContext.toKnownErr(e)
+      })
+  }
+
+  updateActorAccess(
+    data?: ChatBskyModerationUpdateActorAccess.InputSchema,
+    opts?: ChatBskyModerationUpdateActorAccess.CallOptions,
+  ): Promise<ChatBskyModerationUpdateActorAccess.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.updateActorAccess', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyModerationUpdateActorAccess.toKnownErr(e)
       })
   }
 }
