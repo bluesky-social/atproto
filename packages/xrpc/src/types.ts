@@ -37,6 +37,22 @@ export enum ResponseType {
   UpstreamTimeout = 504,
 }
 
+export function httpResponseCodeToEnum(status: number): ResponseType {
+  if (status in ResponseType) {
+    return status
+  } else if (status >= 100 && status < 200) {
+    return ResponseType.XRPCNotSupported
+  } else if (status >= 200 && status < 300) {
+    return ResponseType.Success
+  } else if (status >= 300 && status < 400) {
+    return ResponseType.XRPCNotSupported
+  } else if (status >= 400 && status < 500) {
+    return ResponseType.InvalidRequest
+  } else {
+    return ResponseType.InternalServerError
+  }
+}
+
 export const ResponseTypeNames = {
   [ResponseType.InvalidResponse]: 'InvalidResponse',
   [ResponseType.Success]: 'Success',
@@ -87,12 +103,40 @@ export class XRPCError extends Error {
     public error?: string,
     message?: string,
     headers?: Headers,
+    options?: ErrorOptions,
   ) {
-    super(message || error || ResponseTypeStrings[status])
+    super(message || error || ResponseTypeStrings[status], options)
     if (!this.error) {
       this.error = ResponseTypeNames[status]
     }
     this.headers = headers
+
+    // Pre 2022 runtimes won't handle the "options" constructor argument
+    if (!this.cause && options?.cause) {
+      this.cause = options.cause
+    }
+  }
+
+  static from(cause: unknown, fallbackStatus?: ResponseType): XRPCError {
+    if (cause instanceof XRPCError) {
+      return cause
+    }
+
+    // Extract status code from "http-errors" like errors
+    const statusCode: unknown =
+      cause instanceof Error
+        ? ('statusCode' in cause ? cause.statusCode : undefined) ??
+          ('status' in cause ? cause.status : undefined)
+        : undefined
+
+    const status: ResponseType =
+      typeof statusCode === 'number'
+        ? httpResponseCodeToEnum(statusCode)
+        : fallbackStatus ?? ResponseType.Unknown
+
+    const message = cause instanceof Error ? cause.message : String(cause)
+
+    return new XRPCError(status, undefined, message, undefined, { cause })
   }
 }
 
@@ -106,6 +150,8 @@ export class XRPCInvalidResponseError extends XRPCError {
       ResponseType.InvalidResponse,
       ResponseTypeStrings[ResponseType.InvalidResponse],
       `The server gave an invalid response and may be out of date.`,
+      undefined,
+      { cause: validationError },
     )
   }
 }
