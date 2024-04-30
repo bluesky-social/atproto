@@ -8577,6 +8577,9 @@ export const schemaDict = {
           takendown: {
             type: 'boolean',
           },
+          dmsRevoked: {
+            type: 'boolean',
+          },
           appealed: {
             type: 'boolean',
             description:
@@ -8829,6 +8832,24 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      modEventDisableDms: {
+        type: 'object',
+        description: 'Revoke DM access for a subject',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventEnableDms: {
+        type: 'object',
+        description: 'Restore DM access for a subject',
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },
@@ -9167,6 +9188,8 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#modEventDisableDms',
+                  'lex:tools.ozone.moderation.defs#modEventEnableDms',
                 ],
               },
               subject: {
@@ -9610,6 +9633,19 @@ export const schemaDict = {
     lexicon: 1,
     id: 'temp.dm.defs',
     defs: {
+      messageRef: {
+        type: 'object',
+        required: ['did', 'messageId'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          messageId: {
+            type: 'string',
+          },
+        },
+      },
       message: {
         type: 'object',
         required: ['text'],
@@ -10073,6 +10109,139 @@ export const schemaDict = {
       },
     },
   },
+  TempDmModGetActorMetadata: {
+    lexicon: 1,
+    id: 'temp.dm.modGetActorMetadata',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['day', 'month', 'all'],
+            properties: {
+              day: {
+                type: 'ref',
+                ref: 'lex:temp.dm.modGetActorMetadata#metadata',
+              },
+              month: {
+                type: 'ref',
+                ref: 'lex:temp.dm.modGetActorMetadata#metadata',
+              },
+              all: {
+                type: 'ref',
+                ref: 'lex:temp.dm.modGetActorMetadata#metadata',
+              },
+            },
+          },
+        },
+      },
+      metadata: {
+        type: 'object',
+        required: [
+          'messagesSent',
+          'messagesReceived',
+          'convos',
+          'convosStarted',
+        ],
+        properties: {
+          messagesSent: {
+            type: 'integer',
+          },
+          messagesReceived: {
+            type: 'integer',
+          },
+          convos: {
+            type: 'integer',
+          },
+          convosStarted: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  TempDmModGetMessageContext: {
+    lexicon: 1,
+    id: 'temp.dm.modGetMessageContext',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['messageId'],
+          properties: {
+            messageId: {
+              type: 'string',
+            },
+            before: {
+              type: 'integer',
+              default: 5,
+            },
+            after: {
+              type: 'integer',
+              default: 5,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['messages'],
+            properties: {
+              messages: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:temp.dm.defs#messageView',
+                    'lex:temp.dm.defs#deletedMessage',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  TempDmModUpdateActorAccess: {
+    lexicon: 1,
+    id: 'temp.dm.modUpdateActorAccess',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actor', 'allowAccess'],
+            properties: {
+              actor: {
+                type: 'string',
+                format: 'did',
+              },
+              allowAccess: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   TempDmMuteChat: {
     lexicon: 1,
     id: 'temp.dm.muteChat',
@@ -10473,6 +10642,9 @@ export const ids = {
   TempDmGetUserSettings: 'temp.dm.getUserSettings',
   TempDmLeaveChat: 'temp.dm.leaveChat',
   TempDmListChats: 'temp.dm.listChats',
+  TempDmModGetActorMetadata: 'temp.dm.modGetActorMetadata',
+  TempDmModGetMessageContext: 'temp.dm.modGetMessageContext',
+  TempDmModUpdateActorAccess: 'temp.dm.modUpdateActorAccess',
   TempDmMuteChat: 'temp.dm.muteChat',
   TempDmSendMessage: 'temp.dm.sendMessage',
   TempDmSendMessageBatch: 'temp.dm.sendMessageBatch',

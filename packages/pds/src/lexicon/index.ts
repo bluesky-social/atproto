@@ -148,6 +148,9 @@ import * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
 import * as TempDmGetUserSettings from './types/temp/dm/getUserSettings'
 import * as TempDmLeaveChat from './types/temp/dm/leaveChat'
 import * as TempDmListChats from './types/temp/dm/listChats'
+import * as TempDmModGetActorMetadata from './types/temp/dm/modGetActorMetadata'
+import * as TempDmModGetMessageContext from './types/temp/dm/modGetMessageContext'
+import * as TempDmModUpdateActorAccess from './types/temp/dm/modUpdateActorAccess'
 import * as TempDmMuteChat from './types/temp/dm/muteChat'
 import * as TempDmSendMessage from './types/temp/dm/sendMessage'
 import * as TempDmSendMessageBatch from './types/temp/dm/sendMessageBatch'
@@ -1990,6 +1993,39 @@ export class TempDmNS {
     >,
   ) {
     const nsid = 'temp.dm.listChats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  modGetActorMetadata<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmModGetActorMetadata.Handler<ExtractAuth<AV>>,
+      TempDmModGetActorMetadata.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.modGetActorMetadata' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  modGetMessageContext<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmModGetMessageContext.Handler<ExtractAuth<AV>>,
+      TempDmModGetMessageContext.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.modGetMessageContext' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  modUpdateActorAccess<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      TempDmModUpdateActorAccess.Handler<ExtractAuth<AV>>,
+      TempDmModUpdateActorAccess.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'temp.dm.modUpdateActorAccess' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

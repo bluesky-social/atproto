@@ -29,6 +29,8 @@ export interface InputSchema {
     | ToolsOzoneModerationDefs.ModEventUnmute
     | ToolsOzoneModerationDefs.ModEventEmail
     | ToolsOzoneModerationDefs.ModEventTag
+    | ToolsOzoneModerationDefs.ModEventDisableDms
+    | ToolsOzoneModerationDefs.ModEventEnableDms
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
