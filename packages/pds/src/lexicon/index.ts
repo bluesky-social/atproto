@@ -129,6 +129,18 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
@@ -140,20 +152,6 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
-import * as TempDmDeleteMessage from './types/temp/dm/deleteMessage'
-import * as TempDmGetChat from './types/temp/dm/getChat'
-import * as TempDmGetChatForMembers from './types/temp/dm/getChatForMembers'
-import * as TempDmGetChatLog from './types/temp/dm/getChatLog'
-import * as TempDmGetChatMessages from './types/temp/dm/getChatMessages'
-import * as TempDmGetUserSettings from './types/temp/dm/getUserSettings'
-import * as TempDmLeaveChat from './types/temp/dm/leaveChat'
-import * as TempDmListChats from './types/temp/dm/listChats'
-import * as TempDmMuteChat from './types/temp/dm/muteChat'
-import * as TempDmSendMessage from './types/temp/dm/sendMessage'
-import * as TempDmSendMessageBatch from './types/temp/dm/sendMessageBatch'
-import * as TempDmUnmuteChat from './types/temp/dm/unmuteChat'
-import * as TempDmUpdateChatRead from './types/temp/dm/updateChatRead'
-import * as TempDmUpdateUserSettings from './types/temp/dm/updateUserSettings'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -197,15 +195,15 @@ export class Server {
   xrpc: XrpcServer
   com: ComNS
   app: AppNS
+  chat: ChatNS
   tools: ToolsNS
-  temp: TempNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.chat = new ChatNS(this)
     this.tools = new ToolsNS(this)
-    this.temp = new TempNS(this)
   }
 }
 
@@ -1729,6 +1727,176 @@ export class AppBskyUnspeccedNS {
   }
 }
 
+export class ChatNS {
+  _server: Server
+  bsky: ChatBskyNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.bsky = new ChatBskyNS(server)
+  }
+}
+
+export class ChatBskyNS {
+  _server: Server
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.actor = new ChatBskyActorNS(server)
+    this.convo = new ChatBskyConvoNS(server)
+  }
+}
+
+export class ChatBskyActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class ChatBskyConvoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteMessageForSelf<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoDeleteMessageForSelf.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoDeleteMessageForSelf.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.deleteMessageForSelf' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoForMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvoForMembers.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvoForMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLog<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetLog.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetLog.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getLog' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessages<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetMessages.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetMessages.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getMessages' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  leaveConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoLeaveConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoLeaveConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.leaveConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listConvos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoListConvos.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoListConvos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.listConvos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoMuteConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoMuteConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.muteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessage<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessage.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessage.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessageBatch<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessageBatch.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUnmuteConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUnmuteConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateRead<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUpdateRead.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUpdateRead.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateRead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
 export class ToolsNS {
   _server: Server
   ozone: ToolsOzoneNS
@@ -1884,178 +2052,6 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class TempNS {
-  _server: Server
-  dm: TempDmNS
-
-  constructor(server: Server) {
-    this._server = server
-    this.dm = new TempDmNS(server)
-  }
-}
-
-export class TempDmNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  deleteMessage<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmDeleteMessage.Handler<ExtractAuth<AV>>,
-      TempDmDeleteMessage.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.deleteMessage' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getChat<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmGetChat.Handler<ExtractAuth<AV>>,
-      TempDmGetChat.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.getChat' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getChatForMembers<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmGetChatForMembers.Handler<ExtractAuth<AV>>,
-      TempDmGetChatForMembers.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.getChatForMembers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getChatLog<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmGetChatLog.Handler<ExtractAuth<AV>>,
-      TempDmGetChatLog.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.getChatLog' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getChatMessages<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmGetChatMessages.Handler<ExtractAuth<AV>>,
-      TempDmGetChatMessages.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.getChatMessages' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getUserSettings<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmGetUserSettings.Handler<ExtractAuth<AV>>,
-      TempDmGetUserSettings.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.getUserSettings' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  leaveChat<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmLeaveChat.Handler<ExtractAuth<AV>>,
-      TempDmLeaveChat.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.leaveChat' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  listChats<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmListChats.Handler<ExtractAuth<AV>>,
-      TempDmListChats.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.listChats' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  muteChat<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmMuteChat.Handler<ExtractAuth<AV>>,
-      TempDmMuteChat.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.muteChat' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  sendMessage<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmSendMessage.Handler<ExtractAuth<AV>>,
-      TempDmSendMessage.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.sendMessage' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  sendMessageBatch<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmSendMessageBatch.Handler<ExtractAuth<AV>>,
-      TempDmSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.sendMessageBatch' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unmuteChat<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmUnmuteChat.Handler<ExtractAuth<AV>>,
-      TempDmUnmuteChat.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.unmuteChat' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateChatRead<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmUpdateChatRead.Handler<ExtractAuth<AV>>,
-      TempDmUpdateChatRead.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.updateChatRead' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateUserSettings<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      TempDmUpdateUserSettings.Handler<ExtractAuth<AV>>,
-      TempDmUpdateUserSettings.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'temp.dm.updateUserSettings' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

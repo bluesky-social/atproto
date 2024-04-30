@@ -8182,6 +8182,661 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyActorDeclaration: {
+    lexicon: 1,
+    id: 'chat.bsky.actor.declaration',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of a Bluesky chat account.',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowIncoming'],
+          properties: {
+            allowIncoming: {
+              type: 'string',
+              knownValues: ['all', 'none', 'following'],
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoDefs: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.defs',
+    defs: {
+      message: {
+        type: 'object',
+        required: ['text'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          text: {
+            type: 'string',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+          },
+          facets: {
+            type: 'array',
+            description: 'Annotations of text (mentions, URLs, hashtags, etc)',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          embed: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.record'],
+          },
+        },
+      },
+      messageView: {
+        type: 'object',
+        required: ['id', 'rev', 'text', 'sentAt'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          rev: {
+            type: 'string',
+          },
+          text: {
+            type: 'string',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+          },
+          facets: {
+            type: 'array',
+            description: 'Annotations of text (mentions, URLs, hashtags, etc)',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          embed: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.record'],
+          },
+          sender: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#messageViewSender',
+          },
+          sentAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      deletedMessageView: {
+        type: 'object',
+        required: ['id', 'rev', 'sentAt'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          rev: {
+            type: 'string',
+          },
+          sender: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#messageViewSender',
+          },
+          sentAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      messageViewSender: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      chatView: {
+        type: 'object',
+        required: ['id', 'rev', 'members', 'muted', 'unreadCount'],
+        properties: {
+          id: {
+            type: 'string',
+          },
+          rev: {
+            type: 'string',
+          },
+          members: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            },
+          },
+          lastMessage: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+          muted: {
+            type: 'boolean',
+          },
+          unreadCount: {
+            type: 'integer',
+          },
+        },
+      },
+      logBeginConvo: {
+        type: 'object',
+        required: ['rev', 'chatId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+        },
+      },
+      logLeaveConvo: {
+        type: 'object',
+        required: ['rev', 'chatId'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+        },
+      },
+      logCreateMessage: {
+        type: 'object',
+        required: ['rev', 'chatId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+        },
+      },
+      logDeleteMessage: {
+        type: 'object',
+        required: ['rev', 'chatId', 'message'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          chatId: {
+            type: 'string',
+          },
+          message: {
+            type: 'union',
+            refs: [
+              'lex:chat.bsky.convo.defs#messageView',
+              'lex:chat.bsky.convo.defs#deletedMessageView',
+            ],
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoDeleteMessageForSelf: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.deleteMessageForSelf',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId', 'messageId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#deletedMessageView',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoGetConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getConvo',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['chatId'],
+          properties: {
+            chatId: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chat'],
+            properties: {
+              chat: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#chatView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoGetConvoForMembers: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getConvoForMembers',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['members'],
+          properties: {
+            members: {
+              type: 'array',
+              minLength: 1,
+              maxLength: 10,
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chat'],
+            properties: {
+              chat: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#chatView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoGetLog: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getLog',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: [],
+          properties: {
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['logs'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              logs: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:chat.bsky.convo.defs#logBeginConvo',
+                    'lex:chat.bsky.convo.defs#logLeaveConvo',
+                    'lex:chat.bsky.convo.defs#logCreateMessage',
+                    'lex:chat.bsky.convo.defs#logDeleteMessage',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoGetMessages: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getMessages',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['chatId'],
+          properties: {
+            chatId: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['messages'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              messages: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:chat.bsky.convo.defs#messageView',
+                    'lex:chat.bsky.convo.defs#deletedMessageView',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoLeaveConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.leaveConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId', 'rev'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+              rev: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoListConvos: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.listConvos',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chats'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              chats: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.convo.defs#chatView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoMuteConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.muteConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#chatView',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoSendMessage: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.sendMessage',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId', 'message'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+              message: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#message',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#messageView',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoSendMessageBatch: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.sendMessageBatch',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['items'],
+            properties: {
+              items: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.convo.sendMessageBatch#batchItem',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['items'],
+            properties: {
+              items: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.convo.defs#messageView',
+                },
+              },
+            },
+          },
+        },
+      },
+      batchItem: {
+        type: 'object',
+        required: ['chatId', 'message'],
+        properties: {
+          chatId: {
+            type: 'string',
+          },
+          message: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#message',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoUnmuteConvo: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.unmuteConvo',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#chatView',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoUpdateRead: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.updateRead',
+    defs: {
+      main: {
+        type: 'procedure',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['chatId'],
+            properties: {
+              chatId: {
+                type: 'string',
+              },
+              messageId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:chat.bsky.convo.defs#chatView',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneCommunicationCreateTemplate: {
     lexicon: 1,
     id: 'tools.ozone.communication.createTemplate',
@@ -9606,680 +10261,6 @@ export const schemaDict = {
       },
     },
   },
-  TempDmDefs: {
-    lexicon: 1,
-    id: 'temp.dm.defs',
-    defs: {
-      message: {
-        type: 'object',
-        required: ['text'],
-        properties: {
-          id: {
-            type: 'string',
-          },
-          text: {
-            type: 'string',
-            maxLength: 10000,
-            maxGraphemes: 1000,
-          },
-          facets: {
-            type: 'array',
-            description: 'Annotations of text (mentions, URLs, hashtags, etc)',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
-          embed: {
-            type: 'union',
-            refs: ['lex:app.bsky.embed.record'],
-          },
-        },
-      },
-      messageView: {
-        type: 'object',
-        required: ['id', 'rev', 'text', 'sentAt'],
-        properties: {
-          id: {
-            type: 'string',
-          },
-          rev: {
-            type: 'string',
-          },
-          text: {
-            type: 'string',
-            maxLength: 10000,
-            maxGraphemes: 1000,
-          },
-          facets: {
-            type: 'array',
-            description: 'Annotations of text (mentions, URLs, hashtags, etc)',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
-          embed: {
-            type: 'union',
-            refs: ['lex:app.bsky.embed.record'],
-          },
-          sender: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#messageViewSender',
-          },
-          sentAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      deletedMessage: {
-        type: 'object',
-        required: ['id', 'sentAt'],
-        properties: {
-          id: {
-            type: 'string',
-          },
-          rev: {
-            type: 'string',
-          },
-          sender: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#messageViewSender',
-          },
-          sentAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      messageViewSender: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
-      chatView: {
-        type: 'object',
-        required: ['id', 'rev', 'members', 'unreadCount'],
-        properties: {
-          id: {
-            type: 'string',
-          },
-          rev: {
-            type: 'string',
-          },
-          members: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
-            },
-          },
-          lastMessage: {
-            type: 'union',
-            refs: [
-              'lex:temp.dm.defs#messageView',
-              'lex:temp.dm.defs#deletedMessage',
-            ],
-          },
-          unreadCount: {
-            type: 'integer',
-          },
-        },
-      },
-      incomingMessageSetting: {
-        type: 'string',
-        knownValues: ['all', 'none', 'following'],
-      },
-      logBeginChat: {
-        type: 'object',
-        required: ['rev', 'chatId'],
-        properties: {
-          rev: {
-            type: 'string',
-          },
-          chatId: {
-            type: 'string',
-          },
-        },
-      },
-      logCreateMessage: {
-        type: 'object',
-        required: ['rev', 'chatId', 'message'],
-        properties: {
-          rev: {
-            type: 'string',
-          },
-          chatId: {
-            type: 'string',
-          },
-          message: {
-            type: 'union',
-            refs: [
-              'lex:temp.dm.defs#messageView',
-              'lex:temp.dm.defs#deletedMessage',
-            ],
-          },
-        },
-      },
-      logDeleteMessage: {
-        type: 'object',
-        required: ['rev', 'chatId', 'message'],
-        properties: {
-          rev: {
-            type: 'string',
-          },
-          chatId: {
-            type: 'string',
-          },
-          message: {
-            type: 'union',
-            refs: [
-              'lex:temp.dm.defs#messageView',
-              'lex:temp.dm.defs#deletedMessage',
-            ],
-          },
-        },
-      },
-    },
-  },
-  TempDmDeleteMessage: {
-    lexicon: 1,
-    id: 'temp.dm.deleteMessage',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chatId', 'messageId'],
-            properties: {
-              chatId: {
-                type: 'string',
-              },
-              messageId: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#deletedMessage',
-          },
-        },
-      },
-    },
-  },
-  TempDmGetChat: {
-    lexicon: 1,
-    id: 'temp.dm.getChat',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: ['chatId'],
-          properties: {
-            chatId: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chat'],
-            properties: {
-              chat: {
-                type: 'ref',
-                ref: 'lex:temp.dm.defs#chatView',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmGetChatForMembers: {
-    lexicon: 1,
-    id: 'temp.dm.getChatForMembers',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: ['members'],
-          properties: {
-            members: {
-              type: 'array',
-              minLength: 1,
-              maxLength: 10,
-              items: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chat'],
-            properties: {
-              chat: {
-                type: 'ref',
-                ref: 'lex:temp.dm.defs#chatView',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmGetChatLog: {
-    lexicon: 1,
-    id: 'temp.dm.getChatLog',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: [],
-          properties: {
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['logs'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              logs: {
-                type: 'array',
-                items: {
-                  type: 'union',
-                  refs: [
-                    'lex:temp.dm.defs#logBeginChat',
-                    'lex:temp.dm.defs#logCreateMessage',
-                    'lex:temp.dm.defs#logDeleteMessage',
-                  ],
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmGetChatMessages: {
-    lexicon: 1,
-    id: 'temp.dm.getChatMessages',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: ['chatId'],
-          properties: {
-            chatId: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['messages'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              messages: {
-                type: 'array',
-                items: {
-                  type: 'union',
-                  refs: [
-                    'lex:temp.dm.defs#messageView',
-                    'lex:temp.dm.defs#deletedMessage',
-                  ],
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmGetUserSettings: {
-    lexicon: 1,
-    id: 'temp.dm.getUserSettings',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          properties: {},
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['allowIncoming'],
-            properties: {
-              allowIncoming: {
-                type: 'ref',
-                ref: 'lex:temp.dm.defs#incomingMessageSetting',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmLeaveChat: {
-    lexicon: 1,
-    id: 'temp.dm.leaveChat',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chatId'],
-            properties: {
-              chatId: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
-  TempDmListChats: {
-    lexicon: 1,
-    id: 'temp.dm.listChats',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chats'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              chats: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:temp.dm.defs#chatView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  TempDmMuteChat: {
-    lexicon: 1,
-    id: 'temp.dm.muteChat',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chatId'],
-            properties: {
-              chatId: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
-  TempDmSendMessage: {
-    lexicon: 1,
-    id: 'temp.dm.sendMessage',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chatId', 'message'],
-            properties: {
-              chatId: {
-                type: 'string',
-              },
-              message: {
-                type: 'ref',
-                ref: 'lex:temp.dm.defs#message',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#messageView',
-          },
-        },
-      },
-    },
-  },
-  TempDmSendMessageBatch: {
-    lexicon: 1,
-    id: 'temp.dm.sendMessageBatch',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['items'],
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:temp.dm.sendMessageBatch#batchItem',
-                },
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['items'],
-            properties: {
-              items: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:temp.dm.defs#messageView',
-                },
-              },
-            },
-          },
-        },
-      },
-      batchItem: {
-        type: 'object',
-        required: ['chatId', 'message'],
-        properties: {
-          chatId: {
-            type: 'string',
-          },
-          message: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#message',
-          },
-        },
-      },
-    },
-  },
-  TempDmUnmuteChat: {
-    lexicon: 1,
-    id: 'temp.dm.unmuteChat',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chatId'],
-            properties: {
-              chatId: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
-  TempDmUpdateChatRead: {
-    lexicon: 1,
-    id: 'temp.dm.updateChatRead',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['chatId'],
-            properties: {
-              chatId: {
-                type: 'string',
-              },
-              messageId: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:temp.dm.defs#chatView',
-          },
-        },
-      },
-    },
-  },
-  TempDmUpdateUserSettings: {
-    lexicon: 1,
-    id: 'temp.dm.updateUserSettings',
-    defs: {
-      main: {
-        type: 'procedure',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              allowIncoming: {
-                type: 'ref',
-                ref: 'lex:temp.dm.defs#incomingMessageSetting',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['allowIncoming'],
-            properties: {
-              allowIncoming: {
-                type: 'ref',
-                ref: 'lex:temp.dm.defs#incomingMessageSetting',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -10447,6 +10428,20 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
+  ChatBskyConvoDefs: 'chat.bsky.convo.defs',
+  ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
+  ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
+  ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
+  ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
+  ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',
+  ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',
+  ChatBskyConvoListConvos: 'chat.bsky.convo.listConvos',
+  ChatBskyConvoMuteConvo: 'chat.bsky.convo.muteConvo',
+  ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
+  ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
+  ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
+  ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',
@@ -10464,19 +10459,4 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
-  TempDmDefs: 'temp.dm.defs',
-  TempDmDeleteMessage: 'temp.dm.deleteMessage',
-  TempDmGetChat: 'temp.dm.getChat',
-  TempDmGetChatForMembers: 'temp.dm.getChatForMembers',
-  TempDmGetChatLog: 'temp.dm.getChatLog',
-  TempDmGetChatMessages: 'temp.dm.getChatMessages',
-  TempDmGetUserSettings: 'temp.dm.getUserSettings',
-  TempDmLeaveChat: 'temp.dm.leaveChat',
-  TempDmListChats: 'temp.dm.listChats',
-  TempDmMuteChat: 'temp.dm.muteChat',
-  TempDmSendMessage: 'temp.dm.sendMessage',
-  TempDmSendMessageBatch: 'temp.dm.sendMessageBatch',
-  TempDmUnmuteChat: 'temp.dm.unmuteChat',
-  TempDmUpdateChatRead: 'temp.dm.updateChatRead',
-  TempDmUpdateUserSettings: 'temp.dm.updateUserSettings',
 }
