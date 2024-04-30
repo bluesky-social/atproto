@@ -17,7 +17,16 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": { "type": "ref", "ref": "chat.bsky.convo.defs#convoView" }
+        "schema": {
+          "type": "object",
+          "required": ["convo"],
+          "properties": {
+            "convo": {
+              "type": "ref",
+              "ref": "chat.bsky.convo.defs#convoView"
+            }
+          }
+        }
       }
     }
   }

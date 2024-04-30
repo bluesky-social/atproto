@@ -8698,8 +8698,14 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#convoView',
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
           },
         },
       },
@@ -8812,8 +8818,14 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#convoView',
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
           },
         },
       },
@@ -8843,8 +8855,14 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#convoView',
+            type: 'object',
+            required: ['convo'],
+            properties: {
+              convo: {
+                type: 'ref',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
           },
         },
       },

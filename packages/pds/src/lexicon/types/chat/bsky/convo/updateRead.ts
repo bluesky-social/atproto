@@ -17,7 +17,10 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export type OutputSchema = ChatBskyConvoDefs.ConvoView
+export interface OutputSchema {
+  convo: ChatBskyConvoDefs.ConvoView
+  [k: string]: unknown
+}
 
 export interface HandlerInput {
   encoding: 'application/json'
