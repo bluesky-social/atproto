@@ -17,7 +17,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  chats: ChatBskyConvoDefs.ChatView[]
+  convos: ChatBskyConvoDefs.ConvoView[]
   [k: string]: unknown
 }
 

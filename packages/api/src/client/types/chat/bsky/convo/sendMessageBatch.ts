@@ -39,7 +39,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface BatchItem {
-  chatId: string
+  convoId: string
   message: ChatBskyConvoDefs.Message
   [k: string]: unknown
 }

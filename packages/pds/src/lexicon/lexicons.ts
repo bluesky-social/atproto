@@ -8300,7 +8300,7 @@ export const schemaDict = {
           },
         },
       },
-      chatView: {
+      convoView: {
         type: 'object',
         required: ['id', 'rev', 'members', 'muted', 'unreadCount'],
         properties: {
@@ -8334,36 +8334,36 @@ export const schemaDict = {
       },
       logBeginConvo: {
         type: 'object',
-        required: ['rev', 'chatId'],
+        required: ['rev', 'convoId'],
         properties: {
           rev: {
             type: 'string',
           },
-          chatId: {
+          convoId: {
             type: 'string',
           },
         },
       },
       logLeaveConvo: {
         type: 'object',
-        required: ['rev', 'chatId'],
+        required: ['rev', 'convoId'],
         properties: {
           rev: {
             type: 'string',
           },
-          chatId: {
+          convoId: {
             type: 'string',
           },
         },
       },
       logCreateMessage: {
         type: 'object',
-        required: ['rev', 'chatId', 'message'],
+        required: ['rev', 'convoId', 'message'],
         properties: {
           rev: {
             type: 'string',
           },
-          chatId: {
+          convoId: {
             type: 'string',
           },
           message: {
@@ -8377,12 +8377,12 @@ export const schemaDict = {
       },
       logDeleteMessage: {
         type: 'object',
-        required: ['rev', 'chatId', 'message'],
+        required: ['rev', 'convoId', 'message'],
         properties: {
           rev: {
             type: 'string',
           },
-          chatId: {
+          convoId: {
             type: 'string',
           },
           message: {
@@ -8406,9 +8406,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId', 'messageId'],
+            required: ['convoId', 'messageId'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
               messageId: {
@@ -8435,9 +8435,9 @@ export const schemaDict = {
         type: 'query',
         parameters: {
           type: 'params',
-          required: ['chatId'],
+          required: ['convoId'],
           properties: {
-            chatId: {
+            convoId: {
               type: 'string',
             },
           },
@@ -8446,11 +8446,11 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chat'],
+            required: ['convo'],
             properties: {
-              chat: {
+              convo: {
                 type: 'ref',
-                ref: 'lex:chat.bsky.convo.defs#chatView',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
               },
             },
           },
@@ -8483,11 +8483,11 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chat'],
+            required: ['convo'],
             properties: {
-              chat: {
+              convo: {
                 type: 'ref',
-                ref: 'lex:chat.bsky.convo.defs#chatView',
+                ref: 'lex:chat.bsky.convo.defs#convoView',
               },
             },
           },
@@ -8545,9 +8545,9 @@ export const schemaDict = {
         type: 'query',
         parameters: {
           type: 'params',
-          required: ['chatId'],
+          required: ['convoId'],
           properties: {
-            chatId: {
+            convoId: {
               type: 'string',
             },
             limit: {
@@ -8596,9 +8596,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId'],
+            required: ['convoId'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
             },
@@ -8608,9 +8608,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId', 'rev'],
+            required: ['convoId', 'rev'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
               rev: {
@@ -8646,16 +8646,16 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chats'],
+            required: ['convos'],
             properties: {
               cursor: {
                 type: 'string',
               },
-              chats: {
+              convos: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:chat.bsky.convo.defs#chatView',
+                  ref: 'lex:chat.bsky.convo.defs#convoView',
                 },
               },
             },
@@ -8674,9 +8674,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId'],
+            required: ['convoId'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
             },
@@ -8686,7 +8686,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#chatView',
+            ref: 'lex:chat.bsky.convo.defs#convoView',
           },
         },
       },
@@ -8702,9 +8702,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId', 'message'],
+            required: ['convoId', 'message'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
               message: {
@@ -8765,9 +8765,9 @@ export const schemaDict = {
       },
       batchItem: {
         type: 'object',
-        required: ['chatId', 'message'],
+        required: ['convoId', 'message'],
         properties: {
-          chatId: {
+          convoId: {
             type: 'string',
           },
           message: {
@@ -8788,9 +8788,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId'],
+            required: ['convoId'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
             },
@@ -8800,7 +8800,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#chatView',
+            ref: 'lex:chat.bsky.convo.defs#convoView',
           },
         },
       },
@@ -8816,9 +8816,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['chatId'],
+            required: ['convoId'],
             properties: {
-              chatId: {
+              convoId: {
                 type: 'string',
               },
               messageId: {
@@ -8831,7 +8831,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#chatView',
+            ref: 'lex:chat.bsky.convo.defs#convoView',
           },
         },
       },

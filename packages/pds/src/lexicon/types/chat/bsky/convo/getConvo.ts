@@ -10,13 +10,13 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ChatBskyConvoDefs from './defs'
 
 export interface QueryParams {
-  chatId: string
+  convoId: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  chat: ChatBskyConvoDefs.ChatView
+  convo: ChatBskyConvoDefs.ConvoView
   [k: string]: unknown
 }
 

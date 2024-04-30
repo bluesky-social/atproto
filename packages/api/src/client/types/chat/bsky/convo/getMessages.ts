@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as ChatBskyConvoDefs from './defs'
 
 export interface QueryParams {
-  chatId: string
+  convoId: string
   limit?: number
   cursor?: string
 }

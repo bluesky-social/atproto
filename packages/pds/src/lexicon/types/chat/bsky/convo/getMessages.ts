@@ -10,7 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ChatBskyConvoDefs from './defs'
 
 export interface QueryParams {
-  chatId: string
+  convoId: string
   limit: number
   cursor?: string
 }

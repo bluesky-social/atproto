@@ -11,11 +11,11 @@ import * as ChatBskyConvoDefs from './defs'
 export interface QueryParams {}
 
 export interface InputSchema {
-  chatId: string
+  convoId: string
   [k: string]: unknown
 }
 
-export type OutputSchema = ChatBskyConvoDefs.ChatView
+export type OutputSchema = ChatBskyConvoDefs.ConvoView
 
 export interface CallOptions {
   headers?: Headers

@@ -50,7 +50,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface BatchItem {
-  chatId: string
+  convoId: string
   message: ChatBskyConvoDefs.Message
   [k: string]: unknown
 }

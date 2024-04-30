@@ -91,7 +91,7 @@ export function validateMessageViewSender(v: unknown): ValidationResult {
   return lexicons.validate('chat.bsky.convo.defs#messageViewSender', v)
 }
 
-export interface ChatView {
+export interface ConvoView {
   id: string
   rev: string
   members: AppBskyActorDefs.ProfileViewBasic[]
@@ -104,21 +104,21 @@ export interface ChatView {
   [k: string]: unknown
 }
 
-export function isChatView(v: unknown): v is ChatView {
+export function isConvoView(v: unknown): v is ConvoView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#chatView'
+    v.$type === 'chat.bsky.convo.defs#convoView'
   )
 }
 
-export function validateChatView(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#chatView', v)
+export function validateConvoView(v: unknown): ValidationResult {
+  return lexicons.validate('chat.bsky.convo.defs#convoView', v)
 }
 
 export interface LogBeginConvo {
   rev: string
-  chatId: string
+  convoId: string
   [k: string]: unknown
 }
 
@@ -136,7 +136,7 @@ export function validateLogBeginConvo(v: unknown): ValidationResult {
 
 export interface LogLeaveConvo {
   rev: string
-  chatId: string
+  convoId: string
   [k: string]: unknown
 }
 
@@ -154,7 +154,7 @@ export function validateLogLeaveConvo(v: unknown): ValidationResult {
 
 export interface LogCreateMessage {
   rev: string
-  chatId: string
+  convoId: string
   message:
     | MessageView
     | DeletedMessageView
@@ -176,7 +176,7 @@ export function validateLogCreateMessage(v: unknown): ValidationResult {
 
 export interface LogDeleteMessage {
   rev: string
-  chatId: string
+  convoId: string
   message:
     | MessageView
     | DeletedMessageView

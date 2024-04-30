@@ -12,7 +12,7 @@ import * as ChatBskyConvoDefs from './defs'
 export interface QueryParams {}
 
 export interface InputSchema {
-  chatId: string
+  convoId: string
   messageId: string
   [k: string]: unknown
 }

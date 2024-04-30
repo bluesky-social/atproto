@@ -16,7 +16,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  chat: ChatBskyConvoDefs.ChatView
+  convo: ChatBskyConvoDefs.ConvoView
   [k: string]: unknown
 }
 
