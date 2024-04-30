@@ -20,6 +20,11 @@
             "maxGraphemes": 256,
             "maxLength": 2560
           },
+          "descriptionFacets": {
+            "type": "array",
+            "description": "Description annotations (mentions, URLs, hashtags, etc)",
+            "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+          },
           "avatar": {
             "type": "blob",
             "description": "Small image to be displayed next to posts from account. AKA, 'profile picture'",
