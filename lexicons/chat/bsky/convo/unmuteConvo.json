@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.deleteMessage",
+  "id": "chat.bsky.convo.unmuteConvo",
   "defs": {
     "main": {
       "type": "procedure",
@@ -8,16 +8,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId", "messageId"],
+          "required": ["chatId"],
           "properties": {
-            "chatId": { "type": "string" },
-            "messageId": { "type": "string" }
+            "chatId": { "type": "string" }
           }
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": { "type": "ref", "ref": "temp.dm.defs#deletedMessage" }
+        "schema": { "type": "ref", "ref": "chat.bsky.convo.defs#chatView" }
       }
     }
   }

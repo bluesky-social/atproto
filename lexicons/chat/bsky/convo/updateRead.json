@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.updateChatRead",
+  "id": "chat.bsky.convo.updateRead",
   "defs": {
     "main": {
       "type": "procedure",
@@ -17,7 +17,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": { "type": "ref", "ref": "temp.dm.defs#chatView" }
+        "schema": { "type": "ref", "ref": "chat.bsky.convo.defs#chatView" }
       }
     }
   }

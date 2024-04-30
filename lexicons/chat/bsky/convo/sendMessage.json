@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.unmuteChat",
+  "id": "chat.bsky.convo.sendMessage",
   "defs": {
     "main": {
       "type": "procedure",
@@ -8,17 +8,21 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId"],
+          "required": ["chatId", "message"],
           "properties": {
-            "chatId": { "type": "string" }
+            "chatId": { "type": "string" },
+            "message": {
+              "type": "ref",
+              "ref": "chat.bsky.convo.defs#message"
+            }
           }
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
-          "type": "object",
-          "properties": {}
+          "type": "ref",
+          "ref": "chat.bsky.convo.defs#messageView"
         }
       }
     }

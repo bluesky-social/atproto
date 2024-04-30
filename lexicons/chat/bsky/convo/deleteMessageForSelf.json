@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.sendMessage",
+  "id": "chat.bsky.convo.deleteMessageForSelf",
   "defs": {
     "main": {
       "type": "procedure",
@@ -8,13 +8,10 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["chatId", "message"],
+          "required": ["chatId", "messageId"],
           "properties": {
             "chatId": { "type": "string" },
-            "message": {
-              "type": "ref",
-              "ref": "temp.dm.defs#message"
-            }
+            "messageId": { "type": "string" }
           }
         }
       },
@@ -22,7 +19,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "temp.dm.defs#messageView"
+          "ref": "chat.bsky.convo.defs#deletedMessageView"
         }
       }
     }

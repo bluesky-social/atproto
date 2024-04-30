@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.defs",
+  "id": "chat.bsky.convo.defs",
   "defs": {
     "message": {
       "type": "object",
@@ -47,9 +47,9 @@
         "sentAt": { "type": "string", "format": "datetime" }
       }
     },
-    "deletedMessage": {
+    "deletedMessageView": {
       "type": "object",
-      "required": ["id", "sentAt"],
+      "required": ["id", "rev", "sentAt"],
       "properties": {
         "id": { "type": "string" },
         "rev": { "type": "string" },
@@ -66,7 +66,7 @@
     },
     "chatView": {
       "type": "object",
-      "required": ["id", "rev", "members", "unreadCount"],
+      "required": ["id", "rev", "members", "muted", "unreadCount"],
       "properties": {
         "id": { "type": "string" },
         "rev": { "type": "string" },
@@ -79,16 +79,21 @@
         },
         "lastMessage": {
           "type": "union",
-          "refs": ["#messageView", "#deletedMessage"]
+          "refs": ["#messageView", "#deletedMessageView"]
         },
+        "muted": { "type": "boolean" },
         "unreadCount": { "type": "integer" }
       }
     },
-    "incomingMessageSetting": {
-      "type": "string",
-      "knownValues": ["all", "none", "following"]
+    "logBeginConvo": {
+      "type": "object",
+      "required": ["rev", "chatId"],
+      "properties": {
+        "rev": { "type": "string" },
+        "chatId": { "type": "string" }
+      }
     },
-    "logBeginChat": {
+    "logLeaveConvo": {
       "type": "object",
       "required": ["rev", "chatId"],
       "properties": {
@@ -104,7 +109,7 @@
         "chatId": { "type": "string" },
         "message": {
           "type": "union",
-          "refs": ["#messageView", "#deletedMessage"]
+          "refs": ["#messageView", "#deletedMessageView"]
         }
       }
     },
@@ -116,7 +121,7 @@
         "chatId": { "type": "string" },
         "message": {
           "type": "union",
-          "refs": ["#messageView", "#deletedMessage"]
+          "refs": ["#messageView", "#deletedMessageView"]
         }
       }
     }

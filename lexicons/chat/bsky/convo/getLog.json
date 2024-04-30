@@ -1,20 +1,13 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.getChatMessages",
+  "id": "chat.bsky.convo.getLog",
   "defs": {
     "main": {
       "type": "query",
       "parameters": {
         "type": "params",
-        "required": ["chatId"],
+        "required": [],
         "properties": {
-          "chatId": { "type": "string" },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100,
-            "default": 50
-          },
           "cursor": { "type": "string" }
         }
       },
@@ -22,16 +15,18 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["messages"],
+          "required": ["logs"],
           "properties": {
             "cursor": { "type": "string" },
-            "messages": {
+            "logs": {
               "type": "array",
               "items": {
                 "type": "union",
                 "refs": [
-                  "temp.dm.defs#messageView",
-                  "temp.dm.defs#deletedMessage"
+                  "chat.bsky.convo.defs#logBeginConvo",
+                  "chat.bsky.convo.defs#logLeaveConvo",
+                  "chat.bsky.convo.defs#logCreateMessage",
+                  "chat.bsky.convo.defs#logDeleteMessage"
                 ]
               }
             }

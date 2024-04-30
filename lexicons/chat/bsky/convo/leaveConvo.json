@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.updateUserSettings",
+  "id": "chat.bsky.convo.leaveConvo",
   "defs": {
     "main": {
       "type": "procedure",
@@ -8,11 +8,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["chatId"],
           "properties": {
-            "allowIncoming": {
-              "type": "ref",
-              "ref": "temp.dm.defs#incomingMessageSetting"
-            }
+            "chatId": { "type": "string" }
           }
         }
       },
@@ -20,12 +18,10 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["allowIncoming"],
+          "required": ["chatId", "rev"],
           "properties": {
-            "allowIncoming": {
-              "type": "ref",
-              "ref": "temp.dm.defs#incomingMessageSetting"
-            }
+            "chatId": { "type": "string" },
+            "rev": { "type": "string" }
           }
         }
       }

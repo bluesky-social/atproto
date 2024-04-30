@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "temp.dm.muteChat",
+  "id": "chat.bsky.convo.muteConvo",
   "defs": {
     "main": {
       "type": "procedure",
@@ -16,10 +16,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "properties": {}
-        }
+        "schema": { "type": "ref", "ref": "chat.bsky.convo.defs#chatView" }
       }
     }
   }
