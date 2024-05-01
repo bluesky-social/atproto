@@ -17,6 +17,10 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
       // skip
     }
   }
+
+  const collator = new Intl.Collator('en-US')
+  docs.sort((a, b) => collator.compare(a.id, b.id))
+
   return docs
 }
 
