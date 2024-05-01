@@ -3779,6 +3779,20 @@ export const schemaDict = {
           labeler: {
             type: 'boolean',
           },
+          chat: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
+          },
+        },
+      },
+      profileAssociatedChat: {
+        type: 'object',
+        required: ['allowIncoming'],
+        properties: {
+          allowIncoming: {
+            type: 'string',
+            knownValues: ['all', 'none', 'following'],
+          },
         },
       },
       viewerState: {
