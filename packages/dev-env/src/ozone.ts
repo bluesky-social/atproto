@@ -56,7 +56,7 @@ export class TestOzone {
       version: '0.0.0',
       port,
       didPlcUrl: config.plcUrl,
-      publicUrl: 'https://ozone.public.url',
+      publicUrl: url,
       serverDid,
       signingKeyHex,
       ...config,
