@@ -93,7 +93,7 @@
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
         "labeler": { "type": "boolean" },
-        "pinned": { "type": "integer" }
+        "pinnedPosts": { "type": "integer" }
       }
     },
     "viewerState": {
