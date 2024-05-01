@@ -166,6 +166,15 @@ Array [
             "uri": "record(3)",
             "viewer": Object {},
           },
+          "grandparentAuthor": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
+          },
           "root": Object {
             "$type": "app.bsky.feed.defs#postView",
             "author": Object {
