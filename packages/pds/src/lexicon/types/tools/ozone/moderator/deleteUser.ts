@@ -23,7 +23,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'ModeratorNotFound'
+  error?: 'ModeratorNotFound' | 'LastAdmin'
 }
 
 export type HandlerOutput = HandlerError | void

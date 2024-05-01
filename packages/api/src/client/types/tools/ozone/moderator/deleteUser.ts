@@ -31,9 +31,16 @@ export class ModeratorNotFoundError extends XRPCError {
   }
 }
 
+export class LastAdminError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'ModeratorNotFound') return new ModeratorNotFoundError(e)
+    if (e.error === 'LastAdmin') return new LastAdminError(e)
   }
   return e
 }

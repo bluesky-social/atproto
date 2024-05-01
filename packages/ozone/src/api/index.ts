@@ -15,6 +15,10 @@ import createTemplate from './communication/createTemplate'
 import updateTemplate from './communication/updateTemplate'
 import deleteTemplate from './communication/deleteTemplate'
 import listTemplates from './communication/listTemplates'
+import addUser from './moderator/addUser'
+import updateUser from './moderator/updateUser'
+import deleteUser from './moderator/deleteUser'
+import listUsers from './moderator/listUsers'
 import proxied from './proxied'
 
 export * as health from './health'
@@ -37,6 +41,10 @@ export default function (server: Server, ctx: AppContext) {
   createTemplate(server, ctx)
   updateTemplate(server, ctx)
   deleteTemplate(server, ctx)
+  listUsers(server, ctx)
+  addUser(server, ctx)
+  updateUser(server, ctx)
+  deleteUser(server, ctx)
   proxied(server, ctx)
   return server
 }

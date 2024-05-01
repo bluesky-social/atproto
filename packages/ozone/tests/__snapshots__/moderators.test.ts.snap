@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`moderator management listUsers allows all mods to list all users 1`] = `
+Object {
+  "cursor": "",
+  "users": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "disabled": false,
+      "id": "1",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleAdmin",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "disabled": false,
+      "id": "2",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleModerator",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "disabled": false,
+      "id": "3",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleTriage",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+}
+`;
+
+exports[`moderator management listUsers allows all mods to list all users 2`] = `
+Object {
+  "cursor": "",
+  "users": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "disabled": false,
+      "id": "1",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleAdmin",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "disabled": false,
+      "id": "2",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleModerator",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "disabled": false,
+      "id": "3",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleTriage",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+}
+`;
+
+exports[`moderator management listUsers allows listing all users 1`] = `
+Object {
+  "cursor": "",
+  "users": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "disabled": false,
+      "id": "1",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleAdmin",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "disabled": false,
+      "id": "2",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleModerator",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "disabled": false,
+      "id": "3",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleTriage",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+}
+`;
+
+exports[`moderator management listUsers allows listing all users 2`] = `
+Object {
+  "cursor": "",
+  "users": Array [
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "disabled": false,
+      "id": "1",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleAdmin",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(2)",
+      "disabled": false,
+      "id": "2",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleModerator",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(3)",
+      "disabled": false,
+      "id": "3",
+      "lastUpdatedBy": "user(1)",
+      "role": "tools.ozone.moderator.defs#modRoleTriage",
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+}
+`;

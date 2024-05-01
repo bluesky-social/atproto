@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 export interface User {
   handle?: string
   did: string
-  isSuspended?: boolean
+  disabled?: boolean
   role:
     | 'lex:tools.ozone.moderator.defs#modRoleAdmin'
     | 'lex:tools.ozone.moderator.defs#modRoleModerator'

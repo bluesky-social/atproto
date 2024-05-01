@@ -18,12 +18,14 @@ import { BlobDiverter } from './daemon/blob-diverter'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
 import { getSigningKeyId } from './util'
+import { ModeratorService, ModeratorServiceCreator } from './moderator'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  moderatorService: ModeratorServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
   blobDiverter?: BlobDiverter
@@ -96,6 +98,7 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
+    const moderatorService = ModeratorService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -105,6 +108,7 @@ export class AppContext {
       moderators: cfg.access.moderators,
       triage: cfg.access.triage,
       adminPassword: secrets.adminPassword,
+      moderatorService: moderatorService(db),
     })
 
     return new AppContext(
@@ -113,6 +117,7 @@ export class AppContext {
         cfg,
         modService,
         communicationTemplateService,
+        moderatorService,
         appviewAgent,
         pdsAgent,
         signingKey,
@@ -154,6 +159,10 @@ export class AppContext {
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
     return this.opts.communicationTemplateService
+  }
+
+  get moderatorService(): ModeratorServiceCreator {
+    return this.opts.moderatorService
   }
 
   get appviewAgent(): AtpAgent {

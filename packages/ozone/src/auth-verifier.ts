@@ -2,6 +2,7 @@ import express from 'express'
 import * as ui8 from 'uint8arrays'
 import { IdResolver } from '@atproto/identity'
 import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
+import { ModeratorService } from './moderator'
 
 type ReqCtx = {
   req: express.Request
@@ -51,6 +52,7 @@ export type AuthVerifierOpts = {
   moderators: string[]
   triage: string[]
   adminPassword: string
+  moderatorService: ModeratorService
 }
 
 export class AuthVerifier {
@@ -58,6 +60,7 @@ export class AuthVerifier {
   admins: string[]
   moderators: string[]
   triage: string[]
+  moderatorService: ModeratorService
   private adminPassword: string
 
   constructor(
@@ -69,6 +72,7 @@ export class AuthVerifier {
     this.moderators = opts.moderators
     this.triage = opts.triage
     this.adminPassword = opts.adminPassword
+    this.moderatorService = opts.moderatorService
   }
 
   modOrAdminToken = async (
@@ -113,9 +117,19 @@ export class AuthVerifier {
     }
     const payload = await verifyJwt(jwtStr, this.serviceDid, getSigningKey)
     const iss = payload.iss
-    const isAdmin = this.admins.includes(iss)
-    const isModerator = isAdmin || this.moderators.includes(iss)
-    const isTriage = isModerator || this.triage.includes(iss)
+    const user = await this.moderatorService.getUser(iss)
+
+    if (!user) {
+      throw new AuthRequiredError('moderator not found', 'ModeratorNotFound')
+    }
+
+    if (user.disabled) {
+      throw new AuthRequiredError('moderator is disabled', 'UserDisabled')
+    }
+
+    const { isAdmin, isModerator, isTriage } =
+      await this.moderatorService.getUserRole(user)
+
     return {
       credentials: {
         type: 'standard',

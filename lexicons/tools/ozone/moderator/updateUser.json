@@ -9,10 +9,10 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["did", "role", "isSuspended"],
+          "required": ["did", "role", "disabled"],
           "properties": {
             "did": { "type": "string", "format": "did" },
-            "isSuspended": { "type": "boolean" },
+            "disabled": { "type": "boolean" },
             "role": {
               "type": "string",
               "knownValues": [

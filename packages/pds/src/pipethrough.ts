@@ -23,6 +23,10 @@ const defaultService = (
 ): { url: string; did: string } | null => {
   const nsid = path.replace('/xrpc/', '')
   switch (nsid) {
+    case ids.ToolsOzoneModeratorAddUser:
+    case ids.ToolsOzoneModeratorDeleteUser:
+    case ids.ToolsOzoneModeratorUpdateUser:
+    case ids.ToolsOzoneModeratorListUsers:
     case ids.ToolsOzoneCommunicationCreateTemplate:
     case ids.ToolsOzoneCommunicationDeleteTemplate:
     case ids.ToolsOzoneCommunicationUpdateTemplate:

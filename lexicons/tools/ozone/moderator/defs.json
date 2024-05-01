@@ -8,7 +8,7 @@
       "properties": {
         "handle": { "type": "string", "format": "handle" },
         "did": { "type": "string", "format": "did" },
-        "isSuspended": { "type": "boolean" },
+        "disabled": { "type": "boolean" },
         "role": {
           "type": "string",
           "knownValues": [

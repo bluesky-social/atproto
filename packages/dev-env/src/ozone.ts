@@ -111,16 +111,34 @@ export class TestOzone {
     return new ModeratorClient(this)
   }
 
-  addAdminDid(did: string) {
+  async addAdminDid(did: string) {
     this.ctx.cfg.access.admins.push(did)
+    await this.ctx.moderatorService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.moderator.defs#modRoleAdmin',
+    })
   }
 
-  addModeratorDid(did: string) {
+  async addModeratorDid(did: string) {
     this.ctx.cfg.access.moderators.push(did)
+    await this.ctx.moderatorService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.moderator.defs#modRoleModerator',
+    })
   }
 
-  addTriageDid(did: string) {
+  async addTriageDid(did: string) {
     this.ctx.cfg.access.triage.push(did)
+    await this.ctx.moderatorService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.moderator.defs#modRoleTriage',
+    })
   }
 
   async modHeaders(role: 'admin' | 'moderator' | 'triage' = 'moderator') {

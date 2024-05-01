@@ -9666,7 +9666,7 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
-          isSuspended: {
+          disabled: {
             type: 'boolean',
           },
           role: {
@@ -9720,6 +9720,11 @@ export const schemaDict = {
           {
             name: 'ModeratorNotFound',
             description: 'The user being deleted is not a moderator',
+          },
+          {
+            name: 'LastAdmin',
+            description:
+              'There must always be at least one moderator with admin access',
           },
         ],
       },
@@ -9779,13 +9784,13 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['did', 'role', 'isSuspended'],
+            required: ['did', 'role', 'disabled'],
             properties: {
               did: {
                 type: 'string',
                 format: 'did',
               },
-              isSuspended: {
+              disabled: {
                 type: 'boolean',
               },
               role: {

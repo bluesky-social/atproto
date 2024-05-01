@@ -12,7 +12,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   did: string
-  isSuspended: boolean
+  disabled: boolean
   role:
     | 'lex:tools.ozone.moderator.updateUser#modRoleAdmin'
     | 'lex:tools.ozone.moderator.updateUser#modRoleModerator'
