@@ -97,6 +97,7 @@ export interface ReplyRef {
     | NotFoundPost
     | BlockedPost
     | { $type: string; [k: string]: unknown }
+  parentReplyAuthor?: AppBskyActorDefs.ProfileViewBasic
   [k: string]: unknown
 }
 
