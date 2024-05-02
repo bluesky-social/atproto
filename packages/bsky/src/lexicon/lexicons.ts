@@ -3779,6 +3779,9 @@ export const schemaDict = {
           labeler: {
             type: 'boolean',
           },
+          pinnedPosts: {
+            type: 'integer',
+          },
         },
       },
       viewerState: {
@@ -4248,6 +4251,15 @@ export const schemaDict = {
                 'Larger horizontal image to display behind profile view.',
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
+            },
+            pinnedPosts: {
+              type: 'array',
+              description: 'Array of post URIs that are pinned by the user',
+              maxLength: 2,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
             },
             labels: {
               type: 'union',
@@ -4783,6 +4795,9 @@ export const schemaDict = {
           like: {
             type: 'string',
             format: 'at-uri',
+          },
+          pinned: {
+            type: 'boolean',
           },
           replyDisabled: {
             type: 'boolean',
@@ -5388,6 +5403,7 @@ export const schemaDict = {
                 'posts_no_replies',
                 'posts_with_media',
                 'posts_and_author_threads',
+                'pinned_posts',
               ],
               default: 'posts_with_replies',
             },
@@ -5418,60 +5434,6 @@ export const schemaDict = {
           },
           {
             name: 'BlockedByActor',
-          },
-        ],
-      },
-    },
-  },
-  AppBskyFeedGetFeed: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getFeed',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Get a hydrated feed from an actor's selected feed generator. Implemented by App View.",
-        parameters: {
-          type: 'params',
-          required: ['feed'],
-          properties: {
-            feed: {
-              type: 'string',
-              format: 'at-uri',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feed: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'UnknownFeed',
           },
         ],
       },
@@ -5558,6 +5520,60 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyFeedGetFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get a hydrated feed from an actor's selected feed generator. Implemented by App View.",
+        parameters: {
+          type: 'params',
+          required: ['feed'],
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
       },
     },
   },
@@ -5754,6 +5770,48 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -5811,48 +5869,6 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
-      },
-    },
-  },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -6800,6 +6816,50 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetListBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get mod lists that the requesting account (actor) is blocking. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetList: {
     lexicon: 1,
     id: 'app.bsky.graph.getList',
@@ -6846,50 +6906,6 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.graph.defs#listItemView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphGetListBlocks: {
-    lexicon: 1,
-    id: 'app.bsky.graph.getListBlocks',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get mod lists that the requesting account (actor) is blocking. Requires auth.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['lists'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              lists: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.graph.defs#listView',
                 },
               },
             },
@@ -7135,61 +7151,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphList: {
-    lexicon: 1,
-    id: 'app.bsky.graph.list',
-    defs: {
-      main: {
-        type: 'record',
-        description:
-          'Record representing a list of accounts (actors). Scope includes both moderation-oriented lists and curration-oriented lists.',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['name', 'purpose', 'createdAt'],
-          properties: {
-            purpose: {
-              type: 'ref',
-              description:
-                'Defines the purpose of the list (aka, moderation-oriented or curration-oriented)',
-              ref: 'lex:app.bsky.graph.defs#listPurpose',
-            },
-            name: {
-              type: 'string',
-              maxLength: 64,
-              minLength: 1,
-              description: 'Display name for list; can not be empty.',
-            },
-            description: {
-              type: 'string',
-              maxGraphemes: 300,
-              maxLength: 3000,
-            },
-            descriptionFacets: {
-              type: 'array',
-              items: {
-                type: 'ref',
-                ref: 'lex:app.bsky.richtext.facet',
-              },
-            },
-            avatar: {
-              type: 'blob',
-              accept: ['image/png', 'image/jpeg'],
-              maxSize: 1000000,
-            },
-            labels: {
-              type: 'union',
-              refs: ['lex:com.atproto.label.defs#selfLabels'],
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphListblock: {
     lexicon: 1,
     id: 'app.bsky.graph.listblock',
@@ -7240,6 +7201,61 @@ export const schemaDict = {
               format: 'at-uri',
               description:
                 'Reference (AT-URI) to the list record (app.bsky.graph.list).',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.list',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record representing a list of accounts (actors). Scope includes both moderation-oriented lists and curration-oriented lists.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['name', 'purpose', 'createdAt'],
+          properties: {
+            purpose: {
+              type: 'ref',
+              description:
+                'Defines the purpose of the list (aka, moderation-oriented or curration-oriented)',
+              ref: 'lex:app.bsky.graph.defs#listPurpose',
+            },
+            name: {
+              type: 'string',
+              maxLength: 64,
+              minLength: 1,
+              description: 'Display name for list; can not be empty.',
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+              maxSize: 1000000,
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',
@@ -8292,14 +8308,14 @@ export const ids = {
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
-  AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
   AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
+  AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
@@ -8315,17 +8331,17 @@ export const ids = {
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
-  AppBskyGraphGetList: 'app.bsky.graph.getList',
   AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
+  AppBskyGraphGetList: 'app.bsky.graph.getList',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
-  AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
+  AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',

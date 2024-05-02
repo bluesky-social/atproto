@@ -89,6 +89,7 @@ export interface ProfileAssociated {
   lists?: number
   feedgens?: number
   labeler?: boolean
+  pinnedPosts?: number
   [k: string]: unknown
 }
 
