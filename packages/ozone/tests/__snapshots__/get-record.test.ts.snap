@@ -54,7 +54,6 @@ Object {
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
-    "labels": Array [],
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -132,7 +131,7 @@ Object {
       "id": 1,
       "lastReportedAt": "1970-01-01T00:00:00.000Z",
       "lastReviewedAt": "1970-01-01T00:00:00.000Z",
-      "lastReviewedBy": "user(2)",
+      "lastReviewedBy": "user(1)",
       "reviewState": "tools.ozone.moderation.defs#reviewClosed",
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
@@ -154,7 +153,6 @@ Object {
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
-    "labels": Array [],
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
