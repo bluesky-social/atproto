@@ -54,6 +54,7 @@ export function httpResponseCodeToEnum(status: number): ResponseType {
 }
 
 export const ResponseTypeNames = {
+  [ResponseType.Unknown]: 'Unknown',
   [ResponseType.InvalidResponse]: 'InvalidResponse',
   [ResponseType.Success]: 'Success',
   [ResponseType.InvalidRequest]: 'InvalidRequest',
@@ -69,7 +70,12 @@ export const ResponseTypeNames = {
   [ResponseType.UpstreamTimeout]: 'UpstreamTimeout',
 }
 
+export function httpResponseCodeToName(status: number): string {
+  return ResponseTypeNames[httpResponseCodeToEnum(status)]
+}
+
 export const ResponseTypeStrings = {
+  [ResponseType.Unknown]: 'Unknown',
   [ResponseType.InvalidResponse]: 'Invalid Response',
   [ResponseType.Success]: 'Success',
   [ResponseType.InvalidRequest]: 'Invalid Request',
@@ -85,6 +91,10 @@ export const ResponseTypeStrings = {
   [ResponseType.UpstreamTimeout]: 'Upstream Timeout',
 }
 
+export function httpResponseCodeToString(status: number): string {
+  return ResponseTypeStrings[httpResponseCodeToEnum(status)]
+}
+
 export class XRPCResponse {
   success = true
 
@@ -96,24 +106,24 @@ export class XRPCResponse {
 
 export class XRPCError extends Error {
   success = false
-  headers?: Headers
+
+  public status: ResponseType
 
   constructor(
-    public status: ResponseType,
-    public error?: string,
+    statusCode: number,
+    public error: string = httpResponseCodeToName(statusCode),
     message?: string,
-    headers?: Headers,
+    public headers?: Headers,
     options?: ErrorOptions,
   ) {
-    super(message || error || ResponseTypeStrings[status], options)
-    if (!this.error) {
-      this.error = ResponseTypeNames[status]
-    }
-    this.headers = headers
+    super(message || error || httpResponseCodeToString(statusCode), options)
+
+    this.status = httpResponseCodeToEnum(statusCode)
 
     // Pre 2022 runtimes won't handle the "options" constructor argument
-    if (!this.cause && options?.cause) {
-      this.cause = options.cause
+    const cause = options?.cause
+    if (this.cause === undefined && cause !== undefined) {
+      this.cause = cause
     }
   }
 
@@ -134,9 +144,10 @@ export class XRPCError extends Error {
         ? httpResponseCodeToEnum(statusCode)
         : fallbackStatus ?? ResponseType.Unknown
 
+    const error = ResponseTypeNames[status]
     const message = cause instanceof Error ? cause.message : String(cause)
 
-    return new XRPCError(status, undefined, message, undefined, { cause })
+    return new XRPCError(status, error, message, undefined, { cause })
   }
 }
 
