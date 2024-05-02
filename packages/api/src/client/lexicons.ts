@@ -56,13 +56,6 @@ export const schemaDict = {
               ref: 'lex:com.atproto.server.defs#inviteCode',
             },
           },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
           invitesDisabled: {
             type: 'boolean',
           },
@@ -8878,13 +8871,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
           invitesDisabled: {
             type: 'boolean',
           },
@@ -9009,13 +8995,6 @@ export const schemaDict = {
           repo: {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#repoView',
-          },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
           },
         },
       },
@@ -9185,7 +9164,6 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventMuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
-                  'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
                 ],

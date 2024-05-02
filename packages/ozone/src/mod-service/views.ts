@@ -46,12 +46,9 @@ export class ModerationViews {
     private appviewAuth: (labelers?: ParsedLabelers) => Promise<AuthHeaders>,
   ) {}
 
-  async getAccoutInfosByDid(
-    dids: string[],
-    labelers?: ParsedLabelers,
-  ): Promise<Map<string, AccountView>> {
+  async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
-    const auth = await this.appviewAuth(labelers)
+    const auth = await this.appviewAuth()
     if (!auth) return new Map()
     try {
       const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
@@ -72,13 +69,10 @@ export class ModerationViews {
     }
   }
 
-  async repos(
-    dids: string[],
-    labelers?: ParsedLabelers,
-  ): Promise<Map<string, RepoView>> {
+  async repos(dids: string[]): Promise<Map<string, RepoView>> {
     if (dids.length === 0) return new Map()
     const [infos, subjectStatuses] = await Promise.all([
-      this.getAccoutInfosByDid(dids, labelers),
+      this.getAccoutInfosByDid(dids),
       this.getSubjectStatus(dids),
     ])
 
@@ -89,7 +83,6 @@ export class ModerationViews {
       return acc.set(did, {
         // No email or invite info on appview
         did,
-        labels: info.labels,
         handle: info.handle,
         relatedRecords: info.relatedRecords ?? [],
         indexedAt: info.indexedAt,
@@ -223,9 +216,10 @@ export class ModerationViews {
     did: string,
     labelers?: ParsedLabelers,
   ): Promise<RepoViewDetail | undefined> {
-    const [repos, localLabels] = await Promise.all([
-      this.repos([did], labelers),
+    const [repos, localLabels, externalLabels] = await Promise.all([
+      this.repos([did]),
       this.labels(did),
+      this.getExternalLabels([did], labelers),
     ])
     const repo = repos.get(did)
     if (!repo) return
@@ -235,15 +229,14 @@ export class ModerationViews {
       moderation: {
         ...repo.moderation,
       },
-      labels: [...localLabels, ...(repo.labels || [])],
+      labels: [...localLabels, ...externalLabels],
     }
   }
 
   async fetchRecords(
     subjects: RecordSubject[],
-    labelers?: ParsedLabelers,
   ): Promise<Map<string, RecordInfo>> {
-    const auth = await this.appviewAuth(labelers)
+    const auth = await this.appviewAuth()
     if (!auth) return new Map()
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
@@ -272,17 +265,14 @@ export class ModerationViews {
     }, new Map<string, RecordInfo>())
   }
 
-  async records(
-    subjects: RecordSubject[],
-    labelers?: ParsedLabelers,
-  ): Promise<Map<string, RecordView>> {
+  async records(subjects: RecordSubject[]): Promise<Map<string, RecordView>> {
     const uris = subjects.map((record) => new AtUri(record.uri))
     const dids = uris.map((u) => u.hostname)
 
     const [repos, subjectStatuses, records] = await Promise.all([
-      this.repos(dids, labelers),
+      this.repos(dids),
       this.getSubjectStatus(subjects.map((s) => s.uri)),
-      this.fetchRecords(subjects, labelers),
+      this.fetchRecords(subjects),
     ])
 
     return uris.reduce((acc, uri) => {
@@ -296,7 +286,6 @@ export class ModerationViews {
         cid: record.cid,
         value: record.value,
         blobCids: findBlobRefs(record.value).map((blob) => blob.ref.toString()),
-        labels: record.labels,
         indexedAt: record.indexedAt,
         repo,
         moderation: {
@@ -313,7 +302,7 @@ export class ModerationViews {
     labelers?: ParsedLabelers,
   ): Promise<RecordViewDetail | undefined> {
     const [records, subjectStatusesResult] = await Promise.all([
-      this.records([subject], labelers),
+      this.records([subject]),
       this.getSubjectStatus([subject.uri]),
     ])
     const record = records.get(subject.uri)
@@ -321,9 +310,10 @@ export class ModerationViews {
 
     const status = subjectStatusesResult.get(subject.uri)
 
-    const [blobs, labels, subjectStatus] = await Promise.all([
+    const [blobs, labels, externalLabels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
+      this.getExternalLabels([record.uri], labelers),
       status ? this.formatSubjectStatus(status) : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
@@ -339,8 +329,25 @@ export class ModerationViews {
         ...record.moderation,
         subjectStatus,
       },
-      labels: [...labels, ...selfLabels, ...(record['labels'] || [])],
+      labels: [...labels, ...selfLabels, ...externalLabels],
     }
+  }
+
+  async getExternalLabels(
+    subjects: string[],
+    labelers?: ParsedLabelers,
+  ): Promise<Label[]> {
+    if (!labelers?.dids.length && !labelers?.redact.size) return []
+    const auth = await this.appviewAuth(labelers)
+
+    const {
+      data: { labels },
+    } = await this.appviewAgent.api.com.atproto.label.queryLabels(
+      { uriPatterns: subjects },
+      auth,
+    )
+
+    return labels
   }
 
   formatReport(report: ModerationEventRowWithHandle): ReportOutput {
@@ -555,7 +562,6 @@ type RecordInfo = {
   uri: string
   cid: string
   value: Record<string, unknown>
-  labels?: Label[]
   indexedAt: string
 }
 

@@ -41,8 +41,6 @@ describe('label hydration', () => {
   })
 
   it('returns labels based for a subject', async () => {
-    AtpAgent.configure({ appLabelers: [alice] })
-    pdsAgent.configureLabelersHeader([])
     const { data } = await pdsAgent.api.com.atproto.label.queryLabels(
       { uriPatterns: [carol], sources: [alice] },
       {
@@ -57,6 +55,22 @@ describe('label hydration', () => {
   it('returns labels from supplied labelers as param', async () => {
     const { data } = await pdsAgent.api.com.atproto.label.queryLabels(
       { uriPatterns: [carol], sources: [alice, labelerDid] },
+      {
+        headers: sc.getHeaders(bob),
+      },
+    )
+    expect(data.labels?.length).toBe(2)
+    expect(data.labels?.find((l) => l.src === alice)?.val).toEqual('spam')
+    expect(data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
+      'misleading',
+    )
+  })
+
+  it('returns labels from labelers supplied in header when sources params is empty', async () => {
+    AtpAgent.configure({ appLabelers: [alice, labelerDid] })
+    pdsAgent.configureLabelersHeader([])
+    const { data } = await pdsAgent.api.com.atproto.label.queryLabels(
+      { uriPatterns: [carol] },
       {
         headers: sc.getHeaders(bob),
       },

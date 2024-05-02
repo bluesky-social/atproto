@@ -403,10 +403,6 @@
           "type": "ref",
           "ref": "com.atproto.server.defs#inviteCode"
         },
-        "labels": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        },
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" }
       }
@@ -475,11 +471,7 @@
         },
         "indexedAt": { "type": "string", "format": "datetime" },
         "moderation": { "type": "ref", "ref": "#moderation" },
-        "repo": { "type": "ref", "ref": "#repoView" },
-        "labels": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        }
+        "repo": { "type": "ref", "ref": "#repoView" }
       }
     },
     "recordViewDetail": {

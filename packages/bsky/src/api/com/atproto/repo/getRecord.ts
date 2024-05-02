@@ -18,13 +18,6 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
 
-    const labelers = ctx.reqLabelers(req)
-    const labelMap = await ctx.hydrator.label.getLabelsForSubjects(
-      [uri],
-      labelers,
-    )
-    const labels = Array.from(labelMap.get(uri)?.labels?.values() || [])
-
     return {
       encoding: 'application/json' as const,
       body: {
@@ -33,7 +26,6 @@ export default function (server: Server, ctx: AppContext) {
         value: {
           ...result.record,
         },
-        labels,
       },
     }
   })
