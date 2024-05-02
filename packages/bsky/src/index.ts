@@ -110,6 +110,7 @@ export class BskyAppView {
 
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
+      alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
     })

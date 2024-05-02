@@ -55,12 +55,14 @@ type ModServiceOutput = {
 
 export type AuthVerifierOpts = {
   ownDid: string
+  alternateAudienceDids: string[]
   modServiceDid: string
   adminPasses: string[]
 }
 
 export class AuthVerifier {
   public ownDid: string
+  public standardAudienceDids: Set<string>
   public modServiceDid: string
   private adminPasses: Set<string>
 
@@ -69,6 +71,10 @@ export class AuthVerifier {
     opts: AuthVerifierOpts,
   ) {
     this.ownDid = opts.ownDid
+    this.standardAudienceDids = new Set([
+      opts.ownDid,
+      ...opts.alternateAudienceDids,
+    ])
     this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
   }
@@ -91,9 +97,15 @@ export class AuthVerifier {
       }
     }
     const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: this.ownDid,
+      aud: null,
       iss: null,
     })
+    if (!this.standardAudienceDids.has(aud)) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
         type: 'standard',
