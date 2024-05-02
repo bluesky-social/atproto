@@ -13,6 +13,7 @@ export interface QueryParams {}
 export interface InputSchema {
   actor: string
   allowAccess: boolean
+  ref?: string
   [k: string]: unknown
 }
 

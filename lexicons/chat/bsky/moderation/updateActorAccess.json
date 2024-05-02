@@ -11,7 +11,8 @@
           "required": ["actor", "allowAccess"],
           "properties": {
             "actor": { "type": "string", "format": "did" },
-            "allowAccess": { "type": "boolean" }
+            "allowAccess": { "type": "boolean" },
+            "ref": {"type": "string"}
           }
         }
       }

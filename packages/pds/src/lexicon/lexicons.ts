@@ -9009,6 +9009,9 @@ export const schemaDict = {
               allowAccess: {
                 type: 'boolean',
               },
+              ref: {
+                type: 'string',
+              },
             },
           },
         },
