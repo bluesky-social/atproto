@@ -91,29 +91,23 @@ export class XrpcClient {
       )
 
       const resCode = httpResponseCodeToEnum(resStatus)
-      if (resCode === ResponseType.Success) {
-        try {
-          this.lex.assertValidXrpcOutput(methodNsid, resBody)
-        } catch (e: unknown) {
-          if (e instanceof ValidationError) {
-            throw new XRPCInvalidResponseError(methodNsid, e, resBody)
-          } else {
-            throw e
-          }
-        }
-        return new XRPCResponse(resBody, resHeaders)
-      } else {
-        if (resBody && isErrorResponseBody(resBody)) {
-          throw new XRPCError(
-            resCode,
-            resBody.error,
-            resBody.message,
-            resHeaders,
-          )
-        } else {
-          throw new XRPCError(resCode)
-        }
+      if (resCode !== ResponseType.Success) {
+        const { error = undefined, message = undefined } =
+          resBody && isErrorResponseBody(resBody) ? resBody : {}
+        throw new XRPCError(resCode, error, message, resHeaders)
       }
+
+      try {
+        this.lex.assertValidXrpcOutput(methodNsid, resBody)
+      } catch (e: unknown) {
+        if (e instanceof ValidationError) {
+          throw new XRPCInvalidResponseError(methodNsid, e, resBody)
+        }
+
+        throw e
+      }
+
+      return new XRPCResponse(resBody, resHeaders)
     } catch (err) {
       throw XRPCError.from(err)
     }
