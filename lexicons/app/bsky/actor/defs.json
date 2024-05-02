@@ -139,7 +139,8 @@
           "#threadViewPref",
           "#interestsPref",
           "#mutedWordsPref",
-          "#hiddenPostsPref"
+          "#hiddenPostsPref",
+          "#hiddenRepostersPref"
         ]
       }
     },
@@ -337,6 +338,17 @@
           "type": "array",
           "items": { "type": "string", "format": "at-uri" },
           "description": "A list of URIs of posts the account owner has hidden."
+        }
+      }
+    },
+    "hiddenRepostersPref": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": { "type": "string", "format": "did" },
+          "description": "A list of account DIDs that the account owner chose to hide reposts from."
         }
       }
     },
