@@ -20,6 +20,7 @@ export type Posts = HydrationMap<Post>
 export type PostViewerState = {
   like?: string
   repost?: string
+  pinned?: boolean
 }
 
 export type PostViewerStates = HydrationMap<PostViewerState>
@@ -86,16 +87,16 @@ export class FeedHydrator {
 
   async getPostViewerStates(
     refs: ItemRef[],
-    viewer: string,
+    { did, pinnedPosts }: { did: string; pinnedPosts?: string[] },
   ): Promise<PostViewerStates> {
     if (!refs.length) return new HydrationMap<PostViewerState>()
     const [likes, reposts] = await Promise.all([
       this.dataplane.getLikesByActorAndSubjects({
-        actorDid: viewer,
+        actorDid: did,
         refs,
       }),
       this.dataplane.getRepostsByActorAndSubjects({
-        actorDid: viewer,
+        actorDid: did,
         refs,
       }),
     ])
@@ -103,6 +104,7 @@ export class FeedHydrator {
       return acc.set(uri, {
         like: parseString(likes.uris[i]),
         repost: parseString(reposts.uris[i]),
+        pinned: pinnedPosts?.includes(uri) || undefined,
       })
     }, new HydrationMap<PostViewerState>())
   }

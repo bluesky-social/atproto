@@ -79,6 +79,20 @@ export const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { actor, filter: params.filter, items: [] }
   }
+
+  if (params.filter === 'pinned_posts') {
+    return {
+      actor,
+      filter: params.filter,
+      items:
+        actor.profile?.pinnedPosts?.map((uri) => ({
+          post: { uri: uri, cid: undefined },
+          repost: undefined,
+        })) || [],
+      cursor: undefined,
+    }
+  }
+
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
     limit: params.limit,

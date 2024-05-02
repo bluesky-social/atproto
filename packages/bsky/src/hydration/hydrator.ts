@@ -13,6 +13,7 @@ import {
   Actors,
   ProfileViewerStates,
   ProfileViewerState,
+  Actor,
 } from './actor'
 import {
   Follows,
@@ -269,11 +270,14 @@ export class Hydrator {
     state: HydrationState = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
-    const postsLayer0 = await this.feed.getPosts(
-      uris,
-      ctx.includeTakedowns,
-      state.posts,
-    )
+    const [postsLayer0, viewer] = await Promise.all([
+      this.feed.getPosts(uris, ctx.includeTakedowns, state.posts),
+      ctx.viewer
+        ? this.actor
+            .getActors([ctx.viewer])
+            .then((v) => v.get(ctx.viewer as string))
+        : undefined,
+    ])
     // first level embeds plus thread roots we haven't fetched yet
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
@@ -329,7 +333,12 @@ export class Hydrator {
         ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
         ...postUrisLayer2.map(uriToRef),
       ]),
-      ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
+      ctx.viewer
+        ? this.feed.getPostViewerStates(refs, {
+            did: ctx.viewer,
+            pinnedPosts: viewer?.profile?.pinnedPosts,
+          })
+        : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
