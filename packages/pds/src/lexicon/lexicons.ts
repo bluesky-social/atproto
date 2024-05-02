@@ -4833,6 +4833,12 @@ export const schemaDict = {
               'lex:app.bsky.feed.defs#blockedPost',
             ],
           },
+          grandparentAuthor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            description:
+              'When parent is a reply to another post, this is the author of that post.',
+          },
         },
       },
       reasonRepost: {
