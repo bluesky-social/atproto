@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ params, req }) => {
+  server.com.atproto.repo.getRecord(async ({ params }) => {
     const { repo, collection, rkey, cid } = params
     const [did] = await ctx.hydrator.actor.getDids([repo])
     if (!did) {
@@ -23,9 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       body: {
         uri: uri,
         cid: result.cid,
-        value: {
-          ...result.record,
-        },
+        value: result.record,
       },
     }
   })
