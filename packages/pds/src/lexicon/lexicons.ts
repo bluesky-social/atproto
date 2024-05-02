@@ -8351,6 +8351,12 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
           },
+          disabledMembers: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
           muted: {
             type: 'boolean',
           },

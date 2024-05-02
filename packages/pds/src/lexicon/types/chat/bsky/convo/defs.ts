@@ -117,6 +117,7 @@ export interface ConvoView {
     | MessageView
     | DeletedMessageView
     | { $type: string; [k: string]: unknown }
+  disabledMembers?: string[]
   muted: boolean
   unreadCount: number
   [k: string]: unknown

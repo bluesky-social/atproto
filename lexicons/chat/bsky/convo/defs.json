@@ -89,6 +89,10 @@
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
         },
+        "disabledMembers": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "muted": { "type": "boolean" },
         "unreadCount": { "type": "integer" }
       }
