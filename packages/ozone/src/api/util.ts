@@ -112,6 +112,8 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventReport',
   'tools.ozone.moderation.defs#modEventMute',
   'tools.ozone.moderation.defs#modEventUnmute',
+  'tools.ozone.moderation.defs#modEventMuteReporter',
+  'tools.ozone.moderation.defs#modEventUnmuteReporter',
   'tools.ozone.moderation.defs#modEventReverseTakedown',
   'tools.ozone.moderation.defs#modEventEmail',
   'tools.ozone.moderation.defs#modEventResolveAppeal',

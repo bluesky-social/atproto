@@ -203,6 +203,21 @@ Array [
       "muted": false,
     },
   },
+  Object {
+    "associated": Object {
+      "labeler": true,
+    },
+    "description": "The pretend version of mod.bsky.app",
+    "did": "user(6)",
+    "displayName": "Dev-env Moderation",
+    "handle": "mod-authority.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+  },
 ]
 `;
 
@@ -272,6 +287,19 @@ Array [
     "viewer": Object {
       "blockedBy": false,
       "following": "record(5)",
+      "muted": false,
+    },
+  },
+  Object {
+    "associated": Object {
+      "labeler": true,
+    },
+    "did": "user(6)",
+    "displayName": "Dev-env Moderation",
+    "handle": "mod-authority.test",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },

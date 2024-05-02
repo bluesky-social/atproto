@@ -342,6 +342,7 @@ Array [
 exports[`feed generation getFeed paginates, handling replies and reposts. 1`] = `
 Array [
   Object {
+    "feedContext": "item-0",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -401,6 +402,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-1",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
@@ -435,6 +437,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-2",
     "post": Object {
       "author": Object {
         "did": "user(4)",
@@ -554,6 +557,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-4",
     "post": Object {
       "author": Object {
         "did": "user(4)",
@@ -678,6 +682,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-5",
     "post": Object {
       "author": Object {
         "did": "user(6)",
@@ -865,6 +870,7 @@ Array [
 exports[`feed generation getFeed resolves basic feed contents without auth. 1`] = `
 Array [
   Object {
+    "feedContext": "item-0",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -919,6 +925,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-2",
     "post": Object {
       "author": Object {
         "did": "user(2)",
@@ -1023,6 +1030,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-4",
     "post": Object {
       "author": Object {
         "did": "user(2)",
@@ -1135,6 +1143,7 @@ Array [
 exports[`feed generation getFeed resolves basic feed contents. 1`] = `
 Array [
   Object {
+    "feedContext": "item-0",
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
@@ -1194,6 +1203,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-2",
     "post": Object {
       "author": Object {
         "did": "user(2)",
@@ -1313,6 +1323,7 @@ Array [
     },
   },
   Object {
+    "feedContext": "item-4",
     "post": Object {
       "author": Object {
         "did": "user(2)",

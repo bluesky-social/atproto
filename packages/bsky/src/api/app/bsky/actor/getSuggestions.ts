@@ -29,6 +29,9 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
+        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+          ? req.headers['x-bsky-topics'].join(',')
+          : req.headers['x-bsky-topics'],
       })
       const { resHeaders: resultHeaders, ...result } = await getSuggestions(
         { ...params, hydrateCtx, headers },

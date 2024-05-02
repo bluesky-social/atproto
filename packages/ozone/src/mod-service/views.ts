@@ -117,6 +117,7 @@ export class ModerationViews {
 
     if (
       [
+        'tools.ozone.moderation.defs#modEventMuteReporter',
         'tools.ozone.moderation.defs#modEventTakedown',
         'tools.ozone.moderation.defs#modEventMute',
       ].includes(event.action)
@@ -166,6 +167,7 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         reportType: event.meta?.reportType ?? undefined,
+        isReporterMuted: !!event.meta?.isReporterMuted,
       }
     }
 
@@ -519,6 +521,7 @@ export class ModerationViews {
       lastReportedAt: status.lastReportedAt ?? undefined,
       lastAppealedAt: status.lastAppealedAt ?? undefined,
       muteUntil: status.muteUntil ?? undefined,
+      muteReportingUntil: status.muteReportingUntil ?? undefined,
       suspendUntil: status.suspendUntil ?? undefined,
       takendown: status.takendown ?? undefined,
       appealed: status.appealed ?? undefined,
