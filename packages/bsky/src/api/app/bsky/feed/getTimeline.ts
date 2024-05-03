@@ -90,7 +90,7 @@ const noBlocksOrMutes = (inputs: {
       !bam.authorMuted &&
       !bam.originatorBlocked &&
       !bam.originatorMuted &&
-      !bam.parentAuthorBlocked
+      !bam.ancestorAuthorBlocked
     )
   })
   return skeleton

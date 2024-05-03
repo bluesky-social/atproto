@@ -37,6 +37,12 @@ describe('pds views with blocking', () => {
       sc.posts[dan][0].ref,
       'alice replies to dan',
     )
+    const _carolReplyToAliceReplyToDan = await sc.reply(
+      carol,
+      sc.posts[dan][0].ref,
+      aliceReplyToDan.ref,
+      "carol replies to alice's reply to dan",
+    )
     carolReplyToDan = await sc.reply(
       carol,
       sc.posts[dan][0].ref,
@@ -161,12 +167,13 @@ describe('pds views with blocking', () => {
       { headers: await network.serviceHeaders(carol) },
     )
 
-    // dan's posts don't appear, nor alice's reply to dan.
+    // dan's posts don't appear, nor alice's reply to dan, nor carol's reply to alice (which was a reply to dan)
     expect(
       resCarol.data.feed.some(
         (post) =>
           post.post.author.did === dan ||
-          post.reply?.parent.author?.['did'] === dan,
+          post.reply?.parent.author?.['did'] === dan ||
+          post.reply?.grandparentAuthor?.did === dan,
       ),
     ).toBeFalsy()
 
@@ -178,7 +185,8 @@ describe('pds views with blocking', () => {
       resDan.data.feed.some(
         (post) =>
           post.post.author.did === carol ||
-          post.reply?.parent.author?.['did'] === carol,
+          post.reply?.parent.author?.['did'] === carol ||
+          post.reply?.grandparentAuthor?.did === carol,
       ),
     ).toBeFalsy()
   })
