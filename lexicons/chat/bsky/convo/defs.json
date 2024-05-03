@@ -89,7 +89,7 @@
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
         },
-        "disabledMembers": { 
+        "disabledMembers": {
           "type": "array",
           "items": { "type": "string" }
         },

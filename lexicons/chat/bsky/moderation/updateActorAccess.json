@@ -12,7 +12,7 @@
           "properties": {
             "actor": { "type": "string", "format": "did" },
             "allowAccess": { "type": "boolean" },
-            "ref": {"type": "string"}
+            "ref": { "type": "string" }
           }
         }
       }
