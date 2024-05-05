@@ -551,7 +551,9 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'post',
     author: 'self',
     labels: { post: ['!hide'] },
-    behaviors: {},
+    behaviors: {
+      contentView: ['blur'],
+    },
   },
   "Self-post: Imperative label ('!hide') on author profile": {
     cfg: 'none',
@@ -573,7 +575,9 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'post',
     author: 'self',
     labels: { post: ['!warn'] },
-    behaviors: {},
+    behaviors: {
+      contentView: ['blur'],
+    },
   },
   "Self-post: Imperative label ('!warn') on author profile": {
     cfg: 'none',

@@ -78,9 +78,27 @@ export class ModerationDecision {
 
   ui(context: keyof ModerationBehavior): ModerationUI {
     const ui = new ModerationUI()
+    // Always apply labels on posts even if the user is the author. Also, we
+    // want to downgrade the `hide` setting to `warn` in these cases so the
+    // user is always aware of the label.
     if (this.isMe) {
+      if (context !== 'contentView' && context !== 'contentMedia') return ui
+      for (const cause of this.causes) {
+        if (cause.type !== 'label' || cause.target !== 'content') continue
+        if (!cause.downgraded) {
+          cause.setting = cause.setting === 'hide' ? 'warn' : cause.setting
+          if (cause.behavior[context] === 'blur') {
+            ui.blurs.push(cause)
+          } else if (cause.behavior[context] === 'alert') {
+            ui.alerts.push(cause)
+          } else if (cause.behavior[context] === 'inform') {
+            ui.informs.push(cause)
+          }
+        }
+      }
       return ui
     }
+
     for (const cause of this.causes) {
       if (
         cause.type === 'blocking' ||
