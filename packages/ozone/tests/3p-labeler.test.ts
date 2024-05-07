@@ -29,7 +29,7 @@ describe('labels from 3p labelers', () => {
     const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
     const ozoneDid = await createOzoneDid(network.plc.url, ozoneKey)
     thirdPartyLabeler = await TestOzone.create({
-      port: ozone.port + Math.floor(Math.random() * 10) + 1,
+      port: ozone.port + 10,
       plcUrl: network.plc.url,
       signingKey: ozoneKey,
       serverDid: ozoneDid,
