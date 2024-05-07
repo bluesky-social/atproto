@@ -1,6 +1,6 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.chat.bsky.moderation.getMessageContext({
@@ -9,18 +9,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!ctx.chatAgent) {
         throw new InvalidRequestError('No chat agent configured')
       }
-      if (!auth.credentials.isModerator) {
-        if (params.after > 0 || params.before > 0) {
-          throw new AuthRequiredError(
-            'Must be a full moderator to view context window',
-          )
-        }
-      }
-      if (params.after > 5 || params.before > 5) {
-        throw new InvalidRequestError(
-          'Cannot view a context window larger than 5',
-        )
-      }
+      const maxWindowSize = auth.credentials.isModerator ? 5 : 0
+      const before = Math.min(maxWindowSize, params.before)
+      const after = Math.min(maxWindowSize, params.after)
 
       // Ensure that the requested message was actually reported to prevent arbitrary lookups
       const found = await ctx.db.db
@@ -36,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const res =
         await ctx.chatAgent.api.chat.bsky.moderation.getMessageContext(
-          params,
+          { ...params, before, after },
           await ctx.chatAuth(),
         )
       return {
