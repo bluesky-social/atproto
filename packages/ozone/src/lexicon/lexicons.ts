@@ -8591,9 +8591,6 @@ export const schemaDict = {
           takendown: {
             type: 'boolean',
           },
-          dmsRevoked: {
-            type: 'boolean',
-          },
           appealed: {
             type: 'boolean',
             description:
@@ -8846,24 +8843,6 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
-          },
-        },
-      },
-      modEventDisableDms: {
-        type: 'object',
-        description: 'Revoke DM access for a subject',
-        properties: {
-          comment: {
-            type: 'string',
-          },
-        },
-      },
-      modEventEnableDms: {
-        type: 'object',
-        description: 'Restore DM access for a subject',
-        properties: {
-          comment: {
-            type: 'string',
           },
         },
       },
@@ -9202,8 +9181,6 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventUnmute',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
-                  'lex:tools.ozone.moderation.defs#modEventDisableDms',
-                  'lex:tools.ozone.moderation.defs#modEventEnableDms',
                 ],
               },
               subject: {

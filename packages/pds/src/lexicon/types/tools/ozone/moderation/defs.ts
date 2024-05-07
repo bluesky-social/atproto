@@ -118,7 +118,6 @@ export interface SubjectStatusView {
   /** Timestamp referencing when the author of the subject appealed a moderation action */
   lastAppealedAt?: string
   takendown?: boolean
-  dmsRevoked?: boolean
   /** True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. */
   appealed?: boolean
   suspendUntil?: string
@@ -465,42 +464,6 @@ export function isModEventTag(v: unknown): v is ModEventTag {
 
 export function validateModEventTag(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventTag', v)
-}
-
-/** Revoke DM access for a subject */
-export interface ModEventDisableDms {
-  comment?: string
-  [k: string]: unknown
-}
-
-export function isModEventDisableDms(v: unknown): v is ModEventDisableDms {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventDisableDms'
-  )
-}
-
-export function validateModEventDisableDms(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventDisableDms', v)
-}
-
-/** Restore DM access for a subject */
-export interface ModEventEnableDms {
-  comment?: string
-  [k: string]: unknown
-}
-
-export function isModEventEnableDms(v: unknown): v is ModEventEnableDms {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.moderation.defs#modEventEnableDms'
-  )
-}
-
-export function validateModEventEnableDms(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.moderation.defs#modEventEnableDms', v)
 }
 
 export interface RepoView {
