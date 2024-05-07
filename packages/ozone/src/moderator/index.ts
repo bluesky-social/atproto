@@ -31,7 +31,7 @@ export class ModeratorService {
     createdAt?: Date
     updatedAt?: Date
   }): Promise<Selectable<Moderator>> {
-    const newTemplate = await this.db.db
+    const newModerator = await this.db.db
       .insertInto('moderator')
       .values({
         role,
@@ -44,7 +44,29 @@ export class ModeratorService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    return newTemplate
+    return newModerator
+  }
+
+  async upsert({
+    role,
+    did,
+    lastUpdatedBy,
+  }: Pick<
+    Selectable<Moderator>,
+    'role' | 'did' | 'lastUpdatedBy'
+  >): Promise<void> {
+    await this.db.db
+      .insertInto('moderator')
+      .values({
+        role,
+        did,
+        lastUpdatedBy,
+        disabled: false,
+        updatedAt: new Date(),
+        createdAt: new Date(),
+      })
+      .onConflict((oc) => oc.column('did').doUpdateSet({ role }))
+      .execute()
   }
 
   async update(
@@ -56,7 +78,7 @@ export class ModeratorService {
       >
     >,
   ): Promise<Selectable<Moderator>> {
-    const updatedTemplate = await this.db.db
+    const updatedModerator = await this.db.db
       .updateTable('moderator')
       .where('did', '=', did)
       .set({
@@ -66,7 +88,7 @@ export class ModeratorService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    return updatedTemplate
+    return updatedModerator
   }
 
   async delete(did: string): Promise<void> {
