@@ -5,11 +5,13 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
 
 export interface User {
   handle?: string
   did: string
   disabled?: boolean
+  profile?: AppBskyActorDefs.ProfileViewDetailed
   role:
     | 'lex:tools.ozone.moderator.defs#modRoleAdmin'
     | 'lex:tools.ozone.moderator.defs#modRoleModerator'

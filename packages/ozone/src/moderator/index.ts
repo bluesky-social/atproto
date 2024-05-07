@@ -120,12 +120,12 @@ export class ModeratorService {
     return user
   }
 
-  getUserRole(user: User) {
-    const isAdmin = user.role === 'tools.ozone.moderator.defs#modRoleAdmin'
+  getUserRole(user?: User) {
+    const isAdmin = user?.role === 'tools.ozone.moderator.defs#modRoleAdmin'
     const isModerator =
-      isAdmin || user.role === 'tools.ozone.moderator.defs#modRoleModerator'
+      isAdmin || user?.role === 'tools.ozone.moderator.defs#modRoleModerator'
     const isTriage =
-      isModerator || user.role === 'tools.ozone.moderator.defs#modRoleTriage'
+      isModerator || user?.role === 'tools.ozone.moderator.defs#modRoleTriage'
 
     return {
       isModerator,

@@ -9,6 +9,10 @@
         "handle": { "type": "string", "format": "handle" },
         "did": { "type": "string", "format": "did" },
         "disabled": { "type": "boolean" },
+        "profile": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewDetailed"
+        },
         "role": {
           "type": "string",
           "knownValues": [

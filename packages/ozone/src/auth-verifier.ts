@@ -119,11 +119,7 @@ export class AuthVerifier {
     const iss = payload.iss
     const user = await this.moderatorService.getUser(iss)
 
-    if (!user) {
-      throw new AuthRequiredError('moderator not found', 'ModeratorNotFound')
-    }
-
-    if (user.disabled) {
+    if (user?.disabled) {
       throw new AuthRequiredError('moderator is disabled', 'UserDisabled')
     }
 

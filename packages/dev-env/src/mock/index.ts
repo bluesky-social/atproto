@@ -95,13 +95,13 @@ export async function generateMockSetup(env: TestNetwork) {
       handle: 'triage.test',
       password: 'triage-pass',
     })
-  await env.ozone.addAdminDid(triageRes.data.did)
+  await env.ozone.addTriageDid(triageRes.data.did)
   const modRes = await clients.loggedout.api.com.atproto.server.createAccount({
     email: 'mod@test.com',
     handle: 'mod.test',
     password: 'mod-pass',
   })
-  await env.ozone.addAdminDid(modRes.data.did)
+  await env.ozone.addModeratorDid(modRes.data.did)
   const adminRes = await clients.loggedout.api.com.atproto.server.createAccount(
     {
       email: 'admin-mod@test.com',

@@ -9674,6 +9674,10 @@ export const schemaDict = {
           disabled: {
             type: 'boolean',
           },
+          profile: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
+          },
           role: {
             type: 'string',
             knownValues: [
