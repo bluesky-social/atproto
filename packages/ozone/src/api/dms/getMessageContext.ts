@@ -21,6 +21,19 @@ export default function (server: Server, ctx: AppContext) {
           'Cannot view a context window larger than 5',
         )
       }
+
+      // Ensure that the requested message was actually reported to prevent arbitrary lookups
+      const found = await ctx.db.db
+        .selectFrom('moderation_event')
+        .select('id')
+        .where('subjectMessageId', '=', params.messageId)
+        .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+        .limit(1)
+        .executeTakeFirst()
+      if (!found) {
+        throw new InvalidRequestError('No report for requested message')
+      }
+
       const res =
         await ctx.chatAgent.api.chat.bsky.moderation.getMessageContext(
           params,
