@@ -346,6 +346,7 @@ export class ModerationService {
         subjectUri: subjectInfo.subjectUri,
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
+        subjectMessageId: subjectInfo.subjectMessageId,
       })
       .returningAll()
       .executeTakeFirstOrThrow()

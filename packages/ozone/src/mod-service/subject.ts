@@ -5,6 +5,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { RepoRef } from '../lexicon/types/com/atproto/admin/defs'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
+import { MessageRef } from '../lexicon/types/chat/bsky/convo/defs'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
@@ -28,6 +29,14 @@ export const subjectFromInput = (
   ) {
     return new RecordSubject(subject.uri, subject.cid, blobs)
   }
+  if (
+    subject.$type === 'chat.bsky.convo.defs#messageRef' &&
+    typeof subject.did === 'string' &&
+    typeof subject.messageId === 'string'
+  ) {
+    return new MessageSubject(subject.did, subject.messageId)
+  }
+
   throw new InvalidRequestError('Invalid subject')
 }
 
@@ -42,6 +51,11 @@ export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
       row.subjectCid,
       row.subjectBlobCids ?? [],
     )
+  } else if (
+    row.subjectType === 'chat.bsky.convo.defs#messageRef' &&
+    row.subjectMessageId
+  ) {
+    return new MessageSubject(row.subjectDid, row.subjectMessageId)
   } else {
     return new RepoSubject(row.subjectDid)
   }
@@ -61,11 +75,15 @@ export const subjectFromStatusRow = (
 }
 
 type SubjectInfo = {
-  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
+  subjectType:
+    | 'com.atproto.admin.defs#repoRef'
+    | 'com.atproto.repo.strongRef'
+    | 'chat.bsky.convo.defs#messageRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   subjectBlobCids: string[] | null
+  subjectMessageId: string | null
 }
 
 export interface ModSubject {
@@ -74,8 +92,9 @@ export interface ModSubject {
   blobCids?: string[]
   isRepo(): this is RepoSubject
   isRecord(): this is RecordSubject
+  isMessage(): this is MessageSubject
   info(): SubjectInfo
-  lex(): RepoRef | StrongRef
+  lex(): RepoRef | StrongRef | MessageRef
 }
 
 export class RepoSubject implements ModSubject {
@@ -88,6 +107,9 @@ export class RepoSubject implements ModSubject {
   isRecord() {
     return false
   }
+  isMessage() {
+    return false
+  }
   info() {
     return {
       subjectType: 'com.atproto.admin.defs#repoRef' as const,
@@ -95,6 +117,7 @@ export class RepoSubject implements ModSubject {
       subjectUri: null,
       subjectCid: null,
       subjectBlobCids: null,
+      subjectMessageId: null,
     }
   }
   lex(): RepoRef {
@@ -124,6 +147,9 @@ export class RecordSubject implements ModSubject {
   isRecord() {
     return true
   }
+  isMessage() {
+    return false
+  }
   info() {
     return {
       subjectType: 'com.atproto.repo.strongRef' as const,
@@ -131,6 +157,7 @@ export class RecordSubject implements ModSubject {
       subjectUri: this.uri,
       subjectCid: this.cid,
       subjectBlobCids: this.blobCids ?? [],
+      subjectMessageId: null,
     }
   }
   lex(): StrongRef {
@@ -138,6 +165,41 @@ export class RecordSubject implements ModSubject {
       $type: 'com.atproto.repo.strongRef',
       uri: this.uri,
       cid: this.cid,
+    }
+  }
+}
+
+export class MessageSubject implements ModSubject {
+  blobCids = undefined
+  recordPath = undefined
+  constructor(
+    public did: string,
+    public messageId: string,
+  ) {}
+  isRepo() {
+    return false
+  }
+  isRecord() {
+    return false
+  }
+  isMessage() {
+    return true
+  }
+  info() {
+    return {
+      subjectType: 'chat.bsky.convo.defs#messageRef' as const,
+      subjectDid: this.did,
+      subjectUri: null,
+      subjectCid: null,
+      subjectBlobCids: null,
+      subjectMessageId: this.messageId,
+    }
+  }
+  lex(): MessageRef {
+    return {
+      $type: 'chat.bsky.convo.defs#messageRef',
+      did: this.did,
+      messageId: this.messageId,
     }
   }
 }
