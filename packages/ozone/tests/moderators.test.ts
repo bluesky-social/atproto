@@ -1,9 +1,4 @@
-import {
-  ModeratorClient,
-  SeedClient,
-  TestNetwork,
-  basicSeed,
-} from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { forSnapshot } from './_util'
 
@@ -11,9 +6,7 @@ describe('moderator management', () => {
   let network: TestNetwork
   let adminAgent: AtpAgent
   let triageAgent: AtpAgent
-  let ozone: AtpAgent
   let sc: SeedClient
-  let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -21,8 +14,6 @@ describe('moderator management', () => {
     })
     adminAgent = network.pds.getClient()
     sc = network.getSeedClient()
-    modClient = network.ozone.getModClient()
-    ozone = network.ozone.getClient()
     await basicSeed(sc)
     await network.processAll()
 
@@ -55,11 +46,15 @@ describe('moderator management', () => {
       expect(forSnapshot(forAdmin)).toMatchSnapshot()
       expect(forSnapshot(forTriage)).toMatchSnapshot()
       // Validate that the list looks the same to both admin and triage mods
+
       expect(forAdmin.users.length).toEqual(forTriage.users.length)
     })
   })
   describe('deleteUser', () => {
     it('only allows admins to delete users', async () => {
+      const {
+        data: { users: initialUsers },
+      } = await adminAgent.api.tools.ozone.moderator.listUsers({})
       await expect(
         triageAgent.api.tools.ozone.moderator.deleteUser({
           did: sc.dids.bob,
@@ -70,11 +65,11 @@ describe('moderator management', () => {
         did: sc.dids.bob,
       })
       const {
-        data: { users },
+        data: { users: usersAfterDelete },
       } = await adminAgent.api.tools.ozone.moderator.listUsers({})
 
-      expect(users.length).toEqual(2)
-      expect(users.map(({ did }) => did)).not.toContain(sc.dids.bob)
+      expect(usersAfterDelete.length).toEqual(initialUsers.length - 1)
+      expect(usersAfterDelete.map(({ did }) => did)).not.toContain(sc.dids.bob)
     })
 
     it('throws error when trying to remove non-existent user', async () => {
@@ -85,6 +80,26 @@ describe('moderator management', () => {
       ).rejects.toThrow('moderator not found')
     })
     it('throws error when trying to remove the last admin user', async () => {
+      console.log('here')
+      const {
+        data: { users },
+      } = await adminAgent.api.tools.ozone.moderator.listUsers({})
+      const didsToBeRemoved: string[] = []
+      users.forEach(({ did, role }) => {
+        if (role.includes('Admin') && did !== sc.dids.alice) {
+          didsToBeRemoved.push(did)
+        }
+      })
+
+      // Remove all admins and leave only one
+      await Promise.all(
+        didsToBeRemoved.map((did) => {
+          return network.ozone.ctx
+            .moderatorService(network.ozone.ctx.db)
+            .delete(did)
+        }),
+      )
+
       await expect(
         adminAgent.api.tools.ozone.moderator.deleteUser({
           did: sc.dids.alice,

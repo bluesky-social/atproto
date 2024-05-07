@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a user from moderator's list in the ozone service.",
+      "description": "Delete a user from moderator's list in the ozone service. Requires admin role.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -21,7 +21,7 @@
           "description": "The user being deleted is not a moderator"
         },
         {
-          "name": "LastAdmin",
+          "name": "OnlyRemainingAdmin",
           "description": "There must always be at least one moderator with admin access"
         }
       ]

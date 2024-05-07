@@ -99,7 +99,7 @@ export class ModeratorService {
     const otherAdminsExist = await this.areThereOtherAdmins(did)
 
     if (!otherAdminsExist) {
-      throw new InvalidRequestError('last admin', 'LastAdmin')
+      throw new InvalidRequestError('last admin', 'OnlyRemainingAdmin')
     }
 
     const userExists = await this.doesUserExist(did)

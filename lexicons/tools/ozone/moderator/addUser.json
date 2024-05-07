@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a user as moderator in the ozone service.",
+      "description": "Add a user as moderator in the ozone service. Requires admin role.",
       "input": {
         "encoding": "application/json",
         "schema": {
