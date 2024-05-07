@@ -9,7 +9,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createIndex('moderation_event_message_id_index')
     .on('moderation_event')
-    .column('messageId')
+    .column('subjectMessageId')
     .execute()
 }
 
