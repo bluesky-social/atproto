@@ -34,6 +34,8 @@ const defaultService = (
     case ids.ToolsOzoneModerationQueryEvents:
     case ids.ToolsOzoneModerationQueryStatuses:
     case ids.ToolsOzoneModerationSearchRepos:
+    case ids.ChatBskyModerationGetActorMetadata:
+    case ids.ChatBskyModerationGetMessageContext:
       return ctx.cfg.modService
     case ids.ComAtprotoModerationCreateReport:
       return ctx.cfg.reportService
