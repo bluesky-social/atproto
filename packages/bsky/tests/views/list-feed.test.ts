@@ -1,6 +1,11 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
+import {
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+  stripViewerFromPost,
+} from '../_util'
 
 describe('list feed views', () => {
   let network: TestNetwork
@@ -94,6 +99,9 @@ describe('list feed views', () => {
           result.reply = {
             parent: stripViewerFromPost(item.reply.parent),
             root: stripViewerFromPost(item.reply.root),
+            grandparentAuthor:
+              item.reply.grandparentAuthor &&
+              stripViewer(item.reply.grandparentAuthor),
           }
         }
         return result

@@ -55,7 +55,7 @@ import { ParsedLabelers } from '../util'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
-  viewer = this.vals.viewer
+  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
   constructor(private vals: HydrateCtxVals) {}
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
@@ -395,7 +395,7 @@ export class Hydrator {
   }
 
   // app.bsky.feed.defs#feedViewPost
-  // - post (+ replies)
+  // - post (+ replies w/ reply parent author)
   //   - profile
   //     - list basic
   //   - list
@@ -413,22 +413,46 @@ export class Hydrator {
     items: FeedItem[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const postUris = items.map((item) => item.post.uri)
-    const repostUris = mapDefined(items, (item) => item.repost?.uri)
-    const [posts, reposts, repostProfileState] = await Promise.all([
-      this.feed.getPosts(postUris, ctx.includeTakedowns),
-      this.feed.getReposts(repostUris, ctx.includeTakedowns),
-      this.hydrateProfiles(repostUris.map(didFromUri), ctx),
-    ])
+    // get posts, collect reply refs
+    const posts = await this.feed.getPosts(
+      items.map((item) => item.post.uri),
+      ctx.includeTakedowns,
+    )
+    const rootUris: string[] = []
+    const parentUris: string[] = []
     const postAndReplyRefs: ItemRef[] = []
     posts.forEach((post, uri) => {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
       if (post.record.reply) {
+        rootUris.push(post.record.reply.root.uri)
+        parentUris.push(post.record.reply.parent.uri)
         postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
       }
     })
-    const postState = await this.hydratePosts(postAndReplyRefs, ctx, { posts })
+    // get replies, collect reply parent authors
+    const replies = await this.feed.getPosts(
+      [...rootUris, ...parentUris],
+      ctx.includeTakedowns,
+    )
+    const replyParentAuthors: string[] = []
+    parentUris.forEach((uri) => {
+      const parent = replies.get(uri)
+      if (!parent?.record.reply) return
+      replyParentAuthors.push(didFromUri(parent.record.reply.parent.uri))
+    })
+    // hydrate state for all posts, reposts, authors of reposts + reply parent authors
+    const repostUris = mapDefined(items, (item) => item.repost?.uri)
+    const [postState, repostProfileState, reposts] = await Promise.all([
+      this.hydratePosts(postAndReplyRefs, ctx, {
+        posts: posts.merge(replies), // avoids refetches of posts
+      }),
+      this.hydrateProfiles(
+        [...repostUris.map(didFromUri), ...replyParentAuthors],
+        ctx,
+      ),
+      this.feed.getReposts(repostUris, ctx.includeTakedowns),
+    ])
     return mergeManyStates(postState, repostProfileState, {
       reposts,
       ctx,
@@ -683,6 +707,12 @@ export class Hydrator {
       includeTakedowns: vals.includeTakedowns,
     })
   }
+}
+
+// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
+const serviceRefToDid = (serviceRef: string) => {
+  const idx = serviceRef.indexOf('#')
+  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
 }
 
 const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {

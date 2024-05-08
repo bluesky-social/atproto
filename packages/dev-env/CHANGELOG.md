@@ -1,5 +1,45 @@
 # @atproto/dev-env
 
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies [[`58f719cc1`](https://github.com/bluesky-social/atproto/commit/58f719cc1c8d0ebd5ad7cf11221372b671cd7857)]:
+  - @atproto/api@0.12.8
+  - @atproto/bsky@0.0.50
+  - @atproto/ozone@0.1.12
+  - @atproto/pds@0.4.19
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [[`58551bbe0`](https://github.com/bluesky-social/atproto/commit/58551bbe0595462c44fc3b6ab5b83e520f141933)]:
+  - @atproto/ozone@0.1.11
+  - @atproto/api@0.12.7
+  - @atproto/pds@0.4.18
+  - @atproto/bsky@0.0.49
+
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [[`b9b7c5821`](https://github.com/bluesky-social/atproto/commit/b9b7c582199d57d2fe0af8af5c8c411ed34f5b9d)]:
+  - @atproto/api@0.12.6
+  - @atproto/bsky@0.0.48
+  - @atproto/ozone@0.1.10
+  - @atproto/pds@0.4.17
+
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [[`3424a1770`](https://github.com/bluesky-social/atproto/commit/3424a17703891f5678ec76ef97e696afb3288b22)]:
+  - @atproto/api@0.12.5
+  - @atproto/bsky@0.0.47
+  - @atproto/ozone@0.1.9
+  - @atproto/pds@0.4.16
+
 ## 0.3.6
 
 ### Patch Changes

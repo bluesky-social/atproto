@@ -7,6 +7,7 @@ export interface ServerConfigValues {
   port?: number
   publicUrl?: string
   serverDid: string
+  alternateAudienceDids: string[]
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -48,6 +49,9 @@ export class ServerConfig {
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
+    const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
+      ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
+      : []
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
@@ -104,6 +108,7 @@ export class ServerConfig {
       port,
       publicUrl,
       serverDid,
+      alternateAudienceDids,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
@@ -162,6 +167,10 @@ export class ServerConfig {
 
   get serverDid() {
     return this.cfg.serverDid
+  }
+
+  get alternateAudienceDids() {
+    return this.cfg.alternateAudienceDids
   }
 
   get dataplaneUrls() {

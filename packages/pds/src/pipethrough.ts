@@ -59,6 +59,7 @@ const REQ_HEADERS_TO_FORWARD = [
   'accept-language',
   'content-type',
   'atproto-accept-labelers',
+  'x-bsky-topics',
 ]
 
 export const createUrlAndHeaders = async (

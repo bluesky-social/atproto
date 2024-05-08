@@ -26,10 +26,16 @@ const run = async () => {
       publicUrl: 'http://localhost:2584',
     },
     plc: { port: 2582 },
+    introspect: { port: 2581 },
   })
   mockMailer(network.pds)
   await generateMockSetup(network)
 
+  if (network.introspect) {
+    console.log(
+      `🔍 Dev-env introspection server started http://localhost:${network.introspect.port}`,
+    )
+  }
   console.log(
     `👤 DID Placeholder server started http://localhost:${network.plc.port}`,
   )
@@ -37,6 +43,7 @@ const run = async () => {
     `🌞 Personal Data server started http://localhost:${network.pds.port}`,
   )
   console.log(`🗼 Ozone server started http://localhost:${network.ozone.port}`)
+  console.log(`🗼 Ozone service DID ${network.ozone.ctx.cfg.service.did}`)
   console.log(`🌅 Bsky Appview started http://localhost:${network.bsky.port}`)
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator started http://localhost:${fg.port}`)

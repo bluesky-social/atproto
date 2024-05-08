@@ -21,8 +21,10 @@ export interface InputSchema {
     | ToolsOzoneModerationDefs.ModEventLabel
     | ToolsOzoneModerationDefs.ModEventReport
     | ToolsOzoneModerationDefs.ModEventMute
-    | ToolsOzoneModerationDefs.ModEventReverseTakedown
     | ToolsOzoneModerationDefs.ModEventUnmute
+    | ToolsOzoneModerationDefs.ModEventMuteReporter
+    | ToolsOzoneModerationDefs.ModEventUnmuteReporter
+    | ToolsOzoneModerationDefs.ModEventReverseTakedown
     | ToolsOzoneModerationDefs.ModEventEmail
     | ToolsOzoneModerationDefs.ModEventTag
     | { $type: string; [k: string]: unknown }

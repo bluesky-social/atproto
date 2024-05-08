@@ -1,5 +1,31 @@
 # @atproto/api
 
+## 0.12.8
+
+### Patch Changes
+
+- [`58f719cc1`](https://github.com/bluesky-social/atproto/commit/58f719cc1c8d0ebd5ad7cf11221372b671cd7857) Thanks [@devinivy](https://github.com/devinivy)! - Add grandparent author to feed item reply ref
+
+## 0.12.7
+
+### Patch Changes
+
+- [#2390](https://github.com/bluesky-social/atproto/pull/2390) [`58551bbe0`](https://github.com/bluesky-social/atproto/commit/58551bbe0595462c44fc3b6ab5b83e520f141933) Thanks [@foysalit](https://github.com/foysalit)! - Allow muting reports from accounts via `#modEventMuteReporter` event
+
+## 0.12.6
+
+### Patch Changes
+
+- [#2427](https://github.com/bluesky-social/atproto/pull/2427) [`b9b7c5821`](https://github.com/bluesky-social/atproto/commit/b9b7c582199d57d2fe0af8af5c8c411ed34f5b9d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Introduces V2 of saved feeds preferences. V2 and v1 prefs are incompatible. v1
+  methods and preference objects are retained for backwards compatability, but are
+  considered deprecated. Developers should immediately migrate to v2 interfaces.
+
+## 0.12.5
+
+### Patch Changes
+
+- [#2419](https://github.com/bluesky-social/atproto/pull/2419) [`3424a1770`](https://github.com/bluesky-social/atproto/commit/3424a17703891f5678ec76ef97e696afb3288b22) Thanks [@pfrazee](https://github.com/pfrazee)! - Add authFactorToken to session objects
+
 ## 0.12.4
 
 ### Patch Changes
