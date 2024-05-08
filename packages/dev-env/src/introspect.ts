@@ -48,14 +48,6 @@ export class IntrospectServer {
   }
 
   async close() {
-    return new Promise<void>((resolve, reject) => {
-      this.server.close((err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
-      })
-    })
-  }
+    this.server.close()
+    await events.once(this.server, 'close')
 }
