@@ -110,7 +110,11 @@ export class Views {
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
-        labeler: actor?.isLabeler,
+        labeler: actor.isLabeler,
+        // @TODO apply default chat policy?
+        chat: actor.allowIncomingChatsFrom
+          ? { allowIncoming: actor.allowIncomingChatsFrom }
+          : undefined,
       },
     }
   }
@@ -160,7 +164,16 @@ export class Views {
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
-      associated: actor?.isLabeler ? { labeler: true } : undefined,
+      associated:
+        actor.isLabeler || actor.allowIncomingChatsFrom
+          ? {
+              labeler: actor.isLabeler ? true : undefined,
+              // @TODO apply default chat policy?
+              chat: actor.allowIncomingChatsFrom
+                ? { allowIncoming: actor.allowIncomingChatsFrom }
+                : undefined,
+            }
+          : undefined,
       viewer: this.profileViewer(did, state),
       labels,
     }

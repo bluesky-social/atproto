@@ -4,6 +4,7 @@ import { keyBy } from '@atproto/common'
 import { getRecords } from './records'
 import { Database } from '../db'
 import { sql } from 'kysely'
+import { parseRecordBytes } from '../../../hydration/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActors(req) {
@@ -14,8 +15,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const profileUris = dids.map(
       (did) => `at://${did}/app.bsky.actor.profile/self`,
     )
+    const chatDeclarationUris = dids.map(
+      (did) => `at://${did}/chat.bsky.actor.declaration/self`,
+    )
     const { ref } = db.db.dynamic
-    const [handlesRes, profiles] = await Promise.all([
+    const [handlesRes, profiles, chatDeclarations] = await Promise.all([
       db.db
         .selectFrom('actor')
         .where('did', 'in', dids)
@@ -29,10 +33,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         ])
         .execute(),
       getRecords(db)({ uris: profileUris }),
+      getRecords(db)({ uris: chatDeclarationUris }),
     ])
     const byDid = keyBy(handlesRes, 'did')
     const actors = dids.map((did, i) => {
       const row = byDid[did]
+      const chatDeclaration = parseRecordBytes(
+        chatDeclarations.records[i].record,
+      )
       return {
         exists: !!row,
         handle: row?.handle ?? undefined,
@@ -41,6 +49,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         takedownRef: row?.takedownRef || undefined,
         tombstonedAt: undefined, // in current implementation, tombstoned actors are deleted
         labeler: row?.isLabeler ?? false,
+        allowIncomingChatsFrom:
+          typeof chatDeclaration?.['allowIncoming'] === 'string'
+            ? chatDeclaration['allowIncoming']
+            : undefined,
       }
     })
     return { actors }

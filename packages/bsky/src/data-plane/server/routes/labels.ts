@@ -43,4 +43,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     return { labels }
   },
+
+  async getAllLabelers() {
+    throw new Error('not implemented')
+  },
 })

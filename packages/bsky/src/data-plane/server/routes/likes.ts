@@ -5,7 +5,7 @@ import { TimeCidKeyset, paginate } from '../db/pagination'
 import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getLikesBySubject(req) {
+  async getLikesBySubjectSorted(req) {
     const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 
@@ -32,6 +32,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       uris: likes.map((l) => l.uri),
       cursor: keyset.packFromResult(likes),
     }
+  },
+
+  async getLikesBySubject(_req) {
+    throw new Error('deprecated in favor of getLikesBySubjectSorted')
   },
 
   async getLikesByActorAndSubjects(req) {
