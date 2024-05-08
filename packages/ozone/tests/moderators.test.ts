@@ -43,8 +43,8 @@ describe('moderator management', () => {
           return triageAgent.api.tools.ozone.moderator.listUsers({})
         })(),
       ])
-      expect(forSnapshot(forAdmin)).toMatchSnapshot()
-      expect(forSnapshot(forTriage)).toMatchSnapshot()
+      expect(forSnapshot(forAdmin.users)).toMatchSnapshot()
+      expect(forSnapshot(forTriage.users)).toMatchSnapshot()
       // Validate that the list looks the same to both admin and triage mods
 
       expect(forAdmin.users.length).toEqual(forTriage.users.length)
@@ -80,7 +80,6 @@ describe('moderator management', () => {
       ).rejects.toThrow('moderator not found')
     })
     it('throws error when trying to remove the last admin user', async () => {
-      console.log('here')
       const {
         data: { users },
       } = await adminAgent.api.tools.ozone.moderator.listUsers({})
