@@ -58,6 +58,7 @@ export class TestBsky {
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,
+      alternateAudienceDids: [],
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
       bsyncUrl: `http://localhost:${bsyncPort}`,

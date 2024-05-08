@@ -68,6 +68,11 @@
         "parent": {
           "type": "union",
           "refs": ["#postView", "#notFoundPost", "#blockedPost"]
+        },
+        "grandparentAuthor": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic",
+          "description": "When parent is a reply to another post, this is the author of that post."
         }
       }
     },
