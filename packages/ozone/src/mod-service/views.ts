@@ -343,7 +343,7 @@ export class ModerationViews {
     const {
       data: { labels },
     } = await this.appviewAgent.api.com.atproto.label.queryLabels(
-      { uriPatterns: subjects },
+      { uriPatterns: subjects, sources: labelers.dids },
       auth,
     )
 
