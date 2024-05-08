@@ -2,6 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { User } from '../../lexicon/types/tools/ozone/moderator/defs'
+import { getUserRole } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderator.updateUser({
@@ -29,9 +30,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const newUser = await moderatorService.update(did, {
         disabled,
-        //   @ts-ignore
-        //   TODO: types?
-        role: role as User['role'],
+        role: getUserRole(role),
         lastUpdatedBy: access.iss,
       })
 

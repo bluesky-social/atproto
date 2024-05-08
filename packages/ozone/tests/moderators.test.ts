@@ -113,21 +113,21 @@ describe('moderator management', () => {
         triageAgent.api.tools.ozone.moderator.updateUser({
           disabled: false,
           did: sc.dids.carol,
-          role: 'tools.ozone.moderator.updateUser#modRoleAdmin',
+          role: 'tools.ozone.moderator.defs#modRoleAdmin',
         }),
       ).rejects.toThrow('Must be an admin to update a moderator user')
 
       await adminAgent.api.tools.ozone.moderator.updateUser({
         disabled: true,
         did: sc.dids.carol,
-        role: 'tools.ozone.moderator.updateUser#modRoleAdmin',
+        role: 'tools.ozone.moderator.defs#modRoleAdmin',
       })
       const {
         data: { users },
       } = await adminAgent.api.tools.ozone.moderator.listUsers({})
 
       expect(users.find(({ did }) => did === sc.dids.carol)?.role).toEqual(
-        'tools.ozone.moderator.updateUser#modRoleAdmin',
+        'tools.ozone.moderator.defs#modRoleAdmin',
       )
     })
     it('throws error when trying to update non-existent user', async () => {
@@ -135,7 +135,7 @@ describe('moderator management', () => {
         adminAgent.api.tools.ozone.moderator.updateUser({
           disabled: false,
           did: 'did:plc:test',
-          role: 'tools.ozone.moderator.updateUser#modRoleAdmin',
+          role: 'tools.ozone.moderator.defs#modRoleAdmin',
         }),
       ).rejects.toThrow('moderator not found')
     })

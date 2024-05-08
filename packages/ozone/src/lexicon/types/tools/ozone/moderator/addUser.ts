@@ -14,9 +14,9 @@ export interface QueryParams {}
 export interface InputSchema {
   did: string
   role:
-    | 'lex:tools.ozone.moderator.addUser#modRoleAdmin'
-    | 'lex:tools.ozone.moderator.addUser#modRoleModerator'
-    | 'lex:tools.ozone.moderator.addUser#modRoleTriage'
+    | 'tools.ozone.moderator.defs#modRoleAdmin'
+    | 'tools.ozone.moderator.defs#modRoleModerator'
+    | 'tools.ozone.moderator.defs#modRoleTriage'
     | (string & {})
   [k: string]: unknown
 }

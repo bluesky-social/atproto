@@ -10,8 +10,8 @@ export interface Moderator {
     | 'tools.ozone.moderator.defs#modRoleTriage'
     | 'tools.ozone.moderator.defs#modRoleModerator'
   disabled: Generated<boolean>
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
   lastUpdatedBy: string
 }
 

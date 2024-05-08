@@ -15,9 +15,9 @@ export interface InputSchema {
   did: string
   disabled: boolean
   role:
-    | 'lex:tools.ozone.moderator.updateUser#modRoleAdmin'
-    | 'lex:tools.ozone.moderator.updateUser#modRoleModerator'
-    | 'lex:tools.ozone.moderator.updateUser#modRoleTriage'
+    | 'tools.ozone.moderator.defs#modRoleAdmin'
+    | 'tools.ozone.moderator.defs#modRoleModerator'
+    | 'tools.ozone.moderator.defs#modRoleTriage'
     | (string & {})
   [k: string]: unknown
 }

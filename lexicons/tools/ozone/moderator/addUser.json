@@ -15,9 +15,9 @@
             "role": {
               "type": "string",
               "knownValues": [
-                "#modRoleAdmin",
-                "#modRoleModerator",
-                "#modRoleTriage"
+                "tools.ozone.moderator.defs#modRoleAdmin",
+                "tools.ozone.moderator.defs#modRoleModerator",
+                "tools.ozone.moderator.defs#modRoleTriage"
               ]
             }
           }

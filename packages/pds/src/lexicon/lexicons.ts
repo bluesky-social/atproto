@@ -9617,7 +9617,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Add a user as moderator in the ozone service.',
+        description:
+          'Add a user as moderator in the ozone service. Requires admin role.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -9631,9 +9632,9 @@ export const schemaDict = {
               role: {
                 type: 'string',
                 knownValues: [
-                  'lex:tools.ozone.moderator.addUser#modRoleAdmin',
-                  'lex:tools.ozone.moderator.addUser#modRoleModerator',
-                  'lex:tools.ozone.moderator.addUser#modRoleTriage',
+                  'tools.ozone.moderator.defs#modRoleAdmin',
+                  'tools.ozone.moderator.defs#modRoleModerator',
+                  'tools.ozone.moderator.defs#modRoleTriage',
                 ],
               },
             },
@@ -9711,7 +9712,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "Delete a user from moderator's list in the ozone service.",
+          "Delete a user from moderator's list in the ozone service. Requires admin role.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -9731,7 +9732,7 @@ export const schemaDict = {
             description: 'The user being deleted is not a moderator',
           },
           {
-            name: 'LastAdmin',
+            name: 'OnlyRemainingAdmin',
             description:
               'There must always be at least one moderator with admin access',
           },
@@ -9745,7 +9746,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'List all users with access to the ozone service.',
+        description:
+          'List all users with access to the ozone service. Any ozone user can access this endpoint.',
         parameters: {
           type: 'params',
           properties: {
@@ -9788,7 +9790,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Update a moderator user in the ozone service.',
+        description:
+          'Update a moderator user in the ozone service. Requires admin role.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -9805,9 +9808,9 @@ export const schemaDict = {
               role: {
                 type: 'string',
                 knownValues: [
-                  'lex:tools.ozone.moderator.updateUser#modRoleAdmin',
-                  'lex:tools.ozone.moderator.updateUser#modRoleModerator',
-                  'lex:tools.ozone.moderator.updateUser#modRoleTriage',
+                  'tools.ozone.moderator.defs#modRoleAdmin',
+                  'tools.ozone.moderator.defs#modRoleModerator',
+                  'tools.ozone.moderator.defs#modRoleTriage',
                 ],
               },
             },

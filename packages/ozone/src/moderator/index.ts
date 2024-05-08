@@ -3,6 +3,7 @@ import { Selectable } from 'kysely'
 import { Moderator } from '../db/schema/moderator'
 import { User } from '../lexicon/types/tools/ozone/moderator/defs'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { paginate, TimeIdKeyset } from '../db/pagination'
 
 export type ModeratorServiceCreator = (db: Database) => ModeratorService
 
@@ -13,11 +14,23 @@ export class ModeratorService {
     return (db: Database) => new ModeratorService(db)
   }
 
-  //   TODO: Implement cursor-based pagination here
-  async list(): Promise<Selectable<Moderator>[]> {
-    const list = await this.db.db.selectFrom('moderator').selectAll().execute()
+  async list({
+    cursor,
+    limit = 25,
+  }: {
+    cursor?: string
+    limit?: number
+  }): Promise<{ users: Selectable<Moderator>[]; cursor?: string }> {
+    const { ref } = this.db.db.dynamic
+    const keyset = new TimeIdKeyset(
+      ref(`moderator.createdAt`),
+      ref('moderator.id'),
+    )
+    const builder = this.db.db.selectFrom('moderator').selectAll()
+    const paginatedBuilder = paginate(builder, { cursor, limit, keyset })
+    const users = await paginatedBuilder.execute()
 
-    return list
+    return { users, cursor: keyset.packFromResult(users) }
   }
 
   async create({
@@ -28,8 +41,8 @@ export class ModeratorService {
     createdAt,
     lastUpdatedBy,
   }: Omit<Selectable<Moderator>, 'id' | 'createdAt' | 'updatedAt'> & {
-    createdAt?: Date
-    updatedAt?: Date
+    createdAt?: string
+    updatedAt?: string
   }): Promise<Selectable<Moderator>> {
     const newModerator = await this.db.db
       .insertInto('moderator')
@@ -38,8 +51,8 @@ export class ModeratorService {
         did,
         disabled,
         lastUpdatedBy,
-        updatedAt: updatedAt || new Date(),
-        createdAt: createdAt || new Date(),
+        updatedAt: updatedAt || new Date().toISOString(),
+        createdAt: createdAt || new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -62,8 +75,8 @@ export class ModeratorService {
         did,
         lastUpdatedBy,
         disabled: false,
-        updatedAt: new Date(),
-        createdAt: new Date(),
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.column('did').doUpdateSet({ role }))
       .execute()
@@ -83,7 +96,7 @@ export class ModeratorService {
       .where('did', '=', did)
       .set({
         ...updates,
-        updatedAt: updates.updatedAt || new Date(),
+        updatedAt: updates.updatedAt || new Date().toISOString(),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -162,8 +175,8 @@ export class ModeratorService {
       did: moderator.did,
       role: moderator.role,
       disabled: moderator.disabled,
-      createdAt: moderator.createdAt.toISOString(),
-      updatedAt: moderator.updatedAt.toISOString(),
+      createdAt: moderator.createdAt,
+      updatedAt: moderator.updatedAt,
       lastUpdatedBy: moderator.lastUpdatedBy,
     }
   }
