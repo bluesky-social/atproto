@@ -92,6 +92,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
+    "creatorHandle": "mod-authority.test",
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
@@ -153,6 +154,7 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
+    "creatorHandle": "mod-authority.test",
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [

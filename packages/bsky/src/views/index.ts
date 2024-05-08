@@ -16,10 +16,12 @@ import {
   NotFoundPost,
   PostView,
   ReasonRepost,
+  ReplyRef,
   ThreadViewPost,
   ThreadgateView,
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
+import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
@@ -334,7 +336,7 @@ export class Views {
     originatorBlocked: boolean
     authorMuted: boolean
     authorBlocked: boolean
-    parentAuthorBlocked: boolean
+    ancestorAuthorBlocked: boolean
   } {
     const authorDid = creatorFromUri(item.post.uri)
     const originatorDid = item.repost
@@ -343,14 +345,19 @@ export class Views {
     const post = state.posts?.get(item.post.uri)
     const parentUri = post?.record.reply?.parent.uri
     const parentAuthorDid = parentUri && creatorFromUri(parentUri)
+    const parent = parentUri ? state.posts?.get(parentUri) : undefined
+    const grandparentUri = parent?.record.reply?.parent.uri
+    const grandparentAuthorDid =
+      grandparentUri && creatorFromUri(grandparentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
-      parentAuthorBlocked: parentAuthorDid
-        ? this.viewerBlockExists(parentAuthorDid, state)
-        : false,
+      ancestorAuthorBlocked:
+        (!!parentAuthorDid && this.viewerBlockExists(parentAuthorDid, state)) ||
+        (!!grandparentAuthorDid &&
+          this.viewerBlockExists(grandparentAuthorDid, state)),
     }
   }
 
@@ -477,7 +484,7 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState) {
+  replyRef(uri: string, state: HydrationState): ReplyRef | undefined {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
@@ -489,7 +496,18 @@ export class Views {
         root = parent
       }
     }
-    return root && parent ? { root, parent } : undefined
+    let grandparentAuthor: ProfileViewBasic | undefined
+    if (isPostRecord(parent.record) && parent.record.reply) {
+      grandparentAuthor = this.profileBasic(
+        creatorFromUri(parent.record.reply.parent.uri),
+        state,
+      )
+    }
+    return {
+      root,
+      parent,
+      grandparentAuthor,
+    }
   }
 
   maybePost(uri: string, state: HydrationState): MaybePostView {

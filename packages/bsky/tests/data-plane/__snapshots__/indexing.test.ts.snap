@@ -86,6 +86,15 @@ Array [
           "viewer": Object {},
         },
         "reply": Object {
+          "grandparentAuthor": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
+          },
           "parent": Object {
             "$type": "app.bsky.feed.defs#postView",
             "author": Object {

@@ -26,7 +26,6 @@ export interface InputSchema {
     | ToolsOzoneModerationDefs.ModEventMuteReporter
     | ToolsOzoneModerationDefs.ModEventUnmuteReporter
     | ToolsOzoneModerationDefs.ModEventReverseTakedown
-    | ToolsOzoneModerationDefs.ModEventUnmute
     | ToolsOzoneModerationDefs.ModEventEmail
     | ToolsOzoneModerationDefs.ModEventTag
     | { $type: string; [k: string]: unknown }

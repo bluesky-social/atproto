@@ -1,6 +1,11 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
+import {
+  forSnapshot,
+  paginateAll,
+  stripViewer,
+  stripViewerFromPost,
+} from '../_util'
 import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
@@ -132,6 +137,9 @@ describe('pds author feed views', () => {
           result.reply = {
             parent: stripViewerFromPost(item.reply.parent),
             root: stripViewerFromPost(item.reply.root),
+            grandparentAuthor:
+              item.reply.grandparentAuthor &&
+              stripViewer(item.reply.grandparentAuthor),
           }
         }
         return result
