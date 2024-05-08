@@ -12,6 +12,7 @@ import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { EXAMPLE_LABELER } from './const'
+import { IntrospectServer } from './introspect'
 
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
@@ -22,6 +23,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     public pds: TestPds,
     public bsky: TestBsky,
     public ozone: TestOzone,
+    public introspect?: IntrospectServer,
   ) {
     super(plc, pds)
   }
@@ -85,7 +87,18 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     mockNetworkUtilities(pds, bsky)
 
-    return new TestNetwork(plc, pds, bsky, ozone)
+    let introspect: IntrospectServer | undefined = undefined
+    if (params.introspect?.port) {
+      introspect = await IntrospectServer.start(
+        params.introspect.port,
+        plc,
+        pds,
+        bsky,
+        ozone,
+      )
+    }
+
+    return new TestNetwork(plc, pds, bsky, ozone, introspect)
   }
 
   async processFullSubscription(timeout = 5000) {
@@ -144,5 +157,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.bsky.close()
     await this.pds.close()
     await this.plc.close()
+    await this.introspect?.close()
   }
 }
