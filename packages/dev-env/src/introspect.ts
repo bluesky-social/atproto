@@ -50,4 +50,5 @@ export class IntrospectServer {
   async close() {
     this.server.close()
     await events.once(this.server, 'close')
+  }
 }
