@@ -6,7 +6,12 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import {
+  RateLimiter,
+  RateLimiterCreator,
+  RateLimiterOpts,
+  createServiceAuthHeaders,
+} from '@atproto/xrpc-server'
 import { ServerConfig, ServerSecrets } from './config'
 import {
   AuthVerifier,
@@ -39,6 +44,7 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
+  ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   appViewAgent?: AtpAgent
   moderationAgent?: AtpAgent
@@ -62,6 +68,7 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
+  public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public appViewAgent: AtpAgent | undefined
   public moderationAgent: AtpAgent | undefined
@@ -84,6 +91,7 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
+    this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.moderationAgent = opts.moderationAgent
@@ -160,6 +168,30 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
+    let ratelimitCreator: RateLimiterCreator | undefined = undefined
+    if (cfg.rateLimits.enabled) {
+      const bypassSecret = cfg.rateLimits.bypassKey
+      const bypassIps = cfg.rateLimits.bypassIps
+      if (cfg.rateLimits.mode === 'redis') {
+        if (!redisScratch) {
+          throw new Error('Redis not set up for ratelimiting mode: `redis`')
+        }
+        ratelimitCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.redis(redisScratch, {
+            bypassSecret,
+            bypassIps,
+            ...opts,
+          })
+      } else {
+        ratelimitCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.memory({
+            bypassSecret,
+            bypassIps,
+            ...opts,
+          })
+      }
+    }
+
     const appViewAgent = cfg.bskyAppView
       ? new AtpAgent({ service: cfg.bskyAppView.url })
       : undefined
@@ -231,6 +263,7 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
+      ratelimitCreator,
       crawlers,
       appViewAgent,
       moderationAgent,
