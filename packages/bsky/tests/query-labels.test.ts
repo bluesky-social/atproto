@@ -66,22 +66,6 @@ describe('label hydration', () => {
     )
   })
 
-  it('returns labels from labelers supplied in header when sources params is empty', async () => {
-    AtpAgent.configure({ appLabelers: [alice, labelerDid] })
-    pdsAgent.configureLabelersHeader([])
-    const { data } = await pdsAgent.api.com.atproto.label.queryLabels(
-      { uriPatterns: [carol] },
-      {
-        headers: sc.getHeaders(bob),
-      },
-    )
-    expect(data.labels?.length).toBe(2)
-    expect(data.labels?.find((l) => l.src === alice)?.val).toEqual('spam')
-    expect(data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
-      'misleading',
-    )
-  })
-
   const createLabel = async (opts: {
     src?: string
     uri: string
