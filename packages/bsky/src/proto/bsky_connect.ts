@@ -16,6 +16,8 @@ import {
   DeleteActorMutelistSubscriptionResponse,
   DeleteActorMuteRequest,
   DeleteActorMuteResponse,
+  GetActorChatDeclarationRecordsRequest,
+  GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
   GetActorFeedsResponse,
   GetActorFollowsActorsRequest,
@@ -34,6 +36,8 @@ import {
   GetActorsResponse,
   GetActorTakedownRequest,
   GetActorTakedownResponse,
+  GetAllLabelersRequest,
+  GetAllLabelersResponse,
   GetAuthorFeedRequest,
   GetAuthorFeedResponse,
   GetBidirectionalBlockRequest,
@@ -64,6 +68,8 @@ import {
   GetFollowersResponse,
   GetFollowRecordsRequest,
   GetFollowRecordsResponse,
+  GetFollowsFollowingRequest,
+  GetFollowsFollowingResponse,
   GetFollowsRequest,
   GetFollowsResponse,
   GetFollowSuggestionsRequest,
@@ -86,6 +92,8 @@ import {
   GetLikesByActorAndSubjectsResponse,
   GetLikesBySubjectRequest,
   GetLikesBySubjectResponse,
+  GetLikesBySubjectSortedRequest,
+  GetLikesBySubjectSortedResponse,
   GetListBlockRecordsRequest,
   GetListBlockRecordsResponse,
   GetListCountRequest,
@@ -257,6 +265,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetActorChatDeclarationRecords
+     */
+    getActorChatDeclarationRecords: {
+      name: 'GetActorChatDeclarationRecords',
+      I: GetActorChatDeclarationRecordsRequest,
+      O: GetActorChatDeclarationRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetRepostRecords
      */
     getRepostRecords: {
@@ -321,6 +338,15 @@ export const Service = {
       name: 'GetLikesBySubject',
       I: GetLikesBySubjectRequest,
       O: GetLikesBySubjectResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetLikesBySubjectSorted
+     */
+    getLikesBySubjectSorted: {
+      name: 'GetLikesBySubjectSorted',
+      I: GetLikesBySubjectSortedRequest,
+      O: GetLikesBySubjectSortedResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -745,6 +771,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetAllLabelers
+     */
+    getAllLabelers: {
+      name: 'GetAllLabelers',
+      I: GetAllLabelersRequest,
+      O: GetAllLabelersResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * Sync
      *
      * @generated from rpc bsky.Service.GetLatestRev
@@ -802,6 +837,17 @@ export const Service = {
       name: 'GetIdentityByHandle',
       I: GetIdentityByHandleRequest,
       O: GetIdentityByHandleResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Graph
+     *
+     * @generated from rpc bsky.Service.GetFollowsFollowing
+     */
+    getFollowsFollowing: {
+      name: 'GetFollowsFollowing',
+      I: GetFollowsFollowingRequest,
+      O: GetFollowsFollowingResponse,
       kind: MethodKind.Unary,
     },
     /**
