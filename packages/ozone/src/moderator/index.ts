@@ -27,7 +27,12 @@ export class ModeratorService {
       ref('moderator.id'),
     )
     const builder = this.db.db.selectFrom('moderator').selectAll()
-    const paginatedBuilder = paginate(builder, { cursor, limit, keyset })
+    const paginatedBuilder = paginate(builder, {
+      cursor,
+      limit,
+      keyset,
+      direction: 'desc',
+    })
     const users = await paginatedBuilder.execute()
 
     return { users, cursor: keyset.packFromResult(users) }
