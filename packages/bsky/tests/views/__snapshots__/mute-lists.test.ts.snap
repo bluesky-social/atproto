@@ -480,6 +480,11 @@ Object {
   "items": Array [
     Object {
       "subject": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],

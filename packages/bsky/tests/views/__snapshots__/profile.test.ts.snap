@@ -81,6 +81,9 @@ Array [
   },
   Object {
     "associated": Object {
+      "chat": Object {
+        "allowIncoming": "none",
+      },
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
@@ -144,6 +147,9 @@ Object {
 exports[`pds profile views fetches other's profile, without a follow 1`] = `
 Object {
   "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
