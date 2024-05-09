@@ -72,10 +72,7 @@ export class Server {
       this.addLexicons(lexicons)
     }
     this.router.use(this.routes)
-    this.router.use(
-      '/xrpc/:methodId',
-      opts?.catchall ?? this.catchall.bind(this),
-    )
+    this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
     this.router.once('mount', (app: Application) => {
       this.enableStreamingOnListen(app)
@@ -186,7 +183,24 @@ export class Server {
     )
   }
 
-  async catchall(req: Request, _res: Response, next: NextFunction) {
+  async catchall(req: Request, res: Response, next: NextFunction) {
+    if (this.globalRateLimiters) {
+      await consumeMany(
+        {
+          req,
+          res,
+          auth: undefined,
+          params: {},
+          input: undefined,
+        },
+        this.globalRateLimiters.map((rl) => rl.consume),
+      )
+    }
+
+    if (this.options.catchall) {
+      return this.options.catchall(req, res, next)
+    }
+
     const def = this.lex.getDef(req.params.methodId)
     if (!def) {
       return next(new MethodNotImplementedError())
