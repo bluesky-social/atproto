@@ -2774,11 +2774,11 @@ export class ChatBskyActorNS {
   }
 
   exportAccountData(
-    data?: ChatBskyActorExportAccountData.InputSchema,
+    params?: ChatBskyActorExportAccountData.QueryParams,
     opts?: ChatBskyActorExportAccountData.CallOptions,
   ): Promise<ChatBskyActorExportAccountData.Response> {
     return this._service.xrpc
-      .call('chat.bsky.actor.exportAccountData', opts?.qp, data, opts)
+      .call('chat.bsky.actor.exportAccountData', params, undefined, opts)
       .catch((e) => {
         throw ChatBskyActorExportAccountData.toKnownErr(e)
       })

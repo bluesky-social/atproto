@@ -8293,7 +8293,7 @@ export const schemaDict = {
     id: 'chat.bsky.actor.exportAccountData',
     defs: {
       main: {
-        type: 'procedure',
+        type: 'query',
         output: {
           encoding: 'application/jsonl',
         },

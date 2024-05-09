@@ -13,7 +13,6 @@ export type InputSchema = undefined
 
 export interface CallOptions {
   headers?: Headers
-  qp?: QueryParams
 }
 
 export interface Response {
