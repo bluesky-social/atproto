@@ -155,7 +155,8 @@ export const makeRequest = async (
     throw new XRPCError(ResponseType.UpstreamFailure)
   }
   if (res.status !== ResponseType.Success) {
-    const ui8Buffer = new Uint8Array(await res.arrayBuffer())
+    const arrBuffer = await readArrayBufferRes(res)
+    const ui8Buffer = new Uint8Array(arrBuffer)
     const errInfo = safeParseJson(ui8.toString(ui8Buffer, 'utf8'))
     throw new XRPCError(
       res.status,
@@ -206,7 +207,7 @@ export const pipeProxyRes = async (
 }
 
 export const parseProxyRes = async (res: Response) => {
-  const buffer = await res.arrayBuffer()
+  const buffer = await readArrayBufferRes(res)
   const encoding = res.headers.get('content-type') ?? 'application/json'
   const resHeaders = RES_HEADERS_TO_FORWARD.reduce(
     (acc, cur) => {
@@ -251,6 +252,15 @@ export const parseRes = <T>(nsid: string, res: HandlerPipeThrough): T => {
   const json = safeParseJson(ui8.toString(buffer, 'utf8'))
   const lex = json && jsonToLex(json)
   return lexicons.assertValidXrpcOutput(nsid, lex) as T
+}
+
+const readArrayBufferRes = async (res: Response): Promise<ArrayBuffer> => {
+  try {
+    return await res.arrayBuffer()
+  } catch (err) {
+    httpLogger.warn({ err }, 'pipethrough network error')
+    throw new XRPCError(ResponseType.UpstreamFailure)
+  }
 }
 
 const isSafeUrl = (url: URL) => {
