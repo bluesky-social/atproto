@@ -129,7 +129,7 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
-import * as ChatBskyConvoDeleteAccount from './types/chat/bsky/convo/deleteAccount'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
@@ -1763,6 +1763,17 @@ export class ChatBskyActorNS {
     this._server = server
   }
 
+  deleteAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyActorDeleteAccount.Handler<ExtractAuth<AV>>,
+      ChatBskyActorDeleteAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   exportAccountData<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1780,17 +1791,6 @@ export class ChatBskyConvoNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  deleteAccount<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ChatBskyConvoDeleteAccount.Handler<ExtractAuth<AV>>,
-      ChatBskyConvoDeleteAccount.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'chat.bsky.convo.deleteAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 
   deleteMessageForSelf<AV extends AuthVerifier>(

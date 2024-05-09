@@ -8272,9 +8272,9 @@ export const schemaDict = {
       },
     },
   },
-  ChatBskyConvoDeleteAccount: {
+  ChatBskyActorDeleteAccount: {
     lexicon: 1,
-    id: 'chat.bsky.convo.deleteAccount',
+    id: 'chat.bsky.actor.deleteAccount',
     defs: {
       main: {
         type: 'procedure',
@@ -10693,7 +10693,7 @@ export const ids = {
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
-  ChatBskyConvoDeleteAccount: 'chat.bsky.convo.deleteAccount',
+  ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
   ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
   ChatBskyConvoDefs: 'chat.bsky.convo.defs',
   ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
