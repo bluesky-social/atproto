@@ -185,16 +185,25 @@ export class Server {
 
   async catchall(req: Request, res: Response, next: NextFunction) {
     if (this.globalRateLimiters) {
-      await consumeMany(
-        {
-          req,
-          res,
-          auth: undefined,
-          params: {},
-          input: undefined,
-        },
-        this.globalRateLimiters.map((rl) => rl.consume),
-      )
+      try {
+        const rlRes = await consumeMany(
+          {
+            req,
+            res,
+            auth: undefined,
+            params: {},
+            input: undefined,
+          },
+          this.globalRateLimiters.map(
+            (rl) => (ctx: XRPCReqContext) => rl.consume(ctx),
+          ),
+        )
+        if (rlRes instanceof RateLimitExceededError) {
+          return next(rlRes)
+        }
+      } catch (err) {
+        return next(err)
+      }
     }
 
     if (this.options.catchall) {
