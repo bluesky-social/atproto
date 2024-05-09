@@ -97,7 +97,7 @@ const LEXICONS: LexiconDoc[] = [
   },
   {
     lexicon: 1,
-    id: 'io.example.nonExistant',
+    id: 'io.example.nonExistent',
     defs: {
       main: {
         type: 'query',
@@ -246,7 +246,7 @@ describe('Parameters', () => {
   })
 
   it('applies global limits to xrpc catchall', async () => {
-    const makeCall = () => client.call('io.example.nonExistant')
+    const makeCall = () => client.call('io.example.nonExistent')
     await expect(makeCall()).rejects.toThrow('Rate Limit Exceeded')
   })
 
