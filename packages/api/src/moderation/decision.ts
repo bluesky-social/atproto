@@ -78,15 +78,15 @@ export class ModerationDecision {
 
   ui(context: keyof ModerationBehavior): ModerationUI {
     const ui = new ModerationUI()
-    if (this.isMe) {
-      return ui
-    }
     for (const cause of this.causes) {
       if (
         cause.type === 'blocking' ||
         cause.type === 'blocked-by' ||
         cause.type === 'block-other'
       ) {
+        if (this.isMe) {
+          continue
+        }
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
@@ -101,6 +101,9 @@ export class ModerationDecision {
           }
         }
       } else if (cause.type === 'muted') {
+        if (this.isMe) {
+          continue
+        }
         if (context === 'profileList' || context === 'contentList') {
           ui.filters.push(cause)
         }
@@ -114,6 +117,9 @@ export class ModerationDecision {
           }
         }
       } else if (cause.type === 'mute-word') {
+        if (this.isMe) {
+          continue
+        }
         if (context === 'contentList') {
           ui.filters.push(cause)
         }
@@ -141,21 +147,21 @@ export class ModerationDecision {
         }
       } else if (cause.type === 'label') {
         if (context === 'profileList' && cause.target === 'account') {
-          if (cause.setting === 'hide') {
+          if (cause.setting === 'hide' && !this.isMe) {
             ui.filters.push(cause)
           }
         } else if (
           context === 'contentList' &&
           (cause.target === 'account' || cause.target === 'content')
         ) {
-          if (cause.setting === 'hide') {
+          if (cause.setting === 'hide' && !this.isMe) {
             ui.filters.push(cause)
           }
         }
         if (!cause.downgraded) {
           if (cause.behavior[context] === 'blur') {
             ui.blurs.push(cause)
-            if (cause.noOverride) {
+            if (cause.noOverride && !this.isMe) {
               ui.noOverride = true
             }
           } else if (cause.behavior[context] === 'alert') {

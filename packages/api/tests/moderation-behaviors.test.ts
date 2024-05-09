@@ -536,14 +536,26 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'profile',
     author: 'self',
     labels: { account: ['!hide'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+      displayName: ['blur'],
+      profileList: ['blur'],
+      profileView: ['blur'],
+      contentList: ['blur'],
+      contentView: ['blur'],
+    },
   },
   'Self-profile: !hide on profile': {
     cfg: 'none',
     subject: 'profile',
     author: 'self',
     labels: { profile: ['!hide'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+      displayName: ['blur'],
+    },
   },
 
   "Self-post: Imperative label ('!hide') on post": {
@@ -551,21 +563,34 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'post',
     author: 'self',
     labels: { post: ['!hide'] },
-    behaviors: {},
+    behaviors: {
+      contentView: ['blur'],
+      contentList: ['blur'],
+    },
   },
   "Self-post: Imperative label ('!hide') on author profile": {
     cfg: 'none',
     subject: 'post',
     author: 'self',
     labels: { profile: ['!hide'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+      displayName: ['blur'],
+    },
   },
   "Self-post: Imperative label ('!hide') on author account": {
     cfg: 'none',
     subject: 'post',
     author: 'self',
     labels: { account: ['!hide'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+      displayName: ['blur'],
+      contentList: ['blur'],
+      contentView: ['blur'],
+    },
   },
 
   "Self-post: Imperative label ('!warn') on post": {
@@ -573,21 +598,33 @@ const SCENARIOS: SuiteScenarios = {
     subject: 'post',
     author: 'self',
     labels: { post: ['!warn'] },
-    behaviors: {},
+    behaviors: {
+      contentView: ['blur'],
+      contentList: ['blur'],
+    },
   },
   "Self-post: Imperative label ('!warn') on author profile": {
     cfg: 'none',
     subject: 'post',
     author: 'self',
     labels: { profile: ['!warn'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+      displayName: ['blur'],
+    },
   },
   "Self-post: Imperative label ('!warn') on author account": {
     cfg: 'none',
     subject: 'post',
     author: 'self',
     labels: { account: ['!warn'] },
-    behaviors: {},
+    behaviors: {
+      avatar: ['blur'],
+      banner: ['blur'],
+      contentList: ['blur'],
+      contentView: ['blur'],
+    },
   },
 
   'Mute/block: Blocking user': {
