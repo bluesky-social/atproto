@@ -19,12 +19,9 @@ export const proxyHandler =
   (ctx: AppContext): CatchallHandler =>
   async (req, res, next) => {
     try {
+      const { url, aud } = await formatUrlAndAud(ctx, req)
       const auth = await ctx.authVerifier.access({ req })
-      const { url, headers } = await createUrlAndHeaders(
-        ctx,
-        req,
-        auth.credentials.did,
-      )
+      const headers = await formatHeaders(ctx, req, aud, auth.credentials.did)
       const body = stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
       const proxyRes = await makeRequest(url, reqInit)
@@ -41,12 +38,8 @@ export const pipethrough = async (
   requester: string | null,
   audOverride?: string,
 ): Promise<HandlerPipeThrough> => {
-  const { url, headers } = await createUrlAndHeaders(
-    ctx,
-    req,
-    requester,
-    audOverride,
-  )
+  const { url, aud } = await formatUrlAndAud(ctx, req, audOverride)
+  const headers = await formatHeaders(ctx, req, aud, requester)
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -62,12 +55,11 @@ const REQ_HEADERS_TO_FORWARD = [
   'x-bsky-topics',
 ]
 
-export const createUrlAndHeaders = async (
+export const formatUrlAndAud = async (
   ctx: AppContext,
   req: express.Request,
-  requester: string | null,
   audOverride?: string,
-): Promise<{ url: URL; headers: { authorization?: string } }> => {
+): Promise<{ url: URL; aud: string }> => {
   const proxyTo = await parseProxyHeader(ctx, req)
   const defaultProxy = defaultService(ctx, req)
   const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
@@ -79,6 +71,15 @@ export const createUrlAndHeaders = async (
   if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
     throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
   }
+  return { url, aud }
+}
+
+export const formatHeaders = async (
+  ctx: AppContext,
+  req: express.Request,
+  aud: string,
+  requester: string | null,
+): Promise<{ authorization?: string }> => {
   const headers = requester
     ? (await ctx.serviceAuthHeaders(requester, aud)).headers
     : {}
@@ -89,7 +90,7 @@ export const createUrlAndHeaders = async (
       headers[header] = val
     }
   }
-  return { url, headers }
+  return headers
 }
 
 const formatReqInit = (
