@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.9
+
+### Patch Changes
+
+- [#2467](https://github.com/bluesky-social/atproto/pull/2467) [`f83b4c8ca`](https://github.com/bluesky-social/atproto/commit/f83b4c8cad01cebc1b67caa6c7ebe45f07b2f318) Thanks [@haileyok](https://github.com/haileyok)! - Modify label-handling on user's own content to still apply blurring
+
 ## 0.12.8
 
 ### Patch Changes
