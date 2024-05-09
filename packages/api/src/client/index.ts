@@ -155,6 +155,9 @@ import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
+import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
+import * as ChatBskyConvoDeleteAccount from './types/chat/bsky/convo/deleteAccount'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
@@ -333,6 +336,9 @@ export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
+export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
+export * as ChatBskyConvoDeleteAccount from './types/chat/bsky/convo/deleteAccount'
+export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
 export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
@@ -2755,6 +2761,17 @@ export class ChatBskyActorNS {
     this._service = service
     this.declaration = new DeclarationRecord(service)
   }
+
+  exportAccountData(
+    data?: ChatBskyActorExportAccountData.InputSchema,
+    opts?: ChatBskyActorExportAccountData.CallOptions,
+  ): Promise<ChatBskyActorExportAccountData.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.actor.exportAccountData', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyActorExportAccountData.toKnownErr(e)
+      })
+  }
 }
 
 export class DeclarationRecord {
@@ -2832,6 +2849,17 @@ export class ChatBskyConvoNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  deleteAccount(
+    data?: ChatBskyConvoDeleteAccount.InputSchema,
+    opts?: ChatBskyConvoDeleteAccount.CallOptions,
+  ): Promise<ChatBskyConvoDeleteAccount.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.deleteAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoDeleteAccount.toKnownErr(e)
+      })
   }
 
   deleteMessageForSelf(

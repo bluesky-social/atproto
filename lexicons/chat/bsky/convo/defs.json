@@ -82,16 +82,12 @@
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "app.bsky.actor.defs#profileViewBasic"
+            "ref": "chat.bsky.actor.defs#profileViewBasic"
           }
         },
         "lastMessage": {
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
-        },
-        "disabledMembers": {
-          "type": "array",
-          "items": { "type": "string" }
         },
         "muted": { "type": "boolean" },
         "unreadCount": { "type": "integer" }
