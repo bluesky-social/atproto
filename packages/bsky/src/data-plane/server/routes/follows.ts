@@ -92,4 +92,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(follows),
     }
   },
+  async getFollowsFollowing() {
+    throw new Error('not implemented')
+  },
 })

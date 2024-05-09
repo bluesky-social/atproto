@@ -2,6 +2,8 @@ import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import {
   HydrationMap,
+  RecordInfo,
+  parseRecord,
   parseRecordBytes,
   parseString,
   safeTakedownRef,
@@ -16,9 +18,18 @@ export type Actor = {
   sortedAt?: Date
   takedownRef?: string
   isLabeler: boolean
+  allowIncomingChatsFrom?: string
 }
 
 export type Actors = HydrationMap<Actor>
+
+type ChatDeclarationRecord = {
+  allowIncoming: 'all' | 'none' | 'following' | string
+}
+
+export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
+
+export type ChatDeclarations = HydrationMap<ChatDeclaration>
 
 export type ProfileViewerState = {
   muted?: boolean
@@ -107,8 +118,24 @@ export class ActorHydrator {
         sortedAt: profile?.sortedAt?.toDate(),
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
+        allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
       })
     }, new HydrationMap<Actor>())
+  }
+
+  async getChatDeclarations(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<ChatDeclarations> {
+    if (!uris.length) return new HydrationMap<ChatDeclaration>()
+    const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<ChatDeclarationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<ChatDeclaration>())
   }
 
   // "naive" because this method does not verify the existence of the list itself

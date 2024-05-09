@@ -57,6 +57,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -163,6 +168,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -311,6 +321,11 @@ Array [
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "chat": Object {
+                "allowIncoming": "none",
+              },
+            },
             "did": "user(2)",
             "handle": "dan.test",
             "labels": Array [],
@@ -440,6 +455,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -496,6 +516,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -639,6 +664,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -745,6 +775,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -1125,6 +1160,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -1445,6 +1485,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -1652,6 +1697,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -1667,6 +1717,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -2390,6 +2445,11 @@ Array [
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "chat": Object {
+                "allowIncoming": "none",
+              },
+            },
             "did": "user(2)",
             "handle": "dan.test",
             "labels": Array [],
@@ -2614,6 +2674,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -2797,6 +2862,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -3065,6 +3135,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(0)",
         "handle": "dan.test",
         "labels": Array [],
@@ -3805,6 +3880,11 @@ Array [
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "chat": Object {
+                "allowIncoming": "none",
+              },
+            },
             "did": "user(0)",
             "handle": "dan.test",
             "labels": Array [],
@@ -4270,6 +4350,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(0)",
         "handle": "dan.test",
         "labels": Array [],
@@ -4837,6 +4922,11 @@ Array [
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "chat": Object {
+                "allowIncoming": "none",
+              },
+            },
             "did": "user(0)",
             "handle": "dan.test",
             "labels": Array [],
@@ -5285,6 +5375,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -5499,6 +5594,11 @@ Array [
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -5716,6 +5816,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
@@ -5895,6 +6000,11 @@ Array [
   Object {
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],

@@ -98,6 +98,14 @@ message GetProfileRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetActorChatDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetActorChatDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetRepostRecordsRequest {
   repeated string uris = 1;
 }
@@ -120,6 +128,13 @@ message GetLabelerRecordsRequest {
 
 message GetLabelerRecordsResponse {
   repeated Record records = 1;
+}
+
+message GetAllLabelersRequest {}
+
+message GetAllLabelersResponse {
+  repeated string uris = 1;
+  repeated Record records = 2;
 }
 
 
@@ -183,6 +198,17 @@ message GetLikesBySubjectRequest {
 }
 
 message GetLikesBySubjectResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+message GetLikesBySubjectSortedRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetLikesBySubjectSortedResponse {
   repeated string uris = 1;
   string cursor = 2;
 }
@@ -307,6 +333,7 @@ message ActorInfo {
   string takedown_ref = 5;
   google.protobuf.Timestamp tombstoned_at = 6;
   bool labeler = 7;
+  string allow_incoming_chats_from = 8;
 }
 
 message GetActorsResponse {
@@ -358,12 +385,20 @@ message RelationshipPair {
   string b = 2;
 }
 
+message BlockExistence {
+  string blocked_by = 1;
+  string blocking = 2;
+  string blocked_by_list = 3;
+  string blocking_by_list = 4;
+}
+
 message GetBlockExistenceRequest {
   repeated RelationshipPair pairs = 1;
 }
 
 message GetBlockExistenceResponse {
   repeated bool exists = 1;
+  repeated BlockExistence blocks = 2;
 }
 
 
@@ -931,6 +966,17 @@ message GetRecordTakedownResponse {
 }
 
 
+// Polo-backed Graph Endpoints
+
+// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
+message GetFollowsFollowingRequest {
+  string actor_did = 1;
+  string target_did = 2;
+}
+message GetFollowsFollowingResponse {
+  repeated string dids = 1;
+}
+
 // Ping
 message PingRequest {}
 message PingResponse {}
@@ -953,6 +999,7 @@ service Service {
   rpc GetListRecords(GetListRecordsRequest) returns (GetListRecordsResponse);
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
+  rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
@@ -964,6 +1011,7 @@ service Service {
 
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
+  rpc GetLikesBySubjectSorted(GetLikesBySubjectSortedRequest) returns (GetLikesBySubjectSortedResponse);
   rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
 
@@ -1041,6 +1089,7 @@ service Service {
 
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
+  rpc GetAllLabelers(GetAllLabelersRequest) returns (GetAllLabelersResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
@@ -1053,6 +1102,9 @@ service Service {
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
   rpc GetIdentityByHandle(GetIdentityByHandleRequest) returns (GetIdentityByHandleResponse);
+
+  // Graph
+  rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
@@ -1083,6 +1135,10 @@ service Service {
   rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
 }
 
+
+//
+// Write Path
+//
 
 message TakedownActorRequest {
   string did = 1;

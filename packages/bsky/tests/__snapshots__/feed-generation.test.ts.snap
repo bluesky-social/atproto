@@ -685,6 +685,11 @@ Array [
     "feedContext": "item-5",
     "post": Object {
       "author": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(6)",
         "handle": "dan.test",
         "labels": Array [],
