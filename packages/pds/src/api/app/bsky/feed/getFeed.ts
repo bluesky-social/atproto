@@ -16,9 +16,7 @@ export default function (server: Server, ctx: AppContext) {
           { feed: params.feed },
           await ctx.appviewAuthHeaders(requester),
         )
-      return pipethrough(ctx, req, requester, feed.view.did, {
-        reqHeadersToForward: ['x-bsky-topics'],
-      })
+      return pipethrough(ctx, req, requester, feed.view.did)
     },
   })
 }
