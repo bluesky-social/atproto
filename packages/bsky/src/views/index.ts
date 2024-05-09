@@ -111,6 +111,7 @@ export class Views {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
         labeler: actor?.isLabeler,
+        pinnedPosts: actor.profile?.pinnedPosts?.length,
       },
     }
   }
@@ -450,6 +451,7 @@ export class Views {
         ? {
             repost: viewer.repost,
             like: viewer.like,
+            pinned: viewer.pinned,
             replyDisabled: this.userReplyDisabled(uri, state),
           }
         : undefined,

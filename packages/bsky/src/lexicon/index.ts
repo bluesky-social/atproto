@@ -92,14 +92,14 @@ import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describ
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -108,8 +108,8 @@ import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteract
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -1246,17 +1246,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getFeed<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedGetFeed.Handler<ExtractAuth<AV>>,
-      AppBskyFeedGetFeed.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getFeedGenerator<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1276,6 +1265,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetFeed.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetFeed.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1312,17 +1312,6 @@ export class AppBskyFeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getPostThread<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>,
-      AppBskyFeedGetPostThread.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getPosts<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1331,6 +1320,17 @@ export class AppBskyFeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getPosts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPostThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetPostThread.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetPostThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getPostThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1430,17 +1430,6 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getList<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyGraphGetList.Handler<ExtractAuth<AV>>,
-      AppBskyGraphGetList.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.graph.getList' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getListBlocks<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1449,6 +1438,17 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getList<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetList.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetList.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getList' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

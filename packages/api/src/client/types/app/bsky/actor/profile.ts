@@ -15,6 +15,8 @@ export interface Record {
   avatar?: BlobRef
   /** Larger horizontal image to display behind profile view. */
   banner?: BlobRef
+  /** Array of post URIs that are pinned by the user */
+  pinnedPosts?: string[]
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
