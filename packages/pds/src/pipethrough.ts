@@ -69,7 +69,7 @@ export const createUrlAndHeaders = async (
   audOverride?: string,
 ): Promise<{ url: URL; headers: { authorization?: string } }> => {
   const proxyTo = await parseProxyHeader(ctx, req)
-  const defaultProxy = defaultService(ctx, req.baseUrl)
+  const defaultProxy = defaultService(ctx, req)
   const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
   const aud = audOverride ?? proxyTo?.did ?? defaultProxy?.did
   if (!serviceUrl || !aud) {
@@ -223,9 +223,9 @@ export const parseProxyRes = async (res: Response) => {
 
 const defaultService = (
   ctx: AppContext,
-  path: string,
+  req: express.Request,
 ): { url: string; did: string } | null => {
-  const nsid = path.replace('/xrpc/', '')
+  const nsid = req.originalUrl.split('?')[0].replace('/xrpc/', '')
   switch (nsid) {
     case ids.ToolsOzoneCommunicationCreateTemplate:
     case ids.ToolsOzoneCommunicationDeleteTemplate:
