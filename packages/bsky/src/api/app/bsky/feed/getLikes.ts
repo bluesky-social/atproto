@@ -41,7 +41,8 @@ const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { likes: [] }
   }
-  const likesRes = await ctx.hydrator.dataplane.getLikesBySubjectSorted({
+  // @TODO deprecate getLikesBySubject and move to getLikesBySubjectSorted
+  const likesRes = await ctx.hydrator.dataplane.getLikesBySubject({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
