@@ -669,6 +669,7 @@ export class Hydrator {
         (await this.label.getLabelers([did], includeTakedowns)).get(did) ??
         undefined
       )
+      // @TODO use lexicon constant
     } else if (collection === 'chat.bsky.actor.declaration') {
       if (parsed.rkey !== 'self') return
       return (
