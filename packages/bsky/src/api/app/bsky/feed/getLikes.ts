@@ -13,6 +13,7 @@ import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
 import { clearlyBadCursor, resHeaders } from '../../../util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -40,6 +41,11 @@ const skeleton = async (inputs: {
   const { ctx, params } = inputs
   if (clearlyBadCursor(params.cursor)) {
     return { likes: [] }
+  }
+  if (looksLikeNonSortedCursor(params.cursor)) {
+    throw new InvalidRequestError(
+      'Cursor appear to be out of date, please try reloading.',
+    )
   }
   const likesRes = await ctx.hydrator.dataplane.getLikesBySubjectSorted({
     subject: { uri: params.uri, cid: params.cid },
@@ -115,4 +121,10 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   likes: string[]
   cursor?: string
+}
+
+const looksLikeNonSortedCursor = (cursor: string | undefined) => {
+  // the old cursor values used with getLikesBySubject() were dids.
+  // we now use getLikesBySubjectSorted(), whose cursors look like timestamps.
+  return cursor?.startsWith('did:')
 }
