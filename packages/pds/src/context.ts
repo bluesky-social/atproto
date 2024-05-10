@@ -8,7 +8,7 @@ import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { safeFetchWrap } from '@atproto/fetch-node'
-import { JoseKeyset } from '@atproto/jwk-jose'
+import { JoseKey, JoseKeyset } from '@atproto/jwk-jose'
 import {
   RateLimiter,
   RateLimiterCreator,
@@ -249,15 +249,9 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
-    const keyset = await JoseKeyset.fromImportables({
-      // @TODO: load keys from config
-      ['kid-1']:
-        '-----BEGIN PRIVATE KEY-----\n' +
-        'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg4D4H8/CFAVuKMgQD\n' +
-        'BIK9m53AEUrCxQKrgtMNSTNV9A2hRANCAARAwyllCZOflLEQM0MaYujz7ITxqczZ\n' +
-        '6Vxhj4urrdXUN3MEliQcc14ImTWHt7h7+xbxIXETLj0kTzctAxSbtwZf\n' +
-        '-----END PRIVATE KEY-----\n',
-    })
+    const keyset = new JoseKeyset([
+      await JoseKey.fromKeyLike(jwtSecretKey, 'key-1', 'HS256'),
+    ])
 
     // A Fetch function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user
