@@ -117,15 +117,28 @@ export class JoseKey extends Key {
 
       // KeyLike
       if (!kid) throw new TypeError('Missing "kid" for KeyLike key')
-      return this.fromJWK(await exportJWK(input), kid)
+      return this.fromKeyLike(input, kid)
     }
 
     throw new TypeError('Invalid input')
   }
 
+  static async fromKeyLike(
+    keyLike: KeyLike,
+    kid: string,
+    alg?: string,
+  ): Promise<JoseKey> {
+    const jwk = await exportJWK(keyLike)
+    if (alg) {
+      if (!jwk.alg) jwk.alg = alg
+      else if (jwk.alg !== alg) throw new TypeError('Invalid "alg" in JWK')
+    }
+    return this.fromJWK(jwk, kid)
+  }
+
   static async fromPKCS8(pem: string, kid: string): Promise<JoseKey> {
     const keyLike = await importPKCS8(pem, '', { extractable: true })
-    return this.fromJWK(await exportJWK(keyLike), kid)
+    return this.fromKeyLike(keyLike, kid)
   }
 
   static async fromJWK(
