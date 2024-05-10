@@ -267,7 +267,10 @@ export class AppContext {
       responseMaxSize: 512 * 1024, // 512kB
       ssrfProtection: !cfg.fetch.disableSsrf,
       fetch: async (request, init?: RequestInit) => {
-        fetchLogger.info({ method: request.method, uri: request.url }, 'fetch')
+        fetchLogger.info(
+          { method: init?.method ?? request.method, uri: request.url },
+          'fetch',
+        )
         return globalThis.fetch(request, init)
       },
     })
