@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.21
+
+### Patch Changes
+
+- [`f36585013`](https://github.com/bluesky-social/atproto/commit/f365850139ffb2b5e63facfd95eedf0b87d01ee7) Thanks [@devinivy](https://github.com/devinivy)! - Support generic service proxying the PDS
+
 ## 0.4.20
 
 ### Patch Changes
