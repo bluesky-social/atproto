@@ -79,11 +79,12 @@ export async function fetchTimeout(
     controller.abort()
   }
   const cleanup = () => {
-    clearTimeout(timeoutId)
+    clearTimeout(timer)
     request.signal?.removeEventListener('abort', abort)
   }
 
-  const timeoutId = setTimeout(abort, timeout).unref()
+  const timer = setTimeout(abort, timeout)
+  if (typeof timer === 'object') timer.unref?.() // only on node
   request.signal?.addEventListener('abort', abort)
 
   signal.addEventListener('abort', cleanup)
