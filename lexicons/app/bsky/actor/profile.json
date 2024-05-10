@@ -32,6 +32,15 @@
             "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
           },
+          "pinnedPosts": {
+            "type": "array",
+            "description": "Array of post URIs that are pinned by the user",
+            "maxLength": 2,
+            "items": {
+              "type": "string",
+              "format": "at-uri"
+            }
+          },
           "labels": {
             "type": "union",
             "description": "Self-label values, specific to the Bluesky application, on the overall account.",
