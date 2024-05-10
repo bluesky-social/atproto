@@ -1,29 +1,18 @@
 import type { ReplayStore } from '@atproto/oauth-provider'
-import { Redis, type RedisOptions } from 'ioredis'
+import { Redis } from 'ioredis'
+import { CreateRedisOptions, createRedis } from '../lib/redis.js'
 
-export type { RedisOptions, Redis }
+export type { Redis, CreateRedisOptions }
 
-export type ReplayStoreRedisOptions = Redis | RedisOptions | string
+export type ReplayStoreRedisOptions = {
+  redis: CreateRedisOptions
+}
 
 export class ReplayStoreRedis implements ReplayStore {
   private readonly redis: Redis
 
   constructor(options: ReplayStoreRedisOptions) {
-    if (options instanceof Redis) {
-      this.redis = options
-    } else if (typeof options === 'string') {
-      const url = new URL(
-        options.startsWith('redis://') ? options : `redis://${options}`,
-      )
-
-      this.redis = new Redis({
-        host: url.hostname,
-        port: parseInt(url.port, 10),
-        password: url.password,
-      })
-    } else {
-      this.redis = new Redis(options)
-    }
+    this.redis = createRedis(options.redis)
   }
 
   /**

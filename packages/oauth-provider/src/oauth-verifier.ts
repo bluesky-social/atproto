@@ -86,7 +86,7 @@ export class OAuthVerifier {
     issuer,
     keyset,
     replayStore = redis != null
-      ? new ReplayStoreRedis(redis)
+      ? new ReplayStoreRedis({ redis })
       : new ReplayStoreMemory(),
     accessTokenType = AccessTokenType.jwt,
 

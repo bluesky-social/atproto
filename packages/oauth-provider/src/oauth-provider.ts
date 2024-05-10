@@ -88,6 +88,7 @@ import { oidcPayload } from './parameters/oidc-payload.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
+import { RequestStoreRedis } from './request/request-store-redis.js'
 import { RequestStore, ifRequestStore } from './request/request-store.js'
 import { RequestUri, requestUriSchema } from './request/request-uri.js'
 import {
@@ -195,12 +196,15 @@ export class OAuthProvider extends OAuthVerifier {
     replayStore = ifReplayStore(store),
     requestStore = ifRequestStore(store),
 
+    redis,
     ...rest
   }: OAuthProviderOptions) {
-    super({ replayStore, ...rest })
+    super({ replayStore, redis, ...rest })
 
     clientStore ??= new ClientStoreUri(rest)
-    requestStore ??= new RequestStoreMemory()
+    requestStore ??= redis
+      ? new RequestStoreRedis({ redis })
+      : new RequestStoreMemory()
 
     this.defaultMaxAge = defaultMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
