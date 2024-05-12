@@ -1,3 +1,6 @@
+# NOTE: this is a fork of the upstream github.com/bluesky-social/atproto repo. 
+For notes on how to use this fork, refer to FORK.md
+
 # AT Protocol Reference Implementation (TypeScript)
 
 Welcome friends!
