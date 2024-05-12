@@ -9467,6 +9467,36 @@ export const schemaDict = {
       },
     },
   },
+  ComHabitatBlogPost: {
+    lexicon: 1,
+    id: 'com.habitat.blog.post',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'Record containing a Habitat blogpost.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['text', 'createdAt'],
+          properties: {
+            text: {
+              type: 'string',
+              maxLength: 3000,
+              maxGraphemes: 300,
+              description:
+                'The primary post content. May be an empty string, if there are embeds.',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Client-declared timestamp when this post was originally created.',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -9649,4 +9679,5 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ComHabitatBlogPost: 'com.habitat.blog.post',
 }

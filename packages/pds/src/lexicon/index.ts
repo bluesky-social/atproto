@@ -195,10 +195,12 @@ export class Server {
 export class ComNS {
   _server: Server
   atproto: ComAtprotoNS
+  habitat: ComHabitatNS
 
   constructor(server: Server) {
     this._server = server
     this.atproto = new ComAtprotoNS(server)
+    this.habitat = new ComHabitatNS(server)
   }
 }
 
@@ -1083,6 +1085,24 @@ export class ComAtprotoTempNS {
   ) {
     const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComHabitatNS {
+  _server: Server
+  blog: ComHabitatBlogNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.blog = new ComHabitatBlogNS(server)
+  }
+}
+
+export class ComHabitatBlogNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
