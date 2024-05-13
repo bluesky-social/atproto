@@ -1,5 +1,6 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
 import {
   HydrationMap,
   RecordInfo,
@@ -22,10 +23,6 @@ export type Actor = {
 }
 
 export type Actors = HydrationMap<Actor>
-
-type ChatDeclarationRecord = {
-  allowIncoming: 'all' | 'none' | 'following' | string
-}
 
 export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
 

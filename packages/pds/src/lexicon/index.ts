@@ -129,6 +129,23 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
@@ -183,12 +200,14 @@ export class Server {
   xrpc: XrpcServer
   com: ComNS
   app: AppNS
+  chat: ChatNS
   tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.chat = new ChatNS(this)
     this.tools = new ToolsNS(this)
   }
 }
@@ -1709,6 +1728,241 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatNS {
+  _server: Server
+  bsky: ChatBskyNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.bsky = new ChatBskyNS(server)
+  }
+}
+
+export class ChatBskyNS {
+  _server: Server
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.actor = new ChatBskyActorNS(server)
+    this.convo = new ChatBskyConvoNS(server)
+    this.moderation = new ChatBskyModerationNS(server)
+  }
+}
+
+export class ChatBskyActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyActorDeleteAccount.Handler<ExtractAuth<AV>>,
+      ChatBskyActorDeleteAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  exportAccountData<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyActorExportAccountData.Handler<ExtractAuth<AV>>,
+      ChatBskyActorExportAccountData.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.exportAccountData' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyConvoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteMessageForSelf<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoDeleteMessageForSelf.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoDeleteMessageForSelf.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.deleteMessageForSelf' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoForMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvoForMembers.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvoForMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLog<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetLog.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetLog.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getLog' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessages<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetMessages.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetMessages.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getMessages' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  leaveConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoLeaveConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoLeaveConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.leaveConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listConvos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoListConvos.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoListConvos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.listConvos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoMuteConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoMuteConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.muteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessage<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessage.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessage.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessageBatch<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessageBatch.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUnmuteConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUnmuteConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateRead<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUpdateRead.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUpdateRead.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateRead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorMetadata<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationGetActorMetadata.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationGetActorMetadata.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getActorMetadata' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessageContext<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationGetMessageContext.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationGetMessageContext.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getMessageContext' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateActorAccess<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationUpdateActorAccess.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationUpdateActorAccess.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.updateActorAccess' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

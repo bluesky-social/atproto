@@ -1,5 +1,6 @@
 import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
+import * as lex from '../../../../lexicon/lexicons'
 import { DatabaseSchema } from '../../db/database-schema'
 import RecordProcessor from '../processor'
 import { Database } from '../../db'
@@ -7,7 +8,7 @@ import { BackgroundQueue } from '../../background'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 
-const lexId = 'chat.bsky.actor.declaration' // @TODO use lexicon constant
+const lexId = lex.ids.ChatBskyActorDeclaration
 
 const insertFn = async (
   _db: DatabaseSchema,
