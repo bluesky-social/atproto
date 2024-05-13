@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.22
+
+### Patch Changes
+
+- [#2485](https://github.com/bluesky-social/atproto/pull/2485) [`d32f7215f`](https://github.com/bluesky-social/atproto/commit/d32f7215f69bc87f50890d9cfdb09840c2fbaa41) Thanks [@devinivy](https://github.com/devinivy)! - Add lexicons for chat.bsky namespace
+
+- Updated dependencies [[`d32f7215f`](https://github.com/bluesky-social/atproto/commit/d32f7215f69bc87f50890d9cfdb09840c2fbaa41)]:
+  - @atproto/api@0.12.10
+
 ## 0.4.21
 
 ### Patch Changes
