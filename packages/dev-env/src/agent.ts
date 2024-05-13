@@ -5,7 +5,7 @@ import AtpAgent, {
 import { EXAMPLE_LABELER } from './const'
 
 export class TestAgent extends AtpAgent {
-  protected dispatcher: SessionDispatcher
+  readonly dispatcher: SessionDispatcher
 
   constructor(options: SessionDispatcherOptions) {
     const dispatcher = new SessionDispatcher(options)
