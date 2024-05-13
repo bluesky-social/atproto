@@ -8,12 +8,7 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
-import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
-  Options as XrpcServerOptions,
-} from '@atproto/xrpc-server'
+import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
 import API from './api'
 import * as basicRoutes from './basic-routes'
@@ -25,6 +20,7 @@ import { createServer } from './lexicon'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext, { AppContextOptions } from './context'
 import compression from './util/compression'
+import { proxyHandler } from './pipethrough'
 
 export * from './config'
 export { Database } from './db'
@@ -71,51 +67,31 @@ export class PDS {
         textLimit: 100 * 1024, // 100kb
         blobLimit: cfg.service.blobUploadLimit,
       },
-    }
-    if (cfg.rateLimits.enabled) {
-      const bypassSecret = cfg.rateLimits.bypassKey
-      const bypassIps = cfg.rateLimits.bypassIps
-      let rlCreator: RateLimiterCreator
-      if (cfg.rateLimits.mode === 'redis') {
-        if (!ctx.redisScratch) {
-          throw new Error('Redis not set up for ratelimiting mode: `redis`')
-        }
-        rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(ctx.redisScratch, {
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      } else {
-        rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.memory({
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      }
-      xrpcOpts['rateLimits'] = {
-        creator: rlCreator,
-        global: [
-          {
-            name: 'global-ip',
-            durationMs: 5 * MINUTE,
-            points: 3000,
-          },
-        ],
-        shared: [
-          {
-            name: 'repo-write-hour',
-            durationMs: HOUR,
-            points: 5000, // creates=3, puts=2, deletes=1
-          },
-          {
-            name: 'repo-write-day',
-            durationMs: DAY,
-            points: 35000, // creates=3, puts=2, deletes=1
-          },
-        ],
-      }
+      catchall: proxyHandler(ctx),
+      rateLimits: ctx.ratelimitCreator
+        ? {
+            creator: ctx.ratelimitCreator,
+            global: [
+              {
+                name: 'global-ip',
+                durationMs: 5 * MINUTE,
+                points: 3000,
+              },
+            ],
+            shared: [
+              {
+                name: 'repo-write-hour',
+                durationMs: HOUR,
+                points: 5000, // creates=3, puts=2, deletes=1
+              },
+              {
+                name: 'repo-write-day',
+                durationMs: DAY,
+                points: 35000, // creates=3, puts=2, deletes=1
+              },
+            ],
+          }
+        : undefined,
     }
 
     let server = createServer(xrpcOpts)

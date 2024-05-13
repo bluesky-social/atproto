@@ -4,6 +4,11 @@ exports[`notification views fetches notifications omitting mentions and replies 
 Array [
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],
@@ -31,6 +36,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],
@@ -58,6 +68,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],
@@ -367,6 +382,11 @@ exports[`notification views fetches notifications without a last-seen 1`] = `
 Array [
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],
@@ -394,6 +414,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],
@@ -421,6 +446,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],
@@ -465,6 +495,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(0)",
       "handle": "dan.test",
       "labels": Array [],

@@ -1,11 +1,12 @@
+import assert from 'node:assert'
+import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
-import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getLikesBySubject(req) {
+  async getLikesBySubjectSorted(req) {
     const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 
@@ -32,6 +33,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       uris: likes.map((l) => l.uri),
       cursor: keyset.packFromResult(likes),
     }
+  },
+
+  // @NOTE deprecated in favor of getLikesBySubjectSorted
+  async getLikesBySubject(req, context) {
+    assert(this.getLikesBySubjectSorted)
+    return this.getLikesBySubjectSorted(req, context)
   },
 
   async getLikesByActorAndSubjects(req) {
