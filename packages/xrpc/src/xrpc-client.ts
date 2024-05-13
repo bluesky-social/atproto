@@ -17,22 +17,27 @@ import {
   httpResponseBodyParse,
   isErrorResponseBody,
 } from './util'
-import { XrpcDispatcher, XrpcDispatcherOptions } from './xrpc-dispatcher'
+import {
+  FetchHandler,
+  FetchHandlerOptions,
+  buildFetchHandler,
+} from './fetch-handler'
 
 export class XrpcClient {
-  readonly dispatcher: XrpcDispatcher
+  readonly fetchHandler: FetchHandler
   readonly lex: Lexicons
 
   protected headers = new Map<string, Gettable<string>>()
 
   constructor(
-    dispatcher: XrpcDispatcher | XrpcDispatcherOptions,
-    lex?: Lexicons | Iterable<LexiconDoc>,
+    fetchHandler: FetchHandler | FetchHandlerOptions,
+    lex: Lexicons | Iterable<LexiconDoc>,
   ) {
-    this.dispatcher =
-      dispatcher instanceof XrpcDispatcher
-        ? dispatcher
-        : new XrpcDispatcher(dispatcher)
+    this.fetchHandler =
+      typeof fetchHandler === 'function'
+        ? fetchHandler
+        : buildFetchHandler(fetchHandler)
+
     this.lex = lex instanceof Lexicons ? lex : new Lexicons(lex)
   }
 
@@ -80,7 +85,7 @@ export class XrpcClient {
     }
 
     try {
-      const response = await this.dispatcher.dispatch(reqUrl, init)
+      const response = await this.fetchHandler.call(undefined, reqUrl, init)
 
       const resStatus = response.status
       const resHeaders = Object.fromEntries(response.headers.entries())

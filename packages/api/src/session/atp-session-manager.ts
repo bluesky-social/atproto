@@ -16,24 +16,24 @@ import {
   AtpPersistSessionHandler,
   AtpSessionData,
 } from '../types'
-import { AtpDispatcher } from './atp-dispatcher'
+import { SessionManager } from './session-manager'
 
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
 export type Fetch = (this: void, request: Request) => Promise<Response>
-export interface SessionDispatcherOptions {
+export interface AtpSessionManagerOptions {
   service: string | URL
   persistSession?: AtpPersistSessionHandler
   fetch?: Fetch
 }
 
 /**
- * An {@link XrpcDispatcher} that uses legacy "com.atproto.server" endpoints to
+ * A {@link SessionManager} that uses legacy "com.atproto.server" endpoints to
  * manage sessions and route XRPC requests.
  */
-export class SessionDispatcher extends AtpDispatcher {
+export class AtpSessionManager implements SessionManager {
   public serviceUrl: URL
   public pdsUrl?: URL // The PDS URL, driven by the did doc
   public session?: AtpSessionData
@@ -43,9 +43,7 @@ export class SessionDispatcher extends AtpDispatcher {
   private persistSession?: AtpPersistSessionHandler
   private refreshSessionPromise: Promise<void> | undefined
 
-  constructor(options: SessionDispatcherOptions) {
-    super((url, init) => this._dispatch(url, init))
-
+  constructor(options: AtpSessionManagerOptions) {
     this.serviceUrl = new URL(options.service)
     this.fetch = options.fetch || globalThis.fetch
     this.setPersistSessionHandler(options.persistSession)
@@ -71,8 +69,7 @@ export class SessionDispatcher extends AtpDispatcher {
   }
 
   /**
-   * Internal fetch method that will be triggered by the XRPC Dispatcher (parent
-   * class). This method will:
+   * fetch method that will be triggered by the ApiClient. This method will:
    * - Set the proper origin for the request (pds or service)
    * - Add the proper auth headers to the request
    * - Handle session refreshes
@@ -80,10 +77,7 @@ export class SessionDispatcher extends AtpDispatcher {
    * @note We define this as a method on the prototype instead of inlining the
    * function in the constructor for readability.
    */
-  protected async _dispatch(
-    url: string,
-    reqInit: RequestInit,
-  ): Promise<Response> {
+  async fetchHandler(url: string, reqInit: RequestInit): Promise<Response> {
     // wait for any active session-refreshes to finish
     await this.refreshSessionPromise
 
@@ -251,11 +245,12 @@ export class SessionDispatcher extends AtpDispatcher {
   ): Promise<ComAtprotoServerGetSession.Response> {
     try {
       this.session = session
-      // For this particular call, we want this._dispatch() to be used in order
-      // to refresh the session if needed. To do so, we use a (new) AtpClient
-      // instance to build the HTTP request, and pass "this" as the dispatcher
-      // so that this._dispatch() is called.
-      const res = await new AtpClient(this).com.atproto.server.getSession()
+      // For this particular call, we want this.fetchHandler() to be used in
+      // order to refresh the session if needed. So let's create a new client
+      // instance with the right fetchHandler.
+      const res = await new AtpClient(
+        this.fetchHandler,
+      ).com.atproto.server.getSession()
       if (res.data.did !== this.session.did) {
         throw new XRPCError(
           ResponseType.InvalidRequest,

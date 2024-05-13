@@ -61,14 +61,14 @@ const indexTs = (
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
-    //= import { XrpcClient, XrpcDispatcher, XrpcDispatcherOptions } from '@atproto/xrpc'
+    //= import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc',
     })
     xrpcImport.addNamedImports([
       { name: 'XrpcClient' },
-      { name: 'XrpcDispatcher' },
-      { name: 'XrpcDispatcherOptions' },
+      { name: 'FetchHandler' },
+      { name: 'FetchHandlerOptions' },
     ])
     //= import {schemas} from './lexicons'
     file
@@ -131,13 +131,13 @@ const indexTs = (
       })
     }
 
-    //= constructor (options: XrpcDispatcher | XrpcDispatcherOptions) {
+    //= constructor (options: FetchHandler | FetchHandlerOptions) {
     //=   super(options, schemas)
     //=   {namespace declarations}
     //= }
     atpClientCls.addConstructor({
       parameters: [
-        { name: 'options', type: 'XrpcDispatcher | XrpcDispatcherOptions' },
+        { name: 'options', type: 'FetchHandler | FetchHandlerOptions' },
       ],
       statements: [
         'super(options, schemas)',
