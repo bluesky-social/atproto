@@ -8345,7 +8345,7 @@ export const schemaDict = {
       },
       messageView: {
         type: 'object',
-        required: ['id', 'rev', 'text', 'sentAt'],
+        required: ['id', 'rev', 'text', 'sender', 'sentAt'],
         properties: {
           id: {
             type: 'string',
@@ -8382,7 +8382,7 @@ export const schemaDict = {
       },
       deletedMessageView: {
         type: 'object',
-        required: ['id', 'rev', 'sentAt'],
+        required: ['id', 'rev', 'sender', 'sentAt'],
         properties: {
           id: {
             type: 'string',

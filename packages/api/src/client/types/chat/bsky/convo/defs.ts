@@ -55,7 +55,7 @@ export interface MessageView {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   embed?: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
-  sender?: MessageViewSender
+  sender: MessageViewSender
   sentAt: string
   [k: string]: unknown
 }
@@ -75,7 +75,7 @@ export function validateMessageView(v: unknown): ValidationResult {
 export interface DeletedMessageView {
   id: string
   rev: string
-  sender?: MessageViewSender
+  sender: MessageViewSender
   sentAt: string
   [k: string]: unknown
 }
