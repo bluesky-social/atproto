@@ -118,4 +118,5 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventEmail',
   'tools.ozone.moderation.defs#modEventResolveAppeal',
   'tools.ozone.moderation.defs#modEventTag',
+  'tools.ozone.moderation.defs#modEventDivert',
 ])
