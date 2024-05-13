@@ -28,7 +28,7 @@ export class AtpAgent {
   labelersHeader: string[] = []
   proxyHeader?: string
 
-  protected dispatcher: AtpDispatcher
+  readonly dispatcher: AtpDispatcher
 
   get com() {
     return this.api.com
