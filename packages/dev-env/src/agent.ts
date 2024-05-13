@@ -1,36 +1,36 @@
 import AtpAgent, {
-  SessionDispatcher,
-  SessionDispatcherOptions,
+  AtpSessionManager,
+  AtpSessionManagerOptions,
 } from '@atproto/api'
 import { EXAMPLE_LABELER } from './const'
 
 export class TestAgent extends AtpAgent {
-  readonly dispatcher: SessionDispatcher
+  readonly sessionManager: AtpSessionManager
 
-  constructor(options: SessionDispatcherOptions) {
-    const dispatcher = new SessionDispatcher(options)
-    super(dispatcher)
-    this.dispatcher = dispatcher
+  constructor(options: AtpSessionManagerOptions) {
+    const sessionManager = new AtpSessionManager(options)
+    super(sessionManager)
+    this.sessionManager = sessionManager
     this.configureLabelersHeader([EXAMPLE_LABELER])
   }
 
   get session() {
-    return this.dispatcher.session
+    return this.sessionManager.session
   }
 
   get hasSession() {
-    return this.dispatcher.hasSession
+    return this.sessionManager.hasSession
   }
 
   get service() {
-    return this.dispatcher.serviceUrl
+    return this.sessionManager.serviceUrl
   }
 
-  login(...args: Parameters<SessionDispatcher['login']>) {
-    return this.dispatcher.login(...args)
+  login(...args: Parameters<AtpSessionManager['login']>) {
+    return this.sessionManager.login(...args)
   }
 
-  createAccount(...args: Parameters<SessionDispatcher['createAccount']>) {
-    return this.dispatcher.createAccount(...args)
+  createAccount(...args: Parameters<AtpSessionManager['createAccount']>) {
+    return this.sessionManager.createAccount(...args)
   }
 }

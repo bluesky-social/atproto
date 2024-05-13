@@ -51,7 +51,7 @@ declare global {
 
 export class BskyAgent extends AtpAgent {
   clone() {
-    const inst = new BskyAgent(this.dispatcher)
+    const inst = new BskyAgent(this.sessionManager)
     this.copyInto(inst)
     return inst
   }

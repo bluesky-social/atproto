@@ -1,11 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import {
-  XrpcClient,
-  XrpcDispatcher,
-  XrpcDispatcherOptions,
-} from '@atproto/xrpc'
+import { XrpcClient, FetchHandler, FetchHandlerOptions } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
@@ -369,7 +365,7 @@ export class AtpClient extends XrpcClient {
   app: AppNS
   tools: ToolsNS
 
-  constructor(options: XrpcDispatcher | XrpcDispatcherOptions) {
+  constructor(options: FetchHandler | FetchHandlerOptions) {
     super(options, schemas)
     this.com = new ComNS(this)
     this.app = new AppNS(this)

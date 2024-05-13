@@ -1,13 +1,15 @@
 import { AtpClient } from './client'
 import { BSKY_LABELER_DID } from './const'
-import { AtpDispatcher } from './dispatcher/atp-dispatcher'
+import { SessionManager, isSessionManager } from './session/session-manager'
 import {
-  StatelessDispatcher,
-  StatelessDispatcherOptions,
-} from './dispatcher/stateless-dispatcher'
+  StatelessSessionManager,
+  StatelessSessionManagerOptions,
+} from './session/stateless-session-handler'
 import { AtpAgentGlobalOpts, AtprotoServiceType } from './types'
 
 const MAX_LABELERS = 10
+
+export type AtpAgentOptions = SessionManager | StatelessSessionManagerOptions
 
 export class AtpAgent {
   /**
@@ -28,19 +30,21 @@ export class AtpAgent {
   labelersHeader: string[] = []
   proxyHeader?: string
 
-  readonly dispatcher: AtpDispatcher
+  readonly sessionManager: SessionManager
 
   get com() {
     return this.api.com
   }
 
-  constructor(options: AtpDispatcher | StatelessDispatcherOptions) {
-    this.dispatcher =
-      options instanceof AtpDispatcher
-        ? options
-        : new StatelessDispatcher(options)
+  constructor(options: AtpAgentOptions) {
+    this.sessionManager = isSessionManager(options)
+      ? options
+      : new StatelessSessionManager(options)
 
-    this.api = new AtpClient(this.dispatcher)
+    this.api = new AtpClient((...args) =>
+      // The function needs to be "bound" to the right context
+      this.sessionManager.fetchHandler(...args),
+    )
     this.api.setHeader('atproto-accept-labelers', () =>
       // Make sure to read the static property from the subclass in case it was
       // overridden.
@@ -54,7 +58,7 @@ export class AtpAgent {
   }
 
   clone() {
-    const inst = new AtpAgent(this.dispatcher)
+    const inst = new AtpAgent(this.sessionManager)
     this.copyInto(inst)
     return inst
   }
@@ -70,16 +74,16 @@ export class AtpAgent {
     return inst
   }
 
+  /** @deprecated only used for a very particular use-case in the official Bluesky app */
   async getServiceUrl(): Promise<URL> {
-    // Clone to prevent mutation of the original dispatcher's URL
-    return this.dispatcher.getServiceUrl()
+    return this.sessionManager.getServiceUrl()
   }
 
   /**
    * Get the active session's DID
    */
   async getDid(): Promise<string> {
-    return this.dispatcher.getDid()
+    return this.sessionManager.getDid()
   }
 
   /**

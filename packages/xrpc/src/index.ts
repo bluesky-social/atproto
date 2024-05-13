@@ -1,6 +1,6 @@
 export * from './client'
+export * from './fetch-handler'
 export * from './types'
-export * from './xrpc-dispatcher'
 export * from './xrpc-client'
 
 import { Client } from './client'
