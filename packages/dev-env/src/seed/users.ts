@@ -19,21 +19,10 @@ export default async (sc: SeedClient) => {
     users.bob.selfLabels,
   )
 
-  await sc.agent.api.com.atproto.repo.putRecord(
-    {
-      repo: sc.dids.dan,
-      collection: 'chat.bsky.actor.declaration',
-      rkey: 'self',
-      validate: false,
-      record: {
-        $type: 'chat.bsky.actor.declaration',
-        allowIncoming: 'none',
-      },
-    },
-    {
-      encoding: 'application/json',
-      headers: sc.getHeaders(sc.dids.dan),
-    },
+  await sc.agent.api.chat.bsky.actor.declaration.create(
+    { repo: sc.dids.dan },
+    { allowIncoming: 'none' },
+    sc.getHeaders(sc.dids.dan),
   )
 
   return sc
