@@ -156,6 +156,8 @@ main_docker() {
     echo "all services ${services} are already running"
   fi
 
+
+  # do not exit when following commands fail, so we can intercept exit code & tear down docker
   set +e
 
   # setup environment variables and run args
