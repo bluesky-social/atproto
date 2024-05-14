@@ -156,6 +156,8 @@ main_docker() {
     echo "all services ${services} are already running"
   fi
 
+  set +e
+
   # setup environment variables and run args
   export_env
   "$@"
