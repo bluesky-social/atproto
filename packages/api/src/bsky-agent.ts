@@ -390,6 +390,9 @@ export class BskyAgent extends AtpAgent {
       interests: {
         tags: [],
       },
+      bskyAppState: {
+        dismissedNudges: [],
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -477,6 +480,13 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.moderationPrefs.hiddenPosts = v.items
+      } else if (
+        AppBskyActorDefs.isBskyAppStatePref(pref) &&
+        AppBskyActorDefs.validateBskyAppStatePref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.bskyAppState.dismissedNudges = v.dismissedNudges || []
       }
     }
 
@@ -1032,6 +1042,34 @@ export class BskyAgent extends AtpAgent {
 
   async unhidePost(postUri: string) {
     await updateHiddenPost(this, postUri, 'unhide')
+  }
+
+  async bskyAppDismissNudge(nudge: string) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      if (!Array.isArray(bskyAppStatePref.dismissedNudges)) {
+        bskyAppStatePref.dismissedNudges = [nudge]
+      } else {
+        if (!bskyAppStatePref.dismissedNudges.includes(nudge)) {
+          bskyAppStatePref.dismissedNudges.push(nudge)
+        }
+      }
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
   }
 }
 

@@ -4166,6 +4166,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#interestsPref',
             'lex:app.bsky.actor.defs#mutedWordsPref',
             'lex:app.bsky.actor.defs#hiddenPostsPref',
+            'lex:app.bsky.actor.defs#bskyAppStatePref',
           ],
         },
       },
@@ -4404,6 +4405,23 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+      bskyAppStatePref: {
+        description:
+          "A grab bag of state that's specific to the bsky.app program. Third-party apps probably shouldn't muck with this.",
+        type: 'object',
+        properties: {
+          dismissedNudges: {
+            description:
+              "An array of tokens which identify nudges (modals, popups) that the user has seen and dismissed, and which therefore don't need to be shown again.",
+            type: 'array',
+            maxLength: 1000,
+            items: {
+              type: 'string',
+              maxLength: 100,
+            },
           },
         },
       },

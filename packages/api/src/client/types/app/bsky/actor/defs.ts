@@ -184,6 +184,7 @@ export type Preferences = (
   | InterestsPref
   | MutedWordsPref
   | HiddenPostsPref
+  | BskyAppStatePref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -455,4 +456,23 @@ export function isLabelerPrefItem(v: unknown): v is LabelerPrefItem {
 
 export function validateLabelerPrefItem(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
+}
+
+/** A grab bag of state that's specific to the bsky.app program. Third-party apps probably shouldn't muck with this. */
+export interface BskyAppStatePref {
+  /** An array of tokens which identify nudges (modals, popups) that the user has seen and dismissed, and which therefore don't need to be shown again. */
+  dismissedNudges?: string[]
+  [k: string]: unknown
+}
+
+export function isBskyAppStatePref(v: unknown): v is BskyAppStatePref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#bskyAppStatePref'
+  )
+}
+
+export function validateBskyAppStatePref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#bskyAppStatePref', v)
 }
