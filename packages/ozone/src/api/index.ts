@@ -15,7 +15,7 @@ import createTemplate from './communication/createTemplate'
 import updateTemplate from './communication/updateTemplate'
 import deleteTemplate from './communication/deleteTemplate'
 import listTemplates from './communication/listTemplates'
-import dms from './dms'
+import chat from './chat'
 import proxied from './proxied'
 
 export * as health from './health'
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
   createTemplate(server, ctx)
   updateTemplate(server, ctx)
   deleteTemplate(server, ctx)
-  dms(server, ctx)
+  chat(server, ctx)
   proxied(server, ctx)
   return server
 }
