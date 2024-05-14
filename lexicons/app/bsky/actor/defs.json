@@ -92,7 +92,18 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
-        "labeler": { "type": "boolean" }
+        "labeler": { "type": "boolean" },
+        "chat": { "type": "ref", "ref": "#profileAssociatedChat" }
+      }
+    },
+    "profileAssociatedChat": {
+      "type": "object",
+      "required": ["allowIncoming"],
+      "properties": {
+        "allowIncoming": {
+          "type": "string",
+          "knownValues": ["all", "none", "following"]
+        }
       }
     },
     "viewerState": {

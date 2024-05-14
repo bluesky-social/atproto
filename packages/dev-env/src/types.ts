@@ -4,6 +4,10 @@ import * as bsync from '@atproto/bsync'
 import * as ozone from '@atproto/ozone'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 
+export type IntrospectConfig = {
+  port?: number
+}
+
 export type PlcConfig = {
   port?: number
   version?: string
@@ -45,6 +49,7 @@ export type TestServerParams = {
   plc: Partial<PlcConfig>
   bsky: Partial<BskyConfig>
   ozone: Partial<OzoneConfig>
+  introspect: Partial<IntrospectConfig>
 }
 
 export type DidAndKey = {

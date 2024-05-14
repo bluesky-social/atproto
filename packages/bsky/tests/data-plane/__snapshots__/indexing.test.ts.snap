@@ -219,6 +219,11 @@ Array [
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
+                "associated": Object {
+                  "chat": Object {
+                    "allowIncoming": "none",
+                  },
+                },
                 "did": "user(3)",
                 "handle": "dan.test",
                 "labels": Array [],
@@ -432,6 +437,11 @@ Array [
     "cursor": "0000000000000__bafycid",
     "follows": Array [
       Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(3)",
         "handle": "dan.test",
         "labels": Array [],
@@ -633,6 +643,9 @@ Object {
 exports[`indexing indexes profiles. 1`] = `
 Object {
   "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -655,6 +668,9 @@ Object {
 exports[`indexing indexes profiles. 2`] = `
 Object {
   "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
@@ -677,6 +693,9 @@ Object {
 exports[`indexing indexes profiles. 3`] = `
 Object {
   "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
