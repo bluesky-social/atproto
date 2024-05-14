@@ -177,6 +177,7 @@ describe('moderation', () => {
         .selectFrom('moderation_event')
         .selectAll()
         .where('subjectMessageId', 'in', [messageId1, messageId2])
+        .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
         .execute()
       expect(events.length).toBe(2)
       expect(
