@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet'
 import * as AppBskyEmbedRecord from '../../../app/bsky/embed/record'
-import * as AppBskyActorDefs from '../../../app/bsky/actor/defs'
+import * as ChatBskyActorDefs from '../actor/defs'
 
 export interface MessageRef {
   did: string
@@ -55,7 +55,7 @@ export interface MessageView {
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
   embed?: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
-  sender?: MessageViewSender
+  sender: MessageViewSender
   sentAt: string
   [k: string]: unknown
 }
@@ -75,7 +75,7 @@ export function validateMessageView(v: unknown): ValidationResult {
 export interface DeletedMessageView {
   id: string
   rev: string
-  sender?: MessageViewSender
+  sender: MessageViewSender
   sentAt: string
   [k: string]: unknown
 }
@@ -112,12 +112,11 @@ export function validateMessageViewSender(v: unknown): ValidationResult {
 export interface ConvoView {
   id: string
   rev: string
-  members: AppBskyActorDefs.ProfileViewBasic[]
+  members: ChatBskyActorDefs.ProfileViewBasic[]
   lastMessage?:
     | MessageView
     | DeletedMessageView
     | { $type: string; [k: string]: unknown }
-  disabledMembers?: string[]
   muted: boolean
   unreadCount: number
   [k: string]: unknown

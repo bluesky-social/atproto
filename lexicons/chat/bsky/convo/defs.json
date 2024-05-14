@@ -33,7 +33,7 @@
     },
     "messageView": {
       "type": "object",
-      "required": ["id", "rev", "text", "sentAt"],
+      "required": ["id", "rev", "text", "sender", "sentAt"],
       "properties": {
         "id": { "type": "string" },
         "rev": { "type": "string" },
@@ -57,7 +57,7 @@
     },
     "deletedMessageView": {
       "type": "object",
-      "required": ["id", "rev", "sentAt"],
+      "required": ["id", "rev", "sender", "sentAt"],
       "properties": {
         "id": { "type": "string" },
         "rev": { "type": "string" },
@@ -82,16 +82,12 @@
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "app.bsky.actor.defs#profileViewBasic"
+            "ref": "chat.bsky.actor.defs#profileViewBasic"
           }
         },
         "lastMessage": {
           "type": "union",
           "refs": ["#messageView", "#deletedMessageView"]
-        },
-        "disabledMembers": {
-          "type": "array",
-          "items": { "type": "string" }
         },
         "muted": { "type": "boolean" },
         "unreadCount": { "type": "integer" }

@@ -8223,6 +8223,83 @@ export const schemaDict = {
       },
     },
   },
+  ChatBskyActorDefs: {
+    lexicon: 1,
+    id: 'chat.bsky.actor.defs',
+    defs: {
+      profileViewBasic: {
+        type: 'object',
+        required: ['did', 'handle'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          displayName: {
+            type: 'string',
+            maxGraphemes: 64,
+            maxLength: 640,
+          },
+          avatar: {
+            type: 'string',
+            format: 'uri',
+          },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          chatDisabled: {
+            type: 'boolean',
+            description:
+              'Set to true when the actor cannot actively participate in converations',
+          },
+        },
+      },
+    },
+  },
+  ChatBskyActorDeleteAccount: {
+    lexicon: 1,
+    id: 'chat.bsky.actor.deleteAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ChatBskyActorExportAccountData: {
+    lexicon: 1,
+    id: 'chat.bsky.actor.exportAccountData',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/jsonl',
+        },
+      },
+    },
+  },
   ChatBskyConvoDefs: {
     lexicon: 1,
     id: 'chat.bsky.convo.defs',
@@ -8268,7 +8345,7 @@ export const schemaDict = {
       },
       messageView: {
         type: 'object',
-        required: ['id', 'rev', 'text', 'sentAt'],
+        required: ['id', 'rev', 'text', 'sender', 'sentAt'],
         properties: {
           id: {
             type: 'string',
@@ -8305,7 +8382,7 @@ export const schemaDict = {
       },
       deletedMessageView: {
         type: 'object',
-        required: ['id', 'rev', 'sentAt'],
+        required: ['id', 'rev', 'sender', 'sentAt'],
         properties: {
           id: {
             type: 'string',
@@ -8347,7 +8424,7 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
             },
           },
           lastMessage: {
@@ -8356,12 +8433,6 @@ export const schemaDict = {
               'lex:chat.bsky.convo.defs#messageView',
               'lex:chat.bsky.convo.defs#deletedMessageView',
             ],
-          },
-          disabledMembers: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
           },
           muted: {
             type: 'boolean',
@@ -10622,6 +10693,9 @@ export const ids = {
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
+  ChatBskyActorDefs: 'chat.bsky.actor.defs',
+  ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
+  ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
   ChatBskyConvoDefs: 'chat.bsky.convo.defs',
   ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',

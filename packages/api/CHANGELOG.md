@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.12.10
+
+### Patch Changes
+
+- [#2485](https://github.com/bluesky-social/atproto/pull/2485) [`d32f7215f`](https://github.com/bluesky-social/atproto/commit/d32f7215f69bc87f50890d9cfdb09840c2fbaa41) Thanks [@devinivy](https://github.com/devinivy)! - Add lexicons for chat.bsky namespace
+
+## 0.12.9
+
+### Patch Changes
+
+- [#2467](https://github.com/bluesky-social/atproto/pull/2467) [`f83b4c8ca`](https://github.com/bluesky-social/atproto/commit/f83b4c8cad01cebc1b67caa6c7ebe45f07b2f318) Thanks [@haileyok](https://github.com/haileyok)! - Modify label-handling on user's own content to still apply blurring
+
 ## 0.12.8
 
 ### Patch Changes
