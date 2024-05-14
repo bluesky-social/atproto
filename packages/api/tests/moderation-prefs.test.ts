@@ -83,6 +83,9 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
         sort: 'oldest',
       },
+      bskyAppState: {
+        dismissedNudges: [],
+      },
     })
   })
 
@@ -128,6 +131,9 @@ describe('agent', () => {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
       },
+      bskyAppState: {
+        dismissedNudges: [],
+      },
     })
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
 
@@ -159,6 +165,9 @@ describe('agent', () => {
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
+      },
+      bskyAppState: {
+        dismissedNudges: [],
       },
     })
     expect(agent.labelersHeader).toStrictEqual([])
@@ -211,6 +220,9 @@ describe('agent', () => {
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
+      },
+      bskyAppState: {
+        dismissedNudges: [],
       },
     })
   })

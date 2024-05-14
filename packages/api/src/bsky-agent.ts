@@ -1044,7 +1044,7 @@ export class BskyAgent extends AtpAgent {
     await updateHiddenPost(this, postUri, 'unhide')
   }
 
-  async bskyAppDismissNudge(nudge: string) {
+  async bskyAppDismissNudge(nudge: string, isDismissed = true) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       let bskyAppStatePref = prefs.findLast(
         (pref) =>
@@ -1053,11 +1053,20 @@ export class BskyAgent extends AtpAgent {
       )
 
       bskyAppStatePref = bskyAppStatePref || {}
-      if (!Array.isArray(bskyAppStatePref.dismissedNudges)) {
-        bskyAppStatePref.dismissedNudges = [nudge]
+      if (isDismissed) {
+        if (!Array.isArray(bskyAppStatePref.dismissedNudges)) {
+          bskyAppStatePref.dismissedNudges = [nudge]
+        } else {
+          if (!bskyAppStatePref.dismissedNudges.includes(nudge)) {
+            bskyAppStatePref.dismissedNudges.push(nudge)
+          }
+        }
       } else {
-        if (!bskyAppStatePref.dismissedNudges.includes(nudge)) {
-          bskyAppStatePref.dismissedNudges.push(nudge)
+        if (!Array.isArray(bskyAppStatePref.dismissedNudges)) {
+          bskyAppStatePref.dismissedNudges = []
+        } else {
+          bskyAppStatePref.dismissedNudges =
+            bskyAppStatePref.dismissedNudges.filter((v) => v !== nudge)
         }
       }
 

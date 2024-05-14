@@ -276,6 +276,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -312,6 +315,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -350,6 +356,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -386,6 +395,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -427,6 +439,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -472,6 +487,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -515,6 +533,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -560,6 +581,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -604,6 +628,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -647,6 +674,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -698,6 +728,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -741,6 +774,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -786,6 +822,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -830,6 +869,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -873,6 +915,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -925,6 +970,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -975,6 +1023,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
 
@@ -1027,6 +1078,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: [],
+        },
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -1077,6 +1131,9 @@ describe('agent', () => {
         },
         interests: {
           tags: ['foo', 'bar'],
+        },
+        bskyAppState: {
+          dismissedNudges: [],
         },
       })
     })
@@ -1195,6 +1252,14 @@ describe('agent', () => {
             sort: 'newest',
             prioritizeFollowedUsers: false,
           },
+          {
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            dismissedNudges: ['one'],
+          },
+          {
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            dismissedNudges: ['two'],
+          },
         ],
       })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
@@ -1246,6 +1311,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: ['two'],
         },
       })
 
@@ -1299,6 +1367,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: ['two'],
         },
       })
 
@@ -1354,6 +1425,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: ['two'],
+        },
       })
 
       await agent.removeLabeler('did:plc:other')
@@ -1403,6 +1477,9 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          dismissedNudges: ['two'],
         },
       })
 
@@ -1454,6 +1531,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: ['two'],
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1504,6 +1584,9 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: ['two'],
+        },
       })
 
       await agent.setFeedViewPrefs('home', {
@@ -1518,6 +1601,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
+      await agent.bskyAppDismissNudge('three')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -1565,11 +1649,18 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          dismissedNudges: ['two', 'three'],
+        },
       })
 
       const res = await agent.app.bsky.actor.getPreferences()
       expect(res.data.preferences.sort(byType)).toStrictEqual(
         [
+          {
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            dismissedNudges: ['two', 'three'],
+          },
           {
             $type: 'app.bsky.actor.defs#adultContentPref',
             enabled: false,
@@ -2690,6 +2781,50 @@ describe('agent', () => {
             pinned: true,
           },
         ])
+      })
+    })
+
+    describe('dismissed nudges', () => {
+      let agent: BskyAgent
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user11.test',
+          email: 'user11@test.com',
+          password: 'password',
+        })
+      })
+
+      it('dismissNudge (true)', async () => {
+        await agent.bskyAppDismissNudge('first')
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.dismissedNudges',
+          ['first'],
+        )
+        await agent.bskyAppDismissNudge('first')
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.dismissedNudges',
+          ['first'],
+        )
+        await agent.bskyAppDismissNudge('second')
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.dismissedNudges',
+          ['first', 'second'],
+        )
+      })
+
+      it('dismissNudge (false)', async () => {
+        await agent.bskyAppDismissNudge('first', false)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.dismissedNudges',
+          ['second'],
+        )
+        await agent.bskyAppDismissNudge('first', false)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.dismissedNudges',
+          ['second'],
+        )
       })
     })
 
