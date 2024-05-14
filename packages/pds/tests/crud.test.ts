@@ -517,6 +517,36 @@ describe('crud operations', () => {
         description: 'Dog lover',
       })
     })
+
+    // @TODO remove after migrating legacy blobs
+    it('updates a legacy blob ref when updating profile', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const file = await fs.readFile(
+        '../dev-env/src/seed/img/key-portrait-small.jpg',
+      )
+      const uploadedRes = await repo.uploadBlob(file, {
+        encoding: 'image/jpeg',
+      })
+
+      await repo.putRecord({
+        ...profilePath,
+        repo: bob.did,
+        record: {
+          displayName: 'Robert',
+          avatar: BlobRef.fromJsonRef({
+            mimeType: uploadedRes.data.blob.mimeType,
+            cid: uploadedRes.data.blob.ref.toString(),
+          }),
+        },
+      })
+
+      const got = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      const gotAvatar = got.data.value['avatar'] as BlobRef
+      expect(gotAvatar.original).toEqual(uploadedRes.data.blob.original)
+    })
   })
 
   // Validation
