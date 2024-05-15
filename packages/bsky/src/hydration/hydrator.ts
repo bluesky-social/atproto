@@ -669,6 +669,13 @@ export class Hydrator {
         (await this.label.getLabelers([did], includeTakedowns)).get(did) ??
         undefined
       )
+    } else if (collection === ids.ChatBskyActorDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getChatDeclarations([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
       const actor = (await this.actor.getActors([did], includeTakedowns)).get(

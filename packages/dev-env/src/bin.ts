@@ -26,10 +26,16 @@ const run = async () => {
       publicUrl: 'http://localhost:2584',
     },
     plc: { port: 2582 },
+    introspect: { port: 2581 },
   })
   mockMailer(network.pds)
   await generateMockSetup(network)
 
+  if (network.introspect) {
+    console.log(
+      `🔍 Dev-env introspection server started http://localhost:${network.introspect.port}`,
+    )
+  }
   console.log(
     `👤 DID Placeholder server started http://localhost:${network.plc.port}`,
   )

@@ -89,6 +89,7 @@ export interface ProfileAssociated {
   lists?: number
   feedgens?: number
   labeler?: boolean
+  chat?: ProfileAssociatedChat
   [k: string]: unknown
 }
 
@@ -102,6 +103,25 @@ export function isProfileAssociated(v: unknown): v is ProfileAssociated {
 
 export function validateProfileAssociated(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileAssociated', v)
+}
+
+export interface ProfileAssociatedChat {
+  allowIncoming: 'all' | 'none' | 'following' | (string & {})
+  [k: string]: unknown
+}
+
+export function isProfileAssociatedChat(
+  v: unknown,
+): v is ProfileAssociatedChat {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#profileAssociatedChat'
+  )
+}
+
+export function validateProfileAssociatedChat(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileAssociatedChat', v)
 }
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */

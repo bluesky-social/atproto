@@ -154,6 +154,26 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
+import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
+import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
@@ -315,6 +335,26 @@ export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
+export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
+export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
+export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
+export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
+export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
@@ -380,6 +420,7 @@ export class AtpServiceClient {
   xrpc: XrpcServiceClient
   com: ComNS
   app: AppNS
+  chat: ChatNS
   tools: ToolsNS
 
   constructor(baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
@@ -387,6 +428,7 @@ export class AtpServiceClient {
     this.xrpc = xrpcService
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.chat = new ChatNS(this)
     this.tools = new ToolsNS(this)
   }
 
@@ -2683,6 +2725,313 @@ export class AppBskyUnspeccedNS {
       .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
+      })
+  }
+}
+
+export class ChatNS {
+  _service: AtpServiceClient
+  bsky: ChatBskyNS
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.bsky = new ChatBskyNS(service)
+  }
+}
+
+export class ChatBskyNS {
+  _service: AtpServiceClient
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.actor = new ChatBskyActorNS(service)
+    this.convo = new ChatBskyConvoNS(service)
+    this.moderation = new ChatBskyModerationNS(service)
+  }
+}
+
+export class ChatBskyActorNS {
+  _service: AtpServiceClient
+  declaration: DeclarationRecord
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.declaration = new DeclarationRecord(service)
+  }
+
+  deleteAccount(
+    data?: ChatBskyActorDeleteAccount.InputSchema,
+    opts?: ChatBskyActorDeleteAccount.CallOptions,
+  ): Promise<ChatBskyActorDeleteAccount.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.actor.deleteAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyActorDeleteAccount.toKnownErr(e)
+      })
+  }
+
+  exportAccountData(
+    params?: ChatBskyActorExportAccountData.QueryParams,
+    opts?: ChatBskyActorExportAccountData.CallOptions,
+  ): Promise<ChatBskyActorExportAccountData.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.actor.exportAccountData', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyActorExportAccountData.toKnownErr(e)
+      })
+  }
+}
+
+export class DeclarationRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ChatBskyActorDeclaration.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'chat.bsky.actor.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ChatBskyActorDeclaration.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'chat.bsky.actor.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: ChatBskyActorDeclaration.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'chat.bsky.actor.declaration'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection: 'chat.bsky.actor.declaration',
+        rkey: 'self',
+        ...params,
+        record,
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'chat.bsky.actor.declaration', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ChatBskyConvoNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  deleteMessageForSelf(
+    data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
+    opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
+  ): Promise<ChatBskyConvoDeleteMessageForSelf.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.deleteMessageForSelf', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoDeleteMessageForSelf.toKnownErr(e)
+      })
+  }
+
+  getConvo(
+    params?: ChatBskyConvoGetConvo.QueryParams,
+    opts?: ChatBskyConvoGetConvo.CallOptions,
+  ): Promise<ChatBskyConvoGetConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getConvo', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetConvo.toKnownErr(e)
+      })
+  }
+
+  getConvoForMembers(
+    params?: ChatBskyConvoGetConvoForMembers.QueryParams,
+    opts?: ChatBskyConvoGetConvoForMembers.CallOptions,
+  ): Promise<ChatBskyConvoGetConvoForMembers.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getConvoForMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetConvoForMembers.toKnownErr(e)
+      })
+  }
+
+  getLog(
+    params?: ChatBskyConvoGetLog.QueryParams,
+    opts?: ChatBskyConvoGetLog.CallOptions,
+  ): Promise<ChatBskyConvoGetLog.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getLog', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetLog.toKnownErr(e)
+      })
+  }
+
+  getMessages(
+    params?: ChatBskyConvoGetMessages.QueryParams,
+    opts?: ChatBskyConvoGetMessages.CallOptions,
+  ): Promise<ChatBskyConvoGetMessages.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getMessages', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetMessages.toKnownErr(e)
+      })
+  }
+
+  leaveConvo(
+    data?: ChatBskyConvoLeaveConvo.InputSchema,
+    opts?: ChatBskyConvoLeaveConvo.CallOptions,
+  ): Promise<ChatBskyConvoLeaveConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.leaveConvo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoLeaveConvo.toKnownErr(e)
+      })
+  }
+
+  listConvos(
+    params?: ChatBskyConvoListConvos.QueryParams,
+    opts?: ChatBskyConvoListConvos.CallOptions,
+  ): Promise<ChatBskyConvoListConvos.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.listConvos', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoListConvos.toKnownErr(e)
+      })
+  }
+
+  muteConvo(
+    data?: ChatBskyConvoMuteConvo.InputSchema,
+    opts?: ChatBskyConvoMuteConvo.CallOptions,
+  ): Promise<ChatBskyConvoMuteConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoMuteConvo.toKnownErr(e)
+      })
+  }
+
+  sendMessage(
+    data?: ChatBskyConvoSendMessage.InputSchema,
+    opts?: ChatBskyConvoSendMessage.CallOptions,
+  ): Promise<ChatBskyConvoSendMessage.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.sendMessage', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoSendMessage.toKnownErr(e)
+      })
+  }
+
+  sendMessageBatch(
+    data?: ChatBskyConvoSendMessageBatch.InputSchema,
+    opts?: ChatBskyConvoSendMessageBatch.CallOptions,
+  ): Promise<ChatBskyConvoSendMessageBatch.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.sendMessageBatch', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoSendMessageBatch.toKnownErr(e)
+      })
+  }
+
+  unmuteConvo(
+    data?: ChatBskyConvoUnmuteConvo.InputSchema,
+    opts?: ChatBskyConvoUnmuteConvo.CallOptions,
+  ): Promise<ChatBskyConvoUnmuteConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.unmuteConvo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoUnmuteConvo.toKnownErr(e)
+      })
+  }
+
+  updateRead(
+    data?: ChatBskyConvoUpdateRead.InputSchema,
+    opts?: ChatBskyConvoUpdateRead.CallOptions,
+  ): Promise<ChatBskyConvoUpdateRead.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.updateRead', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoUpdateRead.toKnownErr(e)
+      })
+  }
+}
+
+export class ChatBskyModerationNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getActorMetadata(
+    params?: ChatBskyModerationGetActorMetadata.QueryParams,
+    opts?: ChatBskyModerationGetActorMetadata.CallOptions,
+  ): Promise<ChatBskyModerationGetActorMetadata.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.getActorMetadata', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyModerationGetActorMetadata.toKnownErr(e)
+      })
+  }
+
+  getMessageContext(
+    params?: ChatBskyModerationGetMessageContext.QueryParams,
+    opts?: ChatBskyModerationGetMessageContext.CallOptions,
+  ): Promise<ChatBskyModerationGetMessageContext.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.getMessageContext', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyModerationGetMessageContext.toKnownErr(e)
+      })
+  }
+
+  updateActorAccess(
+    data?: ChatBskyModerationUpdateActorAccess.InputSchema,
+    opts?: ChatBskyModerationUpdateActorAccess.CallOptions,
+  ): Promise<ChatBskyModerationUpdateActorAccess.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.updateActorAccess', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyModerationUpdateActorAccess.toKnownErr(e)
       })
   }
 }
