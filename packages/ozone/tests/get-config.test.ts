@@ -2,7 +2,7 @@ import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { forSnapshot } from './_util'
 
-describe('communication-templates', () => {
+describe('get-config', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -33,16 +33,14 @@ describe('communication-templates', () => {
 
   it('returns server config', async () => {
     const moderatorConfig = await getConfig('moderator')
-    console.log(moderatorConfig)
-    expect(forSnapshot(moderatorConfig)).toMatchSnapshot()
+    expect(moderatorConfig.appview?.configured).toBe(true)
+    expect(moderatorConfig.pds?.configured).toBe(true)
+    expect(moderatorConfig.blobDivert?.configured).toBe(false)
+    expect(moderatorConfig.viewerRole).toEqual('moderator')
   })
 
   it('returns the right role for the viewer', async () => {
-    const [moderatorConfig, adminConfig] = await Promise.all([
-      getConfig('moderator'),
-      getConfig('admin'),
-    ])
-    expect(moderatorConfig.viewerRole).toBe('moderator')
+    const adminConfig = await getConfig('admin')
     expect(adminConfig.viewerRole).toBe('admin')
   })
 })
