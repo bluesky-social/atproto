@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.label.queryLabels(async ({ params, req }) => {
+  server.com.atproto.label.queryLabels(async ({ params }) => {
     const { uriPatterns, sources } = params
 
     if (uriPatterns.find((uri) => uri.includes('*'))) {

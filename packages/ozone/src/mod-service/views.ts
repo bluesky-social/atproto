@@ -338,14 +338,13 @@ export class ModerationViews {
     labelers?: ParsedLabelers,
   ): Promise<Label[]> {
     if (!labelers?.dids.length && !labelers?.redact.size) return []
-    const auth = await this.appviewAuth()
 
     const {
       data: { labels },
-    } = await this.appviewAgent.api.com.atproto.label.queryLabels(
-      { uriPatterns: subjects, sources: labelers.dids },
-      auth,
-    )
+    } = await this.appviewAgent.api.com.atproto.label.queryLabels({
+      uriPatterns: subjects,
+      sources: labelers.dids,
+    })
 
     return labels
   }
