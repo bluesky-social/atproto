@@ -46,7 +46,7 @@ export class TestPds {
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
       fetchDisableSsrf: true,
-      oauthProviderName: 'PDS (dev)',
+      oauthProviderName: 'Development PDS',
       oauthProviderPrimaryColor: '#ffcb1e',
       oauthProviderLogo:
         'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
