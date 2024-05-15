@@ -149,6 +149,43 @@ describe('moderation', () => {
       })
       await expect(promiseB).resolves.toBeDefined()
     })
+
+    it('creates reports of a DM chat.', async () => {
+      const messageId1 = 'testmessageid1'
+      const messageId2 = 'testmessageid2'
+      const reportA = await sc.createReport({
+        reportedBy: sc.dids.alice,
+        reasonType: REASONSPAM,
+        subject: {
+          $type: 'chat.bsky.convo.defs#messageRef',
+          did: sc.dids.carol,
+          messageId: messageId1,
+        },
+      })
+      const reportB = await sc.createReport({
+        reportedBy: sc.dids.carol,
+        reasonType: REASONOTHER,
+        reason: 'defamation',
+        subject: {
+          $type: 'chat.bsky.convo.defs#messageRef',
+          did: sc.dids.carol,
+          messageId: messageId2,
+        },
+      })
+      expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
+      const events = await ozone.ctx.db.db
+        .selectFrom('moderation_event')
+        .selectAll()
+        .where('subjectMessageId', 'in', [messageId1, messageId2])
+        .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+        .execute()
+      expect(events.length).toBe(2)
+      expect(
+        events.every(
+          (row) => row.subjectType === 'chat.bsky.convo.defs#messageRef',
+        ),
+      ).toBe(true)
+    })
   })
 
   describe('actioning', () => {

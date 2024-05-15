@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs'
 import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
@@ -32,6 +33,7 @@ export interface ModEventView {
   subject:
     | ComAtprotoAdminDefs.RepoRef
     | ComAtprotoRepoStrongRef.Main
+    | ChatBskyConvoDefs.MessageRef
     | { $type: string; [k: string]: unknown }
   subjectBlobCids: string[]
   createdBy: string
