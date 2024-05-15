@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`communication-templates gets server config 1`] = `
+Object {
+  "appview": Object {
+    "configured": true,
+    "url": "http://localhost:53334",
+  },
+  "blobDivert": Object {
+    "configured": false,
+  },
+  "pds": Object {
+    "configured": true,
+    "url": "http://localhost:53335",
+  },
+  "viewerRole": "moderator",
+}
+`;
+
+exports[`communication-templates returns server config 1`] = `
+Object {
+  "appview": Object {
+    "configured": true,
+    "url": "http://localhost:53897",
+  },
+  "blobDivert": Object {
+    "configured": false,
+  },
+  "pds": Object {
+    "configured": true,
+    "url": "http://localhost:53898",
+  },
+  "viewerRole": "moderator",
+}
+`;

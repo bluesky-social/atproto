@@ -9625,6 +9625,51 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneServerGetConfig: {
+    lexicon: 1,
+    id: 'tools.ozone.server.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Get details about ozone's server configuration.",
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              appview: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.server.getConfig#serviceConfig',
+              },
+              pds: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.server.getConfig#serviceConfig',
+              },
+              blobDivert: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.server.getConfig#serviceConfig',
+              },
+              viewerRole: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      serviceConfig: {
+        type: 'object',
+        properties: {
+          configured: {
+            type: 'boolean',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -9809,4 +9854,5 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
 }
