@@ -2,14 +2,16 @@ import { Lexicons } from '../lexicons'
 import {
   LexArray,
   LexObject,
+  LexRefVariant,
   LexUserType,
-  ValidationResult,
   ValidationError,
+  ValidationResult,
+  isDiscriminatedObject,
 } from '../types'
-import { validateOneOf } from '../util'
+import { toConcreteTypes, toLexUri } from '../util'
 
-import * as Primitives from './primitives'
-import * as Blob from './blob'
+import { blob } from './blob'
+import { boolean, integer, string, bytes, cidLink, unknown } from './primitives'
 
 export function validate(
   lexicons: Lexicons,
@@ -19,23 +21,23 @@ export function validate(
 ): ValidationResult {
   switch (def.type) {
     case 'boolean':
-      return Primitives.boolean(lexicons, path, def, value)
+      return boolean(lexicons, path, def, value)
     case 'integer':
-      return Primitives.integer(lexicons, path, def, value)
+      return integer(lexicons, path, def, value)
     case 'string':
-      return Primitives.string(lexicons, path, def, value)
+      return string(lexicons, path, def, value)
     case 'bytes':
-      return Primitives.bytes(lexicons, path, def, value)
+      return bytes(lexicons, path, def, value)
     case 'cid-link':
-      return Primitives.cidLink(lexicons, path, def, value)
+      return cidLink(lexicons, path, def, value)
     case 'unknown':
-      return Primitives.unknown(lexicons, path, def, value)
+      return unknown(lexicons, path, def, value)
     case 'object':
       return object(lexicons, path, def, value)
     case 'array':
       return array(lexicons, path, def, value)
     case 'blob':
-      return Blob.blob(lexicons, path, def, value)
+      return blob(lexicons, path, def, value)
     default:
       return {
         success: false,
@@ -163,4 +165,78 @@ export function object(
   }
 
   return { success: true, value: resultValue }
+}
+
+export function validateOneOf(
+  lexicons: Lexicons,
+  path: string,
+  def: LexRefVariant | LexUserType,
+  value: unknown,
+  mustBeObj = false, // this is the only type constraint we need currently (used by xrpc body schema validators)
+): ValidationResult {
+  let error
+
+  let concreteDefs
+  if (def.type === 'union') {
+    if (!isDiscriminatedObject(value)) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must be an object which includes the "$type" property`,
+        ),
+      }
+    }
+    if (!refsContainType(def.refs, value.$type)) {
+      if (def.closed) {
+        return {
+          success: false,
+          error: new ValidationError(
+            `${path} $type must be one of ${def.refs.join(', ')}`,
+          ),
+        }
+      }
+      return { success: true, value }
+    } else {
+      concreteDefs = toConcreteTypes(lexicons, {
+        type: 'ref',
+        ref: value.$type,
+      })
+    }
+  } else {
+    concreteDefs = toConcreteTypes(lexicons, def)
+  }
+
+  for (const concreteDef of concreteDefs) {
+    const result = mustBeObj
+      ? object(lexicons, path, concreteDef, value)
+      : validate(lexicons, path, concreteDef, value)
+    if (result.success) {
+      return result
+    }
+    error ??= result.error
+  }
+  if (concreteDefs.length > 1) {
+    return {
+      success: false,
+      error: new ValidationError(
+        `${path} did not match any of the expected definitions`,
+      ),
+    }
+  }
+  return { success: false, error }
+}
+
+// to avoid bugs like #0189 this needs to handle both
+// explicit and implicit #main
+const refsContainType = (refs: string[], type: string) => {
+  const lexUri = toLexUri(type)
+  if (refs.includes(lexUri)) {
+    return true
+  }
+
+  if (lexUri.endsWith('#main')) {
+    return refs.includes(lexUri.replace('#main', ''))
+  } else {
+    return refs.includes(lexUri + '#main')
+  }
 }
