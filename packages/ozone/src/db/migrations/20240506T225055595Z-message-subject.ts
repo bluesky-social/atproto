@@ -18,5 +18,4 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .alterTable('moderation_event')
     .dropColumn('subjectMessageId')
     .execute()
-  await db.schema.dropIndex('moderation_event_message_id_index').execute()
 }

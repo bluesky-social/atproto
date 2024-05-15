@@ -243,7 +243,6 @@ const assertTagAuth = (
       }
     }
   }
-  return true
 }
 
 const validateLabels = (labels: string[]) => {
