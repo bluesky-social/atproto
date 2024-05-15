@@ -43,7 +43,7 @@ export class ModerationViews {
     private signingKey: Keypair,
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
-    private appviewAuth: (labelers?: ParsedLabelers) => Promise<AuthHeaders>,
+    private appviewAuth: () => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
@@ -338,7 +338,7 @@ export class ModerationViews {
     labelers?: ParsedLabelers,
   ): Promise<Label[]> {
     if (!labelers?.dids.length && !labelers?.redact.size) return []
-    const auth = await this.appviewAuth(labelers)
+    const auth = await this.appviewAuth()
 
     const {
       data: { labels },

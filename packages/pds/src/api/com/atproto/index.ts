@@ -6,7 +6,6 @@ import repo from './repo'
 import serverMethods from './server'
 import sync from './sync'
 import temp from './temp'
-import label from './label'
 
 export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)
@@ -15,5 +14,4 @@ export default function (server: Server, ctx: AppContext) {
   serverMethods(server, ctx)
   sync(server, ctx)
   temp(server, ctx)
-  label(server, ctx)
 }

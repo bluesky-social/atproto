@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         redact: new Set(),
       },
     )
-    const labels = uriPatterns.map((uri) => labelMap.getBySubject(uri)).flat()
+    const labels = uriPatterns.flatMap((uri) => labelMap.getBySubject(uri))
 
     return {
       encoding: 'application/json',

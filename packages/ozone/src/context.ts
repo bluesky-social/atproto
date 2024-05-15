@@ -215,12 +215,8 @@ export class AppContext {
     return this.serviceAuthHeaders(this.cfg.pds.did)
   }
 
-  async appviewAuth(labelers?: ParsedLabelers) {
-    const auth = await this.serviceAuthHeaders(this.cfg.appview.did)
-    if (auth && labelers?.dids?.length) {
-      auth.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
-    }
-    return auth
+  async appviewAuth() {
+    return this.serviceAuthHeaders(this.cfg.appview.did)
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {
