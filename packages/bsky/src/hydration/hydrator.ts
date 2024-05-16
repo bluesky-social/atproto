@@ -219,11 +219,12 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [lists, listViewers, labels] = await Promise.all([
-      this.graph.getLists(uris),
+      this.graph.getLists(uris, ctx.includeTakedowns),
       ctx.viewer ? this.graph.getListViewerStates(uris, ctx.viewer) : undefined,
       this.label.getLabelsForSubjects(uris, ctx.labelers),
     ])
 
+    // TODO: Check why the takedown label is not coming through here when list has been takendown
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(uris, lists, labels)
     }

@@ -500,7 +500,7 @@ export async function generateMockSetup(env: TestNetwork) {
         description: 'A list of people who hate labels',
       },
     )
-    alice.agent.api.app.bsky.graph.listitem.create(
+    await alice.agent.api.app.bsky.graph.listitem.create(
       { repo: alice.did },
       {
         subject: bob.did,
@@ -508,7 +508,7 @@ export async function generateMockSetup(env: TestNetwork) {
         list: new RecordRef(flowerLovers.uri, flowerLovers.cid).uriStr,
       },
     )
-    bob.agent.api.app.bsky.graph.listitem.create(
+    await bob.agent.api.app.bsky.graph.listitem.create(
       { repo: bob.did },
       {
         subject: alice.did,
