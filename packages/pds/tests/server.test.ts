@@ -89,7 +89,7 @@ describe('server', () => {
       text: 'blahblabh',
       createdAt: new Date().toISOString(),
     }
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 150; i++) {
       record[randomStr(8, 'base32')] = randomStr(32, 'base32')
     }
     const createRes = await agent.com.atproto.repo.createRecord(
