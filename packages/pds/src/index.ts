@@ -63,7 +63,7 @@ export class PDS {
     const xrpcOpts: XrpcServerOptions = {
       validateResponse: false,
       payload: {
-        jsonLimit: 100 * 1024, // 100kb
+        jsonLimit: 150 * 1024, // 150kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: cfg.service.blobUploadLimit,
       },
