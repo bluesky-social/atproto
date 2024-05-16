@@ -7,7 +7,6 @@ import {
   RecordRef,
 } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { forSnapshot } from './_util'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('admin get repo view', () => {
@@ -29,15 +28,13 @@ describe('admin get repo view', () => {
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
+    alicesList = await sc.createList(sc.dids.alice, "Alice's List", 'mod')
+    AtpAgent.configure({ appLabelers: [ozone.ctx.cfg.service.did] })
     await network.processAll()
   })
 
   afterAll(async () => {
     await network.close()
-  })
-
-  beforeAll(async () => {
-    alicesList = await sc.createList(sc.dids.alice, "Alice's List", 'mod')
   })
 
   const getAlicesList = async () => {
@@ -84,24 +81,23 @@ describe('admin get repo view', () => {
     await network.processAll()
   })
 
-  //   TODO: This should pass but for some reason, the takendown list is returned by the appview too
-  //   which is not relevant to the change since all that matters is that ozone returns it but would be good to have that fixed too
   it('returns takendown lists', async () => {
     const beforeTakedown = await getAlicesList()
     expect(beforeTakedown.fromOzone.lists[0].uri).toEqual(alicesList.uriStr)
     expect(beforeTakedown.fromAppview.lists[0].uri).toEqual(alicesList.uriStr)
 
-    //     Takedown alice's list
-    await modClient.emitEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventTakedown',
-      },
-      subject: {
-        $type: 'com.atproto.repo.strongRef',
-        ...alicesList.raw,
-      },
-    })
-    await network.processAll()
+    // Takedown alice's list using a !takedown label
+    await network.bsky.db.db
+      .insertInto('label')
+      .values({
+        src: ozone.ctx.cfg.service.did,
+        uri: alicesList.uriStr,
+        cid: alicesList.cidStr,
+        val: TAKEDOWN_LABEL,
+        neg: false,
+        cts: new Date().toISOString(),
+      })
+      .execute()
 
     const afterTakedown = await getAlicesList()
 
