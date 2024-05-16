@@ -64,7 +64,7 @@ describe('server', () => {
       await axios.post(
         `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
         {
-          data: 'x'.repeat(100 * 1024), // 100kb
+          data: 'x'.repeat(150 * 1024), // 150kb
         },
         { headers: sc.getHeaders(alice) },
       )
@@ -89,7 +89,7 @@ describe('server', () => {
       text: 'blahblabh',
       createdAt: new Date().toISOString(),
     }
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 100; i++) {
       record[randomStr(8, 'base32')] = randomStr(32, 'base32')
     }
     const createRes = await agent.com.atproto.repo.createRecord(
