@@ -56,6 +56,21 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
   })
 
+  it('fetches thread with handle in uri', async () => {
+    const thread = await agent.api.app.bsky.feed.getPostThread(
+      {
+        depth: 1,
+        uri: sc.posts[alice][1].ref.uriStr.replace(
+          `at://${alice}`,
+          `at://${sc.accounts[alice].handle}`,
+        ),
+      },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
   it('fetches ancestors', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
