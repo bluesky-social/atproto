@@ -9,7 +9,7 @@ import {
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 
-describe('admin get repo view', () => {
+describe('admin get lists', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let agent: AtpAgent
