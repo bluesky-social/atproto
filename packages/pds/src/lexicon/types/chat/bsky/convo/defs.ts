@@ -11,6 +11,7 @@ import * as ChatBskyActorDefs from '../actor/defs'
 
 export interface MessageRef {
   did: string
+  convoId: string
   messageId: string
   [k: string]: unknown
 }
@@ -27,8 +28,7 @@ export function validateMessageRef(v: unknown): ValidationResult {
   return lexicons.validate('chat.bsky.convo.defs#messageRef', v)
 }
 
-export interface Message {
-  id?: string
+export interface MessageInput {
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
@@ -36,16 +36,16 @@ export interface Message {
   [k: string]: unknown
 }
 
-export function isMessage(v: unknown): v is Message {
+export function isMessageInput(v: unknown): v is MessageInput {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'chat.bsky.convo.defs#message'
+    v.$type === 'chat.bsky.convo.defs#messageInput'
   )
 }
 
-export function validateMessage(v: unknown): ValidationResult {
-  return lexicons.validate('chat.bsky.convo.defs#message', v)
+export function validateMessageInput(v: unknown): ValidationResult {
+  return lexicons.validate('chat.bsky.convo.defs#messageInput', v)
 }
 
 export interface MessageView {
