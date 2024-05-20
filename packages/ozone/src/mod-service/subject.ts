@@ -32,9 +32,10 @@ export const subjectFromInput = (
   if (
     subject.$type === 'chat.bsky.convo.defs#messageRef' &&
     typeof subject.did === 'string' &&
+    typeof subject.convoId === 'string' &&
     typeof subject.messageId === 'string'
   ) {
-    return new MessageSubject(subject.did, subject.messageId)
+    return new MessageSubject(subject.did, subject.convoId, subject.messageId)
   }
 
   throw new InvalidRequestError('Invalid subject')
@@ -55,7 +56,9 @@ export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
     row.subjectType === 'chat.bsky.convo.defs#messageRef' &&
     row.subjectMessageId
   ) {
-    return new MessageSubject(row.subjectDid, row.subjectMessageId)
+    const convoId =
+      typeof row.meta?.['convoId'] === 'string' ? row.meta['convoId'] : ''
+    return new MessageSubject(row.subjectDid, convoId, row.subjectMessageId)
   } else {
     return new RepoSubject(row.subjectDid)
   }
@@ -84,6 +87,7 @@ type SubjectInfo = {
   subjectCid: string | null
   subjectBlobCids: string[] | null
   subjectMessageId: string | null
+  meta: Record<string, string> | null
 }
 
 export interface ModSubject {
@@ -118,6 +122,7 @@ export class RepoSubject implements ModSubject {
       subjectCid: null,
       subjectBlobCids: null,
       subjectMessageId: null,
+      meta: null,
     }
   }
   lex(): RepoRef {
@@ -158,6 +163,7 @@ export class RecordSubject implements ModSubject {
       subjectCid: this.cid,
       subjectBlobCids: this.blobCids ?? [],
       subjectMessageId: null,
+      meta: null,
     }
   }
   lex(): StrongRef {
@@ -174,6 +180,7 @@ export class MessageSubject implements ModSubject {
   recordPath = undefined
   constructor(
     public did: string,
+    public convoId: string,
     public messageId: string,
   ) {}
   isRepo() {
@@ -193,12 +200,14 @@ export class MessageSubject implements ModSubject {
       subjectCid: null,
       subjectBlobCids: null,
       subjectMessageId: this.messageId,
+      meta: { convoId: this.convoId },
     }
   }
   lex(): MessageRef {
     return {
       $type: 'chat.bsky.convo.defs#messageRef',
       did: this.did,
+      convoId: this.convoId,
       messageId: this.messageId,
     }
   }

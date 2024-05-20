@@ -160,6 +160,7 @@ describe('moderation', () => {
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId1,
+          convoId: 'testconvoid1',
         },
       })
       const reportB = await sc.createReport({
@@ -170,6 +171,7 @@ describe('moderation', () => {
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId2,
+          convoId: 'testconvoid2',
         },
       })
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()

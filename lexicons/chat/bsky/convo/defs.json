@@ -4,17 +4,17 @@
   "defs": {
     "messageRef": {
       "type": "object",
-      "required": ["did", "messageId"],
+      "required": ["did", "messageId", "convoId"],
       "properties": {
         "did": { "type": "string", "format": "did" },
+        "convoId": { "type": "string" },
         "messageId": { "type": "string" }
       }
     },
-    "message": {
+    "messageInput": {
       "type": "object",
       "required": ["text"],
       "properties": {
-        "id": { "type": "string" },
         "text": {
           "type": "string",
           "maxLength": 10000,

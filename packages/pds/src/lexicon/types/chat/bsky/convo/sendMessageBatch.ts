@@ -51,7 +51,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 export interface BatchItem {
   convoId: string
-  message: ChatBskyConvoDefs.Message
+  message: ChatBskyConvoDefs.MessageInput
   [k: string]: unknown
 }
 

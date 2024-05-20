@@ -9,6 +9,8 @@ import { CID } from 'multiformats/cid'
 import * as ChatBskyConvoDefs from '../convo/defs'
 
 export interface QueryParams {
+  /** Conversation that the message is from. NOTE: this field will eventually be required. */
+  convoId?: string
   messageId: string
   before?: number
   after?: number
