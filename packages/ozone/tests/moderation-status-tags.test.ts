@@ -1,32 +1,22 @@
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation-status-tags', () => {
   let network: TestNetwork
-  let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
-
-  const emitModerationEvent = async (eventData) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
-      encoding: 'application/json',
-      headers: network.bsky.adminAuthHeaders('moderator'),
-    })
-  }
-
-  const queryModerationStatuses = (statusQuery) =>
-    agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
-      headers: network.bsky.adminAuthHeaders('moderator'),
-    })
+  let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation_status_tags',
     })
-    agent = network.ozone.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -41,43 +31,36 @@ describe('moderation-status-tags', () => {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.bob,
       }
-      await emitModerationEvent({
+      await sc.createReport({
+        reasonType: REASONSPAM,
+        reason: 'X',
         subject: bobsAccount,
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
-          comment: 'X',
-          reportType: REASONSPAM,
-        },
-        createdBy: sc.dids.alice,
+        reportedBy: sc.dids.alice,
       })
-      await emitModerationEvent({
+      await modClient.emitEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTag',
+          $type: 'tools.ozone.moderation.defs#modEventTag',
           add: ['interaction-churn'],
           remove: [],
         },
-        createdBy: sc.dids.alice,
       })
-      const { data: statusAfterInteractionTag } = await queryModerationStatuses(
-        {
-          subject: bobsAccount.did,
-        },
-      )
+      const statusAfterInteractionTag = await modClient.queryStatuses({
+        subject: bobsAccount.did,
+      })
       expect(statusAfterInteractionTag.subjectStatuses[0].tags).toContain(
         'interaction-churn',
       )
 
-      await emitModerationEvent({
+      await modClient.emitEvent({
         subject: bobsAccount,
         event: {
-          $type: 'com.atproto.admin.defs#modEventTag',
+          $type: 'tools.ozone.moderation.defs#modEventTag',
           remove: ['interaction-churn'],
           add: ['follow-churn'],
         },
-        createdBy: sc.dids.alice,
       })
-      const { data: statusAfterFollowTag } = await queryModerationStatuses({
+      const statusAfterFollowTag = await modClient.queryStatuses({
         subject: bobsAccount.did,
       })
 

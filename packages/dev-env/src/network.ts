@@ -3,15 +3,16 @@ import * as uint8arrays from 'uint8arrays'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { Client as PlcClient } from '@did-plc/lib'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
 import { TestOzone } from './ozone'
+import { OzoneServiceProfile } from './ozone-service-profile'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { EXAMPLE_LABELER } from './const'
+import { IntrospectServer } from './introspect'
 
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
@@ -22,6 +23,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     public pds: TestPds,
     public bsky: TestBsky,
     public ozone: TestOzone,
+    public introspect?: IntrospectServer,
   ) {
     super(plc, pds)
   }
@@ -42,14 +44,16 @@ export class TestNetwork extends TestNetworkNoAppView {
     const pdsPort = params.pds?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
-    const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
-    const ozoneDid = await new PlcClient(plc.url).createDid({
-      signingKey: ozoneKey.did(),
-      rotationKeys: [ozoneKey.did()],
-      handle: 'ozone.test',
-      pds: `http://pds.invalid`,
-      signer: ozoneKey,
-    })
+    const thirdPartyPdsProps = {
+      didPlcUrl: plc.url,
+      ...params.pds,
+      inviteRequired: false,
+      port: await getPort(),
+    }
+    const thirdPartyPds = await TestPds.create(thirdPartyPdsProps)
+    const ozoneServiceProfile = new OzoneServiceProfile(thirdPartyPds)
+    const { did: ozoneDid, key: ozoneKey } =
+      await ozoneServiceProfile.createDidAndKey()
 
     const bsky = await TestBsky.create({
       port: bskyPort,
@@ -60,36 +64,74 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       redisHost,
       modServiceDid: ozoneDid,
+      labelsFromIssuerDids: [ozoneDid, EXAMPLE_LABELER],
       ...params.bsky,
     })
 
-    const pds = await TestPds.create({
+    const modServiceUrl = `http://localhost:${ozonePort}`
+    const pdsProps = {
       port: pdsPort,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      modServiceUrl: `http://localhost:${ozonePort}`,
+      modServiceUrl,
       modServiceDid: ozoneDid,
       ...params.pds,
-    })
+    }
+
+    const pds = await TestPds.create(pdsProps)
 
     const ozone = await TestOzone.create({
       port: ozonePort,
       plcUrl: plc.url,
       signingKey: ozoneKey,
       serverDid: ozoneDid,
-      dbPostgresSchema: `ozone_${dbPostgresSchema}`,
+      dbPostgresSchema: `ozone_${dbPostgresSchema || 'db'}`,
       dbPostgresUrl,
       appviewUrl: bsky.url,
       appviewDid: bsky.ctx.cfg.serverDid,
+      appviewPushEvents: true,
       pdsUrl: pds.url,
       pdsDid: pds.ctx.cfg.service.did,
       ...params.ozone,
     })
 
-    mockNetworkUtilities(pds, bsky)
+    let inviteCode: string | undefined
+    if (pdsProps.inviteRequired) {
+      const { data: invite } = await pds
+        .getClient()
+        .api.com.atproto.server.createInviteCode(
+          { useCount: 1 },
+          {
+            encoding: 'application/json',
+            headers: pds.adminAuthHeaders(),
+          },
+        )
+      inviteCode = invite.code
+    }
+    await ozoneServiceProfile.createServiceDetails(pds, modServiceUrl, {
+      inviteCode,
+    })
 
-    return new TestNetwork(plc, pds, bsky, ozone)
+    ozone.addAdminDid(ozoneDid)
+
+    mockNetworkUtilities(pds, bsky)
+    await pds.processAll()
+    await bsky.sub.background.processAll()
+    await thirdPartyPds.close()
+
+    let introspect: IntrospectServer | undefined = undefined
+    if (params.introspect?.port) {
+      introspect = await IntrospectServer.start(
+        params.introspect.port,
+        plc,
+        pds,
+        bsky,
+        ozone,
+      )
+    }
+
+    return new TestNetwork(plc, pds, bsky, ozone, introspect)
   }
 
   async processFullSubscription(timeout = 5000) {
@@ -112,6 +154,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.pds.processAll()
     await this.processFullSubscription(timeout)
     await this.bsky.sub.background.processAll()
+    await this.ozone.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {
@@ -147,5 +190,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.bsky.close()
     await this.pds.close()
     await this.plc.close()
+    await this.introspect?.close()
   }
 }

@@ -10,11 +10,11 @@ import {
   RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { Notification } from '../../../../proto/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -25,12 +25,18 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.notification.listNotifications({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await listNotifications({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const result = await listNotifications(
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -43,17 +49,18 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
+  const viewer = params.hydrateCtx.viewer
   if (clearlyBadCursor(params.cursor)) {
     return { notifs: [] }
   }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
-      actorDid: params.viewer,
+      actorDid: viewer,
       cursor: params.cursor,
       limit: params.limit,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: params.viewer,
+      actorDid: viewer,
     }),
   ])
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
@@ -73,7 +80,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { skeleton, params, ctx } = input
-  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.viewer)
+  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
 }
 
 const noBlockOrMutes = (
@@ -107,7 +114,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

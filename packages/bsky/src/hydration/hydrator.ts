@@ -22,8 +22,20 @@ import {
   Lists,
   RelationshipPair,
 } from './graph'
-import { LabelHydrator, Labels } from './label'
-import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
+import {
+  LabelHydrator,
+  LabelerAggs,
+  LabelerViewerStates,
+  Labelers,
+  Labels,
+} from './label'
+import {
+  HydrationMap,
+  Merges,
+  RecordInfo,
+  didFromUri,
+  urisByCollection,
+} from './util'
 import {
   FeedGenAggs,
   FeedGens,
@@ -39,9 +51,26 @@ import {
   FeedItem,
   ItemRef,
 } from './feed'
+import { ParsedLabelers } from '../util'
+
+export class HydrateCtx {
+  labelers = this.vals.labelers
+  viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
+  includeTakedowns = this.vals.includeTakedowns
+  constructor(private vals: HydrateCtxVals) {}
+  copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
+    return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
+  }
+}
+
+export type HydrateCtxVals = {
+  labelers: ParsedLabelers
+  viewer: string | null
+  includeTakedowns?: boolean
+}
 
 export type HydrationState = {
-  viewer?: string | null
+  ctx?: HydrateCtx
   actors?: Actors
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
@@ -61,6 +90,9 @@ export type HydrationState = {
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
   feedgenAggs?: FeedGenAggs
+  labelers?: Labelers
+  labelerViewers?: LabelerViewerStates
+  labelerAggs?: LabelerAggs
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -75,15 +107,17 @@ export class Hydrator {
   feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
+  serviceLabelers: Set<string>
 
   constructor(
     public dataplane: DataPlaneClient,
-    public opts?: { labelsFromIssuerDids?: string[] },
+    serviceLabelers: string[] = [],
   ) {
     this.actor = new ActorHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
-    this.label = new LabelHydrator(dataplane, opts)
+    this.label = new LabelHydrator(dataplane)
+    this.serviceLabelers = new Set(serviceLabelers)
   }
 
   // app.bsky.actor.defs#profileView
@@ -92,8 +126,10 @@ export class Hydrator {
   // Note: builds on the naive profile viewer hydrator and removes references to lists that have been deleted
   async hydrateProfileViewers(
     dids: string[],
-    viewer: string,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    const viewer = ctx.viewer
+    if (!viewer) return {}
     const profileViewers = await this.actor.getProfileViewerStatesNaive(
       dids,
       viewer,
@@ -102,14 +138,14 @@ export class Hydrator {
     profileViewers?.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
     })
-    const listState = await this.hydrateListsBasic(listUris, viewer)
+    const listState = await this.hydrateListsBasic(listUris, ctx)
     // if a list no longer exists or is not a mod list, then remove from viewer state
     profileViewers?.forEach((item) => {
       removeNonModListsFromProfileViewer(item, listState)
     })
     return mergeStates(listState, {
       profileViewers,
-      viewer,
+      ctx,
     })
   }
 
@@ -118,18 +154,20 @@ export class Hydrator {
   //   - list basic
   async hydrateProfiles(
     dids: string[],
-    viewer: string | null,
-    includeTakedowns = false,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [actors, labels, profileViewersState] = await Promise.all([
-      this.actor.getActors(dids, includeTakedowns),
-      this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
-      viewer ? this.hydrateProfileViewers(dids, viewer) : undefined,
+      this.actor.getActors(dids, ctx.includeTakedowns),
+      this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
+      this.hydrateProfileViewers(dids, ctx),
     ])
+    if (!ctx.includeTakedowns) {
+      actionTakedownLabels(dids, actors, labels)
+    }
     return mergeStates(profileViewersState ?? {}, {
       actors,
       labels,
-      viewer,
+      ctx,
     })
   }
 
@@ -139,10 +177,9 @@ export class Hydrator {
   //     - list basic
   async hydrateProfilesBasic(
     dids: string[],
-    viewer: string | null,
-    includeTakedowns = false,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    return this.hydrateProfiles(dids, viewer, includeTakedowns)
+    return this.hydrateProfiles(dids, ctx)
   }
 
   // app.bsky.actor.defs#profileViewDetailed
@@ -151,11 +188,10 @@ export class Hydrator {
   //     - list basic
   async hydrateProfilesDetailed(
     dids: string[],
-    viewer: string | null,
-    includeTakedowns = false,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [state, profileAggs] = await Promise.all([
-      this.hydrateProfiles(dids, viewer, includeTakedowns),
+      this.hydrateProfiles(dids, ctx),
       this.actor.getProfileAggregates(dids),
     ])
     return {
@@ -167,14 +203,12 @@ export class Hydrator {
   // app.bsky.graph.defs#listView
   // - list
   //   - profile basic
-  async hydrateLists(
-    uris: string[],
-    viewer: string | null,
-  ): Promise<HydrationState> {
+  async hydrateLists(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
     const [listsState, profilesState] = await Promise.all([
-      await this.hydrateListsBasic(uris, viewer),
-      await this.hydrateProfilesBasic(uris.map(didFromUri), viewer),
+      await this.hydrateListsBasic(uris, ctx),
+      await this.hydrateProfilesBasic(uris.map(didFromUri), ctx),
     ])
+
     return mergeStates(listsState, profilesState)
   }
 
@@ -182,13 +216,19 @@ export class Hydrator {
   // - list basic
   async hydrateListsBasic(
     uris: string[],
-    viewer: string | null,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [lists, listViewers] = await Promise.all([
+    const [lists, listViewers, labels] = await Promise.all([
       this.graph.getLists(uris),
-      viewer ? this.graph.getListViewerStates(uris, viewer) : undefined,
+      ctx.viewer ? this.graph.getListViewerStates(uris, ctx.viewer) : undefined,
+      this.label.getLabelsForSubjects(uris, ctx.labelers),
     ])
-    return { lists, listViewers, viewer }
+
+    if (!ctx.includeTakedowns) {
+      actionTakedownLabels(uris, lists, labels)
+    }
+
+    return { lists, listViewers, labels, ctx }
   }
 
   // app.bsky.graph.defs#listItemView
@@ -197,7 +237,7 @@ export class Hydrator {
   //     - list basic
   async hydrateListItems(
     uris: string[],
-    viewer: string | null,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const listItems = await this.graph.getListItems(uris)
     const dids: string[] = []
@@ -206,8 +246,8 @@ export class Hydrator {
         dids.push(item.record.subject)
       }
     })
-    const profileState = await this.hydrateProfiles(dids, viewer)
-    return mergeStates(profileState, { listItems, viewer })
+    const profileState = await this.hydrateProfiles(dids, ctx)
+    return mergeStates(profileState, { listItems, ctx })
   }
 
   // app.bsky.feed.defs#postView
@@ -220,16 +260,18 @@ export class Hydrator {
   //   - feedgen
   //     - profile
   //       - list basic
+  //   - mod service
+  //     - profile
+  //       - list basic
   async hydratePosts(
     refs: ItemRef[],
-    viewer: string | null,
-    includeTakedowns = false,
+    ctx: HydrateCtx,
     state: HydrationState = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
     const postsLayer0 = await this.feed.getPosts(
       uris,
-      includeTakedowns,
+      ctx.includeTakedowns,
       state.posts,
     )
     // first level embeds plus thread roots we haven't fetched yet
@@ -239,7 +281,7 @@ export class Hydrator {
     const postUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
     const postsLayer1 = await this.feed.getPosts(
       [...postUrisLayer1, ...additionalRootUris],
-      includeTakedowns,
+      ctx.includeTakedowns,
     )
     // second level embeds, ignoring any additional root uris we mixed-in to the previous layer
     const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1, postUrisLayer1)
@@ -252,7 +294,7 @@ export class Hydrator {
       }
     }
     const [postsLayer2, threadgates] = await Promise.all([
-      this.feed.getPosts(postUrisLayer2, includeTakedowns),
+      this.feed.getPosts(postUrisLayer2, ctx.includeTakedowns),
       this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
     ])
     // collect list/feedgen embeds, lists in threadgates, post record hydration
@@ -265,6 +307,10 @@ export class Hydrator {
       ...(urisLayer1ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
     ]
+    const nestedLabelerDids = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyLabelerService) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyLabelerService) ?? []),
+    ].map((uri) => new AtUri(uri).hostname)
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
@@ -276,29 +322,40 @@ export class Hydrator {
       profileState,
       listState,
       feedGenState,
+      labelerState,
     ] = await Promise.all([
-      this.feed.getPostAggregates(refs),
-      viewer ? this.feed.getPostViewerStates(refs, viewer) : undefined,
-      this.label.getLabelsForSubjects(allPostUris),
+      this.feed.getPostAggregates([
+        ...refs,
+        ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
+        ...postUrisLayer2.map(uriToRef),
+      ]),
+      ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
+      this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
-      this.hydrateProfiles(
-        allPostUris.map(didFromUri),
-        viewer,
-        includeTakedowns,
-      ),
-      this.hydrateLists([...nestedListUris, ...gateListUris], viewer),
-      this.hydrateFeedGens(nestedFeedGenUris, viewer),
+      this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
+      this.hydrateLists([...nestedListUris, ...gateListUris], ctx),
+      this.hydrateFeedGens(nestedFeedGenUris, ctx),
+      this.hydrateLabelers(nestedLabelerDids, ctx),
     ])
+    if (!ctx.includeTakedowns) {
+      actionTakedownLabels(allPostUris, posts, labels)
+    }
     // combine all hydration state
-    return mergeManyStates(profileState, listState, feedGenState, {
-      posts,
-      postAggs,
-      postViewers,
-      postBlocks,
-      labels,
-      threadgates,
-      viewer,
-    })
+    return mergeManyStates(
+      profileState,
+      listState,
+      feedGenState,
+      labelerState,
+      {
+        posts,
+        postAggs,
+        postViewers,
+        postBlocks,
+        labels,
+        threadgates,
+        ctx,
+      },
+    )
   }
 
   private async hydratePostBlocks(posts: Posts): Promise<PostBlocks> {
@@ -338,7 +395,7 @@ export class Hydrator {
   }
 
   // app.bsky.feed.defs#feedViewPost
-  // - post (+ replies)
+  // - post (+ replies w/ reply parent author)
   //   - profile
   //     - list basic
   //   - list
@@ -354,37 +411,51 @@ export class Hydrator {
   //     - ...
   async hydrateFeedItems(
     items: FeedItem[],
-    viewer: string | null,
-    includeTakedowns = false,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const postUris = items.map((item) => item.post.uri)
-    const repostUris = mapDefined(items, (item) => item.repost?.uri)
-    const [posts, reposts, repostProfileState] = await Promise.all([
-      this.feed.getPosts(postUris, includeTakedowns),
-      this.feed.getReposts(repostUris, includeTakedowns),
-      this.hydrateProfiles(
-        repostUris.map(didFromUri),
-        viewer,
-        includeTakedowns,
-      ),
-    ])
+    // get posts, collect reply refs
+    const posts = await this.feed.getPosts(
+      items.map((item) => item.post.uri),
+      ctx.includeTakedowns,
+    )
+    const rootUris: string[] = []
+    const parentUris: string[] = []
     const postAndReplyRefs: ItemRef[] = []
     posts.forEach((post, uri) => {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
       if (post.record.reply) {
+        rootUris.push(post.record.reply.root.uri)
+        parentUris.push(post.record.reply.parent.uri)
         postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
       }
     })
-    const postState = await this.hydratePosts(
-      postAndReplyRefs,
-      viewer,
-      includeTakedowns,
-      { posts },
+    // get replies, collect reply parent authors
+    const replies = await this.feed.getPosts(
+      [...rootUris, ...parentUris],
+      ctx.includeTakedowns,
     )
+    const replyParentAuthors: string[] = []
+    parentUris.forEach((uri) => {
+      const parent = replies.get(uri)
+      if (!parent?.record.reply) return
+      replyParentAuthors.push(didFromUri(parent.record.reply.parent.uri))
+    })
+    // hydrate state for all posts, reposts, authors of reposts + reply parent authors
+    const repostUris = mapDefined(items, (item) => item.repost?.uri)
+    const [postState, repostProfileState, reposts] = await Promise.all([
+      this.hydratePosts(postAndReplyRefs, ctx, {
+        posts: posts.merge(replies), // avoids refetches of posts
+      }),
+      this.hydrateProfiles(
+        [...repostUris.map(didFromUri), ...replyParentAuthors],
+        ctx,
+      ),
+      this.feed.getReposts(repostUris, ctx.includeTakedowns),
+    ])
     return mergeManyStates(postState, repostProfileState, {
       reposts,
-      viewer,
+      ctx,
     })
   }
 
@@ -400,9 +471,9 @@ export class Hydrator {
   //       - list basic
   async hydrateThreadPosts(
     refs: ItemRef[],
-    viewer: string | null,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    return this.hydratePosts(refs, viewer)
+    return this.hydratePosts(refs, ctx)
   }
 
   // app.bsky.feed.defs#generatorView
@@ -411,20 +482,27 @@ export class Hydrator {
   //     - list basic
   async hydrateFeedGens(
     uris: string[], // @TODO any way to get refs here?
-    viewer: string | null,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [feedgens, feedgenAggs, feedgenViewers, profileState] =
+    const [feedgens, feedgenAggs, feedgenViewers, profileState, labels] =
       await Promise.all([
-        this.feed.getFeedGens(uris),
+        this.feed.getFeedGens(uris, ctx.includeTakedowns),
         this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
-        viewer ? this.feed.getFeedGenViewerStates(uris, viewer) : undefined,
-        this.hydrateProfiles(uris.map(didFromUri), viewer),
+        ctx.viewer
+          ? this.feed.getFeedGenViewerStates(uris, ctx.viewer)
+          : undefined,
+        this.hydrateProfiles(uris.map(didFromUri), ctx),
+        this.label.getLabelsForSubjects(uris, ctx.labelers),
       ])
+    if (!ctx.includeTakedowns) {
+      actionTakedownLabels(uris, feedgens, labels)
+    }
     return mergeStates(profileState, {
       feedgens,
       feedgenAggs,
       feedgenViewers,
-      viewer,
+      labels,
+      ctx,
     })
   }
 
@@ -432,27 +510,24 @@ export class Hydrator {
   // - like
   //   - profile
   //     - list basic
-  async hydrateLikes(
-    uris: string[],
-    viewer: string | null,
-  ): Promise<HydrationState> {
+  async hydrateLikes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
       this.feed.getLikes(uris),
-      this.hydrateProfiles(uris.map(didFromUri), viewer),
+      this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
-    return mergeStates(profileState, { likes, viewer })
+    return mergeStates(profileState, { likes, ctx })
   }
 
   // app.bsky.feed.getRepostedBy#repostedBy
   // - repost
   //   - profile
   //     - list basic
-  async hydrateReposts(uris: string[], viewer: string | null) {
+  async hydrateReposts(uris: string[], ctx: HydrateCtx) {
     const [reposts, profileState] = await Promise.all([
       this.feed.getReposts(uris),
-      this.hydrateProfiles(uris.map(didFromUri), viewer),
+      this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
-    return mergeStates(profileState, { reposts, viewer })
+    return mergeStates(profileState, { reposts, ctx })
   }
 
   // app.bsky.notification.listNotifications#notification
@@ -461,7 +536,7 @@ export class Hydrator {
   //     - list basic
   async hydrateNotifications(
     notifs: Notification[],
-    viewer: string | null,
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const uris = notifs.map((notif) => notif.uri)
     const collections = urisByCollection(uris)
@@ -475,16 +550,17 @@ export class Hydrator {
         this.feed.getLikes(likeUris), // reason: like
         this.feed.getReposts(repostUris), // reason: repost
         this.graph.getFollows(followUris), // reason: follow
-        this.label.getLabelsForSubjects(uris),
-        this.hydrateProfiles(uris.map(didFromUri), viewer),
+        this.label.getLabelsForSubjects(uris, ctx.labelers),
+        this.hydrateProfiles(uris.map(didFromUri), ctx),
       ])
+    actionTakedownLabels(postUris, posts, labels)
     return mergeStates(profileState, {
       posts,
       likes,
       reposts,
       follows,
       labels,
-      viewer,
+      ctx,
     })
   }
 
@@ -510,6 +586,32 @@ export class Hydrator {
       }
     }
     return { follows, followBlocks }
+  }
+
+  // app.bsky.labeler.def#labelerViewDetailed
+  // - labeler
+  //   - profile
+  //     - list basic
+  async hydrateLabelers(
+    dids: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [labelers, labelerAggs, labelerViewers, profileState] =
+      await Promise.all([
+        this.label.getLabelers(dids, ctx.includeTakedowns),
+        this.label.getLabelerAggregates(dids),
+        ctx.viewer
+          ? this.label.getLabelerViewerStates(dids, ctx.viewer)
+          : undefined,
+        this.hydrateProfiles(dids, ctx),
+      ])
+    actionTakedownLabels(dids, labelers, profileState.labels ?? new Labels())
+    return mergeStates(profileState, {
+      labelers,
+      labelerAggs,
+      labelerViewers,
+      ctx,
+    })
   }
 
   // ad-hoc record hydration
@@ -560,6 +662,20 @@ export class Hydrator {
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
         undefined
       )
+    } else if (collection === ids.AppBskyLabelerService) {
+      if (parsed.rkey !== 'self') return
+      const did = parsed.hostname
+      return (
+        (await this.label.getLabelers([did], includeTakedowns)).get(did) ??
+        undefined
+      )
+    } else if (collection === ids.ChatBskyActorDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getChatDeclarations([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
       const actor = (await this.actor.getActors([did], includeTakedowns)).get(
@@ -574,6 +690,36 @@ export class Hydrator {
       }
     }
   }
+
+  async createContext(vals: HydrateCtxVals) {
+    // ensures we're only apply labelers that exist and are not taken down
+    const labelers = vals.labelers.dids
+    const nonServiceLabelers = labelers.filter(
+      (did) => !this.serviceLabelers.has(did),
+    )
+    const labelerActors = await this.actor.getActors(
+      nonServiceLabelers,
+      vals.includeTakedowns,
+    )
+    const availableDids = labelers.filter(
+      (did) => this.serviceLabelers.has(did) || !!labelerActors.get(did),
+    )
+    const availableLabelers = {
+      dids: availableDids,
+      redact: vals.labelers.redact,
+    }
+    return new HydrateCtx({
+      labelers: availableLabelers,
+      viewer: vals.viewer,
+      includeTakedowns: vals.includeTakedowns,
+    })
+  }
+}
+
+// service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
+const serviceRefToDid = (serviceRef: string) => {
+  const idx = serviceRef.indexOf('#')
+  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
 }
 
 const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
@@ -681,11 +827,13 @@ export const mergeStates = (
   stateB: HydrationState,
 ): HydrationState => {
   assert(
-    !stateA.viewer || !stateB.viewer || stateA.viewer === stateB.viewer,
+    !stateA.ctx?.viewer ||
+      !stateB.ctx?.viewer ||
+      stateA.ctx?.viewer === stateB.ctx?.viewer,
     'incompatible viewers',
   )
   return {
-    viewer: stateA.viewer ?? stateB.viewer,
+    ctx: stateA.ctx ?? stateB.ctx,
     actors: mergeMaps(stateA.actors, stateB.actors),
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
@@ -705,13 +853,13 @@ export const mergeStates = (
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
+    labelers: mergeMaps(stateA.labelers, stateB.labelers),
+    labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
+    labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
   }
 }
 
-const mergeMaps = <T>(
-  mapA?: HydrationMap<T>,
-  mapB?: HydrationMap<T>,
-): HydrationMap<T> | undefined => {
+const mergeMaps = <M extends Merges>(mapA?: M, mapB?: M): M | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
   return mapA.merge(mapB)
@@ -723,4 +871,20 @@ const mergeManyStates = (...states: HydrationState[]) => {
 
 const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
   return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
+}
+
+const actionTakedownLabels = <T>(
+  keys: string[],
+  hydrationMap: HydrationMap<T>,
+  labels: Labels,
+) => {
+  for (const key of keys) {
+    if (labels.get(key)?.isTakendown) {
+      hydrationMap.set(key, null)
+    }
+  }
+}
+
+const uriToRef = (uri: string): ItemRef => {
+  return { uri }
 }

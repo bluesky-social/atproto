@@ -13,6 +13,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     publicUrl: env.publicUrl,
     did: env.serverDid,
     version: env.version,
+    devMode: env.devMode,
   }
 
   assert(env.dbPostgresUrl)
@@ -24,18 +25,29 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   }
 
-  assert(env.appviewUrl)
-  assert(env.appviewDid)
+  assert(env.appviewUrl && env.appviewDid)
   const appviewCfg: OzoneConfig['appview'] = {
     url: env.appviewUrl,
     did: env.appviewDid,
+    pushEvents: !!env.appviewPushEvents,
   }
 
-  assert(env.pdsUrl)
-  assert(env.pdsDid)
-  const pdsCfg: OzoneConfig['pds'] = {
-    url: env.pdsUrl,
-    did: env.pdsDid,
+  let pdsCfg: OzoneConfig['pds'] = null
+  if (env.pdsUrl || env.pdsDid) {
+    assert(env.pdsUrl && env.pdsDid)
+    pdsCfg = {
+      url: env.pdsUrl,
+      did: env.pdsDid,
+    }
+  }
+
+  let chatCfg: OzoneConfig['chat'] = null
+  if (env.chatUrl || env.chatDid) {
+    assert(env.chatUrl && env.chatDid)
+    chatCfg = {
+      url: env.chatUrl,
+      did: env.chatDid,
+    }
   }
 
   const cdnCfg: OzoneConfig['cdn'] = {
@@ -47,13 +59,29 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
   }
 
+  const blobDivertServiceCfg =
+    env.blobDivertUrl && env.blobDivertAdminPassword
+      ? {
+          url: env.blobDivertUrl,
+          adminPassword: env.blobDivertAdminPassword,
+        }
+      : null
+  const accessCfg: OzoneConfig['access'] = {
+    admins: env.adminDids,
+    moderators: env.moderatorDids,
+    triage: env.triageDids,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
     appview: appviewCfg,
     pds: pdsCfg,
+    chat: chatCfg,
     cdn: cdnCfg,
     identity: identityCfg,
+    blobDivert: blobDivertServiceCfg,
+    access: accessCfg,
   }
 }
 
@@ -62,8 +90,11 @@ export type OzoneConfig = {
   db: DatabaseConfig
   appview: AppviewConfig
   pds: PdsConfig | null
+  chat: ChatConfig | null
   cdn: CdnConfig
   identity: IdentityConfig
+  blobDivert: BlobDivertConfig | null
+  access: AccessConfig
 }
 
 export type ServiceConfig = {
@@ -71,6 +102,12 @@ export type ServiceConfig = {
   publicUrl: string
   did: string
   version?: string
+  devMode?: boolean
+}
+
+export type BlobDivertConfig = {
+  url: string
+  adminPassword: string
 }
 
 export type DatabaseConfig = {
@@ -84,6 +121,7 @@ export type DatabaseConfig = {
 export type AppviewConfig = {
   url: string
   did: string
+  pushEvents: boolean
 }
 
 export type PdsConfig = {
@@ -91,10 +129,21 @@ export type PdsConfig = {
   did: string
 }
 
-export type IdentityConfig = {
-  plcUrl: string
+export type ChatConfig = {
+  url: string
+  did: string
 }
 
 export type CdnConfig = {
   paths?: string[]
+}
+
+export type IdentityConfig = {
+  plcUrl: string
+}
+
+export type AccessConfig = {
+  admins: string[]
+  moderators: string[]
+  triage: string[]
 }

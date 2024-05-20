@@ -1,11 +1,7 @@
 import { AtUri } from '@atproto/syntax'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
-import {
-  REASONSPAM,
-  REASONOTHER,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { TestNetwork } from '../index'
+import { EXAMPLE_LABELER, TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
@@ -15,13 +11,12 @@ import blurHashB64 from './img/blur-hash-avatar-b64'
 // we use this to ensure the mock dataset is always the same
 // which is very useful when testing
 // (not everything is currently deterministic but it could be)
-function* dateGen() {
+function* dateGen(): Generator<string, never> {
   let start = 1657846031914
   while (true) {
     yield new Date(start).toISOString()
     start += 1e3
   }
-  return ''
 }
 
 export async function generateMockSetup(env: TestNetwork) {
@@ -93,10 +88,36 @@ export async function generateMockSetup(env: TestNetwork) {
     )
   }
 
+  // Create moderator accounts
+  const triageRes =
+    await clients.loggedout.api.com.atproto.server.createAccount({
+      email: 'triage@test.com',
+      handle: 'triage.test',
+      password: 'triage-pass',
+    })
+  env.ozone.addAdminDid(triageRes.data.did)
+  const modRes = await clients.loggedout.api.com.atproto.server.createAccount({
+    email: 'mod@test.com',
+    handle: 'mod.test',
+    password: 'mod-pass',
+  })
+  env.ozone.addAdminDid(modRes.data.did)
+  const adminRes = await clients.loggedout.api.com.atproto.server.createAccount(
+    {
+      email: 'admin-mod@test.com',
+      handle: 'admin-mod.test',
+      password: 'admin-mod-pass',
+    },
+  )
+  env.ozone.addAdminDid(adminRes.data.did)
+
   // Report one user
   const reporter = picka(users)
   await reporter.agent.api.com.atproto.moderation.createReport({
-    reasonType: picka([REASONSPAM, REASONOTHER]),
+    reasonType: picka([
+      COM_ATPROTO_MODERATION.DefsReasonSpam,
+      COM_ATPROTO_MODERATION.DefsReasonOther,
+    ]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
@@ -146,7 +167,10 @@ export async function generateMockSetup(env: TestNetwork) {
     if (rand(6) === 0) {
       const reporter = picka(users)
       await reporter.agent.api.com.atproto.moderation.createReport({
-        reasonType: picka([REASONSPAM, REASONOTHER]),
+        reasonType: picka([
+          COM_ATPROTO_MODERATION.DefsReasonSpam,
+          COM_ATPROTO_MODERATION.DefsReasonOther,
+        ]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -325,6 +349,136 @@ export async function generateMockSetup(env: TestNetwork) {
       createdAt: date.next().value,
     },
   )
+
+  // create a labeler account
+  {
+    const res = await clients.loggedout.api.com.atproto.server.createAccount({
+      email: 'labeler@test.com',
+      handle: 'labeler.test',
+      password: 'hunter2',
+    })
+    const agent = env.pds.getClient()
+    agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
+    await agent.api.app.bsky.actor.profile.create(
+      { repo: res.data.did },
+      {
+        displayName: 'Test Labeler',
+        description: `Labeling things across the atmosphere`,
+      },
+    )
+
+    await agent.api.app.bsky.labeler.service.create(
+      { repo: res.data.did, rkey: 'self' },
+      {
+        policies: {
+          labelValues: [
+            '!hide',
+            'porn',
+            'rude',
+            'spam',
+            'spider',
+            'misinfo',
+            'cool',
+            'curate',
+          ],
+          labelValueDefinitions: [
+            {
+              identifier: 'rude',
+              blurs: 'content',
+              severity: 'alert',
+              defaultSetting: 'warn',
+              adultOnly: true,
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Rude',
+                  description: 'Just such a jerk, you wouldnt believe it.',
+                },
+              ],
+            },
+            {
+              identifier: 'spam',
+              blurs: 'content',
+              severity: 'inform',
+              defaultSetting: 'hide',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Spam',
+                  description:
+                    'Low quality posts that dont add to the conversation.',
+                },
+              ],
+            },
+            {
+              identifier: 'spider',
+              blurs: 'media',
+              severity: 'alert',
+              defaultSetting: 'warn',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Spider!',
+                  description: 'Oh no its a spider.',
+                },
+              ],
+            },
+            {
+              identifier: 'cool',
+              blurs: 'none',
+              severity: 'inform',
+              defaultSetting: 'warn',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Cool',
+                  description: 'The coolest peeps in the atmosphere.',
+                },
+              ],
+            },
+            {
+              identifier: 'curate',
+              blurs: 'none',
+              severity: 'none',
+              defaultSetting: 'warn',
+              locales: [
+                {
+                  lang: 'en',
+                  name: 'Curation filter',
+                  description: 'We just dont want to see it as much.',
+                },
+              ],
+            },
+          ],
+        },
+        createdAt: date.next().value,
+      },
+    )
+    await createLabel(env.bsky.db, {
+      uri: alice.did,
+      cid: '',
+      val: 'rude',
+      src: res.data.did,
+    })
+    await createLabel(env.bsky.db, {
+      uri: `at://${alice.did}/app.bsky.feed.generator/alice-favs`,
+      cid: '',
+      val: 'cool',
+      src: res.data.did,
+    })
+    await createLabel(env.bsky.db, {
+      uri: bob.did,
+      cid: '',
+      val: 'cool',
+      src: res.data.did,
+    })
+    await createLabel(env.bsky.db, {
+      uri: carla.did,
+      cid: '',
+      val: 'spam',
+      src: res.data.did,
+    })
+  }
 }
 
 function ucfirst(str: string): string {
@@ -333,7 +487,7 @@ function ucfirst(str: string): string {
 
 const createLabel = async (
   db: Database,
-  opts: { uri: string; cid: string; val: string },
+  opts: { uri: string; cid: string; val: string; src?: string },
 ) => {
   await db.db
     .insertInto('label')
@@ -343,7 +497,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler',
+      src: opts.src ?? EXAMPLE_LABELER,
     })
     .execute()
 }

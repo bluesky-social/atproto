@@ -3,6 +3,7 @@ import { TestBsky } from '../bsky'
 import { TestNetwork } from '../network'
 import { TestNetworkNoAppView } from '../network-no-appview'
 import { SeedClient } from './client'
+import { EXAMPLE_LABELER } from '../const'
 
 export default async (
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
@@ -182,7 +183,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler', // this did is also configured on labelsFromIssuerDids
+      src: EXAMPLE_LABELER, // this did is also configured on labelsFromIssuerDids
     })
     .execute()
 }

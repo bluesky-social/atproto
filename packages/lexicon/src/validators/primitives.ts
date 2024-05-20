@@ -265,6 +265,10 @@ export function string(
         return formats.cid(path, value)
       case 'language':
         return formats.language(path, value)
+      case 'tid':
+        return formats.tid(path, value)
+      case 'record-key':
+        return formats.recordKey(path, value)
     }
   }
 

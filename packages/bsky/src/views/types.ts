@@ -9,8 +9,6 @@ import {
 import {
   Main as RecordEmbed,
   View as RecordEmbedView,
-  ViewBlocked as EmbedBlocked,
-  ViewNotFound as EmbedNotFound,
   ViewRecord as PostEmbedView,
 } from '../lexicon/types/app/bsky/embed/record'
 import {
@@ -24,6 +22,7 @@ import {
   PostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView } from '../lexicon/types/app/bsky/graph/defs'
+import { LabelerView } from '../lexicon/types/app/bsky/labeler/defs'
 
 export type {
   Main as ImagesEmbed,
@@ -69,4 +68,8 @@ export type EmbedView =
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 
-export type RecordEmbedViewInternal = PostEmbedView | GeneratorView | ListView
+export type RecordEmbedViewInternal =
+  | PostEmbedView
+  | GeneratorView
+  | ListView
+  | LabelerView

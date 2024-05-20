@@ -2,6 +2,11 @@
 
 exports[`proxies view requests actor.getProfile 1`] = `
 Object {
+  "associated": Object {
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "hi im bob label_me",
   "did": "user(0)",
@@ -25,6 +30,11 @@ exports[`proxies view requests actor.getProfiles 1`] = `
 Object {
   "profiles": Array [
     Object {
+      "associated": Object {
+        "feedgens": 1,
+        "labeler": false,
+        "lists": 1,
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "description": "its me!",
       "did": "user(0)",
@@ -37,7 +47,6 @@ Object {
         Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(0)",
           "val": "self-label-a",
@@ -45,7 +54,6 @@ Object {
         Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(0)",
           "val": "self-label-b",
@@ -58,6 +66,11 @@ Object {
       },
     },
     Object {
+      "associated": Object {
+        "feedgens": 0,
+        "labeler": false,
+        "lists": 0,
+      },
       "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(2)",
@@ -102,7 +115,6 @@ Object {
       "labels": Array [
         Object {
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "did:example:labeler",
           "uri": "user(2)",
           "val": "repo-action-label",
@@ -131,7 +143,6 @@ Array [
       Object {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(0)",
         "val": "self-label-a",
@@ -139,7 +150,6 @@ Array [
       Object {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(0)",
         "val": "self-label-b",
@@ -182,7 +192,6 @@ Array [
     "labels": Array [
       Object {
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "did:example:labeler",
         "uri": "user(5)",
         "val": "repo-action-label",
@@ -191,6 +200,21 @@ Array [
     "viewer": Object {
       "blockedBy": false,
       "following": "record(5)",
+      "muted": false,
+    },
+  },
+  Object {
+    "associated": Object {
+      "labeler": true,
+    },
+    "description": "The pretend version of mod.bsky.app",
+    "did": "user(6)",
+    "displayName": "Dev-env Moderation",
+    "handle": "mod-authority.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },
@@ -208,7 +232,6 @@ Array [
       Object {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(0)",
         "val": "self-label-a",
@@ -216,7 +239,6 @@ Array [
       Object {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(0)",
         "val": "self-label-b",
@@ -257,7 +279,6 @@ Array [
     "labels": Array [
       Object {
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "did:example:labeler",
         "uri": "user(5)",
         "val": "repo-action-label",
@@ -266,6 +287,19 @@ Array [
     "viewer": Object {
       "blockedBy": false,
       "following": "record(5)",
+      "muted": false,
+    },
+  },
+  Object {
+    "associated": Object {
+      "labeler": true,
+    },
+    "did": "user(6)",
+    "displayName": "Dev-env Moderation",
+    "handle": "mod-authority.test",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },
@@ -353,7 +387,6 @@ Object {
               Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-a",
@@ -361,7 +394,6 @@ Object {
               Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-b",
@@ -397,7 +429,6 @@ Object {
               Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-a",
@@ -405,7 +436,6 @@ Object {
               Object {
                 "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(2)",
                 "uri": "record(4)",
                 "val": "self-label-b",
@@ -517,7 +547,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -525,7 +554,6 @@ Object {
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(1)",
           "val": "self-label-b",
@@ -539,6 +567,7 @@ Object {
     "did": "user(0)",
     "displayName": "MyFeed",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "uri": "record(0)",
     "viewer": Object {},
@@ -562,7 +591,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(1)",
             "uri": "record(1)",
             "val": "self-label-a",
@@ -570,7 +598,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(1)",
             "uri": "record(1)",
             "val": "self-label-b",
@@ -584,6 +611,7 @@ Object {
       "did": "user(0)",
       "displayName": "MyFeed",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "uri": "record(0)",
       "viewer": Object {},
@@ -627,7 +655,6 @@ Object {
           Object {
             "cid": "cids(1)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(2)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -635,7 +662,6 @@ Object {
           Object {
             "cid": "cids(1)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(2)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -669,7 +695,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -677,7 +702,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -713,6 +737,32 @@ Object {
         "viewer": Object {},
       },
       "reply": Object {
+        "grandparentAuthor": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -789,7 +839,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -797,7 +846,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -901,7 +949,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -909,7 +956,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -945,7 +991,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -953,7 +998,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -991,7 +1035,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -999,7 +1042,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -1021,7 +1063,6 @@ Object {
               "labels": Array [
                 Object {
                   "cts": "1970-01-01T00:00:00.000Z",
-                  "neg": false,
                   "src": "did:example:labeler",
                   "uri": "user(4)",
                   "val": "repo-action-label",
@@ -1053,6 +1094,9 @@ Object {
                   "cid": "cids(8)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
                   "labels": Array [],
+                  "likeCount": 2,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(9)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -1100,6 +1144,9 @@ Object {
             ],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 1,
             "uri": "record(7)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1191,7 +1238,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -1199,7 +1245,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -1270,7 +1315,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -1278,7 +1322,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -1295,7 +1338,6 @@ Object {
           Object {
             "cid": "cids(12)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(14)",
             "val": "self-label",
@@ -1410,6 +1452,9 @@ Object {
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(0)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1513,7 +1558,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -1521,7 +1565,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -1564,7 +1607,6 @@ Object {
           "labels": Array [
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
@@ -1579,6 +1621,32 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
       },
       "reply": Object {
+        "grandparentAuthor": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -1655,7 +1723,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -1663,7 +1730,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -1701,7 +1767,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -1709,7 +1774,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -1742,7 +1806,6 @@ Object {
           "labels": Array [
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
@@ -1765,7 +1828,6 @@ Object {
           "labels": Array [
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
@@ -1831,6 +1893,9 @@ Object {
                     "cid": "cids(9)",
                     "indexedAt": "1970-01-01T00:00:00.000Z",
                     "labels": Array [],
+                    "likeCount": 0,
+                    "replyCount": 0,
+                    "repostCount": 0,
                     "uri": "record(11)",
                     "value": Object {
                       "$type": "app.bsky.feed.post",
@@ -1847,6 +1912,9 @@ Object {
             ],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 2,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(8)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1952,7 +2020,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -1960,7 +2027,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -1996,6 +2062,32 @@ Object {
         "viewer": Object {},
       },
       "reply": Object {
+        "grandparentAuthor": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(2)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(0)",
+              "uri": "record(1)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
+        },
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
@@ -2072,7 +2164,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -2080,7 +2171,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -2156,7 +2246,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -2164,7 +2253,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -2200,7 +2288,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -2208,7 +2295,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -2312,7 +2398,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -2320,7 +2405,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -2356,7 +2440,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-a",
@@ -2364,7 +2447,6 @@ Object {
               Object {
                 "cid": "cids(2)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "user(0)",
                 "uri": "record(1)",
                 "val": "self-label-b",
@@ -2402,7 +2484,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -2410,7 +2491,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -2432,7 +2512,6 @@ Object {
               "labels": Array [
                 Object {
                   "cts": "1970-01-01T00:00:00.000Z",
-                  "neg": false,
                   "src": "did:example:labeler",
                   "uri": "user(2)",
                   "val": "repo-action-label",
@@ -2464,6 +2543,9 @@ Object {
                   "cid": "cids(7)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
                   "labels": Array [],
+                  "likeCount": 2,
+                  "replyCount": 0,
+                  "repostCount": 0,
                   "uri": "record(8)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -2511,6 +2593,9 @@ Object {
             ],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 0,
+            "replyCount": 0,
+            "repostCount": 1,
             "uri": "record(7)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -2602,7 +2687,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -2610,7 +2694,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -2644,7 +2727,6 @@ Object {
           "labels": Array [
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
@@ -2710,6 +2792,9 @@ Object {
                     "cid": "cids(9)",
                     "indexedAt": "1970-01-01T00:00:00.000Z",
                     "labels": Array [],
+                    "likeCount": 0,
+                    "replyCount": 0,
+                    "repostCount": 0,
                     "uri": "record(11)",
                     "value": Object {
                       "$type": "app.bsky.feed.post",
@@ -2726,6 +2811,9 @@ Object {
             ],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "likeCount": 2,
+            "replyCount": 0,
+            "repostCount": 0,
             "uri": "record(8)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -2813,7 +2901,6 @@ Object {
           "labels": Array [
             Object {
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "user(2)",
               "val": "repo-action-label",
@@ -2891,6 +2978,9 @@ Object {
               "embeds": Array [],
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "labels": Array [],
+              "likeCount": 0,
+              "replyCount": 0,
+              "repostCount": 0,
               "uri": "record(11)",
               "value": Object {
                 "$type": "app.bsky.feed.post",
@@ -3001,7 +3091,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-a",
@@ -3009,7 +3098,6 @@ Object {
             Object {
               "cid": "cids(2)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(1)",
               "val": "self-label-b",
@@ -3026,7 +3114,6 @@ Object {
           Object {
             "cid": "cids(14)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(17)",
             "val": "self-label",
@@ -3098,7 +3185,6 @@ Object {
       "labels": Array [
         Object {
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "did:example:labeler",
           "uri": "user(0)",
           "val": "repo-action-label",
@@ -3121,7 +3207,6 @@ Object {
         Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -3129,7 +3214,6 @@ Object {
         Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(1)",
           "val": "self-label-b",
@@ -3185,7 +3269,6 @@ Object {
         Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(2)",
           "val": "self-label-a",
@@ -3193,7 +3276,6 @@ Object {
         Object {
           "cid": "cids(1)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(1)",
           "uri": "record(2)",
           "val": "self-label-b",
@@ -3253,7 +3335,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(3)",
             "uri": "record(7)",
             "val": "self-label-a",
@@ -3261,7 +3342,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(3)",
             "uri": "record(7)",
             "val": "self-label-b",
@@ -3294,6 +3374,7 @@ Object {
     },
     "description": "bob's list of mutes",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "name": "bob mutes",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
@@ -3325,6 +3406,7 @@ Object {
       },
       "description": "bob's list of mutes",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "bob mutes",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -3360,6 +3442,7 @@ Object {
       },
       "description": "a second list",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "another list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -3386,6 +3469,7 @@ Object {
       },
       "description": "bob's list of mutes",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "bob mutes",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",

@@ -7,6 +7,7 @@ export interface ServerConfigValues {
   port?: number
   publicUrl?: string
   serverDid: string
+  alternateAudienceDids: string[]
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -20,7 +21,11 @@ export interface ServerConfigValues {
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
   searchUrl?: string
+  suggestionsUrl?: string
+  suggestionsApiKey?: string
   cdnUrl?: string
+  blobRateLimitBypassKey?: string
+  blobRateLimitBypassHostname?: string
   // identity
   didPlcUrl: string
   handleResolveNameservers?: string[]
@@ -44,6 +49,9 @@ export class ServerConfig {
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
+    const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
+      ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
+      : []
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
@@ -53,6 +61,8 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
+    const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -76,6 +86,15 @@ export class ServerConfig {
     const courierIgnoreBadTls =
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+    const blobRateLimitBypassKey =
+      process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_KEY || undefined
+    // single domain would be e.g. "mypds.com", subdomains are supported with a leading dot e.g. ".mypds.com"
+    const blobRateLimitBypassHostname =
+      process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_HOSTNAME || undefined
+    assert(
+      !blobRateLimitBypassKey || blobRateLimitBypassHostname,
+      'must specify a hostname when using a blob rate limit bypass key',
+    )
     const adminPasswords = envList(
       process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
@@ -89,10 +108,13 @@ export class ServerConfig {
       port,
       publicUrl,
       serverDid,
+      alternateAudienceDids,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      suggestionsUrl,
+      suggestionsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -106,6 +128,8 @@ export class ServerConfig {
       courierApiKey,
       courierHttpVersion,
       courierIgnoreBadTls,
+      blobRateLimitBypassKey,
+      blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
       ...stripUndefineds(overrides ?? {}),
@@ -143,6 +167,10 @@ export class ServerConfig {
 
   get serverDid() {
     return this.cfg.serverDid
+  }
+
+  get alternateAudienceDids() {
+    return this.cfg.alternateAudienceDids
   }
 
   get dataplaneUrls() {
@@ -193,8 +221,24 @@ export class ServerConfig {
     return this.cfg.searchUrl
   }
 
+  get suggestionsUrl() {
+    return this.cfg.suggestionsUrl
+  }
+
+  get suggestionsApiKey() {
+    return this.cfg.suggestionsApiKey
+  }
+
   get cdnUrl() {
     return this.cfg.cdnUrl
+  }
+
+  get blobRateLimitBypassKey() {
+    return this.cfg.blobRateLimitBypassKey
+  }
+
+  get blobRateLimitBypassHostname() {
+    return this.cfg.blobRateLimitBypassHostname
   }
 
   get didPlcUrl() {

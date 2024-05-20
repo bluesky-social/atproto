@@ -24,8 +24,8 @@ export default function (server: Server, ctx: AppContext) {
           platform === 'ios'
             ? AppPlatform.IOS
             : platform === 'android'
-            ? AppPlatform.ANDROID
-            : AppPlatform.WEB,
+              ? AppPlatform.ANDROID
+              : AppPlatform.WEB,
         appId,
       })
     },

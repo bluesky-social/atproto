@@ -6,7 +6,12 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import {
+  RateLimiter,
+  RateLimiterCreator,
+  RateLimiterOpts,
+  createServiceAuthHeaders,
+} from '@atproto/xrpc-server'
 import { ServerConfig, ServerSecrets } from './config'
 import {
   AuthVerifier,
@@ -23,16 +28,13 @@ import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { ActorStore, ActorStoreReader } from './actor-store'
-import { LocalViewer } from './read-after-write/viewer'
+import { ActorStore } from './actor-store'
+import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
-  localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqliteCache
@@ -42,6 +44,7 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
+  ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   appViewAgent?: AtpAgent
   moderationAgent?: AtpAgent
@@ -55,10 +58,7 @@ export type AppContextOptions = {
 export class AppContext {
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
-  public localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
   public didCache: DidSqliteCache
@@ -68,6 +68,7 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
+  public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public appViewAgent: AtpAgent | undefined
   public moderationAgent: AtpAgent | undefined
@@ -90,6 +91,7 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
+    this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.moderationAgent = opts.moderationAgent
@@ -113,6 +115,7 @@ export class AppContext {
             endpoint: cfg.blobstore.endpoint,
             forcePathStyle: cfg.blobstore.forcePathStyle,
             credentials: cfg.blobstore.credentials,
+            uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
           })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
@@ -165,6 +168,30 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
+    let ratelimitCreator: RateLimiterCreator | undefined = undefined
+    if (cfg.rateLimits.enabled) {
+      const bypassSecret = cfg.rateLimits.bypassKey
+      const bypassIps = cfg.rateLimits.bypassIps
+      if (cfg.rateLimits.mode === 'redis') {
+        if (!redisScratch) {
+          throw new Error('Redis not set up for ratelimiting mode: `redis`')
+        }
+        ratelimitCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.redis(redisScratch, {
+            bypassSecret,
+            bypassIps,
+            ...opts,
+          })
+      } else {
+        ratelimitCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.memory({
+            bypassSecret,
+            bypassIps,
+            ...opts,
+          })
+      }
+    }
+
     const appViewAgent = cfg.bskyAppView
       ? new AtpAgent({ service: cfg.bskyAppView.url })
       : undefined
@@ -194,12 +221,10 @@ export class AppContext {
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
       jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
-      moderatorPass: secrets.moderatorPassword,
-      triagePass: secrets.triagePassword,
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.modService?.did,
+        modService: cfg.modService?.did,
       },
     })
 
@@ -238,6 +263,7 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
+      ratelimitCreator,
       crawlers,
       appViewAgent,
       moderationAgent,
@@ -253,16 +279,6 @@ export class AppContext {
   async appviewAuthHeaders(did: string) {
     assert(this.cfg.bskyAppView)
     return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
-  }
-
-  async moderationAuthHeaders(did: string) {
-    assert(this.cfg.modService)
-    return this.serviceAuthHeaders(did, this.cfg.modService.did)
-  }
-
-  async reportingAuthHeaders(did: string) {
-    assert(this.cfg.reportService)
-    return this.serviceAuthHeaders(did, this.cfg.reportService.did)
   }
 
   async serviceAuthHeaders(did: string, aud: string) {

@@ -28,11 +28,14 @@ export type Block = RecordInfo<BlockRecord>
 export type RelationshipPair = [didA: string, didB: string]
 
 const dedupePairs = (pairs: RelationshipPair[]): RelationshipPair[] => {
-  const mapped = pairs.reduce((acc, cur) => {
-    const sorted = ([...cur] as RelationshipPair).sort()
-    acc[sorted.join('-')] = sorted
-    return acc
-  }, {} as Record<string, RelationshipPair>)
+  const mapped = pairs.reduce(
+    (acc, cur) => {
+      const sorted = ([...cur] as RelationshipPair).sort()
+      acc[sorted.join('-')] = sorted
+      return acc
+    },
+    {} as Record<string, RelationshipPair>,
+  )
   return Object.values(mapped)
 }
 

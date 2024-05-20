@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { CommitData } from '@atproto/repo'
+import { BlobRef } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
@@ -12,6 +13,9 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
+import { ids } from '../../../../lexicon/lexicons'
+import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
+import { ActorStoreTransactor } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -61,6 +65,12 @@ export default function (server: Server, ctx: AppContext) {
         did,
         async (actorTxn) => {
           const current = await actorTxn.record.getRecord(uri, null, true)
+          const isUpdate = current !== null
+
+          // @TODO temporaray hack for legacy blob refs in profiles - remove after migrating legacy blobs
+          if (isUpdate && collection === ids.AppBskyActorProfile) {
+            await updateProfileLegacyBlobRef(actorTxn, record)
+          }
           const writeInfo = {
             did,
             collection,
@@ -72,7 +82,7 @@ export default function (server: Server, ctx: AppContext) {
 
           let write: PreparedCreate | PreparedUpdate
           try {
-            write = current
+            write = isUpdate
               ? await prepareUpdate(writeInfo)
               : await prepareCreate(writeInfo)
           } catch (err) {
@@ -121,4 +131,27 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+// WARNING: mutates object
+const updateProfileLegacyBlobRef = async (
+  actorStore: ActorStoreTransactor,
+  record: ProfileRecord,
+) => {
+  if (record.avatar && !record.avatar.original['$type']) {
+    const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)
+    record.avatar = new BlobRef(
+      record.avatar.ref,
+      record.avatar.mimeType,
+      blob.size,
+    )
+  }
+  if (record.banner && !record.banner.original['$type']) {
+    const blob = await actorStore.repo.blob.getBlobMetadata(record.banner.ref)
+    record.banner = new BlobRef(
+      record.banner.ref,
+      record.banner.mimeType,
+      blob.size,
+    )
+  }
 }

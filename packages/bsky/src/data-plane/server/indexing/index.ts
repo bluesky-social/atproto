@@ -26,6 +26,8 @@ import * as ListItem from './plugins/list-item'
 import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
+import * as Labeler from './plugins/labeler'
+import * as ChatDeclaration from './plugins/chat-declaration'
 import RecordProcessor from './processor'
 import { subLogger } from '../../../logger'
 import { retryHttp } from '../../../util/retry'
@@ -44,6 +46,8 @@ export class IndexingService {
     listBlock: ListBlock.PluginType
     block: Block.PluginType
     feedGenerator: FeedGenerator.PluginType
+    labeler: Labeler.PluginType
+    chatDeclaration: ChatDeclaration.PluginType
   }
 
   constructor(
@@ -63,6 +67,8 @@ export class IndexingService {
       listBlock: ListBlock.makePlugin(this.db, this.background),
       block: Block.makePlugin(this.db, this.background),
       feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
+      labeler: Labeler.makePlugin(this.db, this.background),
+      chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
     }
   }
 
@@ -203,13 +209,16 @@ export class IndexingService {
       .where('did', '=', did)
       .select(['uri', 'cid'])
       .execute()
-    return res.reduce((acc, cur) => {
-      acc[cur.uri] = {
-        uri: new AtUri(cur.uri),
-        cid: CID.parse(cur.cid),
-      }
-      return acc
-    }, {} as Record<string, { uri: AtUri; cid: CID }>)
+    return res.reduce(
+      (acc, cur) => {
+        acc[cur.uri] = {
+          uri: new AtUri(cur.uri),
+          cid: CID.parse(cur.cid),
+        }
+        return acc
+      },
+      {} as Record<string, { uri: AtUri; cid: CID }>,
+    )
   }
 
   async setCommitLastSeen(
@@ -298,6 +307,7 @@ export class IndexingService {
       .deleteFrom('feed_generator')
       .where('creator', '=', did)
       .execute()
+    await this.db.db.deleteFrom('labeler').where('creator', '=', did).execute()
     // lists
     await this.db.db
       .deleteFrom('list_item')

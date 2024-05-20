@@ -11,8 +11,6 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import { UnknownFeedError } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
 import { ids } from '../src/lexicon/lexicons'
 import {
   FeedViewPost,
@@ -197,7 +195,7 @@ describe('feed generation', () => {
       return res.data
     }
 
-    const paginatedAll: GeneratorView[] = results(await paginateAll(paginator))
+    const paginatedAll = results(await paginateAll(paginator))
 
     expect(paginatedAll.length).toEqual(5)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
@@ -453,7 +451,9 @@ describe('feed generation', () => {
         { feed: feedUriOdd },
         { headers: await network.serviceHeaders(alice, gen.did) },
       )
-      await expect(tryGetFeed).rejects.toThrow(UnknownFeedError)
+      await expect(tryGetFeed).rejects.toMatchObject({
+        error: 'UnknownFeed',
+      })
     })
 
     it('resolves contents of taken-down feed.', async () => {
@@ -543,7 +543,7 @@ describe('feed generation', () => {
             repost: sc.reposts[sc.dids.carol][0].uriStr,
           },
         },
-      ]
+      ].map((item, i) => ({ ...item, feedContext: `item-${i}` })) // add a deterministic context to test passthrough
       const offset = cursor ? parseInt(cursor, 10) : 0
       const fullFeed = candidates.filter((_, i) => {
         if (feedName === 'even') {

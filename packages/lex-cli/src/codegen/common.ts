@@ -4,7 +4,7 @@ import prettier from 'prettier'
 import { GeneratedFile } from '../types'
 
 const PRETTIER_OPTS = {
-  parser: 'babel-ts',
+  parser: 'typescript',
   tabWidth: 2,
   semi: false,
   singleQuote: true,
@@ -14,17 +14,17 @@ const PRETTIER_OPTS = {
 export const utilTs = (project) =>
   gen(project, '/util.ts', async (file) => {
     file.replaceWithText(`
-  export function isObj(v: unknown): v is Record<string, unknown> {
-    return typeof v === 'object' && v !== null
-  }
-  
-  export function hasProp<K extends PropertyKey>(
-    data: object,
-    prop: K,
-  ): data is Record<K, unknown> {
-    return prop in data
-  }
-  `)
+export function isObj(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null
+}
+
+export function hasProp<K extends PropertyKey>(
+  data: object,
+  prop: K,
+): data is Record<K, unknown> {
+  return prop in data
+}
+`)
   })
 
 export const lexiconsTs = (project, lexicons: LexiconDoc[]) =>
@@ -122,7 +122,7 @@ export async function gen(
   const src = project.getFileSystem().readFileSync(path)
   return {
     path: path,
-    content: `${banner()}${prettier.format(src, PRETTIER_OPTS)}`,
+    content: `${banner()}${await prettier.format(src, PRETTIER_OPTS)}`,
   }
 }
 

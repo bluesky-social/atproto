@@ -4,23 +4,31 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getLikes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getLikes({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const result = await getLikes({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -34,7 +42,12 @@ const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { likes: [] }
   }
-  const likesRes = await ctx.hydrator.dataplane.getLikesBySubject({
+  if (looksLikeNonSortedCursor(params.cursor)) {
+    throw new InvalidRequestError(
+      'Cursor appear to be out of date, please try reloading.',
+    )
+  }
+  const likesRes = await ctx.hydrator.dataplane.getLikesBySubjectSorted({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
@@ -51,7 +64,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateLikes(skeleton.likes, params.viewer)
+  return await ctx.hydrator.hydrateLikes(skeleton.likes, params.hydrateCtx)
 }
 
 const noBlocks = (inputs: {
@@ -103,9 +116,15 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   likes: string[]
   cursor?: string
+}
+
+const looksLikeNonSortedCursor = (cursor: string | undefined) => {
+  // the old cursor values used with getLikesBySubject() were dids.
+  // we now use getLikesBySubjectSorted(), whose cursors look like timestamps.
+  return cursor?.startsWith('did:')
 }

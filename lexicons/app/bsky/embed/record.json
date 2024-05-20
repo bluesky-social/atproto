@@ -21,7 +21,8 @@
             "#viewNotFound",
             "#viewBlocked",
             "app.bsky.feed.defs#generatorView",
-            "app.bsky.graph.defs#listView"
+            "app.bsky.graph.defs#listView",
+            "app.bsky.labeler.defs#labelerView"
           ]
         }
       }
@@ -44,6 +45,9 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
+        "replyCount": { "type": "integer" },
+        "repostCount": { "type": "integer" },
+        "likeCount": { "type": "integer" },
         "embeds": {
           "type": "array",
           "items": {

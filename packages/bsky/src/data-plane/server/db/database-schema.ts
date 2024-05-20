@@ -25,7 +25,6 @@ import * as record from './tables/record'
 import * as notification from './tables/notification'
 import * as notificationPushToken from './tables/notification-push-token'
 import * as didCache from './tables/did-cache'
-import * as moderation from './tables/moderation'
 import * as label from './tables/label'
 import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
@@ -33,6 +32,7 @@ import * as suggestedFollow from './tables/suggested-follow'
 import * as suggestedFeed from './tables/suggested-feed'
 import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
+import * as labeler from './tables/labeler'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -60,14 +60,14 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   notification.PartialDB &
   notificationPushToken.PartialDB &
   didCache.PartialDB &
-  moderation.PartialDB &
   label.PartialDB &
   algo.PartialDB &
   viewParam.PartialDB &
   suggestedFollow.PartialDB &
   suggestedFeed.PartialDB &
-  taggedSuggestion.PartialDB &
-  blobTakedown.PartialDB
+  blobTakedown.PartialDB &
+  labeler.PartialDB &
+  taggedSuggestion.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

@@ -25,4 +25,32 @@ describe('handle validation', () => {
     expect(isValidTld('atproto.onion')).toBe(false)
     expect(isValidTld('atproto.internal')).toBe(false)
   })
+
+  it('validates handle length', () => {
+    const domains = [
+      '.loooooooooooooooooong-pds-over18chars.mybsky.mydomain.com',
+      '.test',
+    ]
+    const expectThrow = (handle: string, err: string) => {
+      expect(() => ensureHandleServiceConstraints(handle, domains)).toThrow(err)
+    }
+    const expectNotThrow = (handle: string, memo: string) => {
+      expect(() =>
+        ensureHandleServiceConstraints(handle, domains),
+      ).not.toThrow()
+    }
+    expectThrow('usernamepartover18c.test', 'Handle too long')
+    expectNotThrow(
+      'u23456789012345678.test',
+      'safe up to 18 chars in first segment of the handle',
+    )
+    expectThrow(
+      'usernamepartover18c.loooooooooooooooooong-pds-over18chars.mybsky.mydomain.com',
+      'Handle too long',
+    )
+    expectNotThrow(
+      'u23456789012345678.loooooooooooooooooong-pds-over18chars.mybsky.mydomain.com',
+      'safe long domain in the handle',
+    )
+  })
 })

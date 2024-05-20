@@ -1,4 +1,6 @@
-'use strict' /* eslint-disable */
+/* eslint-env node */
+
+'use strict'
 
 const { registerInstrumentations } = require('@opentelemetry/instrumentation')
 
@@ -48,12 +50,7 @@ const main = async () => {
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     httpLogger.info('pds is stopping')
-
-    periodicModerationActionReversal?.destroy()
-    await periodicModerationActionReversalRunning
-
     await pds.destroy()
-
     httpLogger.info('pds is stopped')
   })
 }

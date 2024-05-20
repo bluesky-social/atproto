@@ -6,6 +6,8 @@ import {
   ensureValidHandle,
   ensureValidNsid,
   ensureValidAtUri,
+  ensureValidTid,
+  ensureValidRecordKey,
 } from '@atproto/syntax'
 import { validateLanguage } from '@atproto/common-web'
 
@@ -121,4 +123,30 @@ export function language(path: string, value: string): ValidationResult {
       `${path} must be a well-formed BCP 47 language tag`,
     ),
   }
+}
+
+export function tid(path: string, value: string): ValidationResult {
+  try {
+    ensureValidTid(value)
+  } catch {
+    return {
+      success: false,
+      error: new ValidationError(
+        `${path} must be a valid TID (timestamp identifier)`,
+      ),
+    }
+  }
+  return { success: true, value }
+}
+
+export function recordKey(path: string, value: string): ValidationResult {
+  try {
+    ensureValidRecordKey(value)
+  } catch {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a valid Record Key`),
+    }
+  }
+  return { success: true, value }
 }

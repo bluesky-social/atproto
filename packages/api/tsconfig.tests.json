@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig/tests.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["jest", "./jest.d.ts"],
+    "noEmit": true,
+    "noUnusedLocals": false
+  },
+  "include": ["./tests"]
+}

@@ -13,6 +13,7 @@ export interface ProfileViewBasic {
   handle: string
   displayName?: string
   avatar?: string
+  associated?: ProfileAssociated
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
@@ -36,6 +37,7 @@ export interface ProfileView {
   displayName?: string
   description?: string
   avatar?: string
+  associated?: ProfileAssociated
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -64,6 +66,7 @@ export interface ProfileViewDetailed {
   followersCount?: number
   followsCount?: number
   postsCount?: number
+  associated?: ProfileAssociated
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -80,6 +83,45 @@ export function isProfileViewDetailed(v: unknown): v is ProfileViewDetailed {
 
 export function validateProfileViewDetailed(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileViewDetailed', v)
+}
+
+export interface ProfileAssociated {
+  lists?: number
+  feedgens?: number
+  labeler?: boolean
+  chat?: ProfileAssociatedChat
+  [k: string]: unknown
+}
+
+export function isProfileAssociated(v: unknown): v is ProfileAssociated {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#profileAssociated'
+  )
+}
+
+export function validateProfileAssociated(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileAssociated', v)
+}
+
+export interface ProfileAssociatedChat {
+  allowIncoming: 'all' | 'none' | 'following' | (string & {})
+  [k: string]: unknown
+}
+
+export function isProfileAssociatedChat(
+  v: unknown,
+): v is ProfileAssociatedChat {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#profileAssociatedChat'
+  )
+}
+
+export function validateProfileAssociatedChat(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileAssociatedChat', v)
 }
 
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
@@ -110,6 +152,7 @@ export type Preferences = (
   | AdultContentPref
   | ContentLabelPref
   | SavedFeedsPref
+  | SavedFeedsPrefV2
   | PersonalDetailsPref
   | FeedViewPref
   | ThreadViewPref
@@ -137,8 +180,10 @@ export function validateAdultContentPref(v: unknown): ValidationResult {
 }
 
 export interface ContentLabelPref {
+  /** Which labeler does this preference apply to? If undefined, applies globally. */
+  labelerDid?: string
   label: string
-  visibility: 'show' | 'warn' | 'hide' | (string & {})
+  visibility: 'ignore' | 'show' | 'warn' | 'hide' | (string & {})
   [k: string]: unknown
 }
 
@@ -152,6 +197,43 @@ export function isContentLabelPref(v: unknown): v is ContentLabelPref {
 
 export function validateContentLabelPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#contentLabelPref', v)
+}
+
+export interface SavedFeed {
+  id: string
+  type: 'feed' | 'list' | 'timeline' | (string & {})
+  value: string
+  pinned: boolean
+  [k: string]: unknown
+}
+
+export function isSavedFeed(v: unknown): v is SavedFeed {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#savedFeed'
+  )
+}
+
+export function validateSavedFeed(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#savedFeed', v)
+}
+
+export interface SavedFeedsPrefV2 {
+  items: SavedFeed[]
+  [k: string]: unknown
+}
+
+export function isSavedFeedsPrefV2(v: unknown): v is SavedFeedsPrefV2 {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#savedFeedsPrefV2'
+  )
+}
+
+export function validateSavedFeedsPrefV2(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#savedFeedsPrefV2', v)
 }
 
 export interface SavedFeedsPref {
@@ -197,7 +279,7 @@ export interface FeedViewPref {
   /** Hide replies in the feed. */
   hideReplies?: boolean
   /** Hide replies in the feed if they are not by followed users. */
-  hideRepliesByUnfollowed?: boolean
+  hideRepliesByUnfollowed: boolean
   /** Hide replies in the feed if they do not have this number of likes. */
   hideRepliesByLikeCount?: number
   /** Hide reposts in the feed. */
@@ -314,4 +396,38 @@ export function isHiddenPostsPref(v: unknown): v is HiddenPostsPref {
 
 export function validateHiddenPostsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#hiddenPostsPref', v)
+}
+
+export interface LabelersPref {
+  labelers: LabelerPrefItem[]
+  [k: string]: unknown
+}
+
+export function isLabelersPref(v: unknown): v is LabelersPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelersPref'
+  )
+}
+
+export function validateLabelersPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelersPref', v)
+}
+
+export interface LabelerPrefItem {
+  did: string
+  [k: string]: unknown
+}
+
+export function isLabelerPrefItem(v: unknown): v is LabelerPrefItem {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelerPrefItem'
+  )
+}
+
+export function validateLabelerPrefItem(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
 }

@@ -3,9 +3,10 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, setRepoRev } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
+  HydrateCtx,
   HydrationState,
   Hydrator,
   mergeStates,
@@ -14,7 +15,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { Actor } from '../../../../hydration/actor'
-import { FeedItem } from '../../../../hydration/feed'
+import { FeedItem, Post } from '../../../../hydration/feed'
 import { FeedType } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
@@ -26,20 +27,26 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, res }) => {
-      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+    handler: async ({ params, auth, req }) => {
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
 
-      const result = await getAuthorFeed(
-        { ...params, viewer, includeTakedowns: canViewTakedowns },
-        ctx,
-      )
+      const result = await getAuthorFeed({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers: hydrateCtx.labelers,
+        }),
       }
     },
   })
@@ -63,14 +70,14 @@ export const skeleton = async (inputs: {
   }
   const actors = await ctx.hydrator.actor.getActors(
     [did],
-    params.includeTakedowns,
+    params.hydrateCtx.includeTakedowns,
   )
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
   }
   if (clearlyBadCursor(params.cursor)) {
-    return { actor, items: [] }
+    return { actor, filter: params.filter, items: [] }
   }
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
@@ -80,6 +87,7 @@ export const skeleton = async (inputs: {
   })
   return {
     actor,
+    filter: params.filter,
     items: res.items.map((item) => ({
       post: { uri: item.uri, cid: item.cid || undefined },
       repost: item.repost
@@ -96,15 +104,9 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  const [feedPostState, profileViewerState = {}] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(
-      skeleton.items,
-      params.viewer,
-      params.includeTakedowns,
-    ),
-    params.viewer
-      ? ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.viewer)
-      : undefined,
+  const [feedPostState, profileViewerState] = await Promise.all([
+    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
+    ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
   return mergeStates(feedPostState, profileViewerState)
 }
@@ -128,14 +130,30 @@ const noBlocksOrMutedReposts = (inputs: {
       'BlockedByActor',
     )
   }
-  skeleton.items = skeleton.items.filter((item) => {
+
+  const checkBlocksAndMutes = (item: FeedItem) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.originatorBlocked &&
-      !(bam.authorMuted && !bam.originatorMuted)
+      (!bam.authorMuted || bam.originatorMuted) // repost of muted content
     )
-  })
+  }
+
+  if (skeleton.filter === 'posts_and_author_threads') {
+    // ensure replies are only included if the feed contains all
+    // replies up to the thread root (i.e. a complete self-thread.)
+    const selfThread = new SelfThreadTracker(skeleton.items, hydration)
+    skeleton.items = skeleton.items.filter((item) => {
+      return (
+        checkBlocksAndMutes(item) &&
+        (item.repost || selfThread.ok(item.post.uri))
+      )
+    })
+  } else {
+    skeleton.items = skeleton.items.filter(checkBlocksAndMutes)
+  }
+
   return skeleton
 }
 
@@ -157,10 +175,70 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string | null; includeTakedowns: boolean }
+type Params = QueryParams & {
+  hydrateCtx: HydrateCtx
+}
 
 type Skeleton = {
   actor: Actor
   items: FeedItem[]
+  filter: QueryParams['filter']
   cursor?: string
+}
+
+class SelfThreadTracker {
+  feedUris = new Set<string>()
+  cache = new Map<string, boolean>()
+
+  constructor(
+    items: FeedItem[],
+    private hydration: HydrationState,
+  ) {
+    items.forEach((item) => {
+      if (!item.repost) {
+        this.feedUris.add(item.post.uri)
+      }
+    })
+  }
+
+  ok(uri: string, loop = new Set<string>()) {
+    // if we've already checked this uri, pull from the cache
+    if (this.cache.has(uri)) {
+      return this.cache.get(uri) ?? false
+    }
+    // loop detection
+    if (loop.has(uri)) {
+      this.cache.set(uri, false)
+      return false
+    } else {
+      loop.add(uri)
+    }
+    // cache through the result
+    const result = this._ok(uri, loop)
+    this.cache.set(uri, result)
+    return result
+  }
+
+  private _ok(uri: string, loop: Set<string>): boolean {
+    // must be in the feed to be in a self-thread
+    if (!this.feedUris.has(uri)) {
+      return false
+    }
+    // must be hydratable to be part of self-thread
+    const post = this.hydration.posts?.get(uri)
+    if (!post) {
+      return false
+    }
+    // root posts (no parent) are trivial case of self-thread
+    const parentUri = getParentUri(post)
+    if (parentUri === null) {
+      return true
+    }
+    // recurse w/ cache: this post is in a self-thread if its parent is.
+    return this.ok(parentUri, loop)
+  }
+}
+
+function getParentUri(post: Post) {
+  return post.record.reply?.parent.uri ?? null
 }

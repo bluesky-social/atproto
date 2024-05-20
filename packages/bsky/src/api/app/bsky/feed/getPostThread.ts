@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
@@ -6,7 +7,7 @@ import {
   OutputSchema,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { ATPROTO_REPO_REV, resHeaders } from '../../../util'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -14,7 +15,7 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 
@@ -27,24 +28,31 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
       let result: OutputSchema
       try {
-        result = await getPostThread({ ...params, viewer }, ctx)
+        result = await getPostThread({ ...params, hydrateCtx }, ctx)
       } catch (err) {
         const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-        setRepoRev(res, repoRev)
+        if (repoRev) {
+          res.setHeader(ATPROTO_REPO_REV, repoRev)
+        }
         throw err
       }
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({
+          repoRev,
+          labelers: hydrateCtx.labelers,
+        }),
       }
     },
   })
@@ -52,20 +60,21 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
+  const anchor = await resolveUri(ctx, params.uri)
   try {
     const res = await ctx.dataplane.getThread({
-      postUri: params.uri,
+      postUri: anchor,
       above: params.parentHeight,
       below: params.depth,
     })
     return {
-      anchor: params.uri,
+      anchor,
       uris: res.uris,
     }
   } catch (err) {
     if (isDataplaneError(err, Code.NotFound)) {
       return {
-        anchor: params.uri,
+        anchor,
         uris: [],
       }
     } else {
@@ -80,7 +89,7 @@ const hydration = async (
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
-    params.viewer,
+    params.hydrateCtx,
   )
 }
 
@@ -105,9 +114,17 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   anchor: string
   uris: string[]
+}
+
+const resolveUri = async (ctx: Context, uriStr: string) => {
+  const uri = new AtUri(uriStr)
+  const [did] = await ctx.hydrator.actor.getDids([uri.host])
+  if (!did) return uriStr
+  uri.host = did
+  return uri.toString()
 }

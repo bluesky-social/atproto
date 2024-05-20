@@ -10,21 +10,28 @@ import {
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getList({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getList({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const result = await getList({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -53,13 +60,12 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  const { viewer } = params
   const { listUri, listitems } = skeleton
   const [listState, profileState] = await Promise.all([
-    ctx.hydrator.hydrateLists([listUri], viewer),
+    ctx.hydrator.hydrateLists([listUri], params.hydrateCtx),
     ctx.hydrator.hydrateProfiles(
       listitems.map(({ did }) => did),
-      viewer,
+      params.hydrateCtx,
     ),
   ])
   return mergeStates(listState, profileState)
@@ -88,7 +94,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
+  hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {

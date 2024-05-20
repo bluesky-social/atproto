@@ -3,7 +3,8 @@ import {
   REVIEWCLOSED,
   REVIEWOPEN,
   REVIEWESCALATED,
-} from '../../lexicon/types/com/atproto/admin/defs'
+  REVIEWNONE,
+} from '../../lexicon/types/tools/ozone/moderation/defs'
 
 export const subjectStatusTableName = 'moderation_subject_status'
 
@@ -13,7 +14,11 @@ export interface ModerationSubjectStatus {
   recordPath: string
   recordCid: string | null
   blobCids: string[] | null
-  reviewState: typeof REVIEWCLOSED | typeof REVIEWOPEN | typeof REVIEWESCALATED
+  reviewState:
+    | typeof REVIEWCLOSED
+    | typeof REVIEWOPEN
+    | typeof REVIEWESCALATED
+    | typeof REVIEWNONE
   createdAt: string
   updatedAt: string
   lastReviewedBy: string | null
@@ -21,6 +26,7 @@ export interface ModerationSubjectStatus {
   lastReportedAt: string | null
   lastAppealedAt: string | null
   muteUntil: string | null
+  muteReportingUntil: string | null
   suspendUntil: string | null
   takendown: boolean
   appealed: boolean | null

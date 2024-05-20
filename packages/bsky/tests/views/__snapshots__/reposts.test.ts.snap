@@ -12,6 +12,11 @@ Array [
     },
   },
   Object {
+    "associated": Object {
+      "chat": Object {
+        "allowIncoming": "none",
+      },
+    },
     "did": "user(1)",
     "handle": "dan.test",
     "labels": Array [],
@@ -62,6 +67,11 @@ Array [
     },
   },
   Object {
+    "associated": Object {
+      "chat": Object {
+        "allowIncoming": "none",
+      },
+    },
     "did": "user(1)",
     "handle": "dan.test",
     "labels": Array [],
