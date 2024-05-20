@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
@@ -59,20 +60,21 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
+  const anchor = await resolveUri(ctx, params.uri)
   try {
     const res = await ctx.dataplane.getThread({
-      postUri: params.uri,
+      postUri: anchor,
       above: params.parentHeight,
       below: params.depth,
     })
     return {
-      anchor: params.uri,
+      anchor,
       uris: res.uris,
     }
   } catch (err) {
     if (isDataplaneError(err, Code.NotFound)) {
       return {
-        anchor: params.uri,
+        anchor,
         uris: [],
       }
     } else {
@@ -117,4 +119,12 @@ type Params = QueryParams & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   anchor: string
   uris: string[]
+}
+
+const resolveUri = async (ctx: Context, uriStr: string) => {
+  const uri = new AtUri(uriStr)
+  const [did] = await ctx.hydrator.actor.getDids([uri.host])
+  if (!did) return uriStr
+  uri.host = did
+  return uri.toString()
 }
