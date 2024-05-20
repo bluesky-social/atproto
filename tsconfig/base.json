@@ -26,6 +26,7 @@
     "resolveJsonModule": true,
     "types": [],
 
+    "noErrorTruncation": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
