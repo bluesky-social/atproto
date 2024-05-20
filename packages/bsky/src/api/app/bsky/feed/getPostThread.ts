@@ -123,13 +123,8 @@ type Skeleton = {
 
 const resolveUri = async (ctx: Context, uriStr: string) => {
   const uri = new AtUri(uriStr)
-  if (uri.host.startsWith('did:')) {
-    return uriStr
-  }
   const [did] = await ctx.hydrator.actor.getDids([uri.host])
-  if (!did) {
-    return uriStr
-  }
+  if (!did) return uriStr
   uri.host = did
   return uri.toString()
 }
