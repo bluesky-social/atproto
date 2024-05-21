@@ -147,7 +147,7 @@ Array [
     "disabled": false,
     "id": 3,
     "lastUpdatedBy": "user(1)",
-    "role": "tools.ozone.moderator.defs#modRoleModerator",
+    "role": "tools.ozone.moderator.defs#modRoleTriage",
     "updatedAt": Object {},
   },
   Object {
@@ -156,7 +156,7 @@ Array [
     "disabled": false,
     "id": 2,
     "lastUpdatedBy": "user(1)",
-    "role": "tools.ozone.moderator.defs#modRoleTriage",
+    "role": "tools.ozone.moderator.defs#modRoleModerator",
     "updatedAt": Object {},
   },
   Object {
@@ -318,7 +318,7 @@ Array [
     "disabled": false,
     "id": 3,
     "lastUpdatedBy": "user(1)",
-    "role": "tools.ozone.moderator.defs#modRoleModerator",
+    "role": "tools.ozone.moderator.defs#modRoleTriage",
     "updatedAt": Object {},
   },
   Object {
@@ -327,7 +327,7 @@ Array [
     "disabled": false,
     "id": 2,
     "lastUpdatedBy": "user(1)",
-    "role": "tools.ozone.moderator.defs#modRoleTriage",
+    "role": "tools.ozone.moderator.defs#modRoleModerator",
     "updatedAt": Object {},
   },
   Object {
