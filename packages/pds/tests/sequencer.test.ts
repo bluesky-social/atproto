@@ -19,6 +19,7 @@ describe('sequencer', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sequencer',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     sequencer = network.pds.ctx.sequencer
     sc = network.getSeedClient()
     await userSeed(sc)

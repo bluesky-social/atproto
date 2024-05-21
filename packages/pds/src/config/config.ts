@@ -22,8 +22,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
+    contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
+    devMode: env.devMode ?? false,
   }
 
   const dbLoc = (name: string) => {
@@ -53,6 +55,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     blobstoreCfg = {
       provider: 's3',
       bucket: env.blobstoreS3Bucket,
+      uploadTimeoutMs: env.blobstoreS3UploadTimeoutMs || 20000,
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
@@ -280,6 +283,8 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
   acceptingImports: boolean
   blobUploadLimit: number
+  contactEmailAddress?: string
+  devMode: boolean
 }
 
 export type DatabaseConfig = {
@@ -301,6 +306,7 @@ export type S3BlobstoreConfig = {
   region?: string
   endpoint?: string
   forcePathStyle?: boolean
+  uploadTimeoutMs?: number
   credentials?: {
     accessKeyId: string
     secretAccessKey: string

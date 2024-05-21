@@ -3,7 +3,8 @@ import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { TestNetwork } from '@atproto/dev-env'
 import * as lex from '../../src/lexicon/lexicons'
-import { Database } from '../../src'
+
+type Database = TestNetwork['bsky']['db']
 
 describe('duplicate record', () => {
   let network: TestNetwork

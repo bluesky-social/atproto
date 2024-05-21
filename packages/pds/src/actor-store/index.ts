@@ -256,6 +256,7 @@ const createActorReader = (
     repo: new RepoReader(db, blobstore(did)),
     record: new RecordReader(db),
     pref: new PreferenceReader(db),
+    keypair: getKeypair,
     transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
       const keypair = await getKeypair()
       return db.transaction((dbTxn) => {
@@ -276,6 +277,7 @@ export type ActorStoreReader = {
   repo: RepoReader
   record: RecordReader
   pref: PreferenceReader
+  keypair: () => Promise<Keypair>
   transact: <T>(fn: ActorStoreTransactFn<T>) => Promise<T>
 }
 

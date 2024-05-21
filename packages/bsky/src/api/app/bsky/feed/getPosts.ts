@@ -3,21 +3,30 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { creatorFromUri } from '../../../../views/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const results = await getPosts({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+
+      const results = await getPosts({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -35,7 +44,7 @@ const hydration = async (inputs: {
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
-    params.viewer,
+    params.hydrateCtx,
   )
 }
 
@@ -70,7 +79,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   posts: string[]

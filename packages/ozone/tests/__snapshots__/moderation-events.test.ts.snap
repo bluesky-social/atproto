@@ -5,8 +5,9 @@ Object {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(2)",
   "event": Object {
-    "$type": "com.atproto.admin.defs#modEventReport",
+    "$type": "tools.ozone.moderation.defs#modEventReport",
     "comment": "X",
+    "isReporterMuted": false,
     "reportType": "com.atproto.moderation.defs#reasonMisleading",
   },
   "id": 1,
@@ -22,7 +23,7 @@ Object {
         "lastReportedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedAt": "1970-01-01T00:00:00.000Z",
         "lastReviewedBy": "user(1)",
-        "reviewState": "com.atproto.admin.defs#reviewEscalated",
+        "reviewState": "tools.ozone.moderation.defs#reviewEscalated",
         "subject": Object {
           "$type": "com.atproto.admin.defs#repoRef",
           "did": "user(0)",
@@ -75,8 +76,9 @@ Array [
     "createdBy": "user(1)",
     "creatorHandle": "alice.test",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventReport",
+      "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "X",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 11,
@@ -90,8 +92,9 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(2)",
+    "creatorHandle": "mod-authority.test",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventTag",
+      "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
         "lang:en",
         "lang:i",
@@ -111,8 +114,9 @@ Array [
     "createdBy": "user(1)",
     "creatorHandle": "alice.test",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventReport",
+      "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "X",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 5,
@@ -133,8 +137,9 @@ Array [
     "createdBy": "user(0)",
     "creatorHandle": "bob.test",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventReport",
+      "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "X",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 10,
@@ -149,10 +154,11 @@ Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "user(1)",
+    "creatorHandle": "mod-authority.test",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventTag",
+      "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
-        "lang:und",
+        "lang:en",
       ],
       "remove": Array [],
     },
@@ -170,8 +176,9 @@ Array [
     "createdBy": "user(0)",
     "creatorHandle": "bob.test",
     "event": Object {
-      "$type": "com.atproto.admin.defs#modEventReport",
+      "$type": "tools.ozone.moderation.defs#modEventReport",
       "comment": "X",
+      "isReporterMuted": false,
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
     "id": 3,

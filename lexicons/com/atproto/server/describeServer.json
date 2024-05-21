@@ -29,6 +29,11 @@
               "description": "URLs of service policy documents.",
               "ref": "#links"
             },
+            "contact": {
+              "type": "ref",
+              "description": "Contact information",
+              "ref": "#contact"
+            },
             "did": {
               "type": "string",
               "format": "did"
@@ -40,8 +45,14 @@
     "links": {
       "type": "object",
       "properties": {
-        "privacyPolicy": { "type": "string" },
-        "termsOfService": { "type": "string" }
+        "privacyPolicy": { "type": "string", "format": "uri" },
+        "termsOfService": { "type": "string", "format": "uri" }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" }
       }
     }
   }

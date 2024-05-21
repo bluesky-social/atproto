@@ -1,7 +1,15 @@
+import {
+  AppBskyActorProfile,
+  AppBskyFeedGenerator,
+  AppBskyFeedPost,
+  AppBskyGraphList,
+} from '@atproto/api'
+
 import { ModerationService } from '.'
 import { ModSubject } from './subject'
 import { ModerationSubjectStatusRow } from './types'
 import { langLogger as log } from '../logger'
+import { code3ToCode2 } from './lang-data'
 
 export class ModerationLangService {
   constructor(private moderationService: ModerationService) {}
@@ -25,7 +33,7 @@ export class ModerationLangService {
         })
         await this.moderationService.logEvent({
           event: {
-            $type: 'com.atproto.admin.defs#modEventTag',
+            $type: 'tools.ozone.moderation.defs#modEventTag',
             add: recordLangs
               ? recordLangs.map((lang) => `lang:${lang}`)
               : ['lang:und'],
@@ -38,6 +46,23 @@ export class ModerationLangService {
         log.error({ subject, err }, 'Error getting record langs')
       }
     }
+  }
+
+  getTextFromRecord(recordValue?: Record<string, unknown>): string | undefined {
+    let text: string | undefined
+
+    if (AppBskyGraphList.isRecord(recordValue)) {
+      text = recordValue.description || recordValue.name
+    } else if (
+      AppBskyFeedGenerator.isRecord(recordValue) ||
+      AppBskyActorProfile.isRecord(recordValue)
+    ) {
+      text = recordValue.description || recordValue.displayName
+    } else if (AppBskyFeedPost.isRecord(recordValue)) {
+      text = recordValue.text
+    }
+
+    return text?.trim()
   }
 
   async getRecordLang({
@@ -70,10 +95,19 @@ export class ModerationLangService {
       ])
       const record = recordByUri.get(subject.uri)
       const recordLang = record?.value.langs as string[] | null
+      const recordText = this.getTextFromRecord(record?.value)
       if (recordLang?.length) {
         recordLang
           .map((lang) => lang.split('-')[0])
           .forEach((lang) => langs.add(lang))
+      } else if (recordText) {
+        // 'lande' is an esm module, so we need to import it dynamically
+        const { default: lande } = await import('lande')
+        const detectedLanguages = lande(recordText)
+        if (detectedLanguages.length) {
+          const langCode = code3ToCode2(detectedLanguages[0][0])
+          if (langCode) langs.add(langCode)
+        }
       }
     }
 

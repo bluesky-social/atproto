@@ -1,7 +1,10 @@
 import axios from 'axios'
+import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
+import { DidAndKey } from './types'
 
 export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
   mockResolvers(pds.ctx.idResolver, pds)
@@ -66,4 +69,24 @@ export const uniqueLockId = () => {
   } while (usedLockIds.has(lockId))
   usedLockIds.add(lockId)
   return lockId
+}
+
+export const createDidAndKey = async (opts: {
+  plcUrl: string
+  handle: string
+  pds: string
+}): Promise<DidAndKey> => {
+  const { plcUrl, handle, pds } = opts
+  const key = await Secp256k1Keypair.create({ exportable: true })
+  const did = await new plc.Client(plcUrl).createDid({
+    signingKey: key.did(),
+    rotationKeys: [key.did()],
+    handle,
+    pds,
+    signer: key,
+  })
+  return {
+    key,
+    did,
+  }
 }

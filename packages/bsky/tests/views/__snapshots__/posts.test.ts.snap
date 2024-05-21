@@ -12,7 +12,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -20,7 +19,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-b",
@@ -37,7 +35,6 @@ Array [
       Object {
         "cid": "cids(0)",
         "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
         "src": "user(0)",
         "uri": "record(0)",
         "val": "self-label",
@@ -72,7 +69,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -80,7 +76,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-b",
@@ -187,6 +182,9 @@ Array [
           "embeds": Array [],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 0,
           "uri": "record(3)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -253,6 +251,11 @@ Array [
   },
   Object {
     "author": Object {
+      "associated": Object {
+        "chat": Object {
+          "allowIncoming": "none",
+        },
+      },
       "did": "user(6)",
       "handle": "dan.test",
       "labels": Array [],
@@ -316,6 +319,9 @@ Array [
                 "cid": "cids(4)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
                 "labels": Array [],
+                "likeCount": 0,
+                "replyCount": 0,
+                "repostCount": 0,
                 "uri": "record(3)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -332,6 +338,9 @@ Array [
         ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
+        "likeCount": 2,
+        "replyCount": 0,
+        "repostCount": 0,
         "uri": "record(6)",
         "value": Object {
           "$type": "app.bsky.feed.post",
@@ -420,7 +429,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-a",
@@ -428,7 +436,6 @@ Array [
         Object {
           "cid": "cids(2)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "user(0)",
           "uri": "record(1)",
           "val": "self-label-b",

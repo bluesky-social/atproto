@@ -10,11 +10,12 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -25,12 +26,15 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
-      const results = await searchPosts({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const results = await searchPosts({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -46,6 +50,16 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         q: params.q,
         cursor: params.cursor,
         limit: params.limit,
+        author: params.author,
+        domain: params.domain,
+        lang: params.lang,
+        mentions: params.mentions,
+        since: params.since,
+        sort: params.sort,
+        tag: params.tag,
+        until: params.until,
+        url: params.url,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       })
     return {
       posts: res.posts.map(({ uri }) => uri),
@@ -70,7 +84,7 @@ const hydration = async (
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
-    params.viewer,
+    params.hydrateCtx,
   )
 }
 
@@ -104,7 +118,7 @@ type Context = {
   searchAgent?: AtpAgent
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   posts: string[]

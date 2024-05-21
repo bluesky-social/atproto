@@ -23,6 +23,7 @@ describe('file uploads', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'file_uploads',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -43,8 +44,10 @@ describe('file uploads', () => {
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
-    const _putTemp = DiskBlobStore.prototype.putTemp
-    DiskBlobStore.prototype.putTemp = function (...args) {
+    const BlobStore = ctx.blobstore('did:invalid')
+      .constructor as typeof DiskBlobStore
+    const _putTemp = BlobStore.prototype.putTemp
+    BlobStore.prototype.putTemp = function (...args) {
       // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
       process.nextTick(() => abortController.abort())
       return _putTemp.call(this, ...args)
@@ -63,7 +66,7 @@ describe('file uploads', () => {
     )
     await expect(response).rejects.toThrow('operation was aborted')
     // Cleanup
-    DiskBlobStore.prototype.putTemp = _putTemp
+    BlobStore.prototype.putTemp = _putTemp
     // This test would fail from an uncaught exception: this grace period gives time for that to surface
     await new Promise((res) => setTimeout(res, 10))
   })

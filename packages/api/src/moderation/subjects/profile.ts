@@ -1,24 +1,19 @@
-import { ModerationCauseAccumulator } from '../accumulator'
-import {
-  Label,
-  ModerationSubjectProfile,
-  ModerationOpts,
-  ModerationDecision,
-} from '../types'
+import { ModerationDecision } from '../decision'
+import { Label, ModerationSubjectProfile, ModerationOpts } from '../types'
 
 export function decideProfile(
   subject: ModerationSubjectProfile,
   opts: ModerationOpts,
 ): ModerationDecision {
-  const acc = new ModerationCauseAccumulator()
+  const acc = new ModerationDecision()
 
   acc.setDid(subject.did)
-
+  acc.setIsMe(subject.did === opts.userDid)
   for (const label of filterProfileLabels(subject.labels)) {
-    acc.addLabel(label, opts)
+    acc.addLabel('profile', label, opts)
   }
 
-  return acc.finalizeDecision(opts)
+  return acc
 }
 
 export function filterProfileLabels(labels?: Label[]): Label[] {

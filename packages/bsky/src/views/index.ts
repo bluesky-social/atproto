@@ -16,9 +16,12 @@ import {
   NotFoundPost,
   PostView,
   ReasonRepost,
+  ReplyRef,
   ThreadViewPost,
   ThreadgateView,
+  isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
+import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
@@ -48,6 +51,10 @@ import {
 import { Label } from '../hydration/label'
 import { FeedItem, Post, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
+import {
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 
 export class Views {
@@ -57,7 +64,9 @@ export class Views {
   // ------------
 
   actorIsTakendown(did: string, state: HydrationState): boolean {
-    return !!state.actors?.get(did)?.takedownRef
+    if (state.actors?.get(did)?.takedownRef) return true
+    if (state.labels?.get(did)?.isTakendown) return true
+    return false
   }
 
   viewerBlockExists(did: string, state: HydrationState): boolean {
@@ -95,9 +104,18 @@ export class Views {
             cidFromBlobJson(actor.profile.banner),
           )
         : undefined,
-      followersCount: profileAggs?.followers,
-      followsCount: profileAggs?.follows,
-      postsCount: profileAggs?.posts,
+      followersCount: profileAggs?.followers ?? 0,
+      followsCount: profileAggs?.follows ?? 0,
+      postsCount: profileAggs?.posts ?? 0,
+      associated: {
+        lists: profileAggs?.lists,
+        feedgens: profileAggs?.feeds,
+        labeler: actor.isLabeler,
+        // @TODO apply default chat policy?
+        chat: actor.allowIncomingChatsFrom
+          ? { allowIncoming: actor.allowIncomingChatsFrom }
+          : undefined,
+      },
     }
   }
 
@@ -125,8 +143,8 @@ export class Views {
       'self',
     ).toString()
     const labels = [
-      ...(state.labels?.get(did) ?? []),
-      ...(state.labels?.get(profileUri) ?? []),
+      ...(state.labels?.getBySubject(did) ?? []),
+      ...(state.labels?.getBySubject(profileUri) ?? []),
       ...this.selfLabels({
         uri: profileUri,
         cid: actor.profileCid?.toString(),
@@ -144,6 +162,18 @@ export class Views {
             cidFromBlobJson(actor.profile.avatar),
           )
         : undefined,
+      // associated.feedgens and associated.lists info not necessarily included
+      // on profile and profile-basic views, but should be on profile-detailed.
+      associated:
+        actor.isLabeler || actor.allowIncomingChatsFrom
+          ? {
+              labeler: actor.isLabeler ? true : undefined,
+              // @TODO apply default chat policy?
+              chat: actor.allowIncomingChatsFrom
+                ? { allowIncoming: actor.allowIncomingChatsFrom }
+                : undefined,
+            }
+          : undefined,
       viewer: this.profileViewer(did, state),
       labels,
     }
@@ -214,6 +244,7 @@ export class Views {
       return undefined
     }
     const listViewer = state.listViewers?.get(uri)
+    const labels = state.labels?.getBySubject(uri) ?? []
     const creator = new AtUri(uri).hostname
     return {
       uri,
@@ -228,6 +259,7 @@ export class Views {
           )
         : undefined,
       indexedAt: list.sortedAt.toISOString(),
+      labels,
       viewer: listViewer
         ? {
             muted: !!listViewer.viewerMuted,
@@ -254,8 +286,56 @@ export class Views {
         ? normalizeDatetimeAlways(record.createdAt)
         : new Date(0).toISOString()
     return record.labels.values.map(({ val }) => {
-      return { src, uri, cid, val, cts, neg: false }
+      return { src, uri, cid, val, cts }
     })
+  }
+
+  labeler(did: string, state: HydrationState): LabelerView | undefined {
+    const labeler = state.labelers?.get(did)
+    if (!labeler) return
+    const creator = this.profile(did, state)
+    if (!creator) return
+    const viewer = state.labelerViewers?.get(did)
+    const aggs = state.labelerAggs?.get(did)
+
+    const uri = AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
+    const labels = [
+      ...(state.labels?.getBySubject(uri) ?? []),
+      ...this.selfLabels({
+        uri,
+        cid: labeler.cid.toString(),
+        record: labeler.record,
+      }),
+    ]
+
+    return {
+      uri,
+      cid: labeler.cid.toString(),
+      creator,
+      likeCount: aggs?.likes ?? 0,
+      viewer: viewer
+        ? {
+            like: viewer.like,
+          }
+        : undefined,
+      indexedAt: labeler.sortedAt.toISOString(),
+      labels,
+    }
+  }
+
+  labelerDetailed(
+    did: string,
+    state: HydrationState,
+  ): LabelerViewDetailed | undefined {
+    const baseView = this.labeler(did, state)
+    if (!baseView) return
+    const record = state.labelers?.get(did)
+    if (!record) return
+
+    return {
+      ...baseView,
+      policies: record.record.policies,
+    }
   }
 
   // Feed
@@ -269,16 +349,28 @@ export class Views {
     originatorBlocked: boolean
     authorMuted: boolean
     authorBlocked: boolean
+    ancestorAuthorBlocked: boolean
   } {
     const authorDid = creatorFromUri(item.post.uri)
     const originatorDid = item.repost
       ? creatorFromUri(item.repost.uri)
       : authorDid
+    const post = state.posts?.get(item.post.uri)
+    const parentUri = post?.record.reply?.parent.uri
+    const parentAuthorDid = parentUri && creatorFromUri(parentUri)
+    const parent = parentUri ? state.posts?.get(parentUri) : undefined
+    const grandparentUri = parent?.record.reply?.parent.uri
+    const grandparentAuthorDid =
+      grandparentUri && creatorFromUri(grandparentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
+      ancestorAuthorBlocked:
+        (!!parentAuthorDid && this.viewerBlockExists(parentAuthorDid, state)) ||
+        (!!grandparentAuthorDid &&
+          this.viewerBlockExists(grandparentAuthorDid, state)),
     }
   }
 
@@ -290,6 +382,7 @@ export class Views {
     if (!creator) return
     const viewer = state.feedgenViewers?.get(uri)
     const aggs = state.feedgenAggs?.get(uri)
+    const labels = state.labels?.getBySubject(uri) ?? []
 
     return {
       uri,
@@ -306,7 +399,8 @@ export class Views {
             cidFromBlobJson(feedgen.record.avatar),
           )
         : undefined,
-      likeCount: aggs?.likes,
+      likeCount: aggs?.likes ?? 0,
+      labels,
       viewer: viewer
         ? {
             like: viewer.like,
@@ -345,7 +439,7 @@ export class Views {
       parsedUri.rkey,
     ).toString()
     const labels = [
-      ...(state.labels?.get(uri) ?? []),
+      ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
         uri,
         cid: post.cid,
@@ -361,9 +455,9 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
-      replyCount: aggs?.replies,
-      repostCount: aggs?.reposts,
-      likeCount: aggs?.likes,
+      replyCount: aggs?.replies ?? 0,
+      repostCount: aggs?.reposts ?? 0,
+      likeCount: aggs?.likes ?? 0,
       indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {
@@ -403,35 +497,39 @@ export class Views {
     }
   }
 
-  replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
-    // don't hydrate reply if there isn't it violates a block
-    if (state.postBlocks?.get(uri)?.reply) return undefined
+  replyRef(uri: string, state: HydrationState): ReplyRef | undefined {
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
-    const root = this.maybePost(
-      postRecord.reply.root.uri,
-      state,
-      usePostViewUnion,
-    )
-    const parent = this.maybePost(
-      postRecord.reply.parent.uri,
-      state,
-      usePostViewUnion,
-    )
-    return root && parent ? { root, parent } : undefined
+    let root = this.maybePost(postRecord.reply.root.uri, state)
+    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
+      parent = this.blockedPost(parent.uri, parent.author.did, state)
+      // in a reply to the root of a thread, parent and root are the same post.
+      if (root.uri === parent.uri) {
+        root = parent
+      }
+    }
+    let grandparentAuthor: ProfileViewBasic | undefined
+    if (isPostRecord(parent.record) && parent.record.reply) {
+      grandparentAuthor = this.profileBasic(
+        creatorFromUri(parent.record.reply.parent.uri),
+        state,
+      )
+    }
+    return {
+      root,
+      parent,
+      grandparentAuthor,
+    }
   }
 
-  maybePost(
-    uri: string,
-    state: HydrationState,
-    usePostViewUnion = false,
-  ): MaybePostView | undefined {
+  maybePost(uri: string, state: HydrationState): MaybePostView {
     const post = this.post(uri, state)
-    if (!post) return usePostViewUnion ? this.notFoundPost(uri) : undefined
+    if (!post) {
+      return this.notFoundPost(uri)
+    }
     if (this.viewerBlockExists(post.author.did, state)) {
-      return usePostViewUnion
-        ? this.blockedPost(uri, post.author.did, state)
-        : undefined
+      return this.blockedPost(uri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
@@ -556,7 +654,7 @@ export class Views {
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
-  ): (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined {
+  ): (ThreadViewPost | BlockedPost)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
@@ -568,7 +666,12 @@ export class Views {
         return undefined
       }
       const post = this.post(uri, state)
-      if (!postInfo || !post) return this.notFoundPost(uri)
+      if (!postInfo || !post) {
+        // in the future we might consider keeping a placeholder for deleted
+        // posts that have replies under them, but not supported at the moment.
+        // this case is mostly likely hit when a takedown was applied to a post.
+        return undefined
+      }
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(uri, post.author.did, state)
@@ -693,6 +796,9 @@ export class Views {
       author: postView.author,
       value: postView.record,
       labels: postView.labels,
+      likeCount: postView.likeCount,
+      replyCount: postView.replyCount,
+      repostCount: postView.repostCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }
@@ -727,6 +833,11 @@ export class Views {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
+      return this.recordEmbedWrapper(view, withTypeTag)
+    } else if (parsedUri.collection === ids.AppBskyLabelerService) {
+      const view = this.labeler(parsedUri.hostname, state)
+      if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.labeler.defs#labelerView'
       return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
@@ -771,7 +882,8 @@ export class Views {
     }
     const rootUriStr: string = post?.record.reply?.root.uri ?? uri
     const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
-    if (!gate || !state.viewer) {
+    const viewer = state.ctx?.viewer
+    if (!gate || !viewer) {
       return undefined
     }
     const rootPost = state.posts?.get(rootUriStr)?.record
@@ -780,7 +892,7 @@ export class Views {
       canReply,
       allowFollowing,
       allowListUris = [],
-    } = parseThreadGate(state.viewer, ownerDid, rootPost ?? null, gate)
+    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
     if (canReply) {
       return false
     }
@@ -817,7 +929,7 @@ export class Views {
       recordInfo = state.follows?.get(notif.uri)
     }
     if (!recordInfo) return
-    const labels = state.labels?.get(notif.uri) ?? []
+    const labels = state.labels?.getBySubject(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
       cid: recordInfo.cid,

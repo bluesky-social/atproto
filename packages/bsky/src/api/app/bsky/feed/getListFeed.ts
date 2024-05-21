@@ -1,9 +1,13 @@
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, setRepoRev } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { mapDefined } from '@atproto/common'
@@ -19,17 +23,19 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getListFeed({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getListFeed({ ...params, viewer }, ctx)
+      const result = await getListFeed({ ...params, hydrateCtx }, ctx)
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
-      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers, repoRev }),
       }
     },
   })
@@ -65,7 +71,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.viewer)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -80,7 +86,8 @@ const noBlocksOrMutes = (inputs: {
       !bam.authorBlocked &&
       !bam.authorMuted &&
       !bam.originatorBlocked &&
-      !bam.originatorMuted
+      !bam.originatorMuted &&
+      !bam.ancestorAuthorBlocked
     )
   })
   return skeleton
@@ -104,7 +111,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   items: FeedItem[]

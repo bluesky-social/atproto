@@ -16,6 +16,7 @@ export const forSnapshot = (obj: unknown) => {
   const collections = { [kTake]: 'collection' }
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
+  const sigs = { [kTake]: 'sig' }
   const unknown = { [kTake]: 'unknown' }
   const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
   return mapLeafValues(toWalk, (item) => {
@@ -60,6 +61,10 @@ export const forSnapshot = (obj: unknown) => {
       if (!match) return str
       const [, did, cid] = match
       return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+    }
+    // decent check for 64-byte base64 encoded signatures
+    if (str.length === 86 && !str.includes(' ')) {
+      return take(sigs, str)
     }
     let isCid: boolean
     try {
@@ -159,16 +164,16 @@ export const stripViewerFromPost = (postUnknown: unknown): PostView => {
     post.embed && isViewRecord(post.embed.record)
       ? post.embed.record // Record from record embed
       : post.embed?.['record'] && isViewRecord(post.embed['record']['record'])
-      ? post.embed['record']['record'] // Record from record-with-media embed
-      : undefined
+        ? post.embed['record']['record'] // Record from record-with-media embed
+        : undefined
   if (recordEmbed) {
     recordEmbed.author = stripViewer(recordEmbed.author)
     recordEmbed.embeds?.forEach((deepEmbed) => {
       const deepRecordEmbed = isViewRecord(deepEmbed.record)
         ? deepEmbed.record // Record from record embed
         : deepEmbed['record'] && isViewRecord(deepEmbed['record']['record'])
-        ? deepEmbed['record']['record'] // Record from record-with-media embed
-        : undefined
+          ? deepEmbed['record']['record'] // Record from record-with-media embed
+          : undefined
       if (deepRecordEmbed) {
         deepRecordEmbed.author = stripViewer(deepRecordEmbed.author)
       }

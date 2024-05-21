@@ -1,7 +1,10 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
 import {
   HydrationMap,
+  RecordInfo,
+  parseRecord,
   parseRecordBytes,
   parseString,
   safeTakedownRef,
@@ -15,9 +18,15 @@ export type Actor = {
   profileTakedownRef?: string
   sortedAt?: Date
   takedownRef?: string
+  isLabeler: boolean
+  allowIncomingChatsFrom?: string
 }
 
 export type Actors = HydrationMap<Actor>
+
+export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
+
+export type ChatDeclarations = HydrationMap<ChatDeclaration>
 
 export type ProfileViewerState = {
   muted?: boolean
@@ -36,6 +45,8 @@ export type ProfileAgg = {
   followers: number
   follows: number
   posts: number
+  lists: number
+  feeds: number
 }
 
 export type ProfileAggs = HydrationMap<ProfileAgg>
@@ -58,13 +69,16 @@ export class ActorHydrator {
     const res = handles.length
       ? await this.dataplane.getDidsByHandles({ handles })
       : { dids: [] }
-    const didByHandle = handles.reduce((acc, cur, i) => {
-      const did = res.dids[i]
-      if (did && did.length > 0) {
-        return acc.set(cur, did)
-      }
-      return acc
-    }, new Map() as Map<string, string>)
+    const didByHandle = handles.reduce(
+      (acc, cur, i) => {
+        const did = res.dids[i]
+        if (did && did.length > 0) {
+          return acc.set(cur, did)
+        }
+        return acc
+      },
+      new Map() as Map<string, string>,
+    )
     return handleOrDids.map((id) =>
       id.startsWith('did:') ? id : didByHandle.get(id),
     )
@@ -100,8 +114,25 @@ export class ActorHydrator {
         profileTakedownRef: safeTakedownRef(profile),
         sortedAt: profile?.sortedAt?.toDate(),
         takedownRef: safeTakedownRef(actor),
+        isLabeler: actor.labeler ?? false,
+        allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
       })
     }, new HydrationMap<Actor>())
+  }
+
+  async getChatDeclarations(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<ChatDeclarations> {
+    if (!uris.length) return new HydrationMap<ChatDeclaration>()
+    const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<ChatDeclarationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<ChatDeclaration>())
   }
 
   // "naive" because this method does not verify the existence of the list itself
@@ -143,6 +174,8 @@ export class ActorHydrator {
         followers: counts.followers[i] ?? 0,
         follows: counts.following[i] ?? 0,
         posts: counts.posts[i] ?? 0,
+        lists: counts.lists[i] ?? 0,
+        feeds: counts.feeds[i] ?? 0,
       })
     }, new HydrationMap<ProfileAgg>())
   }

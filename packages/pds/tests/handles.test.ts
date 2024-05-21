@@ -35,6 +35,7 @@ describe('handles', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
     agent = network.pds.getClient()
@@ -249,27 +250,5 @@ describe('handles', () => {
       handle: 'bob-alt.test',
     })
     await expect(attempt2).rejects.toThrow('Authentication Required')
-    const attempt3 = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob-alt.test',
-      },
-      {
-        headers: network.pds.adminAuthHeaders('moderator'),
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt3).rejects.toThrow('Insufficient privileges')
-    const attempt4 = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob-alt.test',
-      },
-      {
-        headers: network.pds.adminAuthHeaders('triage'),
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt4).rejects.toThrow('Insufficient privileges')
   })
 })

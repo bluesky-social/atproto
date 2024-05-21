@@ -3,6 +3,11 @@
 exports[`indexing indexRepo updates indexes when records change. 1`] = `
 Array [
   Object {
+    "associated": Object {
+      "feedgens": 0,
+      "labeler": false,
+      "lists": 0,
+    },
     "description": "freshening things up",
     "did": "user(0)",
     "followersCount": 2,
@@ -81,6 +86,15 @@ Array [
           "viewer": Object {},
         },
         "reply": Object {
+          "grandparentAuthor": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
+          },
           "parent": Object {
             "$type": "app.bsky.feed.defs#postView",
             "author": Object {
@@ -112,7 +126,6 @@ Array [
               Object {
                 "cid": "cids(3)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "did:example:labeler",
                 "uri": "record(3)",
                 "val": "test-label",
@@ -120,7 +133,6 @@ Array [
               Object {
                 "cid": "cids(3)",
                 "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
                 "src": "did:example:labeler",
                 "uri": "record(3)",
                 "val": "test-label-2",
@@ -207,6 +219,11 @@ Array [
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
+                "associated": Object {
+                  "chat": Object {
+                    "allowIncoming": "none",
+                  },
+                },
                 "did": "user(3)",
                 "handle": "dan.test",
                 "labels": Array [],
@@ -235,6 +252,9 @@ Array [
                     "cid": "cids(8)",
                     "indexedAt": "1970-01-01T00:00:00.000Z",
                     "labels": Array [],
+                    "likeCount": 2,
+                    "replyCount": 0,
+                    "repostCount": 0,
                     "uri": "record(9)",
                     "value": Object {
                       "$type": "app.bsky.feed.post",
@@ -282,6 +302,9 @@ Array [
               ],
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "labels": Array [],
+              "likeCount": 0,
+              "replyCount": 0,
+              "repostCount": 1,
               "uri": "record(7)",
               "value": Object {
                 "$type": "app.bsky.feed.post",
@@ -316,7 +339,6 @@ Array [
             Object {
               "cid": "cids(6)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "record(6)",
               "val": "test-label",
@@ -384,7 +406,6 @@ Array [
             Object {
               "cid": "cids(11)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "user(0)",
               "uri": "record(12)",
               "val": "self-label",
@@ -416,6 +437,11 @@ Array [
     "cursor": "0000000000000__bafycid",
     "follows": Array [
       Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
         "did": "user(3)",
         "handle": "dan.test",
         "labels": Array [],
@@ -470,7 +496,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-a",
@@ -478,7 +503,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-b",
@@ -536,7 +560,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-a",
@@ -544,7 +567,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(1)",
             "val": "self-label-b",
@@ -620,6 +642,14 @@ Object {
 
 exports[`indexing indexes profiles. 1`] = `
 Object {
+  "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "displayName": "dan",
   "followersCount": 0,
@@ -637,6 +667,14 @@ Object {
 
 exports[`indexing indexes profiles. 2`] = `
 Object {
+  "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "displayName": "danny",
   "followersCount": 0,
@@ -654,6 +692,14 @@ Object {
 
 exports[`indexing indexes profiles. 3`] = `
 Object {
+  "associated": Object {
+    "chat": Object {
+      "allowIncoming": "none",
+    },
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+  },
   "did": "user(0)",
   "followersCount": 0,
   "followsCount": 0,

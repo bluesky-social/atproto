@@ -11,7 +11,7 @@ import { selectInviteCodesQb } from '../../../../account-manager/helpers/invite'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodes({
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.moderator,
     handler: async ({ params }) => {
       if (ctx.cfg.entryway) {
         throw new InvalidRequestError(

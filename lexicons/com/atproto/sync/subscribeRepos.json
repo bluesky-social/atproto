@@ -119,7 +119,8 @@
       "properties": {
         "seq": { "type": "integer" },
         "did": { "type": "string", "format": "did" },
-        "time": { "type": "string", "format": "datetime" }
+        "time": { "type": "string", "format": "datetime" },
+        "didDoc": { "type": "unknown" }
       }
     },
     "account": {
@@ -137,12 +138,7 @@
         "status": {
           "type": "string",
           "description": "If active=false, this optional field indicates a reason for why the account is not active.",
-          "knownValues": [
-            "com.atproto.sync.defs#takendown",
-            "com.atproto.sync.defs#suspended",
-            "com.atproto.sync.defs#deleted",
-            "com.atproto.sync.defs#deactivated"
-          ]
+          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
         }
       }
     },

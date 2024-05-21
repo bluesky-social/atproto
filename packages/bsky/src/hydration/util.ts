@@ -5,13 +5,17 @@ import * as ui8 from 'uint8arrays'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 
-export class HydrationMap<T> extends Map<string, T | null> {
-  merge(map: HydrationMap<T>): HydrationMap<T> {
+export class HydrationMap<T> extends Map<string, T | null> implements Merges {
+  merge(map: HydrationMap<T>): this {
     map.forEach((val, key) => {
       this.set(key, val)
     })
     return this
   }
+}
+
+export interface Merges {
+  merge<T extends this>(map: T): this
 }
 
 export type RecordInfo<T> = {

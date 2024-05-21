@@ -78,6 +78,7 @@ export interface Identity {
   seq: number
   did: string
   time: string
+  didDoc?: {}
   [k: string]: unknown
 }
 
@@ -101,12 +102,7 @@ export interface Account {
   /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
   active: boolean
   /** If active=false, this optional field indicates a reason for why the account is not active. */
-  status?:
-    | 'com.atproto.sync.defs#takendown'
-    | 'com.atproto.sync.defs#suspended'
-    | 'com.atproto.sync.defs#deleted'
-    | 'com.atproto.sync.defs#deactivated'
-    | (string & {})
+  status?: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
   [k: string]: unknown
 }
 

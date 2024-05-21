@@ -5,7 +5,7 @@ import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSub
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
-    auth: ctx.authVerifier.roleOrAdminService,
+    auth: ctx.authVerifier.roleOrModService,
     handler: async ({ params }) => {
       const { did, uri, blob } = params
 

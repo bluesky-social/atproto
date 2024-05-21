@@ -1,9 +1,8 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestOzone, TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
-import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 describe('server', () => {
   let network: TestNetwork

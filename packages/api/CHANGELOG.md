@@ -1,5 +1,132 @@
 # @atproto/api
 
+## 0.12.11
+
+### Patch Changes
+
+- [#2499](https://github.com/bluesky-social/atproto/pull/2499) [`06d2328ee`](https://github.com/bluesky-social/atproto/commit/06d2328eeb8d706018dbdf7cc7b9862dd65b96cb) Thanks [@devinivy](https://github.com/devinivy)! - Misc tweaks and fixes to chat lexicons
+
+## 0.12.10
+
+### Patch Changes
+
+- [#2485](https://github.com/bluesky-social/atproto/pull/2485) [`d32f7215f`](https://github.com/bluesky-social/atproto/commit/d32f7215f69bc87f50890d9cfdb09840c2fbaa41) Thanks [@devinivy](https://github.com/devinivy)! - Add lexicons for chat.bsky namespace
+
+## 0.12.9
+
+### Patch Changes
+
+- [#2467](https://github.com/bluesky-social/atproto/pull/2467) [`f83b4c8ca`](https://github.com/bluesky-social/atproto/commit/f83b4c8cad01cebc1b67caa6c7ebe45f07b2f318) Thanks [@haileyok](https://github.com/haileyok)! - Modify label-handling on user's own content to still apply blurring
+
+## 0.12.8
+
+### Patch Changes
+
+- [`58f719cc1`](https://github.com/bluesky-social/atproto/commit/58f719cc1c8d0ebd5ad7cf11221372b671cd7857) Thanks [@devinivy](https://github.com/devinivy)! - Add grandparent author to feed item reply ref
+
+## 0.12.7
+
+### Patch Changes
+
+- [#2390](https://github.com/bluesky-social/atproto/pull/2390) [`58551bbe0`](https://github.com/bluesky-social/atproto/commit/58551bbe0595462c44fc3b6ab5b83e520f141933) Thanks [@foysalit](https://github.com/foysalit)! - Allow muting reports from accounts via `#modEventMuteReporter` event
+
+## 0.12.6
+
+### Patch Changes
+
+- [#2427](https://github.com/bluesky-social/atproto/pull/2427) [`b9b7c5821`](https://github.com/bluesky-social/atproto/commit/b9b7c582199d57d2fe0af8af5c8c411ed34f5b9d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Introduces V2 of saved feeds preferences. V2 and v1 prefs are incompatible. v1
+  methods and preference objects are retained for backwards compatability, but are
+  considered deprecated. Developers should immediately migrate to v2 interfaces.
+
+## 0.12.5
+
+### Patch Changes
+
+- [#2419](https://github.com/bluesky-social/atproto/pull/2419) [`3424a1770`](https://github.com/bluesky-social/atproto/commit/3424a17703891f5678ec76ef97e696afb3288b22) Thanks [@pfrazee](https://github.com/pfrazee)! - Add authFactorToken to session objects
+
+## 0.12.4
+
+### Patch Changes
+
+- [#2416](https://github.com/bluesky-social/atproto/pull/2416) [`93a4a4df9`](https://github.com/bluesky-social/atproto/commit/93a4a4df9ce38f89a5d05e300d247b85fb007e05) Thanks [@devinivy](https://github.com/devinivy)! - Support for email auth factor lexicons
+
+## 0.12.3
+
+### Patch Changes
+
+- [#2383](https://github.com/bluesky-social/atproto/pull/2383) [`0edef0ec0`](https://github.com/bluesky-social/atproto/commit/0edef0ec01403fd6097a4d2875b68313f2f1261f) Thanks [@dholms](https://github.com/dholms)! - Added feed generator interaction lexicons
+
+- [#2409](https://github.com/bluesky-social/atproto/pull/2409) [`c6d758b8b`](https://github.com/bluesky-social/atproto/commit/c6d758b8b63f4ef50b2ab9afc62164e92a53e7f0) Thanks [@devinivy](https://github.com/devinivy)! - Support for upcoming post search params
+
+## 0.12.2
+
+### Patch Changes
+
+- [#2344](https://github.com/bluesky-social/atproto/pull/2344) [`abc6f82da`](https://github.com/bluesky-social/atproto/commit/abc6f82da38abef2b1bbe8d9e41a0534a5418c9e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support muting words that contain apostrophes and other punctuation
+
+## 0.12.1
+
+### Patch Changes
+
+- [#2342](https://github.com/bluesky-social/atproto/pull/2342) [`eb7668c07`](https://github.com/bluesky-social/atproto/commit/eb7668c07d44f4b42ea2cc28143c64f4ba3312f5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds the `associated` property to `profile` and `profile-basic` views, bringing them in line with `profile-detailed` views.
+
+## 0.12.0
+
+### Minor Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
+### Patch Changes
+
+- [#2338](https://github.com/bluesky-social/atproto/pull/2338) [`36f2e966c`](https://github.com/bluesky-social/atproto/commit/36f2e966cba6cc90ba4320520da5c7381cfb8086) Thanks [@pfrazee](https://github.com/pfrazee)! - Fix: correctly detected blocked quote-posts when moderating posts
+
+- Updated dependencies [[`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9)]:
+  - @atproto/common-web@0.3.0
+  - @atproto/lexicon@0.4.0
+  - @atproto/syntax@0.3.0
+  - @atproto/xrpc@0.5.0
+
+## 0.11.2
+
+### Patch Changes
+
+- [#2328](https://github.com/bluesky-social/atproto/pull/2328) [`7dd9941b7`](https://github.com/bluesky-social/atproto/commit/7dd9941b73dbbd82601740e021cc87d765af60ca) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove unecessary escapes from regex, which was causing a minification error when bundled in React Native.
+
+## 0.11.1
+
+### Patch Changes
+
+- [#2312](https://github.com/bluesky-social/atproto/pull/2312) [`219480764`](https://github.com/bluesky-social/atproto/commit/2194807644cbdb0021e867437693300c1b0e55f5) Thanks [@pfrazee](https://github.com/pfrazee)! - Fixed an issue that would cause agent clones to drop the PDS URI config.
+
+## 0.11.0
+
+### Minor Changes
+
+- [#2302](https://github.com/bluesky-social/atproto/pull/2302) [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0) Thanks [@dholms](https://github.com/dholms)! - - Breaking changes
+  - Redesigned the `moderate*` APIs which now output a `ModerationUI` object.
+  - `agent.getPreferences()` output object `BskyPreferences` has been modified.
+  - Moved Ozone routes from `com.atproto.admin` to `tools.ozone` namespace.
+  - Additions
+    - Added support for labeler configuration in `Agent.configure()` and `agent.configureLabelerHeader()`.
+    - Added `agent.addLabeler()` and `agent.removeLabeler()` preference methods.
+    - Muted words and hidden posts are now handled in the `moderate*` APIs.
+    - Added `agent.getLabelers()` and `agent.getLabelDefinitions()`.
+    - Added `agent.configureProxyHeader()` and `withProxy()` methods to support remote service proxying behaviors.
+
+### Patch Changes
+
+- Updated dependencies [[`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0)]:
+  - @atproto/common-web@0.2.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/syntax@0.2.1
+  - @atproto/xrpc@0.4.3
+
+## 0.10.5
+
+### Patch Changes
+
+- [#2279](https://github.com/bluesky-social/atproto/pull/2279) [`192223f12`](https://github.com/bluesky-social/atproto/commit/192223f127c0b226287df1ecfcd953636db08655) Thanks [@gaearon](https://github.com/gaearon)! - Change Following feed prefs to only show replies from people you follow by default
+
 ## 0.10.4
 
 ### Patch Changes

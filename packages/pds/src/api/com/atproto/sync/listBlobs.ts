@@ -4,7 +4,7 @@ import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listBlobs({
-    auth: ctx.authVerifier.optionalAccessOrRole,
+    auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did, since, limit, cursor } = params
       await assertRepoAvailability(

@@ -9,8 +9,10 @@ export const readEnv = (): ServerEnvironment => {
     version: envStr('PDS_VERSION'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
+    contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
+    devMode: envBool('PDS_DEV_MODE'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -31,6 +33,7 @@ export const readEnv = (): ServerEnvironment => {
     blobstoreS3ForcePathStyle: envBool('PDS_BLOBSTORE_S3_FORCE_PATH_STYLE'),
     blobstoreS3AccessKeyId: envStr('PDS_BLOBSTORE_S3_ACCESS_KEY_ID'),
     blobstoreS3SecretAccessKey: envStr('PDS_BLOBSTORE_S3_SECRET_ACCESS_KEY'),
+    blobstoreS3UploadTimeoutMs: envInt('PDS_BLOBSTORE_S3_UPLOAD_TIMEOUT_MS'),
     // disk
     blobstoreDiskLocation: envStr('PDS_BLOBSTORE_DISK_LOCATION'),
     blobstoreDiskTmpLocation: envStr('PDS_BLOBSTORE_DISK_TMP_LOCATION'),
@@ -96,8 +99,6 @@ export const readEnv = (): ServerEnvironment => {
     // secrets
     jwtSecret: envStr('PDS_JWT_SECRET'),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
-    moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
-    triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
 
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
@@ -116,8 +117,10 @@ export type ServerEnvironment = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  contactEmailAddress?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
+  devMode?: boolean
 
   // database
   dataDirectory?: string
@@ -141,6 +144,7 @@ export type ServerEnvironment = {
   blobstoreS3ForcePathStyle?: boolean
   blobstoreS3AccessKeyId?: string
   blobstoreS3SecretAccessKey?: string
+  blobstoreS3UploadTimeoutMs?: number
 
   // identity
   didPlcUrl?: string
@@ -201,8 +205,6 @@ export type ServerEnvironment = {
   // secrets
   jwtSecret?: string
   adminPassword?: string
-  moderatorPassword?: string
-  triagePassword?: string
 
   // keys
   plcRotationKeyKmsKeyId?: string

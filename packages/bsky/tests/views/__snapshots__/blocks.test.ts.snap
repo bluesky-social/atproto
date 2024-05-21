@@ -14,7 +14,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -22,7 +21,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -40,6 +38,11 @@ Object {
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
+            "associated": Object {
+              "chat": Object {
+                "allowIncoming": "none",
+              },
+            },
             "did": "user(2)",
             "handle": "dan.test",
             "labels": Array [],
@@ -68,6 +71,9 @@ Object {
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
+          "likeCount": 0,
+          "replyCount": 0,
+          "repostCount": 1,
           "uri": "record(3)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -102,7 +108,6 @@ Object {
         Object {
           "cid": "cids(0)",
           "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
           "src": "did:example:labeler",
           "uri": "record(0)",
           "val": "test-label",
@@ -155,7 +160,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -163,7 +167,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -195,12 +198,50 @@ Object {
         },
         "text": "alice replies to dan",
       },
-      "replyCount": 0,
+      "replyCount": 1,
       "repostCount": 0,
       "uri": "record(0)",
       "viewer": Object {},
     },
-    "replies": Array [],
+    "replies": Array [
+      Object {
+        "$type": "app.bsky.feed.defs#threadViewPost",
+        "post": Object {
+          "author": Object {
+            "did": "user(3)",
+            "handle": "carol.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
+          },
+          "cid": "cids(4)",
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
+          "likeCount": 0,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "reply": Object {
+              "parent": Object {
+                "cid": "cids(0)",
+                "uri": "record(0)",
+              },
+              "root": Object {
+                "cid": "cids(3)",
+                "uri": "record(4)",
+              },
+            },
+            "text": "carol replies to alice's reply to dan",
+          },
+          "replyCount": 0,
+          "repostCount": 0,
+          "uri": "record(5)",
+          "viewer": Object {},
+        },
+      },
+    ],
   },
 }
 `;
@@ -219,7 +260,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-a",
@@ -227,7 +267,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(2)",
             "val": "self-label-b",
@@ -300,7 +339,6 @@ Object {
             Object {
               "cid": "cids(3)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "record(7)",
               "val": "test-label",
@@ -308,7 +346,6 @@ Object {
             Object {
               "cid": "cids(3)",
               "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
               "src": "did:example:labeler",
               "uri": "record(7)",
               "val": "test-label-2",

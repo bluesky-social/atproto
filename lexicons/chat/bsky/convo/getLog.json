@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.convo.getLog",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": [],
+        "properties": {
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["logs"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "logs": {
+              "type": "array",
+              "items": {
+                "type": "union",
+                "refs": [
+                  "chat.bsky.convo.defs#logBeginConvo",
+                  "chat.bsky.convo.defs#logLeaveConvo",
+                  "chat.bsky.convo.defs#logCreateMessage",
+                  "chat.bsky.convo.defs#logDeleteMessage"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -29,9 +29,6 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
   return {
     jwtSecret: env.jwtSecret,
     adminPassword: env.adminPassword,
-    moderatorPassword: env.moderatorPassword ?? env.adminPassword,
-    triagePassword:
-      env.triagePassword ?? env.moderatorPassword ?? env.adminPassword,
     plcRotationKey,
   }
 }
@@ -39,8 +36,6 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 export type ServerSecrets = {
   jwtSecret: string
   adminPassword: string
-  moderatorPassword: string
-  triagePassword: string
   plcRotationKey: SigningKeyKms | SigningKeyMemory
 }
 

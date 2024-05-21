@@ -5,13 +5,14 @@ import {
   InvalidRequestError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
+import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
@@ -35,18 +36,15 @@ type NullOutput = {
   credentials: null
 }
 
-type RoleOutput = {
+type AdminTokenOutput = {
   credentials: {
-    type: 'role'
-    admin: boolean
-    moderator: boolean
-    triage: boolean
+    type: 'admin_token'
   }
 }
 
-type AdminServiceOutput = {
+type ModServiceOutput = {
   credentials: {
-    type: 'service'
+    type: 'mod_service'
     aud: string
     iss: string
   }
@@ -92,20 +90,16 @@ type ValidatedBearer = {
 export type AuthVerifierOpts = {
   jwtKey: KeyObject
   adminPass: string
-  moderatorPass: string
-  triagePass: string
   dids: {
     pds: string
     entryway?: string
-    admin?: string
+    modService?: string
   }
 }
 
 export class AuthVerifier {
   private _jwtKey: KeyObject
   private _adminPass: string
-  private _moderatorPass: string
-  private _triagePass: string
   public dids: AuthVerifierOpts['dids']
 
   constructor(
@@ -115,8 +109,6 @@ export class AuthVerifier {
   ) {
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
-    this._moderatorPass = opts.moderatorPass
-    this._triagePass = opts.triagePass
     this.dids = opts.dids
   }
 
@@ -186,46 +178,27 @@ export class AuthVerifier {
     }
   }
 
-  role = (ctx: ReqCtx): RoleOutput => {
-    const creds = this.parseRoleCreds(ctx.req)
-    if (creds.status !== RoleStatus.Valid) {
+  adminToken = (ctx: ReqCtx): AdminTokenOutput => {
+    const parsed = parseBasicAuth(ctx.req.headers.authorization || '')
+    if (!parsed) {
       throw new AuthRequiredError()
     }
-    return {
-      credentials: {
-        ...creds,
-        type: 'role',
-      },
+    const { username, password } = parsed
+    if (username !== 'admin' || password !== this._adminPass) {
+      throw new AuthRequiredError()
     }
+    return { credentials: { type: 'admin_token' } }
   }
 
-  accessOrRole = async (ctx: ReqCtx): Promise<AccessOutput | RoleOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return this.access(ctx)
-    } else {
-      return this.role(ctx)
-    }
-  }
-
-  optionalAccessOrRole = async (
+  optionalAccessOrAdminToken = async (
     ctx: ReqCtx,
-  ): Promise<AccessOutput | RoleOutput | NullOutput> => {
+  ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
       return await this.access(ctx)
+    } else if (isBasicToken(ctx.req)) {
+      return await this.adminToken(ctx)
     } else {
-      const creds = this.parseRoleCreds(ctx.req)
-      if (creds.status === RoleStatus.Valid) {
-        return {
-          credentials: {
-            ...creds,
-            type: 'role',
-          },
-        }
-      } else if (creds.status === RoleStatus.Missing) {
-        return { credentials: null }
-      } else {
-        throw new AuthRequiredError()
-      }
+      return this.null()
     }
   }
 
@@ -249,34 +222,43 @@ export class AuthVerifier {
     if (isBearerToken(reqCtx.req)) {
       return await this.userDidAuth(reqCtx)
     } else {
-      return { credentials: null }
+      return this.null()
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
-    if (!this.dids.admin) {
+  modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
+    if (!this.dids.modService) {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
     }
     const payload = await this.verifyServiceJwt(reqCtx, {
-      aud: this.dids.entryway ?? this.dids.pds,
-      iss: [this.dids.admin],
+      aud: null,
+      iss: [this.dids.modService, `${this.dids.modService}#atproto_labeler`],
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
-        type: 'service',
+        type: 'mod_service',
         aud: payload.aud,
         iss: payload.iss,
       },
     }
   }
 
-  roleOrAdminService = async (
+  moderator = async (
     reqCtx: ReqCtx,
-  ): Promise<RoleOutput | AdminServiceOutput> => {
+  ): Promise<AdminTokenOutput | ModServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
+      return this.modService(reqCtx)
     } else {
-      return this.role(reqCtx)
+      return this.adminToken(reqCtx)
     }
   }
 
@@ -337,13 +319,28 @@ export class AuthVerifier {
     opts: { aud: string | null; iss: string[] | null },
   ) {
     const getSigningKey = async (
-      did: string,
+      iss: string,
       forceRefresh: boolean,
     ): Promise<string> => {
-      if (opts.iss !== null && !opts.iss.includes(did)) {
+      if (opts.iss !== null && !opts.iss.includes(iss)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+      const [did, serviceId] = iss.split('#')
+      const keyId =
+        serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+      const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
+      if (!didDoc) {
+        throw new AuthRequiredError('could not resolve iss did')
+      }
+      const parsedKey = getVerificationMaterial(didDoc, keyId)
+      if (!parsedKey) {
+        throw new AuthRequiredError('missing or bad key in did doc')
+      }
+      const didKey = getDidKeyFromMultibase(parsedKey)
+      if (!didKey) {
+        throw new AuthRequiredError('missing or bad key in did doc')
+      }
+      return didKey
     }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)
@@ -354,36 +351,23 @@ export class AuthVerifier {
     return { iss: payload.iss, aud: payload.aud }
   }
 
-  parseRoleCreds(req: express.Request) {
-    const parsed = parseBasicAuth(req.headers.authorization || '')
-    const { Missing, Valid, Invalid } = RoleStatus
-    if (!parsed) {
-      return { status: Missing, admin: false, moderator: false, triage: false }
+  null(): NullOutput {
+    return {
+      credentials: null,
     }
-    const { username, password } = parsed
-    if (username === 'admin' && password === this._adminPass) {
-      return { status: Valid, admin: true, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._moderatorPass) {
-      return { status: Valid, admin: false, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._triagePass) {
-      return { status: Valid, admin: false, moderator: false, triage: true }
-    }
-    return { status: Invalid, admin: false, moderator: false, triage: false }
   }
 
   isUserOrAdmin(
-    auth: AccessOutput | RoleOutput | NullOutput,
+    auth: AccessOutput | AdminTokenOutput | NullOutput,
     did: string,
   ): boolean {
     if (!auth.credentials) {
       return false
-    }
-    if ('did' in auth.credentials) {
+    } else if (auth.credentials.type === 'admin_token') {
+      return true
+    } else {
       return auth.credentials.did === did
     }
-    return auth.credentials.admin
   }
 }
 
@@ -395,6 +379,10 @@ const BASIC = 'Basic '
 
 const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
+}
+
+const isBasicToken = (req: express.Request): boolean => {
+  return req.headers.authorization?.startsWith(BASIC) ?? false
 }
 
 const bearerTokenFromReq = (req: express.Request) => {

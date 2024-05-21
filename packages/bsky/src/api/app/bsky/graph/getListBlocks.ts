@@ -9,9 +9,9 @@ import {
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { clearlyBadCursor } from '../../../util'
+import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getListBlocks = createPipeline(
@@ -22,12 +22,18 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.graph.getListBlocks({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getListBlocks({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const result = await getListBlocks(
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -42,7 +48,7 @@ const skeleton = async (
   }
   const { listUris, cursor } =
     await ctx.hydrator.dataplane.getBlocklistSubscriptions({
-      actorDid: params.viewer,
+      actorDid: params.hydrateCtx.viewer,
       cursor: params.cursor,
       limit: params.limit,
     })
@@ -53,7 +59,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.viewer)
+  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.hydrateCtx)
 }
 
 const presentation = (
@@ -71,7 +77,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string
+  hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {

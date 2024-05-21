@@ -3,10 +3,12 @@ import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { BackgroundQueue } from '@atproto/bsky'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
-import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
-import { BackgroundQueue } from '@atproto/bsky/src/data-plane/server/background'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
+
+export * from '@atproto/bsky'
 
 export class TestBsky {
   constructor(
@@ -56,15 +58,16 @@ export class TestBsky {
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,
+      alternateAudienceDids: [],
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
       bsyncUrl: `http://localhost:${bsyncPort}`,
       bsyncHttpVersion: '1.1',
       courierUrl: 'https://fake.example',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
-      labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
+      labelsFromIssuerDids: [EXAMPLE_LABELER],
       ...cfg,
-      adminPasswords: [ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD],
+      adminPasswords: [ADMIN_PASSWORD],
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -103,7 +106,9 @@ export class TestBsky {
   }
 
   getClient() {
-    return new AtpAgent({ service: this.url })
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelersHeader([EXAMPLE_LABELER])
+    return agent
   }
 
   adminAuth(): string {

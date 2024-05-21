@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
-  /** The handle or DID of the repo. */
+  /** The DID of the repo. */
   did: string
 }
 
@@ -17,12 +17,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   did: string
   active: boolean
-  /** If active=false, this optional field indicates a reason for why the account is not active. */
-  status?:
-    | 'com.atproto.sync.defs#takendown'
-    | 'com.atproto.sync.defs#suspended'
-    | 'com.atproto.sync.defs#deactivated'
-    | (string & {})
+  /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
+  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
   /** Optional field, the current rev of the repo, if active=true */
   rev?: string
   [k: string]: unknown

@@ -10,10 +10,11 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActorsTypeahead = createPipeline(
@@ -24,12 +25,18 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const results = await searchActorsTypeahead({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const results = await searchActorsTypeahead(
+        { ...params, hydrateCtx },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: results,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -49,6 +56,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         typeahead: true,
         q: term,
         limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       })
     return {
       dids: res.actors.map(({ did }) => did),
@@ -70,7 +78,7 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, params.viewer)
+  return ctx.hydrator.hydrateProfilesBasic(skeleton.dids, params.hydrateCtx)
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
@@ -100,7 +108,7 @@ type Context = {
   searchAgent?: AtpAgent
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   dids: string[]

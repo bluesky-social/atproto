@@ -41,6 +41,7 @@ Object {
     Object {
       "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "list a",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(2)",
@@ -51,6 +52,7 @@ Object {
     Object {
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "name": "list b",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
