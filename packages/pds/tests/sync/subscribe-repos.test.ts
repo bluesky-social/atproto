@@ -124,6 +124,8 @@ describe('repo subscribe repos', () => {
     expect(typeof evt.seq).toBe('number')
     expect(evt.did).toBe(did)
     expect(typeof evt.time).toBe('string')
+    expect(evt.didDoc?.['id']).toBe(did)
+    expect(evt.didDoc?.['alsoKnownAs']).toEqual([`at://${handle}`])
   }
 
   const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
@@ -250,7 +252,7 @@ describe('repo subscribe repos', () => {
     verifyAccountEvent(accountEvts[1], bob, true)
     verifyAccountEvent(accountEvts[2], carol, true)
     verifyAccountEvent(accountEvts[3], dan, true)
-    const identityEvts = getAccountEvts(evts)
+    const identityEvts = getIdentityEvts(evts)
     expect(identityEvts.length).toBe(4)
     verifyIdentityEvent(identityEvts[0], alice, 'alice.test')
     verifyIdentityEvent(identityEvts[1], bob, 'bob.test')
@@ -351,9 +353,9 @@ describe('repo subscribe repos', () => {
 
     const identityEvts = getIdentityEvts(evts.slice(-6))
     expect(identityEvts.length).toBe(3)
-    verifyIdentityEvent(handleEvts[0], alice, 'alice2.test')
-    verifyIdentityEvent(handleEvts[1], bob, 'bob2.test')
-    verifyIdentityEvent(handleEvts[2], bob, 'bob2.test')
+    verifyIdentityEvent(identityEvts[0], alice, 'alice2.test')
+    verifyIdentityEvent(identityEvts[1], bob, 'bob2.test')
+    verifyIdentityEvent(identityEvts[2], bob, 'bob2.test')
   })
 
   it('resends handle events on idempotent updates', async () => {
