@@ -113,7 +113,7 @@ describe('proxies view requests', () => {
   it('actor.searchActor', async () => {
     const res = await agent.api.app.bsky.actor.searchActors(
       {
-        term: '.test',
+        q: '.test',
       },
       {
         headers: { ...sc.getHeaders(alice) },
@@ -126,7 +126,7 @@ describe('proxies view requests', () => {
     expect(forSnapshot(sortedFull)).toMatchSnapshot()
     const pt1 = await agent.api.app.bsky.actor.searchActors(
       {
-        term: '.test',
+        q: '.test',
         limit: 1,
       },
       {
@@ -135,7 +135,7 @@ describe('proxies view requests', () => {
     )
     const pt2 = await agent.api.app.bsky.actor.searchActors(
       {
-        term: '.test',
+        q: '.test',
         cursor: pt1.data.cursor,
       },
       {
@@ -151,7 +151,7 @@ describe('proxies view requests', () => {
   it('actor.searchActorTypeahead', async () => {
     const res = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: '.test',
+        q: '.test',
       },
       {
         headers: { ...sc.getHeaders(alice) },
