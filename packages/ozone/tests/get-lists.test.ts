@@ -6,7 +6,7 @@ import {
   ModeratorClient,
   RecordRef,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { BSKY_LABELER_DID } from '@atproto/api'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('admin get lists', () => {
@@ -34,6 +34,7 @@ describe('admin get lists', () => {
   })
 
   afterAll(async () => {
+    AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
     await network.close()
   })
 
@@ -54,7 +55,7 @@ describe('admin get lists', () => {
     expect(beforeTakedown.fromOzone.lists[0].uri).toEqual(alicesList.uriStr)
     expect(beforeTakedown.fromAppview.lists[0].uri).toEqual(alicesList.uriStr)
 
-    //     Takedown alice's account
+    // Takedown alice's account
     await modClient.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject: {
@@ -70,7 +71,7 @@ describe('admin get lists', () => {
     expect(afterTakedown.fromAppview.lists.length).toBe(0)
     expect(afterTakedown.fromOzone.lists[0].uri).toEqual(alicesList.uriStr)
 
-    //     Reverse alice's account takedown
+    // Reverse alice's account takedown
     await modClient.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
       subject: {

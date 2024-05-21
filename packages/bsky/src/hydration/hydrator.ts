@@ -224,7 +224,6 @@ export class Hydrator {
       this.label.getLabelsForSubjects(uris, ctx.labelers),
     ])
 
-    // TODO: Check why the takedown label is not coming through here when list has been takendown
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(uris, lists, labels)
     }
