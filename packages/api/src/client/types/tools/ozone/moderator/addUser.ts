@@ -42,8 +42,7 @@ export class UserAlreadyExistsError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'UserAlreadyExists')
-      return new UserAlreadyExistsError(e)
+    if (e.error === 'UserAlreadyExists') return new UserAlreadyExistsError(e)
   }
   return e
 }
