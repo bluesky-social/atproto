@@ -1,7 +1,6 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { User } from '../../lexicon/types/tools/ozone/moderator/defs'
 import { getUserRole } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
