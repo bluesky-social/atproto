@@ -8,17 +8,17 @@
       "properties": {
         "did": { "type": "string", "format": "did" },
         "handle": {
-            "type": "string",
-            "format": "handle",
-            "description": "The validated handle of the account; or 'handle.invalid' if the handle did not resolve successfully."
+          "type": "string",
+          "format": "handle",
+          "description": "The validated handle of the account; or 'handle.invalid' if the handle did not resolve successfully."
         },
         "tombstoned": {
-            "type": "boolean",
-            "description": "If true, the DID has been deleted, and the other optional fields (eg, handle and didDoc) should be null."
+          "type": "boolean",
+          "description": "If true, the DID has been deleted, and the other optional fields (eg, handle and didDoc) should be null."
         },
         "didDoc": {
-            "type": "unknown",
-            "description": "The complete DID document for the identity."
+          "type": "unknown",
+          "description": "The complete DID document for the identity."
         }
       }
     }
