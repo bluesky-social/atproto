@@ -8306,24 +8306,24 @@ export const schemaDict = {
     defs: {
       messageRef: {
         type: 'object',
-        required: ['did', 'messageId'],
+        required: ['did', 'messageId', 'convoId'],
         properties: {
           did: {
             type: 'string',
             format: 'did',
+          },
+          convoId: {
+            type: 'string',
           },
           messageId: {
             type: 'string',
           },
         },
       },
-      message: {
+      messageInput: {
         type: 'object',
         required: ['text'],
         properties: {
-          id: {
-            type: 'string',
-          },
           text: {
             type: 'string',
             maxLength: 10000,
@@ -8825,7 +8825,7 @@ export const schemaDict = {
               },
               message: {
                 type: 'ref',
-                ref: 'lex:chat.bsky.convo.defs#message',
+                ref: 'lex:chat.bsky.convo.defs#messageInput',
               },
             },
           },
@@ -8854,6 +8854,7 @@ export const schemaDict = {
             properties: {
               items: {
                 type: 'array',
+                maxLength: 100,
                 items: {
                   type: 'ref',
                   ref: 'lex:chat.bsky.convo.sendMessageBatch#batchItem',
@@ -8888,7 +8889,7 @@ export const schemaDict = {
           },
           message: {
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#message',
+            ref: 'lex:chat.bsky.convo.defs#messageInput',
           },
         },
       },
@@ -9038,6 +9039,11 @@ export const schemaDict = {
           type: 'params',
           required: ['messageId'],
           properties: {
+            convoId: {
+              type: 'string',
+              description:
+                'Conversation that the message is from. NOTE: this field will eventually be required.',
+            },
             messageId: {
               type: 'string',
             },

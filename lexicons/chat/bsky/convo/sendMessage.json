@@ -13,7 +13,7 @@
             "convoId": { "type": "string" },
             "message": {
               "type": "ref",
-              "ref": "chat.bsky.convo.defs#message"
+              "ref": "chat.bsky.convo.defs#messageInput"
             }
           }
         }

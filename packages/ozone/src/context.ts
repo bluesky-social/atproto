@@ -26,6 +26,7 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
+  chatAgent: AtpAgent | undefined
   blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
@@ -59,6 +60,9 @@ export class AppContext {
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const pdsAgent = cfg.pds
       ? new AtpAgent({ service: cfg.pds.url })
+      : undefined
+    const chatAgent = cfg.chat
+      ? new AtpAgent({ service: cfg.chat.url })
       : undefined
 
     const idResolver = new IdResolver({
@@ -115,6 +119,7 @@ export class AppContext {
         communicationTemplateService,
         appviewAgent,
         pdsAgent,
+        chatAgent,
         signingKey,
         signingKeyId,
         idResolver,
@@ -164,6 +169,10 @@ export class AppContext {
     return this.opts.pdsAgent
   }
 
+  get chatAgent(): AtpAgent | undefined {
+    return this.opts.chatAgent
+  }
+
   get signingKey(): Keypair {
     return this.opts.signingKey
   }
@@ -210,6 +219,13 @@ export class AppContext {
 
   async appviewAuth() {
     return this.serviceAuthHeaders(this.cfg.appview.did)
+  }
+
+  async chatAuth() {
+    if (!this.cfg.chat) {
+      throw new Error('No chat service configured')
+    }
+    return this.serviceAuthHeaders(this.cfg.chat.did)
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {

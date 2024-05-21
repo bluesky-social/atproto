@@ -41,6 +41,15 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     }
   }
 
+  let chatCfg: OzoneConfig['chat'] = null
+  if (env.chatUrl || env.chatDid) {
+    assert(env.chatUrl && env.chatDid)
+    chatCfg = {
+      url: env.chatUrl,
+      did: env.chatDid,
+    }
+  }
+
   const cdnCfg: OzoneConfig['cdn'] = {
     paths: env.cdnPaths,
   }
@@ -68,6 +77,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     db: dbCfg,
     appview: appviewCfg,
     pds: pdsCfg,
+    chat: chatCfg,
     cdn: cdnCfg,
     identity: identityCfg,
     blobDivert: blobDivertServiceCfg,
@@ -80,6 +90,7 @@ export type OzoneConfig = {
   db: DatabaseConfig
   appview: AppviewConfig
   pds: PdsConfig | null
+  chat: ChatConfig | null
   cdn: CdnConfig
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
@@ -114,6 +125,11 @@ export type AppviewConfig = {
 }
 
 export type PdsConfig = {
+  url: string
+  did: string
+}
+
+export type ChatConfig = {
   url: string
   did: string
 }
