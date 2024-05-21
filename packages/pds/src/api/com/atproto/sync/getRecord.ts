@@ -25,9 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       let carStream: stream.Readable
       try {
         const storage = new SqlRepoReader(actorDb)
-        const commit = params.commit
-          ? CID.parse(params.commit)
-          : await storage.getRoot()
+        const commit = await storage.getRoot()
 
         if (!commit) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
