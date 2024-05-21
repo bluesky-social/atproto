@@ -2874,32 +2874,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncDefs: {
-    lexicon: 1,
-    id: 'com.atproto.sync.defs',
-    defs: {
-      takendown: {
-        type: 'token',
-        description:
-          'Repo hosting status indicating that an administrator has taken down the repo, for a permanent period (though this may be reversed).',
-      },
-      suspended: {
-        type: 'token',
-        description:
-          'Repo hosting status indicating that an administrator has taken down the repo, for a limited (but possibly indefinite) time period.',
-      },
-      deleted: {
-        type: 'token',
-        description:
-          'Repo hosting status indicating that the repository has been removed. The repo may be re-opened or migrated back to this host in the future, but the contents have been deleted for now. Does not clarify if the account self-deleted or an administrator or operator intervened.',
-      },
-      deactivated: {
-        type: 'token',
-        description:
-          'Repo hosting status indicating that the repository has been pause and should not be re-distributed, usually on request of the account holder. This may be temporary or indefinite.',
-      },
-    },
-  },
   ComAtprotoSyncGetBlob: {
     lexicon: 1,
     id: 'com.atproto.sync.getBlob',
@@ -3227,7 +3201,7 @@ export const schemaDict = {
             did: {
               type: 'string',
               format: 'did',
-              description: 'The handle or DID of the repo.',
+              description: 'The DID of the repo.',
             },
           },
         },
@@ -3247,12 +3221,8 @@ export const schemaDict = {
               status: {
                 type: 'string',
                 description:
-                  'If active=false, this optional field indicates a reason for why the account is not active.',
-                knownValues: [
-                  'com.atproto.sync.defs#takendown',
-                  'com.atproto.sync.defs#suspended',
-                  'com.atproto.sync.defs#deactivated',
-                ],
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: ['takendown', 'suspended', 'deactivated'],
               },
               rev: {
                 type: 'string',
@@ -3597,6 +3567,9 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          didDoc: {
+            type: 'unknown',
+          },
         },
       },
       account: {
@@ -3625,12 +3598,7 @@ export const schemaDict = {
             type: 'string',
             description:
               'If active=false, this optional field indicates a reason for why the account is not active.',
-            knownValues: [
-              'com.atproto.sync.defs#takendown',
-              'com.atproto.sync.defs#suspended',
-              'com.atproto.sync.defs#deleted',
-              'com.atproto.sync.defs#deactivated',
-            ],
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
           },
         },
       },
@@ -9390,7 +9358,6 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
-  ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',

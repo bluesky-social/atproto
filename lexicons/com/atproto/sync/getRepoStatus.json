@@ -12,7 +12,7 @@
           "did": {
             "type": "string",
             "format": "did",
-            "description": "The handle or DID of the repo."
+            "description": "The DID of the repo."
           }
         }
       },
@@ -26,12 +26,8 @@
             "active": { "type": "boolean" },
             "status": {
               "type": "string",
-              "description": "If active=false, this optional field indicates a reason for why the account is not active.",
-              "knownValues": [
-                "com.atproto.sync.defs#takendown",
-                "com.atproto.sync.defs#suspended",
-                "com.atproto.sync.defs#deactivated"
-              ]
+              "description": "If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.",
+              "knownValues": ["takendown", "suspended", "deactivated"]
             },
             "rev": {
               "type": "string",

@@ -157,12 +157,6 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
-export const COM_ATPROTO_SYNC = {
-  DefsTakendown: 'com.atproto.sync.defs#takendown',
-  DefsSuspended: 'com.atproto.sync.defs#suspended',
-  DefsDeleted: 'com.atproto.sync.defs#deleted',
-  DefsDeactivated: 'com.atproto.sync.defs#deactivated',
-}
 export const APP_BSKY_FEED = {
   DefsRequestLess: 'app.bsky.feed.defs#requestLess',
   DefsRequestMore: 'app.bsky.feed.defs#requestMore',
