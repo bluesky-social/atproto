@@ -17,6 +17,7 @@ import {
   Handle as HandleEvt,
   Tombstone as TombstoneEvt,
   Account as AccountEvt,
+  Identity as IdentityEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext } from '../../src'
 import basicSeed from '../seeds/basic'
@@ -85,41 +86,51 @@ describe('repo subscribe repos', () => {
     return types
   }
 
-  const getAccountEvts = (frames: Frame[]): AccountEvt[] => {
-    const evts: AccountEvt[] = []
+  const getEventType = <T>(frames: Frame[], type: string): T[] => {
+    const evts: T[] = []
     for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#account') {
+      if (frame instanceof MessageFrame && frame.header.t === type) {
         evts.push(frame.body)
       }
     }
     return evts
+  }
+
+  const getAccountEvts = (frames: Frame[]): AccountEvt[] => {
+    return getEventType(frames, '#account')
+  }
+
+  const getIdentityEvts = (frames: Frame[]): IdentityEvt[] => {
+    return getEventType(frames, '#identity')
   }
 
   const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
-    const evts: HandleEvt[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#handle') {
-        evts.push(frame.body)
-      }
-    }
-    return evts
+    return getEventType(frames, '#handle')
   }
 
   const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
-    const evts: TombstoneEvt[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#tombstone') {
-        evts.push(frame.body)
-      }
-    }
-    return evts
+    return getEventType(frames, '#tombstone')
   }
 
-  const verifyHandleEvent = (evt: unknown, did: string, handle: string) => {
-    expect(evt?.['did']).toBe(did)
-    expect(evt?.['handle']).toBe(handle)
-    expect(typeof evt?.['time']).toBe('string')
-    expect(typeof evt?.['seq']).toBe('number')
+  const getCommitEvents = (frames: Frame[]): CommitEvt[] => {
+    return getEventType(frames, '#commit')
+  }
+
+  const verifyIdentityEvent = (
+    evt: IdentityEvt,
+    did: string,
+    handle: string,
+  ) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(typeof evt.time).toBe('string')
+  }
+
+  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(evt.handle).toBe(handle)
+    expect(typeof evt.time).toBe('string')
   }
 
   const verifyAccountEvent = (
@@ -141,24 +152,14 @@ describe('repo subscribe repos', () => {
     expect(typeof evt?.['seq']).toBe('number')
   }
 
-  const getCommitEvents = (userDid: string, frames: Frame[]) => {
-    const evts: CommitEvt[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#commit') {
-        const body = frame.body as CommitEvt
-        if (body.repo === userDid) {
-          evts.push(frame.body)
-        }
-      }
-    }
-    return evts
-  }
-
   const verifyCommitEvents = async (frames: Frame[]) => {
-    await verifyRepo(alice, getCommitEvents(alice, frames))
-    await verifyRepo(bob, getCommitEvents(bob, frames))
-    await verifyRepo(carol, getCommitEvents(carol, frames))
-    await verifyRepo(dan, getCommitEvents(dan, frames))
+    const forUser = (user: string) => (commit: CommitEvt) =>
+      commit.repo === user
+    const commits = getCommitEvents(frames)
+    await verifyRepo(alice, commits.filter(forUser(alice)))
+    await verifyRepo(bob, commits.filter(forUser(bob)))
+    await verifyRepo(carol, commits.filter(forUser(carol)))
+    await verifyRepo(dan, commits.filter(forUser(dan)))
   }
 
   const verifyRepo = async (did: string, evts: CommitEvt[]) => {
@@ -242,6 +243,19 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
+
+    const accountEvts = getAccountEvts(evts)
+    expect(accountEvts.length).toBe(4)
+    verifyAccountEvent(accountEvts[0], alice, true)
+    verifyAccountEvent(accountEvts[1], bob, true)
+    verifyAccountEvent(accountEvts[2], carol, true)
+    verifyAccountEvent(accountEvts[3], dan, true)
+    const identityEvts = getAccountEvts(evts)
+    expect(identityEvts.length).toBe(4)
+    verifyIdentityEvent(identityEvts[0], alice, 'alice.test')
+    verifyIdentityEvent(identityEvts[1], bob, 'bob.test')
+    verifyIdentityEvent(identityEvts[2], carol, 'carol.test')
+    verifyIdentityEvent(identityEvts[3], dan, 'dan.test')
   })
 
   it('syncs new events', async () => {
@@ -328,9 +342,18 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
+
     const handleEvts = getHandleEvts(evts.slice(-6))
+    expect(handleEvts.length).toBe(3)
     verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+    verifyHandleEvent(handleEvts[2], bob, 'bob2.test')
+
+    const identityEvts = getIdentityEvts(evts.slice(-6))
+    expect(identityEvts.length).toBe(3)
+    verifyIdentityEvent(handleEvts[0], alice, 'alice2.test')
+    verifyIdentityEvent(handleEvts[1], bob, 'bob2.test')
+    verifyIdentityEvent(handleEvts[2], bob, 'bob2.test')
   })
 
   it('resends handle events on idempotent updates', async () => {
