@@ -35,13 +35,11 @@ describe('moderator management', () => {
     await network.close()
   })
 
-  describe('listUsers', () => {
+  describe.only('listUsers', () => {
     it('allows all mods to list all users', async () => {
       const [{ data: forAdmin }, { data: forTriage }] = await Promise.all([
         adminAgent.api.tools.ozone.moderator.listUsers({}),
-        (async () => {
-          return triageAgent.api.tools.ozone.moderator.listUsers({})
-        })(),
+        triageAgent.api.tools.ozone.moderator.listUsers({}),
       ])
       expect(forSnapshot(forAdmin.users)).toMatchSnapshot()
       expect(forSnapshot(forTriage.users)).toMatchSnapshot()

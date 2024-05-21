@@ -84,10 +84,14 @@ export class OzoneService {
         did,
       }),
     )
-    moderators.map((mod) => {
+
+    for (const mod of moderators) {
       const service = this.ctx.moderatorService(this.ctx.db)
-      return service.upsert({ ...mod, lastUpdatedBy: this.ctx.cfg.service.did })
-    })
+      await service.upsert({
+        ...mod,
+        lastUpdatedBy: this.ctx.cfg.service.did,
+      })
+    }
   }
 
   async start(): Promise<http.Server> {
