@@ -10555,8 +10555,9 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:tools.ozone.server.getConfig#serviceConfig',
               },
-              viewerRole: {
-                type: 'string',
+              viewer: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.server.getConfig#viewerConfig',
               },
             },
           },
@@ -10565,12 +10566,17 @@ export const schemaDict = {
       serviceConfig: {
         type: 'object',
         properties: {
-          configured: {
-            type: 'boolean',
-          },
           url: {
             type: 'string',
             format: 'uri',
+          },
+        },
+      },
+      viewerConfig: {
+        type: 'object',
+        properties: {
+          role: {
+            type: 'string',
           },
         },
       },

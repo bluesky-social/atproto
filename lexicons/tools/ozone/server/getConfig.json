@@ -22,8 +22,9 @@
               "type": "ref",
               "ref": "#serviceConfig"
             },
-            "viewerRole": {
-              "type": "string"
+            "viewer": {
+              "type": "ref",
+              "ref": "#viewerConfig"
             }
           }
         }
@@ -32,12 +33,17 @@
     "serviceConfig": {
       "type": "object",
       "properties": {
-        "configured": {
-          "type": "boolean"
-        },
         "url": {
           "type": "string",
           "format": "uri"
+        }
+      }
+    },
+    "viewerConfig": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string"
         }
       }
     }

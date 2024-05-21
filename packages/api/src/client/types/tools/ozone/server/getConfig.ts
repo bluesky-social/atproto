@@ -15,7 +15,7 @@ export interface OutputSchema {
   appview?: ServiceConfig
   pds?: ServiceConfig
   blobDivert?: ServiceConfig
-  viewerRole?: string
+  viewer?: ViewerConfig
   [k: string]: unknown
 }
 
@@ -36,7 +36,6 @@ export function toKnownErr(e: any) {
 }
 
 export interface ServiceConfig {
-  configured?: boolean
   url?: string
   [k: string]: unknown
 }
@@ -51,4 +50,21 @@ export function isServiceConfig(v: unknown): v is ServiceConfig {
 
 export function validateServiceConfig(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.server.getConfig#serviceConfig', v)
+}
+
+export interface ViewerConfig {
+  role?: string
+  [k: string]: unknown
+}
+
+export function isViewerConfig(v: unknown): v is ViewerConfig {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.server.getConfig#viewerConfig'
+  )
+}
+
+export function validateViewerConfig(v: unknown): ValidationResult {
+  return lexicons.validate('tools.ozone.server.getConfig#viewerConfig', v)
 }

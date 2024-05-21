@@ -1,6 +1,5 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { forSnapshot } from './_util'
 
 describe('get-config', () => {
   let network: TestNetwork
@@ -33,14 +32,16 @@ describe('get-config', () => {
 
   it('returns server config', async () => {
     const moderatorConfig = await getConfig('moderator')
-    expect(moderatorConfig.appview?.configured).toBe(true)
-    expect(moderatorConfig.pds?.configured).toBe(true)
-    expect(moderatorConfig.blobDivert?.configured).toBe(false)
-    expect(moderatorConfig.viewerRole).toEqual('moderator')
+    expect(moderatorConfig.appview?.url).toBe(network.ozone.ctx.cfg.appview.url)
+    expect(moderatorConfig.pds?.url).toBe(network.ozone.ctx.cfg.pds?.url)
+    expect(moderatorConfig.blobDivert?.url).toBe(
+      network.ozone.ctx.cfg.blobDivert?.url,
+    )
+    expect(moderatorConfig.viewer?.role).toEqual('moderator')
   })
 
   it('returns the right role for the viewer', async () => {
     const adminConfig = await getConfig('admin')
-    expect(adminConfig.viewerRole).toBe('admin')
+    expect(adminConfig.viewer?.role).toBe('admin')
   })
 })
