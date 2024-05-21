@@ -38,7 +38,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'ModeratorAlreadyExists'
+  error?: 'UserAlreadyExists'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

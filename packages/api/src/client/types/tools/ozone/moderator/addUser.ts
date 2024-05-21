@@ -34,7 +34,7 @@ export interface Response {
   data: OutputSchema
 }
 
-export class ModeratorAlreadyExistsError extends XRPCError {
+export class UserAlreadyExistsError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
@@ -42,8 +42,8 @@ export class ModeratorAlreadyExistsError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'ModeratorAlreadyExists')
-      return new ModeratorAlreadyExistsError(e)
+    if (e.error === 'UserAlreadyExists')
+      return new UserAlreadyExistsError(e)
   }
   return e
 }

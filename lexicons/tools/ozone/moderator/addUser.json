@@ -32,7 +32,7 @@
       },
       "errors": [
         {
-          "name": "ModeratorAlreadyExists",
+          "name": "UserAlreadyExists",
           "description": "The user is already a moderator"
         }
       ]

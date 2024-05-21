@@ -10569,7 +10569,7 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'ModeratorAlreadyExists',
+            name: 'UserAlreadyExists',
             description: 'The user is already a moderator',
           },
         ],
@@ -10745,7 +10745,7 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'ModeratorAlreadyExists',
+            name: 'UserAlreadyExists',
             description: 'The user is already a moderator',
           },
         ],
