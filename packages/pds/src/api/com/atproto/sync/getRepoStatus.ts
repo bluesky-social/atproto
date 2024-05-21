@@ -1,10 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { assertRepoAvailability } from './util'
-import {
-  TAKENDOWN,
-  DEACTIVATED,
-} from '../../../../lexicon/types/com/atproto/sync/defs'
+import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepoStatus({
@@ -16,9 +13,9 @@ export default function (server: Server, ctx: AppContext) {
       let status: string | undefined = undefined
       if (!active) {
         if (account.takedownRef) {
-          status = TAKENDOWN
+          status = AccountStatus.Takendown
         } else if (account.deactivatedAt) {
-          status = DEACTIVATED
+          status = AccountStatus.Deactivated
         }
       }
 

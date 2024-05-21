@@ -10,13 +10,7 @@ import {
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
 import { RepoSeqInsert } from './db'
-import {
-  DEACTIVATED,
-  DELETED,
-  SUSPENDED,
-  TAKENDOWN,
-} from '../lexicon/types/com/atproto/sync/defs'
-import { AccountStatus } from '../account-manager/helpers/account'
+import { AccountStatus } from '../account-manager'
 
 export const formatSeqCommit = async (
   did: string,
@@ -110,15 +104,8 @@ export const formatSeqAccountEvt = async (
     did,
     active: status === 'active',
   }
-
-  if (status === 'takendown') {
-    evt.status = TAKENDOWN
-  } else if (status === 'suspended') {
-    evt.status = SUSPENDED
-  } else if (status === 'deleted') {
-    evt.status = DELETED
-  } else if (status === 'deactivated') {
-    evt.status = DEACTIVATED
+  if (status !== AccountStatus.Active) {
+    evt.status = status
   }
 
   return {
@@ -183,11 +170,11 @@ export const accountEvt = z.object({
   did: z.string(),
   active: z.boolean(),
   status: z
-    .union([
-      z.literal(TAKENDOWN),
-      z.literal(SUSPENDED),
-      z.literal(DELETED),
-      z.literal(DEACTIVATED),
+    .enum([
+      AccountStatus.Takendown,
+      AccountStatus.Suspended,
+      AccountStatus.Deleted,
+      AccountStatus.Deactivated,
     ])
     .optional(),
 })
