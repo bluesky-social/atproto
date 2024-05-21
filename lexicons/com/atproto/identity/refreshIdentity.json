@@ -21,24 +21,8 @@
       "output": {
         "encoding": "application/json",
         "schema": {
-          "type": "object",
-          "required": ["did"],
-          "properties": {
-            "did": { "type": "string", "format": "did" },
-            "handle": {
-              "type": "string",
-              "format": "handle",
-              "description": "The validated handle of the account; or 'handle.invalid' if the handle did not resolve successfully."
-            },
-            "tombstoned": {
-              "type": "boolean",
-              "description": "If true, the DID has been deleted, and the other optional fields should be null."
-            },
-            "didDoc": {
-              "type": "unknown",
-              "description": "The complete DID document for the identity."
-            }
-          }
+          "type": "ref",
+          "ref": "com.atproto.identity.defs#atprotoIdentity"
         }
       }
     }
