@@ -207,48 +207,54 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await wait(waitTime)
   }
 
-  async sequenceEvt(evt: RepoSeqInsert) {
-    await this.db.executeWithRetry(
-      this.db.db.insertInto('repo_seq').values(evt),
+  async sequenceEvt(evt: RepoSeqInsert): Promise<number> {
+    const res = await this.db.executeWithRetry(
+      this.db.db.insertInto('repo_seq').values(evt).returningAll(),
     )
     this.crawlers.notifyOfUpdate()
+    return res[0].seq
   }
 
   async sequenceCommit(
     did: string,
     commitData: CommitData,
     writes: PreparedWrite[],
-  ) {
+  ): Promise<number> {
     const evt = await formatSeqCommit(did, commitData, writes)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceHandleUpdate(did: string, handle: string) {
+  async sequenceHandleUpdate(did: string, handle: string): Promise<number> {
     const evt = await formatSeqHandleUpdate(did, handle)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceIdentityEvt(did: string) {
+  async sequenceIdentityEvt(did: string): Promise<number> {
     const evt = await formatSeqIdentityEvt(did)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceAccountEvt(did: string, status: AccountStatus) {
+  async sequenceAccountEvt(
+    did: string,
+    status: AccountStatus,
+  ): Promise<number> {
     const evt = await formatSeqAccountEvt(did, status)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceTombstone(did: string) {
+  async sequenceTombstone(did: string): Promise<number> {
     const evt = await formatSeqTombstone(did)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async deleteAllForUser(did: string) {
+  async deleteAllForUser(did: string, excludingSeqs: number[] = []) {
     await this.db.executeWithRetry(
       this.db.db
         .deleteFrom('repo_seq')
         .where('did', '=', did)
-        .where('eventType', '!=', 'tombstone'),
+        .if(excludingSeqs.length > 0, (qb) =>
+          qb.where('seq', 'not in', excludingSeqs),
+        ),
     )
   }
 }
