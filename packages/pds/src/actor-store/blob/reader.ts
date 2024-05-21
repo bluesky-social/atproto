@@ -12,9 +12,9 @@ export class BlobReader {
     public blobstore: BlobStore,
   ) {}
 
-  async getBlob(
+  async getBlobMetadata(
     cid: CID,
-  ): Promise<{ size: number; mimeType?: string; stream: stream.Readable }> {
+  ): Promise<{ size: number; mimeType?: string }> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
@@ -25,6 +25,16 @@ export class BlobReader {
     if (!found) {
       throw new InvalidRequestError('Blob not found')
     }
+    return {
+      size: found.size,
+      mimeType: found.mimeType,
+    }
+  }
+
+  async getBlob(
+    cid: CID,
+  ): Promise<{ size: number; mimeType?: string; stream: stream.Readable }> {
+    const metadata = await this.getBlobMetadata(cid)
     let blobStream
     try {
       blobStream = await this.blobstore.getStream(cid)
@@ -35,8 +45,7 @@ export class BlobReader {
       throw err
     }
     return {
-      size: found.size,
-      mimeType: found.mimeType,
+      ...metadata,
       stream: blobStream,
     }
   }

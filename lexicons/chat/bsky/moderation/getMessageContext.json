@@ -8,6 +8,10 @@
         "type": "params",
         "required": ["messageId"],
         "properties": {
+          "convoId": {
+            "type": "string",
+            "description": "Conversation that the message is from. NOTE: this field will eventually be required."
+          },
           "messageId": { "type": "string" },
           "before": { "type": "integer", "default": 5 },
           "after": { "type": "integer", "default": 5 }

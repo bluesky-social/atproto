@@ -12,7 +12,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   convoId: string
-  message: ChatBskyConvoDefs.Message
+  message: ChatBskyConvoDefs.MessageInput
   [k: string]: unknown
 }
 

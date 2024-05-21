@@ -19,6 +19,7 @@ import addUser from './moderator/addUser'
 import updateUser from './moderator/updateUser'
 import deleteUser from './moderator/deleteUser'
 import listUsers from './moderator/listUsers'
+import chat from './chat'
 import proxied from './proxied'
 
 export * as health from './health'
@@ -45,6 +46,7 @@ export default function (server: Server, ctx: AppContext) {
   addUser(server, ctx)
   updateUser(server, ctx)
   deleteUser(server, ctx)
+  chat(server, ctx)
   proxied(server, ctx)
   return server
 }
