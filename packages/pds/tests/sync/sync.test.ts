@@ -18,6 +18,7 @@ describe('repo sync', () => {
   const uris: AtUri[] = []
   const storage = new MemoryBlockstore()
   let currRoot: CID | undefined
+  let currRev: string | undefined
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -64,6 +65,7 @@ describe('repo sync', () => {
     expect(contents).toEqual(repoData)
 
     currRoot = car.root
+    currRev = loaded.commit.rev
   })
 
   it('syncs creates and deletes', async () => {
@@ -101,6 +103,16 @@ describe('repo sync', () => {
     expect(contents).toEqual(repoData)
 
     currRoot = car.root
+    currRev = loaded.commit.rev
+  })
+
+  it('syncs repo status', async () => {
+    const status = await agent.api.com.atproto.sync.getRepoStatus({ did })
+    expect(status.data).toEqual({
+      did,
+      active: true,
+      rev: currRev,
+    })
   })
 
   it('syncs latest repo commit', async () => {
@@ -211,6 +223,31 @@ describe('repo sync', () => {
       )
     })
 
+    afterAll(async () => {
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did,
+          },
+          takedown: { applied: false },
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+    })
+
+    it('returns takendown status', async () => {
+      const res = await agent.api.com.atproto.sync.getRepoStatus({ did })
+      expect(res.data).toEqual({
+        did,
+        active: false,
+        status: 'takendown',
+      })
+    })
+
     it('does not sync repo unauthed', async () => {
       const tryGetRepo = agent.api.com.atproto.sync.getRepo({ did })
       await expect(tryGetRepo).rejects.toThrow(/Repo has been takendown/)
@@ -219,7 +256,7 @@ describe('repo sync', () => {
     it('syncs repo to owner or admin', async () => {
       const tryGetRepoOwner = agent.api.com.atproto.sync.getRepo(
         { did },
-        { headers: { authorization: `Bearer ${sc.accounts[did].accessJwt}` } },
+        { headers: sc.getHeaders(did) },
       )
       await expect(tryGetRepoOwner).resolves.toBeDefined()
       const tryGetRepoAdmin = agent.api.com.atproto.sync.getRepo(
