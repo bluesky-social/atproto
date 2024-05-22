@@ -19,10 +19,10 @@ export default function (server: Server, ctx: AppContext) {
           },
           viewer: {
             role: auth.credentials.isAdmin
-              ? 'admin'
+              ? 'tools.ozone.moderator.defs#modRoleAdmin'
               : auth.credentials.isModerator
-                ? 'moderator'
-                : 'triage',
+                ? 'tools.ozone.moderator.defs#modRoleModerator'
+                : 'tools.ozone.moderator.defs#modRoleTriage',
           },
         },
       }

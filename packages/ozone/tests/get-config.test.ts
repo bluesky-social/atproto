@@ -37,11 +37,15 @@ describe('get-config', () => {
     expect(moderatorConfig.blobDivert?.url).toBe(
       network.ozone.ctx.cfg.blobDivert?.url,
     )
-    expect(moderatorConfig.viewer?.role).toEqual('moderator')
+    expect(moderatorConfig.viewer?.role).toEqual(
+      'tools.ozone.moderator.defs#modRoleModerator',
+    )
   })
 
   it('returns the right role for the viewer', async () => {
     const adminConfig = await getConfig('admin')
-    expect(adminConfig.viewer?.role).toBe('admin')
+    expect(adminConfig.viewer?.role).toBe(
+      'tools.ozone.moderator.defs#modRoleAdmin',
+    )
   })
 })

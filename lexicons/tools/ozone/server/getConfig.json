@@ -43,7 +43,12 @@
       "type": "object",
       "properties": {
         "role": {
-          "type": "string"
+          "type": "string",
+          "knownValues": [
+            "tools.ozone.moderator.defs#modRoleAdmin",
+            "tools.ozone.moderator.defs#modRoleModerator",
+            "tools.ozone.moderator.defs#modRoleTriage"
+          ]
         }
       }
     }
