@@ -654,7 +654,7 @@ export class Views {
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
-  ): (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined {
+  ): (ThreadViewPost | BlockedPost)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
@@ -666,7 +666,12 @@ export class Views {
         return undefined
       }
       const post = this.post(uri, state)
-      if (!postInfo || !post) return this.notFoundPost(uri)
+      if (!postInfo || !post) {
+        // in the future we might consider keeping a placeholder for deleted
+        // posts that have replies under them, but not supported at the moment.
+        // this case is mostly likely hit when a takedown was applied to a post.
+        return undefined
+      }
       if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(uri, post.author.did, state)

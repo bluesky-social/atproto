@@ -18,7 +18,6 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
-  isModEventUnmute,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -342,7 +341,7 @@ export class ModerationService {
         durationInHours: event.durationInHours
           ? Number(event.durationInHours)
           : null,
-        meta,
+        meta: Object.assign(meta, subjectInfo.meta),
         expiresAt:
           (isModEventTakedown(event) || isModEventMute(event)) &&
           event.durationInHours
@@ -353,6 +352,7 @@ export class ModerationService {
         subjectUri: subjectInfo.subjectUri,
         subjectCid: subjectInfo.subjectCid,
         subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
+        subjectMessageId: subjectInfo.subjectMessageId,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
