@@ -28,10 +28,12 @@ import { formatLabel, signLabel } from './util'
 import { LabelRow } from '../db/schema/label'
 import { dbLogger } from '../logger'
 import { httpLogger } from '../logger'
+import { ParsedLabelers } from '../util'
 
 export type AuthHeaders = {
   headers: {
     authorization: string
+    'atproto-accept-labelers'?: string
   }
 }
 
@@ -210,10 +212,14 @@ export class ModerationViews {
     }
   }
 
-  async repoDetail(did: string): Promise<RepoViewDetail | undefined> {
-    const [repos, labels] = await Promise.all([
+  async repoDetail(
+    did: string,
+    labelers?: ParsedLabelers,
+  ): Promise<RepoViewDetail | undefined> {
+    const [repos, localLabels, externalLabels] = await Promise.all([
       this.repos([did]),
       this.labels(did),
+      this.getExternalLabels([did], labelers),
     ])
     const repo = repos.get(did)
     if (!repo) return
@@ -223,7 +229,7 @@ export class ModerationViews {
       moderation: {
         ...repo.moderation,
       },
-      labels,
+      labels: [...localLabels, ...externalLabels],
     }
   }
 
@@ -293,6 +299,7 @@ export class ModerationViews {
 
   async recordDetail(
     subject: RecordSubject,
+    labelers?: ParsedLabelers,
   ): Promise<RecordViewDetail | undefined> {
     const [records, subjectStatusesResult] = await Promise.all([
       this.records([subject]),
@@ -303,9 +310,10 @@ export class ModerationViews {
 
     const status = subjectStatusesResult.get(subject.uri)
 
-    const [blobs, labels, subjectStatus] = await Promise.all([
+    const [blobs, labels, externalLabels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
+      this.getExternalLabels([record.uri], labelers),
       status ? this.formatSubjectStatus(status) : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
@@ -313,6 +321,7 @@ export class ModerationViews {
       cid: record.cid,
       record: record.value,
     })
+
     return {
       ...record,
       blobs,
@@ -320,8 +329,24 @@ export class ModerationViews {
         ...record.moderation,
         subjectStatus,
       },
-      labels: [...labels, ...selfLabels],
+      labels: [...labels, ...selfLabels, ...externalLabels],
     }
+  }
+
+  async getExternalLabels(
+    subjects: string[],
+    labelers?: ParsedLabelers,
+  ): Promise<Label[]> {
+    if (!labelers?.dids.length && !labelers?.redact.size) return []
+
+    const {
+      data: { labels },
+    } = await this.appviewAgent.api.com.atproto.label.queryLabels({
+      uriPatterns: subjects,
+      sources: labelers.dids,
+    })
+
+    return labels
   }
 
   formatReport(report: ModerationEventRowWithHandle): ReportOutput {
