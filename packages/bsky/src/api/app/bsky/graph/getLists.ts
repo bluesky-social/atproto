@@ -16,11 +16,15 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 export default function (server: Server, ctx: AppContext) {
   const getLists = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getLists({
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
       const result = await getLists({ ...params, hydrateCtx }, ctx)
 
       return {
