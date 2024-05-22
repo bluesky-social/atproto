@@ -15,6 +15,7 @@ export interface OutputSchema {
   appview?: ServiceConfig
   pds?: ServiceConfig
   blobDivert?: ServiceConfig
+  chat?: ServiceConfig
   viewer?: ViewerConfig
   [k: string]: unknown
 }
@@ -53,7 +54,11 @@ export function validateServiceConfig(v: unknown): ValidationResult {
 }
 
 export interface ViewerConfig {
-  role?: string
+  role?:
+    | 'tools.ozone.moderator.defs#modRoleAdmin'
+    | 'tools.ozone.moderator.defs#modRoleModerator'
+    | 'tools.ozone.moderator.defs#modRoleTriage'
+    | (string & {})
   [k: string]: unknown
 }
 

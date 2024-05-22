@@ -17,6 +17,9 @@ export default function (server: Server, ctx: AppContext) {
           pds: {
             url: ctx.cfg.pds?.url,
           },
+          chat: {
+            url: ctx.cfg.chat?.url,
+          },
           viewer: {
             role: auth.credentials.isAdmin
               ? 'tools.ozone.moderator.defs#modRoleAdmin'

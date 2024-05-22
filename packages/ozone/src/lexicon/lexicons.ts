@@ -10555,6 +10555,10 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:tools.ozone.server.getConfig#serviceConfig',
               },
+              chat: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.server.getConfig#serviceConfig',
+              },
               viewer: {
                 type: 'ref',
                 ref: 'lex:tools.ozone.server.getConfig#viewerConfig',
@@ -10577,6 +10581,11 @@ export const schemaDict = {
         properties: {
           role: {
             type: 'string',
+            knownValues: [
+              'tools.ozone.moderator.defs#modRoleAdmin',
+              'tools.ozone.moderator.defs#modRoleModerator',
+              'tools.ozone.moderator.defs#modRoleTriage',
+            ],
           },
         },
       },

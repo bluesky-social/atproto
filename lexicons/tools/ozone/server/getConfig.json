@@ -22,6 +22,10 @@
               "type": "ref",
               "ref": "#serviceConfig"
             },
+            "chat": {
+              "type": "ref",
+              "ref": "#serviceConfig"
+            },
             "viewer": {
               "type": "ref",
               "ref": "#viewerConfig"

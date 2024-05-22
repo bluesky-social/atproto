@@ -37,6 +37,7 @@ describe('get-config', () => {
     expect(moderatorConfig.blobDivert?.url).toBe(
       network.ozone.ctx.cfg.blobDivert?.url,
     )
+    expect(moderatorConfig.chat?.url).toBe(undefined)
     expect(moderatorConfig.viewer?.role).toEqual(
       'tools.ozone.moderator.defs#modRoleModerator',
     )
