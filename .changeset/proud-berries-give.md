@@ -1,4 +1,5 @@
 ---
+"@atproto/api": patch
 "@atproto/ozone": patch
 "@atproto/bsky": patch
 ---
