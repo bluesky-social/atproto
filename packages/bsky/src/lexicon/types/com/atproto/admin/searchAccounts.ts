@@ -49,7 +49,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 
 export interface AccountSearchResult {
   did: string
-  email: string
+  email?: string
   normalizedEmail?: string
   handle?: string
   [k: string]: unknown

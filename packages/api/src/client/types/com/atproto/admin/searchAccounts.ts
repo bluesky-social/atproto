@@ -39,7 +39,7 @@ export function toKnownErr(e: any) {
 
 export interface AccountSearchResult {
   did: string
-  email: string
+  email?: string
   normalizedEmail?: string
   handle?: string
   [k: string]: unknown

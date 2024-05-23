@@ -413,7 +413,7 @@ export const schemaDict = {
       },
       accountSearchResult: {
         type: 'object',
-        required: ['did', 'email'],
+        required: ['did'],
         properties: {
           did: {
             type: 'string',
