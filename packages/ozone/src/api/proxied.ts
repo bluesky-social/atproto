@@ -127,18 +127,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-
-  server.com.atproto.admin.searchAccounts({
-    auth: ctx.authVerifier.moderator,
-    handler: async (request) => {
-      const res = await ctx.appviewAgent.com.atproto.admin.searchAccounts(
-        request.params,
-        await ctx.appviewAuth(),
-      )
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
-    },
-  })
 }

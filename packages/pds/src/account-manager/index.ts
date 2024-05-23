@@ -51,14 +51,6 @@ export class AccountManager {
     return account.getAccountByEmail(this.db, email, flags)
   }
 
-  async searchAccounts(params: {
-    email?: string
-    cursor?: string
-    limit?: number
-  }): Promise<{ accounts: account.AccountSearchResult[]; cursor?: string }> {
-    return account.searchAccounts(this.db, params)
-  }
-
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const got = await this.getAccount(did)
