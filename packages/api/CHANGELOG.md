@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.13
+
+### Patch Changes
+
+- [#2517](https://github.com/bluesky-social/atproto/pull/2517) [`1d4ab5d04`](https://github.com/bluesky-social/atproto/commit/1d4ab5d046aac4539658ee6d7e61882c54d5beb9) Thanks [@dholms](https://github.com/dholms)! - Add privileged flag to app password routes
+
 ## 0.12.12
 
 ### Patch Changes
