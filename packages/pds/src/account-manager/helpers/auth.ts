@@ -107,10 +107,10 @@ export const storeRefreshToken = async (
 export const getRefreshToken = async (db: AccountDb, id: string) => {
   const res = await db.db
     .selectFrom('refresh_token')
-    .leftJoin(
-      'app_password',
-      'app_password.name',
-      'refresh_token.appPasswordName',
+    .leftJoin('app_password', (join) =>
+      join
+        .onRef('app_password.did', '=', 'refresh_token.did')
+        .onRef('app_password.name', '=', 'refresh_token.appPasswordName'),
     )
     .where('id', '=', id)
     .selectAll('refresh_token')
