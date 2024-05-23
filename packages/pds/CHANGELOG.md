@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.24
+
+### Patch Changes
+
+- [`cf25a60e2`](https://github.com/bluesky-social/atproto/commit/cf25a60e25b7531a359f0849729209a55193f7d6) Thanks [@devinivy](https://github.com/devinivy)! - Do not allow app passwords to communicate with chat service
+
+- Updated dependencies [[`1f560f021`](https://github.com/bluesky-social/atproto/commit/1f560f021c07eb9e8d76577e67fd2d7ac39cdee4)]:
+  - @atproto/api@0.12.12
+
 ## 0.4.23
 
 ### Patch Changes
