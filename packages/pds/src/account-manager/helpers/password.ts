@@ -37,7 +37,7 @@ export const verifyAppPassword = async (
   if (!found) return null
   return {
     name: found.name,
-    privileged: found.privileged ?? false,
+    privileged: found.privileged === 1 ? true : false,
   }
 }
 
@@ -81,7 +81,7 @@ export const createAppPassword = async (
         name,
         passwordScrypt,
         createdAt: new Date().toISOString(),
-        privileged,
+        privileged: privileged ? 1 : 0,
       })
       .returningAll(),
   )
@@ -92,6 +92,7 @@ export const createAppPassword = async (
     name,
     password,
     createdAt: got.createdAt,
+    privileged,
   }
 }
 
@@ -103,11 +104,12 @@ export const listAppPasswords = async (
     .selectFrom('app_password')
     .select(['name', 'createdAt', 'privileged'])
     .where('did', '=', did)
+    .orderBy('createdAt', 'desc')
     .execute()
   return res.map((row) => ({
     name: row.name,
     createdAt: row.createdAt,
-    privileged: row.privileged ?? false,
+    privileged: row.privileged === 1 ? true : false,
   }))
 }
 

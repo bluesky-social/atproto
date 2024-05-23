@@ -181,10 +181,6 @@ export class AccountManager {
     const token = await auth.getRefreshToken(this.db, id)
     if (!token) return null
 
-    const tokenAppPass = token.appPasswordName
-      ? { name: token.appPasswordName, privileged: token.privileged ?? false }
-      : null
-
     const now = new Date()
 
     // take the chance to tidy all of a user's expired tokens
@@ -212,7 +208,7 @@ export class AccountManager {
       did: token.did,
       jwtKey: this.jwtKey,
       serviceDid: this.serviceDid,
-      scope: auth.formatScope(tokenAppPass),
+      scope: auth.formatScope(token.appPassword),
       jti: nextId,
     })
 
@@ -225,7 +221,7 @@ export class AccountManager {
             expiresAt: expiresAt.toISOString(),
             nextId,
           }),
-          auth.storeRefreshToken(dbTxn, refreshPayload, tokenAppPass),
+          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPassword),
         ]),
       )
     } catch (err) {

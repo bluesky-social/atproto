@@ -48,6 +48,7 @@ export interface AppPassword {
   name: string
   password: string
   createdAt: string
+  privileged?: boolean
   [k: string]: unknown
 }
 

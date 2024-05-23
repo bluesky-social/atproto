@@ -2087,6 +2087,9 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          privileged: {
+            type: 'boolean',
+          },
         },
       },
     },

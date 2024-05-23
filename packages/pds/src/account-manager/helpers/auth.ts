@@ -105,7 +105,7 @@ export const storeRefreshToken = async (
 }
 
 export const getRefreshToken = async (db: AccountDb, id: string) => {
-  return db.db
+  const res = await db.db
     .selectFrom('refresh_token')
     .leftJoin(
       'app_password',
@@ -116,6 +116,20 @@ export const getRefreshToken = async (db: AccountDb, id: string) => {
     .selectAll('refresh_token')
     .select('app_password.privileged')
     .executeTakeFirst()
+  if (!res) return null
+  const { did, expiresAt, appPasswordName, nextId, privileged } = res
+  return {
+    id,
+    did,
+    expiresAt,
+    nextId,
+    appPassword: appPasswordName
+      ? {
+          name: appPasswordName,
+          privileged: privileged === 1 ? true : false,
+        }
+      : null,
+  }
 }
 
 export const deleteExpiredRefreshTokens = async (

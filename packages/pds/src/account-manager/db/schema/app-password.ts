@@ -3,7 +3,7 @@ export interface AppPassword {
   name: string
   passwordScrypt: string
   createdAt: string
-  privileged: boolean | null
+  privileged: 0 | 1 | null
 }
 
 export const tableName = 'app_password'

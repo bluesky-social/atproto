@@ -21,6 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         name,
         input.body.privileged ?? false,
       )
+
       return {
         encoding: 'application/json',
         body: appPassword,
