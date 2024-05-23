@@ -17,7 +17,7 @@ import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.importRepo({
-    auth: ctx.authVerifier.accessNotAppPassword,
+    auth: ctx.authVerifier.accessFull,
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
       if (!ctx.cfg.service.acceptingImports) {
