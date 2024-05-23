@@ -2052,12 +2052,6 @@ export const schemaDict = {
                 description:
                   'A short name for the App Password, to help distinguish them.',
               },
-              scopes: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
             },
           },
         },
