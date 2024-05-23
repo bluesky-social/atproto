@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.25
+
+### Patch Changes
+
+- [`0e8acb9fb`](https://github.com/bluesky-social/atproto/commit/0e8acb9fbaf3edcebd8e4f8fe4a381ede0206895) Thanks [@devinivy](https://github.com/devinivy)! - Only distribute service tokens via non-app-pass access tokens
+
 ## 0.4.24
 
 ### Patch Changes
