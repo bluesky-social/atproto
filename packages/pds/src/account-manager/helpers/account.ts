@@ -2,8 +2,6 @@ import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { AccountDb, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { DAY } from '@atproto/common'
-import { Cursor, GenericKeyset, LabeledResult } from '../../db/pagination'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class UserAlreadyExistsError extends Error {}
 
