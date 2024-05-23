@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
-    auth: ctx.authVerifier.accessNotAppPassword,
+    auth: ctx.authVerifier.accessAppPassPrivileged,
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
       const keypair = await ctx.actorStore.keypair(did)

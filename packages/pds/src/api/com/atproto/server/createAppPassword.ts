@@ -4,7 +4,7 @@ import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
-    auth: ctx.authVerifier.accessNotAppPassword,
+    auth: ctx.authVerifier.accessFull,
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(
@@ -19,7 +19,9 @@ export default function (server: Server, ctx: AppContext) {
       const appPassword = await ctx.accountManager.createAppPassword(
         auth.credentials.did,
         name,
+        input.body.privileged ?? false,
       )
+
       return {
         encoding: 'application/json',
         body: appPassword,

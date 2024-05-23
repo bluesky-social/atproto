@@ -5,6 +5,7 @@ import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
 import { AuthScope } from '../../auth-verifier'
 import { AccountDb } from '../db'
+import { AppPassDescript } from './password'
 
 export type AuthToken = {
   scope: AuthScope
@@ -87,7 +88,7 @@ export const decodeRefreshToken = (jwt: string) => {
 export const storeRefreshToken = async (
   db: AccountDb,
   payload: RefreshToken,
-  appPasswordName: string | null,
+  appPassword: AppPassDescript | null,
 ) => {
   const [result] = await db.executeWithRetry(
     db.db
@@ -95,7 +96,7 @@ export const storeRefreshToken = async (
       .values({
         id: payload.jti,
         did: payload.sub,
-        appPasswordName,
+        appPasswordName: appPassword?.name,
         expiresAt: new Date(payload.exp * 1000).toISOString(),
       })
       .onConflict((oc) => oc.doNothing()), // E.g. when re-granting during a refresh grace period
@@ -104,11 +105,31 @@ export const storeRefreshToken = async (
 }
 
 export const getRefreshToken = async (db: AccountDb, id: string) => {
-  return db.db
+  const res = await db.db
     .selectFrom('refresh_token')
+    .leftJoin(
+      'app_password',
+      'app_password.name',
+      'refresh_token.appPasswordName',
+    )
     .where('id', '=', id)
-    .selectAll()
+    .selectAll('refresh_token')
+    .select('app_password.privileged')
     .executeTakeFirst()
+  if (!res) return null
+  const { did, expiresAt, appPasswordName, nextId, privileged } = res
+  return {
+    id,
+    did,
+    expiresAt,
+    nextId,
+    appPassword: appPasswordName
+      ? {
+          name: appPasswordName,
+          privileged: privileged === 1 ? true : false,
+        }
+      : null,
+  }
 }
 
 export const deleteExpiredRefreshTokens = async (
@@ -179,6 +200,13 @@ export const revokeAppPasswordRefreshToken = async (
 
 export const getRefreshTokenId = () => {
   return ui8.toString(crypto.randomBytes(32), 'base64')
+}
+
+export const formatScope = (appPassword: AppPassDescript | null): AuthScope => {
+  if (!appPassword) return AuthScope.Access
+  return appPassword.privileged
+    ? AuthScope.AppPassPrivileged
+    : AuthScope.AppPass
 }
 
 export class ConcurrentRefreshError extends Error {}
