@@ -46,6 +46,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 export interface AppPassword {
   name: string
   createdAt: string
+  privileged?: boolean
   [k: string]: unknown
 }
 

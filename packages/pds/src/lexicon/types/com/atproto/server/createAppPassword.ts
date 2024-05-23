@@ -13,6 +13,8 @@ export interface QueryParams {}
 export interface InputSchema {
   /** A short name for the App Password, to help distinguish them. */
   name: string
+  /** If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients. */
+  privileged?: boolean
   [k: string]: unknown
 }
 
