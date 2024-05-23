@@ -125,6 +125,7 @@ describe('app_passwords', () => {
       },
     )
 
+    // allows any access auth
     await appAgent.api.app.bsky.feed.post.create(
       {
         repo: appAgent.session?.did,
@@ -138,11 +139,13 @@ describe('app_passwords', () => {
       },
     )
 
+    // allows privileged app passwords or higher
     const priviAttempt = appAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
     })
     await expect(priviAttempt).rejects.toThrow('Bad token scope')
 
+    // allows only full access auth
     const fullAttempt = appAgent.api.com.atproto.server.createAppPassword(
       {
         name: 'another-one',
@@ -165,6 +168,7 @@ describe('app_passwords', () => {
       },
     )
 
+    // allows any access auth
     await priviAgent.api.app.bsky.feed.post.create(
       {
         repo: priviAgent.session?.did,
@@ -178,10 +182,12 @@ describe('app_passwords', () => {
       },
     )
 
+    // allows privileged app passwords or higher
     await priviAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
     })
 
+    // allows only full access auth
     const attempt = priviAgent.api.com.atproto.server.createAppPassword(
       {
         name: 'another-one',
