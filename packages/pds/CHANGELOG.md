@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.26
+
+### Patch Changes
+
+- [#2515](https://github.com/bluesky-social/atproto/pull/2515) [`0cc5ef70f`](https://github.com/bluesky-social/atproto/commit/0cc5ef70f4e5a8e24983051d5f5ad8ee27be8684) Thanks [@dholms](https://github.com/dholms)! - Add privileged app password auth scope
+
 ## 0.4.25
 
 ### Patch Changes
