@@ -13,6 +13,7 @@ export interface QueryParams {}
 export interface InputSchema {
   /** A short name for the App Password, to help distinguish them. */
   name: string
+  scopes?: string[]
   [k: string]: unknown
 }
 
