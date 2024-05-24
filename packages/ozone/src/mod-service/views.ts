@@ -338,15 +338,21 @@ export class ModerationViews {
     labelers?: ParsedLabelers,
   ): Promise<Label[]> {
     if (!labelers?.dids.length && !labelers?.redact.size) return []
-
-    const {
-      data: { labels },
-    } = await this.appviewAgent.api.com.atproto.label.queryLabels({
-      uriPatterns: subjects,
-      sources: labelers.dids,
-    })
-
-    return labels
+    try {
+      const {
+        data: { labels },
+      } = await this.appviewAgent.api.com.atproto.label.queryLabels({
+        uriPatterns: subjects,
+        sources: labelers.dids,
+      })
+      return labels
+    } catch (err) {
+      httpLogger.error(
+        { err, subjects, labelers },
+        'failed to resolve labels from appview',
+      )
+      return []
+    }
   }
 
   formatReport(report: ModerationEventRowWithHandle): ReportOutput {
