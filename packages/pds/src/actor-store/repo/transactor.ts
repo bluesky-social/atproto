@@ -55,9 +55,13 @@ export class RepoTransactor extends RepoReader {
     return commit
   }
 
-  async processWrites(writes: PreparedWrite[], swapCommitCid?: CID) {
+  async processWrites(
+    writes: PreparedWrite[],
+    swapCommitCid?: CID,
+    revOverride?: string,
+  ) {
     this.db.assertTransaction()
-    const commit = await this.formatCommit(writes, swapCommitCid)
+    const commit = await this.formatCommit(writes, swapCommitCid, revOverride)
     await Promise.all([
       // persist the commit to repo storage
       this.storage.applyCommit(commit),
@@ -72,6 +76,7 @@ export class RepoTransactor extends RepoReader {
   async formatCommit(
     writes: PreparedWrite[],
     swapCommit?: CID,
+    revOverride?: string,
   ): Promise<CommitData> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
@@ -115,7 +120,11 @@ export class RepoTransactor extends RepoReader {
 
     const repo = await Repo.load(this.storage, currRoot.cid)
     const writeOps = writes.map(writeToOp)
-    const commit = await repo.formatCommit(writeOps, this.signingKey)
+    const commit = await repo.formatCommit(
+      writeOps,
+      this.signingKey,
+      revOverride,
+    )
 
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
