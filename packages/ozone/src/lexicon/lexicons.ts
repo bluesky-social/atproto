@@ -404,28 +404,10 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.searchAccounts#accountSearchResult',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
                 },
               },
             },
-          },
-        },
-      },
-      accountSearchResult: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-          },
-          email: {
-            type: 'string',
-          },
-          normalizedEmail: {
-            type: 'string',
-          },
-          handle: {
-            type: 'string',
           },
         },
       },

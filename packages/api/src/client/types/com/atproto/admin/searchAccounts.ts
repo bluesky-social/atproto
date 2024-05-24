@@ -6,6 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   email?: string
@@ -17,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  accounts: AccountSearchResult[]
+  accounts: ComAtprotoAdminDefs.AccountView[]
   [k: string]: unknown
 }
 
@@ -35,27 +36,4 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
-}
-
-export interface AccountSearchResult {
-  did: string
-  email?: string
-  normalizedEmail?: string
-  handle?: string
-  [k: string]: unknown
-}
-
-export function isAccountSearchResult(v: unknown): v is AccountSearchResult {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.searchAccounts#accountSearchResult'
-  )
-}
-
-export function validateAccountSearchResult(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'com.atproto.admin.searchAccounts#accountSearchResult',
-    v,
-  )
 }
