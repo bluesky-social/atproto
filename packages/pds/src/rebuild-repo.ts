@@ -1,18 +1,68 @@
 import { CID } from 'multiformats/cid'
 import { ActorStoreTransactor } from './actor-store'
 import AppContext from './context'
-import { MST, MemoryBlockstore, formatDataKey } from '@atproto/repo'
+import {
+  CidSet,
+  MST,
+  MemoryBlockstore,
+  formatDataKey,
+  signCommit,
+} from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
+import { TID } from '@atproto/common'
 
 const run = async (ctx: AppContext, did: string) => {
   const memoryStore = new MemoryBlockstore()
-  ctx.actorStore.transact(did, async (store) => {
-    const records = await listAllRecords(store)
+  const rev = TID.nextStr()
+  await ctx.actorStore.transact(did, async (store) => {
+    const [records, existingCids] = await Promise.all([
+      listAllRecords(store),
+      listExistingBlocks(store),
+    ])
     let mst = await MST.create(memoryStore)
     for (const record of records) {
       mst = await mst.add(record.path, record.cid)
     }
+
+    const mstCids = await mst.allCids()
+    const toDelete = new CidSet(existingCids.toList()).subtractSet(mstCids)
+    await store.repo.storage.deleteMany(toDelete.toList())
+    const newCommit = await signCommit(
+      {
+        did,
+        version: 3,
+        rev,
+        prev: null,
+        data: await mst.getPointer(),
+      },
+      store.repo.signingKey,
+    )
+    const toAdd = memoryStore.blocks
+    const commitCid = await toAdd.add(newCommit)
+    await store.repo.storage.putMany(toAdd, rev)
+    await store.repo.storage.updateRoot(commitCid, rev)
   })
+}
+
+const listExistingBlocks = async (
+  store: ActorStoreTransactor,
+): Promise<CidSet> => {
+  const cids = new CidSet()
+  let cursor: string | undefined = ''
+  while (cursor) {
+    const res = await store.db.db
+      .selectFrom('repo_block')
+      .select('cid')
+      .where('cid', '>', cursor)
+      .orderBy('cid', 'asc')
+      .limit(1000)
+      .execute()
+    for (const row of res) {
+      cids.add(CID.parse(row.cid))
+    }
+    cursor = res.at(-1)?.cid
+  }
+  return cids
 }
 
 const listAllRecords = async (
