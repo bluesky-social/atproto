@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { ActorStoreTransactor } from './actor-store'
-import AppContext from './context'
+import { ActorStoreTransactor } from '../src/actor-store'
+import AppContext from '../src/context'
 import {
   CidSet,
   MST,
@@ -11,7 +11,7 @@ import {
 import { AtUri } from '@atproto/syntax'
 import { TID } from '@atproto/common'
 
-const run = async (ctx: AppContext, did: string) => {
+export const rebuildRepo = async (ctx: AppContext, did: string) => {
   const memoryStore = new MemoryBlockstore()
   const rev = TID.nextStr()
   await ctx.actorStore.transact(did, async (store) => {
