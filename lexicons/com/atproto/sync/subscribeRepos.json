@@ -120,7 +120,7 @@
         "seq": { "type": "integer" },
         "did": { "type": "string", "format": "did" },
         "time": { "type": "string", "format": "datetime" },
-        "didDoc": { "type": "unknown" }
+        "handle": { "type": "string", "format": "handle" }
       }
     },
     "account": {
