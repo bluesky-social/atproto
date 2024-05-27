@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         if (!deactivated) {
-          await ctx.sequencer.sequenceIdentityEvt(did, didDoc)
+          await ctx.sequencer.sequenceIdentityEvt(did, handle)
           await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
           await ctx.sequencer.sequenceCommit(did, commit, [])
         }

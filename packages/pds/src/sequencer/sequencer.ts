@@ -229,11 +229,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return await this.sequenceEvt(evt)
   }
 
-  async sequenceIdentityEvt(
-    did: string,
-    didDoc?: Record<string, unknown>,
-  ): Promise<number> {
-    const evt = await formatSeqIdentityEvt(did, didDoc)
+  async sequenceIdentityEvt(did: string, handle?: string): Promise<number> {
+    const evt = await formatSeqIdentityEvt(did, handle)
     return await this.sequenceEvt(evt)
   }
 

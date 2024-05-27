@@ -5,7 +5,6 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { httpLogger } from '../../../../logger'
 import { authPassthru } from '../../../proxy'
-import { safeResolveDidDoc } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -56,11 +55,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.updateHandle(requester, handle)
       }
 
-      const didDoc = await safeResolveDidDoc(ctx, requester, true)
-
       try {
         await ctx.sequencer.sequenceHandleUpdate(requester, handle)
-        await ctx.sequencer.sequenceIdentityEvt(requester, didDoc)
+        await ctx.sequencer.sequenceIdentityEvt(requester, handle)
       } catch (err) {
         httpLogger.error(
           { err, did: requester, handle },

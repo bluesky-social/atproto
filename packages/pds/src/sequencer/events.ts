@@ -84,13 +84,13 @@ export const formatSeqHandleUpdate = async (
 
 export const formatSeqIdentityEvt = async (
   did: string,
-  didDoc?: Record<string, unknown>,
+  handle?: string,
 ): Promise<RepoSeqInsert> => {
   const evt: IdentityEvt = {
     did,
   }
-  if (didDoc) {
-    evt.didDoc = didDoc
+  if (handle) {
+    evt.handle = handle
   }
   return {
     did,
@@ -167,7 +167,7 @@ export type HandleEvt = z.infer<typeof handleEvt>
 
 export const identityEvt = z.object({
   did: z.string(),
-  didDoc: z.record(z.unknown()).optional(),
+  handle: z.string().optional(),
 })
 export type IdentityEvt = z.infer<typeof identityEvt>
 

@@ -119,13 +119,12 @@ describe('repo subscribe repos', () => {
   const verifyIdentityEvent = (
     evt: IdentityEvt,
     did: string,
-    handle: string,
+    handle?: string,
   ) => {
     expect(typeof evt.seq).toBe('number')
     expect(evt.did).toBe(did)
     expect(typeof evt.time).toBe('string')
-    expect(evt.didDoc?.['id']).toBe(did)
-    expect(evt.didDoc?.['alsoKnownAs']).toEqual([`at://${handle}`])
+    expect(evt.handle).toEqual(handle)
   }
 
   const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {

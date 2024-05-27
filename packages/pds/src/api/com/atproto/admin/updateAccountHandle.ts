@@ -3,7 +3,6 @@ import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { httpLogger } from '../../../../logger'
-import { safeResolveDidDoc } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
@@ -44,11 +43,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.updateHandle(did, handle)
       }
 
-      const didDoc = await safeResolveDidDoc(ctx, did, true)
-
       try {
         await ctx.sequencer.sequenceHandleUpdate(did, handle)
-        await ctx.sequencer.sequenceIdentityEvt(did, didDoc)
+        await ctx.sequencer.sequenceIdentityEvt(did, handle)
       } catch (err) {
         httpLogger.error(
           { err, did, handle },

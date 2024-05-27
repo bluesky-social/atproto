@@ -3,7 +3,6 @@ import AppContext from '../../../../context'
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { safeResolveDidDoc } from '../server/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.submitPlcOperation({
@@ -46,9 +45,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.plcClient.sendOperation(requester, op)
-      const didDoc = await safeResolveDidDoc(ctx, requester, true)
-
-      await ctx.sequencer.sequenceIdentityEvt(requester, didDoc)
+      await ctx.sequencer.sequenceIdentityEvt(requester)
     },
   })
 }
