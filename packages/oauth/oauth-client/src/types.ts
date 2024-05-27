@@ -10,6 +10,7 @@ import z from 'zod'
 
 export type OAuthAuthorizeOptions = {
   display?: 'page' | 'popup' | 'touch' | 'wap'
+  redirect_uri?: string
   id_token_hint?: string
   max_age?: number
   prompt?: 'login' | 'none' | 'consent' | 'select_account'

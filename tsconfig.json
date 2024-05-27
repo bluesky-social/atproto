@@ -16,7 +16,6 @@
     { "path": "./packages/internal/fetch-node" },
     { "path": "./packages/internal/handle-resolver" },
     { "path": "./packages/internal/handle-resolver-node" },
-    { "path": "./packages/internal/identity-resolver" },
     { "path": "./packages/internal/pipe" },
     { "path": "./packages/internal/rollup-plugin-bundle-manifest" },
     { "path": "./packages/internal/simple-store" },

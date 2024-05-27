@@ -31,7 +31,7 @@ options:
 Using an AppView:
 
 > [!CAUTION]
-> Use the Bluesky owned AppView (`https://bsky.app/`), or PDS
+> Use the Bluesky owned AppView (`https://api.bsky.app/`), or PDS
 > (`https://bsky.social/`), at your own risk. Using these servers in a
 > third-party application might expose your users' data (IP address) to Bluesky.
 > Bluesky might log the data sent to it when your app is resolving handles.

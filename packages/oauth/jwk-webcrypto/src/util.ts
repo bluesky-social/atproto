@@ -101,7 +101,7 @@ export function fromSubtleAlgorithm(algorithm: KeyAlgorithm): JWSAlgorithm {
   }
 }
 
-export function isSignatureKeyPair(
+export function isCryptoKeyPair(
   v: unknown,
   extractable?: boolean,
 ): v is CryptoKeyPair {

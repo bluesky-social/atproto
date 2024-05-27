@@ -33,7 +33,6 @@
   "dependencies": {
     "@atproto-labs/did-resolver": "workspace:*",
     "@atproto-labs/handle-resolver": "workspace:*",
-    "@atproto-labs/identity-resolver": "workspace:*",
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto/did": "workspace:*",
     "@atproto/jwk": "workspace:*",

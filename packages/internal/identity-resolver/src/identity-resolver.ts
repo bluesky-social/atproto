@@ -1,10 +1,13 @@
 import {
-  DidResolver,
+  Did,
+  DidDocument,
   ResolveOptions as DidResolveOptions,
+  DidResolver,
+  DidService,
 } from '@atproto-labs/did-resolver'
 import {
-  HandleResolver,
   ResolveOptions as HandleResolveOptions,
+  HandleResolver,
   ResolvedHandle,
   isResolvedHandle,
 } from '@atproto-labs/handle-resolver'
@@ -19,13 +22,12 @@ export type ResolveOptions = DidResolveOptions & HandleResolveOptions
 
 export class IdentityResolver {
   constructor(
+    readonly didResolver: DidResolver<'plc' | 'web'>,
     readonly handleResolver: HandleResolver,
-    readonly didResolver: DidResolver,
   ) {}
 
   public async resolve(
     input: string,
-    serviceType = 'AtprotoPersonalDataServer',
     options?: ResolveOptions,
   ): Promise<ResolvedIdentity> {
     const did = isResolvedHandle(input)
@@ -34,14 +36,43 @@ export class IdentityResolver {
           normalizeAndEnsureValidHandle(input),
           options,
         )
-    if (!did) throw new Error(`Handle ${input} does not resolve to a DID`)
 
-    const url = await this.didResolver.resolveServiceEndpoint(
-      did,
-      { type: serviceType },
-      options,
+    options?.signal?.throwIfAborted()
+
+    if (!did) {
+      throw new TypeError(`Handle "${input}" does not resolve to a DID`)
+    }
+
+    const document = await this.didResolver.resolve(did, options)
+
+    const service = document.service?.find(
+      isAtprotoPersonalDataServerService<'plc' | 'web'>,
+      document,
     )
+
+    if (!service) {
+      throw new TypeError(
+        `No valid "AtprotoPersonalDataServer" service found in "${did}" DID document`,
+      )
+    }
+
+    const url = new URL(service.serviceEndpoint)
 
     return { did, url }
   }
+}
+
+function isAtprotoPersonalDataServerService<M extends string>(
+  this: DidDocument<M>,
+  s: DidService,
+): s is {
+  id: '#atproto_pds' | `${Did<M>}#atproto_pds`
+  type: 'AtprotoPersonalDataServer'
+  serviceEndpoint: string
+} {
+  return (
+    typeof s.serviceEndpoint === 'string' &&
+    s.type === 'AtprotoPersonalDataServer' &&
+    (s.id === '#atproto_pds' || s.id === `${this.id}#atproto_pds`)
+  )
 }

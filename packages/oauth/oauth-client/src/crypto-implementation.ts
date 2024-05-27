@@ -7,7 +7,7 @@ export type DigestAlgorithm = {
 export type { Key }
 
 export interface CryptoImplementation {
-  createKey(algs: string[]): Promise<Key>
+  createKey(algs: string[]): Key | PromiseLike<Key>
   getRandomValues: (length: number) => Uint8Array | PromiseLike<Uint8Array>
   digest: (
     bytes: Uint8Array,

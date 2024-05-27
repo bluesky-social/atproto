@@ -1,10 +1,4 @@
-import { DidResolver, DidResolverOptions } from '@atproto-labs/did-resolver'
-import {
-  AppViewHandleResolver,
-  CachedHandleResolver,
-  HandleResolver,
-} from '@atproto-labs/handle-resolver'
-import { IdentityResolver } from '@atproto-labs/identity-resolver'
+import { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
   OAuthAgent,
   OAuthAuthorizeOptions,
@@ -27,10 +21,10 @@ import { CryptoSubtle } from './crypto-subtle.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
 
 export type BrowserOAuthClientOptions = {
-  clientMetadata: OAuthClientMetadataInput
-  handleResolver: HandleResolver | string | URL
+  clientMetadata?: OAuthClientMetadataInput | string | URL
+  handleResolver?: HandleResolver | string | URL
   responseMode?: OAuthResponseMode
-  plcDirectoryUrl?: DidResolverOptions['plcDirectoryUrl']
+  plcDirectoryUrl?: string | URL
   fetch?: typeof globalThis.fetch
   crypto?: Crypto
 }
@@ -124,6 +118,8 @@ export class BrowserOAuthClient extends OAuthClient {
       redirect: 'error',
     })
     const response = await fetch(request)
+    if (!response.ok) throw new TypeError('Failed to fetch client metadata')
+
     const json: unknown = await response.json()
 
     return new BrowserOAuthClient({
@@ -138,37 +134,42 @@ export class BrowserOAuthClient extends OAuthClient {
   private readonly database: BrowserOAuthDatabase
 
   constructor({
-    clientMetadata,
-    handleResolver,
+    clientMetadata = window.location.href,
+    handleResolver = 'https://bsky.social',
     // "fragment" is safer as it is not sent to the server
     responseMode = 'fragment',
-    plcDirectoryUrl,
+    plcDirectoryUrl = 'https://plc.directory',
     crypto = globalThis.crypto,
     fetch = globalThis.fetch,
-  }: BrowserOAuthClientOptions) {
+  }: BrowserOAuthClientOptions = {}) {
     const database = new BrowserOAuthDatabase()
 
     const listeners = []
     const sessionStore = wrapSessionStore(database.getSessionStore(), listeners)
 
     super({
-      clientMetadata,
+      clientMetadata:
+        typeof clientMetadata === 'string' || clientMetadata instanceof URL
+          ? {
+              client_id: 'http://localhost/',
+              redirect_uris: [
+                new URL(clientMetadata).href.replace('localhost', '127.0.0.1'),
+              ],
+              // If the server supports then, let's also ask for an ID token
+              response_types: ['code id_token', 'code'],
+            }
+          : clientMetadata,
+
       responseMode,
       fetch,
       cryptoImplementation: new CryptoSubtle(crypto),
+      plcDirectoryUrl,
+      handleResolver,
       sessionStore,
       stateStore: database.getStateStore(),
-      identityResolver: new IdentityResolver(
-        new CachedHandleResolver(
-          AppViewHandleResolver.from(handleResolver, { fetch }),
-          database.getHandleCache(),
-        ),
-        new DidResolver({
-          fetch,
-          cache: database.getDidCache(),
-          plcDirectoryUrl,
-        }),
-      ),
+
+      didCache: database.getDidCache(),
+      handleCache: database.getHandleCache(),
       metadataCache: database.getMetadataCache(),
       dpopNonceCache: database.getDpopNonceCache(),
     })

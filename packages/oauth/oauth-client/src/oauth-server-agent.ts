@@ -24,6 +24,7 @@ import { dpopFetchWrapper } from './fetch-dpop.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
 import { OAuthClientMetadataId } from './types.js'
+import { withSignal } from './util.js'
 
 export type TokenSet = {
   iss: string
@@ -52,7 +53,7 @@ export class OAuthServerAgent {
     readonly serverMetadata: OAuthServerMetadata,
     readonly clientMetadata: OAuthClientMetadataId,
     readonly dpopNonces: DpopNonceCache,
-    readonly resolver: OAuthResolver,
+    readonly oauthResolver: OAuthResolver,
     readonly crypto: CryptoWrapper,
     readonly keyset?: Keyset,
     fetch?: GlobalFetch,
@@ -132,12 +133,15 @@ export class OAuthServerAgent {
   private async processTokenResponse(
     tokenResponse: OAuthTokenResponse,
   ): Promise<TokenSet> {
-    if (!tokenResponse.sub) {
-      // ATPROTO requires that the "sub" is always present in the token response.
-      throw new TypeError(`Missing "sub" in token response`)
-    }
+    const { sub } = tokenResponse
+    // ATPROTO requires that the "sub" is always present in the token response.
+    if (!sub) throw new TypeError(`Missing "sub" in token response`)
 
-    const resolved = await this.resolver.resolve(tokenResponse.sub)
+    // TODO (?) make timeout configurable
+    const resolved = await withSignal({ timeout: 10e3 }, (signal) =>
+      this.oauthResolver.resolve(sub, { signal }),
+    )
+
     if (resolved.metadata.issuer !== this.serverMetadata.issuer) {
       // Best case scenario; the user switched PDS. Worst case scenario; a bad
       // actor is trying to impersonate a user. In any case, we must not allow
@@ -146,7 +150,7 @@ export class OAuthServerAgent {
     }
 
     return {
-      sub: tokenResponse.sub,
+      sub,
       aud: resolved.url.href,
       iss: resolved.metadata.issuer,
 

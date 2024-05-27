@@ -1,10 +1,7 @@
-import { DidResolver, DidResolverOptions } from '@atproto-labs/did-resolver'
 import {
   AppViewHandleResolver,
-  CachedHandleResolver,
   HandleResolver,
 } from '@atproto-labs/handle-resolver'
-import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import {
   InternalStateData,
   OAuthAuthorizeOptions,
@@ -19,7 +16,7 @@ import { ReactNativeStoreWithKey } from './react-native-store-with-key.js'
 export type ReactNativeOAuthClientOptions = {
   clientMetadata: OAuthClientMetadata
   handleResolver: HandleResolver | string | URL
-  plcDirectoryUrl?: DidResolverOptions['plcDirectoryUrl']
+  plcDirectoryUrl?: string | URL
   fetch?: typeof globalThis.fetch
 }
 
@@ -33,6 +30,7 @@ export class ReactNativeOAuthClient extends OAuthClient {
     super({
       clientMetadata,
       responseMode: 'query',
+      plcDirectoryUrl,
       // Compatibility: react-native typings do not allow URL as RequestInit
       fetch: (input, init) =>
         fetch(input instanceof URL ? input.href : input, init),
@@ -45,12 +43,7 @@ export class ReactNativeOAuthClient extends OAuthClient {
       stateStore: new ReactNativeStoreWithKey<InternalStateData>(
         () => new Date(Date.now() + 600e3),
       ),
-      identityResolver: new IdentityResolver(
-        new CachedHandleResolver(
-          AppViewHandleResolver.from(handleResolver, { fetch }),
-        ),
-        new DidResolver({ fetch, plcDirectoryUrl }),
-      ),
+      handleResolver: AppViewHandleResolver.from(handleResolver, { fetch }),
     })
   }
 

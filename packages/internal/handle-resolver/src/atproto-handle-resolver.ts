@@ -1,12 +1,12 @@
 import {
   DnsHandleResolver,
   ResolveTxt,
-} from './internal-resolvers/dns-handle-resolver'
-import { ResolveOptions, HandleResolver, ResolvedHandle } from './types'
+} from './internal-resolvers/dns-handle-resolver.js'
 import {
   WellKnownHandleResolver,
   WellKnownHandleResolverOptions,
-} from './internal-resolvers/well-known-handler-resolver'
+} from './internal-resolvers/well-known-handler-resolver.js'
+import { HandleResolver, ResolveOptions, ResolvedHandle } from './types.js'
 
 export type { ResolveTxt }
 export type AtprotoHandleResolverOptions = WellKnownHandleResolverOptions & {
@@ -62,7 +62,7 @@ export class AtprotoHandleResolver implements HandleResolver {
       const res = await httpPromise
       if (res) return res
 
-      options?.signal?.throwIfAborted()
+      signal.throwIfAborted()
 
       return this.dnsResolverFallback?.resolve(handle, wrappedOptions) ?? null
     } finally {

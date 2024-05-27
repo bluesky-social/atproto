@@ -1,35 +1,27 @@
 import { Jwk, jwkSchema } from '@atproto/jwk'
 import { GenerateKeyPairOptions, JoseKey } from '@atproto/jwk-jose'
 
-import { fromSubtleAlgorithm, isSignatureKeyPair } from './util.js'
+import { fromSubtleAlgorithm, isCryptoKeyPair } from './util.js'
 
 export class WebcryptoKey extends JoseKey {
   // We need to override the static method generate from JoseKey because
   // the browser needs both the private and public keys
   static override async generate(
-    kid: string = crypto.randomUUID(),
     allowedAlgos: string[] = ['ES256'],
+    kid: string = crypto.randomUUID(),
     options?: GenerateKeyPairOptions,
   ) {
-    const { privateKey, publicKey } = await this.generateKeyPair(
-      allowedAlgos,
-      options,
-    )
-    // Type safety only: in the browser, "jose" generates a CryptoKeyPair
-    if (
-      !(privateKey instanceof CryptoKey) ||
-      !(publicKey instanceof CryptoKey)
-    ) {
+    const keyPair = await this.generateKeyPair(allowedAlgos, options)
+
+    // Type safety only: in the browser, 'jose' always generates a CryptoKeyPair
+    if (!isCryptoKeyPair(keyPair)) {
       throw new TypeError('Invalid CryptoKeyPair')
     }
-    return this.fromKeypair(kid, { privateKey, publicKey })
+
+    return this.fromKeypair(keyPair, kid)
   }
 
-  static async fromKeypair(kid: string, cryptoKeyPair: CryptoKeyPair) {
-    if (!isSignatureKeyPair(cryptoKeyPair)) {
-      throw new TypeError('CryptoKeyPair must be compatible with sign/verify')
-    }
-
+  static async fromKeypair(cryptoKeyPair: CryptoKeyPair, kid?: string) {
     // https://datatracker.ietf.org/doc/html/rfc7517
     // > The "use" and "key_ops" JWK members SHOULD NOT be used together; [...]
     // > Applications should specify which of these members they use.

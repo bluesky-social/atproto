@@ -7,6 +7,7 @@ import {
   importPKCS8,
   jwtVerify,
   type GenerateKeyPairOptions,
+  type GenerateKeyPairResult,
   type JWK,
   type JWTVerifyOptions,
   type KeyLike,
@@ -30,7 +31,7 @@ import { either } from './util'
 
 export type Importable = string | KeyLike | Jwk
 
-export type { GenerateKeyPairOptions }
+export type { GenerateKeyPairOptions, GenerateKeyPairResult }
 
 export class JoseKey extends Key {
   #keyObj?: KeyLike | Uint8Array
@@ -106,11 +107,14 @@ export class JoseKey extends Key {
   }
 
   static async generate(
-    kid?: string,
     allowedAlgos: string[] = ['ES256'],
-    options?: GenerateKeyPairOptions,
+    kid?: string,
+    options?: Omit<GenerateKeyPairOptions, 'extractable'>,
   ) {
-    const kp = await this.generateKeyPair(allowedAlgos, options)
+    const kp = await this.generateKeyPair(allowedAlgos, {
+      ...options,
+      extractable: true,
+    })
     return this.fromImportable(kp.privateKey, kid)
   }
 

@@ -1,4 +1,15 @@
+import {
+  DidCache,
+  DidResolverCached,
+  DidResolverCommon,
+} from '@atproto-labs/did-resolver'
 import { GlobalFetch } from '@atproto-labs/fetch'
+import {
+  AppViewHandleResolver,
+  CachedHandleResolver,
+  HandleCache,
+  HandleResolver,
+} from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
@@ -45,7 +56,6 @@ export type {
   CryptoImplementation,
   DpopNonceCache,
   GlobalFetch,
-  IdentityResolver,
   Keyset,
   MetadataCache,
   OAuthClientMetadata,
@@ -57,17 +67,20 @@ export type {
 export type OAuthClientOptions = {
   // Config
   responseMode: OAuthResponseMode
-  clientMetadata: OAuthClientMetadataInput
-  keyset?: Keyset
+  clientMetadata: Readonly<OAuthClientMetadataInput>
+  keyset?: Keyset | Iterable<Key | undefined | null | false>
 
   // Stores
   stateStore: StateStore
   sessionStore: SessionStore
+  didCache?: DidCache
+  handleCache?: HandleCache
   metadataCache?: MetadataCache
   dpopNonceCache?: DpopNonceCache
 
   // Services
-  identityResolver: IdentityResolver
+  handleResolver: HandleResolver | URL | string
+  plcDirectoryUrl?: URL | string
   cryptoImplementation: CryptoImplementation
   fetch?: GlobalFetch
 }
@@ -91,25 +104,42 @@ export class OAuthClient {
   constructor({
     fetch = globalThis.fetch,
 
-    metadataCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
-    dpopNonceCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
     stateStore,
     sessionStore,
 
+    didCache = undefined,
+    handleCache = undefined,
+    metadataCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
+    dpopNonceCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
+
     responseMode,
     clientMetadata,
-    identityResolver,
+    handleResolver,
+    plcDirectoryUrl,
     cryptoImplementation,
     keyset,
   }: OAuthClientOptions) {
-    this.clientMetadata = validateClientMetadata(clientMetadata, keyset)
-    this.responseMode = responseMode
     this.keyset = keyset
+      ? keyset instanceof Keyset
+        ? keyset
+        : new Keyset(keyset)
+      : undefined
+    this.clientMetadata = validateClientMetadata(clientMetadata, this.keyset)
+    this.responseMode = responseMode
 
     this.crypto = new CryptoWrapper(cryptoImplementation)
     this.fetch = fetch
     this.resolver = new OAuthResolver(
-      identityResolver,
+      new IdentityResolver(
+        new DidResolverCached(
+          new DidResolverCommon({ fetch, plcDirectoryUrl }),
+          didCache,
+        ),
+        new CachedHandleResolver(
+          AppViewHandleResolver.from(handleResolver, { fetch }),
+          handleCache,
+        ),
+      ),
       new OAuthServerMetadataResolver(metadataCache, fetch),
     )
     this.serverFactory = new OAuthServerFactory(
@@ -127,9 +157,18 @@ export class OAuthClient {
 
   async authorize(
     input: string,
-    options?: OAuthAuthorizeOptions,
+    options?: OAuthAuthorizeOptions & { signal?: AbortSignal },
   ): Promise<URL> {
-    const { did, metadata } = await this.resolver.resolve(input)
+    const redirectUri =
+      options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
+    if (!this.clientMetadata.redirect_uris.includes(redirectUri)) {
+      // The server will enforce this, but let's catch it early
+      throw new TypeError('Invalid redirect_uri')
+    }
+
+    const { did, metadata } = await this.resolver.resolve(input, {
+      signal: options?.signal,
+    })
 
     const nonce = await this.crypto.generateNonce()
     const pkce = await this.crypto.generatePKCE()
@@ -149,7 +188,7 @@ export class OAuthClient {
 
     const parameters = {
       client_id: this.clientMetadata.client_id,
-      redirect_uri: this.clientMetadata.redirect_uris[0],
+      redirect_uri: redirectUri,
       code_challenge: pkce?.challenge,
       code_challenge_method: pkce?.method,
       nonce,
@@ -158,7 +197,7 @@ export class OAuthClient {
       response_mode: this.responseMode,
       response_type:
         // Negotiate by using the order in the client metadata
-        (this.clientMetadata.response_types || ['code id_token'])?.find((t) =>
+        this.clientMetadata.response_types?.find((t) =>
           metadata['response_types_supported']?.includes(t),
         ) ?? 'code',
 

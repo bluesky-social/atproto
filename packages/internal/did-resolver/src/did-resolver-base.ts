@@ -1,24 +1,15 @@
-import {
-  Did,
-  DidDocument,
-  DidError,
-  DidService,
-  extractDidMethod,
-} from '@atproto/did'
 import { FetchError } from '@atproto-labs/fetch'
+import { Did, DidError, extractDidMethod } from '@atproto/did'
 import { ZodError } from 'zod'
 
 import { DidMethod, DidMethods, ResolveOptions } from './did-method.js'
+import { DidResolver, ResolvedDocument } from './did-resolver.js'
 
-export type { DidMethod, ResolveOptions }
-export type ResolvedDocument<D extends Did, M extends string = string> =
-  D extends Did<infer N> ? DidDocument<N extends M ? N : never> : never
+export type { DidMethod, ResolveOptions, ResolvedDocument }
 
-export type Filter =
-  | { id?: string; type: string }
-  | { id: string; type?: string }
-
-export class DidResolverBase<M extends string = string> {
+export class DidResolverBase<M extends string = string>
+  implements DidResolver<M>
+{
   protected readonly methods: Map<string, DidMethod<M>>
 
   constructor(methods: DidMethods<M>) {
@@ -71,57 +62,5 @@ export class DidResolverBase<M extends string = string> {
 
       throw DidError.from(err, did)
     }
-  }
-
-  async resolveService(
-    did: Did,
-    filter: Filter,
-    options?: ResolveOptions,
-  ): Promise<DidService> {
-    if (!filter.id && !filter.type) {
-      throw new TypeError(
-        'Either "filter.id" or "filter.type" must be specified',
-      )
-    }
-    const document = await this.resolve(did, options)
-    const service = document.service?.find(
-      (s) =>
-        (!filter.id || s.id === filter.id) &&
-        (!filter.type || s.type === filter.type),
-    )
-    if (service) return service
-
-    throw new DidError(
-      did,
-      `No service matching "${filter.id || filter.type}" in DID Document`,
-      'did-service-not-found',
-      404,
-    )
-  }
-
-  async resolveServiceEndpoint(
-    did: Did,
-    filter: Filter,
-    options?: ResolveOptions,
-  ): Promise<URL> {
-    const service = await this.resolveService(did, filter, options)
-    if (typeof service.serviceEndpoint === 'string') {
-      return new URL(service.serviceEndpoint)
-    } else if (Array.isArray(service.serviceEndpoint)) {
-      // set of strings or maps
-      if (service.serviceEndpoint.length === 1) {
-        const first = service.serviceEndpoint[0]!
-        if (typeof first === 'string') return new URL(first)
-      }
-    } else {
-      // map
-    }
-
-    throw new DidError(
-      did,
-      `Unable to determine serviceEndpoint for "${filter.id || filter.type}"`,
-      'did-service-endpoint-not-found',
-      404,
-    )
   }
 }

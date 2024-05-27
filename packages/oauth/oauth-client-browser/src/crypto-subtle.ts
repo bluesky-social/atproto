@@ -15,7 +15,7 @@ export class CryptoSubtle implements CryptoImplementation {
   }
 
   async createKey(algs: string[]): Promise<Key> {
-    return WebcryptoKey.generate(undefined, algs)
+    return WebcryptoKey.generate(algs)
   }
 
   getRandomValues(byteLength: number): Uint8Array {
@@ -45,6 +45,6 @@ function digestAlgorithmToSubtle({
     case 'sha512':
       return `SHA-${name.slice(-3)}`
     default:
-      throw new Error(`Unknown hash algorithm ${name}`)
+      throw new TypeError(`Unknown hash algorithm ${name}`)
   }
 }

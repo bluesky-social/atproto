@@ -781,6 +781,9 @@ importers:
 
   packages/oauth/oauth-client:
     dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:*
+        version: link:../../internal/did-resolver
       '@atproto-labs/fetch':
         specifier: workspace:*
         version: link:../../internal/fetch
@@ -827,9 +830,6 @@ importers:
       '@atproto-labs/handle-resolver':
         specifier: workspace:*
         version: link:../../internal/handle-resolver
-      '@atproto-labs/identity-resolver':
-        specifier: workspace:*
-        version: link:../../internal/identity-resolver
       '@atproto-labs/simple-store':
         specifier: workspace:*
         version: link:../../internal/simple-store

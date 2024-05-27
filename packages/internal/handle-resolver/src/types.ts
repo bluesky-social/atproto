@@ -20,7 +20,7 @@ export interface HandleResolver {
    * is found. `null` should only be returned if no unexpected behavior occurred
    * during the resolution process.
    * @throws Error if the resolution method fails due to an unexpected error, or
-   * if the resolution is aborted ({@link ResolveOptions.signal}).
+   * if the resolution is aborted ({@link ResolveOptions}).
    */
   resolve(handle: string, options?: ResolveOptions): Promise<ResolvedHandle>
 }

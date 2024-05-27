@@ -25,6 +25,7 @@
     }
   },
   "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:*",
     "@atproto-labs/fetch": "workspace:*",
     "@atproto-labs/handle-resolver": "workspace:*",
     "@atproto-labs/identity-resolver": "workspace:*",

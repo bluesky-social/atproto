@@ -29,7 +29,7 @@ function encodeKey(key: Key): EncodedKey {
 }
 
 async function decodeKey(encoded: EncodedKey): Promise<Key> {
-  return WebcryptoKey.fromKeypair(encoded.keyId, encoded.keyPair)
+  return WebcryptoKey.fromKeypair(encoded.keyPair, encoded.keyId)
 }
 
 export type Schema = {

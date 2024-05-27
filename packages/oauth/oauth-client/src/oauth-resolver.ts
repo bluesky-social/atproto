@@ -33,19 +33,29 @@ export class OAuthResolver {
     input: string,
     options?: IdentityResolveOptions,
   ): Promise<ResolvedIdentity> {
-    return this.identityResolver.resolve(
-      input,
-      'AtprotoPersonalDataServer',
-      options,
-    )
+    try {
+      return await this.identityResolver.resolve(input, options)
+    } catch (cause) {
+      throw OAuthResolverError.from(
+        cause,
+        `Failed to resolve identity: ${input}`,
+      )
+    }
   }
 
   public async resolveMetadata(
     issuer: string | URL,
     options?: MetadataResolveOptions,
   ) {
-    const { origin } = typeof issuer === 'string' ? new URL(issuer) : issuer
-    return this.metadataResolver.resolve(origin, options)
+    try {
+      const { origin } = typeof issuer === 'string' ? new URL(issuer) : issuer
+      return await this.metadataResolver.resolve(origin, options)
+    } catch (cause) {
+      throw OAuthResolverError.from(
+        cause,
+        `Failed to resolve OAuth server metadata for issuer: ${issuer}`,
+      )
+    }
   }
 
   public async resolve(
@@ -63,7 +73,7 @@ export class OAuthResolver {
       : await this.resolveIdentity(input, options)
 
     if (!ALLOW_UNSECURE && identity.url.protocol !== 'https:') {
-      throw new OAuthResolverError('Unsecure connections are not allowed')
+      throw new OAuthResolverError('Unsecure PDS URLs are not allowed')
     }
 
     const metadata = await this.resolveMetadata(identity.url, options)
