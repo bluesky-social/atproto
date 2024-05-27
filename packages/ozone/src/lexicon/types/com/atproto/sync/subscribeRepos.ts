@@ -78,7 +78,7 @@ export interface Identity {
   seq: number
   did: string
   time: string
-  didDoc?: {}
+  handle?: string
   [k: string]: unknown
 }
 

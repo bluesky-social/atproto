@@ -3567,8 +3567,9 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          didDoc: {
-            type: 'unknown',
+          handle: {
+            type: 'string',
+            format: 'handle',
           },
         },
       },
