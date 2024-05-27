@@ -45,15 +45,13 @@ export const formatAccountStatus = (account: {
   active: boolean
   status?: AccountStatus
 } => {
-  const active = !account.takedownRef && !account.deactivatedAt
   let status: AccountStatus | undefined = undefined
-  if (!active) {
-    if (account.takedownRef) {
-      status = AccountStatus.Takendown
-    } else if (account.deactivatedAt) {
-      status = AccountStatus.Deactivated
-    }
+  if (account.takedownRef) {
+    status = AccountStatus.Takendown
+  } else if (account.deactivatedAt) {
+    status = AccountStatus.Deactivated
   }
+  const active = !status
   return {
     active,
     status,

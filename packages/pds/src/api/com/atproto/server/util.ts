@@ -41,7 +41,6 @@ export const safeResolveDidDoc = async (
   }
 }
 
-// @TODO once supporting multiple pdses, validate pds in did doc based on allow-list.
 export const didDocForSession = async (
   ctx: AppContext,
   did: string,

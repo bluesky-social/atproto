@@ -74,7 +74,7 @@ export class AccountManager {
       includeTakenDown: true,
     })
     if (!got) {
-      return AccountStatus.Deactivated
+      return AccountStatus.Deleted
     } else if (got.takedownRef) {
       return AccountStatus.Takendown
     } else if (got.deactivatedAt) {
