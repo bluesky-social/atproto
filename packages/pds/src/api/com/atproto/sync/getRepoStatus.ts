@@ -1,23 +1,13 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { assertRepoAvailability } from './util'
-import { AccountStatus } from '../../../../account-manager'
+import { assertRepoAvailability, formatAccountStatus } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepoStatus({
     handler: async ({ params }) => {
       const { did } = params
       const account = await assertRepoAvailability(ctx, did, true)
-      const active = !account.takedownRef && !account.deactivatedAt
-
-      let status: string | undefined = undefined
-      if (!active) {
-        if (account.takedownRef) {
-          status = AccountStatus.Takendown
-        } else if (account.deactivatedAt) {
-          status = AccountStatus.Deactivated
-        }
-      }
+      const { active, status } = formatAccountStatus(account)
 
       let rev: string | undefined = undefined
       if (active) {

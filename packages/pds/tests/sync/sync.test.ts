@@ -248,6 +248,13 @@ describe('repo sync', () => {
       })
     })
 
+    it('lists as takendown in listRepos', async () => {
+      const res = await agent.api.com.atproto.sync.listRepos()
+      const found = res.data.repos.find((r) => r.did === did)
+      expect(found?.active).toBe(false)
+      expect(found?.status).toBe('takendown')
+    })
+
     it('does not sync repo unauthed', async () => {
       const tryGetRepo = agent.api.com.atproto.sync.getRepo({ did })
       await expect(tryGetRepo).rejects.toThrow(/Repo has been takendown/)

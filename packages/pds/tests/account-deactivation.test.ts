@@ -96,7 +96,9 @@ describe('account deactivation', () => {
       }),
     ).rejects.toThrow(/Repo has been deactivated/)
     const listedRepos = await agent.com.atproto.sync.listRepos()
-    expect(listedRepos.data.repos.find((r) => r.did === alice)).toBeUndefined()
+    const listedAlice = listedRepos.data.repos.find((r) => r.did === alice)
+    expect(listedAlice?.active).toBe(false)
+    expect(listedAlice?.status).toBe('deactivated')
   })
 
   it('no longer resolves handle', async () => {
