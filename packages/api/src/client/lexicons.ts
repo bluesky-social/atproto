@@ -3366,6 +3366,15 @@ export const schemaDict = {
           rev: {
             type: 'string',
           },
+          active: {
+            type: 'boolean',
+          },
+          status: {
+            type: 'string',
+            description:
+              'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+            knownValues: ['takendown', 'suspended', 'deactivated'],
+          },
         },
       },
     },
@@ -3607,8 +3616,7 @@ export const schemaDict = {
       },
       handle: {
         type: 'object',
-        description:
-          "Represents an update of the account's handle, or transition to/from invalid state. NOTE: Will be deprecated in favor of #identity.",
+        description: 'DEPRECATED -- Use #identity event instead',
         required: ['seq', 'did', 'handle', 'time'],
         properties: {
           seq: {
@@ -3630,8 +3638,7 @@ export const schemaDict = {
       },
       migrate: {
         type: 'object',
-        description:
-          'Represents an account moving from one PDS instance to another. NOTE: not implemented; account migration uses #identity instead',
+        description: 'DEPRECATED -- Use #account event instead',
         required: ['seq', 'did', 'migrateTo', 'time'],
         nullable: ['migrateTo'],
         properties: {
@@ -3653,8 +3660,7 @@ export const schemaDict = {
       },
       tombstone: {
         type: 'object',
-        description:
-          'Indicates that an account has been deleted. NOTE: may be deprecated in favor of #identity or a future #account event',
+        description: 'DEPRECATED -- Use #account event instead',
         required: ['seq', 'did', 'time'],
         properties: {
           seq: {
