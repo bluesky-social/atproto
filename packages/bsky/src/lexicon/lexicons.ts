@@ -3570,6 +3570,8 @@ export const schemaDict = {
           handle: {
             type: 'string',
             format: 'handle',
+            description:
+              "The current handle for the account, or 'handle.invalid' if validation fails. This field is optional, might have been validated or passed-through from an upstream source. Semantics and behaviors for PDS vs Relay may evolve in the future; see atproto specs for more details.",
           },
         },
       },
