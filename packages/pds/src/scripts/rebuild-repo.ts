@@ -1,4 +1,4 @@
-import readline from 'node:readline'
+import readline from 'node:readline/promises'
 import { CID } from 'multiformats/cid'
 import {
   BlockMap,
@@ -127,17 +127,13 @@ const listAllRecords = async (
   return records
 }
 
-const promptContinue = (): Promise<boolean> => {
+const promptContinue = async (): Promise<boolean> => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   })
-
-  return new Promise<boolean>((resolve) => {
-    rl.question('Continue? y/n', (answer) => {
-      resolve(answer === 'y')
-    })
-  })
+  const answer = await rl.question('Continue? y/n ')
+  return answer === ''
 }
 
 type RecordDescript = {
