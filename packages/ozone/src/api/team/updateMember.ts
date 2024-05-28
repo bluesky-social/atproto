@@ -5,7 +5,7 @@ import { getMemberRole } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.team.updateMember({
-    auth: ctx.authVerifier.moderator,
+    auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
@@ -25,7 +25,8 @@ export default function (server: Server, ctx: AppContext) {
       const updatedMember = await teamService.update(did, {
         disabled,
         role: getMemberRole(role),
-        lastUpdatedBy: access.iss,
+        lastUpdatedBy:
+          access.type === 'admin_token' ? 'admin_token' : access.iss,
       })
 
       return {
