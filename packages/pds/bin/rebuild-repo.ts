@@ -11,6 +11,21 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { TID } from '@atproto/common'
+import { envToCfg, envToSecrets, readEnv } from '../src/config'
+
+const run = async () => {
+  const env = readEnv()
+  const cfg = envToCfg(env)
+  const secrets = envToSecrets(env)
+  const ctx = await AppContext.fromConfig(cfg, secrets)
+  const did = process.argv[2]
+  if (!did || !did.startsWith('did:')) {
+    throw new Error('Expected DID as argument')
+  }
+  await rebuildRepo(ctx, did)
+}
+
+run()
 
 export const rebuildRepo = async (ctx: AppContext, did: string) => {
   const memoryStore = new MemoryBlockstore()
