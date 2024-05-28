@@ -30,6 +30,16 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
     for (const record of records) {
       mst = await mst.add(record.path, record.cid)
     }
+    const newBlocks = new BlockMap()
+    for await (const node of mst.walk()) {
+      if (node.isTree()) {
+        const pointer = await node.getPointer()
+        if (!existingCids.has(pointer)) {
+          const serialized = await node.serialize()
+          newBlocks.set(serialized.cid, serialized.bytes)
+        }
+      }
+    }
     const mstCids = await mst.allCids()
     const toDelete = new CidSet(existingCids.toList()).subtractSet(mstCids)
     const newCommit = await signCommit(
@@ -42,7 +52,6 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
       },
       store.repo.signingKey,
     )
-    const newBlocks = removeCidsFromBlocks(memoryStore.blocks, existingCids)
     const commitCid = await newBlocks.add(newCommit)
 
     console.log('Record count: ', records.length)
@@ -116,13 +125,6 @@ const listAllRecords = async (
     cursor = res.at(-1)?.uri
   }
   return records
-}
-
-const removeCidsFromBlocks = (blocks: BlockMap, toRemove: CidSet): BlockMap => {
-  for (const cid of toRemove.toList()) {
-    blocks.delete(cid)
-  }
-  return blocks
 }
 
 const rl = readline.createInterface({
