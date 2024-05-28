@@ -22,7 +22,7 @@ Array [
     "reportedBy": "user(1)",
     "subject": Object {
       "$type": "chat.bsky.convo.defs#messageRef",
-      "convoId": "testconvoid2",
+      "convoId": "",
       "did": "user(1)",
       "messageId": "testmessageid2",
     },

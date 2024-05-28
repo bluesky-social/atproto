@@ -20,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
           !info.profileTakedownRef || includeTakedowns
             ? info.profile
             : undefined
+
         return {
           did,
           handle: info.handle ?? INVALID_HANDLE,

@@ -23,6 +23,7 @@ export enum AuthScope {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
+  AppPassPrivileged = 'com.atproto.appPassPrivileged',
   Deactivated = 'com.atproto.deactivated',
 }
 
@@ -117,6 +118,7 @@ export class AuthVerifier {
   access = (ctx: ReqCtx): Promise<AccessOutput> => {
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
+      AuthScope.AppPassPrivileged,
       AuthScope.AppPass,
     ])
   }
@@ -124,6 +126,7 @@ export class AuthVerifier {
   accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessOutput> => {
     const result = await this.validateAccessToken(ctx.req, [
       AuthScope.Access,
+      AuthScope.AppPassPrivileged,
       AuthScope.AppPass,
     ])
     const found = await this.accountManager.getAccount(result.credentials.did, {
@@ -142,14 +145,22 @@ export class AuthVerifier {
     return result
   }
 
-  accessNotAppPassword = (ctx: ReqCtx): Promise<AccessOutput> => {
+  accessFull = (ctx: ReqCtx): Promise<AccessOutput> => {
     return this.validateAccessToken(ctx.req, [AuthScope.Access])
+  }
+
+  accessAppPassPrivileged = (ctx: ReqCtx): Promise<AccessOutput> => {
+    return this.validateAccessToken(ctx.req, [
+      AuthScope.Access,
+      AuthScope.AppPassPrivileged,
+    ])
   }
 
   accessDeactived = (ctx: ReqCtx): Promise<AccessOutput> => {
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
+      AuthScope.AppPassPrivileged,
       AuthScope.Deactivated,
     ])
   }

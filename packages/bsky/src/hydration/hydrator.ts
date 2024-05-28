@@ -219,7 +219,7 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [lists, listViewers, labels] = await Promise.all([
-      this.graph.getLists(uris),
+      this.graph.getLists(uris, ctx.includeTakedowns),
       ctx.viewer ? this.graph.getListViewerStates(uris, ctx.viewer) : undefined,
       this.label.getLabelsForSubjects(uris, ctx.labelers),
     ])

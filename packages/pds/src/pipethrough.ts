@@ -3,7 +3,7 @@ import * as ui8 from 'uint8arrays'
 import net from 'node:net'
 import stream from 'node:stream'
 import webStream from 'node:stream/web'
-import { jsonToLex } from '@atproto/lexicon'
+import { LexValue, jsonToLex, stringifyLex } from '@atproto/lexicon'
 import {
   CatchallHandler,
   HandlerPipeThrough,
@@ -41,6 +41,22 @@ export const pipethrough = async (
   const { url, aud } = await formatUrlAndAud(ctx, req, audOverride)
   const headers = await formatHeaders(ctx, req, aud, requester)
   const reqInit = formatReqInit(req, headers)
+  const res = await makeRequest(url, reqInit)
+  return parseProxyRes(res)
+}
+
+export const pipethroughProcedure = async (
+  ctx: AppContext,
+  req: express.Request,
+  requester: string | null,
+  body?: LexValue,
+): Promise<HandlerPipeThrough> => {
+  const { url, aud } = await formatUrlAndAud(ctx, req)
+  const headers = await formatHeaders(ctx, req, aud, requester)
+  const encodedBody = body
+    ? new TextEncoder().encode(stringifyLex(body))
+    : undefined
+  const reqInit = formatReqInit(req, headers, encodedBody)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
 }

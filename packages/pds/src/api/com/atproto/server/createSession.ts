@@ -6,6 +6,7 @@ import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
 import { authPassthru, resultPassthru } from '../../../proxy'
+import { AppPassDescript } from '../../../../account-manager/helpers/password'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -48,17 +49,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Invalid identifier or password')
       }
 
-      let appPasswordName: string | null = null
+      let appPassword: AppPassDescript | null = null
       const validAccountPass = await ctx.accountManager.verifyAccountPassword(
         user.did,
         password,
       )
       if (!validAccountPass) {
-        appPasswordName = await ctx.accountManager.verifyAppPassword(
+        appPassword = await ctx.accountManager.verifyAppPassword(
           user.did,
           password,
         )
-        if (appPasswordName === null) {
+        if (appPassword === null) {
           throw new AuthRequiredError('Invalid identifier or password')
         }
       }
@@ -71,7 +72,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
-        ctx.accountManager.createSession(user.did, appPasswordName),
+        ctx.accountManager.createSession(user.did, appPassword),
         didDocForSession(ctx, user.did),
       ])
 

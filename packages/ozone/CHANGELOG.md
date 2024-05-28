@@ -1,5 +1,21 @@
 # @atproto/ozone
 
+## 0.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`1d4ab5d04`](https://github.com/bluesky-social/atproto/commit/1d4ab5d046aac4539658ee6d7e61882c54d5beb9)]:
+  - @atproto/api@0.12.13
+
+## 0.1.16
+
+### Patch Changes
+
+- [#2442](https://github.com/bluesky-social/atproto/pull/2442) [`1f560f021`](https://github.com/bluesky-social/atproto/commit/1f560f021c07eb9e8d76577e67fd2d7ac39cdee4) Thanks [@foysalit](https://github.com/foysalit)! - Add com.atproto.label.queryLabels endpoint on appview and allow viewing external labels through ozone
+
+- Updated dependencies [[`1f560f021`](https://github.com/bluesky-social/atproto/commit/1f560f021c07eb9e8d76577e67fd2d7ac39cdee4)]:
+  - @atproto/api@0.12.12
+
 ## 0.1.15
 
 ### Patch Changes

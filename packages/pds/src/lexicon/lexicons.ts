@@ -2052,6 +2052,11 @@ export const schemaDict = {
                 description:
                   'A short name for the App Password, to help distinguish them.',
               },
+              privileged: {
+                type: 'boolean',
+                description:
+                  "If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients.",
+              },
             },
           },
         },
@@ -2081,6 +2086,9 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          privileged: {
+            type: 'boolean',
           },
         },
       },
@@ -2628,6 +2636,9 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          privileged: {
+            type: 'boolean',
           },
         },
       },
