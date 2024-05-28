@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.28
+
+### Patch Changes
+
+- [#2522](https://github.com/bluesky-social/atproto/pull/2522) [`53551be6c`](https://github.com/bluesky-social/atproto/commit/53551be6cf092a9b4d2e132788b94ac0d4ffcecc) Thanks [@devinivy](https://github.com/devinivy)! - Set max-age CORS header to max practical value
+
 ## 0.4.27
 
 ### Patch Changes
