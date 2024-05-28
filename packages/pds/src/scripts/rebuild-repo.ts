@@ -127,12 +127,12 @@ const listAllRecords = async (
   return records
 }
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-})
-
 const promptContinue = (): Promise<boolean> => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  })
+
   return new Promise<boolean>((resolve) => {
     rl.question('Continue? y/n', (answer) => {
       resolve(answer === 'y')
