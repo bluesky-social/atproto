@@ -1,6 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { ActorStoreTransactor } from '../src/actor-store'
-import AppContext from '../src/context'
 import {
   BlockMap,
   CidSet,
@@ -11,23 +9,15 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { TID } from '@atproto/common'
-import { envToCfg, envToSecrets, readEnv } from '../src/config'
+import { ActorStoreTransactor } from '../actor-store'
+import AppContext from '../context'
 
-const run = async () => {
-  const env = readEnv()
-  const cfg = envToCfg(env)
-  const secrets = envToSecrets(env)
-  const ctx = await AppContext.fromConfig(cfg, secrets)
-  const did = process.argv[2]
+export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
+  const did = args[0]
   if (!did || !did.startsWith('did:')) {
     throw new Error('Expected DID as argument')
   }
-  await rebuildRepo(ctx, did)
-}
 
-run()
-
-export const rebuildRepo = async (ctx: AppContext, did: string) => {
   const memoryStore = new MemoryBlockstore()
   const rev = TID.nextStr()
   const commit = await ctx.actorStore.transact(did, async (store) => {

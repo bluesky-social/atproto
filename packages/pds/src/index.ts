@@ -33,6 +33,7 @@ export { createServer as createLexiconServer } from './lexicon'
 export * as sequencer from './sequencer'
 export { type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
+export { scripts } from './scripts'
 
 export class PDS {
   public ctx: AppContext
