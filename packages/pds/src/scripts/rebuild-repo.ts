@@ -1,3 +1,4 @@
+import readline from 'node:readline'
 import { CID } from 'multiformats/cid'
 import {
   BlockMap,
@@ -29,9 +30,19 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
     for (const record of records) {
       mst = await mst.add(record.path, record.cid)
     }
-
     const mstCids = await mst.allCids()
     const toDelete = new CidSet(existingCids.toList()).subtractSet(mstCids)
+    const toAdd = removeCidsFromBlocks(memoryStore.blocks, existingCids)
+    console.log('Record count: ', records.length)
+    console.log('Existing blocks: ', existingCids.toList().length)
+    console.log('Deleting blocks:', toDelete.toList().length)
+    console.log('Adding blocks: ', toAdd.size)
+
+    const shouldContinue = await promptContinue()
+    if (!shouldContinue) {
+      throw new Error('Aborted')
+    }
+
     await store.repo.storage.deleteMany(toDelete.toList())
     const newCommit = await signCommit(
       {
@@ -46,7 +57,6 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
     // we only include the commit block in "new blocks" (which is what gets sequenced)
     const newBlocks = new BlockMap()
     const commitCid = await newBlocks.add(newCommit)
-    const toAdd = memoryStore.blocks
     toAdd.addMap(newBlocks)
     await store.repo.storage.putMany(toAdd, rev)
     await store.repo.storage.updateRoot(commitCid, rev)
@@ -108,6 +118,26 @@ const listAllRecords = async (
     cursor = res.at(-1)?.uri
   }
   return records
+}
+
+const removeCidsFromBlocks = (blocks: BlockMap, toRemove: CidSet): BlockMap => {
+  for (const cid of toRemove.toList()) {
+    blocks.delete(cid)
+  }
+  return blocks
+}
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+})
+
+const promptContinue = (): Promise<boolean> => {
+  return new Promise<boolean>((resolve) => {
+    rl.question('Continue? y/n', (answer) => {
+      resolve(answer === 'y')
+    })
+  })
 }
 
 type RecordDescript = {

@@ -20,6 +20,7 @@ const main = async () => {
     throw new Error(`could not find script: ${scriptName}`)
   }
   await script(ctx, process.argv.slice(3))
+  console.log('DONE')
 }
 
 main()
