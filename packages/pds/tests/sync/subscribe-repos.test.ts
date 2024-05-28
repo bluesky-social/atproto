@@ -422,12 +422,69 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     // @NOTE requires a larger slice because of over-emission on activateAccount - see note on route
-    const accountEvts = getAccountEvts(evts.slice(-7))
+    const accountEvts = getAccountEvts(evts.slice(-6))
     expect(accountEvts.length).toBe(4)
     verifyAccountEvent(accountEvts[0], alice, false, AccountStatus.Deactivated)
     verifyAccountEvent(accountEvts[1], alice, true)
     verifyAccountEvent(accountEvts[2], bob, false, AccountStatus.Takendown)
     verifyAccountEvent(accountEvts[3], bob, true)
+  })
+
+  it('syncs interleaved account events', async () => {
+    // deactivate -> takedown -> restore -> activate
+    // deactivate then reactivate alice
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      },
+    )
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        takedown: { applied: false },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    await agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(alice),
+    })
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    // @NOTE requires a larger slice because of over-emission on activateAccount - see note on route
+    const accountEvts = getAccountEvts(evts.slice(-6))
+    expect(accountEvts.length).toBe(4)
+    verifyAccountEvent(accountEvts[0], alice, false, AccountStatus.Deactivated)
+    verifyAccountEvent(accountEvts[1], alice, false, AccountStatus.Takendown)
+    verifyAccountEvent(accountEvts[2], alice, false, AccountStatus.Deactivated)
+    verifyAccountEvent(accountEvts[3], alice, true)
   })
 
   it('syncs tombstones', async () => {
