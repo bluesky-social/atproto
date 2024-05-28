@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - rebuild-repo
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
