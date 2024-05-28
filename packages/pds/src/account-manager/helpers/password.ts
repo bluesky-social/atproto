@@ -41,7 +41,7 @@ export const verifyAppPassword = async (
   }
 }
 
-export const updateUserPassword = async (
+export const updateMemberPassword = async (
   db: AccountDb,
   opts: {
     did: string

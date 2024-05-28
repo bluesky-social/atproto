@@ -10542,14 +10542,13 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneModeratorAddUser: {
+  ToolsOzoneTeamAddMember: {
     lexicon: 1,
-    id: 'tools.ozone.moderator.addUser',
+    id: 'tools.ozone.team.addMember',
     defs: {
       main: {
         type: 'procedure',
-        description:
-          'Add a user as moderator in the ozone service. Requires admin role.',
+        description: 'Add a member to the ozone team. Requires admin role.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10563,9 +10562,9 @@ export const schemaDict = {
               role: {
                 type: 'string',
                 knownValues: [
-                  'tools.ozone.moderator.defs#modRoleAdmin',
-                  'tools.ozone.moderator.defs#modRoleModerator',
-                  'tools.ozone.moderator.defs#modRoleTriage',
+                  'tools.ozone.team.defs#roleAdmin',
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
                 ],
               },
             },
@@ -10575,30 +10574,26 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:tools.ozone.moderator.defs#user',
+            ref: 'lex:tools.ozone.team.defs#member',
           },
         },
         errors: [
           {
-            name: 'UserAlreadyExists',
-            description: 'The user is already a moderator',
+            name: 'MemberAlreadyExists',
+            description: 'Member already exists in the team.',
           },
         ],
       },
     },
   },
-  ToolsOzoneModeratorDefs: {
+  ToolsOzoneTeamDefs: {
     lexicon: 1,
-    id: 'tools.ozone.moderator.defs',
+    id: 'tools.ozone.team.defs',
     defs: {
-      user: {
+      member: {
         type: 'object',
         required: ['did', 'role'],
         properties: {
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
           did: {
             type: 'string',
             format: 'did',
@@ -10610,40 +10605,50 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
           },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastUpdatedBy: {
+            type: 'string',
+          },
           role: {
             type: 'string',
             knownValues: [
-              'lex:tools.ozone.moderator.defs#modRoleAdmin',
-              'lex:tools.ozone.moderator.defs#modRoleModerator',
-              'lex:tools.ozone.moderator.defs#modRoleTriage',
+              'lex:tools.ozone.team.defs#roleAdmin',
+              'lex:tools.ozone.team.defs#roleModerator',
+              'lex:tools.ozone.team.defs#roleTriage',
             ],
           },
         },
       },
-      modRoleAdmin: {
+      roleAdmin: {
         type: 'token',
         description:
           'Admin role. Highest level of access, can perform all actions.',
       },
-      modRoleModerator: {
+      roleModerator: {
         type: 'token',
         description: 'Moderator role. Can perform most actions.',
       },
-      modRoleTriage: {
+      roleTriage: {
         type: 'token',
         description:
           'Triage role. Mostly intended for monitoring and escalating issues.',
       },
     },
   },
-  ToolsOzoneModeratorDeleteUser: {
+  ToolsOzoneTeamDeleteMember: {
     lexicon: 1,
-    id: 'tools.ozone.moderator.deleteUser',
+    id: 'tools.ozone.team.deleteMember',
     defs: {
       main: {
         type: 'procedure',
-        description:
-          "Delete a user from moderator's list in the ozone service. Requires admin role.",
+        description: 'Delete a member from ozone team. Requires admin role.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10659,26 +10664,21 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'ModeratorNotFound',
-            description: 'The user being deleted is not a moderator',
-          },
-          {
-            name: 'OnlyRemainingAdmin',
-            description:
-              'There must always be at least one moderator with admin access',
+            name: 'MemberNotFound',
+            description: 'The member being deleted does not exist',
           },
         ],
       },
     },
   },
-  ToolsOzoneModeratorListUsers: {
+  ToolsOzoneTeamListMembers: {
     lexicon: 1,
-    id: 'tools.ozone.moderator.listUsers',
+    id: 'tools.ozone.team.listMembers',
     defs: {
       main: {
         type: 'query',
         description:
-          'List all users with access to the ozone service. Any ozone user can access this endpoint.',
+          'List all members with access to the ozone service. Any ozone member can access this endpoint.',
         parameters: {
           type: 'params',
           properties: {
@@ -10697,16 +10697,16 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['users'],
+            required: ['members'],
             properties: {
               cursor: {
                 type: 'string',
               },
-              users: {
+              members: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:tools.ozone.moderator.defs#user',
+                  ref: 'lex:tools.ozone.team.defs#member',
                 },
               },
             },
@@ -10715,9 +10715,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneModeratorUpdateUser: {
+  ToolsOzoneTeamUpdateMember: {
     lexicon: 1,
-    id: 'tools.ozone.moderator.updateUser',
+    id: 'tools.ozone.team.updateMember',
     defs: {
       main: {
         type: 'procedure',
@@ -10739,9 +10739,9 @@ export const schemaDict = {
               role: {
                 type: 'string',
                 knownValues: [
-                  'tools.ozone.moderator.defs#modRoleAdmin',
-                  'tools.ozone.moderator.defs#modRoleModerator',
-                  'tools.ozone.moderator.defs#modRoleTriage',
+                  'tools.ozone.team.defs#roleAdmin',
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
                 ],
               },
             },
@@ -10751,7 +10751,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:tools.ozone.moderator.defs#user',
+            ref: 'lex:tools.ozone.team.defs#member',
           },
         },
         errors: [
@@ -10967,9 +10967,9 @@ export const ids = {
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
-  ToolsOzoneModeratorAddUser: 'tools.ozone.moderator.addUser',
-  ToolsOzoneModeratorDefs: 'tools.ozone.moderator.defs',
-  ToolsOzoneModeratorDeleteUser: 'tools.ozone.moderator.deleteUser',
-  ToolsOzoneModeratorListUsers: 'tools.ozone.moderator.listUsers',
-  ToolsOzoneModeratorUpdateUser: 'tools.ozone.moderator.updateUser',
+  ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
+  ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
+  ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',
+  ToolsOzoneTeamListMembers: 'tools.ozone.team.listMembers',
+  ToolsOzoneTeamUpdateMember: 'tools.ozone.team.updateMember',
 }

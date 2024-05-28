@@ -12,7 +12,7 @@ import { dbLogger, loggerMiddleware } from './logger'
 import { OzoneConfig, OzoneSecrets } from './config'
 import { createServer } from './lexicon'
 import AppContext, { AppContextOptions } from './context'
-import { Moderator } from './db/schema/moderator'
+import { Member } from './db/schema/member'
 
 export * from './config'
 export { type ImageInvalidator } from './image-invalidator'
@@ -65,31 +65,31 @@ export class OzoneService {
     return new OzoneService({ ctx, app })
   }
 
-  async seedInitialModerators() {
-    const moderators: Array<{ role: Moderator['role']; did: string }> = []
+  async seedInitialMembers() {
+    const members: Array<{ role: Member['role']; did: string }> = []
     this.ctx.cfg.access.admins.forEach((did) =>
-      moderators.push({
-        role: 'tools.ozone.moderator.defs#modRoleAdmin',
+      members.push({
+        role: 'tools.ozone.team.defs#roleAdmin',
         did,
       }),
     )
     this.ctx.cfg.access.triage.forEach((did) =>
-      moderators.push({
-        role: 'tools.ozone.moderator.defs#modRoleTriage',
+      members.push({
+        role: 'tools.ozone.team.defs#roleTriage',
         did,
       }),
     )
     this.ctx.cfg.access.moderators.forEach((did) =>
-      moderators.push({
-        role: 'tools.ozone.moderator.defs#modRoleModerator',
+      members.push({
+        role: 'tools.ozone.team.defs#roleModerator',
         did,
       }),
     )
 
-    for (const mod of moderators) {
-      const service = this.ctx.moderatorService(this.ctx.db)
+    for (const member of members) {
+      const service = this.ctx.teamService(this.ctx.db)
       await service.upsert({
-        ...mod,
+        ...member,
         lastUpdatedBy: this.ctx.cfg.service.did,
       })
     }
@@ -102,7 +102,7 @@ export class OzoneService {
 
     // Any moderator that are configured via env var may not exist in the database
     // so we need to sync them from env var to the database
-    await this.seedInitialModerators()
+    await this.seedInitialMembers()
 
     const { db, backgroundQueue } = this.ctx
     this.dbStatsInterval = setInterval(() => {

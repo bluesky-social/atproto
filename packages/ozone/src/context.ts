@@ -18,7 +18,7 @@ import {
 import { BlobDiverter } from './daemon/blob-diverter'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
-import { ModeratorService, ModeratorServiceCreator } from './moderator'
+import { TeamService, TeamServiceCreator } from './team'
 import {
   defaultLabelerHeader,
   getSigningKeyId,
@@ -32,7 +32,7 @@ export type AppContextOptions = {
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
-  moderatorService: ModeratorServiceCreator
+  teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
   chatAgent: AtpAgent | undefined
@@ -109,14 +109,14 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
-    const moderatorService = ModeratorService.creator()
+    const teamService = TeamService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
     const authVerifier = new AuthVerifier(idResolver, {
       serviceDid: cfg.service.did,
       adminPassword: secrets.adminPassword,
-      moderatorService: moderatorService(db),
+      teamService: teamService(db),
     })
 
     return new AppContext(
@@ -125,7 +125,7 @@ export class AppContext {
         cfg,
         modService,
         communicationTemplateService,
-        moderatorService,
+        teamService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -170,8 +170,8 @@ export class AppContext {
     return this.opts.communicationTemplateService
   }
 
-  get moderatorService(): ModeratorServiceCreator {
-    return this.opts.moderatorService
+  get teamService(): TeamServiceCreator {
+    return this.opts.teamService
   }
 
   get appviewAgent(): AtpAgent {

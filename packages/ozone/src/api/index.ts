@@ -15,10 +15,10 @@ import createTemplate from './communication/createTemplate'
 import updateTemplate from './communication/updateTemplate'
 import deleteTemplate from './communication/deleteTemplate'
 import listTemplates from './communication/listTemplates'
-import addUser from './moderator/addUser'
-import updateUser from './moderator/updateUser'
-import deleteUser from './moderator/deleteUser'
-import listUsers from './moderator/listUsers'
+import addMember from './team/addMember'
+import updateMember from './team/updateMember'
+import deleteMember from './team/deleteMember'
+import listMembers from './team/listMembers'
 import chat from './chat'
 import proxied from './proxied'
 
@@ -42,10 +42,10 @@ export default function (server: Server, ctx: AppContext) {
   createTemplate(server, ctx)
   updateTemplate(server, ctx)
   deleteTemplate(server, ctx)
-  listUsers(server, ctx)
-  addUser(server, ctx)
-  updateUser(server, ctx)
-  deleteUser(server, ctx)
+  listMembers(server, ctx)
+  addMember(server, ctx)
+  updateMember(server, ctx)
+  deleteMember(server, ctx)
   chat(server, ctx)
   proxied(server, ctx)
   return server

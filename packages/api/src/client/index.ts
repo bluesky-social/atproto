@@ -187,11 +187,11 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
-import * as ToolsOzoneModeratorAddUser from './types/tools/ozone/moderator/addUser'
-import * as ToolsOzoneModeratorDefs from './types/tools/ozone/moderator/defs'
-import * as ToolsOzoneModeratorDeleteUser from './types/tools/ozone/moderator/deleteUser'
-import * as ToolsOzoneModeratorListUsers from './types/tools/ozone/moderator/listUsers'
-import * as ToolsOzoneModeratorUpdateUser from './types/tools/ozone/moderator/updateUser'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -373,11 +373,11 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
-export * as ToolsOzoneModeratorAddUser from './types/tools/ozone/moderator/addUser'
-export * as ToolsOzoneModeratorDefs from './types/tools/ozone/moderator/defs'
-export * as ToolsOzoneModeratorDeleteUser from './types/tools/ozone/moderator/deleteUser'
-export * as ToolsOzoneModeratorListUsers from './types/tools/ozone/moderator/listUsers'
-export * as ToolsOzoneModeratorUpdateUser from './types/tools/ozone/moderator/updateUser'
+export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -412,10 +412,10 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
 }
-export const TOOLS_OZONE_MODERATOR = {
-  DefsModRoleAdmin: 'tools.ozone.moderator.defs#modRoleAdmin',
-  DefsModRoleModerator: 'tools.ozone.moderator.defs#modRoleModerator',
-  DefsModRoleTriage: 'tools.ozone.moderator.defs#modRoleTriage',
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
 }
 
 export class AtpBaseClient {
@@ -3065,13 +3065,13 @@ export class ToolsOzoneNS {
   _service: AtpServiceClient
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
-  moderator: ToolsOzoneModeratorNS
+  team: ToolsOzoneTeamNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
-    this.moderator = new ToolsOzoneModeratorNS(service)
+    this.team = new ToolsOzoneTeamNS(service)
   }
 }
 
@@ -3212,54 +3212,54 @@ export class ToolsOzoneModerationNS {
   }
 }
 
-export class ToolsOzoneModeratorNS {
+export class ToolsOzoneTeamNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
   }
 
-  addUser(
-    data?: ToolsOzoneModeratorAddUser.InputSchema,
-    opts?: ToolsOzoneModeratorAddUser.CallOptions,
-  ): Promise<ToolsOzoneModeratorAddUser.Response> {
+  addMember(
+    data?: ToolsOzoneTeamAddMember.InputSchema,
+    opts?: ToolsOzoneTeamAddMember.CallOptions,
+  ): Promise<ToolsOzoneTeamAddMember.Response> {
     return this._service.xrpc
-      .call('tools.ozone.moderator.addUser', opts?.qp, data, opts)
+      .call('tools.ozone.team.addMember', opts?.qp, data, opts)
       .catch((e) => {
-        throw ToolsOzoneModeratorAddUser.toKnownErr(e)
+        throw ToolsOzoneTeamAddMember.toKnownErr(e)
       })
   }
 
-  deleteUser(
-    data?: ToolsOzoneModeratorDeleteUser.InputSchema,
-    opts?: ToolsOzoneModeratorDeleteUser.CallOptions,
-  ): Promise<ToolsOzoneModeratorDeleteUser.Response> {
+  deleteMember(
+    data?: ToolsOzoneTeamDeleteMember.InputSchema,
+    opts?: ToolsOzoneTeamDeleteMember.CallOptions,
+  ): Promise<ToolsOzoneTeamDeleteMember.Response> {
     return this._service.xrpc
-      .call('tools.ozone.moderator.deleteUser', opts?.qp, data, opts)
+      .call('tools.ozone.team.deleteMember', opts?.qp, data, opts)
       .catch((e) => {
-        throw ToolsOzoneModeratorDeleteUser.toKnownErr(e)
+        throw ToolsOzoneTeamDeleteMember.toKnownErr(e)
       })
   }
 
-  listUsers(
-    params?: ToolsOzoneModeratorListUsers.QueryParams,
-    opts?: ToolsOzoneModeratorListUsers.CallOptions,
-  ): Promise<ToolsOzoneModeratorListUsers.Response> {
+  listMembers(
+    params?: ToolsOzoneTeamListMembers.QueryParams,
+    opts?: ToolsOzoneTeamListMembers.CallOptions,
+  ): Promise<ToolsOzoneTeamListMembers.Response> {
     return this._service.xrpc
-      .call('tools.ozone.moderator.listUsers', params, undefined, opts)
+      .call('tools.ozone.team.listMembers', params, undefined, opts)
       .catch((e) => {
-        throw ToolsOzoneModeratorListUsers.toKnownErr(e)
+        throw ToolsOzoneTeamListMembers.toKnownErr(e)
       })
   }
 
-  updateUser(
-    data?: ToolsOzoneModeratorUpdateUser.InputSchema,
-    opts?: ToolsOzoneModeratorUpdateUser.CallOptions,
-  ): Promise<ToolsOzoneModeratorUpdateUser.Response> {
+  updateMember(
+    data?: ToolsOzoneTeamUpdateMember.InputSchema,
+    opts?: ToolsOzoneTeamUpdateMember.CallOptions,
+  ): Promise<ToolsOzoneTeamUpdateMember.Response> {
     return this._service.xrpc
-      .call('tools.ozone.moderator.updateUser', opts?.qp, data, opts)
+      .call('tools.ozone.team.updateMember', opts?.qp, data, opts)
       .catch((e) => {
-        throw ToolsOzoneModeratorUpdateUser.toKnownErr(e)
+        throw ToolsOzoneTeamUpdateMember.toKnownErr(e)
       })
   }
 }

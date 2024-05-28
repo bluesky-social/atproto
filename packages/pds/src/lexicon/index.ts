@@ -157,10 +157,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
-import * as ToolsOzoneModeratorAddUser from './types/tools/ozone/moderator/addUser'
-import * as ToolsOzoneModeratorDeleteUser from './types/tools/ozone/moderator/deleteUser'
-import * as ToolsOzoneModeratorListUsers from './types/tools/ozone/moderator/listUsers'
-import * as ToolsOzoneModeratorUpdateUser from './types/tools/ozone/moderator/updateUser'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -195,10 +195,10 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
 }
-export const TOOLS_OZONE_MODERATOR = {
-  DefsModRoleAdmin: 'tools.ozone.moderator.defs#modRoleAdmin',
-  DefsModRoleModerator: 'tools.ozone.moderator.defs#modRoleModerator',
-  DefsModRoleTriage: 'tools.ozone.moderator.defs#modRoleTriage',
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -1990,13 +1990,13 @@ export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
-  moderator: ToolsOzoneModeratorNS
+  team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
-    this.moderator = new ToolsOzoneModeratorNS(server)
+    this.team = new ToolsOzoneTeamNS(server)
   }
 }
 
@@ -2137,54 +2137,54 @@ export class ToolsOzoneModerationNS {
   }
 }
 
-export class ToolsOzoneModeratorNS {
+export class ToolsOzoneTeamNS {
   _server: Server
 
   constructor(server: Server) {
     this._server = server
   }
 
-  addUser<AV extends AuthVerifier>(
+  addMember<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneModeratorAddUser.Handler<ExtractAuth<AV>>,
-      ToolsOzoneModeratorAddUser.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneTeamAddMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamAddMember.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.moderator.addUser' // @ts-ignore
+    const nsid = 'tools.ozone.team.addMember' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  deleteUser<AV extends AuthVerifier>(
+  deleteMember<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneModeratorDeleteUser.Handler<ExtractAuth<AV>>,
-      ToolsOzoneModeratorDeleteUser.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneTeamDeleteMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamDeleteMember.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.moderator.deleteUser' // @ts-ignore
+    const nsid = 'tools.ozone.team.deleteMember' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  listUsers<AV extends AuthVerifier>(
+  listMembers<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneModeratorListUsers.Handler<ExtractAuth<AV>>,
-      ToolsOzoneModeratorListUsers.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneTeamListMembers.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamListMembers.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.moderator.listUsers' // @ts-ignore
+    const nsid = 'tools.ozone.team.listMembers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  updateUser<AV extends AuthVerifier>(
+  updateMember<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ToolsOzoneModeratorUpdateUser.Handler<ExtractAuth<AV>>,
-      ToolsOzoneModeratorUpdateUser.HandlerReqCtx<ExtractAuth<AV>>
+      ToolsOzoneTeamUpdateMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamUpdateMember.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'tools.ozone.moderator.updateUser' // @ts-ignore
+    const nsid = 'tools.ozone.team.updateMember' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

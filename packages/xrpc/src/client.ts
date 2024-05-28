@@ -115,6 +115,7 @@ export class ServiceClient {
         this.baseClient.lex.assertValidXrpcOutput(methodNsid, res.body)
       } catch (e: any) {
         if (e instanceof ValidationError) {
+          console.error(e)
           throw new XRPCInvalidResponseError(methodNsid, e, res.body)
         } else {
           throw e
