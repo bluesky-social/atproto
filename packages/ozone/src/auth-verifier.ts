@@ -48,18 +48,12 @@ type NullOutput = {
 
 export type AuthVerifierOpts = {
   serviceDid: string
-  admins: string[]
-  moderators: string[]
-  triage: string[]
   adminPassword: string
   moderatorService: ModeratorService
 }
 
 export class AuthVerifier {
   serviceDid: string
-  admins: string[]
-  moderators: string[]
-  triage: string[]
   moderatorService: ModeratorService
   private adminPassword: string
 
@@ -68,9 +62,6 @@ export class AuthVerifier {
     opts: AuthVerifierOpts,
   ) {
     this.serviceDid = opts.serviceDid
-    this.admins = opts.admins
-    this.moderators = opts.moderators
-    this.triage = opts.triage
     this.adminPassword = opts.adminPassword
     this.moderatorService = opts.moderatorService
   }
