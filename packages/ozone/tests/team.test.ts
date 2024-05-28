@@ -51,7 +51,7 @@ describe('team management', () => {
   describe('deleteMember', () => {
     it('only allows admins to delete members', async () => {
       const {
-        data: { members: initialUsers },
+        data: { members: initialMembers },
       } = await adminAgent.api.tools.ozone.team.listMembers({})
       await expect(
         triageAgent.api.tools.ozone.team.deleteMember({
@@ -66,7 +66,7 @@ describe('team management', () => {
         data: { members: membersAfterDelete },
       } = await adminAgent.api.tools.ozone.team.listMembers({})
 
-      expect(membersAfterDelete.length).toEqual(initialUsers.length - 1)
+      expect(membersAfterDelete.length).toEqual(initialMembers.length - 1)
       expect(membersAfterDelete.map(({ did }) => did)).not.toContain(
         sc.dids.bob,
       )

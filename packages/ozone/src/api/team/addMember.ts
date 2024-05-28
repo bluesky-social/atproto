@@ -21,11 +21,11 @@ export default function (server: Server, ctx: AppContext) {
       if (alreadyExists) {
         throw new InvalidRequestError(
           'moderator already exists',
-          'UserAlreadyExists',
+          'MemberAlreadyExists',
         )
       }
 
-      const newUser = await teamService.create({
+      const newMember = await teamService.create({
         did,
         disabled: false,
         role: getMemberRole(role),
@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: teamService.view(newUser),
+        body: teamService.view(newMember),
       }
     },
   })

@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('member not found', 'MemberNotFound')
       }
 
-      const updatedUser = await teamService.update(did, {
+      const updatedMember = await teamService.update(did, {
         disabled,
         role: getMemberRole(role),
         lastUpdatedBy: access.iss,
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: teamService.view(updatedUser),
+        body: teamService.view(updatedMember),
       }
     },
   })
