@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { ActorStoreTransactor } from '../src/actor-store'
 import AppContext from '../src/context'
 import {
+  BlockMap,
   CidSet,
   MST,
   MemoryBlockstore,
@@ -14,7 +15,7 @@ import { TID } from '@atproto/common'
 export const rebuildRepo = async (ctx: AppContext, did: string) => {
   const memoryStore = new MemoryBlockstore()
   const rev = TID.nextStr()
-  await ctx.actorStore.transact(did, async (store) => {
+  const commit = await ctx.actorStore.transact(did, async (store) => {
     const [records, existingCids] = await Promise.all([
       listAllRecords(store),
       listExistingBlocks(store),
@@ -37,11 +38,24 @@ export const rebuildRepo = async (ctx: AppContext, did: string) => {
       },
       store.repo.signingKey,
     )
+    // we only include the commit block in "new blocks" (which is what gets sequenced)
+    const newBlocks = new BlockMap()
+    const commitCid = await newBlocks.add(newCommit)
     const toAdd = memoryStore.blocks
-    const commitCid = await toAdd.add(newCommit)
+    toAdd.addMap(newBlocks)
     await store.repo.storage.putMany(toAdd, rev)
     await store.repo.storage.updateRoot(commitCid, rev)
+    return {
+      cid: commitCid,
+      rev,
+      since: null,
+      prev: null,
+      newBlocks,
+      removedCids: toDelete,
+    }
   })
+  await ctx.accountManager.updateRepoRoot(did, commit.cid, rev)
+  await ctx.sequencer.sequenceCommit(did, commit, [])
 }
 
 const listExistingBlocks = async (
