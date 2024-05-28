@@ -60,7 +60,9 @@ describe('agent', () => {
     expect(agent.session?.email).toEqual('user1@test.com')
     expect(agent.session?.emailConfirmed).toEqual(false)
     assert(isValidDidDoc(res.data.didDoc))
-    expect(agent.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res.data.didDoc))
+    expect(agent.api.xrpc.uri.origin).toEqual(
+      new URL(getPdsEndpoint(res.data.didDoc)!).origin,
+    )
 
     const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
       {},
@@ -110,7 +112,9 @@ describe('agent', () => {
     expect(agent2.session?.email).toEqual('user2@test.com')
     expect(agent2.session?.emailConfirmed).toEqual(false)
     assert(isValidDidDoc(res1.data.didDoc))
-    expect(agent2.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res1.data.didDoc))
+    expect(agent2.api.xrpc.uri.origin).toEqual(
+      new URL(getPdsEndpoint(res1.data.didDoc)!).origin,
+    )
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
@@ -156,7 +160,9 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
     assert(isValidDidDoc(res1.data.didDoc))
-    expect(agent2.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res1.data.didDoc))
+    expect(agent2.api.xrpc.uri.origin).toEqual(
+      new URL(getPdsEndpoint(res1.data.didDoc)!).origin,
+    )
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
