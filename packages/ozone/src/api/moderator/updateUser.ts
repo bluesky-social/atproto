@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const newUser = await moderatorService.update(did, {
+      const updatedUser = await moderatorService.update(did, {
         disabled,
         role: getUserRole(role),
         lastUpdatedBy: access.iss,
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: moderatorService.view(newUser),
+        body: moderatorService.view(updatedUser),
       }
     },
   })

@@ -35,7 +35,7 @@ describe('moderator management', () => {
     await network.close()
   })
 
-  describe.only('listUsers', () => {
+  describe('listUsers', () => {
     it('allows all mods to list all users', async () => {
       const [{ data: forAdmin }, { data: forTriage }] = await Promise.all([
         adminAgent.api.tools.ozone.moderator.listUsers({}),

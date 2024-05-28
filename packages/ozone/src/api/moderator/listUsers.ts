@@ -27,30 +27,25 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderator.listUsers({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
-      try {
-        const moderatorService = ctx.moderatorService(ctx.db)
-        const { users, cursor } = await moderatorService.list(params)
+      const moderatorService = ctx.moderatorService(ctx.db)
+      const { users, cursor } = await moderatorService.list(params)
 
-        if (users?.length) {
-          await getProfiles(users.map((item) => item.did))
-        }
+      if (users?.length) {
+        await getProfiles(users.map((item) => item.did))
+      }
 
-        return {
-          encoding: 'application/json',
-          body: {
-            cursor,
-            users: users.map((item) => {
-              const profile = profileCache.get(item.did)
-              return {
-                ...item,
-                profile,
-              }
-            }),
-          },
-        }
-      } catch (err) {
-        console.error(err)
-        throw err
+      return {
+        encoding: 'application/json',
+        body: {
+          cursor,
+          users: users.map((item) => {
+            const profile = profileCache.get(item.did)
+            return {
+              ...item,
+              profile,
+            }
+          }),
+        },
       }
     },
   })
