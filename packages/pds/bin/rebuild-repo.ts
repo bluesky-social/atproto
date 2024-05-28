@@ -78,7 +78,7 @@ const listExistingBlocks = async (
 ): Promise<CidSet> => {
   const cids = new CidSet()
   let cursor: string | undefined = ''
-  while (cursor) {
+  while (cursor !== undefined) {
     const res = await store.db.db
       .selectFrom('repo_block')
       .select('cid')
@@ -99,7 +99,7 @@ const listAllRecords = async (
 ): Promise<RecordDescript[]> => {
   const records: RecordDescript[] = []
   let cursor: string | undefined = ''
-  while (cursor) {
+  while (cursor !== undefined) {
     const res = await store.db.db
       .selectFrom('record')
       .select(['uri', 'cid'])
