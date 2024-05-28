@@ -32,18 +32,6 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
     }
     const mstCids = await mst.allCids()
     const toDelete = new CidSet(existingCids.toList()).subtractSet(mstCids)
-    const toAdd = removeCidsFromBlocks(memoryStore.blocks, existingCids)
-    console.log('Record count: ', records.length)
-    console.log('Existing blocks: ', existingCids.toList().length)
-    console.log('Deleting blocks:', toDelete.toList().length)
-    console.log('Adding blocks: ', toAdd.size)
-
-    const shouldContinue = await promptContinue()
-    if (!shouldContinue) {
-      throw new Error('Aborted')
-    }
-
-    await store.repo.storage.deleteMany(toDelete.toList())
     const newCommit = await signCommit(
       {
         did,
@@ -54,11 +42,21 @@ export const rebuildRepo = async (ctx: AppContext, args: string[]) => {
       },
       store.repo.signingKey,
     )
-    // we only include the commit block in "new blocks" (which is what gets sequenced)
-    const newBlocks = new BlockMap()
+    const newBlocks = removeCidsFromBlocks(memoryStore.blocks, existingCids)
     const commitCid = await newBlocks.add(newCommit)
-    toAdd.addMap(newBlocks)
-    await store.repo.storage.putMany(toAdd, rev)
+
+    console.log('Record count: ', records.length)
+    console.log('Existing blocks: ', existingCids.toList().length)
+    console.log('Deleting blocks:', toDelete.toList().length)
+    console.log('Adding blocks: ', newBlocks.size)
+
+    const shouldContinue = await promptContinue()
+    if (!shouldContinue) {
+      throw new Error('Aborted')
+    }
+
+    await store.repo.storage.deleteMany(toDelete.toList())
+    await store.repo.storage.putMany(newBlocks, rev)
     await store.repo.storage.updateRoot(commitCid, rev)
     return {
       cid: commitCid,
