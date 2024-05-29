@@ -10677,8 +10677,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description:
-          'List all members with access to the ozone service. Any ozone member can access this endpoint.',
+        description: 'List all members with access to the ozone service.',
         parameters: {
           type: 'params',
           properties: {
@@ -10722,12 +10721,12 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Update a moderator user in the ozone service. Requires admin role.',
+          'Update a member in the ozone service. Requires admin role.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['did', 'role', 'disabled'],
+            required: ['did'],
             properties: {
               did: {
                 type: 'string',
@@ -10756,8 +10755,8 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'UserAlreadyExists',
-            description: 'The user is already a moderator',
+            name: 'MemberNotFound',
+            description: 'The member being updated does not exist in the team',
           },
         ],
       },

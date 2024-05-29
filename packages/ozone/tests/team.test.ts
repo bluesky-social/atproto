@@ -91,7 +91,6 @@ describe('team management', () => {
       ).rejects.toThrow('Must be an admin to update a member')
 
       await adminAgent.api.tools.ozone.team.updateMember({
-        disabled: true,
         did: sc.dids.carol,
         role: 'tools.ozone.team.defs#roleAdmin',
       })

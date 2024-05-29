@@ -9,29 +9,34 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { did, role, disabled } = input.body
+      const { did, role, ...rest } = input.body
 
       if (!access.isAdmin) {
         throw new AuthRequiredError('Must be an admin to update a member')
       }
-      const teamService = ctx.teamService(db)
 
-      const userExists = await teamService.doesMemberExist(did)
+      const updatedMember = await db.transaction(async (dbTxn) => {
+        const teamService = ctx.teamService(dbTxn)
 
-      if (!userExists) {
-        throw new InvalidRequestError('member not found', 'MemberNotFound')
-      }
+        const memberExists = await teamService.doesMemberExist(did)
 
-      const updatedMember = await teamService.update(did, {
-        disabled,
-        role: getMemberRole(role),
-        lastUpdatedBy:
-          access.type === 'admin_token' ? 'admin_token' : access.iss,
+        if (!memberExists) {
+          throw new InvalidRequestError('member not found', 'MemberNotFound')
+        }
+
+        const updated = await teamService.update(did, {
+          ...rest,
+          ...(role ? { role: getMemberRole(role) } : {}),
+          lastUpdatedBy:
+            access.type === 'admin_token' ? 'admin_token' : access.iss,
+        })
+        const memberView = await teamService.view([updated], ctx)
+        return memberView[0]
       })
 
       return {
         encoding: 'application/json',
-        body: teamService.view(updatedMember),
+        body: updatedMember,
       }
     },
   })

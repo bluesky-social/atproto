@@ -2,7 +2,11 @@ import Database from '../db'
 import { Selectable } from 'kysely'
 import { Member } from '../db/schema/member'
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
+import { ProfileViewDetailed } from '../lexicon/types/app/bsky/actor/defs'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { chunkArray } from '@atproto/common'
+import AppContext from '../context'
+import { httpLogger } from '../logger'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 
@@ -44,7 +48,7 @@ export class TeamService {
     updatedAt?: Date
   }): Promise<Selectable<Member>> {
     const now = new Date()
-    const newModerator = await this.db.db
+    const newMember = await this.db.db
       .insertInto('member')
       .values({
         role,
@@ -57,7 +61,7 @@ export class TeamService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    return newModerator
+    return newMember
   }
 
   async upsert({
@@ -92,7 +96,7 @@ export class TeamService {
       >
     >,
   ): Promise<Selectable<Member>> {
-    const updatedModerator = await this.db.db
+    const updatedMember = await this.db.db
       .updateTable('member')
       .where('did', '=', did)
       .set({
@@ -102,7 +106,7 @@ export class TeamService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    return updatedModerator
+    return updatedMember
   }
 
   async delete(did: string): Promise<void> {
@@ -151,14 +155,54 @@ export class TeamService {
     }
   }
 
-  view(member: Selectable<Member>): TeamMember {
-    return {
-      did: member.did,
-      role: member.role,
-      disabled: member.disabled,
-      createdAt: member.createdAt.toISOString(),
-      updatedAt: member.updatedAt.toISOString(),
-      lastUpdatedBy: member.lastUpdatedBy,
+  // getProfiles() only allows 25 DIDs at a time so we need to query in chunks
+  async getProfiles(
+    dids: string[],
+    ctx: AppContext,
+  ): Promise<Map<string, ProfileViewDetailed>> {
+    const profiles = new Map<string, ProfileViewDetailed>()
+
+    try {
+      const headers = await ctx.appviewAuth()
+
+      for (const actors of chunkArray(dids, 25)) {
+        const { data } = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
+          { actors },
+          headers,
+        )
+
+        data.profiles.forEach((profile) => {
+          profiles.set(profile.did, profile)
+        })
+      }
+    } catch (error) {
+      httpLogger.error(
+        { error, dids },
+        'Failed to get profiles for team members',
+      )
     }
+
+    return profiles
+  }
+
+  async view(
+    members: Selectable<Member>[],
+    ctx: AppContext,
+  ): Promise<TeamMember[]> {
+    const profiles = await this.getProfiles(
+      members.map(({ did }) => did),
+      ctx,
+    )
+    return members.map((member) => {
+      return {
+        did: member.did,
+        role: member.role,
+        disabled: member.disabled,
+        profile: profiles.get(member.did),
+        createdAt: member.createdAt.toISOString(),
+        updatedAt: member.updatedAt.toISOString(),
+        lastUpdatedBy: member.lastUpdatedBy,
+      }
+    })
   }
 }

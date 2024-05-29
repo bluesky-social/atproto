@@ -4,12 +4,12 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Update a moderator user in the ozone service. Requires admin role.",
+      "description": "Update a member in the ozone service. Requires admin role.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["did", "role", "disabled"],
+          "required": ["did"],
           "properties": {
             "did": { "type": "string", "format": "did" },
             "disabled": { "type": "boolean" },
@@ -33,8 +33,8 @@
       },
       "errors": [
         {
-          "name": "UserAlreadyExists",
-          "description": "The user is already a moderator"
+          "name": "MemberNotFound",
+          "description": "The member being updated does not exist in the team"
         }
       ]
     }

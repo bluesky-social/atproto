@@ -13,8 +13,8 @@ export interface QueryParams {}
 
 export interface InputSchema {
   did: string
-  disabled: boolean
-  role:
+  disabled?: boolean
+  role?:
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
@@ -38,7 +38,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'UserAlreadyExists'
+  error?: 'MemberNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

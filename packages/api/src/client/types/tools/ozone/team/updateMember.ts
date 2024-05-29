@@ -12,8 +12,8 @@ export interface QueryParams {}
 
 export interface InputSchema {
   did: string
-  disabled: boolean
-  role:
+  disabled?: boolean
+  role?:
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleModerator'
     | 'tools.ozone.team.defs#roleTriage'
@@ -35,7 +35,7 @@ export interface Response {
   data: OutputSchema
 }
 
-export class UserAlreadyExistsError extends XRPCError {
+export class MemberNotFoundError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
@@ -43,7 +43,7 @@ export class UserAlreadyExistsError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'UserAlreadyExists') return new UserAlreadyExistsError(e)
+    if (e.error === 'MemberNotFound') return new MemberNotFoundError(e)
   }
   return e
 }
