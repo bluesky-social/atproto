@@ -2255,6 +2255,17 @@ export const schemaDict = {
               emailAuthFactor: {
                 type: 'boolean',
               },
+              status: {
+                type: 'string',
+                description:
+                  "Hosting status of the account. If not specified, then assume 'active'.",
+                knownValues: [
+                  'active',
+                  'takendown',
+                  'suspended',
+                  'deactivated',
+                ],
+              },
             },
           },
         },
@@ -2591,6 +2602,17 @@ export const schemaDict = {
               didDoc: {
                 type: 'unknown',
               },
+              status: {
+                type: 'string',
+                description:
+                  "Hosting status of the account. If not specified, then assume 'active'.",
+                knownValues: [
+                  'active',
+                  'takendown',
+                  'suspended',
+                  'deactivated',
+                ],
+              },
             },
           },
         },
@@ -2674,6 +2696,17 @@ export const schemaDict = {
               },
               didDoc: {
                 type: 'unknown',
+              },
+              status: {
+                type: 'string',
+                description:
+                  "Hosting status of the account. If not specified, then assume 'active'.",
+                knownValues: [
+                  'active',
+                  'takendown',
+                  'suspended',
+                  'deactivated',
+                ],
               },
             },
           },

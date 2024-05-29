@@ -18,6 +18,8 @@ export interface OutputSchema {
   handle: string
   did: string
   didDoc?: {}
+  /** Hosting status of the account. If not specified, then assume 'active'. */
+  status?: 'active' | 'takendown' | 'suspended' | 'deactivated' | (string & {})
   [k: string]: unknown
 }
 

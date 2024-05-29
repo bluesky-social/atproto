@@ -27,6 +27,8 @@ export interface OutputSchema {
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
+  /** Hosting status of the account. If not specified, then assume 'active'. */
+  status?: 'active' | 'takendown' | 'suspended' | 'deactivated' | (string & {})
   [k: string]: unknown
 }
 
