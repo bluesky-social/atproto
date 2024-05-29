@@ -15,6 +15,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Must be an admin to update a member')
       }
 
+      if (did === ctx.cfg.service.did) {
+        throw new InvalidRequestError('Can not update service owner')
+      }
+
       const updatedMember = await db.transaction(async (dbTxn) => {
         const teamService = ctx.teamService(dbTxn)
 
