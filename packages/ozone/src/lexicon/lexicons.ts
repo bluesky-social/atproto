@@ -8379,7 +8379,7 @@ export const schemaDict = {
           },
           embed: {
             type: 'union',
-            refs: ['lex:app.bsky.embed.record'],
+            refs: ['lex:app.bsky.embed.record#view'],
           },
           sender: {
             type: 'ref',
