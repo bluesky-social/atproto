@@ -48,6 +48,39 @@ describe('team management', () => {
       expect(forAdmin.members.length).toEqual(forTriage.members.length)
     })
   })
+  describe('listMembers', () => {
+    it('allows all members to list all members', async () => {
+      const [{ data: forAdmin }, { data: forTriage }] = await Promise.all([
+        adminAgent.api.tools.ozone.team.listMembers({}),
+        triageAgent.api.tools.ozone.team.listMembers({}),
+      ])
+      expect(forSnapshot(forAdmin.members)).toMatchSnapshot()
+      expect(forSnapshot(forTriage.members)).toMatchSnapshot()
+      // Validate that the list looks the same to both admin and triage members
+
+      expect(forAdmin.members.length).toEqual(forTriage.members.length)
+    })
+  })
+  describe('addMember', () => {
+    const newMemberData = {
+      did: 'did:plc:newMember',
+      role: 'tools.ozone.team.defs#roleAdmin',
+      disabled: false,
+    }
+    it('only allows admins to add member', async () => {
+      await expect(
+        triageAgent.api.tools.ozone.team.addMember(newMemberData),
+      ).rejects.toThrow('Must be an admin to add a member')
+      const { data: newMember } =
+        await adminAgent.api.tools.ozone.team.addMember(newMemberData)
+      expect(forSnapshot(newMember)).toMatchSnapshot()
+    })
+    it('throws error when trying to add existing member', async () => {
+      await expect(
+        adminAgent.api.tools.ozone.team.addMember(newMemberData),
+      ).rejects.toThrow('member already exists')
+    })
+  })
   describe('deleteMember', () => {
     it('only allows admins to delete members', async () => {
       const {

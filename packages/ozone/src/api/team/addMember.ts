@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (alreadyExists) {
           throw new InvalidRequestError(
-            'moderator already exists',
+            'member already exists',
             'MemberAlreadyExists',
           )
         }
