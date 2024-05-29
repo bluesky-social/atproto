@@ -29,13 +29,21 @@ export const subjectFromInput = (
   ) {
     return new RecordSubject(subject.uri, subject.cid, blobs)
   }
+  // @NOTE #messageRef is not a report input for com.atproto.moderation.createReport.
+  // we are taking advantage of the open union in order for bsky.chat to interoperate here.
   if (
     subject.$type === 'chat.bsky.convo.defs#messageRef' &&
     typeof subject.did === 'string' &&
-    typeof subject.convoId === 'string' &&
+    (typeof subject.convoId === 'string' || subject.convoId === undefined) &&
     typeof subject.messageId === 'string'
   ) {
-    return new MessageSubject(subject.did, subject.convoId, subject.messageId)
+    // @TODO we should start to require subject.convoId is a string in order to properly validate
+    // the #messageRef. temporarily allowing it to be optional as a stopgap for rollout.
+    return new MessageSubject(
+      subject.did,
+      subject.convoId ?? '',
+      subject.messageId,
+    )
   }
 
   throw new InvalidRequestError('Invalid subject')
@@ -87,7 +95,7 @@ type SubjectInfo = {
   subjectCid: string | null
   subjectBlobCids: string[] | null
   subjectMessageId: string | null
-  meta: Record<string, string> | null
+  meta: Record<string, string | undefined> | null
 }
 
 export interface ModSubject {
@@ -200,7 +208,7 @@ export class MessageSubject implements ModSubject {
       subjectCid: null,
       subjectBlobCids: null,
       subjectMessageId: this.messageId,
-      meta: { convoId: this.convoId },
+      meta: { convoId: this.convoId || undefined },
     }
   }
   lex(): MessageRef {

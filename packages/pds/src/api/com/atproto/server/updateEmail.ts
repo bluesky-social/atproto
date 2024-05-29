@@ -7,7 +7,7 @@ import { UserAlreadyExistsError } from '../../../../account-manager/helpers/acco
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
-    auth: ctx.authVerifier.accessNotAppPassword,
+    auth: ctx.authVerifier.accessFull,
     handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
       const { token, email } = input.body

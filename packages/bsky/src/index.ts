@@ -7,6 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import AtpAgent from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
+import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -48,7 +49,7 @@ export class BskyAppView {
   }): BskyAppView {
     const { config, signingKey } = opts
     const app = express()
-    app.use(cors())
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
 

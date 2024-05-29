@@ -42,6 +42,7 @@ export function toKnownErr(e: any) {
 export interface AppPassword {
   name: string
   createdAt: string
+  privileged?: boolean
   [k: string]: unknown
 }
 

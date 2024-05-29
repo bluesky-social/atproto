@@ -175,15 +175,18 @@ export class AccountManager {
   // Auth
   // ----------
 
-  async createSession(did: string, appPasswordName: string | null) {
+  async createSession(
+    did: string,
+    appPassword: password.AppPassDescript | null,
+  ) {
     const { accessJwt, refreshJwt } = await auth.createTokens({
       did,
       jwtKey: this.jwtKey,
       serviceDid: this.serviceDid,
-      scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+      scope: auth.formatScope(appPassword),
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
-    await auth.storeRefreshToken(this.db, refreshPayload, appPasswordName)
+    await auth.storeRefreshToken(this.db, refreshPayload, appPassword)
     return { accessJwt, refreshJwt }
   }
 
@@ -218,8 +221,7 @@ export class AccountManager {
       did: token.did,
       jwtKey: this.jwtKey,
       serviceDid: this.serviceDid,
-      scope:
-        token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+      scope: auth.formatScope(token.appPassword),
       jti: nextId,
     })
 
@@ -232,7 +234,7 @@ export class AccountManager {
             expiresAt: expiresAt.toISOString(),
             nextId,
           }),
-          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPasswordName),
+          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPassword),
         ]),
       )
     } catch (err) {
@@ -251,8 +253,8 @@ export class AccountManager {
   // Passwords
   // ----------
 
-  async createAppPassword(did: string, name: string) {
-    return password.createAppPassword(this.db, did, name)
+  async createAppPassword(did: string, name: string, privileged: boolean) {
+    return password.createAppPassword(this.db, did, name, privileged)
   }
 
   async listAppPasswords(did: string) {
@@ -269,7 +271,7 @@ export class AccountManager {
   async verifyAppPassword(
     did: string,
     passwordStr: string,
-  ): Promise<string | null> {
+  ): Promise<password.AppPassDescript | null> {
     return password.verifyAppPassword(this.db, did, passwordStr)
   }
 
