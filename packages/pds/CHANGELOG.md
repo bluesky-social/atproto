@@ -1,5 +1,41 @@
 # @atproto/pds
 
+## 0.4.28
+
+### Patch Changes
+
+- [#2522](https://github.com/bluesky-social/atproto/pull/2522) [`53551be6c`](https://github.com/bluesky-social/atproto/commit/53551be6cf092a9b4d2e132788b94ac0d4ffcecc) Thanks [@devinivy](https://github.com/devinivy)! - Set max-age CORS header to max practical value
+
+## 0.4.27
+
+### Patch Changes
+
+- [#2517](https://github.com/bluesky-social/atproto/pull/2517) [`1d4ab5d04`](https://github.com/bluesky-social/atproto/commit/1d4ab5d046aac4539658ee6d7e61882c54d5beb9) Thanks [@dholms](https://github.com/dholms)! - Fix a bad join on privileged app passwords.
+
+- Updated dependencies [[`1d4ab5d04`](https://github.com/bluesky-social/atproto/commit/1d4ab5d046aac4539658ee6d7e61882c54d5beb9)]:
+  - @atproto/api@0.12.13
+
+## 0.4.26
+
+### Patch Changes
+
+- [#2515](https://github.com/bluesky-social/atproto/pull/2515) [`0cc5ef70f`](https://github.com/bluesky-social/atproto/commit/0cc5ef70f4e5a8e24983051d5f5ad8ee27be8684) Thanks [@dholms](https://github.com/dholms)! - Add privileged app password auth scope
+
+## 0.4.25
+
+### Patch Changes
+
+- [`0e8acb9fb`](https://github.com/bluesky-social/atproto/commit/0e8acb9fbaf3edcebd8e4f8fe4a381ede0206895) Thanks [@devinivy](https://github.com/devinivy)! - Only distribute service tokens via non-app-pass access tokens
+
+## 0.4.24
+
+### Patch Changes
+
+- [`cf25a60e2`](https://github.com/bluesky-social/atproto/commit/cf25a60e25b7531a359f0849729209a55193f7d6) Thanks [@devinivy](https://github.com/devinivy)! - Do not allow app passwords to communicate with chat service
+
+- Updated dependencies [[`1f560f021`](https://github.com/bluesky-social/atproto/commit/1f560f021c07eb9e8d76577e67fd2d7ac39cdee4)]:
+  - @atproto/api@0.12.12
+
 ## 0.4.23
 
 ### Patch Changes

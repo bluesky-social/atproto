@@ -5,7 +5,7 @@ import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
-    auth: ctx.authVerifier.accessNotAppPassword,
+    auth: ctx.authVerifier.accessFull,
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(

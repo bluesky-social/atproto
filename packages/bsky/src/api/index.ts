@@ -46,6 +46,7 @@ import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
 import fetchLabels from './com/atproto/temp/fetchLabels'
+import queryLabels from './com/atproto/label/queryLabels'
 
 export * as health from './health'
 
@@ -102,5 +103,6 @@ export default function (server: Server, ctx: AppContext) {
   resolveHandle(server, ctx)
   getRecord(server, ctx)
   fetchLabels(server, ctx)
+  queryLabels(server, ctx)
   return server
 }

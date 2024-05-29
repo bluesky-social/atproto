@@ -171,7 +171,7 @@ describe('moderation', () => {
           $type: 'chat.bsky.convo.defs#messageRef',
           did: sc.dids.carol,
           messageId: messageId2,
-          convoId: 'testconvoid2',
+          // @TODO convoId intentionally missing, restore once this behavior is deprecated
         },
       })
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
