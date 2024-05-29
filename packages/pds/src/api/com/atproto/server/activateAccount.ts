@@ -7,7 +7,7 @@ import { assertValidDidDocumentForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
-    auth: ctx.authVerifier.accessNotAppPassword,
+    auth: ctx.authVerifier.accessFull,
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
 

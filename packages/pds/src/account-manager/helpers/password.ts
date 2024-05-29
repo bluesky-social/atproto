@@ -4,6 +4,11 @@ import * as scrypt from './scrypt'
 import { AccountDb } from '../db'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 
+export type AppPassDescript = {
+  name: string
+  privileged: boolean
+}
+
 export const verifyAccountPassword = async (
   db: AccountDb,
   did: string,
@@ -21,7 +26,7 @@ export const verifyAppPassword = async (
   db: AccountDb,
   did: string,
   password: string,
-): Promise<string | null> => {
+): Promise<AppPassDescript | null> => {
   const passwordScrypt = await scrypt.hashAppPassword(did, password)
   const found = await db.db
     .selectFrom('app_password')
@@ -29,7 +34,11 @@ export const verifyAppPassword = async (
     .where('did', '=', did)
     .where('passwordScrypt', '=', passwordScrypt)
     .executeTakeFirst()
-  return found?.name ?? null
+  if (!found) return null
+  return {
+    name: found.name,
+    privileged: found.privileged === 1 ? true : false,
+  }
 }
 
 export const updateUserPassword = async (
@@ -51,6 +60,7 @@ export const createAppPassword = async (
   db: AccountDb,
   did: string,
   name: string,
+  privileged: boolean,
 ): Promise<AppPassword> => {
   // create an app password with format:
   // 1234-abcd-5678-efgh
@@ -71,6 +81,7 @@ export const createAppPassword = async (
         name,
         passwordScrypt,
         createdAt: new Date().toISOString(),
+        privileged: privileged ? 1 : 0,
       })
       .returningAll(),
   )
@@ -81,18 +92,25 @@ export const createAppPassword = async (
     name,
     password,
     createdAt: got.createdAt,
+    privileged,
   }
 }
 
 export const listAppPasswords = async (
   db: AccountDb,
   did: string,
-): Promise<{ name: string; createdAt: string }[]> => {
-  return db.db
+): Promise<{ name: string; createdAt: string; privileged: boolean }[]> => {
+  const res = await db.db
     .selectFrom('app_password')
-    .select(['name', 'createdAt'])
+    .select(['name', 'createdAt', 'privileged'])
     .where('did', '=', did)
+    .orderBy('createdAt', 'desc')
     .execute()
+  return res.map((row) => ({
+    name: row.name,
+    createdAt: row.createdAt,
+    privileged: row.privileged === 1 ? true : false,
+  }))
 }
 
 export const deleteAppPassword = async (

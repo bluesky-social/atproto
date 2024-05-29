@@ -75,6 +75,7 @@ export class LabelHydrator {
       subjects,
       issuers: labelers.dids,
     })
+
     return res.labels.reduce((acc, cur) => {
       const parsed = parseJsonBytes(cur) as Label | undefined
       if (!parsed || parsed.neg) return acc

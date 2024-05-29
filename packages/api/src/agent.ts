@@ -263,14 +263,26 @@ export class AtpAgent {
         'atproto-proxy': this.proxyHeader,
       }
     }
+
+    const labelerHeaderName = 'atproto-accept-labelers'
+    const labelerHeaders = AtpAgent.appLabelers
+      .map((str) => `${str};redact`)
+      .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
+
+    // Besides labelers configured via appLabelers and labelersHeader
+    // respect any additional labelers configured via the request headers
+    if (reqHeaders[labelerHeaderName]) {
+      labelerHeaders.push(
+        // Allow for headers to be comma-separated with or without spaces in between by trimming after split
+        ...reqHeaders[labelerHeaderName].split(',').map((str) => str.trim()),
+      )
+    }
+
     reqHeaders = {
       ...reqHeaders,
-      'atproto-accept-labelers': AtpAgent.appLabelers
-        .map((str) => `${str};redact`)
-        .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
-        .slice(0, MAX_LABELERS)
-        .join(', '),
+      [labelerHeaderName]: labelerHeaders.slice(0, MAX_LABELERS).join(', '),
     }
+
     return reqHeaders
   }
 

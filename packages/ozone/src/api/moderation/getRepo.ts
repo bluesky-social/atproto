@@ -6,11 +6,12 @@ import { addAccountInfoToRepoViewDetail, getPdsAccountInfo } from '../util'
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.getRepo({
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const { did } = params
       const db = ctx.db
+      const labelers = ctx.reqLabelers(req)
       const [partialRepo, accountInfo] = await Promise.all([
-        ctx.modService(db).views.repoDetail(did),
+        ctx.modService(db).views.repoDetail(did, labelers),
         getPdsAccountInfo(ctx, did),
       ])
       if (!partialRepo) {
