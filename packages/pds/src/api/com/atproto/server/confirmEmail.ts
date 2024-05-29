@@ -5,7 +5,7 @@ import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.confirmEmail({
-    auth: ctx.authVerifier.accessCheckTakedown,
+    auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
     handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
 

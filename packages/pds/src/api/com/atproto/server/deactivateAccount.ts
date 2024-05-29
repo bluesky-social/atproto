@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deactivateAccount({
-    auth: ctx.authVerifier.accessFull,
+    auth: ctx.authVerifier.accessFull(),
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
       await ctx.accountManager.deactivateAccount(

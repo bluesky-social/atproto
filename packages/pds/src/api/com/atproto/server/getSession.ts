@@ -4,10 +4,13 @@ import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
-    auth: ctx.authVerifier.accessDeactived,
+    auth: ctx.authVerifier.accessStandard({
+      additional: [AuthScope.SignupQueued],
+    }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(
@@ -36,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
           email: user.email ?? undefined,
           didDoc,
           emailConfirmed: !!user.emailConfirmedAt,
+          status: user.deactivatedAt === null ? 'active' : 'deactivated',
         },
       }
     },

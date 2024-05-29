@@ -4,12 +4,15 @@ import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtpAgent } from '@atproto/api'
 import { getDidDoc } from '../util/resolver'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   const { appViewAgent } = ctx
   if (!appViewAgent) return
   server.app.bsky.notification.registerPush({
-    auth: ctx.authVerifier.accessDeactived,
+    auth: ctx.authVerifier.accessStandard({
+      additional: [AuthScope.SignupQueued],
+    }),
     handler: async ({ auth, input }) => {
       const { serviceDid } = input.body
       const {

@@ -52,6 +52,7 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle ?? INVALID_HANDLE,
           accessJwt: rotated.accessJwt,
           refreshJwt: rotated.refreshJwt,
+          status: user.deactivatedAt === null ? 'active' : 'deactivated',
         },
       }
     },

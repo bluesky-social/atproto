@@ -19,7 +19,10 @@ import { ActorStoreTransactor } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
-    auth: ctx.authVerifier.accessCheckTakedown,
+    auth: ctx.authVerifier.accessStandard({
+      checkTakedown: true,
+      checkDeactivated: true,
+    }),
     rateLimit: [
       {
         name: 'repo-write-hour',
