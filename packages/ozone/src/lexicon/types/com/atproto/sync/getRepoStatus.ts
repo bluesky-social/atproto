@@ -9,15 +9,19 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  limit: number
-  cursor?: string
+  /** The DID of the repo. */
+  did: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  repos: Repo[]
+  did: string
+  active: boolean
+  /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
+  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
+  /** Optional field, the current rev of the repo, if active=true */
+  rev?: string
   [k: string]: unknown
 }
 
@@ -32,6 +36,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'RepoNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
@@ -45,26 +50,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Repo {
-  did: string
-  /** Current repo commit CID */
-  head: string
-  rev: string
-  active?: boolean
-  /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
-  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
-  [k: string]: unknown
-}
-
-export function isRepo(v: unknown): v is Repo {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.listRepos#repo'
-  )
-}
-
-export function validateRepo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.sync.listRepos#repo', v)
-}

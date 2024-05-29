@@ -2912,6 +2912,23 @@ export const schemaDict = {
         output: {
           encoding: '*/*',
         },
+        errors: [
+          {
+            name: 'BlobNotFound',
+          },
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
       },
     },
   },
@@ -2944,6 +2961,23 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
+        errors: [
+          {
+            name: 'BlockNotFound',
+          },
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
       },
     },
   },
@@ -3050,6 +3084,15 @@ export const schemaDict = {
           {
             name: 'RepoNotFound',
           },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
         ],
       },
     },
@@ -3090,6 +3133,23 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
       },
     },
   },
@@ -3120,6 +3180,74 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetRepoStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRepoStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the hosting status for a repository, on this server. Expected to be implemented by PDS and Relay.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'active'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
+              rev: {
+                type: 'string',
+                description:
+                  'Optional field, the current rev of the repo, if active=true',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
       },
     },
   },
@@ -3174,6 +3302,20 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
       },
     },
   },
@@ -3234,6 +3376,15 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+          },
+          active: {
+            type: 'boolean',
+          },
+          status: {
+            type: 'string',
+            description:
+              'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+            knownValues: ['takendown', 'suspended', 'deactivated'],
           },
         },
       },
@@ -3312,6 +3463,7 @@ export const schemaDict = {
             refs: [
               'lex:com.atproto.sync.subscribeRepos#commit',
               'lex:com.atproto.sync.subscribeRepos#identity',
+              'lex:com.atproto.sync.subscribeRepos#account',
               'lex:com.atproto.sync.subscribeRepos#handle',
               'lex:com.atproto.sync.subscribeRepos#migrate',
               'lex:com.atproto.sync.subscribeRepos#tombstone',
@@ -3435,12 +3587,47 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          handle: {
+            type: 'string',
+            format: 'handle',
+            description:
+              "The current handle for the account, or 'handle.invalid' if validation fails. This field is optional, might have been validated or passed-through from an upstream source. Semantics and behaviors for PDS vs Relay may evolve in the future; see atproto specs for more details.",
+          },
+        },
+      },
+      account: {
+        type: 'object',
+        description:
+          "Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active.",
+        required: ['seq', 'did', 'time', 'active'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
+          status: {
+            type: 'string',
+            description:
+              'If active=false, this optional field indicates a reason for why the account is not active.',
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+          },
         },
       },
       handle: {
         type: 'object',
-        description:
-          "Represents an update of the account's handle, or transition to/from invalid state. NOTE: Will be deprecated in favor of #identity.",
+        description: 'DEPRECATED -- Use #identity event instead',
         required: ['seq', 'did', 'handle', 'time'],
         properties: {
           seq: {
@@ -3462,8 +3649,7 @@ export const schemaDict = {
       },
       migrate: {
         type: 'object',
-        description:
-          'Represents an account moving from one PDS instance to another. NOTE: not implemented; account migration uses #identity instead',
+        description: 'DEPRECATED -- Use #account event instead',
         required: ['seq', 'did', 'migrateTo', 'time'],
         nullable: ['migrateTo'],
         properties: {
@@ -3485,8 +3671,7 @@ export const schemaDict = {
       },
       tombstone: {
         type: 'object',
-        description:
-          'Indicates that an account has been deleted. NOTE: may be deprecated in favor of #identity or a future #account event',
+        description: 'DEPRECATED -- Use #account event instead',
         required: ['seq', 'did', 'time'],
         properties: {
           seq: {
@@ -9200,6 +9385,7 @@ export const ids = {
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncGetRepoStatus: 'com.atproto.sync.getRepoStatus',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',

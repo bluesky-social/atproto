@@ -22,7 +22,14 @@
       },
       "output": {
         "encoding": "application/vnd.ipld.car"
-      }
+      },
+      "errors": [
+        { "name": "BlockNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

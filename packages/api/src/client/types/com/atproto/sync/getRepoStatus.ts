@@ -10,17 +10,17 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** Optional revision of the repo to list blobs since. */
-  since?: string
-  limit?: number
-  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  cids: string[]
+  did: string
+  active: boolean
+  /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
+  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
+  /** Optional field, the current rev of the repo, if active=true */
+  rev?: string
   [k: string]: unknown
 }
 
@@ -40,30 +40,9 @@ export class RepoNotFoundError extends XRPCError {
   }
 }
 
-export class RepoTakendownError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
-export class RepoSuspendedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
-export class RepoDeactivatedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'RepoNotFound') return new RepoNotFoundError(e)
-    if (e.error === 'RepoTakendown') return new RepoTakendownError(e)
-    if (e.error === 'RepoSuspended') return new RepoSuspendedError(e)
-    if (e.error === 'RepoDeactivated') return new RepoDeactivatedError(e)
   }
   return e
 }
