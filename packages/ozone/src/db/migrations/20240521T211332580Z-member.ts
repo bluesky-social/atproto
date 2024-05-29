@@ -6,8 +6,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('role', 'varchar', (col) => col.notNull())
     .addColumn('disabled', 'boolean', (col) => col.defaultTo(false).notNull())
-    .addColumn('createdAt', 'timestamptz')
-    .addColumn('updatedAt', 'timestamptz')
+    .addColumn('createdAt', 'timestamptz', (col) => col.notNull())
+    .addColumn('updatedAt', 'timestamptz', (col) => col.notNull())
     .addColumn('lastUpdatedBy', 'varchar', (col) => col.notNull())
     .execute()
 }

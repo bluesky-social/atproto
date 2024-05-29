@@ -380,7 +380,7 @@ export class AccountManager {
     const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
     await this.db.transaction(async (dbTxn) =>
       Promise.all([
-        password.updateMemberPassword(dbTxn, { did, passwordScrypt }),
+        password.updateUserPassword(dbTxn, { did, passwordScrypt }),
         emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
         auth.revokeRefreshTokensByDid(dbTxn, did),
       ]),
