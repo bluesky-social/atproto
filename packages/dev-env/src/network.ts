@@ -113,7 +113,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       inviteCode,
     })
 
-    ozone.addAdminDid(ozoneDid)
+    await ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
