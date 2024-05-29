@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List all members with access to the ozone service. Any ozone member can access this endpoint.",
+      "description": "List all members with access to the ozone service.",
       "parameters": {
         "type": "params",
         "properties": {

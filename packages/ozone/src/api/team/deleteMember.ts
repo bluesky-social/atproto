@@ -13,9 +13,11 @@ export default function (server: Server, ctx: AppContext) {
       if (!access.isAdmin) {
         throw new AuthRequiredError('Must be an admin to delete a member')
       }
-      const teamService = ctx.teamService(db)
-      await teamService.assertCanDelete(did)
-      await teamService.delete(did)
+      await db.transaction(async (dbTxn) => {
+        const teamService = ctx.teamService(dbTxn)
+        await teamService.assertCanDelete(did)
+        await teamService.delete(did)
+      })
     },
   })
 }
