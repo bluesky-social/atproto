@@ -33,7 +33,12 @@
             "didDoc": { "type": "unknown" },
             "email": { "type": "string" },
             "emailConfirmed": { "type": "boolean" },
-            "emailAuthFactor": { "type": "boolean" }
+            "emailAuthFactor": { "type": "boolean" },
+            "status": {
+              "type": "string",
+              "description": "Hosting status of the account. If not specified, then assume 'active'.",
+              "knownValues": ["active", "takendown", "suspended", "deactivated"]
+            }
           }
         }
       },
