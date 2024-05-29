@@ -128,10 +128,10 @@ const eventTypes = new Set([
 ])
 
 export const getMemberRole = (role: string) => {
-  if (userRoles.has(role)) {
+  if (memberRoles.has(role)) {
     return role as Member['role']
   }
-  throw new InvalidRequestError('Invalid user role')
+  throw new InvalidRequestError('Invalid member role')
 }
 
-const userRoles = new Set([ROLEADMIN, ROLEMODERATOR, ROLETRIAGE])
+const memberRoles = new Set([ROLEADMIN, ROLEMODERATOR, ROLETRIAGE])
