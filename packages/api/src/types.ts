@@ -27,7 +27,14 @@ export interface AtpSessionData {
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
+  status: AtpSessionStatus
 }
+
+export type AtpSessionStatus =
+  | 'active'
+  | 'takendown'
+  | 'suspended'
+  | 'deactivated'
 
 /**
  * Handler signature passed to AtpAgent to store session data
