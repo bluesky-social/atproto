@@ -86,7 +86,7 @@ describe('sync', () => {
       const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
       evt.blocks = new Uint8Array() // bad blocks
       seqEvt.event = cborEncode(evt)
-      await network.pds.ctx.sequencer.sequenceEvt(seqEvt)
+      return await network.pds.ctx.sequencer.sequenceEvt(seqEvt)
     }
     // create account and index the initial commit event
     await sc.createAccount('jack', {

@@ -238,12 +238,12 @@ describe('moderation', () => {
       }
       // public, disallow
       const attempt1 = agent.api.com.atproto.sync.getBlob(blobParams)
-      await expect(attempt1).rejects.toThrow('Blob not found')
+      await expect(attempt1).rejects.toThrow(/Repo has been takendown/)
       // logged-in, disallow
       const attempt2 = agent.api.com.atproto.sync.getBlob(blobParams, {
         headers: sc.getHeaders(sc.dids.bob),
       })
-      await expect(attempt2).rejects.toThrow('Blob not found')
+      await expect(attempt2).rejects.toThrow(/Repo has been takendown/)
       // logged-in as account, allow
       const res1 = await agent.api.com.atproto.sync.getBlob(blobParams, {
         headers: sc.getHeaders(sc.dids.carol),
