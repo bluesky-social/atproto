@@ -8,7 +8,6 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
     auth: ctx.authVerifier.accessStandard({
       checkTakedown: true,
-      checkDeactivated: true,
     }),
     rateLimit: {
       durationMs: DAY,
