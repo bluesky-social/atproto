@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.14
+
+### Patch Changes
+
+- [#2533](https://github.com/bluesky-social/atproto/pull/2533) [`c4af6a409`](https://github.com/bluesky-social/atproto/commit/c4af6a409ea2171c3cf1d0e7c8ed496794a3f049) Thanks [@devinivy](https://github.com/devinivy)! - Support for post embeds in chat lexicons
+
 ## 0.12.13
 
 ### Patch Changes
