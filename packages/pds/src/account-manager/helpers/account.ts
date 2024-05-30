@@ -204,19 +204,21 @@ export const setEmailConfirmedAt = async (
   )
 }
 
-export const getAccountTakedownStatus = async (
+export const getAccountAdminStatus = async (
   db: AccountDb,
   did: string,
-): Promise<StatusAttr | null> => {
+): Promise<{ takedown: StatusAttr; deactivated: StatusAttr } | null> => {
   const res = await db.db
     .selectFrom('actor')
-    .select('takedownRef')
+    .select(['takedownRef', 'deactivatedAt'])
     .where('did', '=', did)
     .executeTakeFirst()
   if (!res) return null
-  return res.takedownRef
+  const takedown = res.takedownRef
     ? { applied: true, ref: res.takedownRef }
     : { applied: false }
+  const deactivated = res.deactivatedAt ? { applied: true } : { applied: false }
+  return { takedown, deactivated }
 }
 
 export const updateAccountTakedownStatus = async (

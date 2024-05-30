@@ -51,14 +51,15 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       } else if (did) {
-        const takedown = await ctx.accountManager.getAccountTakedownStatus(did)
-        if (takedown) {
+        const status = await ctx.accountManager.getAccountAdminStatus(did)
+        if (status) {
           body = {
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
               did: did,
             },
-            takedown,
+            takedown: status.takedown,
+            deactivated: status.deactivated,
           }
         }
       } else {

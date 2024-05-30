@@ -156,8 +156,8 @@ export class AccountManager {
     )
   }
 
-  async getAccountTakedownStatus(did: string) {
-    return account.getAccountTakedownStatus(this.db, did)
+  async getAccountAdminStatus(did: string) {
+    return account.getAccountAdminStatus(this.db, did)
   }
 
   async updateRepoRoot(did: string, cid: CID, rev: string) {

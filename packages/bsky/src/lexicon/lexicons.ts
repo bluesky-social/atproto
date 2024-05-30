@@ -364,6 +364,10 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
+              deactivated: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
             },
           },
         },
