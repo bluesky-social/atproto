@@ -74,14 +74,18 @@ const presentation = (input: {
   const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
-  } else if (
-    !params.hydrateCtx.includeTakedowns &&
-    ctx.views.actorIsTakendown(skeleton.did, hydration)
-  ) {
-    throw new InvalidRequestError(
-      'Account has been suspended',
-      'AccountTakedown',
-    )
+  } else if (!params.hydrateCtx.includeTakedowns) {
+    if (ctx.views.actorIsTakendown(skeleton.did, hydration)) {
+      throw new InvalidRequestError(
+        'Account has been suspended',
+        'AccountTakedown',
+      )
+    } else if (ctx.views.actorIsDeactivated(skeleton.did, hydration)) {
+      throw new InvalidRequestError(
+        'Account is deactivated',
+        'AccountDeactivated',
+      )
+    }
   }
   return profile
 }
