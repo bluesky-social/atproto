@@ -53,7 +53,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
-        upstreamStatus: row.upstreamStatus ?? '',
+        upstreamStatus: row?.upstreamStatus ?? '',
       }
     })
     return { actors }
