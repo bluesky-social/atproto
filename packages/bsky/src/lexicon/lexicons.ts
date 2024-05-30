@@ -66,6 +66,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       repoRef: {

@@ -66,6 +66,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       repoRef: {
@@ -10036,6 +10040,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       repoViewDetail: {
@@ -10098,6 +10106,10 @@ export const schemaDict = {
             type: 'string',
           },
           emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          deactivatedAt: {
             type: 'string',
             format: 'datetime',
           },

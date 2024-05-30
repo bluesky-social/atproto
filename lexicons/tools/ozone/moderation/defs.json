@@ -405,7 +405,8 @@
           "ref": "com.atproto.server.defs#inviteCode"
         },
         "invitesDisabled": { "type": "boolean" },
-        "inviteNote": { "type": "string" }
+        "inviteNote": { "type": "string" },
+        "deactivatedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoViewDetail": {
@@ -441,7 +442,8 @@
         },
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" },
-        "emailConfirmedAt": { "type": "string", "format": "datetime" }
+        "emailConfirmedAt": { "type": "string", "format": "datetime" },
+        "deactivatedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoViewNotFound": {
