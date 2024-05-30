@@ -3,6 +3,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru } from '../../../proxy'
+import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
@@ -44,9 +45,12 @@ export default function (server: Server, ctx: AppContext) {
       )
       await ctx.actorStore.destroy(did)
       await ctx.accountManager.deleteAccount(did)
-      await ctx.sequencer.sequenceIdentityEvt(did)
-      await ctx.sequencer.sequenceTombstone(did)
-      await ctx.sequencer.deleteAllForUser(did)
+      const accountSeq = await ctx.sequencer.sequenceAccountEvt(
+        did,
+        AccountStatus.Deleted,
+      )
+      const tombstoneSeq = await ctx.sequencer.sequenceTombstone(did)
+      await ctx.sequencer.deleteAllForUser(did, [accountSeq, tombstoneSeq])
     },
   })
 }

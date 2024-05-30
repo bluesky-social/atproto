@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { formatAccountStatus } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
@@ -12,13 +12,13 @@ export default function (server: Server, ctx: AppContext) {
     let builder = db.db
       .selectFrom('actor')
       .innerJoin('repo_root', 'repo_root.did', 'actor.did')
-      .where(notSoftDeletedClause(ref('actor')))
-      .where('actor.deactivatedAt', 'is', null)
       .select([
         'actor.did as did',
         'repo_root.cid as head',
         'repo_root.rev as rev',
         'actor.createdAt as createdAt',
+        'actor.deactivatedAt as deactivatedAt',
+        'actor.takedownRef as takedownRef',
       ])
     const keyset = new TimeDidKeyset(ref('actor.createdAt'), ref('actor.did'))
     builder = paginate(builder, {
@@ -29,11 +29,16 @@ export default function (server: Server, ctx: AppContext) {
       tryIndex: true,
     })
     const res = await builder.execute()
-    const repos = res.map((row) => ({
-      did: row.did,
-      head: row.head,
-      rev: row.rev ?? '',
-    }))
+    const repos = res.map((row) => {
+      const { active, status } = formatAccountStatus(row)
+      return {
+        did: row.did,
+        head: row.head,
+        rev: row.rev ?? '',
+        active,
+        status,
+      }
+    })
     return {
       encoding: 'application/json',
       body: {

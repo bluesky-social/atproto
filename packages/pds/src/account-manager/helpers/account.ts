@@ -16,6 +16,14 @@ export type AvailabilityFlags = {
   includeDeactivated?: boolean
 }
 
+export enum AccountStatus {
+  Active = 'active',
+  Takendown = 'takendown',
+  Suspended = 'suspended',
+  Deleted = 'deleted',
+  Deactivated = 'deactivated',
+}
+
 const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic

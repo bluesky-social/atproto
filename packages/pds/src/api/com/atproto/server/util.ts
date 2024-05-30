@@ -2,7 +2,7 @@ import * as crypto from '@atproto/crypto'
 import { DidDocument } from '@atproto/identity'
 import { ServerConfig } from '../../../../config'
 import AppContext from '../../../../context'
-import { dbLogger } from '../../../../logger'
+import { httpLogger } from '../../../../logger'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 
@@ -28,19 +28,26 @@ export const getRandomToken = () => {
   return token.slice(0, 5) + '-' + token.slice(5, 10)
 }
 
-// @TODO once supporting multiple pdses, validate pds in did doc based on allow-list.
+export const safeResolveDidDoc = async (
+  ctx: AppContext,
+  did: string,
+  forceRefresh?: boolean,
+): Promise<DidDocument | undefined> => {
+  try {
+    const didDoc = await ctx.idResolver.did.resolve(did, forceRefresh)
+    return didDoc ?? undefined
+  } catch (err) {
+    httpLogger.warn({ err, did }, 'failed to resolve did doc')
+  }
+}
+
 export const didDocForSession = async (
   ctx: AppContext,
   did: string,
   forceRefresh?: boolean,
 ): Promise<DidDocument | undefined> => {
   if (!ctx.cfg.identity.enableDidDocWithSession) return
-  try {
-    const didDoc = await ctx.idResolver.did.resolve(did, forceRefresh)
-    return didDoc ?? undefined
-  } catch (err) {
-    dbLogger.warn({ err, did }, 'failed to resolve did doc')
-  }
+  return safeResolveDidDoc(ctx, did, forceRefresh)
 }
 
 export const isValidDidDocForService = async (

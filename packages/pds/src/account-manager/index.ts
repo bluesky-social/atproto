@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as scrypt from './helpers/scrypt'
 import * as account from './helpers/account'
+import { AccountStatus } from './helpers/account'
 import { ActorAccount } from './helpers/account'
 import * as repo from './helpers/repo'
 import * as auth from './helpers/auth'
@@ -12,6 +13,8 @@ import * as password from './helpers/password'
 import * as emailToken from './helpers/email-token'
 import { AuthScope } from '../auth-verifier'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+
+export { AccountStatus } from './helpers/account'
 
 export class AccountManager {
   db: AccountDb
@@ -51,12 +54,6 @@ export class AccountManager {
     return account.getAccountByEmail(this.db, email, flags)
   }
 
-  // Repo exists and is not taken-down
-  async isRepoAvailable(did: string) {
-    const got = await this.getAccount(did)
-    return !!got
-  }
-
   async isAccountActivated(did: string): Promise<boolean> {
     const account = await this.getAccount(did, { includeDeactivated: true })
     if (!account) return false
@@ -69,6 +66,22 @@ export class AccountManager {
   ): Promise<string | null> {
     const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
+  }
+
+  async getAccountStatus(handleOrDid: string): Promise<AccountStatus> {
+    const got = await this.getAccount(handleOrDid, {
+      includeDeactivated: true,
+      includeTakenDown: true,
+    })
+    if (!got) {
+      return AccountStatus.Deleted
+    } else if (got.takedownRef) {
+      return AccountStatus.Takendown
+    } else if (got.deactivatedAt) {
+      return AccountStatus.Deactivated
+    } else {
+      return AccountStatus.Active
+    }
   }
 
   async createAccount(opts: {

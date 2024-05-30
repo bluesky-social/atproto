@@ -102,6 +102,8 @@ export class RepoSubscription {
         await this.handleUpdateHandle(msg)
       } else if (message.isIdentity(msg)) {
         await this.handleIdentityEvt(msg)
+      } else if (message.isAccount(msg)) {
+        await this.handleAccountEvt(msg)
       } else if (message.isTombstone(msg)) {
         await this.handleTombstone(msg)
       } else if (message.isMigrate(msg)) {
@@ -197,6 +199,10 @@ export class RepoSubscription {
     await this.indexingSvc.indexHandle(msg.did, msg.time, true)
   }
 
+  private async handleAccountEvt(_msg: message.Account) {
+    // no-op for now
+  }
+
   private async handleTombstone(msg: message.Tombstone) {
     await this.indexingSvc.tombstoneActor(msg.did)
   }
@@ -268,6 +274,8 @@ function getMessageDetails(msg: Message):
   } else if (message.isHandle(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isIdentity(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isAccount(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isMigrate(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
