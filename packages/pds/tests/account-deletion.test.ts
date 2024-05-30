@@ -143,10 +143,18 @@ describe('account deletion', () => {
     expect(updatedDbContents.userAccounts).toEqual(
       initialDbContents.userAccounts.filter((row) => row.did !== carol.did),
     )
-    // check all seqs for this did are gone, except for the tombstone
+    // check we didn't touch other user seqs
     expect(
-      updatedDbContents.repoSeqs.filter((row) => row.eventType !== 'tombstone'),
+      updatedDbContents.repoSeqs.filter((row) => row.did !== carol.did),
     ).toEqual(initialDbContents.repoSeqs.filter((row) => row.did !== carol.did))
+    // check all seqs for this did are gone, except for the tombstone & account events
+    expect(
+      updatedDbContents.repoSeqs
+        .filter((row) => row.did === carol.did)
+        .every(
+          (row) => row.eventType === 'tombstone' || row.eventType === 'account',
+        ),
+    ).toBe(true)
     // check we do have a tombstone for this did
     expect(
       updatedDbContents.repoSeqs.filter(
