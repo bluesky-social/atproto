@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const did = auth.credentials.did
       const [user, didDoc] = await Promise.all([
-        ctx.accountManager.getAccount(did),
+        ctx.accountManager.getAccount(did, { includeDeactivated: true }),
         didDocForSession(ctx, did),
       ])
       if (!user) {
