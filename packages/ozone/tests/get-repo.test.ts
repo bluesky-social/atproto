@@ -30,6 +30,10 @@ describe('admin get repo view', () => {
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)
+    await pdsAgent.com.atproto.server.deactivateAccount(
+      {},
+      { encoding: 'application/json', headers: sc.getHeaders(sc.dids.dan) },
+    )
     await network.processAll()
   })
 
@@ -131,6 +135,15 @@ describe('admin get repo view', () => {
     expect(
       new Date(afterEmailVerification.emailConfirmedAt as string).getTime(),
     ).toBeGreaterThan(timestampBeforeVerification)
+  })
+
+  it('returns deactivation state', async () => {
+    const res = await agent.api.tools.ozone.moderation.getRepo(
+      { did: sc.dids.dan },
+      { headers: await ozone.modHeaders() },
+    )
+
+    expect(res.data.deactivatedAt).toBeDefined()
   })
 
   it('fails when repo does not exist.', async () => {
