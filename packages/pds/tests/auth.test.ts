@@ -62,7 +62,7 @@ describe('auth', () => {
       handle: account.handle,
       email,
       emailConfirmed: false,
-      status: 'active',
+      active: true,
     })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
@@ -92,7 +92,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
-      status: 'active',
+      active: true,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -137,7 +137,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
-      status: 'active',
+      active: true,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
