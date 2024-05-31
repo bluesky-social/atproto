@@ -1236,8 +1236,8 @@ importers:
         specifier: ^0.0.4
         version: 0.0.4
       better-sqlite3:
-        specifier: ^9.4.0
-        version: 9.4.0
+        specifier: ^10.0.0
+        version: 10.0.0
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -8821,12 +8821,12 @@ packages:
       is-windows: 1.0.2
     dev: true
 
-  /better-sqlite3@9.4.0:
-    resolution: {integrity: sha512-5kynxekMxSjCMiFyUBLHggFcJkCmiZi6fUkiGz/B5GZOvdRWQJD0klqCx5/Y+bm2AKP7I/DHbSFx26AxjruWNg==}
+  /better-sqlite3@10.0.0:
+    resolution: {integrity: sha512-rOz0JY8bt9oMgrFssP7GnvA5R3yln73y/NizzWqy3WlFth8Ux8+g4r/N9fjX97nn4X1YX6MTER2doNpTu5pqiA==}
     requiresBuild: true
     dependencies:
       bindings: 1.5.0
-      prebuild-install: 7.1.1
+      prebuild-install: 7.1.2
     dev: false
 
   /better-sqlite3@9.4.5:
