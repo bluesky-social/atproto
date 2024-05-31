@@ -166,6 +166,8 @@ import {
   UntakedownBlobResponse,
   UntakedownRecordRequest,
   UntakedownRecordResponse,
+  UpdateActorUpstreamStatusRequest,
+  UpdateActorUpstreamStatusResponse,
   UpdateNotificationSeenRequest,
   UpdateNotificationSeenResponse,
 } from './bsky_pb'
@@ -888,6 +890,15 @@ export const Service = {
       name: 'TakedownActor',
       I: TakedownActorRequest,
       O: TakedownActorResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.UpdateActorUpstreamStatus
+     */
+    updateActorUpstreamStatus: {
+      name: 'UpdateActorUpstreamStatus',
+      I: UpdateActorUpstreamStatusRequest,
+      O: UpdateActorUpstreamStatusResponse,
       kind: MethodKind.Unary,
     },
     /**

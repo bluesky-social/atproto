@@ -53,6 +53,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
+        upstreamStatus: row?.upstreamStatus ?? '',
       }
     })
     return { actors }
@@ -71,5 +72,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const byHandle = keyBy(res, 'handle')
     const dids = handles.map((handle) => byHandle[handle]?.did ?? '')
     return { dids }
+  },
+
+  async updateActorUpstreamStatus(req) {
+    const { actorDid, upstreamStatus } = req
+    await db.db
+      .updateTable('actor')
+      .set({ upstreamStatus })
+      .where('did', '=', actorDid)
+      .execute()
   },
 })

@@ -5,7 +5,7 @@ import { AuthScope } from '../../../../auth-verifier'
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.cfg.bskyAppView) return
   server.app.bsky.actor.getPreferences({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
       let preferences = await ctx.actorStore.read(requester, (store) =>

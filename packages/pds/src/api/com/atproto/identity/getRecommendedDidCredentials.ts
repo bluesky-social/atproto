@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.getRecommendedDidCredentials({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
       const signingKey = await ctx.actorStore.keypair(requester)

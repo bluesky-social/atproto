@@ -3760,6 +3760,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   allowIncomingChatsFrom = ''
 
+  /**
+   * @generated from field: string upstream_status = 9;
+   */
+  upstreamStatus = ''
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3783,6 +3788,12 @@ export class ActorInfo extends Message<ActorInfo> {
     {
       no: 8,
       name: 'allow_incoming_chats_from',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 9,
+      name: 'upstream_status',
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
     },
@@ -10004,6 +10015,132 @@ export class PingResponse extends Message<PingResponse> {
     b: PingResponse | PlainMessage<PingResponse> | undefined,
   ): boolean {
     return proto3.util.equals(PingResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateActorUpstreamStatusRequest
+ */
+export class UpdateActorUpstreamStatusRequest extends Message<UpdateActorUpstreamStatusRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: bool active = 2;
+   */
+  active = false
+
+  /**
+   * @generated from field: string upstream_status = 3;
+   */
+  upstreamStatus = ''
+
+  constructor(data?: PartialMessage<UpdateActorUpstreamStatusRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateActorUpstreamStatusRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'active', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    {
+      no: 3,
+      name: 'upstream_status',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateActorUpstreamStatusRequest {
+    return new UpdateActorUpstreamStatusRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorUpstreamStatusRequest {
+    return new UpdateActorUpstreamStatusRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorUpstreamStatusRequest {
+    return new UpdateActorUpstreamStatusRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateActorUpstreamStatusRequest
+      | PlainMessage<UpdateActorUpstreamStatusRequest>
+      | undefined,
+    b:
+      | UpdateActorUpstreamStatusRequest
+      | PlainMessage<UpdateActorUpstreamStatusRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateActorUpstreamStatusRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateActorUpstreamStatusResponse
+ */
+export class UpdateActorUpstreamStatusResponse extends Message<UpdateActorUpstreamStatusResponse> {
+  constructor(data?: PartialMessage<UpdateActorUpstreamStatusResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateActorUpstreamStatusResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateActorUpstreamStatusResponse {
+    return new UpdateActorUpstreamStatusResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorUpstreamStatusResponse {
+    return new UpdateActorUpstreamStatusResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorUpstreamStatusResponse {
+    return new UpdateActorUpstreamStatusResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateActorUpstreamStatusResponse
+      | PlainMessage<UpdateActorUpstreamStatusResponse>
+      | undefined,
+    b:
+      | UpdateActorUpstreamStatusResponse
+      | PlainMessage<UpdateActorUpstreamStatusResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateActorUpstreamStatusResponse, a, b)
   }
 }
 

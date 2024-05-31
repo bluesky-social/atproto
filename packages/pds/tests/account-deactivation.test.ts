@@ -56,6 +56,14 @@ describe('account deactivation', () => {
       active: false,
       status: 'deactivated',
     })
+
+    const adminRes = await agent.com.atproto.admin.getAccountInfo(
+      {
+        did: alice,
+      },
+      { headers: network.pds.adminAuthHeaders() },
+    )
+    expect(typeof adminRes.data.deactivatedAt).toBeDefined()
   })
 
   it('no longer serves repo data', async () => {
@@ -109,11 +117,19 @@ describe('account deactivation', () => {
     ).rejects.toThrow()
   })
 
-  it('still allows login', async () => {
-    await agent.com.atproto.server.createSession({
+  it('still allows login and returns status', async () => {
+    const res = await agent.com.atproto.server.createSession({
       identifier: alice,
       password: sc.accounts[alice].password,
     })
+    expect(res.data.status).toEqual('deactivated')
+  })
+
+  it('returns status on getSession', async () => {
+    const res = await agent.com.atproto.server.getSession(undefined, {
+      headers: sc.getHeaders(alice),
+    })
+    expect(res.data.status).toEqual('deactivated')
   })
 
   it('does not allow writes', async () => {
@@ -169,6 +185,19 @@ describe('account deactivation', () => {
     await agent.com.atproto.server.activateAccount(undefined, {
       headers: sc.getHeaders(alice),
     })
+
     await agent.com.atproto.sync.getRepo({ did: alice })
+
+    const statusRes = await agent.com.atproto.sync.getRepoStatus({ did: alice })
+    expect(statusRes.data.active).toBe(true)
+    expect(statusRes.data.status).toBeUndefined()
+
+    const adminRes = await agent.com.atproto.admin.getAccountInfo(
+      {
+        did: alice,
+      },
+      { headers: network.pds.adminAuthHeaders() },
+    )
+    expect(adminRes.data.deactivatedAt).toBeUndefined()
   })
 })

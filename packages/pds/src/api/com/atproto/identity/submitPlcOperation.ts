@@ -7,7 +7,7 @@ import { httpLogger as log } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.submitPlcOperation({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
       const op = input.body.operation

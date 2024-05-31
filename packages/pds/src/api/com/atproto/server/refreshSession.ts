@@ -52,6 +52,8 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle ?? INVALID_HANDLE,
           accessJwt: rotated.accessJwt,
           refreshJwt: rotated.refreshJwt,
+          active: user.active,
+          status: user.status,
         },
       }
     },

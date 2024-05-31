@@ -66,6 +66,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       repoRef: {
@@ -361,6 +365,10 @@ export const schemaDict = {
                 ],
               },
               takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+              deactivated: {
                 type: 'ref',
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
@@ -2255,6 +2263,15 @@ export const schemaDict = {
               emailAuthFactor: {
                 type: 'boolean',
               },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
             },
           },
         },
@@ -2591,6 +2608,15 @@ export const schemaDict = {
               didDoc: {
                 type: 'unknown',
               },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
             },
           },
         },
@@ -2674,6 +2700,15 @@ export const schemaDict = {
               },
               didDoc: {
                 type: 'unknown',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  "Hosting status of the account. If not specified, then assume 'active'.",
+                knownValues: ['takendown', 'suspended', 'deactivated'],
               },
             },
           },

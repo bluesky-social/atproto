@@ -36,6 +36,7 @@ export interface AccountView {
   invitesDisabled?: boolean
   emailConfirmedAt?: string
   inviteNote?: string
+  deactivatedAt?: string
   [k: string]: unknown
 }
 
