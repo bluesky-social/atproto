@@ -16,6 +16,7 @@
             "handle": { "type": "string", "format": "handle" },
             "did": { "type": "string", "format": "did" },
             "didDoc": { "type": "unknown" },
+            "active": { "type": "boolean" },
             "status": {
               "type": "string",
               "description": "Hosting status of the account. If not specified, then assume 'active'.",
