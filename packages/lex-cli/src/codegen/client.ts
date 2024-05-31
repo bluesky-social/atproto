@@ -261,9 +261,10 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
         isGetReq
           ? `.call('${userType.nsid}', params, undefined, opts)`
           : `.call('${userType.nsid}', opts?.qp, data, opts)`,
-        `  .catch((e) => {`,
-        `    throw ${moduleName}.toKnownErr(e)`,
-        `  })`,
+        userType.def.errors?.length
+          ? // Only add a catch block if there are custom errors
+            `  .catch((e) => { throw ${moduleName}.toKnownErr(e) })`
+          : '',
       ].join('\n'),
     )
   }
@@ -436,11 +437,14 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         main?.type === 'subscription' ||
         main?.type === 'procedure'
       ) {
-        //= import {Headers, XRPCError} from '@atproto/xrpc'
+        //= import {HeadersMap, XRPCError} from '@atproto/xrpc'
         const xrpcImport = file.addImportDeclaration({
           moduleSpecifier: '@atproto/xrpc',
         })
-        xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
+        xrpcImport.addNamedImports([
+          { name: 'HeadersMap' },
+          { name: 'XRPCError' },
+        ])
       }
       //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
       file
@@ -509,7 +513,8 @@ function genClientXrpcCommon(
     name: 'CallOptions',
     isExported: true,
   })
-  opts.addProperty({ name: 'headers?', type: 'Headers' })
+  opts.addProperty({ name: 'signal?', type: 'AbortSignal' })
+  opts.addProperty({ name: 'headers?', type: 'HeadersMap' })
   if (def.type === 'procedure') {
     opts.addProperty({ name: 'qp?', type: 'QueryParams' })
   }
@@ -533,7 +538,7 @@ function genClientXrpcCommon(
     isExported: true,
   })
   res.addProperty({ name: 'success', type: 'boolean' })
-  res.addProperty({ name: 'headers', type: 'Headers' })
+  res.addProperty({ name: 'headers', type: 'HeadersMap' })
   if (def.output?.schema) {
     if (def.output.encoding?.includes(',')) {
       res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
@@ -554,30 +559,32 @@ function genClientXrpcCommon(
       extends: 'XRPCError',
       isExported: true,
     })
-    errCls
-      .addConstructor({
-        parameters: [{ name: 'src', type: 'XRPCError' }],
-      })
-      .setBodyText(`super(src.status, src.error, src.message, src.headers)`)
+    errCls.addConstructor({
+      parameters: [{ name: 'src', type: 'XRPCError' }],
+      statements: [
+        'super(src.status, src.error, src.message, src.headers, { cause: src })',
+      ],
+    })
+
     customErrors.push({ name: error.name, cls: name })
   }
 
   // export function toKnownErr(err: any) {...}
-  const toKnownErrFn = file.addFunction({
+  file.addFunction({
     name: 'toKnownErr',
     isExported: true,
+    parameters: [{ name: 'e', type: 'any' }],
+    statements: customErrors.length
+      ? [
+          'if (e instanceof XRPCError) {',
+          ...customErrors.map(
+            (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
+          ),
+          '}',
+          'return e',
+        ]
+      : ['return e'],
   })
-  toKnownErrFn.addParameter({ name: 'e', type: 'any' })
-  toKnownErrFn.setBodyText(
-    [
-      `if (e instanceof XRPCError) {`,
-      ...customErrors.map(
-        (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
-      ),
-      `}`,
-      `return e`,
-    ].join('\n'),
-  )
 }
 
 function genClientRecord(
