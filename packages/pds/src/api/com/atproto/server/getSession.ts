@@ -39,7 +39,8 @@ export default function (server: Server, ctx: AppContext) {
           email: user.email ?? undefined,
           didDoc,
           emailConfirmed: !!user.emailConfirmedAt,
-          status: user.deactivatedAt === null ? 'active' : 'deactivated',
+          active: user.active,
+          status: user.status,
         },
       }
     },

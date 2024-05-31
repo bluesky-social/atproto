@@ -346,7 +346,7 @@ describe('agent', () => {
         refreshJwt: 'bad',
         did: 'bad',
         handle: 'bad',
-        status: 'active',
+        active: true,
       })
     } catch (_e: any) {
       // ignore

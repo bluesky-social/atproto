@@ -2,7 +2,6 @@ import { AtUri } from '@atproto/syntax'
 import { TID } from '@atproto/common-web'
 
 import { AppBskyActorDefs } from './client'
-import { AtpSessionStatus } from './types'
 
 export function sanitizeMutedWordValue(value: string) {
   return value
@@ -75,17 +74,5 @@ export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
         `Saved feed of type 'list' must be a list, got ${uri.collection}`,
       )
     }
-  }
-}
-
-export const parseSessionStatus = (sessionStr?: string): AtpSessionStatus => {
-  if (!sessionStr) {
-    return 'active'
-  } else if (
-    ['active', 'takendown', 'susepended', 'deactivated'].includes(sessionStr)
-  ) {
-    return sessionStr as AtpSessionStatus
-  } else {
-    return 'active'
   }
 }

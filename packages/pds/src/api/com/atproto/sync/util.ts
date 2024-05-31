@@ -1,8 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import {
-  AccountStatus,
-  ActorAccount,
-} from '../../../../account-manager/helpers/account'
+import { ActorAccount } from '../../../../account-manager/helpers/account'
 import AppContext from '../../../../context'
 
 export const assertRepoAvailability = async (
@@ -36,24 +33,4 @@ export const assertRepoAvailability = async (
     )
   }
   return account
-}
-
-export const formatAccountStatus = (account: {
-  takedownRef: string | null
-  deactivatedAt: string | null
-}): {
-  active: boolean
-  status?: AccountStatus
-} => {
-  let status: AccountStatus | undefined = undefined
-  if (account.takedownRef) {
-    status = AccountStatus.Takendown
-  } else if (account.deactivatedAt) {
-    status = AccountStatus.Deactivated
-  }
-  const active = !status
-  return {
-    active,
-    status,
-  }
 }

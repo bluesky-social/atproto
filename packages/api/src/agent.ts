@@ -20,7 +20,6 @@ import {
   AtprotoServiceType,
 } from './types'
 import { BSKY_LABELER_DID } from './const'
-import { parseSessionStatus } from './util'
 
 const MAX_MOD_AUTHORITIES = 3
 const MAX_LABELERS = 10
@@ -150,7 +149,7 @@ export class AtpAgent {
         email: opts.email,
         emailConfirmed: false,
         emailAuthFactor: false,
-        status: 'active',
+        active: true,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -186,7 +185,8 @@ export class AtpAgent {
         email: res.data.email,
         emailConfirmed: res.data.emailConfirmed,
         emailAuthFactor: res.data.emailAuthFactor,
-        status: parseSessionStatus(res.data.status),
+        active: res.data.active ?? true,
+        status: res.data.status,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -222,7 +222,8 @@ export class AtpAgent {
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
       this.session.emailAuthFactor = res.data.emailAuthFactor
-      this.session.status = parseSessionStatus(res.data.status)
+      this.session.active = res.data.active ?? true
+      this.session.status = res.data.status
       this._updateApiEndpoint(res.data.didDoc)
       this._persistSession?.('update', this.session)
       return res

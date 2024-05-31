@@ -98,9 +98,7 @@ export class ActorHydrator {
       const actor = res.actors[i]
       const isNoHosted =
         actor.takenDown ||
-        ['takendown', 'suspended', 'deactivated'].includes(
-          actor.upstreamStatus ?? '',
-        )
+        (actor.upstreamStatus && actor.upstreamStatus !== 'active')
       if (
         !actor.exists ||
         (isNoHosted && !includeTakedowns) ||
@@ -122,7 +120,7 @@ export class ActorHydrator {
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
-        upstreamStatus: actor.upstreamStatus ?? undefined,
+        upstreamStatus: actor.upstreamStatus || undefined,
       })
     }, new HydrationMap<Actor>())
   }

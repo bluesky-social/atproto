@@ -9,6 +9,8 @@ export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
   invitesDisabled: 0 | 1 | null
+  active: boolean
+  status?: AccountStatus
 }
 
 export type AvailabilityFlags = {
@@ -61,7 +63,7 @@ export const getAccount = async (
       }
     })
     .executeTakeFirst()
-  return found || null
+  return found ? { ...found, ...formatAccountStatus(found) } : null
 }
 
 export const getAccountByEmail = async (
@@ -72,7 +74,7 @@ export const getAccountByEmail = async (
   const found = await selectAccountQB(db, flags)
     .where('email', '=', email.toLowerCase())
     .executeTakeFirst()
-  return found || null
+  return found ? { ...found, ...formatAccountStatus(found) } : null
 }
 
 export const registerActor = async (
@@ -260,4 +262,24 @@ export const activateAccount = async (db: AccountDb, did: string) => {
       })
       .where('did', '=', did),
   )
+}
+
+export const formatAccountStatus = (account: {
+  takedownRef: string | null
+  deactivatedAt: string | null
+}): {
+  active: boolean
+  status?: AccountStatus
+} => {
+  let status: AccountStatus | undefined = undefined
+  if (account.takedownRef) {
+    status = AccountStatus.Takendown
+  } else if (account.deactivatedAt) {
+    status = AccountStatus.Deactivated
+  }
+  const active = !status
+  return {
+    active,
+    status,
+  }
 }

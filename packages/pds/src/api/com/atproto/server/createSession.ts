@@ -86,7 +86,8 @@ export default function (server: Server, ctx: AppContext) {
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt,
           refreshJwt,
-          status: user.deactivatedAt === null ? 'active' : 'deactivated',
+          active: user.active,
+          status: user.status,
         },
       }
     },
