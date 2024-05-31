@@ -2270,12 +2270,7 @@ export const schemaDict = {
                 type: 'string',
                 description:
                   'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: [
-                  'active',
-                  'takendown',
-                  'suspended',
-                  'deactivated',
-                ],
+                knownValues: ['takendown', 'suspended', 'deactivated'],
               },
             },
           },
@@ -2620,12 +2615,7 @@ export const schemaDict = {
                 type: 'string',
                 description:
                   'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: [
-                  'active',
-                  'takendown',
-                  'suspended',
-                  'deactivated',
-                ],
+                knownValues: ['takendown', 'suspended', 'deactivated'],
               },
             },
           },
@@ -2718,12 +2708,7 @@ export const schemaDict = {
                 type: 'string',
                 description:
                   "Hosting status of the account. If not specified, then assume 'active'.",
-                knownValues: [
-                  'active',
-                  'takendown',
-                  'suspended',
-                  'deactivated',
-                ],
+                knownValues: ['takendown', 'suspended', 'deactivated'],
               },
             },
           },
