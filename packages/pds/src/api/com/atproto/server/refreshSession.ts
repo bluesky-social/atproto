@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
-import { authPassthru, resultPassthru } from '../../../proxy'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
@@ -28,12 +28,18 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.refreshSession(
-            undefined,
-            authPassthru(req),
-          ),
+        const res = await ctx.entrywayAgent.com.atproto.server.refreshSession(
+          undefined,
+          authPassthru(req),
         )
+        return {
+          encoding: 'application/json',
+          body: {
+            ...res.data,
+            active: user.active,
+            status: user.status,
+          },
+        }
       }
 
       const [didDoc, rotated] = await Promise.all([
