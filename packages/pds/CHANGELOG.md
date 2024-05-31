@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.30
+
+### Patch Changes
+
+- [#2531](https://github.com/bluesky-social/atproto/pull/2531) [`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912) Thanks [@dholms](https://github.com/dholms)! - Account deactivation. Current hosting status returned on session routes.
+
+- Updated dependencies [[`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912)]:
+  - @atproto/api@0.12.15
+
 ## 0.4.29
 
 ### Patch Changes
