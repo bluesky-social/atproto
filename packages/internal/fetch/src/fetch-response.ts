@@ -73,7 +73,7 @@ const extractResponseMessage: ResponseMessageGetter = async (response) => {
     if (mimeType === 'text/plain') {
       return await response.text()
     } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
-      const json = await response.json()
+      const json: unknown = await response.json()
 
       if (typeof json === 'string') return json
 
