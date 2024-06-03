@@ -28,8 +28,7 @@
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:*",
     "@atproto-labs/handle-resolver": "workspace:*",
-    "@atproto/did": "workspace:*",
-    "tslib": "^2.6.2"
+    "@atproto/did": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

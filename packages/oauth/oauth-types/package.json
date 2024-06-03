@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@atproto/jwk": "workspace:*",
-    "tslib": "^2.6.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

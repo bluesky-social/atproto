@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "multiformats": "^9.9.0",
-    "tslib": "^2.6.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

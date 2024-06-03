@@ -24,8 +24,7 @@
     }
   },
   "dependencies": {
-    "mime": "^3.0.0",
-    "tslib": "^2.6.2"
+    "mime": "^3.0.0"
   },
   "peerDependencies": {
     "rollup": "^4.0.0"

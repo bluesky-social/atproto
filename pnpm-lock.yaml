@@ -462,9 +462,6 @@ importers:
 
   packages/did:
     dependencies:
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -521,9 +518,6 @@ importers:
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -537,9 +531,6 @@ importers:
       '@atproto-labs/pipe':
         specifier: workspace:*
         version: link:../pipe
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -559,9 +550,6 @@ importers:
       ipaddr.js:
         specifier: ^2.1.0
         version: 2.1.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       undici:
         specifier: ^6.14.1
         version: 6.18.1
@@ -581,9 +569,6 @@ importers:
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -603,9 +588,6 @@ importers:
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -622,19 +604,12 @@ importers:
       '@atproto/syntax':
         specifier: workspace:*
         version: link:../../syntax
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
         version: 5.4.4
 
   packages/internal/pipe:
-    dependencies:
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -645,9 +620,6 @@ importers:
       mime:
         specifier: ^3.0.0
         version: 3.0.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       rollup:
         specifier: ^4.10.0
@@ -657,10 +629,6 @@ importers:
         version: 5.4.4
 
   packages/internal/simple-store:
-    dependencies:
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -674,9 +642,6 @@ importers:
       lru-cache:
         specifier: ^10.2.0
         version: 10.2.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -736,9 +701,6 @@ importers:
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -755,9 +717,6 @@ importers:
       jose:
         specifier: ^5.2.0
         version: 5.3.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -771,9 +730,6 @@ importers:
       '@atproto/jwk-jose':
         specifier: workspace:*
         version: link:../jwk-jose
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -811,9 +767,6 @@ importers:
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -848,9 +801,6 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       '@atproto/api':
         specifier: workspace:*
@@ -881,7 +831,7 @@ importers:
         version: 0.4.4(rollup@4.18.0)
       '@rollup/plugin-typescript':
         specifier: ^11.1.6
-        version: 11.1.6(rollup@4.18.0)(tslib@2.6.2)(typescript@5.4.4)
+        version: 11.1.6(rollup@4.18.0)(typescript@5.4.4)
       '@types/react':
         specifier: ^18.2.50
         version: 18.3.2
@@ -945,9 +895,6 @@ importers:
       react-native:
         specifier: '*'
         version: 0.74.1(@babel/core@7.24.5)(@babel/preset-env@7.24.5)(react@18.3.1)
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -1000,9 +947,6 @@ importers:
       psl:
         specifier: ^1.9.0
         version: 1.9.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -1031,7 +975,7 @@ importers:
         version: 0.4.4(rollup@4.18.0)
       '@rollup/plugin-typescript':
         specifier: ^11.1.6
-        version: 11.1.6(rollup@4.18.0)(tslib@2.6.2)(typescript@5.4.4)
+        version: 11.1.6(rollup@4.18.0)(typescript@5.4.4)
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
@@ -1080,9 +1024,6 @@ importers:
       '@atproto/jwk':
         specifier: workspace:*
         version: link:../jwk
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
       zod:
         specifier: ^3.22.4
         version: 3.23.8
@@ -7543,7 +7484,7 @@ packages:
       terser: 5.31.0
     dev: true
 
-  /@rollup/plugin-typescript@11.1.6(rollup@4.18.0)(tslib@2.6.2)(typescript@5.4.4):
+  /@rollup/plugin-typescript@11.1.6(rollup@4.18.0)(typescript@5.4.4):
     resolution: {integrity: sha512-R92yOmIACgYdJ7dJ97p4K69I8gg6IEHt8M7dUBxN3W6nrO8uUxX5ixl0yU/N3aZTi8WhPuICvOHXQvF6FaykAA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -7559,7 +7500,6 @@ packages:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.0)
       resolve: 1.22.4
       rollup: 4.18.0
-      tslib: 2.6.2
       typescript: 5.4.4
     dev: true
 
