@@ -19,7 +19,7 @@ import {
   UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
-import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding.js'
+import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
