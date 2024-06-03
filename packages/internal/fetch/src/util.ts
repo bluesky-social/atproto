@@ -63,6 +63,7 @@ export class MaxBytesTransformStream extends TransformStream<
   Uint8Array
 > {
   constructor(maxBytes: number) {
+    // Note: negation accounts for invalid value types (NaN, non numbers)
     if (!(maxBytes >= 0)) {
       throw new TypeError('maxBytes must be a non-negative number')
     }

@@ -34,6 +34,7 @@ export async function peekJson(
 }
 
 export function checkLength(response: Response, maxBytes: number) {
+  // Note: negation accounts for invalid value types (NaN, non numbers)
   if (!(maxBytes >= 0)) {
     throw new TypeError('maxBytes must be a non-negative number')
   }
