@@ -88,8 +88,13 @@ export function checkDidMethod(
   start = 0,
   end = input.length,
 ): void {
-  if (!(end >= start)) {
-    throw new TypeError('end < start')
+  if (
+    !Number.isFinite(end) ||
+    !Number.isFinite(start) ||
+    end < start ||
+    end > input.length
+  ) {
+    throw new TypeError('Invalid start or end position')
   }
   if (end === start) {
     throw new InvalidDidError(input, `Empty method name`)
@@ -130,8 +135,13 @@ export function checkDidMsid(
   start = 0,
   end = input.length,
 ): void {
-  if (!(end >= start)) {
-    throw new TypeError('end < start')
+  if (
+    !Number.isFinite(end) ||
+    !Number.isFinite(start) ||
+    end < start ||
+    end > input.length
+  ) {
+    throw new TypeError('Invalid start or end position')
   }
   if (end === start) {
     throw new InvalidDidError(input, `DID method-specific id must not be empty`)
