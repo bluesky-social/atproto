@@ -1,14 +1,5 @@
 export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
 
-export function wellKnownUrl(base: URL, path: string) {
-  const lastSlash = base.pathname.lastIndexOf('/')
-
-  const prefix =
-    lastSlash <= 0 ? `/.well-known/` : base.pathname.slice(0, lastSlash)
-
-  return new URL(`${prefix}/${path}`, base)
-}
-
 export type DigitChar =
   | '0'
   | '1'
