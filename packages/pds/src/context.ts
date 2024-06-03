@@ -258,11 +258,11 @@ export class AppContext {
 
     // A Fetch function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user
-    // provided URLs (unless "disableSsrf" is true, of course).
+    // provided URLs (unless "disableSsrfProtection" is true, of course).
     const safeFetch = safeFetchWrap({
-      allowHttp: cfg.fetch.disableSsrf,
+      allowHttp: cfg.fetch.disableSsrfProtection,
       responseMaxSize: 512 * 1024, // 512kB
-      ssrfProtection: !cfg.fetch.disableSsrf,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
       fetch: async (request, init?: RequestInit) => {
         fetchLogger.debug(
           { method: init?.method ?? request.method, uri: request.url },

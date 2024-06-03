@@ -117,7 +117,7 @@ export const readEnv = (): ServerEnvironment => {
     ),
 
     // fetch
-    fetchDisableSsrf: envBool('PDS_DISABLE_SSRF'),
+    fetchDisableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
   }
 }
 
@@ -232,5 +232,5 @@ export type ServerEnvironment = {
   plcRotationKeyK256PrivateKeyHex?: string
 
   // fetch
-  fetchDisableSsrf?: boolean
+  fetchDisableSsrfProtection?: boolean
 }

@@ -236,7 +236,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
   const fetchCfg: ServerConfig['fetch'] = {
-    disableSsrf: env.fetchDisableSsrf ?? false,
+    disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -391,7 +391,7 @@ export type EntrywayConfig = {
 }
 
 export type FetchConfig = {
-  disableSsrf: boolean
+  disableSsrfProtection: boolean
 }
 
 export type OAuthConfig = {
