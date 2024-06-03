@@ -16,14 +16,18 @@ export async function constantTime<T>(
     return await fn()
   } finally {
     const delta = Date.now() - start
-    if (delta < delay) {
-      await new Promise((resolve) => setTimeout(resolve, delay - delta))
-    } else {
-      // The delay is too short, let's wait for the next multiple of `delay`
-      // to avoid leaking information about the execution time.
-      await new Promise((resolve) =>
-        setTimeout(resolve, delay * Math.ceil(delta / delay)),
+
+    // Let's make sure we always wait for a multiple of `delay` milliseconds.
+    const n = Math.max(1, Math.ceil(delta / delay))
+
+    // Ideally, the multiple should always be 1 in order to to properly defend
+    // against timing attacks. Show a warning if it's not.
+    if (n > 1) {
+      console.warn(
+        `constantTime: execution time was ${delta}ms, waiting for the next multiple of ${delay}ms. You should increase the delay to properly defend against timing attacks.`,
       )
     }
+
+    await new Promise((resolve) => setTimeout(resolve, n * delay))
   }
 }
