@@ -44,10 +44,17 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('authenticatedAt', 'varchar', (col) => col.notNull())
     .addColumn('remember', 'boolean', (col) => col.notNull())
     .addColumn('authorizedClients', 'varchar', (col) => col.notNull())
-    .addUniqueConstraint('device_account_did_device_id_idx', [
+    .addPrimaryKeyConstraint('device_account_pk', [
       'deviceId', // first because this table will be joined from the "device" table
       'did',
     ])
+    .addForeignKeyConstraint(
+      'device_account_device_id_fk',
+      ['deviceId'],
+      'device',
+      ['id'],
+      (qb) => qb.onDelete('cascade').onUpdate('cascade'),
+    )
     .execute()
 
   await db.schema
@@ -81,12 +88,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createTable('used_refresh_token')
-    .addColumn('id', 'integer', (col) => col.notNull())
-    .addColumn('usedRefreshToken', 'varchar', (col) => col.notNull())
-    .addUniqueConstraint('used_refresh_token_uniq', ['usedRefreshToken', 'id'])
+    .addColumn('refreshToken', 'varchar', (col) => col.primaryKey())
+    .addColumn('tokenId', 'integer', (col) => col.notNull())
     .addForeignKeyConstraint(
       'used_refresh_token_fk',
-      ['id'],
+      ['tokenId'],
       'token',
       ['id'],
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),

@@ -15,7 +15,7 @@ export interface AuthorizationRequest {
   clientId: OAuthClientId
   clientAuth: JsonObject
   parameters: JsonObject
-  expiresAt: DateISO // TODO: Index this
+  expiresAt: DateISO
   code: Code | null
 }
 

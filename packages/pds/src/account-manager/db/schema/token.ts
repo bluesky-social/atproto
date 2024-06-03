@@ -24,7 +24,7 @@ export interface Token {
   parameters: JsonObject
   details: JsonArray | null
   code: Code | null
-  currentRefreshToken: RefreshToken | null // TODO: Index this
+  currentRefreshToken: RefreshToken | null
 }
 
 export type TokenEntry = Selectable<Token>

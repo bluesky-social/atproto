@@ -171,10 +171,3 @@ export const remove = async (
     .where('did', '=', did)
     .execute()
 }
-
-export const removeByDevice = async (db: AccountDb, deviceId: DeviceId) => {
-  await db.db
-    .deleteFrom('device_account')
-    .where('deviceId', '=', deviceId)
-    .execute()
-}

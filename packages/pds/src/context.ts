@@ -226,6 +226,7 @@ export class AppContext {
       : null
 
     const accountManager = new AccountManager(
+      backgroundQueue,
       cfg.db.accountDbLoc,
       jwtSecretKey,
       cfg.service.did,

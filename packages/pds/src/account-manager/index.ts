@@ -1,4 +1,3 @@
-import { KeyObject } from 'node:crypto'
 import { HOUR, wait } from '@atproto/common'
 import {
   AccountInfo,
@@ -6,6 +5,7 @@ import {
   Code,
   DeviceData,
   DeviceId,
+  DeviceStore,
   FoundRequestResult,
   LoginCredentials,
   NewTokenData,
@@ -13,7 +13,6 @@ import {
   RequestData,
   RequestId,
   RequestStore,
-  DeviceStore,
   TokenData,
   TokenId,
   TokenInfo,
@@ -22,24 +21,26 @@ import {
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
+import { KeyObject } from 'node:crypto'
 
+import { AuthScope } from '../auth-verifier'
+import { BackgroundQueue } from '../background'
 import { softDeleted } from '../db'
+import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
-import * as scrypt from './helpers/scrypt'
 import * as account from './helpers/account'
 import { ActorAccount } from './helpers/account'
-import * as repo from './helpers/repo'
 import * as auth from './helpers/auth'
+import * as authorizationRequest from './helpers/authorization-request.js'
+import * as deviceAccount from './helpers/device-account.js'
+import * as device from './helpers/device.js'
+import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
 import * as password from './helpers/password'
-import * as emailToken from './helpers/email-token'
-import * as authorizationRequest from './helpers/authorization-request.js'
-import * as device from './helpers/device.js'
-import * as deviceAccount from './helpers/device-account.js'
+import * as repo from './helpers/repo'
+import * as scrypt from './helpers/scrypt'
 import * as token from './helpers/token.js'
 import * as usedRefreshToken from './helpers/used-refresh-token.js'
-import { AuthScope } from '../auth-verifier'
-import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 
 export class AccountManager
   implements AccountStore, RequestStore, DeviceStore, TokenStore
@@ -47,6 +48,7 @@ export class AccountManager
   db: AccountDb
 
   constructor(
+    private backgroundQueue: BackgroundQueue,
     dbLocation: string,
     private jwtKey: KeyObject,
     private serviceDid: string,
@@ -487,9 +489,10 @@ export class AccountManager
         throw new AuthRequiredError('App passwords are not allowed')
       }
 
-      await deviceAccount.createOrUpdate(this.db, deviceId, user.did, remember)
-
-      return deviceAccount.get(this.db, deviceId, user.did, this.serviceDid)
+      return await this.db.transaction(async (dbTxn) => {
+        await deviceAccount.createOrUpdate(dbTxn, deviceId, user.did, remember)
+        return deviceAccount.get(dbTxn, deviceId, user.did, this.serviceDid)
+      })
     } catch (err) {
       if (err instanceof AuthRequiredError) return null
       throw err
@@ -528,34 +531,44 @@ export class AccountManager
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
-    return deviceAccount.remove(this.db, deviceId, sub)
+    await this.db.transaction(async (dbTxn) => {
+      await deviceAccount.remove(dbTxn, deviceId, sub)
+    })
   }
 
   // RequestStore
 
   async createRequest(id: RequestId, data: RequestData): Promise<void> {
-    await authorizationRequest.create(this.db, id, data)
+    await this.db.transaction(async (dbTxn) => {
+      await authorizationRequest.create(dbTxn, id, data)
+    })
   }
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
     try {
-      return authorizationRequest.get(this.db, id)
+      return await authorizationRequest.get(this.db, id)
     } finally {
       // Take the opportunity to clean up expired requests. Do this after we got
       // the current (potentially expired) request data to allow the provider to
       // handle expired requests.
-
-      // TODO: Do this less often?
-      await authorizationRequest.deleteOldExpired(this.db)
+      this.backgroundQueue.add(async () => {
+        await this.db.transaction(async (dbTxn) => {
+          await authorizationRequest.removeOldExpired(dbTxn)
+        })
+      })
     }
   }
 
   async updateRequest(id: RequestId, data: UpdateRequestData): Promise<void> {
-    await authorizationRequest.update(this.db, id, data)
+    await this.db.transaction(async (dbTxn) => {
+      await authorizationRequest.update(dbTxn, id, data)
+    })
   }
 
   async deleteRequest(id: RequestId): Promise<void> {
-    await authorizationRequest.deleteById(this.db, id)
+    await this.db.transaction(async (dbTxn) => {
+      await authorizationRequest.deleteById(dbTxn, id)
+    })
   }
 
   async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
@@ -565,7 +578,9 @@ export class AccountManager
   // DeviceStore
 
   async createDevice(deviceId: DeviceId, data: DeviceData): Promise<void> {
-    await device.create(this.db, deviceId, data)
+    await this.db.transaction(async (dbTxn) => {
+      await device.create(dbTxn, deviceId, data)
+    })
   }
 
   async readDevice(deviceId: DeviceId): Promise<null | DeviceData> {
@@ -576,14 +591,16 @@ export class AccountManager
     deviceId: DeviceId,
     data: Partial<DeviceData>,
   ): Promise<void> {
-    await device.update(this.db, deviceId, data)
+    await this.db.transaction(async (dbTxn) => {
+      await device.update(dbTxn, deviceId, data)
+    })
   }
 
   async deleteDevice(deviceId: DeviceId): Promise<void> {
-    await device.remove(this.db, deviceId)
-
-    // TODO: can we use foreign key constraint to delete this row ?
-    await deviceAccount.removeByDevice(this.db, deviceId)
+    await this.db.transaction(async (dbTxn) => {
+      // Will cascade to device_account (device_account_device_id_fk)
+      await device.remove(dbTxn, deviceId)
+    })
   }
 
   // TokenStore
@@ -593,7 +610,15 @@ export class AccountManager
     data: TokenData,
     refreshToken?: RefreshToken,
   ): Promise<void> {
-    await token.create(this.db, id, data, refreshToken)
+    await this.db.transaction(async (dbTxn) => {
+      if (refreshToken) {
+        if (await usedRefreshToken.hasRefreshToken(dbTxn, refreshToken)) {
+          throw new Error('Refresh token already in use')
+        }
+      }
+
+      await token.create(dbTxn, id, data, refreshToken)
+    })
   }
 
   async readToken(tokenId: TokenId): Promise<TokenInfo | null> {
@@ -601,7 +626,10 @@ export class AccountManager
   }
 
   async deleteToken(tokenId: TokenId): Promise<void> {
-    await token.remove(this.db, tokenId)
+    await this.db.transaction(async (dbTxn) => {
+      // Will cascade to used_refresh_token (used_refresh_token_fk)
+      await token.remove(dbTxn, tokenId)
+    })
   }
 
   async rotateToken(
@@ -610,19 +638,25 @@ export class AccountManager
     newRefreshToken: RefreshToken,
     newData: NewTokenData,
   ): Promise<void> {
-    // No transaction because we want to make sure that the token is added
-    // to the used refresh tokens even if the rotate() fails.
+    const err = await this.db.transaction(async (dbTxn) => {
+      const { id, currentRefreshToken } = await token.getForRefresh(
+        dbTxn,
+        tokenId,
+      )
 
-    const { id, currentRefreshToken } = await token.getForRefresh(
-      this.db,
-      tokenId,
-    )
+      if (currentRefreshToken) {
+        await usedRefreshToken.insert(dbTxn, id, currentRefreshToken)
+      }
 
-    if (currentRefreshToken) {
-      await usedRefreshToken.insert(this.db, id, currentRefreshToken)
-    }
+      if (await usedRefreshToken.hasRefreshToken(dbTxn, newRefreshToken)) {
+        // Do NOT throw (we don't want the transaction to be rolled back)
+        return new Error('New refresh token already in use')
+      }
 
-    await token.rotate(this.db, id, newTokenId, newRefreshToken, newData)
+      await token.rotate(dbTxn, id, newTokenId, newRefreshToken, newData)
+    })
+
+    if (err) throw err
   }
 
   async findTokenByRefreshToken(

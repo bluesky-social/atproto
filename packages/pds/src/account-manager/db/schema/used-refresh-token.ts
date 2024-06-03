@@ -2,8 +2,8 @@ import { RefreshToken } from '@atproto/oauth-provider'
 import { Selectable } from 'kysely'
 
 export interface UsedRefreshToken {
-  id: number // TODO: Index this (foreign key to token)
-  usedRefreshToken: RefreshToken
+  tokenId: number
+  refreshToken: RefreshToken
 }
 
 export type UsedRefreshTokenEntry = Selectable<UsedRefreshToken>
