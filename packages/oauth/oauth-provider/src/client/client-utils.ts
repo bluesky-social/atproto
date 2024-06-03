@@ -4,6 +4,6 @@ export function parseRedirectUri(redirectUri: string): URL {
   try {
     return new URL(redirectUri)
   } catch (err) {
-    throw new InvalidRedirectUriError('Invalid redirect URI', err)
+    throw InvalidRedirectUriError.from(err)
   }
 }
