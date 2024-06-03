@@ -341,8 +341,11 @@ export class AuthVerifier {
       verifyOptions,
     )
 
-    if (protectedHeader.typ) {
-      // Only OAuth Provider sets this claim
+    if (protectedHeader.typ === 'dpop+jwt') {
+      // @TODO we should make sure that bearer access tokens do have their "typ"
+      // claim, and allow list the possible value(s) here (typically "at+jwt"),
+      // instead of using a deny list. This would be more secure & future proof
+      // against new token types that would be introduced in the future
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
 
