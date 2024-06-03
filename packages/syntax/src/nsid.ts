@@ -84,10 +84,10 @@ export const ensureValidNsid = (nsid: string): void => {
     if (l.endsWith('-') || l.startsWith('-')) {
       throw new InvalidNsidError('NSID parts can not start or end with hyphen')
     }
-    if (/^[0-9]/.test(l) && i == 0) {
+    if (/^[0-9]/.test(l) && i === 0) {
       throw new InvalidNsidError('NSID first part may not start with a digit')
     }
-    if (!/^[a-zA-Z]+$/.test(l) && i + 1 == labels.length) {
+    if (!/^[a-zA-Z]+$/.test(l) && i + 1 === labels.length) {
       throw new InvalidNsidError('NSID name part must be only letters')
     }
   }
