@@ -1,4 +1,4 @@
-import { jwtSchema } from '@atproto/jwk'
+import { signedJwtSchema } from '@atproto/jwk'
 import { z } from 'zod'
 
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
@@ -14,7 +14,7 @@ export const oauthTokenResponseSchema = z
     issuer: z.string().url().optional(),
     sub: z.string().optional(),
     scope: z.string().optional(),
-    id_token: jwtSchema.optional(),
+    id_token: signedJwtSchema.optional(),
     refresh_token: z.string().optional(),
     expires_in: z.number().optional(),
     authorization_details: oauthAuthorizationDetailsSchema.optional(),

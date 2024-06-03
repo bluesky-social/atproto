@@ -46,8 +46,12 @@ export const TOTAL_REFRESH_LIFETIME = 1 * YEAR
 /** 5 minutes */
 export const PAR_EXPIRES_IN = 5 * MINUTE
 
-/** 1 minute */
-export const JAR_MAX_AGE = 1 * MINUTE
+/**
+ * 59 seconds (should be less than a minute)
+ *
+ * @see {@link https://datatracker.ietf.org/doc/html/rfc9101#section-10.2}
+ */
+export const JAR_MAX_AGE = 59 * SECOND
 
 /** 1 minute */
 export const CLIENT_ASSERTION_MAX_AGE = 1 * MINUTE

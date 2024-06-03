@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { jwtSchema } from '@atproto/jwk'
+import { signedJwtSchema } from '@atproto/jwk'
 
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from './constants.js'
@@ -16,7 +16,7 @@ export const oauthClientCredentialsJwtBearerSchema = z.object({
    *
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwt-bearer-11#section-3}
    */
-  client_assertion: jwtSchema,
+  client_assertion: signedJwtSchema,
 })
 
 export const oauthClientCredentialsSecretPostSchema = z.object({

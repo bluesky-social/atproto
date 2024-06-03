@@ -5,7 +5,7 @@ import {
   fetchJsonProcessor,
 } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
-import { Jwt, Key, Keyset } from '@atproto/jwk'
+import { Key, Keyset, SignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthClientIdentification,
@@ -32,7 +32,7 @@ export type TokenSet = {
   aud: string
   scope?: string
 
-  id_token?: Jwt
+  id_token?: SignedJwt
   refresh_token?: string
   access_token: string
   token_type: OAuthTokenType

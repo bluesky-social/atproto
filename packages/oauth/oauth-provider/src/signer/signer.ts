@@ -1,11 +1,11 @@
 import { randomBytes } from 'node:crypto'
 
 import {
-  Jwt,
   JwtPayload,
   JwtPayloadGetter,
   JwtSignHeader,
   Keyset,
+  SignedJwt,
   VerifyOptions,
 } from '@atproto/jwk'
 import {
@@ -36,7 +36,7 @@ export class Signer {
   ) {}
 
   async verify<P extends Record<string, unknown> = JwtPayload>(
-    token: Jwt,
+    token: SignedJwt,
     options?: Omit<VerifyOptions, 'issuer'>,
   ) {
     return this.keyset.verifyJwt<P>(token, {
@@ -48,7 +48,7 @@ export class Signer {
   public async sign(
     signHeader: JwtSignHeader,
     payload: SignPayload | JwtPayloadGetter<SignPayload>,
-  ): Promise<Jwt> {
+  ): Promise<SignedJwt> {
     return this.keyset.createJwt(signHeader, async (protectedHeader, key) => ({
       ...(typeof payload === 'function'
         ? await payload(protectedHeader, key)
@@ -69,7 +69,7 @@ export class Signer {
       cnf?: Record<string, string>
       authorization_details?: OAuthAuthorizationDetails
     },
-  ): Promise<Jwt> {
+  ): Promise<SignedJwt> {
     const header: JwtSignHeader = {
       // https://datatracker.ietf.org/doc/html/rfc9068#section-2.1
       alg: extra.alg,
@@ -92,7 +92,7 @@ export class Signer {
     return this.sign(header, payload)
   }
 
-  async verifyAccessToken(token: Jwt) {
+  async verifyAccessToken(token: SignedJwt) {
     const result = await this.verify<SignedTokenPayload>(token, {
       typ: 'at+jwt',
     })
@@ -118,7 +118,7 @@ export class Signer {
       code?: string
       access_token?: string
     },
-  ): Promise<Jwt> {
+  ): Promise<SignedJwt> {
     // Should be enforced by the request manager. Let's be sure.
     // https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
     if (!params.nonce) {

@@ -1,4 +1,4 @@
-import { jwtSchema } from '@atproto/jwk'
+import { signedJwtSchema } from '@atproto/jwk'
 import { z } from 'zod'
 
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
@@ -79,7 +79,7 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
     .optional(),
 
   // Previous ID Token, should be provided when prompt=none is used
-  id_token_hint: jwtSchema.optional(),
+  id_token_hint: signedJwtSchema.optional(),
 
   // Type of UI the AS is displayed on
   display: z.enum(['page', 'popup', 'touch']).optional(),

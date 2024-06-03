@@ -1,4 +1,4 @@
-import { Jwk, Jwt } from '@atproto/jwk'
+import { Jwk, SignedJwt } from '@atproto/jwk'
 import { NativeModules, Platform } from 'react-native'
 
 const LINKING_ERROR =
@@ -38,12 +38,12 @@ export const OauthClientReactNative =
       _header: unknown,
       _payload: unknown,
       _jwk: unknown,
-    ): Awaitable<Jwt> {
+    ): Awaitable<SignedJwt> {
       throw new Error(LINKING_ERROR)
     },
 
     verifyJwt(
-      _token: Jwt,
+      _token: SignedJwt,
       _jwk: Jwk,
     ): Awaitable<{
       payload: Record<string, unknown>

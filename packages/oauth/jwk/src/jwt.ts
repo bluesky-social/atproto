@@ -1,24 +1,101 @@
-import { z } from 'zod'
+import { RefinementCtx, ZodIssueCode, z } from 'zod'
 
 import { jwkPubSchema } from './jwk.js'
 
-export const JWT_REGEXP = /^[A-Za-z0-9_-]{2,}(?:\.[A-Za-z0-9_-]{2,}){1,2}$/
-export const jwtSchema = z
+const MIN_JWT_PART_LENGTH = 2
+
+const jwtCharsRefinement = (data: string, ctx: RefinementCtx): void => {
+  // Note: this is a hot path, let's avoid using a RegExp
+  let char
+
+  for (let i = 0; i < data.length; i++) {
+    char = data.charCodeAt(i)
+
+    if (
+      // Base64 URL encoding (most frequent)
+      (65 <= char && char <= 90) || // A-Z
+      (97 <= char && char <= 122) || // a-z
+      (48 <= char && char <= 57) || // 0-9
+      char === 45 || // -
+      char === 95 || // _
+      // Boundary (least frequent)
+      char === 46 // .
+    ) {
+      // continue
+    } else {
+      // Invalid char might be a surrogate pair
+      const invalidChar = String.fromCodePoint(data.codePointAt(i)!)
+      return ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `Invalid character "${invalidChar}" in JWT at position ${i}`,
+      })
+    }
+  }
+}
+
+const jwtFormatRefinementFactory =
+  (parts, minPartLength = 2) =>
+  (data, ctx) => {
+    let partStart = 0
+    for (let p = 0; p < parts - 1; p++) {
+      const nextDot = data.indexOf('.', partStart)
+      if (nextDot === -1) {
+        return ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: `Invalid JWT format: expected ${parts} parts, got ${p + 1}`,
+        })
+      }
+      if (nextDot - partStart < minPartLength) {
+        return ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: `Invalid JWT format: part ${p + 1} is too short`,
+        })
+      }
+      partStart = nextDot + 1
+    }
+    if (data.indexOf('.', partStart) !== -1) {
+      return ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `Invalid JWT format: too many parts`,
+      })
+    }
+    if (data.length - partStart < minPartLength) {
+      return ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `Invalid JWT format: last part is too short`,
+      })
+    }
+  }
+
+export const signedJwtSchema = z
   .string()
   .min(5)
-  .refinement(
-    (data: string): data is `${string}.${string}.${string}` =>
-      JWT_REGEXP.test(data),
-    {
-      code: z.ZodIssueCode.custom,
-      message: 'Must be a JWT',
-    },
+  .superRefine(jwtCharsRefinement)
+  .superRefine(
+    jwtFormatRefinementFactory(3, MIN_JWT_PART_LENGTH) as (
+      data: string,
+    ) => data is `${string}.${string}.${string}`,
   )
 
-export const isJwt = (data: unknown): data is Jwt =>
-  jwtSchema.safeParse(data).success
+export const isSignedJwt = (data: unknown): data is SignedJwt =>
+  signedJwtSchema.safeParse(data).success
 
-export type Jwt = z.infer<typeof jwtSchema>
+export type SignedJwt = z.infer<typeof signedJwtSchema>
+
+export const unsignedJwtSchema = z
+  .string()
+  .min(5)
+  .superRefine(jwtCharsRefinement)
+  .superRefine(
+    jwtFormatRefinementFactory(2, MIN_JWT_PART_LENGTH) as (
+      data: string,
+    ) => data is `${string}.${string}`,
+  )
+
+export const isUnsignedJwt = (data: unknown): data is UnsignedJwt =>
+  unsignedJwtSchema.safeParse(data).success
+
+export type UnsignedJwt = z.infer<typeof unsignedJwtSchema>
 
 /**
  * @see {@link https://www.rfc-editor.org/rfc/rfc7515.html#section-4}

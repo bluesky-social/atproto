@@ -1,4 +1,4 @@
-import { jwtSchema } from '@atproto/jwk'
+import { signedJwtSchema, unsignedJwtSchema } from '@atproto/jwk'
 import {
   oauthAuthenticationRequestParametersSchema,
   oauthClientIdentificationSchema,
@@ -13,9 +13,8 @@ export const authorizationRequestJarSchema = z.object({
    * - "iat" is required and **MUST** be less than one minute
    *
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9101}
-   * @see {AuthorizationServer.getAuthorizationRequest}
    */
-  request: jwtSchema,
+  request: z.union([signedJwtSchema, unsignedJwtSchema]),
 })
 
 export type AuthorizationRequestJar = z.infer<

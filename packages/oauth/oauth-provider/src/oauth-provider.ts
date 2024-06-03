@@ -1,4 +1,4 @@
-import { Jwks, Jwt, Keyset, jwtSchema } from '@atproto/jwk'
+import { Jwks, Keyset, SignedJwt, signedJwtSchema } from '@atproto/jwk'
 import {
   AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -823,7 +823,7 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  protected async signUserinfo(userinfo: Userinfo): Promise<Jwt> {
+  protected async signUserinfo(userinfo: Userinfo): Promise<SignedJwt> {
     const client = await this.clientManager.getClient(userinfo.client_id)
     return this.signer.sign(
       {
@@ -1064,7 +1064,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
 
     const userinfoBodySchema = z.object({
-      access_token: jwtSchema.optional(),
+      access_token: signedJwtSchema.optional(),
     })
 
     router.addRoute(

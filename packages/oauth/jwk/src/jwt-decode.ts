@@ -1,5 +1,3 @@
-import { base64url } from 'multiformats/bases/base64'
-
 import { ERR_JWT_INVALID, JwtVerifyError } from './errors.js'
 import {
   JwtHeader,
@@ -7,6 +5,7 @@ import {
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from './jwt.js'
+import { parseB64uJson } from './util.js'
 
 export function unsafeDecodeJwt(jwt: string): {
   header: JwtHeader
@@ -25,11 +24,4 @@ export function unsafeDecodeJwt(jwt: string): {
   const payload = jwtPayloadSchema.parse(parseB64uJson(payloadEnc!))
 
   return { header, payload }
-}
-
-const decoder = new TextDecoder()
-function parseB64uJson(input: string): unknown {
-  const inputBytes = base64url.baseDecode(input)
-  const json = decoder.decode(inputBytes)
-  return JSON.parse(json)
 }

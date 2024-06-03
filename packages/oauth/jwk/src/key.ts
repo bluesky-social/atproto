@@ -2,7 +2,7 @@ import { jwkAlgorithms } from './alg.js'
 import { JwkError } from './errors.js'
 import { Jwk, jwkSchema } from './jwk.js'
 import { VerifyOptions, VerifyPayload, VerifyResult } from './jwt-verify.js'
-import { Jwt, JwtHeader, JwtPayload } from './jwt.js'
+import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
 export abstract class Key {
@@ -79,7 +79,7 @@ export abstract class Key {
   /**
    * Create a signed JWT
    */
-  abstract createJwt(header: JwtHeader, payload: JwtPayload): Promise<Jwt>
+  abstract createJwt(header: JwtHeader, payload: JwtPayload): Promise<SignedJwt>
 
   /**
    * Verify the signature, headers and payload of a JWT
@@ -89,5 +89,5 @@ export abstract class Key {
   abstract verifyJwt<
     P extends VerifyPayload = JwtPayload,
     C extends string = string,
-  >(token: Jwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>>
+  >(token: SignedJwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>>
 }

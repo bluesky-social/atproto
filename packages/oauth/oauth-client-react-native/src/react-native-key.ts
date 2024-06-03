@@ -1,8 +1,8 @@
 import {
-  Jwt,
   JwtHeader,
   JwtPayload,
   Key,
+  SignedJwt,
   VerifyOptions,
   VerifyPayload,
   VerifyResult,
@@ -33,14 +33,14 @@ export class ReactNativeKey extends Key {
     throw new Error('No supported algorithms')
   }
 
-  async createJwt(header: JwtHeader, payload: JwtPayload): Promise<Jwt> {
+  async createJwt(header: JwtHeader, payload: JwtPayload): Promise<SignedJwt> {
     return OauthClientReactNative.createJwt(header, payload, this.jwk)
   }
 
   async verifyJwt<
     P extends VerifyPayload = JwtPayload,
     C extends string = string,
-  >(token: Jwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>> {
+  >(token: SignedJwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>> {
     const result = await OauthClientReactNative.verifyJwt(token, this.jwk)
 
     const payload = jwtPayloadSchema.parse(result.payload)

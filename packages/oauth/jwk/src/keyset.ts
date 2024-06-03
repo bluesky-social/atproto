@@ -10,7 +10,7 @@ import { Jwk } from './jwk.js'
 import { Jwks } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
-import { Jwt, JwtHeader, JwtPayload } from './jwt.js'
+import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { Key } from './key.js'
 import {
   Override,
@@ -192,7 +192,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   async createJwt(
     { alg: sAlg, kid: sKid, ...header }: JwtSignHeader,
     payload: JwtPayload | JwtPayloadGetter,
-  ): Promise<Jwt> {
+  ): Promise<SignedJwt> {
     try {
       const [key, alg] = this.findKey({ alg: sAlg, kid: sKid, use: 'sig' })
       const protectedHeader = { ...header, alg, kid: key.kid }
@@ -211,7 +211,7 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     P extends Record<string, unknown> = JwtPayload,
     C extends string = string,
   >(
-    token: Jwt,
+    token: SignedJwt,
     options?: VerifyOptions<C>,
   ): Promise<VerifyResult<P, C> & { key: K }> {
     const { header } = unsafeDecodeJwt(token)

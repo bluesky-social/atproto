@@ -17,11 +17,11 @@ import { JOSEError } from 'jose/errors'
 import {
   Jwk,
   JwkError,
-  Jwt,
   JwtCreateError,
   JwtHeader,
   JwtPayload,
   Key,
+  SignedJwt,
   VerifyOptions,
   VerifyPayload,
   VerifyResult,
@@ -60,13 +60,13 @@ export class JoseKey extends Key {
     const keyObj = await this.getKey()
     return new SignJWT(payload)
       .setProtectedHeader({ ...header, kid: this.kid })
-      .sign(keyObj) as Promise<Jwt>
+      .sign(keyObj) as Promise<SignedJwt>
   }
 
   async verifyJwt<
     P extends VerifyPayload = JwtPayload,
     C extends string = string,
-  >(token: Jwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>> {
+  >(token: SignedJwt, options?: VerifyOptions<C>): Promise<VerifyResult<P, C>> {
     try {
       const keyObj = await this.getKey()
       const result = await jwtVerify(token, keyObj, {

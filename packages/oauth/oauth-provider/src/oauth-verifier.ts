@@ -1,4 +1,4 @@
-import { Key, Keyset, jwtSchema } from '@atproto/jwk'
+import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
 import { AccessToken, OAuthTokenType } from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
 
@@ -152,21 +152,20 @@ export class OAuthVerifier {
     dpopJkt: string | null,
     verifyOptions?: VerifyTokenClaimsOptions,
   ): Promise<VerifyTokenClaimsResult> {
-    const jwt = jwtSchema.safeParse(token)
-    if (!jwt.success) {
+    if (!isSignedJwt(token)) {
       throw new InvalidTokenError(tokenType, `Malformed token`)
     }
 
     this.assertTokenTypeAllowed(tokenType, AccessTokenType.jwt)
 
     const { payload } = await this.signer
-      .verifyAccessToken(jwt.data)
+      .verifyAccessToken(token)
       .catch((err) => {
         throw InvalidTokenError.from(err, tokenType)
       })
 
     return verifyTokenClaims(
-      jwt.data,
+      token,
       payload.jti,
       tokenType,
       dpopJkt,

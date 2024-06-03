@@ -1,4 +1,4 @@
-import { isJwt } from '@atproto/jwk'
+import { isSignedJwt } from '@atproto/jwk'
 import {
   AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -423,7 +423,7 @@ export class TokenManager {
         return
       }
 
-      case isJwt(token): {
+      case isSignedJwt(token): {
         const { payload } = await this.signer.verify(token, {
           clockTolerance: Infinity,
         })
@@ -484,7 +484,7 @@ export class TokenManager {
       case isTokenId(token):
         return this.store.readToken(token)
 
-      case isJwt(token): {
+      case isSignedJwt(token): {
         const { payload } = await this.signer
           .verifyAccessToken(token)
           .catch((_) => ({ payload: null }))
