@@ -1,20 +1,18 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { getCarStream } from '../getRepo'
+import { assertRepoAvailability } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getCheckout({
     auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did } = params
-      // takedown check for anyone other than an admin or the user
-      if (!ctx.authVerifier.isUserOrAdmin(auth, did)) {
-        const available = await ctx.accountManager.isRepoAvailable(did)
-        if (!available) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-      }
+      await assertRepoAvailability(
+        ctx,
+        did,
+        ctx.authVerifier.isUserOrAdmin(auth, did),
+      )
 
       const carStream = await getCarStream(ctx, did)
 

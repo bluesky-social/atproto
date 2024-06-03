@@ -27,7 +27,12 @@
           }
         }
       },
-      "errors": [{ "name": "RepoNotFound" }]
+      "errors": [
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

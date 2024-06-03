@@ -32,7 +32,13 @@ export enum AuthScope {
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
   AppPassPrivileged = 'com.atproto.appPassPrivileged',
-  Deactivated = 'com.atproto.deactivated',
+  SignupQueued = 'com.atproto.signupQueued',
+}
+
+export type AccessOpts = {
+  additional: AuthScope[]
+  checkTakedown: boolean
+  checkDeactivated: boolean
 }
 
 export enum RoleStatus {
@@ -131,55 +137,40 @@ export class AuthVerifier {
 
   // verifiers (arrow fns to preserve scope)
 
-  access = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    return this.validateAccessToken(ctx, [
-      AuthScope.Access,
-      AuthScope.AppPassPrivileged,
-      AuthScope.AppPass,
-    ])
-  }
-
-  accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    const result = await this.validateAccessToken(ctx, [
-      AuthScope.Access,
-      AuthScope.AppPassPrivileged,
-      AuthScope.AppPass,
-    ])
-    const found = await this.accountManager.getAccount(result.credentials.did, {
-      includeDeactivated: true,
-    })
-    if (!found) {
-      // will be turned into ExpiredToken for the client if proxied by entryway
-      throw new ForbiddenError('Account not found', 'AccountNotFound')
-    }
-    if (softDeleted(found)) {
-      throw new AuthRequiredError(
-        'Account has been taken down',
-        'AccountTakedown',
+  accessStandard =
+    (opts: Partial<AccessOpts> = {}) =>
+    (ctx: ReqCtx): Promise<AccessOutput> => {
+      return this.validateAccessToken(
+        ctx,
+        [
+          AuthScope.Access,
+          AuthScope.AppPassPrivileged,
+          AuthScope.AppPass,
+          ...(opts.additional ?? []),
+        ],
+        opts,
       )
     }
-    return result
-  }
 
-  accessFull = (ctx: ReqCtx): Promise<AccessOutput> => {
-    return this.validateAccessToken(ctx, [AuthScope.Access])
-  }
+  accessFull =
+    (opts: Partial<AccessOpts> = {}) =>
+    (ctx: ReqCtx): Promise<AccessOutput> => {
+      return this.validateAccessToken(
+        ctx,
+        [AuthScope.Access, ...(opts.additional ?? [])],
+        opts,
+      )
+    }
 
-  accessAppPassPrivileged = (ctx: ReqCtx): Promise<AccessOutput> => {
-    return this.validateAccessToken(ctx, [
-      AuthScope.Access,
-      AuthScope.AppPassPrivileged,
-    ])
-  }
-
-  accessDeactived = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    return this.validateAccessToken(ctx, [
-      AuthScope.Access,
-      AuthScope.AppPass,
-      AuthScope.AppPassPrivileged,
-      AuthScope.Deactivated,
-    ])
-  }
+  accessPrivileged =
+    (opts: Partial<AccessOpts> = {}) =>
+    (ctx: ReqCtx): Promise<AccessOutput> => {
+      return this.validateAccessToken(ctx, [
+        AuthScope.Access,
+        AuthScope.AppPassPrivileged,
+        ...(opts.additional ?? []),
+      ])
+    }
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
     const { did, scope, token, tokenId, audience } =
@@ -222,7 +213,7 @@ export class AuthVerifier {
     ctx: ReqCtx,
   ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
     if (isAccessToken(ctx.req)) {
-      return await this.access(ctx)
+      return await this.accessStandard()(ctx)
     } else if (isBasicToken(ctx.req)) {
       return await this.adminToken(ctx)
     } else {
@@ -378,15 +369,25 @@ export class AuthVerifier {
   protected async validateAccessToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
+    {
+      checkTakedown = false,
+      checkDeactivated = false,
+    }: { checkTakedown?: boolean; checkDeactivated?: boolean } = {},
   ): Promise<AccessOutput> {
     this.setAuthHeaders(ctx)
 
+    let accessOutput: AccessOutput
+
     const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
     switch (type) {
-      case AuthType.BEARER:
-        return this.validateBearerAccessToken(ctx, scopes)
-      case AuthType.DPOP:
-        return this.validateDpopAccessToken(ctx, scopes)
+      case AuthType.BEARER: {
+        accessOutput = await this.validateBearerAccessToken(ctx, scopes)
+        break
+      }
+      case AuthType.DPOP: {
+        accessOutput = await this.validateDpopAccessToken(ctx, scopes)
+        break
+      }
       case null:
         throw new AuthRequiredError(undefined, 'AuthMissing')
       default:
@@ -395,6 +396,34 @@ export class AuthVerifier {
           'InvalidToken',
         )
     }
+
+    if (checkTakedown || checkDeactivated) {
+      const found = await this.accountManager.getAccount(
+        accessOutput.credentials.did,
+        {
+          includeDeactivated: true,
+          includeTakenDown: true,
+        },
+      )
+      if (!found) {
+        // will be turned into ExpiredToken for the client if proxied by entryway
+        throw new ForbiddenError('Account not found', 'AccountNotFound')
+      }
+      if (checkTakedown && softDeleted(found)) {
+        throw new AuthRequiredError(
+          'Account has been taken down',
+          'AccountTakedown',
+        )
+      }
+      if (checkDeactivated && found.deactivatedAt) {
+        throw new AuthRequiredError(
+          'Account is deactivated',
+          'AccountDeactivated',
+        )
+      }
+    }
+
+    return accessOutput
   }
 
   protected async validateDpopAccessToken(

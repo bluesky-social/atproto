@@ -34,3 +34,4 @@ export * as _20231003T202833377Z from './20231003T202833377Z-create-moderation-s
 export * as _20231220T225126090Z from './20231220T225126090Z-blob-takedowns'
 export * as _20240124T023719200Z from './20240124T023719200Z-tagged-suggestions'
 export * as _20240226T225725627Z from './20240226T225725627Z-labelers'
+export * as _20240530T170337073Z from './20240530T170337073Z-account-deactivation'

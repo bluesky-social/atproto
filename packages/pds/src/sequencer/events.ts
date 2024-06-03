@@ -10,6 +10,7 @@ import {
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
 import { RepoSeqInsert } from './db'
+import { AccountStatus } from '../account-manager'
 
 export const formatSeqCommit = async (
   did: string,
@@ -83,13 +84,37 @@ export const formatSeqHandleUpdate = async (
 
 export const formatSeqIdentityEvt = async (
   did: string,
+  handle?: string,
 ): Promise<RepoSeqInsert> => {
   const evt: IdentityEvt = {
     did,
   }
+  if (handle) {
+    evt.handle = handle
+  }
   return {
     did,
     eventType: 'identity',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
+export const formatSeqAccountEvt = async (
+  did: string,
+  status: AccountStatus,
+): Promise<RepoSeqInsert> => {
+  const evt: AccountEvt = {
+    did,
+    active: status === 'active',
+  }
+  if (status !== AccountStatus.Active) {
+    evt.status = status
+  }
+
+  return {
+    did,
+    eventType: 'account',
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
@@ -142,8 +167,23 @@ export type HandleEvt = z.infer<typeof handleEvt>
 
 export const identityEvt = z.object({
   did: z.string(),
+  handle: z.string().optional(),
 })
 export type IdentityEvt = z.infer<typeof identityEvt>
+
+export const accountEvt = z.object({
+  did: z.string(),
+  active: z.boolean(),
+  status: z
+    .enum([
+      AccountStatus.Takendown,
+      AccountStatus.Suspended,
+      AccountStatus.Deleted,
+      AccountStatus.Deactivated,
+    ])
+    .optional(),
+})
+export type AccountEvt = z.infer<typeof accountEvt>
 
 export const tombstoneEvt = z.object({
   did: z.string(),
@@ -168,6 +208,12 @@ type TypedIdentityEvt = {
   time: string
   evt: IdentityEvt
 }
+type TypedAccountEvt = {
+  type: 'account'
+  seq: number
+  time: string
+  evt: AccountEvt
+}
 type TypedTombstoneEvt = {
   type: 'tombstone'
   seq: number
@@ -178,4 +224,5 @@ export type SeqEvt =
   | TypedCommitEvt
   | TypedHandleEvt
   | TypedIdentityEvt
+  | TypedAccountEvt
   | TypedTombstoneEvt

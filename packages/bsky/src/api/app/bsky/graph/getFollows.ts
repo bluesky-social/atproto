@@ -105,13 +105,12 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton, params } = input
   const { subjectDid, followUris, cursor } = skeleton
-  const isTakendown = (did: string) =>
-    ctx.views.actorIsTakendown(did, hydration)
+  const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
   if (
     !subject ||
-    (!params.hydrateCtx.includeTakedowns && isTakendown(subjectDid))
+    (!params.hydrateCtx.includeTakedowns && isNoHosted(subjectDid))
   ) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
@@ -119,7 +118,7 @@ const presentation = (
   const follows = mapDefined(followUris, (followUri) => {
     const followDid = hydration.follows?.get(followUri)?.record.subject
     if (!followDid) return
-    if (!params.hydrateCtx.includeTakedowns && isTakendown(followDid)) {
+    if (!params.hydrateCtx.includeTakedowns && isNoHosted(followDid)) {
       return
     }
     return ctx.views.profile(followDid, hydration)

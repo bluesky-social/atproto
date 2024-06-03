@@ -29,6 +29,7 @@ describe('sync listing', () => {
       sc.dids.carol,
       sc.dids.dan,
     ])
+    expect(res.data.repos.every((r) => r.active === true)).toBe(true)
   })
 
   it('paginates listed hosted repos', async () => {

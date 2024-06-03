@@ -7,7 +7,7 @@ import { assertValidDidDocumentForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
-    auth: ctx.authVerifier.accessFull,
+    auth: ctx.authVerifier.accessFull(),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
 
@@ -36,7 +36,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
-      await ctx.sequencer.sequenceIdentityEvt(requester)
+      const status = await ctx.accountManager.getAccountStatus(requester)
+      await ctx.sequencer.sequenceAccountEvt(requester, status)
       await ctx.sequencer.sequenceHandleUpdate(
         requester,
         account.handle ?? INVALID_HANDLE,

@@ -7,7 +7,7 @@ import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
-    auth: ctx.authVerifier.accessFull,
+    auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
     handler: async ({ params, auth, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(

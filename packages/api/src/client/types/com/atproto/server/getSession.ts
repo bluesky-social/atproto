@@ -18,6 +18,9 @@ export interface OutputSchema {
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
   didDoc?: {}
+  active?: boolean
+  /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
+  status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})
   [k: string]: unknown
 }
 

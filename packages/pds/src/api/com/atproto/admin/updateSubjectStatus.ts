@@ -17,6 +17,8 @@ export default function (server: Server, ctx: AppContext) {
       if (takedown) {
         if (isRepoRef(subject)) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
+          const status = await ctx.accountManager.getAccountStatus(subject.did)
+          await ctx.sequencer.sequenceAccountEvt(subject.did, status)
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
           await ctx.actorStore.transact(uri.hostname, (store) =>

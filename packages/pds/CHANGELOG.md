@@ -1,5 +1,27 @@
 # @atproto/pds
 
+## 0.4.30
+
+### Patch Changes
+
+- [#2531](https://github.com/bluesky-social/atproto/pull/2531) [`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912) Thanks [@dholms](https://github.com/dholms)! - Account deactivation. Current hosting status returned on session routes.
+
+- Updated dependencies [[`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912)]:
+  - @atproto/api@0.12.15
+
+## 0.4.29
+
+### Patch Changes
+
+- Updated dependencies [[`c4af6a409`](https://github.com/bluesky-social/atproto/commit/c4af6a409ea2171c3cf1d0e7c8ed496794a3f049)]:
+  - @atproto/api@0.12.14
+
+## 0.4.28
+
+### Patch Changes
+
+- [#2522](https://github.com/bluesky-social/atproto/pull/2522) [`53551be6c`](https://github.com/bluesky-social/atproto/commit/53551be6cf092a9b4d2e132788b94ac0d4ffcecc) Thanks [@devinivy](https://github.com/devinivy)! - Set max-age CORS header to max practical value
+
 ## 0.4.27
 
 ### Patch Changes

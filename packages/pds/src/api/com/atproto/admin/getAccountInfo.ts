@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
           invitesDisabled: managesOwnInvites
             ? account.invitesDisabled === 1
             : undefined,
+          deactivatedAt: account.deactivatedAt ?? undefined,
         },
       }
     },

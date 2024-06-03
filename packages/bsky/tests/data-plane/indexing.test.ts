@@ -614,14 +614,14 @@ describe('indexing', () => {
     })
   })
 
-  describe('tombstoneActor', () => {
+  describe('deleteActor', () => {
     it('does not unindex actor when they are still being hosted by their pds', async () => {
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       // Attempt indexing tombstone
-      await network.bsky.sub.indexingSvc.tombstoneActor(sc.dids.alice)
+      await network.bsky.sub.indexingSvc.deleteActor(sc.dids.alice)
       const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
@@ -648,7 +648,7 @@ describe('indexing', () => {
       })
       await network.pds.ctx.backgroundQueue.processAll()
       // Index tombstone
-      await network.bsky.sub.indexingSvc.tombstoneActor(alice)
+      await network.bsky.sub.indexingSvc.deleteActor(alice)
       const getProfileAfter = agent.api.app.bsky.actor.getProfile(
         { actor: alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },

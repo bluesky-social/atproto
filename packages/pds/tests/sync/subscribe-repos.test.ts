@@ -16,10 +16,13 @@ import {
   Commit as CommitEvt,
   Handle as HandleEvt,
   Tombstone as TombstoneEvt,
+  Account as AccountEvt,
+  Identity as IdentityEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext } from '../../src'
 import basicSeed from '../seeds/basic'
 import { CID } from 'multiformats/cid'
+import { AccountStatus } from '../../src/account-manager'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
@@ -64,16 +67,6 @@ describe('repo subscribe repos', () => {
     return repo.verifyRepo(car.blocks, car.root, did, signingKey.did())
   }
 
-  const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
-    const evts: HandleEvt[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#handle') {
-        evts.push(frame.body)
-      }
-    }
-    return evts
-  }
-
   const getAllEvents = (userDid: string, frames: Frame[]) => {
     const types: unknown[] = []
     for (const frame of frames) {
@@ -93,21 +86,65 @@ describe('repo subscribe repos', () => {
     return types
   }
 
-  const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
-    const evts: TombstoneEvt[] = []
+  const getEventType = <T>(frames: Frame[], type: string): T[] => {
+    const evts: T[] = []
     for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#tombstone') {
+      if (frame instanceof MessageFrame && frame.header.t === type) {
         evts.push(frame.body)
       }
     }
     return evts
   }
 
-  const verifyHandleEvent = (evt: unknown, did: string, handle: string) => {
-    expect(evt?.['did']).toBe(did)
-    expect(evt?.['handle']).toBe(handle)
-    expect(typeof evt?.['time']).toBe('string')
-    expect(typeof evt?.['seq']).toBe('number')
+  const getAccountEvts = (frames: Frame[]): AccountEvt[] => {
+    return getEventType(frames, '#account')
+  }
+
+  const getIdentityEvts = (frames: Frame[]): IdentityEvt[] => {
+    return getEventType(frames, '#identity')
+  }
+
+  const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
+    return getEventType(frames, '#handle')
+  }
+
+  const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
+    return getEventType(frames, '#tombstone')
+  }
+
+  const getCommitEvents = (frames: Frame[]): CommitEvt[] => {
+    return getEventType(frames, '#commit')
+  }
+
+  const verifyIdentityEvent = (
+    evt: IdentityEvt,
+    did: string,
+    handle?: string,
+  ) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(typeof evt.time).toBe('string')
+    expect(evt.handle).toEqual(handle)
+  }
+
+  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(evt.handle).toBe(handle)
+    expect(typeof evt.time).toBe('string')
+  }
+
+  const verifyAccountEvent = (
+    evt: AccountEvt,
+    did: string,
+    active: boolean,
+    status?: AccountStatus,
+  ) => {
+    expect(typeof evt.seq).toBe('number')
+    expect(evt.did).toBe(did)
+    expect(typeof evt.time).toBe('string')
+    expect(evt.active).toBe(active)
+    expect(evt.status).toBe(status)
   }
 
   const verifyTombstoneEvent = (evt: unknown, did: string) => {
@@ -116,24 +153,14 @@ describe('repo subscribe repos', () => {
     expect(typeof evt?.['seq']).toBe('number')
   }
 
-  const getCommitEvents = (userDid: string, frames: Frame[]) => {
-    const evts: CommitEvt[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame && frame.header.t === '#commit') {
-        const body = frame.body as CommitEvt
-        if (body.repo === userDid) {
-          evts.push(frame.body)
-        }
-      }
-    }
-    return evts
-  }
-
   const verifyCommitEvents = async (frames: Frame[]) => {
-    await verifyRepo(alice, getCommitEvents(alice, frames))
-    await verifyRepo(bob, getCommitEvents(bob, frames))
-    await verifyRepo(carol, getCommitEvents(carol, frames))
-    await verifyRepo(dan, getCommitEvents(dan, frames))
+    const forUser = (user: string) => (commit: CommitEvt) =>
+      commit.repo === user
+    const commits = getCommitEvents(frames)
+    await verifyRepo(alice, commits.filter(forUser(alice)))
+    await verifyRepo(bob, commits.filter(forUser(bob)))
+    await verifyRepo(carol, commits.filter(forUser(carol)))
+    await verifyRepo(dan, commits.filter(forUser(dan)))
   }
 
   const verifyRepo = async (did: string, evts: CommitEvt[]) => {
@@ -217,6 +244,19 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
+
+    const accountEvts = getAccountEvts(evts)
+    expect(accountEvts.length).toBe(4)
+    verifyAccountEvent(accountEvts[0], alice, true)
+    verifyAccountEvent(accountEvts[1], bob, true)
+    verifyAccountEvent(accountEvts[2], carol, true)
+    verifyAccountEvent(accountEvts[3], dan, true)
+    const identityEvts = getIdentityEvts(evts)
+    expect(identityEvts.length).toBe(4)
+    verifyIdentityEvent(identityEvts[0], alice, 'alice.test')
+    verifyIdentityEvent(identityEvts[1], bob, 'bob.test')
+    verifyIdentityEvent(identityEvts[2], carol, 'carol.test')
+    verifyIdentityEvent(identityEvts[3], dan, 'dan.test')
   })
 
   it('syncs new events', async () => {
@@ -303,9 +343,18 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
+
     const handleEvts = getHandleEvts(evts.slice(-6))
+    expect(handleEvts.length).toBe(3)
     verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+    verifyHandleEvent(handleEvts[2], bob, 'bob2.test')
+
+    const identityEvts = getIdentityEvts(evts.slice(-6))
+    expect(identityEvts.length).toBe(3)
+    verifyIdentityEvent(identityEvts[0], alice, 'alice2.test')
+    verifyIdentityEvent(identityEvts[1], bob, 'bob2.test')
+    verifyIdentityEvent(identityEvts[2], bob, 'bob2.test')
   })
 
   it('resends handle events on idempotent updates', async () => {
@@ -323,6 +372,121 @@ describe('repo subscribe repos', () => {
     verifyHandleEvent(handleEvts[0], bob, 'bob2.test')
   })
 
+  it('syncs account events', async () => {
+    // deactivate then reactivate alice
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      },
+    )
+    await agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(alice),
+    })
+
+    // takedown then restore bob
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: bob,
+        },
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: bob,
+        },
+        takedown: { applied: false },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    // @NOTE requires a larger slice because of over-emission on activateAccount - see note on route
+    const accountEvts = getAccountEvts(evts.slice(-6))
+    expect(accountEvts.length).toBe(4)
+    verifyAccountEvent(accountEvts[0], alice, false, AccountStatus.Deactivated)
+    verifyAccountEvent(accountEvts[1], alice, true)
+    verifyAccountEvent(accountEvts[2], bob, false, AccountStatus.Takendown)
+    verifyAccountEvent(accountEvts[3], bob, true)
+  })
+
+  it('syncs interleaved account events', async () => {
+    // deactivate -> takedown -> restore -> activate
+    // deactivate then reactivate alice
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: sc.getHeaders(alice),
+      },
+    )
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        takedown: { applied: false },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    await agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(alice),
+    })
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    // @NOTE requires a larger slice because of over-emission on activateAccount - see note on route
+    const accountEvts = getAccountEvts(evts.slice(-6))
+    expect(accountEvts.length).toBe(4)
+    verifyAccountEvent(accountEvts[0], alice, false, AccountStatus.Deactivated)
+    verifyAccountEvent(accountEvts[1], alice, false, AccountStatus.Takendown)
+    verifyAccountEvent(accountEvts[2], alice, false, AccountStatus.Deactivated)
+    verifyAccountEvent(accountEvts[3], alice, true)
+  })
+
   it('syncs tombstones', async () => {
     const baddie1 = (
       await sc.createAccount('baddie1.test', {
@@ -338,10 +502,24 @@ describe('repo subscribe repos', () => {
         password: 'baddie2-pass',
       })
     ).did
-
-    for (const did of [baddie1, baddie2]) {
-      await ctx.sequencer.sequenceTombstone(did)
-    }
+    const deleteToken = await ctx.accountManager.createEmailToken(
+      baddie1,
+      'delete_account',
+    )
+    await agent.api.com.atproto.server.deleteAccount({
+      did: baddie1,
+      password: 'baddie1-pass',
+      token: deleteToken,
+    })
+    await agent.api.com.atproto.admin.deleteAccount(
+      {
+        did: baddie2,
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
 
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
@@ -351,9 +529,15 @@ describe('repo subscribe repos', () => {
     const evts = await readTillCaughtUp(gen)
     ws.terminate()
 
-    const tombstoneEvts = getTombstoneEvts(evts.slice(-2))
+    const tombstoneEvts = getTombstoneEvts(evts.slice(-4))
+    expect(tombstoneEvts.length).toBe(2)
     verifyTombstoneEvent(tombstoneEvts[0], baddie1)
     verifyTombstoneEvent(tombstoneEvts[1], baddie2)
+
+    const accountEvts = getAccountEvts(evts.slice(-4))
+    expect(accountEvts.length).toBe(2)
+    verifyAccountEvent(accountEvts[0], baddie1, false, AccountStatus.Deleted)
+    verifyAccountEvent(accountEvts[1], baddie2, false, AccountStatus.Deleted)
   })
 
   it('account deletions invalidate all seq ops', async () => {

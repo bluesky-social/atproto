@@ -5,6 +5,7 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
+import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown } from './api'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
@@ -38,7 +39,7 @@ export class OzoneService {
   ): Promise<OzoneService> {
     const app = express()
     app.set('trust proxy', true)
-    app.use(cors())
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
 

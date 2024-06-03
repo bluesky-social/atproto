@@ -149,6 +149,7 @@ export class AtpAgent {
         email: opts.email,
         emailConfirmed: false,
         emailAuthFactor: false,
+        active: true,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -184,6 +185,8 @@ export class AtpAgent {
         email: res.data.email,
         emailConfirmed: res.data.emailConfirmed,
         emailAuthFactor: res.data.emailAuthFactor,
+        active: res.data.active ?? true,
+        status: res.data.status,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -219,6 +222,8 @@ export class AtpAgent {
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
       this.session.emailAuthFactor = res.data.emailAuthFactor
+      this.session.active = res.data.active ?? true
+      this.session.status = res.data.status
       this._updateApiEndpoint(res.data.didDoc)
       this._persistSession?.('update', this.session)
       return res
