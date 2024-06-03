@@ -113,17 +113,37 @@ export type DidDocument<Method extends string = string> = z.infer<
   typeof didDocumentSchema
 > & { id: Did<Method> }
 
-// TODO: add other refinements ?
-export const didDocumentValidator = didDocumentSchema.refinement(
-  (data) =>
-    !data.service?.some((s, i, a) => {
-      for (let j = i + 1; j < a.length; j++) {
-        if (s.id === a[j]!.id) return true
+// @TODO: add other refinements ?
+export const didDocumentValidator = didDocumentSchema
+  .superRefine((data, ctx) => {
+    if (data.service) {
+      for (let i = 0; i < data.service.length; i++) {
+        if (data.service[i].id === data.id) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Service id must be different from the document id`,
+            path: ['service', i, 'id'],
+          })
+        }
       }
-      return false
-    }),
-  {
-    code: z.ZodIssueCode.custom,
-    message: 'Duplicate service id',
-  },
-)
+    }
+  })
+  .superRefine((data, ctx) => {
+    if (data.service) {
+      const normalizedIds = data.service.map((s) =>
+        s.id?.startsWith('#') ? `${data.id}${s.id}` : s.id,
+      )
+
+      for (let i = 0; i < normalizedIds.length; i++) {
+        for (let j = i + 1; j < normalizedIds.length; j++) {
+          if (normalizedIds[i] === normalizedIds[j]) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicate service id (${normalizedIds[j]}) found in the document`,
+              path: ['service', j, 'id'],
+            })
+          }
+        }
+      }
+    }
+  })
