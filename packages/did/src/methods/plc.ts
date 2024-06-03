@@ -7,6 +7,16 @@ const DID_PLC_LENGTH = 32
 
 export { DID_PLC_PREFIX }
 
+export function isDidPlc(input: unknown): input is Did<'plc'> {
+  if (typeof input !== 'string') return false
+  try {
+    checkDidPlc(input)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function checkDidPlc(input: string): asserts input is Did<'plc'> {
   if (input.length !== DID_PLC_LENGTH) {
     throw new InvalidDidError(
