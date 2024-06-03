@@ -18,7 +18,10 @@ export const fromJson = <T>(json: Json): T => {
 
 export type JsonArray = `[${string}]`
 export const isJsonArray = (json: string): json is JsonArray =>
-  json.startsWith('[') && json.endsWith(']')
+  // Although the JSON in the DB should have been encoded using toJson,
+  // there should not be any leading or trailing whitespace. We will still trim
+  // the string to protect against any manual editing of the DB.
+  json.trimStart().startsWith('[') && json.trimEnd().endsWith(']')
 export function assertJsonArray(json: string): asserts json is JsonArray {
   if (!isJsonArray(json)) throw new TypeError('Not an Array')
 }
@@ -34,7 +37,10 @@ export const fromJsonArray = <T>(json: JsonArray): T[] => {
 
 export type JsonObject = `{${string}}`
 const isJsonObject = (json: string): json is JsonObject =>
-  json.startsWith('{') && json.endsWith('}')
+  // Although the JSON in the DB should have been encoded using toJson,
+  // there should not be any leading or trailing whitespace. We will still trim
+  // the string to protect against any manual editing of the DB.
+  json.trimStart().startsWith('{') && json.trimEnd().endsWith('}')
 function assertJsonObject(json: string): asserts json is JsonObject {
   if (!isJsonObject(json)) throw new TypeError('Not an Object')
 }
