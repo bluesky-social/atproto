@@ -248,31 +248,31 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         issuer: serviceCfg.publicUrl,
         provider: {
           customization: {
-            name: env.oauthProviderName ?? 'Personal PDS',
-            logo: env.oauthProviderLogo,
+            name: env.serviceName ?? 'Personal PDS',
+            logo: env.logoUrl,
             colors: {
-              primary: env.oauthProviderPrimaryColor,
-              error: env.oauthProviderErrorColor,
+              primary: env.primaryColor,
+              error: env.errorColor,
             },
             links: [
               {
                 title: 'Home',
-                href: env.oauthProviderHomeLink,
+                href: env.homeUrl,
                 rel: 'bookmark',
               },
               {
                 title: 'Terms of Service',
-                href: env.oauthProviderTosLink,
+                href: env.termsOfServiceUrl,
                 rel: 'terms-of-service',
               },
               {
                 title: 'Privacy Policy',
-                href: env.oauthProviderPrivacyPolicyLink,
+                href: env.privacyPolicyUrl,
                 rel: 'privacy-policy',
               },
               {
                 title: 'Support',
-                href: env.oauthProviderSupportLink,
+                href: env.supportUrl,
                 rel: 'help',
               },
             ].filter(

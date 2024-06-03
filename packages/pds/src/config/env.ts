@@ -6,13 +6,21 @@ export const readEnv = (): ServerEnvironment => {
     port: envInt('PDS_PORT'),
     hostname: envStr('PDS_HOSTNAME'),
     serviceDid: envStr('PDS_SERVICE_DID'),
+    serviceName: envStr('PDS_SERVICE_NAME'),
     version: envStr('PDS_VERSION'),
+    homeUrl: envStr('PDS_HOME_URL'),
+    logoUrl: envStr('PDS_LOGO_URL'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
+    supportUrl: envStr('PDS_SUPPORT_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+
+    // branding
+    primaryColor: envStr('PDS_PRIMARY_COLOR'),
+    errorColor: envStr('PDS_ERROR_COLOR'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -110,16 +118,6 @@ export const readEnv = (): ServerEnvironment => {
 
     // fetch
     fetchDisableSsrf: envBool('PDS_DISABLE_SSRF'),
-
-    // oauth
-    oauthProviderName: envStr('PDS_OAUTH_PROVIDER_NAME'),
-    oauthProviderLogo: envStr('PDS_OAUTH_PROVIDER_LOGO'),
-    oauthProviderPrimaryColor: envStr('PDS_OAUTH_PROVIDER_PRIMARY_COLOR'),
-    oauthProviderErrorColor: envStr('PDS_OAUTH_PROVIDER_ERROR_COLOR'),
-    oauthProviderHomeLink: envStr('PDS_OAUTH_PROVIDER_HOME_LINK'),
-    oauthProviderTosLink: envStr('PDS_OAUTH_PROVIDER_TOS_LINK'),
-    oauthProviderPrivacyPolicyLink: envStr('PDS_OAUTH_PROVIDER_POLICY_LINK'),
-    oauthProviderSupportLink: envStr('PDS_OAUTH_PROVIDER_SUPPORT_LINK'),
   }
 }
 
@@ -128,13 +126,21 @@ export type ServerEnvironment = {
   port?: number
   hostname?: string
   serviceDid?: string
+  serviceName?: string
   version?: string
+  homeUrl?: string
+  logoUrl?: string
   privacyPolicyUrl?: string
+  supportUrl?: string
   termsOfServiceUrl?: string
   contactEmailAddress?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
   devMode?: boolean
+
+  // branding
+  primaryColor?: string
+  errorColor?: string
 
   // database
   dataDirectory?: string
@@ -227,14 +233,4 @@ export type ServerEnvironment = {
 
   // fetch
   fetchDisableSsrf?: boolean
-
-  // oauth
-  oauthProviderName?: string
-  oauthProviderLogo?: string
-  oauthProviderPrimaryColor?: string
-  oauthProviderErrorColor?: string
-  oauthProviderHomeLink?: string
-  oauthProviderTosLink?: string
-  oauthProviderPrivacyPolicyLink?: string
-  oauthProviderSupportLink?: string
 }
