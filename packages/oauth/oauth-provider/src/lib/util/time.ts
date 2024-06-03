@@ -7,7 +7,7 @@ export async function constantTime<T>(
   delay: number,
   fn: () => Awaitable<T>,
 ): Promise<T> {
-  if (!(delay > 0) || !Number.isFinite(delay)) {
+  if (!Number.isFinite(delay) || delay <= 0) {
     throw new TypeError('Delay must be greater than 0')
   }
 
