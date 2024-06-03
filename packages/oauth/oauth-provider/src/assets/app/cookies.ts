@@ -1,4 +1,6 @@
-export const parseCookieString = (cookie: string) =>
+export const parseCookieString = (
+  cookie: string,
+): Record<string, string | undefined> =>
   Object.fromEntries(
     cookie
       .split(';')

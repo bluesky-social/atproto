@@ -32,7 +32,7 @@ export function useApi(
     onRedirected?: () => void
   } = {},
 ) {
-  const csrfToken = useCsrfToken(csrfCookie)
+  const csrfToken = useCsrfToken(csrfCookie) ?? '<csrf-token-missing>' // Invalid value
   const [sessions, setSessions] = useState<readonly Session[]>(initialSessions)
 
   const setSession = useCallback(
