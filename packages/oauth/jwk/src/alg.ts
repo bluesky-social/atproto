@@ -27,7 +27,7 @@ export function* jwkAlgorithms(jwk: Jwk): Generator<string> {
         switch (crv) {
           case 'P-256':
           case 'P-384':
-            yield `ES${crv.slice(-3)}`.replace('21', '12')
+            yield `ES${crv.slice(-3)}`
             break
           case 'P-521':
             yield 'ES512'
