@@ -33,12 +33,10 @@ export class DidError extends Error {
           : 'An unknown error occurred'
 
     const status =
-      (typeof (cause as any)?.statusCode === 'number'
-        ? (cause as any).statusCode
+      (typeof cause?.['statusCode'] === 'number'
+        ? cause['statusCode']
         : undefined) ??
-      (typeof (cause as any)?.status === 'number'
-        ? (cause as any).status
-        : undefined)
+      (typeof cause?.['status'] === 'number' ? cause['status'] : undefined)
 
     return new DidError(did, message, 'did-unknown-error', status, cause)
   }
