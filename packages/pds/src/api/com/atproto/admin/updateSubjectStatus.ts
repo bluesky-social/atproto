@@ -9,6 +9,7 @@ import {
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
+//
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
     auth: ctx.authVerifier.moderator,
