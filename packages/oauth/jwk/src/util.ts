@@ -1,4 +1,5 @@
 import { base64url } from 'multiformats/bases/base64'
+import { RefinementCtx, ZodIssueCode } from 'zod'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type Simplify<T> = { [K in keyof T]: T[K] } & {}
@@ -58,4 +59,117 @@ export function parseB64uJson(input: string): unknown {
   const inputBytes = base64url.baseDecode(input)
   const json = decoder.decode(inputBytes)
   return JSON.parse(json)
+}
+
+/**
+ * @example
+ * ```ts
+ * // jwtSchema will only allow base64url chars & "." (dot)
+ * const jwtSchema = z.string().superRefine(jwtCharsRefinement)
+ * ```
+ */
+export const jwtCharsRefinement = (data: string, ctx: RefinementCtx): void => {
+  // Note: this is a hot path, let's avoid using a RegExp
+  let char
+
+  for (let i = 0; i < data.length; i++) {
+    char = data.charCodeAt(i)
+
+    if (
+      // Base64 URL encoding (most frequent)
+      (65 <= char && char <= 90) || // A-Z
+      (97 <= char && char <= 122) || // a-z
+      (48 <= char && char <= 57) || // 0-9
+      char === 45 || // -
+      char === 95 || // _
+      // Boundary (least frequent, check last)
+      char === 46 // .
+    ) {
+      // continue
+    } else {
+      // Invalid char might be a surrogate pair
+      const invalidChar = String.fromCodePoint(data.codePointAt(i)!)
+      return ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `Invalid character "${invalidChar}" in JWT at position ${i}`,
+      })
+    }
+  }
+}
+
+/**
+ * @example
+ * ```ts
+ * const jwtSchema = z.string().superRefine(segmentedStringRefinementFactory(3))
+ * type Jwt = z.infer<typeof jwtSchema> // `${string}.${string}.${string}`
+ * ```
+ */
+export const segmentedStringRefinementFactory = <const C extends number>(
+  count: C,
+  minPartLength = 2,
+) => {
+  if (!Number.isFinite(count) || count < 1 || (count | 0) !== count) {
+    throw new TypeError(`Count must be a natural number (got ${count})`)
+  }
+
+  const minTotalLength = count * minPartLength + (count - 1)
+  const errorPrefix = `Invalid JWT format`
+
+  /**
+   * @example
+   * ```ts
+   * type SegmentedString3 = SegmentedString<3> // `${string}.${string}.${string}`
+   * type SegmentedString4 = SegmentedString<4> // `${string}.${string}.${string}.${string}`
+   * ```
+   */
+  type SegmentedString<
+    C extends number,
+    Acc extends string[] = [string],
+  > = Acc['length'] extends C
+    ? `${Acc[0]}`
+    : `${Acc[0]}.${SegmentedString<C, [string, ...Acc]>}`
+
+  return (data: string, ctx: RefinementCtx): data is SegmentedString<C> => {
+    if (data.length < minTotalLength) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `${errorPrefix}: too short`,
+      })
+      return false
+    }
+    let currentStart = 0
+    for (let i = 0; i < count - 1; i++) {
+      const nextDot = data.indexOf('.', currentStart)
+      if (nextDot === -1) {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: `${errorPrefix}: expected ${count} segments, got ${i + 1}`,
+        })
+        return false
+      }
+      if (nextDot - currentStart < minPartLength) {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: `${errorPrefix}: segment ${i + 1} is too short`,
+        })
+        return false
+      }
+      currentStart = nextDot + 1
+    }
+    if (data.indexOf('.', currentStart) !== -1) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `${errorPrefix}: too many segments`,
+      })
+      return false
+    }
+    if (data.length - currentStart < minPartLength) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: `${errorPrefix}: last segment is too short`,
+      })
+      return false
+    }
+    return true
+  }
 }
