@@ -3,11 +3,7 @@ import { WebSocket, ClientOptions } from 'ws'
 import { streamByteChunks } from './stream'
 import { CloseCode, DisconnectError } from './types'
 
-export class WebSocketKeepAlive {
-  public ws: WebSocket | null = null
-  public initialSetup = true
-  public reconnects: number | null = null
-
+export class WebSocketKeepAlive implements AsyncIterable<Uint8Array> {
   constructor(
     public opts: ClientOptions & {
       getUrl: () => Promise<string>
@@ -24,57 +20,80 @@ export class WebSocketKeepAlive {
 
   async *[Symbol.asyncIterator](): AsyncGenerator<Uint8Array> {
     const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
-    while (true) {
-      if (this.reconnects !== null) {
-        const duration = this.initialSetup
+
+    let initialSetup = true
+    let reconnects: number | null = null
+
+    while (this.opts.signal?.aborted !== true) {
+      if (reconnects !== null) {
+        const duration = initialSetup
           ? Math.min(1000, maxReconnectMs)
-          : backoffMs(this.reconnects++, maxReconnectMs)
+          : backoffMs(reconnects++, maxReconnectMs)
         await wait(duration)
+
+        if (this.opts.signal?.aborted) break
       }
       const url = await this.opts.getUrl()
-      this.ws = new WebSocket(url, this.opts)
+
+      if (this.opts.signal?.aborted) break
+
       const ac = new AbortController()
-      if (this.opts.signal) {
-        forwardSignal(this.opts.signal, ac)
-      }
-      this.ws.once('open', () => {
-        this.initialSetup = false
-        this.reconnects = 0
-        if (this.ws) {
-          this.startHeartbeat(this.ws)
-        }
-      })
-      this.ws.once('close', (code, reason) => {
-        if (code === CloseCode.Abnormal) {
-          // Forward into an error to distinguish from a clean close
-          ac.abort(
-            new AbnormalCloseError(`Abnormal ws close: ${reason.toString()}`),
-          )
-        }
-      })
+      const ws = new WebSocket(url, this.opts)
 
       try {
-        const wsStream = streamByteChunks(this.ws, { signal: ac.signal })
+        this.opts.signal?.addEventListener(
+          'abort',
+          (event) => ac.abort((event.target as AbortSignal).reason),
+          // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
+          { signal: ac.signal },
+        )
+
+        ws.once('open', () => {
+          initialSetup = false
+          reconnects = 0
+          if (!ac.signal.aborted) {
+            this.startHeartbeat(ws)
+          }
+        })
+
+        ws.once('close', (code, reason) => {
+          if (code === CloseCode.Abnormal) {
+            // Forward into an error to distinguish from a clean close
+            ac.abort(
+              new AbnormalCloseError(`Abnormal ws close: ${reason.toString()}`),
+            )
+          }
+        })
+
+        const wsStream = streamByteChunks(ws, { signal: ac.signal })
         for await (const chunk of wsStream) {
           yield chunk
         }
+
+        // Other side cleanly ended stream and disconnected
+        break
       } catch (_err) {
         const err = _err?.['code'] === 'ABORT_ERR' ? _err['cause'] : _err
         if (err instanceof DisconnectError) {
           // We cleanly end the connection
-          this.ws?.close(err.wsCode)
+          ws.close(err.wsCode)
           break
         }
-        this.ws?.close() // No-ops if already closed or closing
+
         if (isReconnectable(err)) {
-          this.reconnects ??= 0 // Never reconnect with a null
-          this.opts.onReconnectError?.(err, this.reconnects, this.initialSetup)
+          reconnects ??= 0 // Never reconnect with a null
+          this.opts.onReconnectError?.(err, reconnects, initialSetup)
           continue
         } else {
           throw err
         }
+      } finally {
+        // No-ops if already closed or closing
+        ws.close()
+
+        // Remove listener on incoming signal
+        ac.abort()
       }
-      break // Other side cleanly ended stream and disconnected
     }
   }
 
@@ -138,15 +157,4 @@ function backoffMs(n: number, maxMs: number) {
   const randSec = Math.random() - 0.5 // Random jitter between -.5 and .5 seconds
   const ms = 1000 * (baseSec + randSec)
   return Math.min(ms, maxMs)
-}
-
-function forwardSignal(signal: AbortSignal, ac: AbortController) {
-  if (signal.aborted) {
-    return ac.abort(signal.reason)
-  } else {
-    signal.addEventListener('abort', () => ac.abort(signal.reason), {
-      // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
-      signal: ac.signal,
-    })
-  }
 }
