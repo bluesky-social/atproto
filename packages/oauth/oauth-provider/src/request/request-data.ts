@@ -9,7 +9,7 @@ import { Code } from './code.js'
 export type RequestData = {
   clientId: ClientId
   clientAuth: ClientAuth
-  parameters: OAuthAuthenticationRequestParameters
+  parameters: Readonly<OAuthAuthenticationRequestParameters>
   expiresAt: Date
   deviceId: DeviceId | null
   sub: Sub | null

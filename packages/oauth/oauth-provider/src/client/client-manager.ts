@@ -140,7 +140,7 @@ export class ClientManager {
           metadata[`${endpoint}_endpoint_auth_method`] ||
           metadata[`token_endpoint_auth_method`]
 
-        switch (method || null) {
+        switch (method) {
           case 'none':
             break
           case 'private_key_jwt':
@@ -168,7 +168,7 @@ export class ClientManager {
             // Not supported by the Atproto "lazy client registration" model.
             throw new InvalidClientMetadataError(`${method} is not allowed`)
 
-          case null:
+          case undefined:
             throw new InvalidClientMetadataError(
               `Missing "${endpoint}_endpoint_auth_method" client metadata`,
             )
@@ -182,6 +182,12 @@ export class ClientManager {
       if (metadata.authorization_encrypted_response_enc) {
         throw new InvalidClientMetadataError(
           'Encrypted authorization response is not supported',
+        )
+      }
+
+      if (metadata.tls_client_certificate_bound_access_tokens) {
+        throw new InvalidClientMetadataError(
+          'Mutual-TLS bound access tokens are not supported',
         )
       }
 

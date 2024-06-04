@@ -6,7 +6,7 @@ import { RequestUri } from './request-uri.js'
 export type RequestInfo = {
   id: RequestId
   uri: RequestUri
-  parameters: OAuthAuthenticationRequestParameters
+  parameters: Readonly<OAuthAuthenticationRequestParameters>
   expiresAt: Date
   clientAuth: ClientAuth
 }

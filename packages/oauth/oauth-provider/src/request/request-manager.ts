@@ -52,7 +52,7 @@ export class RequestManager {
   async pushedAuthorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
-    input: OAuthAuthenticationRequestParameters,
+    input: Readonly<OAuthAuthenticationRequestParameters>,
     dpopJkt: null | string,
   ): Promise<RequestInfo> {
     const params = await this.validate(client, clientAuth, input, dpopJkt)
@@ -62,7 +62,7 @@ export class RequestManager {
   async authorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
-    input: OAuthAuthenticationRequestParameters,
+    input: Readonly<OAuthAuthenticationRequestParameters>,
     deviceId: DeviceId,
   ): Promise<RequestInfo> {
     const params = await this.validate(client, clientAuth, input, null)
@@ -72,7 +72,7 @@ export class RequestManager {
   protected async create(
     client: Client,
     clientAuth: ClientAuth,
-    parameters: OAuthAuthenticationRequestParameters,
+    parameters: Readonly<OAuthAuthenticationRequestParameters>,
     deviceId: null | DeviceId = null,
   ): Promise<RequestInfo> {
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
@@ -98,7 +98,7 @@ export class RequestManager {
     parameters: Readonly<OAuthAuthenticationRequestParameters>,
     dpopJkt: null | string,
     pkceRequired = this.pkceRequired,
-  ): Promise<OAuthAuthenticationRequestParameters> {
+  ): Promise<Readonly<OAuthAuthenticationRequestParameters>> {
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
     // > The authorization server MAY fully or partially ignore the scope
     // > requested by the client, based on the authorization server policy or
@@ -145,19 +145,19 @@ export class RequestManager {
     const responseTypes = parameters.response_type.split(' ')
 
     if (parameters.authorization_details) {
-      const cAuthDetailsTypes = client.metadata.authorization_details_types
-      if (!cAuthDetailsTypes) {
+      const clientAuthDetailsTypes = client.metadata.authorization_details_types
+      if (!clientAuthDetailsTypes) {
         throw new InvalidParametersError(
           parameters,
-          'Client does not support authorization_details',
+          'Client Metadata does not declare any "authorization_details"',
         )
       }
 
       for (const detail of parameters.authorization_details) {
-        if (!cAuthDetailsTypes?.includes(detail.type)) {
+        if (!clientAuthDetailsTypes?.includes(detail.type)) {
           throw new InvalidParametersError(
             parameters,
-            `Unsupported authorization_details type "${detail.type}"`,
+            `Unsupported "authorization_details" type "${detail.type}"`,
           )
         }
       }
@@ -249,9 +249,6 @@ export class RequestManager {
         '"id_token" response_type requires "openid" scope',
       )
     }
-
-    // @TODO Validate parameters against **all** client metadata (are some
-    // checks missing?) !!!
 
     // Make "expensive" checks after the "cheaper" checks
 
