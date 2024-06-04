@@ -19,6 +19,7 @@ export interface InputSchema {
     | ComAtprotoAdminDefs.RepoBlobRef
     | { $type: string; [k: string]: unknown }
   takedown?: ComAtprotoAdminDefs.StatusAttr
+  deactivated?: ComAtprotoAdminDefs.StatusAttr
   [k: string]: unknown
 }
 

@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
     auth: ctx.authVerifier.moderator,
     handler: async ({ input }) => {
-      const { subject, takedown } = input.body
+      const { subject, takedown, deactivated } = input.body
       if (takedown) {
         if (isRepoRef(subject)) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
@@ -33,6 +33,16 @@ export default function (server: Server, ctx: AppContext) {
           )
         } else {
           throw new InvalidRequestError('Invalid subject')
+        }
+      }
+
+      if (deactivated) {
+        if (isRepoRef(subject)) {
+          if (deactivated.applied) {
+            await ctx.accountManager.deactivateAccount(subject.did, null)
+          } else {
+            await ctx.accountManager.activateAccount(subject.did)
+          }
         }
       }
 
