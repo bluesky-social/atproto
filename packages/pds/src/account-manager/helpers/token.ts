@@ -60,7 +60,7 @@ export const toTokenInfo = (
 })
 
 const selectTokenInfoQB = (db: AccountDb) =>
-  selectAccountQB(db)
+  selectAccountQB(db, { includeDeactivated: true })
     .innerJoin('token', 'token.did', 'actor.did')
     .leftJoin('device_account', (join) =>
       join
