@@ -75,22 +75,14 @@ export function toAccount(
   }
 }
 
-export const getAuthorizedClients = async (
-  db: AccountDb,
-  deviceId: DeviceId,
-  did: string,
-) => {
-  const row = await db.db
+export const readQB = (db: AccountDb, deviceId: DeviceId, did: string) =>
+  db.db
     .selectFrom('device_account')
     .where('did', '=', did)
     .where('deviceId', '=', deviceId)
-    .select('authorizedClients')
-    .executeTakeFirstOrThrow()
+    .select(['remember', 'authorizedClients', 'authenticatedAt'])
 
-  return fromJsonArray<OAuthClientId>(row.authorizedClients)
-}
-
-export const update = async (
+export const updateQB = (
   db: AccountDb,
   deviceId: DeviceId,
   did: string,
@@ -99,16 +91,14 @@ export const update = async (
     authorizedClients?: OAuthClientId[]
     remember?: boolean
   },
-): Promise<void> => {
-  await db.db
+) =>
+  db.db
     .updateTable('device_account')
     .set(toInsertable(entry))
     .where('did', '=', did)
     .where('deviceId', '=', deviceId)
-    .execute()
-}
 
-export const createOrUpdate = async (
+export const createOrUpdateQB = (
   db: AccountDb,
   deviceId: DeviceId,
   did: string,
@@ -120,54 +110,25 @@ export const createOrUpdate = async (
     authorizedClients: [],
   })
 
-  await db.db
+  return db.db
     .insertInto('device_account')
     .values({ did, deviceId, authorizedClients, ...values })
     .onConflict((oc) => oc.columns(['deviceId', 'did']).doUpdateSet(values))
-    .executeTakeFirstOrThrow()
 }
 
-export const get = async (
-  db: AccountDb,
-  deviceId: DeviceId,
-  did: string,
-  audience: string,
-) => {
-  const row = await selectAccountInfoQB(db, deviceId)
-    .where('actor.did', '=', did)
-    .executeTakeFirst()
-
-  if (!row) return null
-
-  return {
-    account: toAccount(row, audience),
-    info: toDeviceAccountInfo(row),
-  }
-}
-
-export const listRemembered = async (
-  db: AccountDb,
-  deviceId: DeviceId,
-  audience: string,
-) => {
-  const rows = await selectAccountInfoQB(db, deviceId)
-    .where('device_account.remember', '=', 1)
-    .execute()
-
-  return rows.map((row) => ({
-    account: toAccount(row, audience),
-    info: toDeviceAccountInfo(row),
-  }))
-}
-
-export const remove = async (
+export const getAccountInfoQB = (
   db: AccountDb,
   deviceId: DeviceId,
   did: string,
 ) => {
-  await db.db
+  return selectAccountInfoQB(db, deviceId).where('actor.did', '=', did)
+}
+
+export const listRememberedQB = (db: AccountDb, deviceId: DeviceId) =>
+  selectAccountInfoQB(db, deviceId).where('device_account.remember', '=', 1)
+
+export const removeQB = (db: AccountDb, deviceId: DeviceId, did: string) =>
+  db.db
     .deleteFrom('device_account')
     .where('deviceId', '=', deviceId)
     .where('did', '=', did)
-    .execute()
-}

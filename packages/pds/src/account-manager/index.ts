@@ -31,7 +31,7 @@ import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
 import * as auth from './helpers/auth'
-import * as authorizationRequest from './helpers/authorization-request.js'
+import * as authRequest from './helpers/authorization-request.js'
 import * as deviceAccount from './helpers/device-account.js'
 import * as device from './helpers/device.js'
 import * as emailToken from './helpers/email-token'
@@ -172,11 +172,13 @@ export class AccountManager
   }
 
   async takedownAccount(did: string, takedown: StatusAttr) {
-    await this.db.transaction(async (dbTxn) => {
-      await account.updateAccountTakedownStatus(dbTxn, did, takedown)
-      await auth.revokeRefreshTokensByDid(dbTxn, did)
-      await token.removeByDid(dbTxn, did)
-    })
+    await this.db.transaction(async (dbTxn) =>
+      Promise.all([
+        account.updateAccountTakedownStatus(dbTxn, did, takedown),
+        auth.revokeRefreshTokensByDid(dbTxn, did),
+        token.removeByDidQB(dbTxn, did).execute(),
+      ]),
+    )
   }
 
   async getAccountAdminStatus(did: string) {
@@ -493,10 +495,11 @@ export class AccountManager
         throw new AuthRequiredError('App passwords are not allowed')
       }
 
-      return await this.db.transaction(async (dbTxn) => {
-        await deviceAccount.createOrUpdate(dbTxn, deviceId, user.did, remember)
-        return deviceAccount.get(dbTxn, deviceId, user.did, this.serviceDid)
-      })
+      await this.db.executeWithRetry(
+        deviceAccount.createOrUpdateQB(this.db, deviceId, user.did, remember),
+      )
+
+      return await this.getDeviceAccount(deviceId, user.did)
     } catch (err) {
       if (err instanceof AuthRequiredError) return null
       throw err
@@ -509,17 +512,18 @@ export class AccountManager
     clientId: string,
   ): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
-      const authorizedClients = await deviceAccount.getAuthorizedClients(
-        dbTxn,
-        deviceId,
-        sub,
-      )
+      const row = await deviceAccount
+        .readQB(dbTxn, deviceId, sub)
+        .executeTakeFirstOrThrow()
 
-      if (authorizedClients.includes(clientId)) return
-
-      await deviceAccount.update(dbTxn, deviceId, sub, {
-        authorizedClients: [...authorizedClients, clientId],
-      })
+      const { authorizedClients } = deviceAccount.toDeviceAccountInfo(row)
+      if (!authorizedClients.includes(clientId)) {
+        await deviceAccount
+          .updateQB(dbTxn, deviceId, sub, {
+            authorizedClients: [...authorizedClients, clientId],
+          })
+          .execute()
+      }
     })
   }
 
@@ -527,84 +531,90 @@ export class AccountManager
     deviceId: DeviceId,
     sub: string,
   ): Promise<AccountInfo | null> {
-    return deviceAccount.get(this.db, deviceId, sub, this.serviceDid)
+    const row = await deviceAccount
+      .getAccountInfoQB(this.db, deviceId, sub)
+      .executeTakeFirst()
+
+    if (!row) return null
+
+    return {
+      account: deviceAccount.toAccount(row, this.serviceDid),
+      info: deviceAccount.toDeviceAccountInfo(row),
+    }
   }
 
   async listDeviceAccounts(deviceId: DeviceId): Promise<AccountInfo[]> {
-    return deviceAccount.listRemembered(this.db, deviceId, this.serviceDid)
+    const rows = await deviceAccount
+      .listRememberedQB(this.db, deviceId)
+      .execute()
+
+    return rows.map((row) => ({
+      account: deviceAccount.toAccount(row, this.serviceDid),
+      info: deviceAccount.toDeviceAccountInfo(row),
+    }))
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      await deviceAccount.remove(dbTxn, deviceId, sub)
-    })
+    await this.db.executeWithRetry(
+      deviceAccount.removeQB(this.db, deviceId, sub),
+    )
   }
 
   // RequestStore
 
   async createRequest(id: RequestId, data: RequestData): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      await authorizationRequest.create(dbTxn, id, data)
-    })
+    await this.db.executeWithRetry(authRequest.createQB(this.db, id, data))
   }
 
   async readRequest(id: RequestId): Promise<RequestData | null> {
     try {
-      return await authorizationRequest.get(this.db, id)
+      const row = await authRequest.readQB(this.db, id).executeTakeFirst()
+      if (!row) return null
+      return authRequest.rowToRequestData(row)
     } finally {
       // Take the opportunity to clean up expired requests. Do this after we got
       // the current (potentially expired) request data to allow the provider to
       // handle expired requests.
       this.backgroundQueue.add(async () => {
-        await this.db.transaction(async (dbTxn) => {
-          await authorizationRequest.removeOldExpired(dbTxn)
-        })
+        await this.db.executeWithRetry(authRequest.removeOldExpiredQB(this.db))
       })
     }
   }
 
   async updateRequest(id: RequestId, data: UpdateRequestData): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      await authorizationRequest.update(dbTxn, id, data)
-    })
+    await this.db.executeWithRetry(authRequest.updateQB(this.db, id, data))
   }
 
   async deleteRequest(id: RequestId): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      await authorizationRequest.deleteById(dbTxn, id)
-    })
+    await this.db.executeWithRetry(authRequest.removeByIdQB(this.db, id))
   }
 
   async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
-    return authorizationRequest.findByCode(this.db, code)
+    const row = await authRequest.findByCodeQB(this.db, code).executeTakeFirst()
+    return row ? authRequest.rowToFoundRequestResult(row) : null
   }
 
   // DeviceStore
 
   async createDevice(deviceId: DeviceId, data: DeviceData): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      await device.create(dbTxn, deviceId, data)
-    })
+    await this.db.executeWithRetry(device.createQB(this.db, deviceId, data))
   }
 
   async readDevice(deviceId: DeviceId): Promise<null | DeviceData> {
-    return device.getById(this.db, deviceId)
+    const row = await device.readQB(this.db, deviceId).executeTakeFirst()
+    return row ? device.rowToDeviceData(row) : null
   }
 
   async updateDevice(
     deviceId: DeviceId,
     data: Partial<DeviceData>,
   ): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      await device.update(dbTxn, deviceId, data)
-    })
+    await this.db.executeWithRetry(device.updateQB(this.db, deviceId, data))
   }
 
   async deleteDevice(deviceId: DeviceId): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      // Will cascade to device_account (device_account_device_id_fk)
-      await device.remove(dbTxn, deviceId)
-    })
+    // Will cascade to device_account (device_account_device_id_fk)
+    await this.db.executeWithRetry(device.removeQB(this.db, deviceId))
   }
 
   // TokenStore
@@ -616,24 +626,27 @@ export class AccountManager
   ): Promise<void> {
     await this.db.transaction(async (dbTxn) => {
       if (refreshToken) {
-        if (await usedRefreshToken.hasRefreshToken(dbTxn, refreshToken)) {
+        const { count } = await usedRefreshToken
+          .countQB(dbTxn, refreshToken)
+          .executeTakeFirstOrThrow()
+
+        if (count > 0) {
           throw new Error('Refresh token already in use')
         }
       }
 
-      await token.create(dbTxn, id, data, refreshToken)
+      return token.createQB(dbTxn, id, data, refreshToken).execute()
     })
   }
 
   async readToken(tokenId: TokenId): Promise<TokenInfo | null> {
-    return token.findBy(this.db, { tokenId }, this.serviceDid)
+    const row = await token.findByQB(this.db, { tokenId }).executeTakeFirst()
+    return row ? token.toTokenInfo(row, this.serviceDid) : null
   }
 
   async deleteToken(tokenId: TokenId): Promise<void> {
-    await this.db.transaction(async (dbTxn) => {
-      // Will cascade to used_refresh_token (used_refresh_token_fk)
-      await token.remove(dbTxn, tokenId)
-    })
+    // Will cascade to used_refresh_token (used_refresh_token_fk)
+    await this.db.executeWithRetry(token.removeQB(this.db, tokenId))
   }
 
   async rotateToken(
@@ -643,21 +656,28 @@ export class AccountManager
     newData: NewTokenData,
   ): Promise<void> {
     const err = await this.db.transaction(async (dbTxn) => {
-      const { id, currentRefreshToken } = await token.getForRefresh(
-        dbTxn,
-        tokenId,
-      )
+      const { id, currentRefreshToken } = await token
+        .forRotateQB(dbTxn, tokenId)
+        .executeTakeFirstOrThrow()
 
       if (currentRefreshToken) {
-        await usedRefreshToken.insert(dbTxn, id, currentRefreshToken)
+        await usedRefreshToken
+          .insertQB(dbTxn, id, currentRefreshToken)
+          .execute()
       }
 
-      if (await usedRefreshToken.hasRefreshToken(dbTxn, newRefreshToken)) {
+      const { count } = await usedRefreshToken
+        .countQB(dbTxn, newRefreshToken)
+        .executeTakeFirstOrThrow()
+
+      if (count > 0) {
         // Do NOT throw (we don't want the transaction to be rolled back)
         return new Error('New refresh token already in use')
       }
 
-      await token.rotate(dbTxn, id, newTokenId, newRefreshToken, newData)
+      await token
+        .rotateQB(dbTxn, id, newTokenId, newRefreshToken, newData)
+        .execute()
     })
 
     if (err) throw err
@@ -666,15 +686,20 @@ export class AccountManager
   async findTokenByRefreshToken(
     refreshToken: RefreshToken,
   ): Promise<TokenInfo | null> {
-    const id = await usedRefreshToken.findByToken(this.db, refreshToken)
-    return token.findBy(
-      this.db,
-      id ? { id } : { currentRefreshToken: refreshToken },
-      this.serviceDid,
-    )
+    const used = await usedRefreshToken
+      .findByTokenQB(this.db, refreshToken)
+      .executeTakeFirst()
+
+    const search = used
+      ? { id: used.tokenId }
+      : { currentRefreshToken: refreshToken }
+
+    const row = await token.findByQB(this.db, search).executeTakeFirst()
+    return row ? token.toTokenInfo(row, this.serviceDid) : null
   }
 
   async findTokenByCode(code: Code): Promise<TokenInfo | null> {
-    return token.findByCode(this.db, code, this.serviceDid)
+    const row = await token.findByQB(this.db, { code }).executeTakeFirst()
+    return row ? token.toTokenInfo(row, this.serviceDid) : null
   }
 }

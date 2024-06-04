@@ -86,62 +86,63 @@ const selectTokenInfoQB = (db: AccountDb) =>
       'device_account.remember',
     ])
 
-export const create = async (
+export const createQB = (
   db: AccountDb,
   tokenId: TokenId,
   data: TokenData,
   refreshToken?: RefreshToken,
-) => {
-  await db.db
-    .insertInto('token')
-    .values({
-      tokenId,
-      createdAt: toDateISO(data.createdAt),
-      expiresAt: toDateISO(data.expiresAt),
-      updatedAt: toDateISO(data.updatedAt),
-      clientId: data.clientId,
-      clientAuth: toJsonObject(data.clientAuth),
-      deviceId: data.deviceId,
-      did: data.sub,
-      parameters: toJsonObject(data.parameters),
-      details: data.details ? toJsonArray(data.details) : null,
-      code: data.code,
-      currentRefreshToken: refreshToken || null,
-    })
-    .execute()
-}
+) =>
+  db.db.insertInto('token').values({
+    tokenId,
+    createdAt: toDateISO(data.createdAt),
+    expiresAt: toDateISO(data.expiresAt),
+    updatedAt: toDateISO(data.updatedAt),
+    clientId: data.clientId,
+    clientAuth: toJsonObject(data.clientAuth),
+    deviceId: data.deviceId,
+    did: data.sub,
+    parameters: toJsonObject(data.parameters),
+    details: data.details ? toJsonArray(data.details) : null,
+    code: data.code,
+    currentRefreshToken: refreshToken || null,
+  })
 
-export const getForRefresh = async (db: AccountDb, id: TokenId) => {
-  return db.db
+export const forRotateQB = (db: AccountDb, id: TokenId) =>
+  db.db
     .selectFrom('token')
     .where('tokenId', '=', id)
     .where('currentRefreshToken', 'is not', null)
     .select(['id', 'currentRefreshToken'])
-    .executeTakeFirstOrThrow()
-}
 
-export const findBy = async (
+export const findByQB = (
   db: AccountDb,
   search: {
-    tokenId?: TokenId
     id?: number
+    code?: Code
+    tokenId?: TokenId
     currentRefreshToken?: RefreshToken
   },
-  audience: string,
-): Promise<null | TokenInfo> => {
+) => {
   if (
     search.id === undefined &&
+    search.code === undefined &&
     search.tokenId === undefined &&
     search.currentRefreshToken === undefined
   ) {
     // Prevent accidental scan
-    throw new Error('At least one search parameter is required')
+    throw new TypeError('At least one search parameter is required')
   }
 
-  const row = await selectTokenInfoQB(db)
+  return selectTokenInfoQB(db)
     .if(search.id !== undefined, (qb) =>
       // primary key
       qb.where('token.id', '=', search.id!),
+    )
+    .if(search.code !== undefined, (qb) =>
+      // uses "token_code_idx" (partial index, hence the null check)
+      qb
+        .where('token.code', '=', search.code!)
+        .where('token.code', 'is not', null),
     )
     .if(search.tokenId !== undefined, (qb) =>
       // uses "token_token_id_idx"
@@ -151,61 +152,30 @@ export const findBy = async (
       // uses "token_refresh_token_unique_idx"
       qb.where('token.currentRefreshToken', '=', search.currentRefreshToken!),
     )
-    .executeTakeFirst()
-
-  if (!row) return null
-
-  return toTokenInfo(row, audience)
 }
 
-export const removeByDid = async (db: AccountDb, did: string) => {
-  await db.db.deleteFrom('token').where('did', '=', did).execute()
-}
+export const removeByDidQB = (db: AccountDb, did: string) =>
+  db.db.deleteFrom('token').where('did', '=', did)
 
-export const rotate = async (
+export const rotateQB = (
   db: AccountDb,
   id: number,
   newTokenId: TokenId,
   newRefreshToken: RefreshToken,
   newData: NewTokenData,
-) => {
-  const { expiresAt, updatedAt, clientAuth, ...rest } = newData
-
-  // Future proofing
-  if (Object.keys(rest).length > 0) throw new Error('Unexpected fields')
-
-  await db.db
+) =>
+  db.db
     .updateTable('token')
     .set({
       tokenId: newTokenId,
       currentRefreshToken: newRefreshToken,
 
-      expiresAt: toDateISO(expiresAt),
-      updatedAt: toDateISO(updatedAt),
-      clientAuth: toJsonObject(clientAuth),
+      expiresAt: toDateISO(newData.expiresAt),
+      updatedAt: toDateISO(newData.updatedAt),
+      clientAuth: toJsonObject(newData.clientAuth),
     })
     .where('id', '=', id)
-    .execute()
-}
 
-export const remove = async (
-  db: AccountDb,
-  tokenId: TokenId,
-): Promise<void> => {
+export const removeQB = (db: AccountDb, tokenId: TokenId) =>
   // Uses "used_refresh_token_fk" to cascade delete
-  await db.db.deleteFrom('token').where('tokenId', '=', tokenId).execute()
-}
-
-export const findByCode = async (
-  db: AccountDb,
-  code: Code,
-  audience: string,
-): Promise<null | TokenInfo> => {
-  const row = await selectTokenInfoQB(db)
-    .where('code', '=', code)
-    .where('code', 'is not', null) // uses "token_code_idx"
-    .executeTakeFirst()
-
-  if (!row) return null
-  return toTokenInfo(row, audience)
-}
+  db.db.deleteFrom('token').where('tokenId', '=', tokenId)
