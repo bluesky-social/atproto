@@ -4,11 +4,21 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { assertValidDidDocumentForService } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
+      // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.activateAccount(
+          undefined,
+          authPassthru(req, true),
+        )
+        return
+      }
+
       const requester = auth.credentials.did
 
       await assertValidDidDocumentForService(ctx, requester)
