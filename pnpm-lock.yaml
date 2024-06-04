@@ -463,7 +463,7 @@ importers:
   packages/did:
     dependencies:
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
@@ -519,7 +519,7 @@ importers:
         specifier: workspace:*
         version: link:../../did
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
@@ -532,7 +532,7 @@ importers:
         specifier: workspace:*
         version: link:../pipe
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
@@ -570,7 +570,7 @@ importers:
         specifier: workspace:*
         version: link:../../did
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
@@ -702,7 +702,7 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
@@ -768,7 +768,7 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
@@ -914,7 +914,7 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     optionalDependencies:
       ioredis:
@@ -991,7 +991,7 @@ importers:
         specifier: workspace:*
         version: link:../jwk
       zod:
-        specifier: ^3.22.4
+        specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
       typescript:
