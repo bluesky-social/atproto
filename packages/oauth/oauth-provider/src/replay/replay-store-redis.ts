@@ -1,8 +1,9 @@
-import type { ReplayStore } from '@atproto/oauth-provider'
 import { Redis } from 'ioredis'
-import { CreateRedisOptions, createRedis } from '../lib/redis.js'
 
-export type { Redis, CreateRedisOptions }
+import { CreateRedisOptions, createRedis } from '../lib/redis.js'
+import type { ReplayStore } from './replay-store.js'
+
+export type { CreateRedisOptions, Redis }
 
 export type ReplayStoreRedisOptions = {
   redis: CreateRedisOptions

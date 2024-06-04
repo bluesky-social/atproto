@@ -10,20 +10,20 @@ import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Jwks, jwksSchema } from '@atproto/jwk'
 import {
-  Awaitable,
-  ClientData,
-  ClientStore,
-  InvalidClientMetadataError,
-  InvalidRedirectUriError,
   OAuthClientMetadata,
   oauthClientMetadataSchema,
-  parseRedirectUri,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-types'
 
+import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
+import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { isInternetHost, isLoopbackHost } from '../lib/util/hostname.js'
 import { isSubUrl } from '../lib/util/path.js'
+import { Awaitable } from '../lib/util/type.js'
 import { buildWellknownUrl } from '../lib/util/well-known.js'
+import { ClientData } from './client-data.js'
 import { ClientId } from './client-id.js'
+import { ClientStore } from './client-store.js'
+import { parseRedirectUri } from './client-utils.js'
 
 export type LoopbackMetadataGetter = (
   url: URL,
