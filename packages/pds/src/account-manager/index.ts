@@ -43,6 +43,7 @@ import * as token from './helpers/token.js'
 import * as usedRefreshToken from './helpers/used-refresh-token.js'
 
 export { AccountStatus } from './helpers/account'
+export { formatAccountStatus } from './helpers/account'
 
 export class AccountManager
   implements AccountStore, RequestStore, DeviceStore, TokenStore
@@ -104,15 +105,7 @@ export class AccountManager
       includeDeactivated: true,
       includeTakenDown: true,
     })
-    if (!got) {
-      return AccountStatus.Deleted
-    } else if (got.takedownRef) {
-      return AccountStatus.Takendown
-    } else if (got.deactivatedAt) {
-      return AccountStatus.Deactivated
-    } else {
-      return AccountStatus.Active
-    }
+    return account.formatAccountStatus(got).status
   }
 
   async createAccount(opts: {

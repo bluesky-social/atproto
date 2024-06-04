@@ -1,6 +1,7 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
 
+import { formatAccountStatus } from '../../../../account-manager'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
@@ -37,6 +38,8 @@ export default function (server: Server, ctx: AppContext) {
         didDocForSession(ctx, user.did),
       ])
 
+      const { status, active } = formatAccountStatus(user)
+
       return {
         encoding: 'application/json',
         body: {
@@ -47,8 +50,8 @@ export default function (server: Server, ctx: AppContext) {
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt,
           refreshJwt,
-          active: user.active,
-          status: user.status,
+          active,
+          status,
         },
       }
     },
