@@ -122,7 +122,28 @@
           "ref": "app.bsky.graph.defs#listViewBasic"
         },
         "following": { "type": "string", "format": "at-uri" },
-        "followedBy": { "type": "string", "format": "at-uri" }
+        "followedBy": { "type": "string", "format": "at-uri" },
+        "socialProof": {
+          "type": "ref",
+          "ref": "#viewerStateSocialProof"
+        }
+      }
+    },
+    "viewerStateSocialProof": {
+      "type": "object",
+      "description": "The viewer's follows who are followers of the given account.",
+      "required": ["count", "follows"],
+      "properties": {
+        "count": { "type": "integer" },
+        "follows": {
+          "type": "array",
+          "minLength": 1,
+          "maxLength": 5,
+          "items": {
+            "type": "ref",
+            "ref": "#profileViewBasic"
+          }
+        }
       }
     },
     "preferences": {
