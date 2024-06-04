@@ -31,7 +31,7 @@ import {
 } from './client/client-store-uri.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
-import { AUTH_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
+import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
 import { DeviceId } from './device/device-id.js'
 import { DeviceManager } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
@@ -138,7 +138,7 @@ export type OAuthProviderOptions = Override<
      * using the `max_age` parameter and on a client basis using the
      * `default_max_age` client metadata.
      */
-    defaultMaxAge?: number
+    authenticationMaxAge?: number
 
     /**
      * Maximum age access & id tokens can be before requiring a refresh.
@@ -177,7 +177,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly metadata: OAuthServerMetadata
   public readonly customization?: Customization
 
-  public readonly defaultMaxAge: number
+  public readonly authenticationMaxAge: number
 
   public readonly accountManager: AccountManager
   public readonly deviceStore: DeviceStore
@@ -188,7 +188,7 @@ export class OAuthProvider extends OAuthVerifier {
   public constructor({
     metadata,
     customization = undefined,
-    defaultMaxAge = AUTH_MAX_AGE,
+    authenticationMaxAge = AUTHENTICATION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
 
     store, // compound store implementation
@@ -211,7 +211,7 @@ export class OAuthProvider extends OAuthVerifier {
       ? new RequestStoreRedis({ redis })
       : new RequestStoreMemory()
 
-    this.defaultMaxAge = defaultMaxAge
+    this.authenticationMaxAge = authenticationMaxAge
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
     this.customization = customization
 
@@ -243,18 +243,22 @@ export class OAuthProvider extends OAuthVerifier {
     parameters: OAuthAuthenticationRequestParameters,
     info: DeviceAccountInfo,
   ) {
-    const authAge = Math.max(
-      0, // Prevent negative values (fool proof)
-      (Date.now() - info.authenticatedAt.getTime()) / 1e3,
-    )
-    const maxAge = Math.max(
-      0, // Prevent negative values (fool proof)
-      parameters.max_age ??
-        client.metadata.default_max_age ??
-        this.defaultMaxAge,
-    )
+    /** in seconds */
+    const authAge = (Date.now() - info.authenticatedAt.getTime()) / 1e3
 
-    return Math.floor(authAge) > Math.floor(maxAge)
+    // Fool-proof (invalid date, or suspiciously in the future)
+    if (!Number.isFinite(authAge) || authAge < 0) {
+      return true
+    }
+
+    /** in seconds */
+    const maxAge = parameters.max_age ?? client.metadata.default_max_age
+
+    if (maxAge != null && maxAge < this.authenticationMaxAge) {
+      return authAge >= maxAge
+    } else {
+      return authAge >= this.authenticationMaxAge
+    }
   }
 
   protected async authenticateClient(

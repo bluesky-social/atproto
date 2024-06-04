@@ -26,7 +26,7 @@ const YEAR = 365.25 * DAY
 const MONTH = YEAR / 12
 
 /** 7 days */
-export const AUTH_MAX_AGE = 7 * DAY
+export const AUTHENTICATION_MAX_AGE = 7 * DAY
 
 /** 60 minutes */
 export const TOKEN_MAX_AGE = 60 * MINUTE

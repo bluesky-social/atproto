@@ -51,6 +51,14 @@ export const oauthClientMetadataSchema = z.object({
   policy_uri: z.string().url().optional(),
   tos_uri: z.string().url().optional(),
   logo_uri: z.string().url().optional(),
+
+  /**
+   * Default Maximum Authentication Age. Specifies that the End-User MUST be
+   * actively authenticated if the End-User was authenticated longer ago than
+   * the specified number of seconds. The max_age request parameter overrides
+   * this default value. If omitted, no default Maximum Authentication Age is
+   * specified.
+   */
   default_max_age: z.number().optional(),
   require_auth_time: z.boolean().optional(),
   contacts: z.array(z.string().email()).optional(),
