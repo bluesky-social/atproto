@@ -96,7 +96,7 @@ function compareClaimValue(
       return expectedValue === value
     case 'object':
       if (expectedValue === null) return value === null
-    // TODO (?): allow for object comparison
+    // @TODO (?): allow object comparison
     // falls through
     default:
       throw new InvalidRequestError(

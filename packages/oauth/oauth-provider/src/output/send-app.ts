@@ -22,7 +22,7 @@ export function sendApp(
   res: ServerResponse,
   { status = 200, ...options }: BuildDocumentOptions & { status?: number },
 ): void {
-  // TODO: make these headers configurable (?)
+  // @TODO: make these headers configurable (?)
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
@@ -31,7 +31,6 @@ export function sendApp(
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('X-XSS-Protection', '0')
   res.setHeader('Strict-Transport-Security', 'max-age=63072000')
-  // TODO: use CSP rule builder (?)
   res.setHeader(
     'Content-Security-Policy',
     [

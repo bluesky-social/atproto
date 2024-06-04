@@ -280,8 +280,8 @@ export class BrowserOAuthClient extends OAuthClient {
       }
 
       const cancel = () => {
-        // TODO: Store fact that the request was cancelled, allowing any
-        // callback to not request credentials (or revoke those obtained)
+        // @TODO: Store fact that the request was cancelled, allowing any
+        // callback (e.g. in the popup) to revoke the session or credentials.
 
         reject(new Error(options?.signal?.aborted ? 'Aborted' : 'Timeout'))
         cleanup()

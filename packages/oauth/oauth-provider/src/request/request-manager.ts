@@ -250,8 +250,8 @@ export class RequestManager {
       )
     }
 
-    // TODO Validate parameters against **all** client metadata (are some checks
-    // missing?) !!!
+    // @TODO Validate parameters against **all** client metadata (are some
+    // checks missing?) !!!
 
     // Make "expensive" checks after the "cheaper" checks
 

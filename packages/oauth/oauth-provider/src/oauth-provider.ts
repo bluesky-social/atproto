@@ -350,7 +350,6 @@ export class OAuthProvider extends OAuthVerifier {
         input,
       )
 
-      // TODO (?) should we allow using signed JAR for client authentication?
       const { payload: parameters } =
         'request' in input // Handle JAR
           ? await this.decodeJAR(client, input)
@@ -724,7 +723,7 @@ export class OAuthProvider extends OAuthVerifier {
       // If a token is replayed, requestManager.findCode will throw. In that
       // case, we need to revoke any token that was issued for this code.
 
-      // TODO: in order to protect the user, we should maybe also mark the
+      // @TODO (?) in order to protect the user, we should maybe also mark the
       // account-device association as expired ?
       await this.tokenManager.revoke(input.code)
 
@@ -745,7 +744,7 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
   protected async revoke(input: Revoke) {
-    // TODO: this should also remove the account-device association (or, at
+    // @TODO this should also remove the account-device association (or, at
     // least, mark it as expired)
     await this.tokenManager.revoke(input.token)
   }
@@ -1093,8 +1092,6 @@ export class OAuthProvider extends OAuthVerifier {
                 }
               : req.headers,
             {
-              // TODO? Add the URL as an audience of the token ?
-              // audience: [this.url.href],
               scope: ['profile'],
             },
           )
