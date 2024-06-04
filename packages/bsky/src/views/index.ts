@@ -213,7 +213,17 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
+      socialProof: viewer.socialProof ? this.socialProofWithProfiles(viewer.socialProof, state) : undefined,
     }
+  }
+
+  socialProofWithProfiles(
+    socialProof: { count: number; follows: string[] },
+    state: HydrationState) {
+    const follows = mapDefined(socialProof.follows, (did) => {
+      return this.profileBasic(did, state)
+    })
+    return { count: socialProof.count, follows }
   }
 
   blockedProfileViewer(

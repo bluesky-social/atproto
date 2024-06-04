@@ -14,6 +14,7 @@ describe('pds profile views', () => {
   let alice: string
   let bob: string
   let dan: string
+  let carol: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -27,6 +28,7 @@ describe('pds profile views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
+    carol = sc.dids.carol
   })
 
   afterAll(async () => {
@@ -74,6 +76,22 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
+  })
+
+  // TODO: Add test to verify that social proof isn't provided for non-detailed profiles
+  // Alice follows Bob
+  // Bob follows Carol
+  // If Alice looks at Carol's profile, she should see that Bob follows Carol
+  it("shows social profile information", async () => {
+    const carolForAlice = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+
+    const socialProof = carolForAlice.data.viewer?.socialProof
+    expect(socialProof?.count).toBe(1)
+    expect(socialProof?.follows).toHaveLength(1)
+    expect(socialProof?.follows[0].handle).toBe('bob.test')
   })
 
   it('fetches multiple profiles', async () => {
