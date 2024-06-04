@@ -4061,6 +4061,30 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
+          socialProof: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#viewerStateSocialProof',
+          },
+        },
+      },
+      viewerStateSocialProof: {
+        type: 'object',
+        description:
+          "The viewer's follows who are followers of the given account.",
+        required: ['count', 'follows'],
+        properties: {
+          count: {
+            type: 'integer',
+          },
+          follows: {
+            type: 'array',
+            minLength: 1,
+            maxLength: 5,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       preferences: {
@@ -7350,6 +7374,59 @@ export const schemaDict = {
               'the primary actor at-identifier could not be resolved',
           },
         ],
+      },
+    },
+  },
+  AppBskyGraphGetSocialProofFollowers: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getSocialProofFollowers',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates accounts which follow a specified account (actor) and are followed by the viewer.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'followers'],
+            properties: {
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#profileView',
+              },
+              cursor: {
+                type: 'string',
+              },
+              followers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -10914,6 +10991,7 @@ export const ids = {
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
+  AppBskyGraphGetSocialProofFollowers: 'app.bsky.graph.getSocialProofFollowers',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',

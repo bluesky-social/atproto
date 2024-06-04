@@ -133,6 +133,7 @@ export interface ViewerState {
   blockingByList?: AppBskyGraphDefs.ListViewBasic
   following?: string
   followedBy?: string
+  socialProof?: ViewerStateSocialProof
   [k: string]: unknown
 }
 
@@ -146,6 +147,27 @@ export function isViewerState(v: unknown): v is ViewerState {
 
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
+}
+
+/** The viewer's follows who are followers of the given account. */
+export interface ViewerStateSocialProof {
+  count: number
+  follows: ProfileViewBasic[]
+  [k: string]: unknown
+}
+
+export function isViewerStateSocialProof(
+  v: unknown,
+): v is ViewerStateSocialProof {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#viewerStateSocialProof'
+  )
+}
+
+export function validateViewerStateSocialProof(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#viewerStateSocialProof', v)
 }
 
 export type Preferences = (

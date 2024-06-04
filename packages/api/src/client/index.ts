@@ -133,6 +133,7 @@ import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+import * as AppBskyGraphGetSocialProofFollowers from './types/app/bsky/graph/getSocialProofFollowers'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -315,6 +316,7 @@ export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+export * as AppBskyGraphGetSocialProofFollowers from './types/app/bsky/graph/getSocialProofFollowers'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -2145,6 +2147,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.getRelationships', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetRelationships.toKnownErr(e)
+      })
+  }
+
+  getSocialProofFollowers(
+    params?: AppBskyGraphGetSocialProofFollowers.QueryParams,
+    opts?: AppBskyGraphGetSocialProofFollowers.CallOptions,
+  ): Promise<AppBskyGraphGetSocialProofFollowers.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getSocialProofFollowers', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetSocialProofFollowers.toKnownErr(e)
       })
   }
 
