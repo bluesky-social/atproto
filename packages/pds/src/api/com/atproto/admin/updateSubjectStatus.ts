@@ -14,13 +14,11 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.moderator,
     handler: async ({ input }) => {
       const { subject, takedown, deactivated } = input.body
-      let updatedAccountDid: string | undefined = undefined
       if (takedown) {
         if (isRepoRef(subject)) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
           const status = await ctx.accountManager.getAccountStatus(subject.did)
           await ctx.sequencer.sequenceAccountEvt(subject.did, status)
-          updatedAccountDid = subject.did
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
           await ctx.actorStore.transact(uri.hostname, (store) =>
@@ -45,14 +43,12 @@ export default function (server: Server, ctx: AppContext) {
           } else {
             await ctx.accountManager.activateAccount(subject.did)
           }
-          updatedAccountDid = subject.did
         }
       }
 
-      if (updatedAccountDid) {
-        const status =
-          await ctx.accountManager.getAccountStatus(updatedAccountDid)
-        await ctx.sequencer.sequenceAccountEvt(updatedAccountDid, status)
+      if (isRepoRef(subject)) {
+        const status = await ctx.accountManager.getAccountStatus(subject.did)
+        await ctx.sequencer.sequenceAccountEvt(subject.did, status)
       }
 
       return {
