@@ -12,7 +12,6 @@ export default function (server: Server, ctx: AppContext) {
       additional: [AuthScope.SignupQueued],
     }),
     handler: async ({ auth, req }) => {
-      const did = auth.credentials.did
       if (ctx.entrywayAgent) {
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.getSession(
@@ -22,6 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const did = auth.credentials.did
       const [user, didDoc] = await Promise.all([
         ctx.accountManager.getAccount(did, { includeDeactivated: true }),
         didDocForSession(ctx, did),
