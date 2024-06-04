@@ -1,4 +1,4 @@
-import { AuthorizeOptions, OAuthAgent, Session } from '@atproto/oauth-client'
+import { AuthorizeOptions, OAuthAgent } from '@atproto/oauth-client'
 import {
   BrowserOAuthClient,
   LoginContinuedInParentWindowError,
@@ -65,7 +65,7 @@ export function useOAuth(client: BrowserOAuthClient) {
   useEffect(() => {
     if (!oauthAgent) return
 
-    return client.onSession((event, sessionId, session?: Session): void => {
+    return client.onSession((event, sessionId): void => {
       if (
         (event === 'revoked' || event === 'deleted') &&
         sessionId === oauthAgent.sessionId

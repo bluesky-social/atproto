@@ -29,12 +29,11 @@ export type BrowserOAuthClientOptions = {
   crypto?: Crypto
 }
 
-export type SessionListener = (
-  ...args:
-    | [event: 'updated', sessionId: string, session: Session]
-    | [event: 'revoked', sessionId: string]
-    | [event: 'deleted', sessionId: string]
-) => void
+export interface SessionListener {
+  (event: 'updated', sessionId: string, session: Session): void
+  (event: 'revoked', sessionId: string): void
+  (event: 'deleted', sessionId: string): void
+}
 
 const NAMESPACE = `@@atproto/oauth-client-browser`
 
