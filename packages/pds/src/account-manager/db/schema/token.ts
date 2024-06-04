@@ -8,7 +8,7 @@ import {
 } from '@atproto/oauth-provider'
 import { Generated, Selectable } from 'kysely'
 
-import { DateISO, JsonArray, JsonObject } from '../../../db/cast.js'
+import { DateISO, JsonArray, JsonObject } from '../../../db/cast'
 
 export interface Token {
   id: Generated<number>

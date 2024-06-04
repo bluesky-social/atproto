@@ -5,10 +5,10 @@ import {
   LoginCredentials,
 } from '@atproto/oauth-provider'
 
-import { AccountManager } from '../account-manager/index.js'
-import { ActorStore } from '../actor-store/index.js'
-import { ProfileViewBasic } from '../lexicon/types/app/bsky/actor/defs.js'
-import { LocalViewerCreator } from '../read-after-write/index.js'
+import { AccountManager } from '../account-manager/index'
+import { ActorStore } from '../actor-store/index'
+import { ProfileViewBasic } from '../lexicon/types/app/bsky/actor/defs'
+import { LocalViewerCreator } from '../read-after-write/index'
 
 /**
  * Although the {@link AccountManager} class implements the {@link AccountStore}

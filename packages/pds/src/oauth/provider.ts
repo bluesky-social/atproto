@@ -4,11 +4,11 @@ import {
   OAuthProviderOptions,
 } from '@atproto/oauth-provider'
 
-import { AccountManager } from '../account-manager/index.js'
-import { ActorStore } from '../actor-store/index.js'
-import { oauthLogger } from '../logger.js'
-import { LocalViewerCreator } from '../read-after-write/index.js'
-import { DetailedAccountStore } from './detailed-account-store.js'
+import { AccountManager } from '../account-manager/index'
+import { ActorStore } from '../actor-store/index'
+import { oauthLogger } from '../logger'
+import { LocalViewerCreator } from '../read-after-write/index'
+import { DetailedAccountStore } from './detailed-account-store'
 
 export type AuthProviderOptions = {
   accountManager: AccountManager
