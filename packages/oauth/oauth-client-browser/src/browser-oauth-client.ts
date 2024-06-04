@@ -1,7 +1,7 @@
 import { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
+  AuthorizeOptions,
   OAuthAgent,
-  OAuthAuthorizeOptions,
   OAuthCallbackError,
   OAuthClient,
   Session,
@@ -213,13 +213,13 @@ export class BrowserOAuthClient extends OAuthClient {
       const agent = await this.restore(sessionId, refresh)
       return { agent }
     } else {
-      // TODO: we could restore any session from the store ?
+      // @TODO: we could restore any session from the store ?
     }
   }
 
   async signIn(
     input: string,
-    options?: OAuthAuthorizeOptions & { signal?: AbortSignal },
+    options?: AuthorizeOptions & { signal?: AbortSignal },
   ) {
     if (options?.display === 'popup') {
       return this.signInPopup(input, options)
@@ -228,7 +228,7 @@ export class BrowserOAuthClient extends OAuthClient {
     }
   }
 
-  async signInRedirect(input: string, options?: OAuthAuthorizeOptions) {
+  async signInRedirect(input: string, options?: AuthorizeOptions) {
     const url = await this.authorize(input, options)
 
     window.location.href = url.href
@@ -241,7 +241,7 @@ export class BrowserOAuthClient extends OAuthClient {
 
   async signInPopup(
     input: string,
-    options?: Omit<OAuthAuthorizeOptions, 'state'> & { signal?: AbortSignal },
+    options?: Omit<AuthorizeOptions, 'state'> & { signal?: AbortSignal },
   ): Promise<OAuthAgent> {
     // Open new window asap to prevent popup busting by browsers
     const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'

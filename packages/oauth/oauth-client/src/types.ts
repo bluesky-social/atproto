@@ -4,11 +4,11 @@ import {
 } from '@atproto/oauth-types'
 import z from 'zod'
 
-// TODO: Rename these types without the OAuth prefix. All oauth related types
-// are in the oauth-types package. The following types are specific to this
-// package, not to oauth in general.
+// Note: These types are not prefixed with `OAuth` because they are not specific
+// to OAuth. They are specific to this packages. OAuth specific types are in
+// `@atproto/oauth-types`.
 
-export type OAuthAuthorizeOptions = {
+export type AuthorizeOptions = {
   display?: 'page' | 'popup' | 'touch' | 'wap'
   redirect_uri?: string
   id_token_hint?: string
@@ -19,8 +19,8 @@ export type OAuthAuthorizeOptions = {
   ui_locales?: string
 }
 
-export const oauthClientMetadataIdSchema = oauthClientMetadataSchema.extend({
+export const clientMetadataSchema = oauthClientMetadataSchema.extend({
   client_id: oauthClientIdSchema.url(),
 })
 
-export type OAuthClientMetadataId = z.infer<typeof oauthClientMetadataIdSchema>
+export type ClientMetadata = z.infer<typeof clientMetadataSchema>

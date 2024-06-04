@@ -1,13 +1,13 @@
 import { Keyset } from '@atproto/jwk'
 import { OAuthClientMetadataInput } from '@atproto/oauth-types'
 
-import { OAuthClientMetadataId, oauthClientMetadataIdSchema } from './types.js'
+import { ClientMetadata, clientMetadataSchema } from './types.js'
 
 export function validateClientMetadata(
   input: OAuthClientMetadataInput,
   keyset?: Keyset,
-): OAuthClientMetadataId {
-  const metadata = oauthClientMetadataIdSchema.parse(input)
+): ClientMetadata {
+  const metadata = clientMetadataSchema.parse(input)
 
   const url = new URL(metadata.client_id)
   if (url.pathname !== '/') {

@@ -6,11 +6,11 @@ import { CryptoWrapper } from './crypto-wrapper.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { MetadataResolveOptions } from './oauth-server-metadata-resolver.js'
-import { OAuthClientMetadataId } from './types.js'
+import { ClientMetadata } from './types.js'
 
 export class OAuthServerFactory {
   constructor(
-    readonly clientMetadata: OAuthClientMetadataId,
+    readonly clientMetadata: ClientMetadata,
     readonly crypto: CryptoWrapper,
     readonly resolver: OAuthResolver,
     readonly fetch: GlobalFetch,

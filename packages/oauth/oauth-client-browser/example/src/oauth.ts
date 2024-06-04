@@ -1,8 +1,4 @@
-import {
-  OAuthAgent,
-  OAuthAuthorizeOptions,
-  Session,
-} from '@atproto/oauth-client'
+import { AuthorizeOptions, OAuthAgent, Session } from '@atproto/oauth-client'
 import {
   BrowserOAuthClient,
   LoginContinuedInParentWindowError,
@@ -101,7 +97,7 @@ export function useOAuth(client: BrowserOAuthClient) {
   }, [oauthAgent])
 
   const signIn = useCallback(
-    async (input: string, options?: OAuthAuthorizeOptions) => {
+    async (input: string, options?: AuthorizeOptions) => {
       if (oauthAgent) return
 
       setLoading(true)

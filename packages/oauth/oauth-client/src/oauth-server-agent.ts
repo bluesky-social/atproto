@@ -23,7 +23,7 @@ import { CryptoWrapper } from './crypto-wrapper.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
-import { OAuthClientMetadataId } from './types.js'
+import { ClientMetadata } from './types.js'
 import { withSignal } from './util.js'
 
 export type TokenSet = {
@@ -51,7 +51,7 @@ export class OAuthServerAgent {
   constructor(
     readonly dpopKey: Key,
     readonly serverMetadata: OAuthServerMetadata,
-    readonly clientMetadata: OAuthClientMetadataId,
+    readonly clientMetadata: ClientMetadata,
     readonly dpopNonces: DpopNonceCache,
     readonly oauthResolver: OAuthResolver,
     readonly crypto: CryptoWrapper,

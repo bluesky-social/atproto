@@ -33,7 +33,7 @@ import {
   OAuthServerMetadataResolver,
 } from './oauth-server-metadata-resolver.js'
 import { SessionGetter, SessionStore } from './session-getter.js'
-import { OAuthAuthorizeOptions, OAuthClientMetadataId } from './types.js'
+import { AuthorizeOptions, ClientMetadata } from './types.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
 
 export type InternalStateData = {
@@ -87,7 +87,7 @@ export type OAuthClientOptions = {
 
 export class OAuthClient {
   // Config
-  readonly clientMetadata: OAuthClientMetadataId
+  readonly clientMetadata: ClientMetadata
   readonly responseMode: OAuthResponseMode
   readonly keyset?: Keyset
 
@@ -157,7 +157,7 @@ export class OAuthClient {
 
   async authorize(
     input: string,
-    options?: OAuthAuthorizeOptions & { signal?: AbortSignal },
+    options?: AuthorizeOptions & { signal?: AbortSignal },
   ): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
