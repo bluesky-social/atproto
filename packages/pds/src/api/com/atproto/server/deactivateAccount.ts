@@ -6,6 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deactivateAccount({
     auth: ctx.authVerifier.accessFull(),
     handler: async ({ auth, input, req }) => {
+      // in the case of entryway, the full flow is deactivateAccount (PDS) -> deactivateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.deactivateAccount(
           input.body,
