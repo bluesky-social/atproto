@@ -86,7 +86,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    '', // TODO: Build the CSP header based on the asset manifest
+    buildCSP(assetManifest), // Not provided here
   )
 
   // Serve the index.html file
