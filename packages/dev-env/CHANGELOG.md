@@ -1,5 +1,17 @@
 # @atproto/dev-env
 
+## 0.3.22
+
+### Patch Changes
+
+- [#2539](https://github.com/bluesky-social/atproto/pull/2539) [`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46) Thanks [@dholms](https://github.com/dholms)! - Allow updating deactivation state through admin.updateSubjectStatus
+
+- Updated dependencies [[`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46)]:
+  - @atproto/api@0.12.16
+  - @atproto/pds@0.4.31
+  - @atproto/bsky@0.0.59
+  - @atproto/ozone@0.1.21
+
 ## 0.3.21
 
 ### Patch Changes
