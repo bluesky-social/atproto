@@ -834,7 +834,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  override async authenticateToken(
+  protected override async authenticateToken(
     tokenType: OAuthTokenType,
     token: AccessToken,
     dpopJkt: string | null,

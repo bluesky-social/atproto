@@ -544,10 +544,12 @@ export class TokenManager {
     const tokenInfo = await this.getTokenInfo(tokenType, token)
     const { parameters } = tokenInfo.data
 
+    // Construct a list of claim, as if the token was a JWT.
     const claims: TokenClaims = {
       aud: tokenInfo.account.aud,
       sub: tokenInfo.account.sub,
       exp: dateToEpoch(tokenInfo.data.expiresAt),
+      iat: dateToEpoch(tokenInfo.data.updatedAt),
       scope: tokenInfo.data.parameters.scope,
       client_id: tokenInfo.data.clientId,
       cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,

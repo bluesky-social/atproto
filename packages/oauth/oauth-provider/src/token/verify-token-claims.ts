@@ -29,6 +29,7 @@ export function verifyTokenClaims(
   claims: TokenClaims,
   options?: VerifyTokenClaimsOptions,
 ): VerifyTokenClaimsResult {
+  const dateReference = Date.now()
   const claimsJkt = claims.cnf?.jkt ?? null
 
   const expectedTokenType: OAuthTokenType = claimsJkt ? 'DPoP' : 'Bearer'
@@ -54,6 +55,10 @@ export function verifyTokenClaims(
     if (!scopes || !options.scope.some((v) => scopes.includes(v))) {
       throw new InvalidTokenError(tokenType, `Invalid scope`)
     }
+  }
+
+  if (claims.exp && claims.exp * 1000 <= dateReference) {
+    throw new InvalidTokenError(tokenType, `Token expired`)
   }
 
   return { token, tokenId, tokenType, claims }

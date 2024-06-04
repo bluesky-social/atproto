@@ -8,6 +8,7 @@ import { subSchema } from '../oidc/sub.js'
 export const tokenClaimsSchema = z.intersection(
   jwtPayloadSchema
     .pick({
+      iat: true,
       exp: true,
       aud: true,
     })

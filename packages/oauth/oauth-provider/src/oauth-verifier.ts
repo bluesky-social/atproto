@@ -146,7 +146,7 @@ export class OAuthVerifier {
     }
   }
 
-  public async authenticateToken(
+  protected async authenticateToken(
     tokenType: OAuthTokenType,
     token: AccessToken,
     dpopJkt: string | null,
