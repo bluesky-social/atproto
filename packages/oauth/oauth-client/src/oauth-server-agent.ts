@@ -137,7 +137,7 @@ export class OAuthServerAgent {
     // ATPROTO requires that the "sub" is always present in the token response.
     if (!sub) throw new TypeError(`Missing "sub" in token response`)
 
-    // TODO (?) make timeout configurable
+    // @TODO (?) make timeout configurable
     const resolved = await withSignal({ timeout: 10e3 }, (signal) =>
       this.oauthResolver.resolve(sub, { signal }),
     )
