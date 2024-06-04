@@ -348,8 +348,12 @@ describe('Subscriptions', () => {
   })
 
   it('uses a heartbeat to reconnect if a connection is dropped', async () => {
-    // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
-    // on second connection, it returns a message frame and then closes
+    // we run a server that, on first connection, pauses for longer than the
+    // heartbeat interval (doesn't return "pong"s) on second connection, it
+    // returns a message frame and then closes. Note that the length of the
+    // pause might not be enough to make this test pass when the host in under
+    // heavy load.
+
     const port = await getPort()
     const server = new WebSocketServer({ port })
     let firstConnection = true
@@ -358,7 +362,9 @@ describe('Subscriptions', () => {
       if (firstConnection === true) {
         firstConnection = false
         socket.pause()
-        await wait(600)
+
+        await wait(1000)
+
         // shouldn't send this message because the socket would be closed
         const frame = new ErrorFrame({
           error: 'AuthenticationRequired',
@@ -392,13 +398,16 @@ describe('Subscriptions', () => {
       },
     })
 
-    const messages: { count: number }[] = []
-    for await (const msg of subscription) {
-      messages.push(msg)
-    }
+    try {
+      const messages: { count: number }[] = []
+      for await (const msg of subscription) {
+        messages.push(msg)
+      }
 
-    expect(messages).toEqual([{ count: 1 }])
-    expect(firstWasClosed).toBe(true)
-    server.close()
+      expect(messages).toEqual([{ count: 1 }])
+      expect(firstWasClosed).toBe(true)
+    } finally {
+      server.close()
+    }
   })
 })
