@@ -1,11 +1,11 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
-import { authPassthru } from '../../../proxy'
+import { authPassthru, resultPassthru } from '../../../proxy'
 import { AppPassDescript } from '../../../../account-manager/helpers/password'
 
 export default function (server: Server, ctx: AppContext) {
@@ -24,24 +24,12 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ input, req }) => {
       if (ctx.entrywayAgent) {
-        const res = await ctx.entrywayAgent.com.atproto.server.createSession(
-          input.body,
-          authPassthru(req, true),
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.createSession(
+            input.body,
+            authPassthru(req, true),
+          ),
         )
-        const user = await ctx.accountManager.getAccount(res.data.did, {
-          includeDeactivated: true,
-        })
-        if (!user) {
-          throw new InvalidRequestError(`Could not find user info for account`)
-        }
-        return {
-          encoding: 'application/json',
-          body: {
-            ...res.data,
-            active: user.active,
-            status: user.status,
-          },
-        }
       }
 
       const { password } = input.body
