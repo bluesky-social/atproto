@@ -158,6 +158,10 @@ export const findBy = async (
   return toTokenInfo(row, audience)
 }
 
+export const removeByDid = async (db: AccountDb, did: string) => {
+  await db.db.deleteFrom('token').where('did', '=', did).execute()
+}
+
 export const rotate = async (
   db: AccountDb,
   id: number,

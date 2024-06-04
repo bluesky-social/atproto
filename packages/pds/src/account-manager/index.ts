@@ -172,12 +172,11 @@ export class AccountManager
   }
 
   async takedownAccount(did: string, takedown: StatusAttr) {
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        account.updateAccountTakedownStatus(dbTxn, did, takedown),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-      ]),
-    )
+    await this.db.transaction(async (dbTxn) => {
+      await account.updateAccountTakedownStatus(dbTxn, did, takedown)
+      await auth.revokeRefreshTokensByDid(dbTxn, did)
+      await token.removeByDid(dbTxn, did)
+    })
   }
 
   async getAccountAdminStatus(did: string) {
