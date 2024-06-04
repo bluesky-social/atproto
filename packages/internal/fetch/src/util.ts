@@ -1,4 +1,4 @@
-// TODO: Move some of these to a shared package ?
+// @TODO: Move some of these to a shared package ?
 
 export type JsonScalar = string | number | boolean | null
 export type Json = JsonScalar | Json[] | { [key: string]: undefined | Json }
