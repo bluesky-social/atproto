@@ -105,7 +105,9 @@ export class AccountManager
       includeDeactivated: true,
       includeTakenDown: true,
     })
-    return account.formatAccountStatus(got).status
+
+    const res = account.formatAccountStatus(got)
+    return res.active ? AccountStatus.Active : res.status
   }
 
   async createAccount(opts: {

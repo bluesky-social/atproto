@@ -275,6 +275,6 @@ export const formatAccountStatus = (
   } else if (account.deactivatedAt) {
     return { active: false, status: AccountStatus.Deactivated } as const
   } else {
-    return { active: true, status: AccountStatus.Active } as const
+    return { active: true, status: undefined } as const
   }
 }
