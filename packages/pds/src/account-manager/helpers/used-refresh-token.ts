@@ -18,11 +18,13 @@ export const insertQB = (
 export const findByTokenQB = (db: AccountDb, refreshToken: RefreshToken) =>
   db.db
     .selectFrom('used_refresh_token')
+    // uses primary key index
     .where('refreshToken', '=', refreshToken)
     .select('tokenId')
 
 export const countQB = (db: AccountDb, refreshToken: RefreshToken) =>
   db.db
     .selectFrom('used_refresh_token')
+    // uses primary key index
     .where('refreshToken', '=', refreshToken)
     .select((qb) => qb.fn.count<number>('refreshToken').as('count'))

@@ -79,6 +79,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
+    .createIndex('token_did_idx')
+    .unique()
+    .on('token')
+    .column('did')
+    .execute()
+
+  await db.schema
     .createIndex('token_code_idx')
     .unique()
     .on('token')
@@ -95,8 +102,15 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       ['tokenId'],
       'token',
       ['id'],
+      // uses "used_refresh_token_id_idx" index (when cascading)
       (qb) => qb.onDelete('cascade').onUpdate('cascade'),
     )
+    .execute()
+
+  await db.schema
+    .createIndex('used_refresh_token_id_idx')
+    .on('used_refresh_token')
+    .column('tokenId')
     .execute()
 }
 

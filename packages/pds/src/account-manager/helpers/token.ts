@@ -61,9 +61,11 @@ export const toTokenInfo = (
 
 const selectTokenInfoQB = (db: AccountDb) =>
   selectAccountQB(db, { includeDeactivated: true })
+    // uses "token_did_idx" index (though unlikely in practice)
     .innerJoin('token', 'token.did', 'actor.did')
     .leftJoin('device_account', (join) =>
       join
+        // uses "device_account_pk" index
         .on('device_account.did', '=', 'token.did')
         // @ts-expect-error "deviceId" is nullable in token
         .on('device_account.deviceId', '=', 'token.deviceId'),
@@ -135,11 +137,11 @@ export const findByQB = (
 
   return selectTokenInfoQB(db)
     .if(search.id !== undefined, (qb) =>
-      // primary key
+      // uses primary key index
       qb.where('token.id', '=', search.id!),
     )
     .if(search.code !== undefined, (qb) =>
-      // uses "token_code_idx" (partial index, hence the null check)
+      // uses "token_code_idx" partial index (hence the null check)
       qb
         .where('token.code', '=', search.code!)
         .where('token.code', 'is not', null),
@@ -155,6 +157,7 @@ export const findByQB = (
 }
 
 export const removeByDidQB = (db: AccountDb, did: string) =>
+  // uses "token_did_idx" index
   db.db.deleteFrom('token').where('did', '=', did)
 
 export const rotateQB = (
@@ -174,8 +177,9 @@ export const rotateQB = (
       updatedAt: toDateISO(newData.updatedAt),
       clientAuth: toJsonObject(newData.clientAuth),
     })
+    // uses primary key index
     .where('id', '=', id)
 
 export const removeQB = (db: AccountDb, tokenId: TokenId) =>
-  // Uses "used_refresh_token_fk" to cascade delete
+  // uses "used_refresh_token_fk" to cascade delete
   db.db.deleteFrom('token').where('tokenId', '=', tokenId)

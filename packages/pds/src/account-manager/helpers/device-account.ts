@@ -18,6 +18,7 @@ export type SelectableDeviceAccount = Pick<
 
 const selectAccountInfoQB = (db: AccountDb, deviceId: DeviceId) =>
   selectAccountQB(db, { includeDeactivated: true })
+    // note: query planner should use "device_account_pk" index
     .innerJoin('device_account', 'device_account.did', 'actor.did')
     .innerJoin('device', 'device.id', 'device_account.deviceId')
     .where('device.id', '=', deviceId)

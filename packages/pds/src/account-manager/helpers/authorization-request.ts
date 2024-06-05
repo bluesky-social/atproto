@@ -67,6 +67,7 @@ export const removeOldExpiredQB = (db: AccountDb, delay = 600e3) =>
   // can still be returned to the OAuthProvider library for error handling.
   db.db
     .deleteFrom('authorization_request')
+    // uses "authorization_request_expires_at_idx" index
     .where('expiresAt', '<', toDateISO(new Date(Date.now() - delay)))
 
 export const removeByIdQB = (db: AccountDb, id: RequestId) =>
@@ -75,6 +76,7 @@ export const removeByIdQB = (db: AccountDb, id: RequestId) =>
 export const findByCodeQB = (db: AccountDb, code: Code) =>
   db.db
     .selectFrom('authorization_request')
+    // uses "authorization_request_code_idx" partial index (hence the null check)
     .where('code', '=', code)
-    .where('code', 'is not', null) // use "authorization_request_code_idx"
+    .where('code', 'is not', null)
     .selectAll()
