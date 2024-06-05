@@ -16,6 +16,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -199,6 +200,7 @@ export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -567,6 +569,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
+      })
+  }
+
+  searchAccounts(
+    params?: ComAtprotoAdminSearchAccounts.QueryParams,
+    opts?: ComAtprotoAdminSearchAccounts.CallOptions,
+  ): Promise<ComAtprotoAdminSearchAccounts.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.searchAccounts', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSearchAccounts.toKnownErr(e)
       })
   }
 

@@ -378,6 +378,52 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminSearchAccounts: {
+    lexicon: 1,
+    id: 'com.atproto.admin.searchAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get list of accounts that matches your search query.',
+        parameters: {
+          type: 'params',
+          properties: {
+            email: {
+              type: 'string',
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminSendEmail: {
     lexicon: 1,
     id: 'com.atproto.admin.sendEmail',
@@ -10848,6 +10894,7 @@ export const ids = {
   ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
+  ComAtprotoAdminSearchAccounts: 'com.atproto.admin.searchAccounts',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
