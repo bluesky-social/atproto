@@ -10582,9 +10582,9 @@ export const schemaDict = {
           role: {
             type: 'string',
             knownValues: [
-              'tools.ozone.moderator.defs#modRoleAdmin',
-              'tools.ozone.moderator.defs#modRoleModerator',
-              'tools.ozone.moderator.defs#modRoleTriage',
+              'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
             ],
           },
         },

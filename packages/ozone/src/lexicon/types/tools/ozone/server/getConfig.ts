@@ -65,9 +65,9 @@ export function validateServiceConfig(v: unknown): ValidationResult {
 
 export interface ViewerConfig {
   role?:
-    | 'tools.ozone.moderator.defs#modRoleAdmin'
-    | 'tools.ozone.moderator.defs#modRoleModerator'
-    | 'tools.ozone.moderator.defs#modRoleTriage'
+    | 'tools.ozone.team.defs#roleAdmin'
+    | 'tools.ozone.team.defs#roleModerator'
+    | 'tools.ozone.team.defs#roleTriage'
     | (string & {})
   [k: string]: unknown
 }
