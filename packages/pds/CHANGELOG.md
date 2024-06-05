@@ -1,5 +1,16 @@
 # @atproto/pds
 
+## 0.4.32
+
+### Patch Changes
+
+- [#2426](https://github.com/bluesky-social/atproto/pull/2426) [`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd) Thanks [@foysalit](https://github.com/foysalit)! - Add com.atproto.admin.searchAccounts lexicon to allow searching for accounts using email address
+
+- [#2547](https://github.com/bluesky-social/atproto/pull/2547) [`d8e2fefa9`](https://github.com/bluesky-social/atproto/commit/d8e2fefa98581edb3837e567657aa41a1cdb21f6) Thanks [@dholms](https://github.com/dholms)! - Emit an account event on updateSubjectStatus.
+
+- Updated dependencies [[`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd)]:
+  - @atproto/api@0.12.17
+
 ## 0.4.31
 
 ### Patch Changes
