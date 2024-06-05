@@ -58,7 +58,8 @@
       "type": "string",
       "knownValues": [
         "app.bsky.graph.defs#modlist",
-        "app.bsky.graph.defs#curatelist"
+        "app.bsky.graph.defs#curatelist",
+        "app.bsky.graph.defs#referencelist"
       ]
     },
     "modlist": {
@@ -68,6 +69,10 @@
     "curatelist": {
       "type": "token",
       "description": "A list of actors used for curation purposes such as list feeds or interaction gating."
+    },
+    "referencelist": {
+      "type": "token",
+      "description": "A list of actors used for only for reference purposes such as within a pack."
     },
     "listViewerState": {
       "type": "object",
