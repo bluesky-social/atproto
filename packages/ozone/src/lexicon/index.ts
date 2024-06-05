@@ -158,6 +158,7 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -1993,11 +1994,13 @@ export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
 
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.server = new ToolsOzoneServerNS(server)
   }
 }
 
@@ -2134,6 +2137,25 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneServerGetConfig.Handler<ExtractAuth<AV>>,
+      ToolsOzoneServerGetConfig.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

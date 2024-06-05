@@ -188,6 +188,7 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -370,6 +371,7 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -3063,11 +3065,13 @@ export class ToolsOzoneNS {
   _service: AtpServiceClient
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
+    this.server = new ToolsOzoneServerNS(service)
   }
 }
 
@@ -3204,6 +3208,25 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneModerationSearchRepos.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getConfig(
+    params?: ToolsOzoneServerGetConfig.QueryParams,
+    opts?: ToolsOzoneServerGetConfig.CallOptions,
+  ): Promise<ToolsOzoneServerGetConfig.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.server.getConfig', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneServerGetConfig.toKnownErr(e)
       })
   }
 }
