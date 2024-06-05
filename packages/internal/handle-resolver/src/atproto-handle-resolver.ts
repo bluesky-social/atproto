@@ -59,6 +59,8 @@ export class AtprotoHandleResolver implements HandleResolver {
       const dnsRes = await dnsPromise
       if (dnsRes) return dnsRes
 
+      signal.throwIfAborted()
+
       const res = await httpPromise
       if (res) return res
 

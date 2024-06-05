@@ -4,11 +4,11 @@ import { isIP } from 'node:net'
 import { ResolveTxt } from '@atproto-labs/handle-resolver'
 
 export const nodeResolveTxtDefault: ResolveTxt = (hostname) =>
-  resolveTxt(hostname).then(groupChunks)
+  resolveTxt(hostname).then(groupChunks, handleError)
 
 export function nodeResolveTxtFactory(nameservers: string[]): ResolveTxt {
   // Optimization
-  if (!nameservers.length) return async () => []
+  if (!nameservers.length) return async () => null
 
   // Build the resolver asynchronously (will be awaited on every use)
   const resolverPromise: Promise<Resolver | null> = Promise.all<string[]>(
@@ -44,7 +44,9 @@ export function nodeResolveTxtFactory(nameservers: string[]): ResolveTxt {
 
   return async (hostname) => {
     const resolver = await resolverPromise
-    return resolver ? resolver.resolveTxt(hostname).then(groupChunks) : []
+    return resolver
+      ? resolver.resolveTxt(hostname).then(groupChunks, handleError)
+      : null
   }
 }
 
@@ -58,6 +60,32 @@ function isBracedIPv6(address: string): boolean {
 
 function groupChunks(results: string[][]): string[] {
   return results.map((chunks) => chunks.join(''))
+}
+
+function handleError(err: unknown) {
+  // Invalid argument type (e.g. hostname is a number)
+  if (err instanceof TypeError) throw err
+
+  // If the hostname does not resolve, return null
+  if (err instanceof Error) {
+    if (err['code'] === 'ENOTFOUND') return null
+
+    // Hostname is not a valid domain name
+    if (err['code'] === 'EBADNAME') throw err
+
+    // DNS server unreachable
+    // if (err['code'] === 'ETIMEOUT') throw err
+  }
+
+  // Historically, errors were not thrown here. A "null" value indicates to the
+  // AtprotoHandleResolver that it should try the fallback resolver.
+
+  // @TODO We might want to re-visit this to only apply when an unexpected error
+  // occurs (by throwing here). For now, let's keep the same behavior as before.
+
+  // throw err
+
+  return null
 }
 
 function appendPort(address: string, port: string | null): string {

@@ -1,19 +1,26 @@
-import { AtprotoHandleResolver } from './atproto-handle-resolver.js'
-import { ResolveTxt } from './internal-resolvers/dns-handle-resolver.js'
+import {
+  AtprotoHandleResolver,
+  AtprotoHandleResolverOptions,
+} from './atproto-handle-resolver.js'
 import { HandleResolver } from './types.js'
+import { ResolveTxt } from './internal-resolvers/dns-handle-resolver.js'
 
-export type DohHandleResolverOptions = {
-  fetch?: typeof globalThis.fetch
+export type AtprotoDohHandleResolverOptions = Omit<
+  AtprotoHandleResolverOptions,
+  'resolveTxt' | 'resolveTxtFallback'
+> & {
+  dohEndpoint: string | URL
 }
 
-export class DohHandleResolver
+export class AtprotoDohHandleResolver
   extends AtprotoHandleResolver
   implements HandleResolver
 {
-  constructor(dohEndpoint: string | URL, options?: DohHandleResolverOptions) {
+  constructor(options: AtprotoDohHandleResolverOptions) {
     super({
-      fetch: options?.fetch,
-      resolveTxt: dohResolveTxtFactory(dohEndpoint, options),
+      ...options,
+      resolveTxt: dohResolveTxtFactory(options),
+      resolveTxtFallback: undefined,
     })
   }
 }
@@ -26,12 +33,10 @@ export class DohHandleResolver
  * @see {@link https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json/}
  * @todo Add support for DoH using application/dns-message (?)
  */
-function dohResolveTxtFactory(
-  dohEndpoint: string | URL,
-  options?: DohHandleResolverOptions,
-): ResolveTxt {
-  const fetch = options?.fetch ?? globalThis.fetch
-
+function dohResolveTxtFactory({
+  dohEndpoint,
+  fetch = globalThis.fetch,
+}: AtprotoDohHandleResolverOptions): ResolveTxt {
   return async (hostname) => {
     const url = new URL(dohEndpoint)
     url.searchParams.set('type', 'TXT')
@@ -54,13 +59,14 @@ function dohResolveTxtFactory(
       }
 
       const result = asResult(await response.json())
-      return result.Answer.filter(isAnswerTxt).map(extractTxtData)
+      return result.Answer?.filter(isAnswerTxt).map(extractTxtData) ?? null
     } finally {
       // Make sure to always cancel the response body as some engines (Node 👀)
       // do not do this automatically.
       // https://undici.nodejs.org/#/?id=garbage-collection
       if (response.bodyUsed === false) {
-        response.body?.cancel().catch(onCancelError)
+        // Handle rejection asynchronously
+        void response.body?.cancel().catch(onCancelError)
       }
     }
   }
@@ -72,11 +78,11 @@ function onCancelError(err: unknown) {
   }
 }
 
-type Result = { Status: number; Answer: Answer[] }
+type Result = { Status: number; Answer?: Answer[] }
 function isResult(result: unknown): result is Result {
   if (typeof result !== 'object' || result === null) return false
   if (!('Status' in result) || typeof result.Status !== 'number') return false
-  if (!('Answer' in result) || !isArrayOf(result.Answer, isAnswer)) return false
+  if ('Answer' in result && !isArrayOf(result.Answer, isAnswer)) return false
   return true
 }
 function asResult(result: unknown): Result {
