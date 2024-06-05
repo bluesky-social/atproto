@@ -54,6 +54,61 @@
         "subject": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" }
       }
     },
+    "starterPackView": {
+      "type": "object",
+      "required": ["uri", "cid", "name", "creator", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "record": { "type": "unknown" },
+        "creator": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
+        "list": { "type": "ref", "ref": "#listViewBasic" },
+        "listItemsSample": {
+          "type": "array",
+          "maxLength": 12,
+          "items": { "type": "ref", "ref": "#listItemView" }
+        },
+        "feeds": {
+          "type": "array",
+          "maxLength": 50,
+          "items": { "type": "ref", "ref": "app.bsky.feed.defs#generatorView" }
+        },
+        "feedCount": { "type": "integer", "minimum": 0 },
+        "listItemCount": { "type": "integer", "minimum": 0 },
+        "joinedWeekCount": { "type": "integer", "minimum": 0 },
+        "joinedAllTimeCount": { "type": "integer", "minimum": 0 },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "starterPackViewBasic": {
+      "type": "object",
+      "required": ["uri", "cid", "name", "creator", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "record": { "type": "unknown" },
+        "creator": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
+        "feedCount": { "type": "integer", "minimum": 0 },
+        "listItemCount": { "type": "integer", "minimum": 0 },
+        "joinedWeekCount": { "type": "integer", "minimum": 0 },
+        "joinedAllTimeCount": { "type": "integer", "minimum": 0 },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
     "listPurpose": {
       "type": "string",
       "knownValues": [
