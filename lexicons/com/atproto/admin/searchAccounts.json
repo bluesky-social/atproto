@@ -9,8 +9,13 @@
         "type": "params",
         "properties": {
           "email": { "type": "string" },
-          "limit": { "type": "integer" },
-          "cursor": { "type": "string" }
+          "cursor": { "type": "string" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          }
         }
       },
       "output": {

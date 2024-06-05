@@ -10,8 +10,8 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   email?: string
-  limit?: number
   cursor?: string
+  limit?: number
 }
 
 export type InputSchema = undefined

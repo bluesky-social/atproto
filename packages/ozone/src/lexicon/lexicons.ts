@@ -383,11 +383,14 @@ export const schemaDict = {
             email: {
               type: 'string',
             },
-            limit: {
-              type: 'integer',
-            },
             cursor: {
               type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
             },
           },
         },
