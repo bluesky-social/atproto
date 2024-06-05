@@ -64,7 +64,9 @@ const didServiceTypeSchema = z.union([z.string(), z.array(z.string())])
 const didServiceEndpointSchema = z.union([
   rfc3968UriSchema,
   z.record(z.string(), rfc3968UriSchema),
-  z.array(z.union([rfc3968UriSchema, z.record(z.string(), rfc3968UriSchema)])),
+  z
+    .array(z.union([rfc3968UriSchema, z.record(z.string(), rfc3968UriSchema)]))
+    .nonempty(),
 ])
 
 /**
