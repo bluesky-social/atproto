@@ -1834,6 +1834,128 @@ export class GetAllLabelersResponse extends Message<GetAllLabelersResponse> {
 }
 
 /**
+ * @generated from message bsky.GetStarterPackRecordsRequest
+ */
+export class GetStarterPackRecordsRequest extends Message<GetStarterPackRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetStarterPackRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStarterPackRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStarterPackRecordsRequest {
+    return new GetStarterPackRecordsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsRequest {
+    return new GetStarterPackRecordsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsRequest {
+    return new GetStarterPackRecordsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetStarterPackRecordsRequest
+      | PlainMessage<GetStarterPackRecordsRequest>
+      | undefined,
+    b:
+      | GetStarterPackRecordsRequest
+      | PlainMessage<GetStarterPackRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStarterPackRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetStarterPackRecordsResponse
+ */
+export class GetStarterPackRecordsResponse extends Message<GetStarterPackRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(data?: PartialMessage<GetStarterPackRecordsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStarterPackRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStarterPackRecordsResponse {
+    return new GetStarterPackRecordsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsResponse {
+    return new GetStarterPackRecordsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsResponse {
+    return new GetStarterPackRecordsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetStarterPackRecordsResponse
+      | PlainMessage<GetStarterPackRecordsResponse>
+      | undefined,
+    b:
+      | GetStarterPackRecordsResponse
+      | PlainMessage<GetStarterPackRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStarterPackRecordsResponse, a, b)
+  }
+}
+
+/**
  * - Return follow uris where user A follows users B, C, D, …
  *     - E.g. for viewer state on `getProfiles`
  *
@@ -3188,6 +3310,164 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
       | undefined,
   ): boolean {
     return proto3.util.equals(GetCountsForUsersResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetCountsForStarterPacksRequest
+ */
+export class GetCountsForStarterPacksRequest extends Message<GetCountsForStarterPacksRequest> {
+  /**
+   * @generated from field: repeated bsky.RecordRef refs = 1;
+   */
+  refs: RecordRef[] = []
+
+  constructor(data?: PartialMessage<GetCountsForStarterPacksRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetCountsForStarterPacksRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'refs', kind: 'message', T: RecordRef, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetCountsForStarterPacksRequest {
+    return new GetCountsForStarterPacksRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetCountsForStarterPacksRequest {
+    return new GetCountsForStarterPacksRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetCountsForStarterPacksRequest {
+    return new GetCountsForStarterPacksRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetCountsForStarterPacksRequest
+      | PlainMessage<GetCountsForStarterPacksRequest>
+      | undefined,
+    b:
+      | GetCountsForStarterPacksRequest
+      | PlainMessage<GetCountsForStarterPacksRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetCountsForStarterPacksRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetCountsForStarterPacksResponse
+ */
+export class GetCountsForStarterPacksResponse extends Message<GetCountsForStarterPacksResponse> {
+  /**
+   * @generated from field: repeated int32 feeds = 1;
+   */
+  feeds: number[] = []
+
+  /**
+   * @generated from field: repeated int32 list_items = 2;
+   */
+  listItems: number[] = []
+
+  /**
+   * @generated from field: repeated int32 joined_week = 3;
+   */
+  joinedWeek: number[] = []
+
+  /**
+   * @generated from field: repeated int32 joined_all_time = 4;
+   */
+  joinedAllTime: number[] = []
+
+  constructor(data?: PartialMessage<GetCountsForStarterPacksResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetCountsForStarterPacksResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'feeds',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 2,
+      name: 'list_items',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 3,
+      name: 'joined_week',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 4,
+      name: 'joined_all_time',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetCountsForStarterPacksResponse {
+    return new GetCountsForStarterPacksResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetCountsForStarterPacksResponse {
+    return new GetCountsForStarterPacksResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetCountsForStarterPacksResponse {
+    return new GetCountsForStarterPacksResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetCountsForStarterPacksResponse
+      | PlainMessage<GetCountsForStarterPacksResponse>
+      | undefined,
+    b:
+      | GetCountsForStarterPacksResponse
+      | PlainMessage<GetCountsForStarterPacksResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetCountsForStarterPacksResponse, a, b)
   }
 }
 

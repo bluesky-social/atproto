@@ -56,6 +56,8 @@ import {
   GetBlockRecordsResponse,
   GetBlocksRequest,
   GetBlocksResponse,
+  GetCountsForStarterPacksRequest,
+  GetCountsForStarterPacksResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
   GetDidsByHandlesRequest,
@@ -134,6 +136,8 @@ import {
   GetRepostsByActorAndSubjectsResponse,
   GetRepostsBySubjectRequest,
   GetRepostsBySubjectResponse,
+  GetStarterPackRecordsRequest,
+  GetStarterPackRecordsResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -303,6 +307,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetStarterPackRecords
+     */
+    getStarterPackRecords: {
+      name: 'GetStarterPackRecords',
+      I: GetStarterPackRecordsRequest,
+      O: GetStarterPackRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * Follows
      *
      * @generated from rpc bsky.Service.GetActorFollowsActors
@@ -416,6 +429,15 @@ export const Service = {
       name: 'GetCountsForUsers',
       I: GetCountsForUsersRequest,
       O: GetCountsForUsersResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetCountsForStarterPacks
+     */
+    getCountsForStarterPacks: {
+      name: 'GetCountsForStarterPacks',
+      I: GetCountsForStarterPacksRequest,
+      O: GetCountsForStarterPacksResponse,
       kind: MethodKind.Unary,
     },
     /**
