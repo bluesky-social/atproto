@@ -11507,3 +11507,334 @@ export class ClearActorMutelistSubscriptionsResponse extends Message<ClearActorM
     return proto3.util.equals(ClearActorMutelistSubscriptionsResponse, a, b)
   }
 }
+
+/**
+ * @generated from message bsky.CreateThreadMuteRequest
+ */
+export class CreateThreadMuteRequest extends Message<CreateThreadMuteRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string thread_root = 2;
+   */
+  threadRoot = ''
+
+  constructor(data?: PartialMessage<CreateThreadMuteRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateThreadMuteRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'thread_root',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateThreadMuteRequest {
+    return new CreateThreadMuteRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteRequest {
+    return new CreateThreadMuteRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteRequest {
+    return new CreateThreadMuteRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateThreadMuteRequest
+      | PlainMessage<CreateThreadMuteRequest>
+      | undefined,
+    b:
+      | CreateThreadMuteRequest
+      | PlainMessage<CreateThreadMuteRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateThreadMuteRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateThreadMuteResponse
+ */
+export class CreateThreadMuteResponse extends Message<CreateThreadMuteResponse> {
+  constructor(data?: PartialMessage<CreateThreadMuteResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateThreadMuteResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateThreadMuteResponse {
+    return new CreateThreadMuteResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteResponse {
+    return new CreateThreadMuteResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteResponse {
+    return new CreateThreadMuteResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateThreadMuteResponse
+      | PlainMessage<CreateThreadMuteResponse>
+      | undefined,
+    b:
+      | CreateThreadMuteResponse
+      | PlainMessage<CreateThreadMuteResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateThreadMuteResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteThreadMuteRequest
+ */
+export class DeleteThreadMuteRequest extends Message<DeleteThreadMuteRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string thread_root = 2;
+   */
+  threadRoot = ''
+
+  constructor(data?: PartialMessage<DeleteThreadMuteRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteThreadMuteRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'thread_root',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteThreadMuteRequest {
+    return new DeleteThreadMuteRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteRequest {
+    return new DeleteThreadMuteRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteRequest {
+    return new DeleteThreadMuteRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteThreadMuteRequest
+      | PlainMessage<DeleteThreadMuteRequest>
+      | undefined,
+    b:
+      | DeleteThreadMuteRequest
+      | PlainMessage<DeleteThreadMuteRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteThreadMuteRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteThreadMuteResponse
+ */
+export class DeleteThreadMuteResponse extends Message<DeleteThreadMuteResponse> {
+  constructor(data?: PartialMessage<DeleteThreadMuteResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteThreadMuteResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteThreadMuteResponse {
+    return new DeleteThreadMuteResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteResponse {
+    return new DeleteThreadMuteResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteResponse {
+    return new DeleteThreadMuteResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteThreadMuteResponse
+      | PlainMessage<DeleteThreadMuteResponse>
+      | undefined,
+    b:
+      | DeleteThreadMuteResponse
+      | PlainMessage<DeleteThreadMuteResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteThreadMuteResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ClearThreadMutesRequest
+ */
+export class ClearThreadMutesRequest extends Message<ClearThreadMutesRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  constructor(data?: PartialMessage<ClearThreadMutesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ClearThreadMutesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClearThreadMutesRequest {
+    return new ClearThreadMutesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesRequest {
+    return new ClearThreadMutesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesRequest {
+    return new ClearThreadMutesRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ClearThreadMutesRequest
+      | PlainMessage<ClearThreadMutesRequest>
+      | undefined,
+    b:
+      | ClearThreadMutesRequest
+      | PlainMessage<ClearThreadMutesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ClearThreadMutesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ClearThreadMutesResponse
+ */
+export class ClearThreadMutesResponse extends Message<ClearThreadMutesResponse> {
+  constructor(data?: PartialMessage<ClearThreadMutesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ClearThreadMutesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClearThreadMutesResponse {
+    return new ClearThreadMutesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesResponse {
+    return new ClearThreadMutesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesResponse {
+    return new ClearThreadMutesResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ClearThreadMutesResponse
+      | PlainMessage<ClearThreadMutesResponse>
+      | undefined,
+    b:
+      | ClearThreadMutesResponse
+      | PlainMessage<ClearThreadMutesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ClearThreadMutesResponse, a, b)
+  }
+}

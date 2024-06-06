@@ -8,14 +8,20 @@ import {
   ClearActorMutelistSubscriptionsResponse,
   ClearActorMutesRequest,
   ClearActorMutesResponse,
+  ClearThreadMutesRequest,
+  ClearThreadMutesResponse,
   CreateActorMutelistSubscriptionRequest,
   CreateActorMutelistSubscriptionResponse,
   CreateActorMuteRequest,
   CreateActorMuteResponse,
+  CreateThreadMuteRequest,
+  CreateThreadMuteResponse,
   DeleteActorMutelistSubscriptionRequest,
   DeleteActorMutelistSubscriptionResponse,
   DeleteActorMuteRequest,
   DeleteActorMuteResponse,
+  DeleteThreadMuteRequest,
+  DeleteThreadMuteResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -982,6 +988,33 @@ export const Service = {
       name: 'ClearActorMutelistSubscriptions',
       I: ClearActorMutelistSubscriptionsRequest,
       O: ClearActorMutelistSubscriptionsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.CreateThreadMute
+     */
+    createThreadMute: {
+      name: 'CreateThreadMute',
+      I: CreateThreadMuteRequest,
+      O: CreateThreadMuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.DeleteThreadMute
+     */
+    deleteThreadMute: {
+      name: 'DeleteThreadMute',
+      I: DeleteThreadMuteRequest,
+      O: DeleteThreadMuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.ClearThreadMutes
+     */
+    clearThreadMutes: {
+      name: 'ClearThreadMutes',
+      I: ClearThreadMutesRequest,
+      O: ClearThreadMutesResponse,
       kind: MethodKind.Unary,
     },
   },
