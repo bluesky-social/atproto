@@ -139,7 +139,8 @@
           "#threadViewPref",
           "#interestsPref",
           "#mutedWordsPref",
-          "#hiddenPostsPref"
+          "#hiddenPostsPref",
+          "#labelersPref"
         ]
       }
     },

@@ -159,6 +159,7 @@ export type Preferences = (
   | InterestsPref
   | MutedWordsPref
   | HiddenPostsPref
+  | LabelersPref
   | { $type: string; [k: string]: unknown }
 )[]
 
