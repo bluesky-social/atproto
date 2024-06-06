@@ -15,6 +15,7 @@ import createTemplate from './communication/createTemplate'
 import updateTemplate from './communication/updateTemplate'
 import deleteTemplate from './communication/deleteTemplate'
 import listTemplates from './communication/listTemplates'
+import getConfig from './server/getConfig'
 import chat from './chat'
 import proxied from './proxied'
 
@@ -40,5 +41,6 @@ export default function (server: Server, ctx: AppContext) {
   deleteTemplate(server, ctx)
   chat(server, ctx)
   proxied(server, ctx)
+  getConfig(server, ctx)
   return server
 }

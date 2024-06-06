@@ -17,6 +17,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -160,6 +161,7 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -342,6 +344,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminSearchAccounts.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.searchAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2018,11 +2031,13 @@ export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
 
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.server = new ToolsOzoneServerNS(server)
   }
 }
 
@@ -2159,6 +2174,25 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneServerGetConfig.Handler<ExtractAuth<AV>>,
+      ToolsOzoneServerGetConfig.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

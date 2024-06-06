@@ -182,7 +182,10 @@ export const updateEmail = async (
     await db.executeWithRetry(
       db.db
         .updateTable('account')
-        .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+        .set({
+          email: email.toLowerCase(),
+          emailConfirmedAt: null,
+        })
         .where('did', '=', did),
     )
   } catch (err) {

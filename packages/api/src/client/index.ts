@@ -16,6 +16,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -191,6 +192,7 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -201,6 +203,7 @@ export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -376,6 +379,7 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -572,6 +576,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
+      })
+  }
+
+  searchAccounts(
+    params?: ComAtprotoAdminSearchAccounts.QueryParams,
+    opts?: ComAtprotoAdminSearchAccounts.CallOptions,
+  ): Promise<ComAtprotoAdminSearchAccounts.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.searchAccounts', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSearchAccounts.toKnownErr(e)
       })
   }
 
@@ -3159,11 +3174,13 @@ export class ToolsOzoneNS {
   _service: AtpServiceClient
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
+    this.server = new ToolsOzoneServerNS(service)
   }
 }
 
@@ -3300,6 +3317,25 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneModerationSearchRepos.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getConfig(
+    params?: ToolsOzoneServerGetConfig.QueryParams,
+    opts?: ToolsOzoneServerGetConfig.CallOptions,
+  ): Promise<ToolsOzoneServerGetConfig.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.server.getConfig', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneServerGetConfig.toKnownErr(e)
       })
   }
 }
