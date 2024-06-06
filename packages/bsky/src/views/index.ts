@@ -107,7 +107,7 @@ export class Views {
   ): ProfileViewDetailed | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const baseView = this.profile(did, state)
+    const baseView = this.profile(did, state, true)
     if (!baseView) return
     const profileAggs = state.profileAggs?.get(did)
     return {
@@ -134,10 +134,14 @@ export class Views {
     }
   }
 
-  profile(did: string, state: HydrationState): ProfileView | undefined {
+  profile(
+    did: string,
+    state: HydrationState,
+    includeKnownFollowers = false,
+  ): ProfileView | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const basicView = this.profileBasic(did, state)
+    const basicView = this.profileBasic(did, state, includeKnownFollowers)
     if (!basicView) return
     return {
       ...basicView,
@@ -149,11 +153,10 @@ export class Views {
   profileBasic(
     did: string,
     state: HydrationState,
-    profileResolutionDepth = 0,
+    includeKnownFollowers = false,
   ): ProfileViewBasic | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    if (profileResolutionDepth > 1) return
     const profileUri = AtUri.make(
       did,
       ids.AppBskyActorProfile,
@@ -191,7 +194,7 @@ export class Views {
                 : undefined,
             }
           : undefined,
-      viewer: this.profileViewer(did, state, profileResolutionDepth),
+      viewer: this.profileViewer(did, state, includeKnownFollowers),
       labels,
     }
   }
@@ -199,7 +202,7 @@ export class Views {
   profileViewer(
     did: string,
     state: HydrationState,
-    profileResolutionDepth = 0,
+    includeKnownFollowers = false,
   ): ProfileViewerState | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
@@ -218,23 +221,19 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
-      knownFollowers: viewer.knownFollowers
-        ? this.knownFollowersDidsToProfileViews(
-            viewer.knownFollowers,
-            state,
-            profileResolutionDepth,
-          )
-        : undefined,
+      knownFollowers:
+        includeKnownFollowers && viewer.knownFollowers
+          ? this.knownFollowersDidsToProfileViews(viewer.knownFollowers, state)
+          : undefined,
     }
   }
 
   knownFollowersDidsToProfileViews(
     knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
     state: HydrationState,
-    profileResolutionDepth = 0,
   ) {
     const followers = mapDefined(knownFollowers.followers, (did) => {
-      return this.profileBasic(did, state, profileResolutionDepth + 1)
+      return this.profileBasic(did, state, false)
     })
     return { count: knownFollowers.count, followers }
   }

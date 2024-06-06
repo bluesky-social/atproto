@@ -47,10 +47,6 @@ Array [
             "viewer": Object {
               "blockedBy": false,
               "following": "record(2)",
-              "knownFollowers": Object {
-                "count": 1,
-                "followers": Array [],
-              },
               "muted": false,
             },
           },
@@ -123,10 +119,6 @@ Array [
               "blockedBy": false,
               "followedBy": "record(1)",
               "following": "record(0)",
-              "knownFollowers": Object {
-                "count": 1,
-                "followers": Array [],
-              },
               "muted": false,
             },
           },
@@ -181,10 +173,6 @@ Array [
               "blockedBy": false,
               "followedBy": "record(1)",
               "following": "record(0)",
-              "knownFollowers": Object {
-                "count": 1,
-                "followers": Array [],
-              },
               "muted": false,
             },
           },
