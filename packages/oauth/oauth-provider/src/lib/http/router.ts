@@ -72,7 +72,7 @@ export class Router<
   /**
    * @returns router middleware which dispatches a route matching the request.
    */
-  routes() {
+  buildHandler() {
     const routerUrl = this.url
 
     // Calling next('router') from a middleware will skip all the remaining

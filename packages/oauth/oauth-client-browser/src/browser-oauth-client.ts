@@ -169,8 +169,11 @@ export class BrowserOAuthClient extends OAuthClient {
 
       didCache: database.getDidCache(),
       handleCache: database.getHandleCache(),
-      metadataCache: database.getMetadataCache(),
       dpopNonceCache: database.getDpopNonceCache(),
+      authorizationServerMetadataCache:
+        database.getAuthorizationServerMetadataCache(),
+      protectedResourceMetadataCache:
+        database.getProtectedResourceMetadataCache(),
     })
 
     this.sessionStore = sessionStore

@@ -1,8 +1,8 @@
 import z from 'zod'
 
 import {
-  ResolveOptions,
   HandleResolver,
+  ResolveOptions,
   ResolvedHandle,
   isResolvedHandle,
 } from './types.js'

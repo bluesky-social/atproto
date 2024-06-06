@@ -3,30 +3,23 @@ import {
   IdentityResolver,
   ResolvedIdentity,
 } from '@atproto-labs/identity-resolver'
-import { OAuthServerMetadata } from '@atproto/oauth-types'
+import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { OAuthResolverError } from './oauth-resolver-error.js'
 import {
-  MetadataResolveOptions,
-  OAuthServerMetadataResolver,
-} from './oauth-server-metadata-resolver.js'
+  GetCachedOptions,
+  OAuthAuthorizationServerMetadataResolver,
+} from './oauth-authorization-server-metadata-resolver.js'
+import { OAuthProtectedResourceMetadataResolver } from './oauth-protected-resource-metadata-resolver.js'
 
-export type ResolveOptions = MetadataResolveOptions & IdentityResolveOptions
-
-// try/catch to support running in a browser, including when process.env is
-// shimmed (e.g. by webpack)
-const ALLOW_UNSECURE = (() => {
-  try {
-    return process.env.NODE_ENV === 'development'
-  } catch {
-    return false
-  }
-})()
+export type { GetCachedOptions }
+export type ResolveOptions = GetCachedOptions & IdentityResolveOptions
 
 export class OAuthResolver {
   constructor(
     readonly identityResolver: IdentityResolver,
-    readonly metadataResolver: OAuthServerMetadataResolver,
+    readonly protectedResourceMetadataResolver: OAuthProtectedResourceMetadataResolver,
+    readonly authorizationServerMetadataResolver: OAuthAuthorizationServerMetadataResolver,
   ) {}
 
   public async resolveIdentity(
@@ -44,12 +37,11 @@ export class OAuthResolver {
   }
 
   public async resolveMetadata(
-    issuer: string | URL,
-    options?: MetadataResolveOptions,
-  ) {
+    issuer: string,
+    options?: GetCachedOptions,
+  ): Promise<OAuthAuthorizationServerMetadata> {
     try {
-      const { origin } = typeof issuer === 'string' ? new URL(issuer) : issuer
-      return await this.metadataResolver.resolve(origin, options)
+      return await this.authorizationServerMetadataResolver.get(issuer, options)
     } catch (cause) {
       throw OAuthResolverError.from(
         cause,
@@ -58,26 +50,62 @@ export class OAuthResolver {
     }
   }
 
+  public async resolvePdsMetadata(
+    pds: string | URL,
+    options?: GetCachedOptions,
+  ) {
+    try {
+      const rsMetadata = await this.protectedResourceMetadataResolver.get(
+        pds,
+        options,
+      )
+
+      const issuer = rsMetadata.authorization_servers?.[0]
+      if (!issuer) {
+        throw new OAuthResolverError(
+          `No authorization servers found for PDS: ${pds}`,
+        )
+      }
+
+      options?.signal?.throwIfAborted()
+
+      const asMetadata = await this.resolveMetadata(issuer, options)
+
+      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+      if (asMetadata.protected_resources) {
+        if (!asMetadata.protected_resources.includes(rsMetadata.resource)) {
+          throw new OAuthResolverError(
+            `PDS "${pds}" not protected by issuer "${issuer}"`,
+          )
+        }
+      }
+
+      return asMetadata
+    } catch (cause) {
+      options?.signal?.throwIfAborted()
+
+      throw OAuthResolverError.from(
+        cause,
+        `Failed to resolve OAuth server metadata for resource: ${pds}`,
+      )
+    }
+  }
+
   public async resolve(
     input: string,
     options?: ResolveOptions,
-  ): Promise<
-    Partial<ResolvedIdentity> & {
-      url: URL
-      metadata: OAuthServerMetadata
-    }
-  > {
-    // Allow using a PDS url directly as login input (e.g. when the handle does not resolve to a DID)
-    const identity = /^https?:\/\//.test(input)
-      ? { url: new URL(input) }
-      : await this.resolveIdentity(input, options)
+  ): Promise<{
+    identity: ResolvedIdentity
+    metadata: OAuthAuthorizationServerMetadata
+  }> {
+    options?.signal?.throwIfAborted()
 
-    if (!ALLOW_UNSECURE && identity.url.protocol !== 'https:') {
-      throw new OAuthResolverError('Unsecure PDS URLs are not allowed')
-    }
+    const identity = await this.resolveIdentity(input, options)
 
-    const metadata = await this.resolveMetadata(identity.url, options)
+    options?.signal?.throwIfAborted()
 
-    return { ...identity, metadata }
+    const metadata = await this.resolvePdsMetadata(identity.pds, options)
+
+    return { identity, metadata }
   }
 }

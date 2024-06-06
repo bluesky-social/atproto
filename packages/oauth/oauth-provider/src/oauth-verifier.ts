@@ -1,5 +1,9 @@
 import { Key, Keyset, isSignedJwt } from '@atproto/jwk'
-import { AccessToken, OAuthTokenType } from '@atproto/oauth-types'
+import {
+  AccessToken,
+  OAuthTokenType,
+  oauthIssuerIdentifierSchema,
+} from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
@@ -93,14 +97,16 @@ export class OAuthVerifier {
 
     ...dpopMgrOptions
   }: OAuthVerifierOptions) {
-    const issuerUrl = new URL(String(issuer))
-    if (issuerUrl.pathname !== '/' || issuerUrl.search || issuerUrl.hash) {
+    const issuerParsed = oauthIssuerIdentifierSchema.parse(issuer)
+
+    // TODO (?) support issuer with path
+    if (new URL(issuerParsed).pathname !== '/') {
       throw new TypeError(
         '"issuer" must be an URL with no path, search or hash',
       )
     }
 
-    this.issuer = issuerUrl.href
+    this.issuer = issuerParsed
     this.keyset = keyset instanceof Keyset ? keyset : new Keyset(keyset)
 
     this.accessTokenType = accessTokenType

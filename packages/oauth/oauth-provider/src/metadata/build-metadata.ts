@@ -1,5 +1,5 @@
 import { Keyset } from '@atproto/jwk'
-import { OAuthServerMetadata } from '@atproto/oauth-types'
+import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { Client } from '../client/client.js'
 import { OIDC_STANDARD_CLAIMS } from '../oidc/claims.js'
@@ -9,6 +9,7 @@ export type CustomMetadata = {
   claims_supported?: string[]
   scopes_supported?: string[]
   authorization_details_types_supported?: string[]
+  protected_resources?: string[]
 }
 
 /**
@@ -19,9 +20,9 @@ export function buildMetadata(
   issuer: string,
   keyset: Keyset,
   customMetadata?: CustomMetadata,
-): OAuthServerMetadata {
+): OAuthAuthorizationServerMetadata {
   return {
-    issuer: issuer,
+    issuer,
 
     scopes_supported: [
       'offline_access',
@@ -157,5 +158,8 @@ export function buildMetadata(
     // https://datatracker.ietf.org/doc/html/rfc9396#section-14.4
     authorization_details_types_supported:
       customMetadata?.authorization_details_types_supported,
+
+    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+    protected_resources: customMetadata?.protected_resources,
   }
 }

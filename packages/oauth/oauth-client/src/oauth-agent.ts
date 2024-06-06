@@ -1,6 +1,6 @@
 import { GlobalFetch, fetchFailureHandler } from '@atproto-labs/fetch'
 import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
-import { OAuthServerMetadata } from '@atproto/oauth-types'
+import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import { OAuthServerAgent, TokenSet } from './oauth-server-agent.js'
@@ -35,7 +35,7 @@ export class OAuthAgent {
     this.dpopFetch = (...args) => dpopFetch(...args).catch(fetchFailureHandler)
   }
 
-  get serverMetadata(): Readonly<OAuthServerMetadata> {
+  get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {
     return this.server.serverMetadata
   }
 

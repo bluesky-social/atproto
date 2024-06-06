@@ -1,7 +1,7 @@
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthenticationRequestParameters,
-  OAuthServerMetadata,
+  OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 
 import { DeviceAccountInfo } from '../account/account-store.js'
@@ -39,7 +39,7 @@ export class RequestManager {
   constructor(
     protected readonly store: RequestStore,
     protected readonly signer: Signer,
-    protected readonly metadata: OAuthServerMetadata,
+    protected readonly metadata: OAuthAuthorizationServerMetadata,
     protected readonly hooks: RequestHooks,
     protected readonly pkceRequired = true,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,

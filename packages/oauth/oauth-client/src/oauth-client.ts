@@ -24,14 +24,18 @@ import { FALLBACK_ALG } from './constants.js'
 import { CryptoImplementation } from './crypto-implementation.js'
 import { CryptoWrapper } from './crypto-wrapper.js'
 import { OAuthAgent } from './oauth-agent.js'
+import {
+  AuthorizationServerMetadataCache,
+  OAuthAuthorizationServerMetadataResolver,
+} from './oauth-authorization-server-metadata-resolver.js'
 import { OAuthCallbackError } from './oauth-callback-error.js'
+import {
+  OAuthProtectedResourceMetadataResolver,
+  ProtectedResourceMetadataCache,
+} from './oauth-protected-resource-metadata-resolver.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
-import {
-  MetadataCache,
-  OAuthServerMetadataResolver,
-} from './oauth-server-metadata-resolver.js'
 import { SessionGetter, SessionStore } from './session-getter.js'
 import { AuthorizeOptions, ClientMetadata } from './types.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
@@ -53,14 +57,15 @@ export type StateStore = SimpleStore<string, InternalStateData>
 
 // Export all types needed to construct OAuthClientOptions
 export type {
+  AuthorizationServerMetadataCache,
   CryptoImplementation,
   DpopNonceCache,
   GlobalFetch,
   Keyset,
-  MetadataCache,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
   OAuthResponseMode,
+  ProtectedResourceMetadataCache,
   SessionStore,
 }
 
@@ -75,7 +80,8 @@ export type OAuthClientOptions = {
   sessionStore: SessionStore
   didCache?: DidCache
   handleCache?: HandleCache
-  metadataCache?: MetadataCache
+  authorizationServerMetadataCache?: AuthorizationServerMetadataCache
+  protectedResourceMetadataCache?: ProtectedResourceMetadataCache
   dpopNonceCache?: DpopNonceCache
 
   // Services
@@ -108,9 +114,16 @@ export class OAuthClient {
     sessionStore,
 
     didCache = undefined,
-    handleCache = undefined,
-    metadataCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
     dpopNonceCache = new SimpleStoreMemory({ ttl: 60e3, max: 100 }),
+    handleCache = undefined,
+    authorizationServerMetadataCache = new SimpleStoreMemory({
+      ttl: 60e3,
+      max: 100,
+    }),
+    protectedResourceMetadataCache = new SimpleStoreMemory({
+      ttl: 60e3,
+      max: 100,
+    }),
 
     responseMode,
     clientMetadata,
@@ -140,7 +153,14 @@ export class OAuthClient {
           handleCache,
         ),
       ),
-      new OAuthServerMetadataResolver(metadataCache, fetch),
+      new OAuthProtectedResourceMetadataResolver(
+        protectedResourceMetadataCache,
+        fetch,
+      ),
+      new OAuthAuthorizationServerMetadataResolver(
+        authorizationServerMetadataCache,
+        fetch,
+      ),
     )
     this.serverFactory = new OAuthServerFactory(
       this.clientMetadata,
@@ -166,9 +186,16 @@ export class OAuthClient {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const { did, metadata } = await this.resolver.resolve(input, {
-      signal: options?.signal,
-    })
+    const signal = options?.signal
+    const { identity, metadata } = /^https?:\/\//.test(input)
+      ? // Allow using an entryway url directly as login input (e.g. when the
+        // user forgot their handle, or when the handle does not resolve to a
+        // DID)
+        {
+          identity: undefined,
+          metadata: await this.resolver.resolveMetadata(input, { signal }),
+        }
+      : await this.resolver.resolve(input, { signal })
 
     const nonce = await this.crypto.generateNonce()
     const pkce = await this.crypto.generatePKCE()
@@ -193,7 +220,7 @@ export class OAuthClient {
       code_challenge_method: pkce?.method,
       nonce,
       state,
-      login_hint: did || undefined,
+      login_hint: identity?.did || undefined,
       response_mode: this.responseMode,
       response_type:
         // Negotiate by using the order in the client metadata

@@ -45,3 +45,7 @@ export const withSignal = async <T>(
     abortController.abort()
   }
 }
+
+export function contentMime(headers: Headers): string | undefined {
+  return headers.get('content-type')?.split(';')[0]!.trim()
+}

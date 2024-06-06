@@ -15,7 +15,7 @@ import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
 export type ResolvedIdentity = {
   did: NonNullable<ResolvedHandle>
-  url: URL
+  pds: URL
 }
 
 export type ResolveOptions = DidResolveOptions & HandleResolveOptions
@@ -56,9 +56,9 @@ export class IdentityResolver {
       )
     }
 
-    const url = new URL(service.serviceEndpoint)
+    const pds = new URL(service.serviceEndpoint)
 
-    return { did, url }
+    return { did, pds }
   }
 }
 

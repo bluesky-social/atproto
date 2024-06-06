@@ -1,33 +1,12 @@
 import { z } from 'zod'
 
-export const oauthServerIssuerSchema = z
-  .string()
-  .url()
-  .superRefine((value, ctx) => {
-    // Validate the issuer (MIX-UP attacks)
-    const url = new URL(value)
-
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Issuer must be an HTTP or HTTPS URL',
-      })
-    }
-
-    if (value !== `${url.origin}/`) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          'Issuer URL must not contain a path, username, password, query, or fragment',
-      })
-    }
-  })
+import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
 
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414}
  */
-export const oauthServerMetadataSchema = z.object({
-  issuer: oauthServerIssuerSchema,
+export const oauthAuthorizationServerMetadataSchema = z.object({
+  issuer: oauthIssuerIdentifierSchema,
 
   claims_supported: z.array(z.string()).optional(),
   claims_locales_supported: z.array(z.string()).optional(),
@@ -92,30 +71,36 @@ export const oauthServerMetadataSchema = z.object({
 
   // https://datatracker.ietf.org/doc/html/rfc9449#section-5.1
   dpop_signing_alg_values_supported: z.array(z.string()).optional(),
+
+  // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+  protected_resources: z.array(z.string().url()).optional(),
 })
 
-export type OAuthServerMetadata = z.infer<typeof oauthServerMetadataSchema>
+export type OAuthAuthorizationServerMetadata = z.infer<
+  typeof oauthAuthorizationServerMetadataSchema
+>
 
-export const oauthServerMetadataValidator = oauthServerMetadataSchema
-  .superRefine((data, ctx) => {
-    if (
-      data.require_pushed_authorization_requests &&
-      !data.pushed_authorization_request_endpoint
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          '"pushed_authorization_request_endpoint" required when "require_pushed_authorization_requests" is true',
-      })
-    }
-  })
-  .superRefine((data, ctx) => {
-    if (data.response_types_supported) {
-      if (!data.response_types_supported.includes('code')) {
+export const oauthAuthorizationServerMetadataValidator =
+  oauthAuthorizationServerMetadataSchema
+    .superRefine((data, ctx) => {
+      if (
+        data.require_pushed_authorization_requests &&
+        !data.pushed_authorization_request_endpoint
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Response type "code" is required',
+          message:
+            '"pushed_authorization_request_endpoint" required when "require_pushed_authorization_requests" is true',
         })
       }
-    }
-  })
+    })
+    .superRefine((data, ctx) => {
+      if (data.response_types_supported) {
+        if (!data.response_types_supported.includes('code')) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Response type "code" is required',
+          })
+        }
+      }
+    })

@@ -11,7 +11,7 @@ import {
   OAuthClientIdentification,
   OAuthEndpointName,
   OAuthParResponse,
-  OAuthServerMetadata,
+  OAuthAuthorizationServerMetadata,
   OAuthTokenResponse,
   OAuthTokenType,
   oauthParResponseSchema,
@@ -50,7 +50,7 @@ export class OAuthServerAgent {
 
   constructor(
     readonly dpopKey: Key,
-    readonly serverMetadata: OAuthServerMetadata,
+    readonly serverMetadata: OAuthAuthorizationServerMetadata,
     readonly clientMetadata: ClientMetadata,
     readonly dpopNonces: DpopNonceCache,
     readonly oauthResolver: OAuthResolver,
@@ -151,7 +151,7 @@ export class OAuthServerAgent {
 
     return {
       sub,
-      aud: resolved.url.href,
+      aud: resolved.identity.pds.href,
       iss: resolved.metadata.issuer,
 
       scope: tokenResponse.scope,

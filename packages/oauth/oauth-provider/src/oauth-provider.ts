@@ -5,7 +5,7 @@ import {
   OAuthAuthenticationRequestParameters,
   OAuthClientIdentification,
   OAuthEndpointName,
-  OAuthServerMetadata,
+  OAuthAuthorizationServerMetadata,
   OAuthTokenType,
   oauthAuthenticationRequestParametersSchema,
 } from '@atproto/oauth-types'
@@ -127,8 +127,16 @@ export {
   type CustomMetadata,
   type Customization,
   type Handler,
-  type OAuthServerMetadata,
+  type OAuthAuthorizationServerMetadata,
 }
+
+export type RouterOptions<
+  Req extends IncomingMessage = IncomingMessage,
+  Res extends ServerResponse = ServerResponse,
+> = {
+  onError?: (req: Req, res: Res, err: unknown, message: string) => void
+}
+
 export type OAuthProviderOptions = Override<
   OAuthVerifierOptions & OAuthHooks & ClientStoreUriConfig,
   {
@@ -174,7 +182,7 @@ export type OAuthProviderOptions = Override<
 >
 
 export class OAuthProvider extends OAuthVerifier {
-  public readonly metadata: OAuthServerMetadata
+  public readonly metadata: OAuthAuthorizationServerMetadata
   public readonly customization?: Customization
 
   public readonly authenticationMaxAge: number
@@ -865,14 +873,21 @@ export class OAuthProvider extends OAuthVerifier {
     T = void,
     Req extends IncomingMessage = IncomingMessage,
     Res extends ServerResponse = ServerResponse,
+  >(options?: RouterOptions<Req, Res>): Handler<T, Req, Res> {
+    const router = this.buildRouter<T, Req, Res>(options)
+    return router.buildHandler()
+  }
+
+  public buildRouter<
+    T = void,
+    Req extends IncomingMessage = IncomingMessage,
+    Res extends ServerResponse = ServerResponse,
   >({
     onError = process.env['NODE_ENV'] === 'development'
       ? (req, res, err, msg): void =>
           console.error(`OAuthProvider error (${msg}):`, err)
       : undefined,
-  }: {
-    onError?: (req: Req, res: Res, err: unknown, message: string) => void
-  }): Handler<T, Req, Res> {
+  }: RouterOptions<Req, Res> = {}) {
     const deviceManager = new DeviceManager(this.deviceStore)
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -1312,6 +1327,6 @@ export class OAuthProvider extends OAuthVerifier {
       }
     })
 
-    return router.routes()
+    return router
   }
 }

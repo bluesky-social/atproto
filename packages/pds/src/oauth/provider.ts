@@ -39,6 +39,12 @@ export class PdsOAuthProvider extends OAuthProvider {
       redis,
       safeFetch,
       customization,
+      metadata: {
+        // PdsOAuthProvider is used when the PDS is both an authorization server
+        // & resource server, in which case the issuer origin is also the
+        // resource server uri.
+        protected_resources: [new URL(issuer).origin],
+      },
 
       accountStore: new DetailedAccountStore(
         accountManager,
