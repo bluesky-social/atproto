@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.getSocialProofFollowers",
+  "id": "app.bsky.graph.getKnownFollowers",
   "defs": {
     "main": {
       "type": "query",

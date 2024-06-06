@@ -123,19 +123,19 @@
         },
         "following": { "type": "string", "format": "at-uri" },
         "followedBy": { "type": "string", "format": "at-uri" },
-        "socialProof": {
+        "knownFollowers": {
           "type": "ref",
-          "ref": "#viewerStateSocialProof"
+          "ref": "#knownFollowers"
         }
       }
     },
-    "viewerStateSocialProof": {
+    "knownFollowers": {
       "type": "object",
-      "description": "The viewer's follows who are followers of the given account.",
-      "required": ["count", "follows"],
+      "description": "The subject's followers whom you also follow",
+      "required": ["count", "followers"],
       "properties": {
         "count": { "type": "integer" },
-        "follows": {
+        "followers": {
           "type": "array",
           "minLength": 1,
           "maxLength": 5,
