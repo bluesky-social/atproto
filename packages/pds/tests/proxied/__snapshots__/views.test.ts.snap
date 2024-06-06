@@ -21,6 +21,28 @@ Object {
     "blockedBy": false,
     "followedBy": "record(1)",
     "following": "record(0)",
+    "knownFollowers": Object {
+      "count": 1,
+      "followers": Array [
+        Object {
+          "did": "user(2)",
+          "handle": "dan.test",
+          "labels": Array [
+            Object {
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "did:example:labeler",
+              "uri": "user(2)",
+              "val": "repo-action-label",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "following": "record(2)",
+            "muted": false,
+          },
+        },
+      ],
+    },
     "muted": false,
   },
 }
@@ -85,6 +107,28 @@ Object {
         "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "knownFollowers": Object {
+          "count": 1,
+          "followers": Array [
+            Object {
+              "did": "user(4)",
+              "handle": "dan.test",
+              "labels": Array [
+                Object {
+                  "cts": "1970-01-01T00:00:00.000Z",
+                  "src": "did:example:labeler",
+                  "uri": "user(4)",
+                  "val": "repo-action-label",
+                },
+              ],
+              "viewer": Object {
+                "blockedBy": false,
+                "following": "record(3)",
+                "muted": false,
+              },
+            },
+          ],
+        },
         "muted": false,
       },
     },
