@@ -149,9 +149,11 @@ export class Views {
   profileBasic(
     did: string,
     state: HydrationState,
+    profileResolutionDepth = 0,
   ): ProfileViewBasic | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
+    if (profileResolutionDepth > 1) return
     const profileUri = AtUri.make(
       did,
       ids.AppBskyActorProfile,
@@ -189,7 +191,7 @@ export class Views {
                 : undefined,
             }
           : undefined,
-      viewer: this.profileViewer(did, state),
+      viewer: this.profileViewer(did, state, profileResolutionDepth),
       labels,
     }
   }
@@ -197,6 +199,7 @@ export class Views {
   profileViewer(
     did: string,
     state: HydrationState,
+    profileResolutionDepth = 0,
   ): ProfileViewerState | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
@@ -216,7 +219,11 @@ export class Views {
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
       knownFollowers: viewer.knownFollowers
-        ? this.knownFollowersDidsToProfileViews(viewer.knownFollowers, state)
+        ? this.knownFollowersDidsToProfileViews(
+            viewer.knownFollowers,
+            state,
+            profileResolutionDepth,
+          )
         : undefined,
     }
   }
@@ -224,9 +231,10 @@ export class Views {
   knownFollowersDidsToProfileViews(
     knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
     state: HydrationState,
+    profileResolutionDepth = 0,
   ) {
     const followers = mapDefined(knownFollowers.followers, (did) => {
-      return this.profileBasic(did, state)
+      return this.profileBasic(did, state, profileResolutionDepth + 1)
     })
     return { count: knownFollowers.count, followers }
   }
