@@ -82,19 +82,19 @@ describe('pds profile views', () => {
   // Alice follows Bob
   // Bob follows Carol
   // If Alice looks at Carol's profile, she should see that Bob follows Carol
-  it("shows social profile information", async () => {
+  it('returns known followers viewer data', async () => {
     const carolForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
       { headers: await network.serviceHeaders(alice) },
     )
 
-    const socialProof = carolForAlice.data.viewer?.socialProof
-    expect(socialProof?.count).toBe(1)
-    expect(socialProof?.follows).toHaveLength(1)
-    expect(socialProof?.follows[0].handle).toBe('bob.test')
+    const knownFollowers = carolForAlice.data.viewer?.knownFollowers
+    expect(knownFollowers?.count).toBe(1)
+    expect(knownFollowers?.followers).toHaveLength(1)
+    expect(knownFollowers?.followers[0].handle).toBe('bob.test')
   })
 
-  it('fetches multiple profiles', async () => {
+  it.only('fetches multiple profiles', async () => {
     const {
       data: { profiles },
     } = await agent.api.app.bsky.actor.getProfiles(

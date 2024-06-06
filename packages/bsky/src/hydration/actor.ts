@@ -1,5 +1,4 @@
 import { DataPlaneClient } from '../data-plane/client'
-import { ViewerStateSocialProof } from '../lexicon/types/app/bsky/actor/defs'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
 import {
@@ -39,9 +38,9 @@ export type ProfileViewerState = {
   blockingByList?: string
   following?: string
   followedBy?: string
-  socialProof?: {
+  knownFollowers?: {
     count: number
-    follows: string[]
+    followers: string[]
   }
 }
 
@@ -58,7 +57,7 @@ export type ProfileAgg = {
 export type ProfileAggs = HydrationMap<ProfileAgg>
 
 export class ActorHydrator {
-  constructor(public dataplane: DataPlaneClient) { }
+  constructor(public dataplane: DataPlaneClient) {}
 
   async getRepoRevSafe(did: string | null): Promise<string | null> {
     if (!did) return null
@@ -151,25 +150,27 @@ export class ActorHydrator {
   async getProfileViewerStatesNaive(
     dids: string[],
     viewer: string,
-    hydrateSocialProof = false,
+    hydrateKnownFollowers = false,
   ): Promise<ProfileViewerStates> {
     if (!dids.length) return new HydrationMap<ProfileViewerState>()
 
-    const targetDidToFollowsFollowing = {};
-    const socialProofsProm = hydrateSocialProof ? dids.map(async did => {
-      const followsFollowing = await this.dataplane.getFollowsFollowing({
-        actorDid: viewer,
-        targetDid: did,
-      })
-      targetDidToFollowsFollowing[did] = followsFollowing.dids;
-    }) : [];
+    const subjectDidToKnownFollowersMap = {}
+    const knownFollowersRequests = hydrateKnownFollowers
+      ? dids.map(async (did) => {
+          const followsFollowing = await this.dataplane.getFollowsFollowing({
+            actorDid: viewer,
+            targetDid: did,
+          })
+          subjectDidToKnownFollowersMap[did] = followsFollowing.dids
+        })
+      : []
 
     const [res] = await Promise.all([
       this.dataplane.getRelationships({
         actorDid: viewer,
         targetDids: dids,
       }),
-      Promise.all(socialProofsProm),
+      Promise.all(knownFollowersRequests),
     ])
 
     return dids.reduce((acc, did, i) => {
@@ -178,7 +179,7 @@ export class ActorHydrator {
         // ignore self-follows, self-mutes, self-blocks
         return acc.set(did, {})
       }
-      const followsFollowing = targetDidToFollowsFollowing[did];
+      const knownFollowersDids = subjectDidToKnownFollowersMap[did]
       return acc.set(did, {
         muted: rels.muted ?? false,
         mutedByList: parseString(rels.mutedByList),
@@ -188,10 +189,13 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
-        socialProof: followsFollowing?.length > 0 ? {
-          count: followsFollowing?.length ?? 0,
-          follows: (followsFollowing ?? []).slice(0, 5),
-        } : undefined,
+        knownFollowers:
+          knownFollowersDids?.length > 0
+            ? {
+                count: knownFollowersDids?.length ?? 0,
+                followers: (knownFollowersDids ?? []).slice(0, 5),
+              }
+            : undefined,
       })
     }, new HydrationMap<ProfileViewerState>())
   }

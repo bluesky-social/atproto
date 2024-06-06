@@ -2,12 +2,14 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { mapDefined } from '@atproto/common'
 import { ImageUriBuilder } from '../image/uri'
 import { HydrationState } from '../hydration/hydrator'
+import { ProfileViewerState as HydratorProfileViewerState } from '../hydration/actor'
 import { ids } from '../lexicon/lexicons'
 import {
   ProfileViewDetailed,
   ProfileView,
   ProfileViewBasic,
   ViewerState as ProfileViewerState,
+  KnownFollowers,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
   BlockedPost,
@@ -213,17 +215,20 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
-      socialProof: viewer.socialProof ? this.socialProofWithProfiles(viewer.socialProof, state) : undefined,
+      knownFollowers: viewer.knownFollowers
+        ? this.knownFollowersDidsToProfileViews(viewer.knownFollowers, state)
+        : undefined,
     }
   }
 
-  socialProofWithProfiles(
-    socialProof: { count: number; follows: string[] },
-    state: HydrationState) {
-    const follows = mapDefined(socialProof.follows, (did) => {
+  knownFollowersDidsToProfileViews(
+    knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
+    state: HydrationState,
+  ) {
+    const followers = mapDefined(knownFollowers.followers, (did) => {
       return this.profileBasic(did, state)
     })
-    return { count: socialProof.count, follows }
+    return { count: knownFollowers.count, followers }
   }
 
   blockedProfileViewer(
