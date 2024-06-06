@@ -94,7 +94,7 @@ describe('pds profile views', () => {
     expect(knownFollowers?.followers[0].handle).toBe('bob.test')
   })
 
-  it.only('fetches multiple profiles', async () => {
+  it('fetches multiple profiles', async () => {
     const {
       data: { profiles },
     } = await agent.api.app.bsky.actor.getProfiles(
