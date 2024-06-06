@@ -334,6 +334,7 @@ message ActorInfo {
   google.protobuf.Timestamp tombstoned_at = 6;
   bool labeler = 7;
   string allow_incoming_chats_from = 8;
+  string upstream_status = 9;
 }
 
 message GetActorsResponse {
@@ -1120,6 +1121,7 @@ service Service {
   rpc TakedownBlob(TakedownBlobRequest) returns (TakedownBlobResponse);
   rpc TakedownRecord(TakedownRecordRequest) returns (TakedownRecordResponse);
   rpc TakedownActor(TakedownActorRequest) returns (TakedownActorResponse);
+  rpc UpdateActorUpstreamStatus(UpdateActorUpstreamStatusRequest) returns (UpdateActorUpstreamStatusResponse);
 
   rpc UntakedownBlob(UntakedownBlobRequest) returns (UntakedownBlobResponse);
   rpc UntakedownRecord(UntakedownRecordRequest) returns (UntakedownRecordResponse);
@@ -1139,6 +1141,15 @@ service Service {
 //
 // Write Path
 //
+
+message UpdateActorUpstreamStatusRequest {
+  string actor_did = 1;
+  bool active = 2;
+  string upstream_status = 3;
+}
+
+message UpdateActorUpstreamStatusResponse {
+}
 
 message TakedownActorRequest {
   string did = 1;

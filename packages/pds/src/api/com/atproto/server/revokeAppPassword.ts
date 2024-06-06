@@ -4,7 +4,7 @@ import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.revokeAppPassword({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.revokeAppPassword(

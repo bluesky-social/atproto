@@ -17,6 +17,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -73,6 +74,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -157,6 +159,7 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
@@ -347,6 +350,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminSearchAccounts.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.searchAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1015,6 +1029,17 @@ export class ComAtprotoSyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepoStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncGetRepoStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncGetRepoStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.getRepoStatus' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1990,12 +2015,14 @@ export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
   team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.server = new ToolsOzoneServerNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
 }
@@ -2133,6 +2160,25 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getConfig<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneServerGetConfig.Handler<ExtractAuth<AV>>,
+      ToolsOzoneServerGetConfig.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

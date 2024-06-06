@@ -19,6 +19,7 @@ import addMember from './team/addMember'
 import updateMember from './team/updateMember'
 import deleteMember from './team/deleteMember'
 import listMembers from './team/listMembers'
+import getConfig from './server/getConfig'
 import chat from './chat'
 import proxied from './proxied'
 
@@ -48,5 +49,6 @@ export default function (server: Server, ctx: AppContext) {
   deleteMember(server, ctx)
   chat(server, ctx)
   proxied(server, ctx)
+  getConfig(server, ctx)
   return server
 }

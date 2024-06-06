@@ -8,7 +8,7 @@ import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
-    auth: ctx.authVerifier.accessCheckTakedown,
+    auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
     rateLimit: [
       {
         durationMs: 5 * MINUTE,
@@ -57,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
 
       try {
         await ctx.sequencer.sequenceHandleUpdate(requester, handle)
-        await ctx.sequencer.sequenceIdentityEvt(requester)
+        await ctx.sequencer.sequenceIdentityEvt(requester, handle)
       } catch (err) {
         httpLogger.error(
           { err, did: requester, handle },

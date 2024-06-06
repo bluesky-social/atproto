@@ -7,7 +7,7 @@ import { httpLogger as log } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.submitPlcOperation({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
       const op = input.body.operation
@@ -47,6 +47,7 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.plcClient.sendOperation(requester, op)
       await ctx.sequencer.sequenceIdentityEvt(requester)
+
       try {
         await ctx.idResolver.did.resolve(requester, true)
       } catch (err) {

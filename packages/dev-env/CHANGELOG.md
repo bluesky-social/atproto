@@ -1,5 +1,56 @@
 # @atproto/dev-env
 
+## 0.3.23
+
+### Patch Changes
+
+- Updated dependencies [[`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd), [`d8e2fefa9`](https://github.com/bluesky-social/atproto/commit/d8e2fefa98581edb3837e567657aa41a1cdb21f6)]:
+  - @atproto/ozone@0.1.22
+  - @atproto/bsky@0.0.60
+  - @atproto/api@0.12.17
+  - @atproto/pds@0.4.32
+
+## 0.3.22
+
+### Patch Changes
+
+- [#2539](https://github.com/bluesky-social/atproto/pull/2539) [`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46) Thanks [@dholms](https://github.com/dholms)! - Allow updating deactivation state through admin.updateSubjectStatus
+
+- Updated dependencies [[`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46)]:
+  - @atproto/api@0.12.16
+  - @atproto/pds@0.4.31
+  - @atproto/bsky@0.0.59
+  - @atproto/ozone@0.1.21
+
+## 0.3.21
+
+### Patch Changes
+
+- Updated dependencies [[`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912)]:
+  - @atproto/api@0.12.15
+  - @atproto/pds@0.4.30
+  - @atproto/bsky@0.0.58
+  - @atproto/ozone@0.1.20
+
+## 0.3.20
+
+### Patch Changes
+
+- Updated dependencies [[`c4af6a409`](https://github.com/bluesky-social/atproto/commit/c4af6a409ea2171c3cf1d0e7c8ed496794a3f049)]:
+  - @atproto/api@0.12.14
+  - @atproto/bsky@0.0.57
+  - @atproto/ozone@0.1.19
+  - @atproto/pds@0.4.29
+
+## 0.3.19
+
+### Patch Changes
+
+- Updated dependencies [[`53551be6c`](https://github.com/bluesky-social/atproto/commit/53551be6cf092a9b4d2e132788b94ac0d4ffcecc)]:
+  - @atproto/ozone@0.1.18
+  - @atproto/bsky@0.0.56
+  - @atproto/pds@0.4.28
+
 ## 0.3.18
 
 ### Patch Changes

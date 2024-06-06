@@ -59,6 +59,13 @@ export default function (server: Server, ctx: AppContext) {
           time: evt.time,
           ...evt.evt,
         }
+      } else if (evt.type === 'account') {
+        yield {
+          $type: '#account',
+          seq: evt.seq,
+          time: evt.time,
+          ...evt.evt,
+        }
       } else if (evt.type === 'tombstone') {
         yield {
           $type: '#tombstone',

@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listMissingBlobs({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth, params }) => {
       const did = auth.credentials.did
       const { limit, cursor } = params

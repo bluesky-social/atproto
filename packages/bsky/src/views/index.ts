@@ -63,8 +63,21 @@ export class Views {
   // Actor
   // ------------
 
+  actorIsNoHosted(did: string, state: HydrationState): boolean {
+    return (
+      this.actorIsDeactivated(did, state) || this.actorIsTakendown(did, state)
+    )
+  }
+
+  actorIsDeactivated(did: string, state: HydrationState): boolean {
+    if (state.actors?.get(did)?.upstreamStatus === 'deactivated') return true
+    return false
+  }
+
   actorIsTakendown(did: string, state: HydrationState): boolean {
     if (state.actors?.get(did)?.takedownRef) return true
+    if (state.actors?.get(did)?.upstreamStatus === 'takendown') return true
+    if (state.actors?.get(did)?.upstreamStatus === 'suspended') return true
     if (state.labels?.get(did)?.isTakendown) return true
     return false
   }

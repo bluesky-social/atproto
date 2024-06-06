@@ -1,5 +1,41 @@
 # @atproto/bsky
 
+## 0.0.60
+
+### Patch Changes
+
+- [#2426](https://github.com/bluesky-social/atproto/pull/2426) [`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd) Thanks [@foysalit](https://github.com/foysalit)! - Add com.atproto.admin.searchAccounts lexicon to allow searching for accounts using email address
+
+- Updated dependencies [[`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd)]:
+  - @atproto/api@0.12.17
+
+## 0.0.59
+
+### Patch Changes
+
+- Updated dependencies [[`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46)]:
+  - @atproto/api@0.12.16
+
+## 0.0.58
+
+### Patch Changes
+
+- Updated dependencies [[`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912)]:
+  - @atproto/api@0.12.15
+
+## 0.0.57
+
+### Patch Changes
+
+- Updated dependencies [[`c4af6a409`](https://github.com/bluesky-social/atproto/commit/c4af6a409ea2171c3cf1d0e7c8ed496794a3f049)]:
+  - @atproto/api@0.12.14
+
+## 0.0.56
+
+### Patch Changes
+
+- [#2522](https://github.com/bluesky-social/atproto/pull/2522) [`53551be6c`](https://github.com/bluesky-social/atproto/commit/53551be6cf092a9b4d2e132788b94ac0d4ffcecc) Thanks [@devinivy](https://github.com/devinivy)! - Set max-age CORS header to max practical value
+
 ## 0.0.55
 
 ### Patch Changes

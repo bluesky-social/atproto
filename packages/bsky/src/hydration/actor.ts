@@ -20,6 +20,7 @@ export type Actor = {
   takedownRef?: string
   isLabeler: boolean
   allowIncomingChatsFrom?: string
+  upstreamStatus?: string
 }
 
 export type Actors = HydrationMap<Actor>
@@ -95,9 +96,12 @@ export class ActorHydrator {
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
+      const isNoHosted =
+        actor.takenDown ||
+        (actor.upstreamStatus && actor.upstreamStatus !== 'active')
       if (
         !actor.exists ||
-        (actor.takenDown && !includeTakedowns) ||
+        (isNoHosted && !includeTakedowns) ||
         !!actor.tombstonedAt
       ) {
         return acc.set(did, null)
@@ -116,6 +120,7 @@ export class ActorHydrator {
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
+        upstreamStatus: actor.upstreamStatus || undefined,
       })
     }, new HydrationMap<Actor>())
   }

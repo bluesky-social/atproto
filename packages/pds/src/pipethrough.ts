@@ -15,12 +15,12 @@ import { httpLogger } from './logger'
 import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
 
-export const proxyHandler =
-  (ctx: AppContext): CatchallHandler =>
-  async (req, res, next) => {
+export const proxyHandler = (ctx: AppContext): CatchallHandler => {
+  const accessStandard = ctx.authVerifier.accessStandard()
+  return async (req, res, next) => {
     try {
       const { url, aud } = await formatUrlAndAud(ctx, req)
-      const auth = await ctx.authVerifier.access({ req })
+      const auth = await accessStandard({ req })
       const headers = await formatHeaders(ctx, req, aud, auth.credentials.did)
       const body = stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
@@ -31,6 +31,7 @@ export const proxyHandler =
     }
     return next()
   }
+}
 
 export const pipethrough = async (
   ctx: AppContext,

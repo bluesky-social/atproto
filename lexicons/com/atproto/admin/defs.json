@@ -32,7 +32,8 @@
         },
         "invitesDisabled": { "type": "boolean" },
         "emailConfirmedAt": { "type": "string", "format": "datetime" },
-        "inviteNote": { "type": "string" }
+        "inviteNote": { "type": "string" },
+        "deactivatedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoRef": {

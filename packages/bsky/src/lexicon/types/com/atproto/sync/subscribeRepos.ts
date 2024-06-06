@@ -16,6 +16,7 @@ export interface QueryParams {
 export type OutputSchema =
   | Commit
   | Identity
+  | Account
   | Handle
   | Migrate
   | Tombstone
@@ -77,6 +78,8 @@ export interface Identity {
   seq: number
   did: string
   time: string
+  /** The current handle for the account, or 'handle.invalid' if validation fails. This field is optional, might have been validated or passed-through from an upstream source. Semantics and behaviors for PDS vs Relay may evolve in the future; see atproto specs for more details. */
+  handle?: string
   [k: string]: unknown
 }
 
@@ -92,7 +95,31 @@ export function validateIdentity(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.sync.subscribeRepos#identity', v)
 }
 
-/** Represents an update of the account's handle, or transition to/from invalid state. NOTE: Will be deprecated in favor of #identity. */
+/** Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active. */
+export interface Account {
+  seq: number
+  did: string
+  time: string
+  /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
+  active: boolean
+  /** If active=false, this optional field indicates a reason for why the account is not active. */
+  status?: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  [k: string]: unknown
+}
+
+export function isAccount(v: unknown): v is Account {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#account'
+  )
+}
+
+export function validateAccount(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#account', v)
+}
+
+/** DEPRECATED -- Use #identity event instead */
 export interface Handle {
   seq: number
   did: string
@@ -113,7 +140,7 @@ export function validateHandle(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.sync.subscribeRepos#handle', v)
 }
 
-/** Represents an account moving from one PDS instance to another. NOTE: not implemented; account migration uses #identity instead */
+/** DEPRECATED -- Use #account event instead */
 export interface Migrate {
   seq: number
   did: string
@@ -134,7 +161,7 @@ export function validateMigrate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.sync.subscribeRepos#migrate', v)
 }
 
-/** Indicates that an account has been deleted. NOTE: may be deprecated in favor of #identity or a future #account event */
+/** DEPRECATED -- Use #account event instead */
 export interface Tombstone {
   seq: number
   did: string

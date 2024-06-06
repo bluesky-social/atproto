@@ -478,6 +478,7 @@ export interface RepoView {
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invitesDisabled?: boolean
   inviteNote?: string
+  deactivatedAt?: string
   [k: string]: unknown
 }
 
@@ -506,6 +507,7 @@ export interface RepoViewDetail {
   invitesDisabled?: boolean
   inviteNote?: string
   emailConfirmedAt?: string
+  deactivatedAt?: string
   [k: string]: unknown
 }
 

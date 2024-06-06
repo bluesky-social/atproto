@@ -1,5 +1,29 @@
 # @atproto/api
 
+## 0.12.17
+
+### Patch Changes
+
+- [#2426](https://github.com/bluesky-social/atproto/pull/2426) [`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd) Thanks [@foysalit](https://github.com/foysalit)! - Add com.atproto.admin.searchAccounts lexicon to allow searching for accounts using email address
+
+## 0.12.16
+
+### Patch Changes
+
+- [#2539](https://github.com/bluesky-social/atproto/pull/2539) [`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46) Thanks [@dholms](https://github.com/dholms)! - Allow updating deactivation state through admin.updateSubjectStatus
+
+## 0.12.15
+
+### Patch Changes
+
+- [#2531](https://github.com/bluesky-social/atproto/pull/2531) [`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912) Thanks [@dholms](https://github.com/dholms)! - Account deactivation. Current hosting status returned on session routes.
+
+## 0.12.14
+
+### Patch Changes
+
+- [#2533](https://github.com/bluesky-social/atproto/pull/2533) [`c4af6a409`](https://github.com/bluesky-social/atproto/commit/c4af6a409ea2171c3cf1d0e7c8ed496794a3f049) Thanks [@devinivy](https://github.com/devinivy)! - Support for post embeds in chat lexicons
+
 ## 0.12.13
 
 ### Patch Changes
