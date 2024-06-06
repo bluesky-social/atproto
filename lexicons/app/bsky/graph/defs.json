@@ -56,7 +56,7 @@
     },
     "starterPackView": {
       "type": "object",
-      "required": ["uri", "cid", "name", "creator", "indexedAt"],
+      "required": ["uri", "cid", "record", "creator", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
@@ -89,7 +89,7 @@
     },
     "starterPackViewBasic": {
       "type": "object",
-      "required": ["uri", "cid", "name", "creator", "indexedAt"],
+      "required": ["uri", "cid", "record", "creator", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
@@ -127,7 +127,7 @@
     },
     "referencelist": {
       "type": "token",
-      "description": "A list of actors used for only for reference purposes such as within a pack."
+      "description": "A list of actors used for only for reference purposes such as within a starter pack."
     },
     "listViewerState": {
       "type": "object",
