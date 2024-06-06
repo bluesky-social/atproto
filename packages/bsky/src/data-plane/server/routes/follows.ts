@@ -92,7 +92,32 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(follows),
     }
   },
-  async getFollowsFollowing() {
-    throw new Error('not implemented')
+
+  // Alice follows Bob
+  // Bob follows Dan
+  // If Alice looks at Dan's profile, she should see that Bob follows Dan
+  async getFollowsFollowing(req) {
+    //      Alice     Dan
+    const { actorDid, targetDid } = req
+
+    // follow table:
+    // - creator is follower
+    // - subjectDid is the person being followed
+
+    // Get all the people the Alice is following
+    // Get all the people the Dan is followed by
+    // Find the intersection
+
+    let followsReq = db.db
+      .selectFrom('follow')
+      .where('follow.creator', '=', actorDid)
+      .where('follow.subjectDid', 'in',
+        db.db.selectFrom('follow').where('follow.subjectDid', '=', targetDid).select(['creator'])
+      )
+      .select(['subjectDid'])
+
+    const rows = await followsReq.execute()
+    const dids = rows.map((r) => r.subjectDid)
+    return { dids };
   },
 })

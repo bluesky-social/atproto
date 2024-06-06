@@ -57,7 +57,7 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
-  constructor(private vals: HydrateCtxVals) {}
+  constructor(private vals: HydrateCtxVals) { }
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
     return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
   }
@@ -127,13 +127,25 @@ export class Hydrator {
   async hydrateProfileViewers(
     dids: string[],
     ctx: HydrateCtx,
+    hydrateSocialProof = false,
   ): Promise<HydrationState> {
     const viewer = ctx.viewer
     if (!viewer) return {}
     const profileViewers = await this.actor.getProfileViewerStatesNaive(
       dids,
       viewer,
+      hydrateSocialProof,
     )
+
+    // Hydrate in profile view basic for each social proof follow
+    const allFollows = new Set<string>()
+    profileViewers.forEach((profileViewer) => {
+      (profileViewer?.socialProof?.follows || []).forEach((follow) => {
+        allFollows.add(follow)
+      });
+    });
+    const socialProofState = allFollows.size > 0 ? await this.hydrateProfilesBasic(Array.from(allFollows), ctx) : {};
+
     const listUris: string[] = []
     profileViewers?.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
@@ -143,7 +155,8 @@ export class Hydrator {
     profileViewers?.forEach((item) => {
       removeNonModListsFromProfileViewer(item, listState)
     })
-    return mergeStates(listState, {
+
+    return mergeManyStates(socialProofState, listState, {
       profileViewers,
       ctx,
     })
@@ -155,12 +168,14 @@ export class Hydrator {
   async hydrateProfiles(
     dids: string[],
     ctx: HydrateCtx,
+    hydrateSocialProof = false,
   ): Promise<HydrationState> {
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
-      this.hydrateProfileViewers(dids, ctx),
+      this.hydrateProfileViewers(dids, ctx, hydrateSocialProof),
     ])
+
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
@@ -191,7 +206,7 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [state, profileAggs] = await Promise.all([
-      this.hydrateProfiles(dids, ctx),
+      this.hydrateProfiles(dids, ctx, true),
       this.actor.getProfileAggregates(dids),
     ])
     return {
@@ -828,8 +843,8 @@ export const mergeStates = (
 ): HydrationState => {
   assert(
     !stateA.ctx?.viewer ||
-      !stateB.ctx?.viewer ||
-      stateA.ctx?.viewer === stateB.ctx?.viewer,
+    !stateB.ctx?.viewer ||
+    stateA.ctx?.viewer === stateB.ctx?.viewer,
     'incompatible viewers',
   )
   return {
