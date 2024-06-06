@@ -16,6 +16,7 @@ export interface ProfileViewBasic {
   associated?: ProfileAssociated
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
+  createdAt?: string
   [k: string]: unknown
 }
 
@@ -39,6 +40,7 @@ export interface ProfileView {
   avatar?: string
   associated?: ProfileAssociated
   indexedAt?: string
+  createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
@@ -67,7 +69,9 @@ export interface ProfileViewDetailed {
   followsCount?: number
   postsCount?: number
   associated?: ProfileAssociated
+  joinedViaStarterPack?: AppBskyGraphDefs.StarterPackViewBasic
   indexedAt?: string
+  createdAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
