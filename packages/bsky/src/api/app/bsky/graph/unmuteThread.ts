@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { MuteOperation_Type } from '../../../../proto/bsync_pb'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.graph.muteThread({
+  server.app.bsky.graph.unmuteThread({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { root } = input.body

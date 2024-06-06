@@ -6,7 +6,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('rootUri', 'varchar', (col) => col.notNull())
     .addColumn('mutedByDid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('list_mute_pkey', ['rootUri', 'mutedByDid'])
+    .addPrimaryKeyConstraint('thread_mute_pkey', ['rootUri', 'mutedByDid'])
     .execute()
 }
 
