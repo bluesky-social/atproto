@@ -1,35 +1,30 @@
-import { AtUri } from '@atproto/syntax'
+import { Selectable } from 'kysely'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
+import * as StarterPack from '../../../../lexicon/types/app/bsky/graph/starterpack'
 import * as lex from '../../../../lexicon/lexicons'
+import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
-import { Database } from '../../db'
 import { BackgroundQueue } from '../../background'
 
-const lexId = lex.ids.AppBskyActorProfile
-type IndexedProfile = DatabaseSchemaType['profile']
+const lexId = lex.ids.AppBskyGraphStarterpack
+type IndexedStarterPack = Selectable<DatabaseSchemaType['starter_pack']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Profile.Record,
+  obj: StarterPack.Record,
   timestamp: string,
-): Promise<IndexedProfile | null> => {
-  if (uri.rkey !== 'self') return null
+): Promise<IndexedStarterPack | null> => {
   const inserted = await db
-    .insertInto('profile')
+    .insertInto('starter_pack')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      displayName: obj.displayName,
-      description: obj.description,
-      avatarCid: obj.avatar?.ref.toString(),
-      bannerCid: obj.banner?.ref.toString(),
-      joinedViaStarterPackUri: obj.joinedViaStarterPack?.uri,
-      createdAt: obj.createdAt ?? new Date().toISOString(),
+      createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
@@ -49,9 +44,9 @@ const notifsForInsert = () => {
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedProfile | null> => {
+): Promise<IndexedStarterPack | null> => {
   const deleted = await db
-    .deleteFrom('profile')
+    .deleteFrom('starter_pack')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -62,7 +57,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
+export type PluginType = RecordProcessor<StarterPack.Record, IndexedStarterPack>
 
 export const makePlugin = (
   db: Database,

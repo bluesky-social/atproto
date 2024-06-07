@@ -21,6 +21,8 @@ import {
   ListViewerStates,
   Lists,
   RelationshipPair,
+  StarterPackAggs,
+  StarterPacks,
 } from './graph'
 import {
   LabelHydrator,
@@ -33,6 +35,7 @@ import {
   HydrationMap,
   Merges,
   RecordInfo,
+  ItemRef,
   didFromUri,
   urisByCollection,
 } from './util'
@@ -49,7 +52,6 @@ import {
   PostViewerStates,
   Threadgates,
   FeedItem,
-  ItemRef,
 } from './feed'
 import { ParsedLabelers } from '../util'
 
@@ -90,6 +92,8 @@ export type HydrationState = {
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
   feedgenAggs?: FeedGenAggs
+  starterPacks?: StarterPacks
+  starterPackAggs?: StarterPackAggs
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
@@ -186,6 +190,10 @@ export class Hydrator {
   // - profile detailed
   //   - profile
   //     - list basic
+  //   - starterpack
+  //     - profile
+  //       - list basic
+  //     - labels
   async hydrateProfilesDetailed(
     dids: string[],
     ctx: HydrateCtx,
@@ -194,10 +202,17 @@ export class Hydrator {
       this.hydrateProfiles(dids, ctx),
       this.actor.getProfileAggregates(dids),
     ])
-    return {
-      ...state,
-      profileAggs,
-    }
+    const starterPackUriSet = new Set<string>()
+    state.actors?.forEach((actor) => {
+      if (actor?.profile?.joinedViaStarterPack) {
+        starterPackUriSet.add(actor?.profile?.joinedViaStarterPack?.uri)
+      }
+    })
+    const starterPackState = await this.hydrateStarterPacksBasic(
+      [...starterPackUriSet],
+      ctx,
+    )
+    return mergeManyStates(state, starterPackState, { profileAggs, ctx })
   }
 
   // app.bsky.graph.defs#listView
@@ -506,6 +521,106 @@ export class Hydrator {
     })
   }
 
+  // app.bsky.graph.defs#starterPackViewBasic
+  // - starterpack
+  //   - profile
+  //     - list basic
+  //  - labels
+  async hydrateStarterPacksBasic(
+    uris: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [starterPacks, starterPackAggs, profileState, labels] =
+      await Promise.all([
+        this.graph.getStarterPacks(uris, ctx.includeTakedowns),
+        this.graph.getStarterPackAggregates(uris.map((uri) => ({ uri }))),
+        this.hydrateProfiles(uris.map(didFromUri), ctx),
+        this.label.getLabelsForSubjects(uris, ctx.labelers),
+      ])
+    if (!ctx.includeTakedowns) {
+      actionTakedownLabels(uris, starterPacks, labels)
+    }
+    return mergeStates(profileState, {
+      starterPacks,
+      starterPackAggs,
+      labels,
+      ctx,
+    })
+  }
+
+  // app.bsky.graph.defs#starterPackView
+  // - starterpack
+  //   - profile
+  //     - list basic
+  //   - feedgen
+  //     - profile
+  //       - list basic
+  //  - list basic
+  //  - list item
+  //    - profile
+  //      - list basic
+  //  - labels
+  async hydrateStarterPacks(
+    uris: string[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const starterPackState = await this.hydrateStarterPacksBasic(uris, ctx)
+    // gather feed and list uris
+    const feedUriSet = new Set<string>()
+    const listUriSet = new Set<string>()
+    starterPackState.starterPacks?.forEach((sp) => {
+      sp?.record.feeds?.forEach((feed) => feedUriSet.add(feed.uri))
+      if (sp?.record.list) {
+        listUriSet.add(sp?.record.list)
+      }
+    })
+    const feedUris = [...feedUriSet]
+    const listUris = [...listUriSet]
+    // hydrate feeds, lists, and their members
+    const [feedGenState, listState, ...listsMembers] = await Promise.all([
+      this.hydrateFeedGens(feedUris, ctx),
+      this.hydrateLists(listUris, ctx),
+      ...listUris.map((uri) =>
+        this.dataplane.getListMembers({ listUri: uri, limit: 50 }),
+      ),
+    ])
+    // collect list info
+    const listMembersByList = new Map(
+      listUris.map((uri, i) => [uri, listsMembers[i]]),
+    )
+    const listMemberDids = listsMembers.flatMap((lm) =>
+      lm.listitems.map((li) => li.did),
+    )
+    // sample top list items per starter pack based on their follows
+    const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
+    const listItemUris: string[] = []
+    uris.forEach((uri) => {
+      const sp = starterPackState.starterPacks?.get(uri)
+      const agg = starterPackState.starterPackAggs?.get(uri)
+      if (!sp?.record.list || !agg) return
+      const members = listMembersByList.get(sp.record.list)
+      if (!members) return
+      // update aggregation with list items for top 12 most followed members
+      agg.listItemSampleUris = [...members.listitems]
+        .sort((li1, li2) => {
+          const score1 = listMemberAggs.get(li1.did)?.followers ?? 0
+          const score2 = listMemberAggs.get(li2.did)?.followers ?? 0
+          return score2 - score1
+        })
+        .slice(0, 12)
+        .map((li) => li.uri)
+      listItemUris.push(...agg.listItemSampleUris)
+    })
+    // hydrate sampled list items
+    const listItemState = await this.hydrateListItems(listItemUris, ctx)
+    return mergeManyStates(
+      starterPackState,
+      feedGenState,
+      listState,
+      listItemState,
+    )
+  }
+
   // app.bsky.feed.getLikes#like
   // - like
   //   - profile
@@ -657,6 +772,11 @@ export class Hydrator {
         (await this.graph.getBlocks([uri], includeTakedowns)).get(uri) ??
         undefined
       )
+    } else if (collection === ids.AppBskyGraphStarterpack) {
+      return (
+        (await this.graph.getStarterPacks([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
     } else if (collection === ids.AppBskyFeedGenerator) {
       return (
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
@@ -713,6 +833,14 @@ export class Hydrator {
       viewer: vals.viewer,
       includeTakedowns: vals.includeTakedowns,
     })
+  }
+
+  async resolveUri(uriStr: string) {
+    const uri = new AtUri(uriStr)
+    const [did] = await this.actor.getDids([uri.host])
+    if (!did) return uriStr
+    uri.host = did
+    return uri.toString()
   }
 }
 
@@ -853,6 +981,8 @@ export const mergeStates = (
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
+    starterPacks: mergeMaps(stateA.starterPacks, stateB.starterPacks),
+    starterPackAggs: mergeMaps(stateA.starterPackAggs, stateB.starterPackAggs),
     labelers: mergeMaps(stateA.labelers, stateB.labelers),
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),

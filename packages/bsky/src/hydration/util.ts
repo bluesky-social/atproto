@@ -25,6 +25,8 @@ export type RecordInfo<T> = {
   takedownRef: string | undefined
 }
 
+export type ItemRef = { uri: string; cid?: string }
+
 export const parseRecord = <T>(
   entry: Record,
   includeTakedowns: boolean,

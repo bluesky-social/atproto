@@ -22,7 +22,12 @@ import {
   isPostView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
+import {
+  ListView,
+  ListViewBasic,
+  StarterPackView,
+  StarterPackViewBasic,
+} from '../lexicon/types/app/bsky/graph/defs'
 import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
@@ -129,6 +134,9 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
       },
+      joinedViaStarterPack: actor.profile?.joinedViaStarterPack
+        ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
+        : undefined,
     }
   }
 
@@ -141,6 +149,7 @@ export class Views {
       ...basicView,
       description: actor.profile?.description || undefined,
       indexedAt: actor.sortedAt?.toISOString(),
+      createdAt: actor.profile?.createdAt,
     }
   }
 
@@ -279,6 +288,57 @@ export class Views {
             blocked: listViewer.viewerListBlockUri,
           }
         : undefined,
+    }
+  }
+
+  starterPackBasic(
+    uri: string,
+    state: HydrationState,
+  ): StarterPackViewBasic | undefined {
+    const sp = state.starterPacks?.get(uri)
+    if (!sp) return
+    const parsedUri = new AtUri(uri)
+    const creator = this.profileBasic(parsedUri.hostname, state)
+    if (!creator) return
+    const agg = state.starterPackAggs?.get(uri)
+    const labels = state.labels?.getBySubject(uri) ?? []
+    return {
+      uri,
+      cid: sp.cid,
+      record: sp.record,
+      creator,
+      feedCount: agg?.feeds ?? 0,
+      joinedAllTimeCount: agg?.joinedAllTime ?? 0,
+      joinedWeekCount: agg?.joinedWeek ?? 0,
+      listItemCount: agg?.listItems ?? 0,
+      labels,
+      indexedAt: sp.sortedAt.toISOString(),
+    }
+  }
+
+  starterPack(uri: string, state: HydrationState): StarterPackView | undefined {
+    const sp = state.starterPacks?.get(uri)
+    const basicView = this.starterPackBasic(uri, state)
+    if (!sp || !basicView) return
+    const agg = state.starterPackAggs?.get(uri)
+    const feeds = mapDefined(sp.record.feeds ?? [], (feed) =>
+      this.feedGenerator(feed.uri, state),
+    )
+    const list = sp.record.list
+      ? this.listBasic(sp.record.list, state)
+      : undefined
+    const listItemsSample = mapDefined(agg?.listItemSampleUris ?? [], (uri) => {
+      const li = state.listItems?.get(uri)
+      if (!li) return
+      const subject = this.profile(li.record.subject, state)
+      if (!subject) return
+      return { uri, subject }
+    })
+    return {
+      ...basicView,
+      feeds,
+      list,
+      listItemsSample,
     }
   }
 

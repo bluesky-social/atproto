@@ -6,6 +6,7 @@ import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generato
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   HydrationMap,
+  ItemRef,
   RecordInfo,
   parseRecord,
   parseString,
@@ -55,8 +56,6 @@ export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 
 export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
-
-export type ItemRef = { uri: string; cid?: string }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
 // technically have additional fields, not supported by the mock dataplane.
