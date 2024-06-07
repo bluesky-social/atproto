@@ -9,3 +9,4 @@ export * as _20240208T213404429Z from './20240208T213404429Z-add-tags-column-to-
 export * as _20240228T003647759Z from './20240228T003647759Z-add-label-sigs'
 export * as _20240408T192432676Z from './20240408T192432676Z-mute-reporting'
 export * as _20240506T225055595Z from './20240506T225055595Z-message-subject'
+export * as _20240607T085607200Z from './20240607T085607200Z-configuration'
