@@ -9,7 +9,6 @@ import {
   ProfileView,
   ProfileViewBasic,
   ViewerState as ProfileViewerState,
-  KnownFollowers,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
   BlockedPost,
@@ -112,7 +111,7 @@ export class Views {
     const viewer = state.profileViewers?.get(did)
     const knownFollowers =
       viewer && viewer.knownFollowers
-        ? this.knownFollowersDidsToProfileViews(viewer.knownFollowers, state)
+        ? this.knownFollowers(viewer.knownFollowers, state)
         : undefined
     const profileAggs = state.profileAggs?.get(did)
     return {
@@ -224,11 +223,10 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
-      knownFollowers: undefined,
     }
   }
 
-  knownFollowersDidsToProfileViews(
+  knownFollowers(
     knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
     state: HydrationState,
   ) {
