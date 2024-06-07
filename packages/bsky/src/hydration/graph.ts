@@ -195,4 +195,20 @@ export class GraphHydrator {
     })
     return { followers: res.followers, cursor: res.cursor }
   }
+
+  async getKnownFollowers(input: {
+    viewerDid: string
+    subjectDid: string
+    cursor?: string
+    limit?: number
+  }): Promise<{ knownFollowers: string[] }> {
+    const { viewerDid, subjectDid } = input
+    const res = await this.dataplane.getFollowsFollowing({
+      actorDid: viewerDid,
+      targetDid: subjectDid,
+    })
+    return {
+      knownFollowers: input.limit ? res.dids.slice(0, input.limit) : res.dids,
+    }
+  }
 }
