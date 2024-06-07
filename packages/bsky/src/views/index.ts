@@ -116,10 +116,10 @@ export class Views {
     const profileAggs = state.profileAggs?.get(did)
     return {
       ...baseView,
-      viewer: {
+      viewer: baseView.viewer ? {
         ...baseView.viewer,
         knownFollowers,
-      },
+      } : undefined,
       banner: actor.profile?.banner
         ? this.imgUriBuilder.getPresetUri(
             'banner',
