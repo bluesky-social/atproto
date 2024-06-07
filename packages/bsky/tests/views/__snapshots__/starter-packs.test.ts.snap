@@ -70,7 +70,7 @@ Array [
     "joinedAllTimeCount": 3,
     "joinedWeekCount": 3,
     "labels": Array [],
-    "listItemCount": 0,
+    "listItemCount": 3,
     "record": Object {
       "$type": "app.bsky.graph.starterpack",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -161,7 +161,7 @@ Object {
     "purpose": "app.bsky.graph.defs#referencelist",
     "uri": "record(1)",
   },
-  "listItemCount": 0,
+  "listItemCount": 3,
   "listItemsSample": Array [
     Object {
       "subject": Object {
@@ -243,7 +243,7 @@ Object {
   "joinedAllTimeCount": 3,
   "joinedWeekCount": 3,
   "labels": Array [],
-  "listItemCount": 0,
+  "listItemCount": 3,
   "record": Object {
     "$type": "app.bsky.graph.starterpack",
     "createdAt": "1970-01-01T00:00:00.000Z",

@@ -80,7 +80,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const countsListItems = listUris.length
       ? await db.db
           .selectFrom('list_item')
-          .where('uri', 'in', listUris)
+          .where('listUri', 'in', listUris)
           .select(['listUri as uri', countAll.as('count')])
           .groupBy('listUri')
           .execute()
