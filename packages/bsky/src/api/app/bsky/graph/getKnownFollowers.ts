@@ -93,12 +93,8 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton } = input
   const { knownFollowers } = skeleton
-  const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
   const followers = mapDefined(knownFollowers, (did) => {
-    if (isNoHosted(did)) {
-      return
-    }
     return ctx.views.profile(did, hydration)
   })
   const subject = ctx.views.profile(skeleton.subjectDid, hydration)!
