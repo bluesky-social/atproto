@@ -1,4 +1,4 @@
-import Graphemer from 'graphemer'
+import { countGrapheme } from 'unicode-segmenter/grapheme';
 import * as ui8 from 'uint8arrays'
 
 // counts the number of bytes in a utf8 string
@@ -8,8 +8,7 @@ export const utf8Len = (str: string): number => {
 
 // counts the number of graphemes (user-displayed characters) in a string
 export const graphemeLen = (str: string): number => {
-  const splitter = new Graphemer()
-  return splitter.countGraphemes(str)
+  return countGrapheme(str)
 }
 
 export const utf8ToB64Url = (utf8: string): string => {
