@@ -8,10 +8,10 @@ import { SimpleStore } from '@atproto-labs/simple-store'
 import { Key, Keyset, SignedJwt } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
+  OAuthAuthorizationServerMetadata,
   OAuthClientIdentification,
   OAuthEndpointName,
   OAuthParResponse,
-  OAuthAuthorizationServerMetadata,
   OAuthTokenResponse,
   OAuthTokenType,
   oauthParResponseSchema,
