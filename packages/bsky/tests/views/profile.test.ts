@@ -78,11 +78,7 @@ describe('pds profile views', () => {
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
   })
 
-  // TODO: Add test to verify that social proof isn't provided for non-detailed profiles
-  // Alice follows Bob
-  // Bob follows Carol
-  // If Alice looks at Carol's profile, she should see that Bob follows Carol
-  it('returns known followers viewer data', async () => {
+  it('returns knownFollowers viewer data', async () => {
     const carolForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
       { headers: await network.serviceHeaders(alice) },
@@ -92,6 +88,16 @@ describe('pds profile views', () => {
     expect(knownFollowers?.count).toBe(1)
     expect(knownFollowers?.followers).toHaveLength(1)
     expect(knownFollowers?.followers[0].handle).toBe('bob.test')
+  })
+
+  it('does not return knownFollowers for basic profile views', async () => {
+    const { data } = await agent.api.app.bsky.graph.getFollows(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    const follow = data.follows[0]
+
+    expect(follow.viewer?.knownFollowers).toBeFalsy()
   })
 
   it('fetches multiple profiles', async () => {
