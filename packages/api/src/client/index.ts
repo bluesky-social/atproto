@@ -105,14 +105,14 @@ import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -128,16 +128,16 @@ import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
-import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
+import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
@@ -289,14 +289,14 @@ export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
-export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -312,16 +312,16 @@ export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
-export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
-export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
+export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
@@ -1594,17 +1594,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getFeed(
-    params?: AppBskyFeedGetFeed.QueryParams,
-    opts?: AppBskyFeedGetFeed.CallOptions,
-  ): Promise<AppBskyFeedGetFeed.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getFeed', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetFeed.toKnownErr(e)
-      })
-  }
-
   getFeedGenerator(
     params?: AppBskyFeedGetFeedGenerator.QueryParams,
     opts?: AppBskyFeedGetFeedGenerator.CallOptions,
@@ -1624,6 +1613,17 @@ export class AppBskyFeedNS {
       .call('app.bsky.feed.getFeedGenerators', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getFeed(
+    params?: AppBskyFeedGetFeed.QueryParams,
+    opts?: AppBskyFeedGetFeed.CallOptions,
+  ): Promise<AppBskyFeedGetFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeed.toKnownErr(e)
       })
   }
 
@@ -1660,17 +1660,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getPostThread(
-    params?: AppBskyFeedGetPostThread.QueryParams,
-    opts?: AppBskyFeedGetPostThread.CallOptions,
-  ): Promise<AppBskyFeedGetPostThread.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getPostThread', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetPostThread.toKnownErr(e)
-      })
-  }
-
   getPosts(
     params?: AppBskyFeedGetPosts.QueryParams,
     opts?: AppBskyFeedGetPosts.CallOptions,
@@ -1679,6 +1668,17 @@ export class AppBskyFeedNS {
       .call('app.bsky.feed.getPosts', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetPosts.toKnownErr(e)
+      })
+  }
+
+  getPostThread(
+    params?: AppBskyFeedGetPostThread.QueryParams,
+    opts?: AppBskyFeedGetPostThread.CallOptions,
+  ): Promise<AppBskyFeedGetPostThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getPostThread', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetPostThread.toKnownErr(e)
       })
   }
 
@@ -2051,17 +2051,17 @@ export class AppBskyGraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
-  list: ListRecord
   listblock: ListblockRecord
   listitem: ListitemRecord
+  list: ListRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.block = new BlockRecord(service)
     this.follow = new FollowRecord(service)
-    this.list = new ListRecord(service)
     this.listblock = new ListblockRecord(service)
     this.listitem = new ListitemRecord(service)
+    this.list = new ListRecord(service)
   }
 
   getBlocks(
@@ -2097,17 +2097,6 @@ export class AppBskyGraphNS {
       })
   }
 
-  getList(
-    params?: AppBskyGraphGetList.QueryParams,
-    opts?: AppBskyGraphGetList.CallOptions,
-  ): Promise<AppBskyGraphGetList.Response> {
-    return this._service.xrpc
-      .call('app.bsky.graph.getList', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyGraphGetList.toKnownErr(e)
-      })
-  }
-
   getListBlocks(
     params?: AppBskyGraphGetListBlocks.QueryParams,
     opts?: AppBskyGraphGetListBlocks.CallOptions,
@@ -2116,6 +2105,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.getListBlocks', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetListBlocks.toKnownErr(e)
+      })
+  }
+
+  getList(
+    params?: AppBskyGraphGetList.QueryParams,
+    opts?: AppBskyGraphGetList.CallOptions,
+  ): Promise<AppBskyGraphGetList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getList', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetList.toKnownErr(e)
       })
   }
 
@@ -2346,67 +2346,6 @@ export class FollowRecord {
   }
 }
 
-export class ListRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphList.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.list',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.list',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyGraphList.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.graph.list'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.graph.list', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.list', ...params },
-      { headers },
-    )
-  }
-}
-
 export class ListblockRecord {
   _service: AtpServiceClient
 
@@ -2528,6 +2467,67 @@ export class ListitemRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.listitem', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ListRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphList.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphList.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.list'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params },
       { headers },
     )
   }
