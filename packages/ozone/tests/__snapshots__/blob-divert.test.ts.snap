@@ -8,7 +8,7 @@ Object {
     "$type": "tools.ozone.moderation.defs#modEventDivert",
     "comment": "Diverting for test",
   },
-  "id": 9,
+  "id": 1,
   "subject": Object {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
