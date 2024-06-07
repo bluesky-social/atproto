@@ -1,0 +1,17 @@
+{
+      "lexicon": 1,
+      "id": "com.atproto.config.defs",
+      "defs": {
+        "configurationView": {
+          "type": "object",
+          "required": ["key", "value", "createdAt", "updatedAt"],
+          "properties": {
+            "key": { "type": "string" },
+            "value": { "type": "string" },
+            "createdAt": { "type": "string", "format": "datetime" },
+            "updatedAt": { "type": "string", "format": "datetime" },
+            "createdBy": { "type": "string", "format": "did" }
+          }
+        }
+      }
+    }

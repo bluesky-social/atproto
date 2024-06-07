@@ -1,0 +1,63 @@
+{
+      "lexicon": 1,
+      "id": "com.atproto.config.updateConfig",
+      "defs": {
+        "main": {
+          "type": "procedure",
+          "description": "Update configuration values for given key-value pairs.",
+          "input": {
+            "encoding": "application/json",
+            "schema": {
+              "type": "object",
+              "required": ["updates"],
+              "properties": {
+                "updates": {
+                  "type": "array",
+                  "items": {
+                    "type": "ref",
+                    "ref": "#updateItem"
+                  },
+                  "description": "Array of key-value pairs to be updated."
+                }
+              }
+            }
+          },
+          "output": {
+            "encoding": "application/json",
+            "schema": {
+              "type": "object",
+              "required": ["configurations"],
+              "properties": {
+                "configurations": {
+                  "type": "array",
+                  "items": {
+                    "type": "ref",
+                    "ref": "com.atproto.config.defs#configurationView"
+                  },
+                  "description": "Array of updated configuration key-value pairs."
+                }
+              }
+            }
+          }
+        },
+        "updateItem": {
+          "type": "object",
+          "required": ["key", "currentValue", "newValue"],
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "The key for which the configuration value(s) will be updated."
+            },
+            "currentValue": {
+              "type": "string",
+              "description": "The current value of the configuration."
+            },
+            "newValue": {
+              "type": "string",
+              "description": "The new value to update the configuration to."
+            }
+          }
+        }
+      }
+    }
+    

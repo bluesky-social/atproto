@@ -1,0 +1,58 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.config.createConfig",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create new configuration key-value pairs.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["configs"],
+          "properties": {
+            "configs": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#configItem"
+              },
+              "description": "Array of key-value configurations to be created."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["configurations"],
+          "properties": {
+            "configurations": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.config.defs#configurationView"
+              },
+              "description": "Array of created configuration key-value pairs."
+            }
+          }
+        }
+      }
+    },
+    "configItem": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The key of the configuration."
+        },
+        "value": {
+          "type": "string",
+          "description": "The value of the configuration."
+        }
+      }
+    }
+  }
+}

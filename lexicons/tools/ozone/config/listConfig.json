@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.config.listConfig",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List configurations, matching a specific key or similar/exact value.",
+      "parameters": {
+        "type": "params",
+        "required": [],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key of the configuration."
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the configuration. Asterisk (*) can be used as a wildcard to match similar values prefixed or suffixed with a certain keyword."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 50,
+            "description": "The number of configuration key-value pairs to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "The cursor for pagination."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["configurations"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "configurations": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.atproto.config.defs#configurationView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
