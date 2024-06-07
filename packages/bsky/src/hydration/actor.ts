@@ -189,7 +189,7 @@ export class ActorHydrator {
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
         knownFollowers:
-          knownFollowersDids?.length > 0
+          knownFollowersDids && knownFollowersDids.length > 0
             ? {
                 count: knownFollowersDids?.length ?? 0,
                 followers: (knownFollowersDids ?? []).slice(0, 5),
