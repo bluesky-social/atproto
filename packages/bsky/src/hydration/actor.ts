@@ -154,18 +154,17 @@ export class ActorHydrator {
   ): Promise<ProfileViewerStates> {
     if (!dids.length) return new HydrationMap<ProfileViewerState>()
 
-    const subjectDidToKnownFollowersMap = {}
     const knownFollowersRequests = hydrateKnownFollowers
       ? dids.map(async (did) => {
           const followsFollowing = await this.dataplane.getFollowsFollowing({
             actorDid: viewer,
             targetDid: did,
           })
-          subjectDidToKnownFollowersMap[did] = followsFollowing.dids
+          return followsFollowing.dids
         })
       : []
 
-    const [res] = await Promise.all([
+    const [res, resolvedKnownFollowers] = await Promise.all([
       this.dataplane.getRelationships({
         actorDid: viewer,
         targetDids: dids,
@@ -179,7 +178,7 @@ export class ActorHydrator {
         // ignore self-follows, self-mutes, self-blocks
         return acc.set(did, {})
       }
-      const knownFollowersDids = subjectDidToKnownFollowersMap[did]
+      const knownFollowersDids = resolvedKnownFollowers[i]
       return acc.set(did, {
         muted: rels.muted ?? false,
         mutedByList: parseString(rels.mutedByList),
