@@ -22,6 +22,7 @@ import search from './search'
 import suggestions from './suggestions'
 import sync from './sync'
 import threads from './threads'
+import starterPacks from './starter-packs'
 import { Database } from '../db'
 
 export default (db: Database, idResolver: IdResolver) =>
@@ -48,6 +49,7 @@ export default (db: Database, idResolver: IdResolver) =>
       ...suggestions(db),
       ...sync(db),
       ...threads(db),
+      ...starterPacks(db),
 
       async ping() {
         return {}

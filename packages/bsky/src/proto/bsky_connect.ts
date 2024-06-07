@@ -34,6 +34,8 @@ import {
   GetActorRepostsResponse,
   GetActorsRequest,
   GetActorsResponse,
+  GetActorStarterPacksRequest,
+  GetActorStarterPacksResponse,
   GetActorTakedownRequest,
   GetActorTakedownResponse,
   GetAllLabelersRequest,
@@ -801,6 +803,17 @@ export const Service = {
       name: 'GetAllLabelers',
       I: GetAllLabelersRequest,
       O: GetAllLabelersResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Starter packs
+     *
+     * @generated from rpc bsky.Service.GetActorStarterPacks
+     */
+    getActorStarterPacks: {
+      name: 'GetActorStarterPacks',
+      I: GetActorStarterPacksRequest,
+      O: GetActorStarterPacksResponse,
       kind: MethodKind.Unary,
     },
     /**

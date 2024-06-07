@@ -912,6 +912,21 @@ message GetLabelsResponse {
 }
 
 //
+// Starter packs
+//
+
+message GetActorStarterPacksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorStarterPacksResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+//
 // Sync
 //
 
@@ -1111,6 +1126,9 @@ service Service {
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
   rpc GetAllLabelers(GetAllLabelersRequest) returns (GetAllLabelersResponse);
+
+  // Starter packs
+  rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);

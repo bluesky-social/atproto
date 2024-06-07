@@ -9351,6 +9351,143 @@ export class GetLabelsResponse extends Message<GetLabelsResponse> {
 }
 
 /**
+ * @generated from message bsky.GetActorStarterPacksRequest
+ */
+export class GetActorStarterPacksRequest extends Message<GetActorStarterPacksRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActorStarterPacksRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActorStarterPacksRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActorStarterPacksRequest {
+    return new GetActorStarterPacksRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksRequest {
+    return new GetActorStarterPacksRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksRequest {
+    return new GetActorStarterPacksRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetActorStarterPacksRequest
+      | PlainMessage<GetActorStarterPacksRequest>
+      | undefined,
+    b:
+      | GetActorStarterPacksRequest
+      | PlainMessage<GetActorStarterPacksRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActorStarterPacksRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorStarterPacksResponse
+ */
+export class GetActorStarterPacksResponse extends Message<GetActorStarterPacksResponse> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActorStarterPacksResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActorStarterPacksResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActorStarterPacksResponse {
+    return new GetActorStarterPacksResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksResponse {
+    return new GetActorStarterPacksResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksResponse {
+    return new GetActorStarterPacksResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActorStarterPacksResponse
+      | PlainMessage<GetActorStarterPacksResponse>
+      | undefined,
+    b:
+      | GetActorStarterPacksResponse
+      | PlainMessage<GetActorStarterPacksResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActorStarterPacksResponse, a, b)
+  }
+}
+
+/**
  * - Latest repo rev of user w/ DID
  *     - Read-after-write header in`getProfile`, `getProfiles`, `getActorLikes`, `getAuthorFeed`, `getListFeed`, `getPostThread`, `getTimeline`.  Could it be view dependent?
  *
