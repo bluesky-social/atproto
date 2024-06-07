@@ -233,7 +233,7 @@ export class Views {
     state: HydrationState,
   ) {
     const followers = mapDefined(knownFollowers.followers, (did) => {
-      return this.profileBasic(did, state, false)
+      return this.profileBasic(did, state)
     })
     return { count: knownFollowers.count, followers }
   }
