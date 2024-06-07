@@ -106,11 +106,20 @@ export class Views {
   ): ProfileViewDetailed | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const baseView = this.profile(did, state, true)
+    const baseView = this.profile(did, state)
     if (!baseView) return
+    const viewer = state.profileViewers?.get(did)
+    const knownFollowers =
+      viewer && viewer.knownFollowers
+        ? this.knownFollowersDidsToProfileViews(viewer.knownFollowers, state)
+        : undefined
     const profileAggs = state.profileAggs?.get(did)
     return {
       ...baseView,
+      viewer: {
+        ...baseView.viewer,
+        knownFollowers,
+      },
       banner: actor.profile?.banner
         ? this.imgUriBuilder.getPresetUri(
             'banner',
@@ -133,14 +142,10 @@ export class Views {
     }
   }
 
-  profile(
-    did: string,
-    state: HydrationState,
-    includeKnownFollowers = false,
-  ): ProfileView | undefined {
+  profile(did: string, state: HydrationState): ProfileView | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const basicView = this.profileBasic(did, state, includeKnownFollowers)
+    const basicView = this.profileBasic(did, state)
     if (!basicView) return
     return {
       ...basicView,
@@ -152,7 +157,6 @@ export class Views {
   profileBasic(
     did: string,
     state: HydrationState,
-    includeKnownFollowers = false,
   ): ProfileViewBasic | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
@@ -193,7 +197,7 @@ export class Views {
                 : undefined,
             }
           : undefined,
-      viewer: this.profileViewer(did, state, includeKnownFollowers),
+      viewer: this.profileViewer(did, state),
       labels,
     }
   }
@@ -201,7 +205,6 @@ export class Views {
   profileViewer(
     did: string,
     state: HydrationState,
-    includeKnownFollowers = false,
   ): ProfileViewerState | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
@@ -220,10 +223,7 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
-      knownFollowers:
-        includeKnownFollowers && viewer.knownFollowers
-          ? this.knownFollowersDidsToProfileViews(viewer.knownFollowers, state)
-          : undefined,
+      knownFollowers: undefined,
     }
   }
 
