@@ -205,12 +205,14 @@ describe('Moderation: custom labels', () => {
           author: mock.profileViewBasic({
             handle: 'carla.test',
             displayName: 'Carla',
+            website: 'http://cart.test'
             labels: profileLabels,
           }),
         }),
         author: mock.profileViewBasic({
           handle: 'bob.test',
           displayName: 'Bob',
+          website: 'http://bob.test'
         }),
       })
       const res = moderatePost(post, modOpts(blurs, severity))

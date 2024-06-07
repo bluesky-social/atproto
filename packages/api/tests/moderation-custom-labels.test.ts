@@ -229,6 +229,7 @@ describe('Moderation: custom labels', () => {
             author: mock.profileViewBasic({
               handle: 'bob.test',
               displayName: 'Bob',
+              website: 'http://bob.test.com'
             }),
             labels: [
               mock.label({
@@ -245,6 +246,7 @@ describe('Moderation: custom labels', () => {
           mock.profileViewBasic({
             handle: 'bob.test',
             displayName: 'Bob',
+            website: 'http://bob.test'
             labels: [
               mock.label({
                 val: 'custom',
@@ -260,6 +262,7 @@ describe('Moderation: custom labels', () => {
           mock.profileViewBasic({
             handle: 'bob.test',
             displayName: 'Bob',
+            website: 'http://bob.test'
             labels: [
               mock.label({
                 val: 'custom',

@@ -94,11 +94,13 @@ export const mock = {
   profileViewBasic({
     handle,
     displayName,
+    website,
     description,
     viewer,
     labels,
   }: {
     handle: string
+    website?: string
     displayName?: string
     description?: string
     viewer?: AppBskyActorDefs.ViewerState
@@ -108,6 +110,7 @@ export const mock = {
       did: `did:web:${handle}`,
       handle,
       displayName,
+      website,
       description, // technically not in ProfileViewBasic but useful in some cases
       viewer,
       labels,

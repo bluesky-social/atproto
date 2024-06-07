@@ -13,6 +13,11 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
+        "website": {
+          "type": "string",
+          "maxGraphemes": 128,
+          "maxLength": 1280
+        },
         "avatar": { "type": "string", "format": "uri" },
         "associated": {
           "type": "ref",
@@ -40,6 +45,11 @@
           "type": "string",
           "maxGraphemes": 256,
           "maxLength": 2560
+        },
+        "website": {
+          "type": "string",
+          "maxGraphemes": 128,
+          "maxLength": 1280
         },
         "avatar": { "type": "string", "format": "uri" },
         "associated": {
@@ -69,6 +79,11 @@
           "type": "string",
           "maxGraphemes": 256,
           "maxLength": 2560
+        },
+        "website": {
+          "type": "string",
+          "maxGraphemes": 128,
+          "maxLength": 1280
         },
         "avatar": { "type": "string", "format": "uri" },
         "banner": { "type": "string", "format": "uri" },

@@ -10,6 +10,7 @@ Array [
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "its me!",
+    "website":"https://www.ali.com",
     "did": "user(0)",
     "displayName": "ali",
     "followersCount": 2,

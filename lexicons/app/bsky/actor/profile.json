@@ -20,6 +20,12 @@
             "maxGraphemes": 256,
             "maxLength": 2560
           },
+          "website":{
+            "type": "string",
+            "description": "User linked website.",
+            "maxGraphemes": 128,
+            "maxLength": 128
+          },
           "avatar": {
             "type": "blob",
             "description": "Small image to be displayed next to posts from account. AKA, 'profile picture'",

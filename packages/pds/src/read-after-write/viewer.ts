@@ -124,6 +124,7 @@ export class LocalViewer {
     return {
       did: this.did,
       handle: accountRes.handle ?? INVALID_HANDLE,
+      website: record?.website,
       displayName: record?.displayName,
       avatar: record?.avatar
         ? this.getImageUrl('avatar', record.avatar.ref.toString())
@@ -299,6 +300,7 @@ export class LocalViewer {
   ): ProfileViewBasic {
     return {
       ...view,
+      website: record.website,
       displayName: record.displayName,
       avatar: record.avatar
         ? this.getImageUrl('avatar', record.avatar.ref.toString())
@@ -310,6 +312,7 @@ export class LocalViewer {
     return {
       ...this.updateProfileViewBasic(view, record),
       description: record.description,
+      website: record.website
     }
   }
 

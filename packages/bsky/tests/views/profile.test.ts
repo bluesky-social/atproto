@@ -128,6 +128,7 @@ describe('pds profile views', () => {
     await updateProfile(alice, {
       displayName: 'ali',
       description: 'new descript',
+      website: 'https://www.ali.com',
       avatar: avatarRes.data.blob,
       banner: bannerRes.data.blob,
     })

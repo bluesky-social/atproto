@@ -11,6 +11,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 export interface ProfileViewBasic {
   did: string
   handle: string
+  website: string
   displayName?: string
   avatar?: string
   associated?: AppBskyActorDefs.ProfileAssociated

@@ -139,6 +139,7 @@ export class Views {
     if (!basicView) return
     return {
       ...basicView,
+      website: actor.profile?.website,
       description: actor.profile?.description || undefined,
       indexedAt: actor.sortedAt?.toISOString(),
     }
@@ -167,6 +168,7 @@ export class Views {
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
+      website: actor.profile?.website,
       displayName: actor.profile?.displayName,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(

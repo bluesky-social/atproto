@@ -11,6 +11,7 @@ import * as AppBskyGraphDefs from '../graph/defs'
 export interface ProfileViewBasic {
   did: string
   handle: string
+  website?: string
   displayName?: string
   avatar?: string
   associated?: ProfileAssociated
@@ -35,6 +36,7 @@ export interface ProfileView {
   did: string
   handle: string
   displayName?: string
+  website?: string
   description?: string
   avatar?: string
   associated?: ProfileAssociated
@@ -61,6 +63,7 @@ export interface ProfileViewDetailed {
   handle: string
   displayName?: string
   description?: string
+  website?: string
   avatar?: string
   banner?: string
   followersCount?: number

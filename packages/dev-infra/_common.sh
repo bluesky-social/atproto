@@ -26,17 +26,17 @@ export_env() {
 # Exports postgres environment variables
 export_pg_env() {
   # Based on creds in compose.yaml
-  export PGPORT=5433
+  export PGPORT=5432
   export PGHOST=localhost
   export PGUSER=pg
   export PGPASSWORD=password
   export PGDATABASE=postgres
-  export DB_POSTGRES_URL="postgresql://pg:password@127.0.0.1:5433/postgres"
+  export DB_POSTGRES_URL="postgresql://pg:password@127.0.0.1:5432/postgres"
 }
 
 # Exports redis environment variables
 export_redis_env() {
-  export REDIS_HOST="127.0.0.1:6380"
+  export REDIS_HOST="127.0.0.1:6379"
 }
 
 pg_clear() {
@@ -59,9 +59,9 @@ redis_clear() {
 }
 
 main_native() {
-  local services=${SERVICES}
-  local postgres_url_env_var=`[[ $services == *"db_test"* ]] && echo "DB_TEST_POSTGRES_URL" || echo "DB_POSTGRES_URL"`
-  local redis_host_env_var=`[[ $services == *"redis_test"* ]] && echo "REDIS_TEST_HOST" || echo "REDIS_HOST"`
+  local services="db redis"
+  local postgres_url_env_var="DB_POSTGRES_URL"
+  local redis_host_env_var="REDIS_HOST"
 
   postgres_url="${!postgres_url_env_var}"
   redis_host="${!redis_host_env_var}"
@@ -82,21 +82,19 @@ main_native() {
   fi
 
   cleanup() {
-    local services=$@
-
-    if [ -n "${redis_host}" ] && [[ $services == *"redis_test"* ]]; then
+    if [ -n "${redis_host}" ]; then
       redis_clear "redis://${redis_host}" &> /dev/null
     fi
 
-    if [ -n "${postgres_url}" ] && [[ $services == *"db_test"* ]]; then
+    if [ -n "${postgres_url}" ]; then
       pg_clear "${postgres_url}" &> /dev/null
     fi
   }
 
   # trap SIGINT and performs cleanup
-  trap "on_sigint ${services}" INT
+  trap "on_sigint" INT
   on_sigint() {
-    cleanup $@
+    cleanup
     exit $?
   }
 
@@ -112,33 +110,26 @@ main_native() {
 }
 
 main_docker() {
-  # Expect a SERVICES env var to be set with the docker service names
-  local services=${SERVICES}
+  local services="db redis"
 
   dir=$(dirname $0)
   compose_file="${dir}/docker-compose.yaml"
 
-  # whether this particular script started the container(s)
   started_container=false
 
-  # performs cleanup as necessary, i.e. taking down containers
-  # if this script started them
   cleanup() {
-    local services=$@
     echo # newline
     if $started_container; then
       docker compose --file $compose_file rm --force --stop --volumes ${services}
     fi
   }
 
-  # trap SIGINT and performs cleanup
-  trap "on_sigint ${services}" INT
+  trap "on_sigint" INT
   on_sigint() {
-    cleanup $@
+    cleanup
     exit $?
   }
 
-  # check if all services are running already
   not_running=false
   for service in $services; do
     container_id=$(get_container_id $compose_file $service)
@@ -148,7 +139,6 @@ main_docker() {
     fi
   done
 
-  # if any are missing, recreate all services
   if $not_running; then
     started_container=true
     docker compose --file $compose_file up --wait --force-recreate ${services}
@@ -156,17 +146,13 @@ main_docker() {
     echo "all services ${services} are already running"
   fi
 
-  # do not exit when following commands fail, so we can intercept exit code & tear down docker
   set +e
 
-  # setup environment variables and run args
   export_env
   "$@"
-  # save return code for later
   code=$?
 
-  # performs cleanup as necessary
-  cleanup ${services}
+  cleanup
   exit ${code}
 }
 
