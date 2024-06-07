@@ -65,6 +65,7 @@ Object {
       "cid": "cids(2)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(3)",
         "displayName": "ali",
@@ -133,6 +134,7 @@ Array [
     "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -174,6 +176,7 @@ Array [
     "cid": "cids(3)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -215,6 +218,7 @@ Array [
     "cid": "cids(4)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -256,6 +260,7 @@ Array [
     "cid": "cids(5)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -297,6 +302,7 @@ Array [
     "cid": "cids(6)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -1463,6 +1469,7 @@ Object {
     "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -1512,6 +1519,7 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
@@ -1553,6 +1561,7 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
@@ -1604,6 +1613,7 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
@@ -1647,6 +1657,7 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
@@ -1688,6 +1699,7 @@ Object {
       "cid": "cids(4)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
