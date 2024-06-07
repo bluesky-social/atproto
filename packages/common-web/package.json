@@ -19,9 +19,9 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "graphemer": "^1.4.0",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0",
+    "unicode-segmenter": "^0.7.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
