@@ -13,6 +13,7 @@ import {
   Actors,
   ProfileViewerStates,
   ProfileViewerState,
+  KnownFollowers,
 } from './actor'
 import {
   Follows,
@@ -93,6 +94,7 @@ export type HydrationState = {
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
+  knownFollowers?: KnownFollowers
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -127,26 +129,13 @@ export class Hydrator {
   async hydrateProfileViewers(
     dids: string[],
     ctx: HydrateCtx,
-    hydrateKnownFollowers = false,
   ): Promise<HydrationState> {
     const viewer = ctx.viewer
     if (!viewer) return {}
     const profileViewers = await this.actor.getProfileViewerStatesNaive(
       dids,
       viewer,
-      hydrateKnownFollowers,
     )
-
-    // Hydrate basic profile view for each follow known to the viewer
-    const knownFollowers = new Set(
-      Array.from(profileViewers.values()).flatMap(
-        (viewer) => viewer?.knownFollowers?.followers ?? [],
-      ),
-    )
-    const knownFollowersHydrationState =
-      knownFollowers.size > 0
-        ? await this.hydrateProfilesBasic(Array.from(knownFollowers), ctx)
-        : {}
 
     const listUris: string[] = []
     profileViewers?.forEach((item) => {
@@ -158,7 +147,7 @@ export class Hydrator {
       removeNonModListsFromProfileViewer(item, listState)
     })
 
-    return mergeManyStates(knownFollowersHydrationState, listState, {
+    return mergeManyStates(listState, {
       profileViewers,
       ctx,
     })
@@ -170,12 +159,11 @@ export class Hydrator {
   async hydrateProfiles(
     dids: string[],
     ctx: HydrateCtx,
-    hydrateKnownFollowers = false,
   ): Promise<HydrationState> {
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, ctx.includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
-      this.hydrateProfileViewers(dids, ctx, hydrateKnownFollowers),
+      this.hydrateProfileViewers(dids, ctx),
     ])
 
     if (!ctx.includeTakedowns) {
@@ -207,13 +195,19 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    const knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
+    const knownFollowersDids = Array.from(knownFollowers.values())
+      .filter(Boolean)
+      .flatMap((f) => f!.followers)
+    const allDids = Array.from(new Set(dids.concat(knownFollowersDids)))
     const [state, profileAggs] = await Promise.all([
-      this.hydrateProfiles(dids, ctx, true),
+      this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
     ])
     return {
       ...state,
       profileAggs,
+      knownFollowers,
     }
   }
 

@@ -46,6 +46,8 @@ export type ProfileViewerState = {
 
 export type ProfileViewerStates = HydrationMap<ProfileViewerState>
 
+export type KnownFollowers = HydrationMap<ProfileViewerState['knownFollowers']>
+
 export type ProfileAgg = {
   followers: number
   follows: number
@@ -150,26 +152,14 @@ export class ActorHydrator {
   async getProfileViewerStatesNaive(
     dids: string[],
     viewer: string,
-    hydrateKnownFollowers = false,
   ): Promise<ProfileViewerStates> {
     if (!dids.length) return new HydrationMap<ProfileViewerState>()
 
-    const knownFollowersRequests = hydrateKnownFollowers
-      ? dids.map(async (did) => {
-          const followsFollowing = await this.dataplane.getFollowsFollowing({
-            actorDid: viewer,
-            targetDid: did,
-          })
-          return followsFollowing.dids
-        })
-      : []
-
-    const [res, resolvedKnownFollowers] = await Promise.all([
+    const [res] = await Promise.all([
       this.dataplane.getRelationships({
         actorDid: viewer,
         targetDids: dids,
       }),
-      Promise.all(knownFollowersRequests),
     ])
 
     return dids.reduce((acc, did, i) => {
@@ -178,7 +168,6 @@ export class ActorHydrator {
         // ignore self-follows, self-mutes, self-blocks
         return acc.set(did, {})
       }
-      const knownFollowersDids = resolvedKnownFollowers[i]
       return acc.set(did, {
         muted: rels.muted ?? false,
         mutedByList: parseString(rels.mutedByList),
@@ -188,15 +177,36 @@ export class ActorHydrator {
         blockingByList: parseString(rels.blockingByList),
         following: parseString(rels.following),
         followedBy: parseString(rels.followedBy),
-        knownFollowers:
-          knownFollowersDids && knownFollowersDids.length > 0
-            ? {
-                count: knownFollowersDids?.length ?? 0,
-                followers: (knownFollowersDids ?? []).slice(0, 5),
-              }
-            : undefined,
       })
     }, new HydrationMap<ProfileViewerState>())
+  }
+
+  async getKnownFollowers(
+    dids: string[],
+    viewer: string | null,
+  ): Promise<KnownFollowers> {
+    if (!viewer) return new HydrationMap<ProfileViewerState['knownFollowers']>()
+    const knownFollowersResults = await Promise.all(
+      dids.map(async (did) => {
+        const followsFollowing = await this.dataplane.getFollowsFollowing({
+          actorDid: viewer,
+          targetDid: did,
+        })
+        return followsFollowing.dids
+      }),
+    )
+    return dids.reduce((acc, did, i) => {
+      const result = knownFollowersResults[i]
+      return acc.set(
+        did,
+        result && result.length > 0
+          ? {
+              count: result.length,
+              followers: result.slice(0, 5),
+            }
+          : undefined,
+      )
+    }, new HydrationMap<ProfileViewerState['knownFollowers']>())
   }
 
   async getProfileAggregates(dids: string[]): Promise<ProfileAggs> {

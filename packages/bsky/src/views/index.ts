@@ -108,11 +108,10 @@ export class Views {
     if (!actor) return
     const baseView = this.profile(did, state)
     if (!baseView) return
-    const viewer = state.profileViewers?.get(did)
-    const knownFollowers =
-      viewer && viewer.knownFollowers
-        ? this.knownFollowers(viewer.knownFollowers, state)
-        : undefined
+    const knownFollowersSkeleton = state.knownFollowers?.get(did)
+    const knownFollowers = knownFollowersSkeleton
+      ? this.knownFollowers(knownFollowersSkeleton, state)
+      : undefined
     const profileAggs = state.profileAggs?.get(did)
     return {
       ...baseView,

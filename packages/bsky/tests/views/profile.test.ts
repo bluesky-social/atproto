@@ -100,7 +100,7 @@ describe('pds profile views', () => {
     expect(follow.viewer?.knownFollowers).toBeFalsy()
   })
 
-  it('returns knownFollowers viewer data', async () => {
+  it('getKnownFollowers works', async () => {
     const { data } = await agent.api.app.bsky.graph.getKnownFollowers(
       { actor: carol },
       { headers: await network.serviceHeaders(alice) },
