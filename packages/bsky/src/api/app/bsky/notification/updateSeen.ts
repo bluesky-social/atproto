@@ -1,4 +1,4 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import { Struct, Timestamp } from '@bufbuild/protobuf'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -11,6 +11,21 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.dataplane.updateNotificationSeen({
         actorDid: viewer,
         timestamp: Timestamp.fromDate(new Date(seenAt)),
+      })
+      await ctx.courierClient.pushNotifications({
+        notifications: [
+          {
+            id: 'mark-read-generic',
+            clientControlled: true,
+            recipientDid: viewer,
+            alwaysDeliver: true,
+            collapseKey: 'mark-read-generic',
+            timestamp: Timestamp.fromDate(new Date()),
+            additional: Struct.fromJson({
+              reason: 'mark-read-generic',
+            }),
+          },
+        ],
       })
     },
   })
