@@ -1,5 +1,3 @@
-import { keyBy } from '@atproto/common'
-import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { FollowsFollowing } from '../../../proto/bsky_pb'
 import { Database } from '../db'
@@ -128,10 +126,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         )
         .select(['subjectDid'])
       const rows = await followsReq.execute()
-      results.push({
-        targetDid: subjectDid,
-        dids: rows.map((r) => r.subjectDid),
-      } as FollowsFollowing)
+      results.push(
+        new FollowsFollowing({
+          targetDid: subjectDid,
+          dids: rows.map((r) => r.subjectDid),
+        }),
+      )
     }
 
     return { results }
