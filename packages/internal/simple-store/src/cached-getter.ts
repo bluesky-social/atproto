@@ -111,6 +111,7 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
             throw err
           })
           .then(async (value) => {
+            // The value should be stored even is the signal was aborted.
             await this.setStored(key, value)
             return { isFresh: true, value }
           })
@@ -120,8 +121,8 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
       })
 
     if (this.pending.has(key)) {
-      // This should never happen. Indeed, there most not be any 'await'
-      // between this and the loop iteration check meaning that
+      // This should never happen. Indeed, there must not be any 'await'
+      // statement between this and the loop iteration check meaning that
       // this.pending.get returned undefined. It is there to catch bugs that
       // would occur in future changes to the code.
       throw new Error('Concurrent request for the same key')
