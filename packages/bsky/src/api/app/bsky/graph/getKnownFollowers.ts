@@ -59,8 +59,8 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     actorDid: params.hydrateCtx.viewer,
     targetDids: [subjectDid],
   })
-  const result = res.results[0]
-  const knownFollowers = result ? result.dids.slice(0, params.limit || 50) : []
+  const result = res.results.at(0)
+  const knownFollowers = result ? result.dids.slice(0, params.limit) : []
 
   return {
     subjectDid,
