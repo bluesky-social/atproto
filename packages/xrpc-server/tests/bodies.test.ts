@@ -1,6 +1,5 @@
 import * as http from 'http'
 import { Readable } from 'stream'
-import { ReadableStream } from 'stream/web'
 import { gzipSync } from 'zlib'
 import getPort from 'get-port'
 import { LexiconDoc } from '@atproto/lexicon'
