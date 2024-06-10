@@ -21,8 +21,6 @@ import {
 } from '@atproto/oauth-types'
 
 import { FALLBACK_ALG } from './constants.js'
-import { CryptoImplementation } from './crypto-implementation.js'
-import { CryptoWrapper } from './crypto-wrapper.js'
 import { OAuthAgent } from './oauth-agent.js'
 import {
   AuthorizationServerMetadataCache,
@@ -36,6 +34,8 @@ import {
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
+import { RuntimeImplementation } from './runtime-implementation.js'
+import { Runtime } from './runtime.js'
 import { SessionGetter, SessionStore } from './session-getter.js'
 import { AuthorizeOptions, ClientMetadata } from './types.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
@@ -58,7 +58,6 @@ export type StateStore = SimpleStore<string, InternalStateData>
 // Export all types needed to construct OAuthClientOptions
 export type {
   AuthorizationServerMetadataCache,
-  CryptoImplementation,
   DpopNonceCache,
   GlobalFetch,
   Keyset,
@@ -66,6 +65,7 @@ export type {
   OAuthClientMetadataInput,
   OAuthResponseMode,
   ProtectedResourceMetadataCache,
+  RuntimeImplementation,
   SessionStore,
 }
 
@@ -87,7 +87,7 @@ export type OAuthClientOptions = {
   // Services
   handleResolver: HandleResolver | URL | string
   plcDirectoryUrl?: URL | string
-  cryptoImplementation: CryptoImplementation
+  runtimeImplementation: RuntimeImplementation
   fetch?: GlobalFetch
 }
 
@@ -98,9 +98,9 @@ export class OAuthClient {
   readonly keyset?: Keyset
 
   // Services
-  readonly crypto: CryptoWrapper
+  readonly runtime: Runtime
   readonly fetch: GlobalFetch
-  readonly resolver: OAuthResolver
+  readonly oauthResolver: OAuthResolver
   readonly serverFactory: OAuthServerFactory
 
   // Stores
@@ -129,7 +129,7 @@ export class OAuthClient {
     clientMetadata,
     handleResolver,
     plcDirectoryUrl,
-    cryptoImplementation,
+    runtimeImplementation,
     keyset,
   }: OAuthClientOptions) {
     this.keyset = keyset
@@ -140,9 +140,9 @@ export class OAuthClient {
     this.clientMetadata = validateClientMetadata(clientMetadata, this.keyset)
     this.responseMode = responseMode
 
-    this.crypto = new CryptoWrapper(cryptoImplementation)
+    this.runtime = new Runtime(runtimeImplementation)
     this.fetch = fetch
-    this.resolver = new OAuthResolver(
+    this.oauthResolver = new OAuthResolver(
       new IdentityResolver(
         new DidResolverCached(
           new DidResolverCommon({ fetch, plcDirectoryUrl }),
@@ -164,15 +164,34 @@ export class OAuthClient {
     )
     this.serverFactory = new OAuthServerFactory(
       this.clientMetadata,
-      this.crypto,
-      this.resolver,
+      this.runtime,
+      this.oauthResolver,
       this.fetch,
       this.keyset,
       dpopNonceCache,
     )
 
-    this.sessionGetter = new SessionGetter(sessionStore, this.serverFactory)
+    this.sessionGetter = new SessionGetter(
+      sessionStore,
+      this.serverFactory,
+      this.runtime,
+    )
     this.stateStore = stateStore
+  }
+
+  // Exposed as public API for convenience
+  get identityResolver() {
+    return this.oauthResolver.identityResolver
+  }
+
+  // Exposed as public API for convenience
+  get didResolver() {
+    return this.identityResolver.didResolver
+  }
+
+  // Exposed as public API for convenience
+  get handleResolver() {
+    return this.identityResolver.handleResolver
   }
 
   async authorize(
@@ -193,17 +212,17 @@ export class OAuthClient {
         // DID)
         {
           identity: undefined,
-          metadata: await this.resolver.resolveMetadata(input, { signal }),
+          metadata: await this.oauthResolver.resolveMetadata(input, { signal }),
         }
-      : await this.resolver.resolve(input, { signal })
+      : await this.oauthResolver.resolve(input, { signal })
 
-    const nonce = await this.crypto.generateNonce()
-    const pkce = await this.crypto.generatePKCE()
-    const dpopKey = await this.crypto.generateKey(
+    const nonce = await this.runtime.generateNonce()
+    const pkce = await this.runtime.generatePKCE()
+    const dpopKey = await this.runtime.generateKey(
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
     )
 
-    const state = await this.crypto.generateNonce()
+    const state = await this.runtime.generateNonce()
 
     await this.stateStore.set(state, {
       iss: metadata.issuer,
@@ -280,7 +299,7 @@ export class OAuthClient {
 
   async callback(params: URLSearchParams): Promise<{
     agent: OAuthAgent
-    state?: string
+    state: string | null
   }> {
     const responseJwt = params.get('response')
     if (responseJwt != null) {
@@ -350,7 +369,7 @@ export class OAuthClient {
       const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
       try {
         if (tokenSet.id_token) {
-          await this.crypto.validateIdTokenClaims(
+          await this.runtime.validateIdTokenClaims(
             tokenSet.id_token,
             stateParam,
             stateData.nonce,
@@ -359,16 +378,16 @@ export class OAuthClient {
           )
         }
 
-        const sessionId = await this.crypto.generateNonce(4)
+        const { sub } = tokenSet
 
-        await this.sessionGetter.setStored(sessionId, {
+        await this.sessionGetter.setStored(sub, {
           dpopKey: stateData.dpopKey,
           tokenSet,
         })
 
-        const agent = this.createAgent(server, sessionId)
+        const agent = this.createAgent(server, sub)
 
-        return { agent, state: stateData.appState }
+        return { agent, state: stateData.appState ?? null }
       } catch (err) {
         await server.revoke(tokenSet.access_token)
 
@@ -387,9 +406,9 @@ export class OAuthClient {
    *
    * @param refresh See {@link SessionGetter.getSession}
    */
-  async restore(sessionId: string, refresh?: boolean): Promise<OAuthAgent> {
+  async restore(sub: string, refresh?: boolean): Promise<OAuthAgent> {
     const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
-      sessionId,
+      sub,
       refresh,
     )
 
@@ -398,21 +417,21 @@ export class OAuthClient {
       allowStale: refresh === false,
     })
 
-    return this.createAgent(server, sessionId)
+    return this.createAgent(server, sub)
   }
 
-  async revoke(sessionId: string) {
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sessionId, {
+  async revoke(sub: string) {
+    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
       allowStale: true,
     })
 
     const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
 
     await server.revoke(tokenSet.access_token)
-    await this.sessionGetter.delStored(sessionId)
+    await this.sessionGetter.delStored(sub)
   }
 
-  createAgent(server: OAuthServerAgent, sessionId: string): OAuthAgent {
-    return new OAuthAgent(server, sessionId, this.sessionGetter, this.fetch)
+  createAgent(server: OAuthServerAgent, sub: string): OAuthAgent {
+    return new OAuthAgent(server, sub, this.sessionGetter, this.fetch)
   }
 }

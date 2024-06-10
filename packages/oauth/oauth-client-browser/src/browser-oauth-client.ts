@@ -5,7 +5,7 @@ import {
   OAuthCallbackError,
   OAuthClient,
   Session,
-  SessionStore,
+  TokenSet,
 } from '@atproto/oauth-client'
 import {
   OAuthClientMetadataInput,
@@ -17,7 +17,7 @@ import {
   BrowserOAuthDatabase,
   DatabaseStore,
 } from './browser-oauth-database.js'
-import { CryptoSubtle } from './crypto-subtle.js'
+import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
 
 export type BrowserOAuthClientOptions = {
@@ -25,101 +25,113 @@ export type BrowserOAuthClientOptions = {
   handleResolver?: HandleResolver | string | URL
   responseMode?: OAuthResponseMode
   plcDirectoryUrl?: string | URL
+
+  crypto?: typeof globalThis.crypto
   fetch?: typeof globalThis.fetch
-  crypto?: Crypto
 }
 
-export interface SessionListener {
-  (event: 'updated', sessionId: string, session: Session): void
-  (event: 'revoked', sessionId: string): void
-  (event: 'deleted', sessionId: string): void
+type EventDetails = {
+  updated: TokenSet
+  deleted: { sub: string }
 }
+
+type CustomEventListener<T extends keyof EventDetails = keyof EventDetails> = (
+  event: CustomEvent<EventDetails[T]>,
+) => void
+
+const initEvent = <T extends keyof EventDetails>(
+  type: T,
+  detail: EventDetails[T],
+) => new CustomEvent(type, { detail, cancelable: false, bubbles: false })
 
 const NAMESPACE = `@@atproto/oauth-client-browser`
+
+//- Popup channel
 
 const POPUP_CHANNEL_NAME = `${NAMESPACE}(popup-channel)`
 const POPUP_STATE_PREFIX = `${NAMESPACE}(popup-state):`
 
-const REVOKE_CHANNEL_NAME = `${NAMESPACE}(revoke-channel)`
-
-type ChannelResultData = {
+type PopupChannelResultData = {
   key: string
-  result:
-    | PromiseRejectedResult
-    | PromiseFulfilledResult<{
-        sessionId: string
-      }>
+  result: PromiseRejectedResult | PromiseFulfilledResult<string>
 }
 
-type ChannelAckData = {
+type PopupChannelAckData = {
   key: string
   ack: true
 }
 
-type ChannelData = ChannelResultData | ChannelAckData
+type PopupChannelData = PopupChannelResultData | PopupChannelAckData
 
-const revokeChannel = new BroadcastChannel(REVOKE_CHANNEL_NAME)
+//- Deleted channel
 
+const deletedChannel = new BroadcastChannel(`${NAMESPACE}(deleted-channel)`)
+
+type WrappedSessionStore = Disposable & DatabaseStore<Session>
 const wrapSessionStore = (
   dbStore: DatabaseStore<Session>,
-  listeners: readonly SessionListener[],
-): Required<SessionStore & DatabaseStore<Session>> => {
-  const onMessage = (event: MessageEvent<{ sessionId: string }>) => {
-    if (event.source !== window) {
-      // If the message was posted from the current window, the "delete" event
-      // will already have been triggered.
-      for (const listener of listeners) {
-        listener('revoked', event.data.sessionId)
-      }
-    }
-  }
-
-  revokeChannel.addEventListener('message', onMessage)
-
-  return {
+  eventTarget: EventTarget,
+) => {
+  const store: WrappedSessionStore = {
     getKeys: async () => {
       return dbStore.getKeys()
     },
-    get: async (sessionId) => {
-      return dbStore.get(sessionId)
+    get: async (sub) => {
+      return dbStore.get(sub)
     },
-    set: async (sessionId, session) => {
-      await dbStore.set(sessionId, session)
-      for (const listener of listeners) {
-        listener('updated', sessionId, session)
-      }
-    },
-    del: async (sessionId) => {
-      await dbStore.del(sessionId)
-      revokeChannel.postMessage({ sessionId })
+    set: async (sub, session) => {
+      await dbStore.set(sub, session)
 
-      for (const listener of listeners) {
-        listener('deleted', sessionId)
-      }
+      eventTarget.dispatchEvent(initEvent('updated', session.tokenSet))
     },
-    revoked: (sessionId) => {
-      for (const listener of listeners) {
-        listener('revoked', sessionId)
-      }
+    del: async (sub) => {
+      await dbStore.del(sub)
+      deletedChannel.postMessage(sub)
+
+      eventTarget.dispatchEvent(initEvent('deleted', { sub }))
     },
     clear: async () => {
       await dbStore.clear?.()
     },
+    [Symbol.dispose]: () => {
+      deletedChannel.removeEventListener('message', onMessage)
+    },
   }
+
+  const onMessage = (event: MessageEvent<string>) => {
+    // Listen for "deleted" events from other windows. The content will already
+    // have been deleted from the store so we only need to notify the listeners.
+    if (event.source !== window) {
+      const sub = event.data
+      eventTarget.dispatchEvent(initEvent('deleted', { sub }))
+    }
+  }
+
+  deletedChannel.addEventListener('message', onMessage)
+
+  return store
+}
+
+export type BrowserOAuthClientLoadOptions = Omit<
+  BrowserOAuthClientOptions,
+  'clientMetadata'
+> & {
+  signal?: AbortSignal
 }
 
 export class BrowserOAuthClient extends OAuthClient {
-  static async load(
-    options: Omit<BrowserOAuthClientOptions, 'clientMetadata'>,
-  ) {
+  static async load(options: BrowserOAuthClientLoadOptions) {
     const fetch = options?.fetch ?? globalThis.fetch
     const request = new Request('/.well-known/oauth-client-metadata', {
       redirect: 'error',
+      signal: options.signal,
     })
     const response = await fetch(request)
     if (!response.ok) throw new TypeError('Failed to fetch client metadata')
 
     const json: unknown = await response.json()
+
+    options.signal?.throwIfAborted()
 
     return new BrowserOAuthClient({
       clientMetadata: oauthClientMetadataSchema.parse(json),
@@ -127,9 +139,9 @@ export class BrowserOAuthClient extends OAuthClient {
     })
   }
 
-  readonly sessionStore: DatabaseStore<Session>
+  readonly sessionStore: WrappedSessionStore
 
-  private readonly listeners: SessionListener[]
+  private readonly eventTarget: EventTarget
   private readonly database: BrowserOAuthDatabase
 
   constructor({
@@ -143,8 +155,11 @@ export class BrowserOAuthClient extends OAuthClient {
   }: BrowserOAuthClientOptions = {}) {
     const database = new BrowserOAuthDatabase()
 
-    const listeners = []
-    const sessionStore = wrapSessionStore(database.getSessionStore(), listeners)
+    const eventTarget = new EventTarget()
+    const sessionStore = wrapSessionStore(
+      database.getSessionStore(),
+      eventTarget,
+    )
 
     super({
       clientMetadata:
@@ -161,7 +176,7 @@ export class BrowserOAuthClient extends OAuthClient {
 
       responseMode,
       fetch,
-      cryptoImplementation: new CryptoSubtle(crypto),
+      runtimeImplementation: new BrowserRuntimeImplementation(crypto),
       plcDirectoryUrl,
       handleResolver,
       sessionStore,
@@ -178,44 +193,48 @@ export class BrowserOAuthClient extends OAuthClient {
 
     this.sessionStore = sessionStore
 
-    this.listeners = listeners
+    this.eventTarget = eventTarget
     this.database = database
 
     fixLocation(this.clientMetadata)
   }
 
-  onSession(listener: SessionListener) {
-    this.listeners.push(listener)
-    let called = false
-    return () => {
-      if (called) return
-      called = true
+  addEventListener<T extends keyof EventDetails>(
+    type: T,
+    callback: CustomEventListener<T> | null,
+    options?: AddEventListenerOptions | boolean,
+  ) {
+    this.eventTarget.addEventListener(type, callback as EventListener, options)
+  }
 
-      const index = this.listeners.indexOf(listener)
-      if (index !== -1) this.listeners.splice(index, 1)
-    }
+  removeEventListener(
+    type: string,
+    callback: CustomEventListener | null,
+    options?: EventListenerOptions | boolean,
+  ) {
+    this.eventTarget.removeEventListener(
+      type,
+      callback as EventListener,
+      options,
+    )
   }
 
   async restoreAll() {
-    const sessionIds = await this.sessionStore.getKeys()
+    const subs = await this.sessionStore.getKeys()
     return Object.fromEntries(
       await Promise.all(
-        sessionIds.map(async (sessionId) => {
-          return [sessionId, await this.restore(sessionId, false)] as const
-        }),
+        subs.map(async (sub) => [sub, await this.restore(sub, false)] as const),
       ),
     )
   }
 
-  async init(sessionId?: string, refresh?: boolean) {
+  async init(sub?: string, refresh?: boolean) {
     const signInResult = await this.signInCallback()
     if (signInResult) {
       return signInResult
-    } else if (sessionId) {
-      const agent = await this.restore(sessionId, refresh)
+    } else if (sub) {
+      const agent = await this.restore(sub, refresh)
       return { agent }
-    } else {
-      // @TODO: we could restore any session from the store ?
     }
   }
 
@@ -272,12 +291,12 @@ export class BrowserOAuthClient extends OAuthClient {
     popup?.focus()
 
     return new Promise<OAuthAgent>((resolve, reject) => {
-      const channel = new BroadcastChannel(POPUP_CHANNEL_NAME)
+      const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
 
       const cleanup = () => {
         clearTimeout(timeout)
-        channel.removeEventListener('message', onMessage)
-        channel.close()
+        popupChannel.removeEventListener('message', onMessage)
+        popupChannel.close()
         options?.signal?.removeEventListener('abort', cancel)
         popup?.close()
       }
@@ -294,24 +313,24 @@ export class BrowserOAuthClient extends OAuthClient {
 
       const timeout = setTimeout(cancel, 5 * 60e3)
 
-      const onMessage = async ({ data }: MessageEvent<ChannelData>) => {
+      const onMessage = async ({ data }: MessageEvent<PopupChannelData>) => {
         if (data.key !== stateKey) return
         if (!('result' in data)) return
 
         // Send acknowledgment to popup window
-        channel.postMessage({ key: stateKey, ack: true })
+        popupChannel.postMessage({ key: stateKey, ack: true })
 
         cleanup()
 
         const { result } = data
         if (result.status === 'fulfilled') {
-          const { sessionId } = result.value
+          const sub = result.value
           try {
             options?.signal?.throwIfAborted()
-            resolve(await this.restore(sessionId))
+            resolve(await this.restore(sub))
           } catch (err) {
             reject(err)
-            void this.revoke(sessionId)
+            void this.revoke(sub)
           }
         } else {
           const { message, params } = result.reason
@@ -319,7 +338,7 @@ export class BrowserOAuthClient extends OAuthClient {
         }
       }
 
-      channel.addEventListener('message', onMessage)
+      popupChannel.addEventListener('message', onMessage)
     })
   }
 
@@ -356,14 +375,14 @@ export class BrowserOAuthClient extends OAuthClient {
     // the following code to run again if the user refreshes the page)
     history.replaceState(null, '', location.pathname)
 
-    const sendResult = (message: ChannelResultData) => {
-      const channel = new BroadcastChannel(POPUP_CHANNEL_NAME)
+    const sendResult = (message: PopupChannelResultData) => {
+      const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
 
       return new Promise<boolean>((resolve) => {
         const cleanup = (result: boolean) => {
           clearTimeout(timer)
-          channel.removeEventListener('message', onMessage)
-          channel.close()
+          popupChannel.removeEventListener('message', onMessage)
+          popupChannel.close()
           resolve(result)
         }
 
@@ -371,14 +390,12 @@ export class BrowserOAuthClient extends OAuthClient {
           cleanup(false)
         }
 
-        const onMessage = ({ data }: MessageEvent<ChannelData>) => {
-          if (message.key !== data.key || !('ack' in data)) return
-
-          cleanup(true)
+        const onMessage = ({ data }: MessageEvent<PopupChannelData>) => {
+          if ('ack' in data && message.key === data.key) cleanup(true)
         }
 
-        channel.addEventListener('message', onMessage)
-        channel.postMessage(message)
+        popupChannel.addEventListener('message', onMessage)
+        popupChannel.postMessage(message)
         // Receiving of "ack" should be very fast, giving it 500 ms anyway
         const timer = setTimeout(onTimeout, 500)
       })
@@ -391,9 +408,7 @@ export class BrowserOAuthClient extends OAuthClient {
             key: result.state.slice(POPUP_STATE_PREFIX.length),
             result: {
               status: 'fulfilled',
-              value: {
-                sessionId: result.agent.sessionId,
-              },
+              value: result.agent.sub,
             },
           })
 
@@ -439,6 +454,8 @@ export class BrowserOAuthClient extends OAuthClient {
   }
 
   async [Symbol.asyncDispose]() {
+    // TODO This should be implemented using a DisposableStack
+    await this.sessionStore[Symbol.dispose]()
     await this.database[Symbol.asyncDispose]()
   }
 }

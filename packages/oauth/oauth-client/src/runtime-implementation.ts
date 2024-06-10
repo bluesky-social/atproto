@@ -6,11 +6,12 @@ export type DigestAlgorithm = {
 
 export type { Key }
 
-export interface CryptoImplementation {
+export interface RuntimeImplementation {
   createKey(algs: string[]): Key | PromiseLike<Key>
   getRandomValues: (length: number) => Uint8Array | PromiseLike<Uint8Array>
   digest: (
     bytes: Uint8Array,
     algorithm: DigestAlgorithm,
   ) => Uint8Array | PromiseLike<Uint8Array>
+  requestLock?: <T>(name: string, fn: () => T | PromiseLike<T>) => Promise<T>
 }

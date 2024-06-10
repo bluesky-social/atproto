@@ -18,7 +18,7 @@ const client = new OAuthClient({
     // loopback client)
   },
 
-  cryptoImplementation: {
+  runtimeImplementation: {
     // A runtime specific implementation of the crypto operations needed by the
     // OAuth client.
 
@@ -74,13 +74,13 @@ const client = new OAuthClient({
   sessionStore: {
     // A store for saving session data.
 
-    set(sessionId: string, session: Session): Promise<void> {
+    set(sub: string, session: Session): Promise<void> {
       throw new Error('Not implemented')
     },
-    get(sessionId: string): Promise<Session | undefined> {
+    get(sub: string): Promise<Session | undefined> {
       throw new Error('Not implemented')
     },
-    del(sessionId: string): Promise<void> {
+    del(sub: string): Promise<void> {
       throw new Error('Not implemented')
     },
   },
@@ -112,8 +112,8 @@ const result = await client.callback(params)
 // Verify the state (e.g. to link to an internal user)
 result.state === '434321'
 
-// The session ID that was saved in the session store
-result.agent.sessionId
+// The authenticated user's identifier
+result.agent.sub
 
 // Make an authenticated request to the server. New credentials will be
 // automatically fetched if needed (causing sessionStore.set() to be called).

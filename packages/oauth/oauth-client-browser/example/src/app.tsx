@@ -4,14 +4,6 @@ import { useCallback, useState } from 'react'
 import LoginForm from './login-form'
 import { useOAuth } from './oauth'
 
-/**
- * State data that we want to persist across the OAuth flow, when the user is
- * "logging in".
- */
-export type AppState = {
-  foo: string
-}
-
 const client = new BrowserOAuthClient({
   plcDirectoryUrl: 'http://localhost:2582', // dev-env
   handleResolver: 'http://localhost:2584', // dev-env
@@ -24,23 +16,20 @@ const client = new BrowserOAuthClient({
 })
 
 function App() {
-  const { initialized, oauthAgent, signedIn, signOut, error, loading, signIn } =
-    useOAuth(client)
+  const { agent, signedIn, signOut, loading, signIn } = useOAuth(client)
   const [profile, setProfile] = useState<{
     value: { displayName?: string }
   } | null>(null)
 
   const loadProfile = useCallback(async () => {
-    if (!oauthAgent) return
+    if (!agent) return
 
-    const info = await oauthAgent.getUserinfo()
+    const info = await agent.getInfo()
     console.log('info', info)
-
-    if (!oauthAgent) return
 
     // A call that requires to be authenticated
     console.log(
-      await oauthAgent
+      await agent
         .request(
           '/xrpc/com.atproto.server.getServiceAuth?' +
             new URLSearchParams({ aud: info.sub }).toString(),
@@ -49,7 +38,7 @@ function App() {
     )
 
     // This call does not require authentication
-    const profile = await oauthAgent
+    const profile = await agent
       .request(
         '/xrpc/com.atproto.repo.getRecord?' +
           new URLSearchParams({
@@ -59,15 +48,10 @@ function App() {
           }).toString(),
       )
       .then((r) => r.json())
-
     console.log(profile)
 
     setProfile(profile.data)
-  }, [oauthAgent])
-
-  if (!initialized) {
-    return <p>{error || 'Loading...'}</p>
-  }
+  }, [agent])
 
   return signedIn ? (
     <div>
@@ -80,7 +64,7 @@ function App() {
       <button onClick={signOut}>Logout</button>
     </div>
   ) : (
-    <LoginForm error={error} loading={loading} onLogin={signIn} />
+    <LoginForm loading={loading} onLogin={signIn} />
   )
 }
 

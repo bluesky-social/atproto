@@ -1,30 +1,26 @@
-import { AuthorizeOptions, OAuthAgent } from '@atproto/oauth-client'
+import { OAuthAgent, AuthorizeOptions } from '@atproto/oauth-client'
 import {
   BrowserOAuthClient,
   LoginContinuedInParentWindowError,
 } from '@atproto/oauth-client-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const CURRENT_SESSION_ID_KEY = 'CURRENT_SESSION_ID_KEY'
+const CURRENT_AUTHENTICATED_SUB = 'CURRENT_AUTHENTICATED_SUB'
 
 export function useOAuth(client: BrowserOAuthClient) {
-  const [oauthAgent, setOAuthAgent] = useState<undefined | null | OAuthAgent>(
-    void 0,
-  )
-  const [error, setError] = useState<null | string>(null)
+  const [agent, setAgent] = useState<null | OAuthAgent>(null)
   const [loading, setLoading] = useState(true)
-  const [state, setState] = useState<undefined | string>(undefined)
 
   useEffect(() => {
     // Ignore init step
-    if (oauthAgent === undefined) return
+    if (loading) return
 
-    if (oauthAgent) {
-      localStorage.setItem(CURRENT_SESSION_ID_KEY, oauthAgent.sessionId)
+    if (agent) {
+      localStorage.setItem(CURRENT_AUTHENTICATED_SUB, agent.sub)
     } else {
-      localStorage.removeItem(CURRENT_SESSION_ID_KEY)
+      localStorage.removeItem(CURRENT_AUTHENTICATED_SUB)
     }
-  }, [oauthAgent])
+  }, [loading, agent])
 
   const clientRef = useRef<typeof client>()
   useEffect(() => {
@@ -32,18 +28,18 @@ export function useOAuth(client: BrowserOAuthClient) {
     if (clientRef.current === client) return
     clientRef.current = client
 
-    setOAuthAgent(undefined)
-    setError(null)
     setLoading(true)
-    setState(undefined)
+    setAgent(null)
+
+    const subToLoad =
+      localStorage.getItem(CURRENT_AUTHENTICATED_SUB) || undefined
 
     client
-      .init(localStorage.getItem(CURRENT_SESSION_ID_KEY) || undefined)
+      .init(subToLoad)
       .then(async (r) => {
         if (clientRef.current !== client) return
 
-        setOAuthAgent(r?.agent || null)
-        setState(r?.state)
+        setAgent(r?.agent || null)
       })
       .catch((err) => {
         console.error('Failed to init:', err)
@@ -51,9 +47,8 @@ export function useOAuth(client: BrowserOAuthClient) {
         if (clientRef.current !== client) return
         if (err instanceof LoginContinuedInParentWindowError) return
 
-        localStorage.removeItem(CURRENT_SESSION_ID_KEY)
-        setOAuthAgent(null)
-        setError(String(err))
+        localStorage.removeItem(CURRENT_AUTHENTICATED_SUB)
+        setAgent(null)
       })
       .finally(() => {
         if (clientRef.current !== client) return
@@ -63,66 +58,61 @@ export function useOAuth(client: BrowserOAuthClient) {
   }, [client])
 
   useEffect(() => {
-    if (!oauthAgent) return
+    if (!agent) return
 
-    return client.onSession((event, sessionId): void => {
-      if (
-        (event === 'revoked' || event === 'deleted') &&
-        sessionId === oauthAgent.sessionId
-      ) {
-        setOAuthAgent(null)
-        setError(null)
+    const clear = ({ detail }: { detail: { sub: string } }) => {
+      if (detail.sub === agent.sub) {
+        setAgent(null)
         setLoading(true)
-        setState(undefined)
       }
-    })
-  }, [client, oauthAgent])
+    }
+
+    client.addEventListener('deleted', clear)
+
+    return () => {
+      client.removeEventListener('deleted', clear)
+    }
+  }, [client, agent])
 
   const signOut = useCallback(async () => {
-    if (!oauthAgent) return
+    if (!agent) return
 
-    setOAuthAgent(null)
-    setError(null)
+    setAgent(null)
     setLoading(true)
-    setState(undefined)
 
     try {
-      await oauthAgent.signOut()
+      await agent.signOut()
     } catch (err) {
       console.error('Failed to clear credentials', err)
-      setError(String(err))
+      throw err
     } finally {
       setLoading(false)
     }
-  }, [oauthAgent])
+  }, [agent])
 
   const signIn = useCallback(
     async (input: string, options?: AuthorizeOptions) => {
-      if (oauthAgent) return
+      if (agent) return
 
       setLoading(true)
-      setState(undefined)
 
       try {
         const agent = await client.signIn(input, options)
-        setOAuthAgent(agent)
+        setAgent(agent)
       } catch (err) {
         console.error('Failed to login', err)
-        setError(String(err))
+        throw err
       } finally {
         setLoading(false)
       }
     },
-    [oauthAgent, client],
+    [agent, client],
   )
 
   return {
-    initialized: oauthAgent !== undefined,
-    oauthAgent: oauthAgent ?? null,
-    state,
+    agent,
     loading,
-    error,
-    signedIn: oauthAgent != null,
+    signedIn: agent != null,
     signIn,
     signOut,
   }

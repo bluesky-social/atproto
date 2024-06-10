@@ -1,15 +1,30 @@
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'
 import {
-  Key,
-  CryptoImplementation,
   DigestAlgorithm,
+  Key,
+  RuntimeImplementation,
 } from '@atproto/oauth-client'
 
-export class CryptoSubtle implements CryptoImplementation {
-  constructor(private crypto: Crypto = globalThis.crypto) {
+export class BrowserRuntimeImplementation implements RuntimeImplementation {
+  // https://developer.mozilla.org/en-US/docs/Web/API/LockManager/request
+  requestLock = navigator.locks?.request
+    ? <T>(name: string, fn: () => T | PromiseLike<T>): Promise<T> =>
+        navigator.locks.request(name, { mode: 'exclusive' }, async () => fn())
+    : undefined
+
+  constructor(private crypto = globalThis.crypto) {
     if (!crypto?.subtle) {
       throw new Error(
         'Crypto with CryptoSubtle is required. If running in a browser, make sure the current page is loaded over HTTPS.',
+      )
+    }
+
+    if (!this.requestLock) {
+      // There is no real need to polyfill this on older browsers. The
+      // oauth-client library will try and recover from concurrency issues when
+      // refreshing tokens.
+      console.warn(
+        'Locks API not available. You should consider using a more recent browser.',
       )
     }
   }
