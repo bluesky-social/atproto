@@ -232,7 +232,9 @@ export class Views {
     state: HydrationState,
   ) {
     const followers = mapDefined(knownFollowers.followers, (did) => {
-      if (this.viewerBlockExists(did, state)) return undefined
+      if (this.viewerBlockExists(did, state)) {
+        return undefined
+      }
       return this.profileBasic(did, state)
     })
     return { count: knownFollowers.count, followers }
