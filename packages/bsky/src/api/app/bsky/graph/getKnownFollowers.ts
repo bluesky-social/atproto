@@ -54,13 +54,14 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   if (clearlyBadCursor(params.cursor)) {
     return { subjectDid, knownFollowers: [], cursor: undefined }
   }
-  const { knownFollowers } = await ctx.hydrator.graph.getKnownFollowers({
-    viewerDid: params.hydrateCtx.viewer,
-    subjectDid,
-    cursor: params.cursor,
-    // default here since no dataplane support
-    limit: params.limit || 50,
+
+  const res = await ctx.hydrator.dataplane.getFollowsFollowing({
+    actorDid: params.hydrateCtx.viewer,
+    targetDids: [subjectDid],
   })
+  const result = res.results[0]
+  const knownFollowers = result ? result.dids.slice(0, params.limit || 50) : []
+
   return {
     subjectDid,
     knownFollowers,
