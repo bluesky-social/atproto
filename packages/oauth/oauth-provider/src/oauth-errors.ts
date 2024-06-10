@@ -6,6 +6,7 @@ export { AccountSelectionRequiredError } from './errors/account-selection-requir
 export { ConsentRequiredError } from './errors/consent-required-error.js'
 export { InvalidAuthorizationDetailsError } from './errors/invalid-authorization-details-error.js'
 export { InvalidClientError } from './errors/invalid-client-error.js'
+export { InvalidClientIdError } from './errors/invalid-client-id-error.js'
 export { InvalidClientMetadataError } from './errors/invalid-client-metadata-error.js'
 export { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 export { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'

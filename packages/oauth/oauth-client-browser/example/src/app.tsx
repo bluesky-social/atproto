@@ -17,7 +17,7 @@ const client = new BrowserOAuthClient({
   handleResolver: 'http://localhost:2584', // dev-env
 
   clientMetadata: {
-    client_id: 'http://localhost/',
+    client_id: 'http://localhost',
     redirect_uris: ['http://127.0.0.1:8080/'],
     response_types: ['code id_token', 'code'],
   },

@@ -7,13 +7,13 @@ import { OAuthError } from './oauth-error.js'
  * rejected this request.  Note that an authorization server MAY choose to
  * substitute a valid value for any requested parameter of a client's metadata.
  */
-export class InvalidClientMetadataError extends OAuthError {
+export class InvalidClientIdError extends OAuthError {
   constructor(error_description: string, cause?: unknown) {
-    super('invalid_client_metadata', error_description, 400, cause)
+    super('invalid_client_id', error_description, 400, cause)
   }
 
-  static from(cause: unknown): InvalidClientMetadataError {
-    if (cause instanceof InvalidClientMetadataError) return cause
-    return new InvalidClientMetadataError('Invalid client configuration', cause)
+  static from(cause: unknown): InvalidClientIdError {
+    if (cause instanceof InvalidClientIdError) return cause
+    return new InvalidClientIdError('Invalid client identifier', cause)
   }
 }

@@ -1,6 +1,8 @@
 import { parse as pslParse } from 'psl'
 
-export function isLoopbackHost(host: string): boolean {
+export type LoopbackHost = 'localhost' | '127.0.0.1' | '[::1]'
+
+export function isLoopbackHost(host: unknown): host is LoopbackHost {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
 }
 

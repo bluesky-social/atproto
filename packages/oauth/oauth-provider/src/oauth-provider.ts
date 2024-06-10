@@ -1,14 +1,19 @@
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { SimpleStore } from '@atproto-labs/simple-store'
+import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Jwks, Keyset, SignedJwt, signedJwtSchema } from '@atproto/jwk'
 import {
   AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthenticationRequestParameters,
-  OAuthClientIdentification,
-  OAuthEndpointName,
   OAuthAuthorizationServerMetadata,
+  OAuthClientIdentification,
+  OAuthClientMetadata,
+  OAuthEndpointName,
   OAuthTokenType,
   oauthAuthenticationRequestParametersSchema,
 } from '@atproto/oauth-types'
+import { Redis, type RedisOptions } from 'ioredis'
 import { z } from 'zod'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
@@ -24,11 +29,10 @@ import { Account } from './account/account.js'
 import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
 import { ClientAuth, authJwkThumbprint } from './client/client-auth.js'
 import { ClientId, clientIdSchema } from './client/client-id.js'
-import { ClientManager } from './client/client-manager.js'
 import {
-  ClientStoreUri,
-  ClientStoreUriConfig,
-} from './client/client-store-uri.js'
+  ClientManager,
+  LoopbackMetadataGetter,
+} from './client/client-manager.js'
 import { ClientStore, ifClientStore } from './client/client-store.js'
 import { Client } from './client/client.js'
 import { AUTHENTICATION_MAX_AGE, TOKEN_MAX_AGE } from './constants.js'
@@ -138,7 +142,7 @@ export type RouterOptions<
 }
 
 export type OAuthProviderOptions = Override<
-  OAuthVerifierOptions & OAuthHooks & ClientStoreUriConfig,
+  OAuthVerifierOptions & OAuthHooks,
   {
     /**
      * Maximum age a device/account session can be before requiring
@@ -163,12 +167,20 @@ export type OAuthProviderOptions = Override<
      */
     customization?: Customization
 
-    accountStore?: AccountStore
-    deviceStore?: DeviceStore
-    clientStore?: ClientStore
-    replayStore?: ReplayStore
-    requestStore?: RequestStore
-    tokenStore?: TokenStore
+    /**
+     * A custom fetch function that can be used to fetch the client metadata from
+     * the internet. By default, the fetch function is a safeFetchWrap() function
+     * that protects against SSRF attacks, large responses & known bad domains. If
+     * you want to disable all protections, you can provide `globalThis.fetch` as
+     * fetch function.
+     */
+    safeFetch?: typeof globalThis.fetch
+
+    /**
+     * A redis instance to use for replay protection. If not provided, replay
+     * protection will use memory storage.
+     */
+    redis?: Redis | RedisOptions | string
 
     /**
      * This will be used as the default store for all the stores. If a store is
@@ -178,6 +190,39 @@ export type OAuthProviderOptions = Override<
      * `<name>Store` options.
      */
     store?: OAuthProviderStore
+
+    accountStore?: AccountStore
+    deviceStore?: DeviceStore
+    clientStore?: ClientStore
+    replayStore?: ReplayStore
+    requestStore?: RequestStore
+    tokenStore?: TokenStore
+
+    /**
+     * In order to speed up the client fetching process, you can provide a cache
+     * to store HTTP responses.
+     *
+     * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
+     */
+    clientJwksCache?: SimpleStore<string, Jwks>
+
+    /**
+     * In order to speed up the client fetching process, you can provide a cache
+     * to store HTTP responses.
+     *
+     * @note the cached entries should automatically expire after a certain time (typically 10 minutes)
+     */
+    clientMetadataCache?: SimpleStore<string, OAuthClientMetadata>
+
+    /**
+     * In order to enable loopback clients, you can provide a function that
+     * returns the client metadata for a given loopback URL. This is useful for
+     * development and testing purposes. This function is not called for internet
+     * clients.
+     *
+     * @default is as specified by ATPROTO
+     */
+    loopbackMetadata?: null | false | LoopbackMetadataGetter
   }
 >
 
@@ -199,22 +244,50 @@ export class OAuthProvider extends OAuthVerifier {
     authenticationMaxAge = AUTHENTICATION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
 
+    safeFetch = safeFetchWrap(),
+    redis,
     store, // compound store implementation
 
+    // Requires stores
     accountStore = asAccountStore(store),
     deviceStore = asDeviceStore(store),
     tokenStore = asTokenStore(store),
 
+    // These are optional
     clientStore = ifClientStore(store),
     replayStore = ifReplayStore(store),
     requestStore = ifRequestStore(store),
 
-    redis,
+    clientJwksCache = new SimpleStoreMemory({
+      maxSize: 50_000_000,
+      ttl: 600e3,
+    }),
+    clientMetadataCache = new SimpleStoreMemory({
+      maxSize: 50_000_000,
+      ttl: 600e3,
+    }),
+
+    loopbackMetadata = ({ origin, pathname, searchParams }) => ({
+      client_name: 'Loopback client',
+      response_types: ['code', 'code id_token'],
+      grant_types: ['authorization_code'],
+      scope: 'openid profile',
+      redirect_uris: searchParams.has('redirect_uri')
+        ? (searchParams.getAll('redirect_uri') as [string, ...string[]])
+        : (['127.0.0.1', '[::1]'].map(
+            (ip) =>
+              Object.assign(new URL(pathname, origin), { hostname: ip }).href,
+          ) as [string, ...string[]]),
+      token_endpoint_auth_method: 'none',
+      application_type: 'native',
+      dpop_bound_access_tokens: true,
+    }),
+
+    // OAuthHooks & OAuthVerifierOptions
     ...rest
   }: OAuthProviderOptions) {
     super({ replayStore, redis, ...rest })
 
-    clientStore ??= new ClientStoreUri(rest)
     requestStore ??= redis
       ? new RequestStoreRedis({ redis })
       : new RequestStoreMemory()
@@ -226,7 +299,15 @@ export class OAuthProvider extends OAuthVerifier {
     this.deviceStore = deviceStore
 
     this.accountManager = new AccountManager(accountStore, rest)
-    this.clientManager = new ClientManager(clientStore, this.keyset, rest)
+    this.clientManager = new ClientManager(
+      this.keyset,
+      rest,
+      clientStore || null,
+      loopbackMetadata || null,
+      safeFetch,
+      clientJwksCache,
+      clientMetadataCache,
+    )
     this.requestManager = new RequestManager(
       requestStore,
       this.signer,
