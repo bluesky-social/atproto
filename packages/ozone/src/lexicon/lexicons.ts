@@ -4123,7 +4123,7 @@ export const schemaDict = {
           },
           followers: {
             type: 'array',
-            minLength: 1,
+            minLength: 0,
             maxLength: 5,
             items: {
               type: 'ref',
