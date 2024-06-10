@@ -969,13 +969,21 @@ message GetRecordTakedownResponse {
 
 // Polo-backed Graph Endpoints
 
-// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
+
+
+// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the targets
 message GetFollowsFollowingRequest {
   string actor_did = 1;
-  string target_did = 2;
+  repeated string target_dids = 2;
 }
+
+message FollowsFollowing {
+  string target_did = 1;
+  repeated string dids = 2;
+}
+
 message GetFollowsFollowingResponse {
-  repeated string dids = 1;
+  repeated FollowsFollowing results = 1;
 }
 
 // Ping
@@ -1117,6 +1125,19 @@ service Service {
   // Write Path
   //
 
+  // Setup
+  rpc SetupTables(SetupTablesRequest) returns (SetupTablesResponse);
+
+  // Identity
+  rpc UpdateIdentity(UpdateIdentityRequest) returns (UpdateIdentityResponse);
+
+  // Sync
+  rpc UpdateLatestRev(UpdateLatestRevRequest) returns (UpdateLatestRevResponse);
+
+  // Labels
+  rpc CreateLabels(CreateLabelsRequest) returns (CreateLabelsResponse);
+  rpc CreateLabelsCacheUpdate(CreateLabelsCacheUpdateRequest) returns (CreateLabelsCacheUpdateResponse);
+
   // Moderation
   rpc TakedownBlob(TakedownBlobRequest) returns (TakedownBlobResponse);
   rpc TakedownRecord(TakedownRecordRequest) returns (TakedownRecordResponse);
@@ -1127,7 +1148,126 @@ service Service {
   rpc UntakedownRecord(UntakedownRecordRequest) returns (UntakedownRecordResponse);
   rpc UntakedownActor(UntakedownActorRequest) returns (UntakedownActorResponse);
 
+  // Caches
+  rpc CreateGraphBlockFilterUpdate(CreateGraphBlockFilterUpdateRequest) returns (CreateGraphBlockFilterUpdateResponse);
+  rpc CreateActorMuteFilterUpdate(CreateActorMuteFilterUpdateRequest) returns (CreateActorMuteFilterUpdateResponse);
+
+  rpc CreateGraphListblockCacheUpdate(CreateGraphListblockCacheUpdateRequest) returns (CreateGraphListblockCacheUpdateResponse);
+  rpc DeleteGraphListblockCacheUpdate(DeleteGraphListblockCacheUpdateRequest) returns (DeleteGraphListblockCacheUpdateResponse);
+
+  rpc DeleteFeedPostCacheUpdate(DeleteFeedPostCacheUpdateRequest) returns (DeleteFeedPostCacheUpdateResponse);
+  rpc TakedownPostCacheUpdate(TakedownPostCacheUpdateRequest) returns (TakedownPostCacheUpdateResponse);
+
+  rpc CreateFeedGeneratorSearchDBUpdate(CreateFeedGeneratorSearchDBUpdateRequest) returns (CreateFeedGeneratorSearchDBUpdateResponse);
+  rpc UpdateFeedGeneratorSearchDBUpdate(UpdateFeedGeneratorSearchDBUpdateRequest) returns (UpdateFeedGeneratorSearchDBUpdateResponse);
+  rpc DeleteFeedGeneratorSearchDBUpdate(DeleteFeedGeneratorSearchDBUpdateRequest) returns (DeleteFeedGeneratorSearchDBUpdateResponse);
+
+  rpc CreateListmuteCacheUpdate(CreateListmuteCacheUpdateRequest) returns (CreateListmuteCacheUpdateResponse);
+  rpc DeleteListmuteCacheUpdate(DeleteListmuteCacheUpdateRequest) returns (DeleteListmuteCacheUpdateResponse);
+  rpc ClearListmutesCacheUpdate(ClearListmutesCacheUpdateRequest) returns (ClearListmutesCacheUpdateResponse);
+
   // Ingestion
+  rpc CreateFeedPost(CreateFeedPostRequest) returns (CreateFeedPostResponse);
+  rpc DeleteFeedPost(DeleteFeedPostRequest) returns (DeleteFeedPostResponse);
+  rpc UpdateFeedPost(UpdateFeedPostRequest) returns (UpdateFeedPostResponse);
+
+  rpc CreateFeedPostNotifications(CreateFeedPostNotificationsRequest) returns (CreateFeedPostNotificationsResponse);
+  rpc DeleteFeedPostNotifications(DeleteFeedPostNotificationsRequest) returns (DeleteFeedPostNotificationsResponse);
+  rpc UpdateFeedPostNotifications(UpdateFeedPostNotificationsRequest) returns (UpdateFeedPostNotificationsResponse);
+
+  rpc CreateFeedPostTimelineFanOut(CreateFeedPostTimelineFanOutRequest) returns (CreateFeedPostTimelineFanOutResponse);
+  rpc DeleteFeedPostTimelineFanOut(DeleteFeedPostTimelineFanOutRequest) returns (DeleteFeedPostTimelineFanOutResponse);
+  rpc UpdateFeedPostTimelineFanOut(UpdateFeedPostTimelineFanOutRequest) returns (UpdateFeedPostTimelineFanOutResponse);
+
+  rpc CreateFeedPostListFeedFanOut(CreateFeedPostListFeedFanOutRequest) returns (CreateFeedPostListFeedFanOutResponse);
+
+  rpc CreateGraphListItemUpdateListFeed(CreateGraphListItemUpdateListFeedRequest) returns (CreateGraphListItemUpdateListFeedResponse);
+  rpc DeleteGraphListItemUpdateListFeed(DeleteGraphListItemUpdateListFeedRequest) returns (DeleteGraphListItemUpdateListFeedResponse);
+
+  rpc CreateFeedRepost(CreateFeedRepostRequest) returns (CreateFeedRepostResponse);
+  rpc DeleteFeedRepost(DeleteFeedRepostRequest) returns (DeleteFeedRepostResponse);
+  rpc UpdateFeedRepost(UpdateFeedRepostRequest) returns (UpdateFeedRepostResponse);
+
+  rpc CreateFeedRepostNotifications(CreateFeedRepostNotificationsRequest) returns (CreateFeedRepostNotificationsResponse);
+  rpc DeleteFeedRepostNotifications(DeleteFeedRepostNotificationsRequest) returns (DeleteFeedRepostNotificationsResponse);
+  rpc UpdateFeedRepostNotifications(UpdateFeedRepostNotificationsRequest) returns (UpdateFeedRepostNotificationsResponse);
+
+  rpc CreateFeedRepostTimelineFanOut(CreateFeedRepostTimelineFanOutRequest) returns (CreateFeedRepostTimelineFanOutResponse);
+  rpc DeleteFeedRepostTimelineFanOut(DeleteFeedRepostTimelineFanOutRequest) returns (DeleteFeedRepostTimelineFanOutResponse);
+  rpc UpdateFeedRepostTimelineFanOut(UpdateFeedRepostTimelineFanOutRequest) returns (UpdateFeedRepostTimelineFanOutResponse);
+
+  rpc CreateFeedLike(CreateFeedLikeRequest) returns (CreateFeedLikeResponse);
+  rpc CreateFeedLikeBatch(CreateFeedLikeBatchRequest) returns (CreateFeedLikeBatchResponse);
+  rpc DeleteFeedLike(DeleteFeedLikeRequest) returns (DeleteFeedLikeResponse);
+  rpc UpdateFeedLike(UpdateFeedLikeRequest) returns (UpdateFeedLikeResponse);
+
+  rpc CreateFeedLikeNotifications(CreateFeedLikeNotificationsRequest) returns (CreateFeedLikeNotificationsResponse);
+  rpc DeleteFeedLikeNotifications(DeleteFeedLikeNotificationsRequest) returns (DeleteFeedLikeNotificationsResponse);
+  rpc UpdateFeedLikeNotifications(UpdateFeedLikeNotificationsRequest) returns (UpdateFeedLikeNotificationsResponse);
+
+  rpc CreateGraphFollow(CreateGraphFollowRequest) returns (CreateGraphFollowResponse);
+  rpc DeleteGraphFollow(DeleteGraphFollowRequest) returns (DeleteGraphFollowResponse);
+  rpc UpdateGraphFollow(UpdateGraphFollowRequest) returns (UpdateGraphFollowResponse);
+
+  rpc CreateGraphFollowNotifications(CreateGraphFollowNotificationsRequest) returns (CreateGraphFollowNotificationsResponse);
+  rpc DeleteGraphFollowNotifications(DeleteGraphFollowNotificationsRequest) returns (DeleteGraphFollowNotificationsResponse);
+  rpc UpdateGraphFollowNotifications(UpdateGraphFollowNotificationsRequest) returns (UpdateGraphFollowNotificationsResponse);
+
+  rpc CreateGraphFollowUpdateTimeline(CreateGraphFollowUpdateTimelineRequest) returns (CreateGraphFollowUpdateTimelineResponse);
+  rpc DeleteGraphFollowUpdateTimeline(DeleteGraphFollowUpdateTimelineRequest) returns (DeleteGraphFollowUpdateTimelineResponse);
+  rpc UpdateGraphFollowUpdateTimeline(UpdateGraphFollowUpdateTimelineRequest) returns (UpdateGraphFollowUpdateTimelineResponse);
+
+  rpc CreateGraphBlock(CreateGraphBlockRequest) returns (CreateGraphBlockResponse);
+  rpc DeleteGraphBlock(DeleteGraphBlockRequest) returns (DeleteGraphBlockResponse);
+  rpc UpdateGraphBlock(UpdateGraphBlockRequest) returns (UpdateGraphBlockResponse);
+
+  rpc CreateActorProfile(CreateActorProfileRequest) returns (CreateActorProfileResponse);
+  rpc DeleteActorProfile(DeleteActorProfileRequest) returns (DeleteActorProfileResponse);
+  rpc UpdateActorProfile(UpdateActorProfileRequest) returns (UpdateActorProfileResponse);
+
+  rpc CreateActorChatDeclaration(CreateActorChatDeclarationRequest) returns (CreateActorChatDeclarationResponse);
+  rpc DeleteActorChatDeclaration(DeleteActorChatDeclarationRequest) returns (DeleteActorChatDeclarationResponse);
+  rpc UpdateActorChatDeclaration(UpdateActorChatDeclarationRequest) returns (UpdateActorChatDeclarationResponse);
+
+  rpc CreateLabeler(CreateLabelerRequest) returns (CreateLabelerResponse);
+  rpc DeleteLabeler(DeleteLabelerRequest) returns (DeleteLabelerResponse);
+  rpc UpdateLabeler(UpdateLabelerRequest) returns (UpdateLabelerResponse);
+
+  rpc CreateGraphList(CreateGraphListRequest) returns (CreateGraphListResponse);
+  rpc DeleteGraphList(DeleteGraphListRequest) returns (DeleteGraphListResponse);
+  rpc UpdateGraphList(UpdateGraphListRequest) returns (UpdateGraphListResponse);
+
+  rpc CreateGraphListitem(CreateGraphListitemRequest) returns (CreateGraphListitemResponse);
+  rpc DeleteGraphListitem(DeleteGraphListitemRequest) returns (DeleteGraphListitemResponse);
+  rpc UpdateGraphListitem(UpdateGraphListitemRequest) returns (UpdateGraphListitemResponse);
+
+  rpc CreateGraphListblock(CreateGraphListblockRequest) returns (CreateGraphListblockResponse);
+  rpc DeleteGraphListblock(DeleteGraphListblockRequest) returns (DeleteGraphListblockResponse);
+  rpc UpdateGraphListblock(UpdateGraphListblockRequest) returns (UpdateGraphListblockResponse);
+
+  rpc CreateFeedGenerator(CreateFeedGeneratorRequest) returns (CreateFeedGeneratorResponse);
+  rpc DeleteFeedGenerator(DeleteFeedGeneratorRequest) returns (DeleteFeedGeneratorResponse);
+  rpc UpdateFeedGenerator(UpdateFeedGeneratorRequest) returns (UpdateFeedGeneratorResponse);
+
+  rpc CreateFeedThreadgate(CreateFeedThreadgateRequest) returns (CreateFeedThreadgateResponse);
+  rpc DeleteFeedThreadgate(DeleteFeedThreadgateRequest) returns (DeleteFeedThreadgateResponse);
+  rpc UpdateFeedThreadgate(UpdateFeedThreadgateRequest) returns (UpdateFeedThreadgateResponse);
+
+  rpc TombstoneActor(TombstoneActorRequest) returns (TombstoneActorResponse);
+  rpc TombstoneActorPosts(TombstoneActorPostsRequest) returns (TombstoneActorPostsResponse);
+  rpc TombstoneActorLikes(TombstoneActorLikesRequest) returns (TombstoneActorLikesResponse);
+  rpc TombstoneActorReposts(TombstoneActorRepostsRequest) returns (TombstoneActorRepostsResponse);
+  rpc TombstoneActorFollows(TombstoneActorFollowsRequest) returns (TombstoneActorFollowsResponse);
+  rpc TombstoneActorBlocks(TombstoneActorBlocksRequest) returns (TombstoneActorBlocksResponse);
+  rpc TombstoneActorListblocks(TombstoneActorListblocksRequest) returns (TombstoneActorListblocksResponse);
+  rpc TombstoneActorFeedgens(TombstoneActorFeedgensRequest) returns (TombstoneActorFeedgensResponse);
+  rpc TombstoneActorLists(TombstoneActorListsRequest) returns (TombstoneActorListsResponse);
+  rpc TombstoneActorListItems(TombstoneActorListItemsRequest) returns (TombstoneActorListItemsResponse);
+  rpc TombstoneActorThreadgates(TombstoneActorThreadgatesRequest) returns (TombstoneActorThreadgatesResponse);
+  rpc CleanupTombstonedActor(CleanupTombstonedActorRequest) returns (CleanupTombstonedActorResponse);
+
+  rpc ResurrectActor(ResurrectActorRequest) returns (ResurrectActorResponse);
+
   rpc CreateActorMute(CreateActorMuteRequest) returns (CreateActorMuteResponse);
   rpc DeleteActorMute(DeleteActorMuteRequest) returns (DeleteActorMuteResponse);
   rpc ClearActorMutes(ClearActorMutesRequest) returns (ClearActorMutesResponse);
@@ -1135,12 +1275,52 @@ service Service {
   rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
   rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
   rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
+
+  rpc CreateSuggestedFeeds(CreateSuggestedFeedsRequest) returns (CreateSuggestedFeedsResponse);
+  rpc CreateSuggestedActors(CreateSuggestedActorsRequest) returns (CreateSuggestedActorsResponse);
+  rpc CreateSuggestedEntities(CreateSuggestedEntitiesRequest) returns (CreateSuggestedEntitiesResponse);
+
+  rpc CreateActorDNP(CreateActorDNPRequest) returns (CreateActorDNPResponse);
+  rpc DeleteActorDNP(DeleteActorDNPRequest) returns (DeleteActorDNPResponse);
+  rpc GetDNPActors(GetDNPActorsRequest) returns (GetDNPActorsResponse);
+
+  rpc RunAdminTool(RunAdminToolRequest) returns (RunAdminToolResponse);
 }
 
 
 //
 // Write Path
 //
+
+// Setup
+
+message SetupTablesRequest {
+}
+
+message SetupTablesResponse {
+}
+
+message UpdateLatestRevRequest {
+  string actor_did = 1;
+  string rev = 2;
+}
+
+message UpdateLatestRevResponse {
+}
+
+message CreateLabelsRequest {
+  repeated bytes labels = 1;
+}
+
+message CreateLabelsResponse {
+}
+
+message CreateLabelsCacheUpdateRequest{
+  repeated bytes labels = 1;
+}
+
+message CreateLabelsCacheUpdateResponse {
+}
 
 message UpdateActorUpstreamStatusRequest {
   string actor_did = 1;
@@ -1202,6 +1382,826 @@ message UntakedownRecordRequest {
 message UntakedownRecordResponse {
 }
 
+message TakedownPostCacheUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 4;
+}
+
+message TakedownPostCacheUpdateResponse {
+}
+
+message CreateFeedPostRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedPostResponse {
+}
+
+message DeleteFeedPostRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedPostResponse {
+}
+
+message UpdateFeedPostRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedPostResponse {
+}
+
+message CreateFeedPostNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedPostNotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message DeleteFeedPostNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedPostNotificationsResponse {
+}
+
+message UpdateFeedPostNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedPostNotificationsResponse {
+}
+
+message CreateFeedPostTimelineFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+  int32 limit = 6;
+  string cursor = 7;
+}
+
+message CreateFeedPostTimelineFanOutResponse {
+  string cursor = 1;
+}
+
+message CreateFeedPostListFeedFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+  int32 limit = 6;
+  string cursor = 7;
+}
+
+message CreateFeedPostListFeedFanOutResponse {
+  string cursor = 1;
+}
+
+message DeleteFeedPostTimelineFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedPostTimelineFanOutResponse {
+}
+
+message UpdateFeedPostTimelineFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedPostTimelineFanOutResponse {
+}
+
+message CreateFeedRepostRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedRepostResponse {
+}
+
+message DeleteFeedRepostRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedRepostResponse {
+}
+
+message UpdateFeedRepostRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedRepostResponse {
+}
+
+message CreateFeedRepostNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedRepostNotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message DeleteFeedRepostNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedRepostNotificationsResponse {
+}
+
+message UpdateFeedRepostNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedRepostNotificationsResponse {
+}
+
+message CreateFeedRepostTimelineFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+  string subject_uri = 6;
+  string subject_cid = 7;
+  int32 limit = 8;
+  string cursor = 9;
+}
+
+message CreateFeedRepostTimelineFanOutResponse {
+  string cursor = 1;
+}
+
+message DeleteFeedRepostTimelineFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedRepostTimelineFanOutResponse {
+}
+
+message UpdateFeedRepostTimelineFanOutRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedRepostTimelineFanOutResponse {
+}
+
+message CreateFeedLikeRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedLikeResponse {
+}
+
+message BatchLike {
+  string rkey = 1;
+  google.protobuf.Timestamp seen = 2;
+  string cid = 3;
+  bytes record = 4;
+}
+
+message CreateFeedLikeBatchRequest {
+  string did = 1;
+  repeated BatchLike likes = 2;
+}
+
+message CreateFeedLikeBatchResponse {
+}
+
+message DeleteFeedLikeRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedLikeResponse {
+}
+
+message UpdateFeedLikeRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedLikeResponse {
+}
+
+message CreateFeedLikeNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedLikeNotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message DeleteFeedLikeNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedLikeNotificationsResponse {
+}
+
+message UpdateFeedLikeNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedLikeNotificationsResponse {
+}
+
+message CreateGraphFollowRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphFollowResponse {
+}
+
+message DeleteGraphFollowRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphFollowResponse {
+}
+
+message UpdateGraphFollowRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphFollowResponse {
+}
+
+message CreateGraphFollowNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphFollowNotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message DeleteGraphFollowNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphFollowNotificationsResponse {
+}
+
+message UpdateGraphFollowNotificationsRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphFollowNotificationsResponse {
+}
+
+message CreateGraphFollowUpdateTimelineRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+  int32 lookback_seconds = 6;
+}
+
+message CreateGraphFollowUpdateTimelineResponse {
+}
+
+message DeleteGraphFollowUpdateTimelineRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphFollowUpdateTimelineResponse {
+}
+
+message UpdateGraphFollowUpdateTimelineRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphFollowUpdateTimelineResponse {
+}
+
+message CreateGraphListItemUpdateListFeedRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+  int32 lookback_seconds = 6;
+  bool include_reposts = 7;
+}
+
+message CreateGraphListItemUpdateListFeedResponse {
+}
+
+message DeleteGraphListItemUpdateListFeedRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphListItemUpdateListFeedResponse {
+}
+
+message CreateGraphBlockRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphBlockResponse {
+}
+
+message CreateGraphBlockFilterUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphBlockFilterUpdateResponse {
+}
+
+message CreateActorMuteFilterUpdateRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message CreateActorMuteFilterUpdateResponse {
+}
+
+message CreateListmuteCacheUpdateRequest {
+  string actor_did = 1;
+  string list_uri = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message CreateListmuteCacheUpdateResponse {
+}
+
+message DeleteListmuteCacheUpdateRequest {
+  string actor_did = 1;
+  string list_uri = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message DeleteListmuteCacheUpdateResponse {
+}
+
+message ClearListmutesCacheUpdateRequest {
+  string actor_did = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message ClearListmutesCacheUpdateResponse {
+}
+
+message DeleteFeedPostCacheUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message DeleteFeedPostCacheUpdateResponse {
+}
+
+message DeleteGraphBlockRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphBlockResponse {
+}
+
+message UpdateGraphBlockRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphBlockResponse {
+}
+
+message CreateActorProfileRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateActorProfileResponse {
+}
+
+message DeleteActorProfileRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteActorProfileResponse {
+}
+
+message UpdateActorProfileRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateActorProfileResponse {
+}
+
+message CreateActorChatDeclarationRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateActorChatDeclarationResponse {
+}
+
+message DeleteActorChatDeclarationRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteActorChatDeclarationResponse {
+}
+
+message UpdateActorChatDeclarationRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateActorChatDeclarationResponse {
+}
+
+message CreateLabelerRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateLabelerResponse {
+}
+
+message DeleteLabelerRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteLabelerResponse {
+}
+
+message UpdateLabelerRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateLabelerResponse {
+}
+
+message CreateGraphListRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphListResponse {
+}
+
+message DeleteGraphListRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphListResponse {
+}
+
+message UpdateGraphListRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphListResponse {
+}
+
+message CreateGraphListitemRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphListitemResponse {
+}
+
+message DeleteGraphListitemRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphListitemResponse {
+}
+
+message UpdateGraphListitemRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphListitemResponse {
+}
+
+message CreateGraphListblockRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphListblockResponse {
+}
+
+message CreateGraphListblockCacheUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateGraphListblockCacheUpdateResponse {
+}
+
+message DeleteGraphListblockRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteGraphListblockResponse {
+}
+
+message DeleteGraphListblockCacheUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message DeleteGraphListblockCacheUpdateResponse {
+}
+
+message UpdateGraphListblockRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateGraphListblockResponse {
+}
+
+message CreateFeedGeneratorRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedGeneratorResponse {
+}
+
+message CreateFeedGeneratorSearchDBUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 5;
+  bytes record = 6;
+}
+
+message CreateFeedGeneratorSearchDBUpdateResponse {
+}
+
+message UpdateFeedGeneratorSearchDBUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 5;
+  bytes record = 6;
+}
+
+message UpdateFeedGeneratorSearchDBUpdateResponse {
+}
+
+message DeleteFeedGeneratorSearchDBUpdateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message DeleteFeedGeneratorSearchDBUpdateResponse {
+}
+
+message DeleteFeedGeneratorRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedGeneratorResponse {
+}
+
+message UpdateFeedGeneratorRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedGeneratorResponse {
+}
+
+message CreateFeedThreadgateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message CreateFeedThreadgateResponse {
+}
+
+message DeleteFeedThreadgateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+}
+
+message DeleteFeedThreadgateResponse {
+}
+
+message UpdateFeedThreadgateRequest {
+  string did = 1;
+  string rkey = 2;
+  google.protobuf.Timestamp seen = 3;
+  string cid = 4;
+  bytes record = 5;
+}
+
+message UpdateFeedThreadgateResponse {
+}
+
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
@@ -1241,3 +2241,215 @@ message ClearActorMutelistSubscriptionsRequest {
 }
 
 message ClearActorMutelistSubscriptionsResponse {}
+
+message UpdateIdentityRequest {
+  string did = 1;
+  string handle = 2;
+  bytes keys = 3;
+  bytes services = 4;
+}
+message UpdateIdentityResponse {
+}
+
+
+message TombstoneActorRequest {
+  string did = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message TombstoneActorResponse {
+}
+
+message TombstoneActorPostsRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorPostsResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorLikesRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorLikesResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorRepostsRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorRepostsResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorFollowsRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorFollowsResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorBlocksRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorBlocksResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorListblocksRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorListblocksResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorFeedgensRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorFeedgensResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorListsRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorListsResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorListItemsRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorListItemsResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message TombstoneActorThreadgatesRequest {
+  string did = 1;
+  string cursor = 2;
+  int32 limit = 3;
+}
+
+message TombstoneActorThreadgatesResponse {
+  string cursor = 1;
+  int32 items_affected = 2;
+}
+
+message CleanupTombstonedActorRequest {
+  string did = 1;
+}
+
+message CleanupTombstonedActorResponse {
+}
+
+message ResurrectActorRequest {
+  string did = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message ResurrectActorResponse {
+}
+
+message SuggestedFeed {
+  string feed_uri = 1;
+  int64 priority = 2;
+}
+
+message CreateSuggestedFeedsRequest {
+  repeated SuggestedFeed suggested_feeds = 1;
+  bool trim = 2;
+}
+
+message CreateSuggestedFeedsResponse {
+}
+
+message SuggestedActor {
+  string actor_did = 1;
+  int64 priority = 2;
+}
+
+message CreateSuggestedActorsRequest {
+  repeated SuggestedActor suggested_actors = 1;
+  bool trim = 2;
+}
+
+message CreateSuggestedActorsResponse {
+}
+
+message CreateSuggestedEntitiesRequest {
+  repeated SuggestedEntity suggested_entities = 1;
+  bool trim = 2;
+}
+
+message CreateSuggestedEntitiesResponse {
+}
+
+message ActorDoNotProcessRecord {
+  string did = 1;
+  string reason = 2;
+  google.protobuf.Timestamp created = 3;
+  google.protobuf.Timestamp expires = 4;
+}
+
+message CreateActorDNPRequest {
+  string did = 1;
+  string reason = 2;
+  google.protobuf.Timestamp expires = 3;
+}
+
+message CreateActorDNPResponse {
+}
+
+message DeleteActorDNPRequest {
+  string did = 1;
+}
+
+message DeleteActorDNPResponse {
+}
+
+message GetDNPActorsRequest {}
+
+message GetDNPActorsResponse {
+  repeated ActorDoNotProcessRecord do_not_process_records = 1;
+}
+
+message RunAdminToolRequest {
+  google.protobuf.Timestamp backfill_cutoff = 1;
+  uint64 num_workers = 2;
+}
+message RunAdminToolResponse {}

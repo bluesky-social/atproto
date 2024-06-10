@@ -186,17 +186,13 @@ export class ActorHydrator {
     viewer: string | null,
   ): Promise<KnownFollowers> {
     if (!viewer) return new HydrationMap<ProfileViewerState['knownFollowers']>()
-    const knownFollowersResults = await Promise.all(
-      dids.map(async (did) => {
-        const followsFollowing = await this.dataplane.getFollowsFollowing({
-          actorDid: viewer,
-          targetDid: did,
-        })
-        return followsFollowing.dids
-      }),
-    )
+    const { results: knownFollowersResults } =
+      await this.dataplane.getFollowsFollowing({
+        actorDid: viewer,
+        targetDids: dids,
+      })
     return dids.reduce((acc, did, i) => {
-      const result = knownFollowersResults[i]
+      const result = knownFollowersResults[i]?.dids
       return acc.set(
         did,
         result && result.length > 0

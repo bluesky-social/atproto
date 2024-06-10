@@ -9809,7 +9809,7 @@ export class GetRecordTakedownResponse extends Message<GetRecordTakedownResponse
 }
 
 /**
- * GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
+ * GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the targets
  *
  * @generated from message bsky.GetFollowsFollowingRequest
  */
@@ -9820,9 +9820,9 @@ export class GetFollowsFollowingRequest extends Message<GetFollowsFollowingReque
   actorDid = ''
 
   /**
-   * @generated from field: string target_did = 2;
+   * @generated from field: repeated string target_dids = 2;
    */
-  targetDid = ''
+  targetDids: string[] = []
 
   constructor(data?: PartialMessage<GetFollowsFollowingRequest>) {
     super()
@@ -9833,7 +9833,13 @@ export class GetFollowsFollowingRequest extends Message<GetFollowsFollowingReque
   static readonly typeName = 'bsky.GetFollowsFollowingRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'target_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'target_dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
   ])
 
   static fromBinary(
@@ -9872,13 +9878,74 @@ export class GetFollowsFollowingRequest extends Message<GetFollowsFollowingReque
 }
 
 /**
+ * @generated from message bsky.FollowsFollowing
+ */
+export class FollowsFollowing extends Message<FollowsFollowing> {
+  /**
+   * @generated from field: string target_did = 1;
+   */
+  targetDid = ''
+
+  /**
+   * @generated from field: repeated string dids = 2;
+   */
+  dids: string[] = []
+
+  constructor(data?: PartialMessage<FollowsFollowing>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.FollowsFollowing'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'target_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): FollowsFollowing {
+    return new FollowsFollowing().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): FollowsFollowing {
+    return new FollowsFollowing().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): FollowsFollowing {
+    return new FollowsFollowing().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: FollowsFollowing | PlainMessage<FollowsFollowing> | undefined,
+    b: FollowsFollowing | PlainMessage<FollowsFollowing> | undefined,
+  ): boolean {
+    return proto3.util.equals(FollowsFollowing, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.GetFollowsFollowingResponse
  */
 export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResponse> {
   /**
-   * @generated from field: repeated string dids = 1;
+   * @generated from field: repeated bsky.FollowsFollowing results = 1;
    */
-  dids: string[] = []
+  results: FollowsFollowing[] = []
 
   constructor(data?: PartialMessage<GetFollowsFollowingResponse>) {
     super()
@@ -9890,9 +9957,9 @@ export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResp
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'dids',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
+      name: 'results',
+      kind: 'message',
+      T: FollowsFollowing,
       repeated: true,
     },
   ])
@@ -10015,6 +10082,411 @@ export class PingResponse extends Message<PingResponse> {
     b: PingResponse | PlainMessage<PingResponse> | undefined,
   ): boolean {
     return proto3.util.equals(PingResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SetupTablesRequest
+ */
+export class SetupTablesRequest extends Message<SetupTablesRequest> {
+  constructor(data?: PartialMessage<SetupTablesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SetupTablesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SetupTablesRequest {
+    return new SetupTablesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SetupTablesRequest {
+    return new SetupTablesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SetupTablesRequest {
+    return new SetupTablesRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SetupTablesRequest | PlainMessage<SetupTablesRequest> | undefined,
+    b: SetupTablesRequest | PlainMessage<SetupTablesRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(SetupTablesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SetupTablesResponse
+ */
+export class SetupTablesResponse extends Message<SetupTablesResponse> {
+  constructor(data?: PartialMessage<SetupTablesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SetupTablesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SetupTablesResponse {
+    return new SetupTablesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SetupTablesResponse {
+    return new SetupTablesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SetupTablesResponse {
+    return new SetupTablesResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SetupTablesResponse | PlainMessage<SetupTablesResponse> | undefined,
+    b: SetupTablesResponse | PlainMessage<SetupTablesResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(SetupTablesResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateLatestRevRequest
+ */
+export class UpdateLatestRevRequest extends Message<UpdateLatestRevRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string rev = 2;
+   */
+  rev = ''
+
+  constructor(data?: PartialMessage<UpdateLatestRevRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateLatestRevRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rev', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateLatestRevRequest {
+    return new UpdateLatestRevRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLatestRevRequest {
+    return new UpdateLatestRevRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLatestRevRequest {
+    return new UpdateLatestRevRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateLatestRevRequest
+      | PlainMessage<UpdateLatestRevRequest>
+      | undefined,
+    b:
+      | UpdateLatestRevRequest
+      | PlainMessage<UpdateLatestRevRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateLatestRevRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateLatestRevResponse
+ */
+export class UpdateLatestRevResponse extends Message<UpdateLatestRevResponse> {
+  constructor(data?: PartialMessage<UpdateLatestRevResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateLatestRevResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateLatestRevResponse {
+    return new UpdateLatestRevResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLatestRevResponse {
+    return new UpdateLatestRevResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLatestRevResponse {
+    return new UpdateLatestRevResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateLatestRevResponse
+      | PlainMessage<UpdateLatestRevResponse>
+      | undefined,
+    b:
+      | UpdateLatestRevResponse
+      | PlainMessage<UpdateLatestRevResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateLatestRevResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateLabelsRequest
+ */
+export class CreateLabelsRequest extends Message<CreateLabelsRequest> {
+  /**
+   * @generated from field: repeated bytes labels = 1;
+   */
+  labels: Uint8Array[] = []
+
+  constructor(data?: PartialMessage<CreateLabelsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateLabelsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'labels',
+      kind: 'scalar',
+      T: 12 /* ScalarType.BYTES */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateLabelsRequest {
+    return new CreateLabelsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsRequest {
+    return new CreateLabelsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsRequest {
+    return new CreateLabelsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateLabelsRequest | PlainMessage<CreateLabelsRequest> | undefined,
+    b: CreateLabelsRequest | PlainMessage<CreateLabelsRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateLabelsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateLabelsResponse
+ */
+export class CreateLabelsResponse extends Message<CreateLabelsResponse> {
+  constructor(data?: PartialMessage<CreateLabelsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateLabelsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateLabelsResponse {
+    return new CreateLabelsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsResponse {
+    return new CreateLabelsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsResponse {
+    return new CreateLabelsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateLabelsResponse | PlainMessage<CreateLabelsResponse> | undefined,
+    b: CreateLabelsResponse | PlainMessage<CreateLabelsResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateLabelsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateLabelsCacheUpdateRequest
+ */
+export class CreateLabelsCacheUpdateRequest extends Message<CreateLabelsCacheUpdateRequest> {
+  /**
+   * @generated from field: repeated bytes labels = 1;
+   */
+  labels: Uint8Array[] = []
+
+  constructor(data?: PartialMessage<CreateLabelsCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateLabelsCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'labels',
+      kind: 'scalar',
+      T: 12 /* ScalarType.BYTES */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateLabelsCacheUpdateRequest {
+    return new CreateLabelsCacheUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsCacheUpdateRequest {
+    return new CreateLabelsCacheUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsCacheUpdateRequest {
+    return new CreateLabelsCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateLabelsCacheUpdateRequest
+      | PlainMessage<CreateLabelsCacheUpdateRequest>
+      | undefined,
+    b:
+      | CreateLabelsCacheUpdateRequest
+      | PlainMessage<CreateLabelsCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateLabelsCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateLabelsCacheUpdateResponse
+ */
+export class CreateLabelsCacheUpdateResponse extends Message<CreateLabelsCacheUpdateResponse> {
+  constructor(data?: PartialMessage<CreateLabelsCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateLabelsCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateLabelsCacheUpdateResponse {
+    return new CreateLabelsCacheUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsCacheUpdateResponse {
+    return new CreateLabelsCacheUpdateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelsCacheUpdateResponse {
+    return new CreateLabelsCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateLabelsCacheUpdateResponse
+      | PlainMessage<CreateLabelsCacheUpdateResponse>
+      | undefined,
+    b:
+      | CreateLabelsCacheUpdateResponse
+      | PlainMessage<CreateLabelsCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateLabelsCacheUpdateResponse, a, b)
   }
 }
 
@@ -10793,6 +11265,10108 @@ export class UntakedownRecordResponse extends Message<UntakedownRecordResponse> 
 }
 
 /**
+ * @generated from message bsky.TakedownPostCacheUpdateRequest
+ */
+export class TakedownPostCacheUpdateRequest extends Message<TakedownPostCacheUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 4;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<TakedownPostCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TakedownPostCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TakedownPostCacheUpdateRequest {
+    return new TakedownPostCacheUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TakedownPostCacheUpdateRequest {
+    return new TakedownPostCacheUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TakedownPostCacheUpdateRequest {
+    return new TakedownPostCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TakedownPostCacheUpdateRequest
+      | PlainMessage<TakedownPostCacheUpdateRequest>
+      | undefined,
+    b:
+      | TakedownPostCacheUpdateRequest
+      | PlainMessage<TakedownPostCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TakedownPostCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TakedownPostCacheUpdateResponse
+ */
+export class TakedownPostCacheUpdateResponse extends Message<TakedownPostCacheUpdateResponse> {
+  constructor(data?: PartialMessage<TakedownPostCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TakedownPostCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TakedownPostCacheUpdateResponse {
+    return new TakedownPostCacheUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TakedownPostCacheUpdateResponse {
+    return new TakedownPostCacheUpdateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TakedownPostCacheUpdateResponse {
+    return new TakedownPostCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TakedownPostCacheUpdateResponse
+      | PlainMessage<TakedownPostCacheUpdateResponse>
+      | undefined,
+    b:
+      | TakedownPostCacheUpdateResponse
+      | PlainMessage<TakedownPostCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TakedownPostCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostRequest
+ */
+export class CreateFeedPostRequest extends Message<CreateFeedPostRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedPostRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostRequest {
+    return new CreateFeedPostRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostRequest {
+    return new CreateFeedPostRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostRequest {
+    return new CreateFeedPostRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateFeedPostRequest | PlainMessage<CreateFeedPostRequest> | undefined,
+    b: CreateFeedPostRequest | PlainMessage<CreateFeedPostRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostResponse
+ */
+export class CreateFeedPostResponse extends Message<CreateFeedPostResponse> {
+  constructor(data?: PartialMessage<CreateFeedPostResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostResponse {
+    return new CreateFeedPostResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostResponse {
+    return new CreateFeedPostResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostResponse {
+    return new CreateFeedPostResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostResponse
+      | PlainMessage<CreateFeedPostResponse>
+      | undefined,
+    b:
+      | CreateFeedPostResponse
+      | PlainMessage<CreateFeedPostResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostRequest
+ */
+export class DeleteFeedPostRequest extends Message<DeleteFeedPostRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedPostRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostRequest {
+    return new DeleteFeedPostRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostRequest {
+    return new DeleteFeedPostRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostRequest {
+    return new DeleteFeedPostRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: DeleteFeedPostRequest | PlainMessage<DeleteFeedPostRequest> | undefined,
+    b: DeleteFeedPostRequest | PlainMessage<DeleteFeedPostRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostResponse
+ */
+export class DeleteFeedPostResponse extends Message<DeleteFeedPostResponse> {
+  constructor(data?: PartialMessage<DeleteFeedPostResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostResponse {
+    return new DeleteFeedPostResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostResponse {
+    return new DeleteFeedPostResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostResponse {
+    return new DeleteFeedPostResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostResponse
+      | PlainMessage<DeleteFeedPostResponse>
+      | undefined,
+    b:
+      | DeleteFeedPostResponse
+      | PlainMessage<DeleteFeedPostResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedPostRequest
+ */
+export class UpdateFeedPostRequest extends Message<UpdateFeedPostRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedPostRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedPostRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedPostRequest {
+    return new UpdateFeedPostRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostRequest {
+    return new UpdateFeedPostRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostRequest {
+    return new UpdateFeedPostRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: UpdateFeedPostRequest | PlainMessage<UpdateFeedPostRequest> | undefined,
+    b: UpdateFeedPostRequest | PlainMessage<UpdateFeedPostRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedPostRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedPostResponse
+ */
+export class UpdateFeedPostResponse extends Message<UpdateFeedPostResponse> {
+  constructor(data?: PartialMessage<UpdateFeedPostResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedPostResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedPostResponse {
+    return new UpdateFeedPostResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostResponse {
+    return new UpdateFeedPostResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostResponse {
+    return new UpdateFeedPostResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedPostResponse
+      | PlainMessage<UpdateFeedPostResponse>
+      | undefined,
+    b:
+      | UpdateFeedPostResponse
+      | PlainMessage<UpdateFeedPostResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedPostResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostNotificationsRequest
+ */
+export class CreateFeedPostNotificationsRequest extends Message<CreateFeedPostNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedPostNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostNotificationsRequest {
+    return new CreateFeedPostNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostNotificationsRequest {
+    return new CreateFeedPostNotificationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostNotificationsRequest {
+    return new CreateFeedPostNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostNotificationsRequest
+      | PlainMessage<CreateFeedPostNotificationsRequest>
+      | undefined,
+    b:
+      | CreateFeedPostNotificationsRequest
+      | PlainMessage<CreateFeedPostNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostNotificationsResponse
+ */
+export class CreateFeedPostNotificationsResponse extends Message<CreateFeedPostNotificationsResponse> {
+  /**
+   * @generated from field: repeated bsky.Notification notifications = 1;
+   */
+  notifications: Notification[] = []
+
+  constructor(data?: PartialMessage<CreateFeedPostNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'notifications',
+      kind: 'message',
+      T: Notification,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostNotificationsResponse {
+    return new CreateFeedPostNotificationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostNotificationsResponse {
+    return new CreateFeedPostNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostNotificationsResponse {
+    return new CreateFeedPostNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostNotificationsResponse
+      | PlainMessage<CreateFeedPostNotificationsResponse>
+      | undefined,
+    b:
+      | CreateFeedPostNotificationsResponse
+      | PlainMessage<CreateFeedPostNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostNotificationsRequest
+ */
+export class DeleteFeedPostNotificationsRequest extends Message<DeleteFeedPostNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedPostNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostNotificationsRequest {
+    return new DeleteFeedPostNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostNotificationsRequest {
+    return new DeleteFeedPostNotificationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostNotificationsRequest {
+    return new DeleteFeedPostNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostNotificationsRequest
+      | PlainMessage<DeleteFeedPostNotificationsRequest>
+      | undefined,
+    b:
+      | DeleteFeedPostNotificationsRequest
+      | PlainMessage<DeleteFeedPostNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostNotificationsResponse
+ */
+export class DeleteFeedPostNotificationsResponse extends Message<DeleteFeedPostNotificationsResponse> {
+  constructor(data?: PartialMessage<DeleteFeedPostNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostNotificationsResponse {
+    return new DeleteFeedPostNotificationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostNotificationsResponse {
+    return new DeleteFeedPostNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostNotificationsResponse {
+    return new DeleteFeedPostNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostNotificationsResponse
+      | PlainMessage<DeleteFeedPostNotificationsResponse>
+      | undefined,
+    b:
+      | DeleteFeedPostNotificationsResponse
+      | PlainMessage<DeleteFeedPostNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedPostNotificationsRequest
+ */
+export class UpdateFeedPostNotificationsRequest extends Message<UpdateFeedPostNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedPostNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedPostNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedPostNotificationsRequest {
+    return new UpdateFeedPostNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostNotificationsRequest {
+    return new UpdateFeedPostNotificationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostNotificationsRequest {
+    return new UpdateFeedPostNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedPostNotificationsRequest
+      | PlainMessage<UpdateFeedPostNotificationsRequest>
+      | undefined,
+    b:
+      | UpdateFeedPostNotificationsRequest
+      | PlainMessage<UpdateFeedPostNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedPostNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedPostNotificationsResponse
+ */
+export class UpdateFeedPostNotificationsResponse extends Message<UpdateFeedPostNotificationsResponse> {
+  constructor(data?: PartialMessage<UpdateFeedPostNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedPostNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedPostNotificationsResponse {
+    return new UpdateFeedPostNotificationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostNotificationsResponse {
+    return new UpdateFeedPostNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostNotificationsResponse {
+    return new UpdateFeedPostNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedPostNotificationsResponse
+      | PlainMessage<UpdateFeedPostNotificationsResponse>
+      | undefined,
+    b:
+      | UpdateFeedPostNotificationsResponse
+      | PlainMessage<UpdateFeedPostNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedPostNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostTimelineFanOutRequest
+ */
+export class CreateFeedPostTimelineFanOutRequest extends Message<CreateFeedPostTimelineFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  /**
+   * @generated from field: int32 limit = 6;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 7;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<CreateFeedPostTimelineFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostTimelineFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 6, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 7, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostTimelineFanOutRequest {
+    return new CreateFeedPostTimelineFanOutRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostTimelineFanOutRequest {
+    return new CreateFeedPostTimelineFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostTimelineFanOutRequest {
+    return new CreateFeedPostTimelineFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostTimelineFanOutRequest
+      | PlainMessage<CreateFeedPostTimelineFanOutRequest>
+      | undefined,
+    b:
+      | CreateFeedPostTimelineFanOutRequest
+      | PlainMessage<CreateFeedPostTimelineFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostTimelineFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostTimelineFanOutResponse
+ */
+export class CreateFeedPostTimelineFanOutResponse extends Message<CreateFeedPostTimelineFanOutResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<CreateFeedPostTimelineFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostTimelineFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostTimelineFanOutResponse {
+    return new CreateFeedPostTimelineFanOutResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostTimelineFanOutResponse {
+    return new CreateFeedPostTimelineFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostTimelineFanOutResponse {
+    return new CreateFeedPostTimelineFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostTimelineFanOutResponse
+      | PlainMessage<CreateFeedPostTimelineFanOutResponse>
+      | undefined,
+    b:
+      | CreateFeedPostTimelineFanOutResponse
+      | PlainMessage<CreateFeedPostTimelineFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostTimelineFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostListFeedFanOutRequest
+ */
+export class CreateFeedPostListFeedFanOutRequest extends Message<CreateFeedPostListFeedFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  /**
+   * @generated from field: int32 limit = 6;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 7;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<CreateFeedPostListFeedFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostListFeedFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 6, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 7, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostListFeedFanOutRequest {
+    return new CreateFeedPostListFeedFanOutRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostListFeedFanOutRequest {
+    return new CreateFeedPostListFeedFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostListFeedFanOutRequest {
+    return new CreateFeedPostListFeedFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostListFeedFanOutRequest
+      | PlainMessage<CreateFeedPostListFeedFanOutRequest>
+      | undefined,
+    b:
+      | CreateFeedPostListFeedFanOutRequest
+      | PlainMessage<CreateFeedPostListFeedFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostListFeedFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedPostListFeedFanOutResponse
+ */
+export class CreateFeedPostListFeedFanOutResponse extends Message<CreateFeedPostListFeedFanOutResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<CreateFeedPostListFeedFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedPostListFeedFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedPostListFeedFanOutResponse {
+    return new CreateFeedPostListFeedFanOutResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostListFeedFanOutResponse {
+    return new CreateFeedPostListFeedFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedPostListFeedFanOutResponse {
+    return new CreateFeedPostListFeedFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedPostListFeedFanOutResponse
+      | PlainMessage<CreateFeedPostListFeedFanOutResponse>
+      | undefined,
+    b:
+      | CreateFeedPostListFeedFanOutResponse
+      | PlainMessage<CreateFeedPostListFeedFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedPostListFeedFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostTimelineFanOutRequest
+ */
+export class DeleteFeedPostTimelineFanOutRequest extends Message<DeleteFeedPostTimelineFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedPostTimelineFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostTimelineFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostTimelineFanOutRequest {
+    return new DeleteFeedPostTimelineFanOutRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostTimelineFanOutRequest {
+    return new DeleteFeedPostTimelineFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostTimelineFanOutRequest {
+    return new DeleteFeedPostTimelineFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostTimelineFanOutRequest
+      | PlainMessage<DeleteFeedPostTimelineFanOutRequest>
+      | undefined,
+    b:
+      | DeleteFeedPostTimelineFanOutRequest
+      | PlainMessage<DeleteFeedPostTimelineFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostTimelineFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostTimelineFanOutResponse
+ */
+export class DeleteFeedPostTimelineFanOutResponse extends Message<DeleteFeedPostTimelineFanOutResponse> {
+  constructor(data?: PartialMessage<DeleteFeedPostTimelineFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostTimelineFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostTimelineFanOutResponse {
+    return new DeleteFeedPostTimelineFanOutResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostTimelineFanOutResponse {
+    return new DeleteFeedPostTimelineFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostTimelineFanOutResponse {
+    return new DeleteFeedPostTimelineFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostTimelineFanOutResponse
+      | PlainMessage<DeleteFeedPostTimelineFanOutResponse>
+      | undefined,
+    b:
+      | DeleteFeedPostTimelineFanOutResponse
+      | PlainMessage<DeleteFeedPostTimelineFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostTimelineFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedPostTimelineFanOutRequest
+ */
+export class UpdateFeedPostTimelineFanOutRequest extends Message<UpdateFeedPostTimelineFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedPostTimelineFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedPostTimelineFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedPostTimelineFanOutRequest {
+    return new UpdateFeedPostTimelineFanOutRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostTimelineFanOutRequest {
+    return new UpdateFeedPostTimelineFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostTimelineFanOutRequest {
+    return new UpdateFeedPostTimelineFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedPostTimelineFanOutRequest
+      | PlainMessage<UpdateFeedPostTimelineFanOutRequest>
+      | undefined,
+    b:
+      | UpdateFeedPostTimelineFanOutRequest
+      | PlainMessage<UpdateFeedPostTimelineFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedPostTimelineFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedPostTimelineFanOutResponse
+ */
+export class UpdateFeedPostTimelineFanOutResponse extends Message<UpdateFeedPostTimelineFanOutResponse> {
+  constructor(data?: PartialMessage<UpdateFeedPostTimelineFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedPostTimelineFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedPostTimelineFanOutResponse {
+    return new UpdateFeedPostTimelineFanOutResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostTimelineFanOutResponse {
+    return new UpdateFeedPostTimelineFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedPostTimelineFanOutResponse {
+    return new UpdateFeedPostTimelineFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedPostTimelineFanOutResponse
+      | PlainMessage<UpdateFeedPostTimelineFanOutResponse>
+      | undefined,
+    b:
+      | UpdateFeedPostTimelineFanOutResponse
+      | PlainMessage<UpdateFeedPostTimelineFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedPostTimelineFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedRepostRequest
+ */
+export class CreateFeedRepostRequest extends Message<CreateFeedRepostRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedRepostRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedRepostRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedRepostRequest {
+    return new CreateFeedRepostRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostRequest {
+    return new CreateFeedRepostRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostRequest {
+    return new CreateFeedRepostRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedRepostRequest
+      | PlainMessage<CreateFeedRepostRequest>
+      | undefined,
+    b:
+      | CreateFeedRepostRequest
+      | PlainMessage<CreateFeedRepostRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedRepostRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedRepostResponse
+ */
+export class CreateFeedRepostResponse extends Message<CreateFeedRepostResponse> {
+  constructor(data?: PartialMessage<CreateFeedRepostResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedRepostResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedRepostResponse {
+    return new CreateFeedRepostResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostResponse {
+    return new CreateFeedRepostResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostResponse {
+    return new CreateFeedRepostResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedRepostResponse
+      | PlainMessage<CreateFeedRepostResponse>
+      | undefined,
+    b:
+      | CreateFeedRepostResponse
+      | PlainMessage<CreateFeedRepostResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedRepostResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedRepostRequest
+ */
+export class DeleteFeedRepostRequest extends Message<DeleteFeedRepostRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedRepostRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedRepostRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedRepostRequest {
+    return new DeleteFeedRepostRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostRequest {
+    return new DeleteFeedRepostRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostRequest {
+    return new DeleteFeedRepostRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedRepostRequest
+      | PlainMessage<DeleteFeedRepostRequest>
+      | undefined,
+    b:
+      | DeleteFeedRepostRequest
+      | PlainMessage<DeleteFeedRepostRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedRepostRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedRepostResponse
+ */
+export class DeleteFeedRepostResponse extends Message<DeleteFeedRepostResponse> {
+  constructor(data?: PartialMessage<DeleteFeedRepostResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedRepostResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedRepostResponse {
+    return new DeleteFeedRepostResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostResponse {
+    return new DeleteFeedRepostResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostResponse {
+    return new DeleteFeedRepostResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedRepostResponse
+      | PlainMessage<DeleteFeedRepostResponse>
+      | undefined,
+    b:
+      | DeleteFeedRepostResponse
+      | PlainMessage<DeleteFeedRepostResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedRepostResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedRepostRequest
+ */
+export class UpdateFeedRepostRequest extends Message<UpdateFeedRepostRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedRepostRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedRepostRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedRepostRequest {
+    return new UpdateFeedRepostRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostRequest {
+    return new UpdateFeedRepostRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostRequest {
+    return new UpdateFeedRepostRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedRepostRequest
+      | PlainMessage<UpdateFeedRepostRequest>
+      | undefined,
+    b:
+      | UpdateFeedRepostRequest
+      | PlainMessage<UpdateFeedRepostRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedRepostRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedRepostResponse
+ */
+export class UpdateFeedRepostResponse extends Message<UpdateFeedRepostResponse> {
+  constructor(data?: PartialMessage<UpdateFeedRepostResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedRepostResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedRepostResponse {
+    return new UpdateFeedRepostResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostResponse {
+    return new UpdateFeedRepostResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostResponse {
+    return new UpdateFeedRepostResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedRepostResponse
+      | PlainMessage<UpdateFeedRepostResponse>
+      | undefined,
+    b:
+      | UpdateFeedRepostResponse
+      | PlainMessage<UpdateFeedRepostResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedRepostResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedRepostNotificationsRequest
+ */
+export class CreateFeedRepostNotificationsRequest extends Message<CreateFeedRepostNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedRepostNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedRepostNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedRepostNotificationsRequest {
+    return new CreateFeedRepostNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostNotificationsRequest {
+    return new CreateFeedRepostNotificationsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostNotificationsRequest {
+    return new CreateFeedRepostNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedRepostNotificationsRequest
+      | PlainMessage<CreateFeedRepostNotificationsRequest>
+      | undefined,
+    b:
+      | CreateFeedRepostNotificationsRequest
+      | PlainMessage<CreateFeedRepostNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedRepostNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedRepostNotificationsResponse
+ */
+export class CreateFeedRepostNotificationsResponse extends Message<CreateFeedRepostNotificationsResponse> {
+  /**
+   * @generated from field: repeated bsky.Notification notifications = 1;
+   */
+  notifications: Notification[] = []
+
+  constructor(data?: PartialMessage<CreateFeedRepostNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedRepostNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'notifications',
+      kind: 'message',
+      T: Notification,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedRepostNotificationsResponse {
+    return new CreateFeedRepostNotificationsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostNotificationsResponse {
+    return new CreateFeedRepostNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostNotificationsResponse {
+    return new CreateFeedRepostNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedRepostNotificationsResponse
+      | PlainMessage<CreateFeedRepostNotificationsResponse>
+      | undefined,
+    b:
+      | CreateFeedRepostNotificationsResponse
+      | PlainMessage<CreateFeedRepostNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedRepostNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedRepostNotificationsRequest
+ */
+export class DeleteFeedRepostNotificationsRequest extends Message<DeleteFeedRepostNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedRepostNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedRepostNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedRepostNotificationsRequest {
+    return new DeleteFeedRepostNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostNotificationsRequest {
+    return new DeleteFeedRepostNotificationsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostNotificationsRequest {
+    return new DeleteFeedRepostNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedRepostNotificationsRequest
+      | PlainMessage<DeleteFeedRepostNotificationsRequest>
+      | undefined,
+    b:
+      | DeleteFeedRepostNotificationsRequest
+      | PlainMessage<DeleteFeedRepostNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedRepostNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedRepostNotificationsResponse
+ */
+export class DeleteFeedRepostNotificationsResponse extends Message<DeleteFeedRepostNotificationsResponse> {
+  constructor(data?: PartialMessage<DeleteFeedRepostNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedRepostNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedRepostNotificationsResponse {
+    return new DeleteFeedRepostNotificationsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostNotificationsResponse {
+    return new DeleteFeedRepostNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostNotificationsResponse {
+    return new DeleteFeedRepostNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedRepostNotificationsResponse
+      | PlainMessage<DeleteFeedRepostNotificationsResponse>
+      | undefined,
+    b:
+      | DeleteFeedRepostNotificationsResponse
+      | PlainMessage<DeleteFeedRepostNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedRepostNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedRepostNotificationsRequest
+ */
+export class UpdateFeedRepostNotificationsRequest extends Message<UpdateFeedRepostNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedRepostNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedRepostNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedRepostNotificationsRequest {
+    return new UpdateFeedRepostNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostNotificationsRequest {
+    return new UpdateFeedRepostNotificationsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostNotificationsRequest {
+    return new UpdateFeedRepostNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedRepostNotificationsRequest
+      | PlainMessage<UpdateFeedRepostNotificationsRequest>
+      | undefined,
+    b:
+      | UpdateFeedRepostNotificationsRequest
+      | PlainMessage<UpdateFeedRepostNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedRepostNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedRepostNotificationsResponse
+ */
+export class UpdateFeedRepostNotificationsResponse extends Message<UpdateFeedRepostNotificationsResponse> {
+  constructor(data?: PartialMessage<UpdateFeedRepostNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedRepostNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedRepostNotificationsResponse {
+    return new UpdateFeedRepostNotificationsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostNotificationsResponse {
+    return new UpdateFeedRepostNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostNotificationsResponse {
+    return new UpdateFeedRepostNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedRepostNotificationsResponse
+      | PlainMessage<UpdateFeedRepostNotificationsResponse>
+      | undefined,
+    b:
+      | UpdateFeedRepostNotificationsResponse
+      | PlainMessage<UpdateFeedRepostNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedRepostNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedRepostTimelineFanOutRequest
+ */
+export class CreateFeedRepostTimelineFanOutRequest extends Message<CreateFeedRepostTimelineFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  /**
+   * @generated from field: string subject_uri = 6;
+   */
+  subjectUri = ''
+
+  /**
+   * @generated from field: string subject_cid = 7;
+   */
+  subjectCid = ''
+
+  /**
+   * @generated from field: int32 limit = 8;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 9;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<CreateFeedRepostTimelineFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedRepostTimelineFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    {
+      no: 6,
+      name: 'subject_uri',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    {
+      no: 7,
+      name: 'subject_cid',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 8, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 9, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedRepostTimelineFanOutRequest {
+    return new CreateFeedRepostTimelineFanOutRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostTimelineFanOutRequest {
+    return new CreateFeedRepostTimelineFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostTimelineFanOutRequest {
+    return new CreateFeedRepostTimelineFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedRepostTimelineFanOutRequest
+      | PlainMessage<CreateFeedRepostTimelineFanOutRequest>
+      | undefined,
+    b:
+      | CreateFeedRepostTimelineFanOutRequest
+      | PlainMessage<CreateFeedRepostTimelineFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedRepostTimelineFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedRepostTimelineFanOutResponse
+ */
+export class CreateFeedRepostTimelineFanOutResponse extends Message<CreateFeedRepostTimelineFanOutResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<CreateFeedRepostTimelineFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedRepostTimelineFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedRepostTimelineFanOutResponse {
+    return new CreateFeedRepostTimelineFanOutResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostTimelineFanOutResponse {
+    return new CreateFeedRepostTimelineFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedRepostTimelineFanOutResponse {
+    return new CreateFeedRepostTimelineFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedRepostTimelineFanOutResponse
+      | PlainMessage<CreateFeedRepostTimelineFanOutResponse>
+      | undefined,
+    b:
+      | CreateFeedRepostTimelineFanOutResponse
+      | PlainMessage<CreateFeedRepostTimelineFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedRepostTimelineFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedRepostTimelineFanOutRequest
+ */
+export class DeleteFeedRepostTimelineFanOutRequest extends Message<DeleteFeedRepostTimelineFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedRepostTimelineFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedRepostTimelineFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedRepostTimelineFanOutRequest {
+    return new DeleteFeedRepostTimelineFanOutRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostTimelineFanOutRequest {
+    return new DeleteFeedRepostTimelineFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostTimelineFanOutRequest {
+    return new DeleteFeedRepostTimelineFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedRepostTimelineFanOutRequest
+      | PlainMessage<DeleteFeedRepostTimelineFanOutRequest>
+      | undefined,
+    b:
+      | DeleteFeedRepostTimelineFanOutRequest
+      | PlainMessage<DeleteFeedRepostTimelineFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedRepostTimelineFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedRepostTimelineFanOutResponse
+ */
+export class DeleteFeedRepostTimelineFanOutResponse extends Message<DeleteFeedRepostTimelineFanOutResponse> {
+  constructor(data?: PartialMessage<DeleteFeedRepostTimelineFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedRepostTimelineFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedRepostTimelineFanOutResponse {
+    return new DeleteFeedRepostTimelineFanOutResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostTimelineFanOutResponse {
+    return new DeleteFeedRepostTimelineFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedRepostTimelineFanOutResponse {
+    return new DeleteFeedRepostTimelineFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedRepostTimelineFanOutResponse
+      | PlainMessage<DeleteFeedRepostTimelineFanOutResponse>
+      | undefined,
+    b:
+      | DeleteFeedRepostTimelineFanOutResponse
+      | PlainMessage<DeleteFeedRepostTimelineFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedRepostTimelineFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedRepostTimelineFanOutRequest
+ */
+export class UpdateFeedRepostTimelineFanOutRequest extends Message<UpdateFeedRepostTimelineFanOutRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedRepostTimelineFanOutRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedRepostTimelineFanOutRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedRepostTimelineFanOutRequest {
+    return new UpdateFeedRepostTimelineFanOutRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostTimelineFanOutRequest {
+    return new UpdateFeedRepostTimelineFanOutRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostTimelineFanOutRequest {
+    return new UpdateFeedRepostTimelineFanOutRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedRepostTimelineFanOutRequest
+      | PlainMessage<UpdateFeedRepostTimelineFanOutRequest>
+      | undefined,
+    b:
+      | UpdateFeedRepostTimelineFanOutRequest
+      | PlainMessage<UpdateFeedRepostTimelineFanOutRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedRepostTimelineFanOutRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedRepostTimelineFanOutResponse
+ */
+export class UpdateFeedRepostTimelineFanOutResponse extends Message<UpdateFeedRepostTimelineFanOutResponse> {
+  constructor(data?: PartialMessage<UpdateFeedRepostTimelineFanOutResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedRepostTimelineFanOutResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedRepostTimelineFanOutResponse {
+    return new UpdateFeedRepostTimelineFanOutResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostTimelineFanOutResponse {
+    return new UpdateFeedRepostTimelineFanOutResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedRepostTimelineFanOutResponse {
+    return new UpdateFeedRepostTimelineFanOutResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedRepostTimelineFanOutResponse
+      | PlainMessage<UpdateFeedRepostTimelineFanOutResponse>
+      | undefined,
+    b:
+      | UpdateFeedRepostTimelineFanOutResponse
+      | PlainMessage<UpdateFeedRepostTimelineFanOutResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedRepostTimelineFanOutResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedLikeRequest
+ */
+export class CreateFeedLikeRequest extends Message<CreateFeedLikeRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedLikeRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedLikeRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedLikeRequest {
+    return new CreateFeedLikeRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeRequest {
+    return new CreateFeedLikeRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeRequest {
+    return new CreateFeedLikeRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateFeedLikeRequest | PlainMessage<CreateFeedLikeRequest> | undefined,
+    b: CreateFeedLikeRequest | PlainMessage<CreateFeedLikeRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedLikeRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedLikeResponse
+ */
+export class CreateFeedLikeResponse extends Message<CreateFeedLikeResponse> {
+  constructor(data?: PartialMessage<CreateFeedLikeResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedLikeResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedLikeResponse {
+    return new CreateFeedLikeResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeResponse {
+    return new CreateFeedLikeResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeResponse {
+    return new CreateFeedLikeResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedLikeResponse
+      | PlainMessage<CreateFeedLikeResponse>
+      | undefined,
+    b:
+      | CreateFeedLikeResponse
+      | PlainMessage<CreateFeedLikeResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedLikeResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.BatchLike
+ */
+export class BatchLike extends Message<BatchLike> {
+  /**
+   * @generated from field: string rkey = 1;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 2;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 3;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 4;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<BatchLike>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.BatchLike'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 3, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): BatchLike {
+    return new BatchLike().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): BatchLike {
+    return new BatchLike().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): BatchLike {
+    return new BatchLike().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: BatchLike | PlainMessage<BatchLike> | undefined,
+    b: BatchLike | PlainMessage<BatchLike> | undefined,
+  ): boolean {
+    return proto3.util.equals(BatchLike, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedLikeBatchRequest
+ */
+export class CreateFeedLikeBatchRequest extends Message<CreateFeedLikeBatchRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: repeated bsky.BatchLike likes = 2;
+   */
+  likes: BatchLike[] = []
+
+  constructor(data?: PartialMessage<CreateFeedLikeBatchRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedLikeBatchRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'likes', kind: 'message', T: BatchLike, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedLikeBatchRequest {
+    return new CreateFeedLikeBatchRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeBatchRequest {
+    return new CreateFeedLikeBatchRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeBatchRequest {
+    return new CreateFeedLikeBatchRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedLikeBatchRequest
+      | PlainMessage<CreateFeedLikeBatchRequest>
+      | undefined,
+    b:
+      | CreateFeedLikeBatchRequest
+      | PlainMessage<CreateFeedLikeBatchRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedLikeBatchRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedLikeBatchResponse
+ */
+export class CreateFeedLikeBatchResponse extends Message<CreateFeedLikeBatchResponse> {
+  constructor(data?: PartialMessage<CreateFeedLikeBatchResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedLikeBatchResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedLikeBatchResponse {
+    return new CreateFeedLikeBatchResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeBatchResponse {
+    return new CreateFeedLikeBatchResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeBatchResponse {
+    return new CreateFeedLikeBatchResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedLikeBatchResponse
+      | PlainMessage<CreateFeedLikeBatchResponse>
+      | undefined,
+    b:
+      | CreateFeedLikeBatchResponse
+      | PlainMessage<CreateFeedLikeBatchResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedLikeBatchResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedLikeRequest
+ */
+export class DeleteFeedLikeRequest extends Message<DeleteFeedLikeRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedLikeRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedLikeRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedLikeRequest {
+    return new DeleteFeedLikeRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeRequest {
+    return new DeleteFeedLikeRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeRequest {
+    return new DeleteFeedLikeRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: DeleteFeedLikeRequest | PlainMessage<DeleteFeedLikeRequest> | undefined,
+    b: DeleteFeedLikeRequest | PlainMessage<DeleteFeedLikeRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedLikeRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedLikeResponse
+ */
+export class DeleteFeedLikeResponse extends Message<DeleteFeedLikeResponse> {
+  constructor(data?: PartialMessage<DeleteFeedLikeResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedLikeResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedLikeResponse {
+    return new DeleteFeedLikeResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeResponse {
+    return new DeleteFeedLikeResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeResponse {
+    return new DeleteFeedLikeResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedLikeResponse
+      | PlainMessage<DeleteFeedLikeResponse>
+      | undefined,
+    b:
+      | DeleteFeedLikeResponse
+      | PlainMessage<DeleteFeedLikeResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedLikeResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedLikeRequest
+ */
+export class UpdateFeedLikeRequest extends Message<UpdateFeedLikeRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedLikeRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedLikeRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedLikeRequest {
+    return new UpdateFeedLikeRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeRequest {
+    return new UpdateFeedLikeRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeRequest {
+    return new UpdateFeedLikeRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: UpdateFeedLikeRequest | PlainMessage<UpdateFeedLikeRequest> | undefined,
+    b: UpdateFeedLikeRequest | PlainMessage<UpdateFeedLikeRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedLikeRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedLikeResponse
+ */
+export class UpdateFeedLikeResponse extends Message<UpdateFeedLikeResponse> {
+  constructor(data?: PartialMessage<UpdateFeedLikeResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedLikeResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedLikeResponse {
+    return new UpdateFeedLikeResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeResponse {
+    return new UpdateFeedLikeResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeResponse {
+    return new UpdateFeedLikeResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedLikeResponse
+      | PlainMessage<UpdateFeedLikeResponse>
+      | undefined,
+    b:
+      | UpdateFeedLikeResponse
+      | PlainMessage<UpdateFeedLikeResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedLikeResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedLikeNotificationsRequest
+ */
+export class CreateFeedLikeNotificationsRequest extends Message<CreateFeedLikeNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedLikeNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedLikeNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedLikeNotificationsRequest {
+    return new CreateFeedLikeNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeNotificationsRequest {
+    return new CreateFeedLikeNotificationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeNotificationsRequest {
+    return new CreateFeedLikeNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedLikeNotificationsRequest
+      | PlainMessage<CreateFeedLikeNotificationsRequest>
+      | undefined,
+    b:
+      | CreateFeedLikeNotificationsRequest
+      | PlainMessage<CreateFeedLikeNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedLikeNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedLikeNotificationsResponse
+ */
+export class CreateFeedLikeNotificationsResponse extends Message<CreateFeedLikeNotificationsResponse> {
+  /**
+   * @generated from field: repeated bsky.Notification notifications = 1;
+   */
+  notifications: Notification[] = []
+
+  constructor(data?: PartialMessage<CreateFeedLikeNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedLikeNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'notifications',
+      kind: 'message',
+      T: Notification,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedLikeNotificationsResponse {
+    return new CreateFeedLikeNotificationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeNotificationsResponse {
+    return new CreateFeedLikeNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedLikeNotificationsResponse {
+    return new CreateFeedLikeNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedLikeNotificationsResponse
+      | PlainMessage<CreateFeedLikeNotificationsResponse>
+      | undefined,
+    b:
+      | CreateFeedLikeNotificationsResponse
+      | PlainMessage<CreateFeedLikeNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedLikeNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedLikeNotificationsRequest
+ */
+export class DeleteFeedLikeNotificationsRequest extends Message<DeleteFeedLikeNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedLikeNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedLikeNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedLikeNotificationsRequest {
+    return new DeleteFeedLikeNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeNotificationsRequest {
+    return new DeleteFeedLikeNotificationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeNotificationsRequest {
+    return new DeleteFeedLikeNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedLikeNotificationsRequest
+      | PlainMessage<DeleteFeedLikeNotificationsRequest>
+      | undefined,
+    b:
+      | DeleteFeedLikeNotificationsRequest
+      | PlainMessage<DeleteFeedLikeNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedLikeNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedLikeNotificationsResponse
+ */
+export class DeleteFeedLikeNotificationsResponse extends Message<DeleteFeedLikeNotificationsResponse> {
+  constructor(data?: PartialMessage<DeleteFeedLikeNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedLikeNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedLikeNotificationsResponse {
+    return new DeleteFeedLikeNotificationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeNotificationsResponse {
+    return new DeleteFeedLikeNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedLikeNotificationsResponse {
+    return new DeleteFeedLikeNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedLikeNotificationsResponse
+      | PlainMessage<DeleteFeedLikeNotificationsResponse>
+      | undefined,
+    b:
+      | DeleteFeedLikeNotificationsResponse
+      | PlainMessage<DeleteFeedLikeNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedLikeNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedLikeNotificationsRequest
+ */
+export class UpdateFeedLikeNotificationsRequest extends Message<UpdateFeedLikeNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedLikeNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedLikeNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedLikeNotificationsRequest {
+    return new UpdateFeedLikeNotificationsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeNotificationsRequest {
+    return new UpdateFeedLikeNotificationsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeNotificationsRequest {
+    return new UpdateFeedLikeNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedLikeNotificationsRequest
+      | PlainMessage<UpdateFeedLikeNotificationsRequest>
+      | undefined,
+    b:
+      | UpdateFeedLikeNotificationsRequest
+      | PlainMessage<UpdateFeedLikeNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedLikeNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedLikeNotificationsResponse
+ */
+export class UpdateFeedLikeNotificationsResponse extends Message<UpdateFeedLikeNotificationsResponse> {
+  constructor(data?: PartialMessage<UpdateFeedLikeNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedLikeNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedLikeNotificationsResponse {
+    return new UpdateFeedLikeNotificationsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeNotificationsResponse {
+    return new UpdateFeedLikeNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedLikeNotificationsResponse {
+    return new UpdateFeedLikeNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedLikeNotificationsResponse
+      | PlainMessage<UpdateFeedLikeNotificationsResponse>
+      | undefined,
+    b:
+      | UpdateFeedLikeNotificationsResponse
+      | PlainMessage<UpdateFeedLikeNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedLikeNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphFollowRequest
+ */
+export class CreateGraphFollowRequest extends Message<CreateGraphFollowRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphFollowRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphFollowRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphFollowRequest {
+    return new CreateGraphFollowRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowRequest {
+    return new CreateGraphFollowRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowRequest {
+    return new CreateGraphFollowRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphFollowRequest
+      | PlainMessage<CreateGraphFollowRequest>
+      | undefined,
+    b:
+      | CreateGraphFollowRequest
+      | PlainMessage<CreateGraphFollowRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphFollowRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphFollowResponse
+ */
+export class CreateGraphFollowResponse extends Message<CreateGraphFollowResponse> {
+  constructor(data?: PartialMessage<CreateGraphFollowResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphFollowResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphFollowResponse {
+    return new CreateGraphFollowResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowResponse {
+    return new CreateGraphFollowResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowResponse {
+    return new CreateGraphFollowResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphFollowResponse
+      | PlainMessage<CreateGraphFollowResponse>
+      | undefined,
+    b:
+      | CreateGraphFollowResponse
+      | PlainMessage<CreateGraphFollowResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphFollowResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphFollowRequest
+ */
+export class DeleteGraphFollowRequest extends Message<DeleteGraphFollowRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphFollowRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphFollowRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphFollowRequest {
+    return new DeleteGraphFollowRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowRequest {
+    return new DeleteGraphFollowRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowRequest {
+    return new DeleteGraphFollowRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphFollowRequest
+      | PlainMessage<DeleteGraphFollowRequest>
+      | undefined,
+    b:
+      | DeleteGraphFollowRequest
+      | PlainMessage<DeleteGraphFollowRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphFollowRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphFollowResponse
+ */
+export class DeleteGraphFollowResponse extends Message<DeleteGraphFollowResponse> {
+  constructor(data?: PartialMessage<DeleteGraphFollowResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphFollowResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphFollowResponse {
+    return new DeleteGraphFollowResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowResponse {
+    return new DeleteGraphFollowResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowResponse {
+    return new DeleteGraphFollowResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphFollowResponse
+      | PlainMessage<DeleteGraphFollowResponse>
+      | undefined,
+    b:
+      | DeleteGraphFollowResponse
+      | PlainMessage<DeleteGraphFollowResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphFollowResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphFollowRequest
+ */
+export class UpdateGraphFollowRequest extends Message<UpdateGraphFollowRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphFollowRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphFollowRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphFollowRequest {
+    return new UpdateGraphFollowRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowRequest {
+    return new UpdateGraphFollowRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowRequest {
+    return new UpdateGraphFollowRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphFollowRequest
+      | PlainMessage<UpdateGraphFollowRequest>
+      | undefined,
+    b:
+      | UpdateGraphFollowRequest
+      | PlainMessage<UpdateGraphFollowRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphFollowRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphFollowResponse
+ */
+export class UpdateGraphFollowResponse extends Message<UpdateGraphFollowResponse> {
+  constructor(data?: PartialMessage<UpdateGraphFollowResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphFollowResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphFollowResponse {
+    return new UpdateGraphFollowResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowResponse {
+    return new UpdateGraphFollowResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowResponse {
+    return new UpdateGraphFollowResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphFollowResponse
+      | PlainMessage<UpdateGraphFollowResponse>
+      | undefined,
+    b:
+      | UpdateGraphFollowResponse
+      | PlainMessage<UpdateGraphFollowResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphFollowResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphFollowNotificationsRequest
+ */
+export class CreateGraphFollowNotificationsRequest extends Message<CreateGraphFollowNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphFollowNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphFollowNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphFollowNotificationsRequest {
+    return new CreateGraphFollowNotificationsRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowNotificationsRequest {
+    return new CreateGraphFollowNotificationsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowNotificationsRequest {
+    return new CreateGraphFollowNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphFollowNotificationsRequest
+      | PlainMessage<CreateGraphFollowNotificationsRequest>
+      | undefined,
+    b:
+      | CreateGraphFollowNotificationsRequest
+      | PlainMessage<CreateGraphFollowNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphFollowNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphFollowNotificationsResponse
+ */
+export class CreateGraphFollowNotificationsResponse extends Message<CreateGraphFollowNotificationsResponse> {
+  /**
+   * @generated from field: repeated bsky.Notification notifications = 1;
+   */
+  notifications: Notification[] = []
+
+  constructor(data?: PartialMessage<CreateGraphFollowNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphFollowNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'notifications',
+      kind: 'message',
+      T: Notification,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphFollowNotificationsResponse {
+    return new CreateGraphFollowNotificationsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowNotificationsResponse {
+    return new CreateGraphFollowNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowNotificationsResponse {
+    return new CreateGraphFollowNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphFollowNotificationsResponse
+      | PlainMessage<CreateGraphFollowNotificationsResponse>
+      | undefined,
+    b:
+      | CreateGraphFollowNotificationsResponse
+      | PlainMessage<CreateGraphFollowNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphFollowNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphFollowNotificationsRequest
+ */
+export class DeleteGraphFollowNotificationsRequest extends Message<DeleteGraphFollowNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphFollowNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphFollowNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphFollowNotificationsRequest {
+    return new DeleteGraphFollowNotificationsRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowNotificationsRequest {
+    return new DeleteGraphFollowNotificationsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowNotificationsRequest {
+    return new DeleteGraphFollowNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphFollowNotificationsRequest
+      | PlainMessage<DeleteGraphFollowNotificationsRequest>
+      | undefined,
+    b:
+      | DeleteGraphFollowNotificationsRequest
+      | PlainMessage<DeleteGraphFollowNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphFollowNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphFollowNotificationsResponse
+ */
+export class DeleteGraphFollowNotificationsResponse extends Message<DeleteGraphFollowNotificationsResponse> {
+  constructor(data?: PartialMessage<DeleteGraphFollowNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphFollowNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphFollowNotificationsResponse {
+    return new DeleteGraphFollowNotificationsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowNotificationsResponse {
+    return new DeleteGraphFollowNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowNotificationsResponse {
+    return new DeleteGraphFollowNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphFollowNotificationsResponse
+      | PlainMessage<DeleteGraphFollowNotificationsResponse>
+      | undefined,
+    b:
+      | DeleteGraphFollowNotificationsResponse
+      | PlainMessage<DeleteGraphFollowNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphFollowNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphFollowNotificationsRequest
+ */
+export class UpdateGraphFollowNotificationsRequest extends Message<UpdateGraphFollowNotificationsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphFollowNotificationsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphFollowNotificationsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphFollowNotificationsRequest {
+    return new UpdateGraphFollowNotificationsRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowNotificationsRequest {
+    return new UpdateGraphFollowNotificationsRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowNotificationsRequest {
+    return new UpdateGraphFollowNotificationsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateGraphFollowNotificationsRequest
+      | PlainMessage<UpdateGraphFollowNotificationsRequest>
+      | undefined,
+    b:
+      | UpdateGraphFollowNotificationsRequest
+      | PlainMessage<UpdateGraphFollowNotificationsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphFollowNotificationsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphFollowNotificationsResponse
+ */
+export class UpdateGraphFollowNotificationsResponse extends Message<UpdateGraphFollowNotificationsResponse> {
+  constructor(data?: PartialMessage<UpdateGraphFollowNotificationsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphFollowNotificationsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphFollowNotificationsResponse {
+    return new UpdateGraphFollowNotificationsResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowNotificationsResponse {
+    return new UpdateGraphFollowNotificationsResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowNotificationsResponse {
+    return new UpdateGraphFollowNotificationsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateGraphFollowNotificationsResponse
+      | PlainMessage<UpdateGraphFollowNotificationsResponse>
+      | undefined,
+    b:
+      | UpdateGraphFollowNotificationsResponse
+      | PlainMessage<UpdateGraphFollowNotificationsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphFollowNotificationsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphFollowUpdateTimelineRequest
+ */
+export class CreateGraphFollowUpdateTimelineRequest extends Message<CreateGraphFollowUpdateTimelineRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  /**
+   * @generated from field: int32 lookback_seconds = 6;
+   */
+  lookbackSeconds = 0
+
+  constructor(data?: PartialMessage<CreateGraphFollowUpdateTimelineRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphFollowUpdateTimelineRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    {
+      no: 6,
+      name: 'lookback_seconds',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphFollowUpdateTimelineRequest {
+    return new CreateGraphFollowUpdateTimelineRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowUpdateTimelineRequest {
+    return new CreateGraphFollowUpdateTimelineRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowUpdateTimelineRequest {
+    return new CreateGraphFollowUpdateTimelineRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphFollowUpdateTimelineRequest
+      | PlainMessage<CreateGraphFollowUpdateTimelineRequest>
+      | undefined,
+    b:
+      | CreateGraphFollowUpdateTimelineRequest
+      | PlainMessage<CreateGraphFollowUpdateTimelineRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphFollowUpdateTimelineRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphFollowUpdateTimelineResponse
+ */
+export class CreateGraphFollowUpdateTimelineResponse extends Message<CreateGraphFollowUpdateTimelineResponse> {
+  constructor(data?: PartialMessage<CreateGraphFollowUpdateTimelineResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphFollowUpdateTimelineResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphFollowUpdateTimelineResponse {
+    return new CreateGraphFollowUpdateTimelineResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowUpdateTimelineResponse {
+    return new CreateGraphFollowUpdateTimelineResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphFollowUpdateTimelineResponse {
+    return new CreateGraphFollowUpdateTimelineResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphFollowUpdateTimelineResponse
+      | PlainMessage<CreateGraphFollowUpdateTimelineResponse>
+      | undefined,
+    b:
+      | CreateGraphFollowUpdateTimelineResponse
+      | PlainMessage<CreateGraphFollowUpdateTimelineResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphFollowUpdateTimelineResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphFollowUpdateTimelineRequest
+ */
+export class DeleteGraphFollowUpdateTimelineRequest extends Message<DeleteGraphFollowUpdateTimelineRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphFollowUpdateTimelineRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphFollowUpdateTimelineRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphFollowUpdateTimelineRequest {
+    return new DeleteGraphFollowUpdateTimelineRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowUpdateTimelineRequest {
+    return new DeleteGraphFollowUpdateTimelineRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowUpdateTimelineRequest {
+    return new DeleteGraphFollowUpdateTimelineRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphFollowUpdateTimelineRequest
+      | PlainMessage<DeleteGraphFollowUpdateTimelineRequest>
+      | undefined,
+    b:
+      | DeleteGraphFollowUpdateTimelineRequest
+      | PlainMessage<DeleteGraphFollowUpdateTimelineRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphFollowUpdateTimelineRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphFollowUpdateTimelineResponse
+ */
+export class DeleteGraphFollowUpdateTimelineResponse extends Message<DeleteGraphFollowUpdateTimelineResponse> {
+  constructor(data?: PartialMessage<DeleteGraphFollowUpdateTimelineResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphFollowUpdateTimelineResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphFollowUpdateTimelineResponse {
+    return new DeleteGraphFollowUpdateTimelineResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowUpdateTimelineResponse {
+    return new DeleteGraphFollowUpdateTimelineResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphFollowUpdateTimelineResponse {
+    return new DeleteGraphFollowUpdateTimelineResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphFollowUpdateTimelineResponse
+      | PlainMessage<DeleteGraphFollowUpdateTimelineResponse>
+      | undefined,
+    b:
+      | DeleteGraphFollowUpdateTimelineResponse
+      | PlainMessage<DeleteGraphFollowUpdateTimelineResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphFollowUpdateTimelineResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphFollowUpdateTimelineRequest
+ */
+export class UpdateGraphFollowUpdateTimelineRequest extends Message<UpdateGraphFollowUpdateTimelineRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphFollowUpdateTimelineRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphFollowUpdateTimelineRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphFollowUpdateTimelineRequest {
+    return new UpdateGraphFollowUpdateTimelineRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowUpdateTimelineRequest {
+    return new UpdateGraphFollowUpdateTimelineRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowUpdateTimelineRequest {
+    return new UpdateGraphFollowUpdateTimelineRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateGraphFollowUpdateTimelineRequest
+      | PlainMessage<UpdateGraphFollowUpdateTimelineRequest>
+      | undefined,
+    b:
+      | UpdateGraphFollowUpdateTimelineRequest
+      | PlainMessage<UpdateGraphFollowUpdateTimelineRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphFollowUpdateTimelineRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphFollowUpdateTimelineResponse
+ */
+export class UpdateGraphFollowUpdateTimelineResponse extends Message<UpdateGraphFollowUpdateTimelineResponse> {
+  constructor(data?: PartialMessage<UpdateGraphFollowUpdateTimelineResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphFollowUpdateTimelineResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphFollowUpdateTimelineResponse {
+    return new UpdateGraphFollowUpdateTimelineResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowUpdateTimelineResponse {
+    return new UpdateGraphFollowUpdateTimelineResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphFollowUpdateTimelineResponse {
+    return new UpdateGraphFollowUpdateTimelineResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateGraphFollowUpdateTimelineResponse
+      | PlainMessage<UpdateGraphFollowUpdateTimelineResponse>
+      | undefined,
+    b:
+      | UpdateGraphFollowUpdateTimelineResponse
+      | PlainMessage<UpdateGraphFollowUpdateTimelineResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphFollowUpdateTimelineResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListItemUpdateListFeedRequest
+ */
+export class CreateGraphListItemUpdateListFeedRequest extends Message<CreateGraphListItemUpdateListFeedRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  /**
+   * @generated from field: int32 lookback_seconds = 6;
+   */
+  lookbackSeconds = 0
+
+  /**
+   * @generated from field: bool include_reposts = 7;
+   */
+  includeReposts = false
+
+  constructor(data?: PartialMessage<CreateGraphListItemUpdateListFeedRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListItemUpdateListFeedRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    {
+      no: 6,
+      name: 'lookback_seconds',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+    {
+      no: 7,
+      name: 'include_reposts',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListItemUpdateListFeedRequest {
+    return new CreateGraphListItemUpdateListFeedRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListItemUpdateListFeedRequest {
+    return new CreateGraphListItemUpdateListFeedRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListItemUpdateListFeedRequest {
+    return new CreateGraphListItemUpdateListFeedRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphListItemUpdateListFeedRequest
+      | PlainMessage<CreateGraphListItemUpdateListFeedRequest>
+      | undefined,
+    b:
+      | CreateGraphListItemUpdateListFeedRequest
+      | PlainMessage<CreateGraphListItemUpdateListFeedRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListItemUpdateListFeedRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListItemUpdateListFeedResponse
+ */
+export class CreateGraphListItemUpdateListFeedResponse extends Message<CreateGraphListItemUpdateListFeedResponse> {
+  constructor(
+    data?: PartialMessage<CreateGraphListItemUpdateListFeedResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListItemUpdateListFeedResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListItemUpdateListFeedResponse {
+    return new CreateGraphListItemUpdateListFeedResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListItemUpdateListFeedResponse {
+    return new CreateGraphListItemUpdateListFeedResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListItemUpdateListFeedResponse {
+    return new CreateGraphListItemUpdateListFeedResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphListItemUpdateListFeedResponse
+      | PlainMessage<CreateGraphListItemUpdateListFeedResponse>
+      | undefined,
+    b:
+      | CreateGraphListItemUpdateListFeedResponse
+      | PlainMessage<CreateGraphListItemUpdateListFeedResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListItemUpdateListFeedResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListItemUpdateListFeedRequest
+ */
+export class DeleteGraphListItemUpdateListFeedRequest extends Message<DeleteGraphListItemUpdateListFeedRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphListItemUpdateListFeedRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListItemUpdateListFeedRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListItemUpdateListFeedRequest {
+    return new DeleteGraphListItemUpdateListFeedRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListItemUpdateListFeedRequest {
+    return new DeleteGraphListItemUpdateListFeedRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListItemUpdateListFeedRequest {
+    return new DeleteGraphListItemUpdateListFeedRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListItemUpdateListFeedRequest
+      | PlainMessage<DeleteGraphListItemUpdateListFeedRequest>
+      | undefined,
+    b:
+      | DeleteGraphListItemUpdateListFeedRequest
+      | PlainMessage<DeleteGraphListItemUpdateListFeedRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListItemUpdateListFeedRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListItemUpdateListFeedResponse
+ */
+export class DeleteGraphListItemUpdateListFeedResponse extends Message<DeleteGraphListItemUpdateListFeedResponse> {
+  constructor(
+    data?: PartialMessage<DeleteGraphListItemUpdateListFeedResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListItemUpdateListFeedResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListItemUpdateListFeedResponse {
+    return new DeleteGraphListItemUpdateListFeedResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListItemUpdateListFeedResponse {
+    return new DeleteGraphListItemUpdateListFeedResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListItemUpdateListFeedResponse {
+    return new DeleteGraphListItemUpdateListFeedResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListItemUpdateListFeedResponse
+      | PlainMessage<DeleteGraphListItemUpdateListFeedResponse>
+      | undefined,
+    b:
+      | DeleteGraphListItemUpdateListFeedResponse
+      | PlainMessage<DeleteGraphListItemUpdateListFeedResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListItemUpdateListFeedResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphBlockRequest
+ */
+export class CreateGraphBlockRequest extends Message<CreateGraphBlockRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphBlockRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphBlockRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphBlockRequest {
+    return new CreateGraphBlockRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockRequest {
+    return new CreateGraphBlockRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockRequest {
+    return new CreateGraphBlockRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphBlockRequest
+      | PlainMessage<CreateGraphBlockRequest>
+      | undefined,
+    b:
+      | CreateGraphBlockRequest
+      | PlainMessage<CreateGraphBlockRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphBlockRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphBlockResponse
+ */
+export class CreateGraphBlockResponse extends Message<CreateGraphBlockResponse> {
+  constructor(data?: PartialMessage<CreateGraphBlockResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphBlockResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphBlockResponse {
+    return new CreateGraphBlockResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockResponse {
+    return new CreateGraphBlockResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockResponse {
+    return new CreateGraphBlockResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphBlockResponse
+      | PlainMessage<CreateGraphBlockResponse>
+      | undefined,
+    b:
+      | CreateGraphBlockResponse
+      | PlainMessage<CreateGraphBlockResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphBlockResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphBlockFilterUpdateRequest
+ */
+export class CreateGraphBlockFilterUpdateRequest extends Message<CreateGraphBlockFilterUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphBlockFilterUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphBlockFilterUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphBlockFilterUpdateRequest {
+    return new CreateGraphBlockFilterUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockFilterUpdateRequest {
+    return new CreateGraphBlockFilterUpdateRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockFilterUpdateRequest {
+    return new CreateGraphBlockFilterUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphBlockFilterUpdateRequest
+      | PlainMessage<CreateGraphBlockFilterUpdateRequest>
+      | undefined,
+    b:
+      | CreateGraphBlockFilterUpdateRequest
+      | PlainMessage<CreateGraphBlockFilterUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphBlockFilterUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphBlockFilterUpdateResponse
+ */
+export class CreateGraphBlockFilterUpdateResponse extends Message<CreateGraphBlockFilterUpdateResponse> {
+  constructor(data?: PartialMessage<CreateGraphBlockFilterUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphBlockFilterUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphBlockFilterUpdateResponse {
+    return new CreateGraphBlockFilterUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockFilterUpdateResponse {
+    return new CreateGraphBlockFilterUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphBlockFilterUpdateResponse {
+    return new CreateGraphBlockFilterUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphBlockFilterUpdateResponse
+      | PlainMessage<CreateGraphBlockFilterUpdateResponse>
+      | undefined,
+    b:
+      | CreateGraphBlockFilterUpdateResponse
+      | PlainMessage<CreateGraphBlockFilterUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphBlockFilterUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorMuteFilterUpdateRequest
+ */
+export class CreateActorMuteFilterUpdateRequest extends Message<CreateActorMuteFilterUpdateRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string subject_did = 2;
+   */
+  subjectDid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<CreateActorMuteFilterUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorMuteFilterUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'subject_did',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorMuteFilterUpdateRequest {
+    return new CreateActorMuteFilterUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorMuteFilterUpdateRequest {
+    return new CreateActorMuteFilterUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorMuteFilterUpdateRequest {
+    return new CreateActorMuteFilterUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateActorMuteFilterUpdateRequest
+      | PlainMessage<CreateActorMuteFilterUpdateRequest>
+      | undefined,
+    b:
+      | CreateActorMuteFilterUpdateRequest
+      | PlainMessage<CreateActorMuteFilterUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorMuteFilterUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorMuteFilterUpdateResponse
+ */
+export class CreateActorMuteFilterUpdateResponse extends Message<CreateActorMuteFilterUpdateResponse> {
+  constructor(data?: PartialMessage<CreateActorMuteFilterUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorMuteFilterUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorMuteFilterUpdateResponse {
+    return new CreateActorMuteFilterUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorMuteFilterUpdateResponse {
+    return new CreateActorMuteFilterUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorMuteFilterUpdateResponse {
+    return new CreateActorMuteFilterUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateActorMuteFilterUpdateResponse
+      | PlainMessage<CreateActorMuteFilterUpdateResponse>
+      | undefined,
+    b:
+      | CreateActorMuteFilterUpdateResponse
+      | PlainMessage<CreateActorMuteFilterUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorMuteFilterUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateListmuteCacheUpdateRequest
+ */
+export class CreateListmuteCacheUpdateRequest extends Message<CreateListmuteCacheUpdateRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string list_uri = 2;
+   */
+  listUri = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<CreateListmuteCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateListmuteCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'list_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateListmuteCacheUpdateRequest {
+    return new CreateListmuteCacheUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateListmuteCacheUpdateRequest {
+    return new CreateListmuteCacheUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateListmuteCacheUpdateRequest {
+    return new CreateListmuteCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateListmuteCacheUpdateRequest
+      | PlainMessage<CreateListmuteCacheUpdateRequest>
+      | undefined,
+    b:
+      | CreateListmuteCacheUpdateRequest
+      | PlainMessage<CreateListmuteCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateListmuteCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateListmuteCacheUpdateResponse
+ */
+export class CreateListmuteCacheUpdateResponse extends Message<CreateListmuteCacheUpdateResponse> {
+  constructor(data?: PartialMessage<CreateListmuteCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateListmuteCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateListmuteCacheUpdateResponse {
+    return new CreateListmuteCacheUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateListmuteCacheUpdateResponse {
+    return new CreateListmuteCacheUpdateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateListmuteCacheUpdateResponse {
+    return new CreateListmuteCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateListmuteCacheUpdateResponse
+      | PlainMessage<CreateListmuteCacheUpdateResponse>
+      | undefined,
+    b:
+      | CreateListmuteCacheUpdateResponse
+      | PlainMessage<CreateListmuteCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateListmuteCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteListmuteCacheUpdateRequest
+ */
+export class DeleteListmuteCacheUpdateRequest extends Message<DeleteListmuteCacheUpdateRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string list_uri = 2;
+   */
+  listUri = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<DeleteListmuteCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteListmuteCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'list_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteListmuteCacheUpdateRequest {
+    return new DeleteListmuteCacheUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteListmuteCacheUpdateRequest {
+    return new DeleteListmuteCacheUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteListmuteCacheUpdateRequest {
+    return new DeleteListmuteCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteListmuteCacheUpdateRequest
+      | PlainMessage<DeleteListmuteCacheUpdateRequest>
+      | undefined,
+    b:
+      | DeleteListmuteCacheUpdateRequest
+      | PlainMessage<DeleteListmuteCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteListmuteCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteListmuteCacheUpdateResponse
+ */
+export class DeleteListmuteCacheUpdateResponse extends Message<DeleteListmuteCacheUpdateResponse> {
+  constructor(data?: PartialMessage<DeleteListmuteCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteListmuteCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteListmuteCacheUpdateResponse {
+    return new DeleteListmuteCacheUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteListmuteCacheUpdateResponse {
+    return new DeleteListmuteCacheUpdateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteListmuteCacheUpdateResponse {
+    return new DeleteListmuteCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteListmuteCacheUpdateResponse
+      | PlainMessage<DeleteListmuteCacheUpdateResponse>
+      | undefined,
+    b:
+      | DeleteListmuteCacheUpdateResponse
+      | PlainMessage<DeleteListmuteCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteListmuteCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ClearListmutesCacheUpdateRequest
+ */
+export class ClearListmutesCacheUpdateRequest extends Message<ClearListmutesCacheUpdateRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 2;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<ClearListmutesCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ClearListmutesCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClearListmutesCacheUpdateRequest {
+    return new ClearListmutesCacheUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClearListmutesCacheUpdateRequest {
+    return new ClearListmutesCacheUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClearListmutesCacheUpdateRequest {
+    return new ClearListmutesCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | ClearListmutesCacheUpdateRequest
+      | PlainMessage<ClearListmutesCacheUpdateRequest>
+      | undefined,
+    b:
+      | ClearListmutesCacheUpdateRequest
+      | PlainMessage<ClearListmutesCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ClearListmutesCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ClearListmutesCacheUpdateResponse
+ */
+export class ClearListmutesCacheUpdateResponse extends Message<ClearListmutesCacheUpdateResponse> {
+  constructor(data?: PartialMessage<ClearListmutesCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ClearListmutesCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClearListmutesCacheUpdateResponse {
+    return new ClearListmutesCacheUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClearListmutesCacheUpdateResponse {
+    return new ClearListmutesCacheUpdateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClearListmutesCacheUpdateResponse {
+    return new ClearListmutesCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | ClearListmutesCacheUpdateResponse
+      | PlainMessage<ClearListmutesCacheUpdateResponse>
+      | undefined,
+    b:
+      | ClearListmutesCacheUpdateResponse
+      | PlainMessage<ClearListmutesCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ClearListmutesCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostCacheUpdateRequest
+ */
+export class DeleteFeedPostCacheUpdateRequest extends Message<DeleteFeedPostCacheUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<DeleteFeedPostCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostCacheUpdateRequest {
+    return new DeleteFeedPostCacheUpdateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostCacheUpdateRequest {
+    return new DeleteFeedPostCacheUpdateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostCacheUpdateRequest {
+    return new DeleteFeedPostCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostCacheUpdateRequest
+      | PlainMessage<DeleteFeedPostCacheUpdateRequest>
+      | undefined,
+    b:
+      | DeleteFeedPostCacheUpdateRequest
+      | PlainMessage<DeleteFeedPostCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedPostCacheUpdateResponse
+ */
+export class DeleteFeedPostCacheUpdateResponse extends Message<DeleteFeedPostCacheUpdateResponse> {
+  constructor(data?: PartialMessage<DeleteFeedPostCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedPostCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedPostCacheUpdateResponse {
+    return new DeleteFeedPostCacheUpdateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostCacheUpdateResponse {
+    return new DeleteFeedPostCacheUpdateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedPostCacheUpdateResponse {
+    return new DeleteFeedPostCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedPostCacheUpdateResponse
+      | PlainMessage<DeleteFeedPostCacheUpdateResponse>
+      | undefined,
+    b:
+      | DeleteFeedPostCacheUpdateResponse
+      | PlainMessage<DeleteFeedPostCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedPostCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphBlockRequest
+ */
+export class DeleteGraphBlockRequest extends Message<DeleteGraphBlockRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphBlockRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphBlockRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphBlockRequest {
+    return new DeleteGraphBlockRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphBlockRequest {
+    return new DeleteGraphBlockRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphBlockRequest {
+    return new DeleteGraphBlockRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphBlockRequest
+      | PlainMessage<DeleteGraphBlockRequest>
+      | undefined,
+    b:
+      | DeleteGraphBlockRequest
+      | PlainMessage<DeleteGraphBlockRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphBlockRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphBlockResponse
+ */
+export class DeleteGraphBlockResponse extends Message<DeleteGraphBlockResponse> {
+  constructor(data?: PartialMessage<DeleteGraphBlockResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphBlockResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphBlockResponse {
+    return new DeleteGraphBlockResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphBlockResponse {
+    return new DeleteGraphBlockResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphBlockResponse {
+    return new DeleteGraphBlockResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphBlockResponse
+      | PlainMessage<DeleteGraphBlockResponse>
+      | undefined,
+    b:
+      | DeleteGraphBlockResponse
+      | PlainMessage<DeleteGraphBlockResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphBlockResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphBlockRequest
+ */
+export class UpdateGraphBlockRequest extends Message<UpdateGraphBlockRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphBlockRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphBlockRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphBlockRequest {
+    return new UpdateGraphBlockRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphBlockRequest {
+    return new UpdateGraphBlockRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphBlockRequest {
+    return new UpdateGraphBlockRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphBlockRequest
+      | PlainMessage<UpdateGraphBlockRequest>
+      | undefined,
+    b:
+      | UpdateGraphBlockRequest
+      | PlainMessage<UpdateGraphBlockRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphBlockRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphBlockResponse
+ */
+export class UpdateGraphBlockResponse extends Message<UpdateGraphBlockResponse> {
+  constructor(data?: PartialMessage<UpdateGraphBlockResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphBlockResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphBlockResponse {
+    return new UpdateGraphBlockResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphBlockResponse {
+    return new UpdateGraphBlockResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphBlockResponse {
+    return new UpdateGraphBlockResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphBlockResponse
+      | PlainMessage<UpdateGraphBlockResponse>
+      | undefined,
+    b:
+      | UpdateGraphBlockResponse
+      | PlainMessage<UpdateGraphBlockResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphBlockResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorProfileRequest
+ */
+export class CreateActorProfileRequest extends Message<CreateActorProfileRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateActorProfileRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorProfileRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorProfileRequest {
+    return new CreateActorProfileRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorProfileRequest {
+    return new CreateActorProfileRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorProfileRequest {
+    return new CreateActorProfileRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateActorProfileRequest
+      | PlainMessage<CreateActorProfileRequest>
+      | undefined,
+    b:
+      | CreateActorProfileRequest
+      | PlainMessage<CreateActorProfileRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorProfileRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorProfileResponse
+ */
+export class CreateActorProfileResponse extends Message<CreateActorProfileResponse> {
+  constructor(data?: PartialMessage<CreateActorProfileResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorProfileResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorProfileResponse {
+    return new CreateActorProfileResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorProfileResponse {
+    return new CreateActorProfileResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorProfileResponse {
+    return new CreateActorProfileResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateActorProfileResponse
+      | PlainMessage<CreateActorProfileResponse>
+      | undefined,
+    b:
+      | CreateActorProfileResponse
+      | PlainMessage<CreateActorProfileResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorProfileResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteActorProfileRequest
+ */
+export class DeleteActorProfileRequest extends Message<DeleteActorProfileRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteActorProfileRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteActorProfileRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteActorProfileRequest {
+    return new DeleteActorProfileRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorProfileRequest {
+    return new DeleteActorProfileRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorProfileRequest {
+    return new DeleteActorProfileRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteActorProfileRequest
+      | PlainMessage<DeleteActorProfileRequest>
+      | undefined,
+    b:
+      | DeleteActorProfileRequest
+      | PlainMessage<DeleteActorProfileRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteActorProfileRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteActorProfileResponse
+ */
+export class DeleteActorProfileResponse extends Message<DeleteActorProfileResponse> {
+  constructor(data?: PartialMessage<DeleteActorProfileResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteActorProfileResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteActorProfileResponse {
+    return new DeleteActorProfileResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorProfileResponse {
+    return new DeleteActorProfileResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorProfileResponse {
+    return new DeleteActorProfileResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteActorProfileResponse
+      | PlainMessage<DeleteActorProfileResponse>
+      | undefined,
+    b:
+      | DeleteActorProfileResponse
+      | PlainMessage<DeleteActorProfileResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteActorProfileResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateActorProfileRequest
+ */
+export class UpdateActorProfileRequest extends Message<UpdateActorProfileRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateActorProfileRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateActorProfileRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateActorProfileRequest {
+    return new UpdateActorProfileRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorProfileRequest {
+    return new UpdateActorProfileRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorProfileRequest {
+    return new UpdateActorProfileRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateActorProfileRequest
+      | PlainMessage<UpdateActorProfileRequest>
+      | undefined,
+    b:
+      | UpdateActorProfileRequest
+      | PlainMessage<UpdateActorProfileRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateActorProfileRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateActorProfileResponse
+ */
+export class UpdateActorProfileResponse extends Message<UpdateActorProfileResponse> {
+  constructor(data?: PartialMessage<UpdateActorProfileResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateActorProfileResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateActorProfileResponse {
+    return new UpdateActorProfileResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorProfileResponse {
+    return new UpdateActorProfileResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorProfileResponse {
+    return new UpdateActorProfileResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateActorProfileResponse
+      | PlainMessage<UpdateActorProfileResponse>
+      | undefined,
+    b:
+      | UpdateActorProfileResponse
+      | PlainMessage<UpdateActorProfileResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateActorProfileResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorChatDeclarationRequest
+ */
+export class CreateActorChatDeclarationRequest extends Message<CreateActorChatDeclarationRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateActorChatDeclarationRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorChatDeclarationRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorChatDeclarationRequest {
+    return new CreateActorChatDeclarationRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorChatDeclarationRequest {
+    return new CreateActorChatDeclarationRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorChatDeclarationRequest {
+    return new CreateActorChatDeclarationRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateActorChatDeclarationRequest
+      | PlainMessage<CreateActorChatDeclarationRequest>
+      | undefined,
+    b:
+      | CreateActorChatDeclarationRequest
+      | PlainMessage<CreateActorChatDeclarationRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorChatDeclarationRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorChatDeclarationResponse
+ */
+export class CreateActorChatDeclarationResponse extends Message<CreateActorChatDeclarationResponse> {
+  constructor(data?: PartialMessage<CreateActorChatDeclarationResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorChatDeclarationResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorChatDeclarationResponse {
+    return new CreateActorChatDeclarationResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorChatDeclarationResponse {
+    return new CreateActorChatDeclarationResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorChatDeclarationResponse {
+    return new CreateActorChatDeclarationResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateActorChatDeclarationResponse
+      | PlainMessage<CreateActorChatDeclarationResponse>
+      | undefined,
+    b:
+      | CreateActorChatDeclarationResponse
+      | PlainMessage<CreateActorChatDeclarationResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorChatDeclarationResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteActorChatDeclarationRequest
+ */
+export class DeleteActorChatDeclarationRequest extends Message<DeleteActorChatDeclarationRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteActorChatDeclarationRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteActorChatDeclarationRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteActorChatDeclarationRequest {
+    return new DeleteActorChatDeclarationRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorChatDeclarationRequest {
+    return new DeleteActorChatDeclarationRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorChatDeclarationRequest {
+    return new DeleteActorChatDeclarationRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteActorChatDeclarationRequest
+      | PlainMessage<DeleteActorChatDeclarationRequest>
+      | undefined,
+    b:
+      | DeleteActorChatDeclarationRequest
+      | PlainMessage<DeleteActorChatDeclarationRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteActorChatDeclarationRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteActorChatDeclarationResponse
+ */
+export class DeleteActorChatDeclarationResponse extends Message<DeleteActorChatDeclarationResponse> {
+  constructor(data?: PartialMessage<DeleteActorChatDeclarationResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteActorChatDeclarationResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteActorChatDeclarationResponse {
+    return new DeleteActorChatDeclarationResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorChatDeclarationResponse {
+    return new DeleteActorChatDeclarationResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorChatDeclarationResponse {
+    return new DeleteActorChatDeclarationResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteActorChatDeclarationResponse
+      | PlainMessage<DeleteActorChatDeclarationResponse>
+      | undefined,
+    b:
+      | DeleteActorChatDeclarationResponse
+      | PlainMessage<DeleteActorChatDeclarationResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteActorChatDeclarationResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateActorChatDeclarationRequest
+ */
+export class UpdateActorChatDeclarationRequest extends Message<UpdateActorChatDeclarationRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateActorChatDeclarationRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateActorChatDeclarationRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateActorChatDeclarationRequest {
+    return new UpdateActorChatDeclarationRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorChatDeclarationRequest {
+    return new UpdateActorChatDeclarationRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorChatDeclarationRequest {
+    return new UpdateActorChatDeclarationRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateActorChatDeclarationRequest
+      | PlainMessage<UpdateActorChatDeclarationRequest>
+      | undefined,
+    b:
+      | UpdateActorChatDeclarationRequest
+      | PlainMessage<UpdateActorChatDeclarationRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateActorChatDeclarationRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateActorChatDeclarationResponse
+ */
+export class UpdateActorChatDeclarationResponse extends Message<UpdateActorChatDeclarationResponse> {
+  constructor(data?: PartialMessage<UpdateActorChatDeclarationResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateActorChatDeclarationResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateActorChatDeclarationResponse {
+    return new UpdateActorChatDeclarationResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorChatDeclarationResponse {
+    return new UpdateActorChatDeclarationResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateActorChatDeclarationResponse {
+    return new UpdateActorChatDeclarationResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateActorChatDeclarationResponse
+      | PlainMessage<UpdateActorChatDeclarationResponse>
+      | undefined,
+    b:
+      | UpdateActorChatDeclarationResponse
+      | PlainMessage<UpdateActorChatDeclarationResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateActorChatDeclarationResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateLabelerRequest
+ */
+export class CreateLabelerRequest extends Message<CreateLabelerRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateLabelerRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateLabelerRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateLabelerRequest {
+    return new CreateLabelerRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelerRequest {
+    return new CreateLabelerRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelerRequest {
+    return new CreateLabelerRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateLabelerRequest | PlainMessage<CreateLabelerRequest> | undefined,
+    b: CreateLabelerRequest | PlainMessage<CreateLabelerRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateLabelerRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateLabelerResponse
+ */
+export class CreateLabelerResponse extends Message<CreateLabelerResponse> {
+  constructor(data?: PartialMessage<CreateLabelerResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateLabelerResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateLabelerResponse {
+    return new CreateLabelerResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelerResponse {
+    return new CreateLabelerResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateLabelerResponse {
+    return new CreateLabelerResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateLabelerResponse | PlainMessage<CreateLabelerResponse> | undefined,
+    b: CreateLabelerResponse | PlainMessage<CreateLabelerResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateLabelerResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteLabelerRequest
+ */
+export class DeleteLabelerRequest extends Message<DeleteLabelerRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteLabelerRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteLabelerRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteLabelerRequest {
+    return new DeleteLabelerRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteLabelerRequest {
+    return new DeleteLabelerRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteLabelerRequest {
+    return new DeleteLabelerRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: DeleteLabelerRequest | PlainMessage<DeleteLabelerRequest> | undefined,
+    b: DeleteLabelerRequest | PlainMessage<DeleteLabelerRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteLabelerRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteLabelerResponse
+ */
+export class DeleteLabelerResponse extends Message<DeleteLabelerResponse> {
+  constructor(data?: PartialMessage<DeleteLabelerResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteLabelerResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteLabelerResponse {
+    return new DeleteLabelerResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteLabelerResponse {
+    return new DeleteLabelerResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteLabelerResponse {
+    return new DeleteLabelerResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: DeleteLabelerResponse | PlainMessage<DeleteLabelerResponse> | undefined,
+    b: DeleteLabelerResponse | PlainMessage<DeleteLabelerResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteLabelerResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateLabelerRequest
+ */
+export class UpdateLabelerRequest extends Message<UpdateLabelerRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateLabelerRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateLabelerRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateLabelerRequest {
+    return new UpdateLabelerRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLabelerRequest {
+    return new UpdateLabelerRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLabelerRequest {
+    return new UpdateLabelerRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: UpdateLabelerRequest | PlainMessage<UpdateLabelerRequest> | undefined,
+    b: UpdateLabelerRequest | PlainMessage<UpdateLabelerRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateLabelerRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateLabelerResponse
+ */
+export class UpdateLabelerResponse extends Message<UpdateLabelerResponse> {
+  constructor(data?: PartialMessage<UpdateLabelerResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateLabelerResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateLabelerResponse {
+    return new UpdateLabelerResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLabelerResponse {
+    return new UpdateLabelerResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateLabelerResponse {
+    return new UpdateLabelerResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: UpdateLabelerResponse | PlainMessage<UpdateLabelerResponse> | undefined,
+    b: UpdateLabelerResponse | PlainMessage<UpdateLabelerResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateLabelerResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListRequest
+ */
+export class CreateGraphListRequest extends Message<CreateGraphListRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphListRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListRequest {
+    return new CreateGraphListRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListRequest {
+    return new CreateGraphListRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListRequest {
+    return new CreateGraphListRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphListRequest
+      | PlainMessage<CreateGraphListRequest>
+      | undefined,
+    b:
+      | CreateGraphListRequest
+      | PlainMessage<CreateGraphListRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListResponse
+ */
+export class CreateGraphListResponse extends Message<CreateGraphListResponse> {
+  constructor(data?: PartialMessage<CreateGraphListResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListResponse {
+    return new CreateGraphListResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListResponse {
+    return new CreateGraphListResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListResponse {
+    return new CreateGraphListResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphListResponse
+      | PlainMessage<CreateGraphListResponse>
+      | undefined,
+    b:
+      | CreateGraphListResponse
+      | PlainMessage<CreateGraphListResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListRequest
+ */
+export class DeleteGraphListRequest extends Message<DeleteGraphListRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphListRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListRequest {
+    return new DeleteGraphListRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListRequest {
+    return new DeleteGraphListRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListRequest {
+    return new DeleteGraphListRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListRequest
+      | PlainMessage<DeleteGraphListRequest>
+      | undefined,
+    b:
+      | DeleteGraphListRequest
+      | PlainMessage<DeleteGraphListRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListResponse
+ */
+export class DeleteGraphListResponse extends Message<DeleteGraphListResponse> {
+  constructor(data?: PartialMessage<DeleteGraphListResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListResponse {
+    return new DeleteGraphListResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListResponse {
+    return new DeleteGraphListResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListResponse {
+    return new DeleteGraphListResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListResponse
+      | PlainMessage<DeleteGraphListResponse>
+      | undefined,
+    b:
+      | DeleteGraphListResponse
+      | PlainMessage<DeleteGraphListResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphListRequest
+ */
+export class UpdateGraphListRequest extends Message<UpdateGraphListRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphListRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphListRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphListRequest {
+    return new UpdateGraphListRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListRequest {
+    return new UpdateGraphListRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListRequest {
+    return new UpdateGraphListRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphListRequest
+      | PlainMessage<UpdateGraphListRequest>
+      | undefined,
+    b:
+      | UpdateGraphListRequest
+      | PlainMessage<UpdateGraphListRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphListRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphListResponse
+ */
+export class UpdateGraphListResponse extends Message<UpdateGraphListResponse> {
+  constructor(data?: PartialMessage<UpdateGraphListResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphListResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphListResponse {
+    return new UpdateGraphListResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListResponse {
+    return new UpdateGraphListResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListResponse {
+    return new UpdateGraphListResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphListResponse
+      | PlainMessage<UpdateGraphListResponse>
+      | undefined,
+    b:
+      | UpdateGraphListResponse
+      | PlainMessage<UpdateGraphListResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphListResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListitemRequest
+ */
+export class CreateGraphListitemRequest extends Message<CreateGraphListitemRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphListitemRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListitemRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListitemRequest {
+    return new CreateGraphListitemRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListitemRequest {
+    return new CreateGraphListitemRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListitemRequest {
+    return new CreateGraphListitemRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphListitemRequest
+      | PlainMessage<CreateGraphListitemRequest>
+      | undefined,
+    b:
+      | CreateGraphListitemRequest
+      | PlainMessage<CreateGraphListitemRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListitemRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListitemResponse
+ */
+export class CreateGraphListitemResponse extends Message<CreateGraphListitemResponse> {
+  constructor(data?: PartialMessage<CreateGraphListitemResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListitemResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListitemResponse {
+    return new CreateGraphListitemResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListitemResponse {
+    return new CreateGraphListitemResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListitemResponse {
+    return new CreateGraphListitemResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphListitemResponse
+      | PlainMessage<CreateGraphListitemResponse>
+      | undefined,
+    b:
+      | CreateGraphListitemResponse
+      | PlainMessage<CreateGraphListitemResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListitemResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListitemRequest
+ */
+export class DeleteGraphListitemRequest extends Message<DeleteGraphListitemRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphListitemRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListitemRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListitemRequest {
+    return new DeleteGraphListitemRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListitemRequest {
+    return new DeleteGraphListitemRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListitemRequest {
+    return new DeleteGraphListitemRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListitemRequest
+      | PlainMessage<DeleteGraphListitemRequest>
+      | undefined,
+    b:
+      | DeleteGraphListitemRequest
+      | PlainMessage<DeleteGraphListitemRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListitemRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListitemResponse
+ */
+export class DeleteGraphListitemResponse extends Message<DeleteGraphListitemResponse> {
+  constructor(data?: PartialMessage<DeleteGraphListitemResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListitemResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListitemResponse {
+    return new DeleteGraphListitemResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListitemResponse {
+    return new DeleteGraphListitemResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListitemResponse {
+    return new DeleteGraphListitemResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListitemResponse
+      | PlainMessage<DeleteGraphListitemResponse>
+      | undefined,
+    b:
+      | DeleteGraphListitemResponse
+      | PlainMessage<DeleteGraphListitemResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListitemResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphListitemRequest
+ */
+export class UpdateGraphListitemRequest extends Message<UpdateGraphListitemRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphListitemRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphListitemRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphListitemRequest {
+    return new UpdateGraphListitemRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListitemRequest {
+    return new UpdateGraphListitemRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListitemRequest {
+    return new UpdateGraphListitemRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphListitemRequest
+      | PlainMessage<UpdateGraphListitemRequest>
+      | undefined,
+    b:
+      | UpdateGraphListitemRequest
+      | PlainMessage<UpdateGraphListitemRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphListitemRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphListitemResponse
+ */
+export class UpdateGraphListitemResponse extends Message<UpdateGraphListitemResponse> {
+  constructor(data?: PartialMessage<UpdateGraphListitemResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphListitemResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphListitemResponse {
+    return new UpdateGraphListitemResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListitemResponse {
+    return new UpdateGraphListitemResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListitemResponse {
+    return new UpdateGraphListitemResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphListitemResponse
+      | PlainMessage<UpdateGraphListitemResponse>
+      | undefined,
+    b:
+      | UpdateGraphListitemResponse
+      | PlainMessage<UpdateGraphListitemResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphListitemResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListblockRequest
+ */
+export class CreateGraphListblockRequest extends Message<CreateGraphListblockRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphListblockRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListblockRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListblockRequest {
+    return new CreateGraphListblockRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockRequest {
+    return new CreateGraphListblockRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockRequest {
+    return new CreateGraphListblockRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateGraphListblockRequest
+      | PlainMessage<CreateGraphListblockRequest>
+      | undefined,
+    b:
+      | CreateGraphListblockRequest
+      | PlainMessage<CreateGraphListblockRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListblockRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListblockResponse
+ */
+export class CreateGraphListblockResponse extends Message<CreateGraphListblockResponse> {
+  constructor(data?: PartialMessage<CreateGraphListblockResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListblockResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListblockResponse {
+    return new CreateGraphListblockResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockResponse {
+    return new CreateGraphListblockResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockResponse {
+    return new CreateGraphListblockResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphListblockResponse
+      | PlainMessage<CreateGraphListblockResponse>
+      | undefined,
+    b:
+      | CreateGraphListblockResponse
+      | PlainMessage<CreateGraphListblockResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListblockResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListblockCacheUpdateRequest
+ */
+export class CreateGraphListblockCacheUpdateRequest extends Message<CreateGraphListblockCacheUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateGraphListblockCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListblockCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListblockCacheUpdateRequest {
+    return new CreateGraphListblockCacheUpdateRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockCacheUpdateRequest {
+    return new CreateGraphListblockCacheUpdateRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockCacheUpdateRequest {
+    return new CreateGraphListblockCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphListblockCacheUpdateRequest
+      | PlainMessage<CreateGraphListblockCacheUpdateRequest>
+      | undefined,
+    b:
+      | CreateGraphListblockCacheUpdateRequest
+      | PlainMessage<CreateGraphListblockCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListblockCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateGraphListblockCacheUpdateResponse
+ */
+export class CreateGraphListblockCacheUpdateResponse extends Message<CreateGraphListblockCacheUpdateResponse> {
+  constructor(data?: PartialMessage<CreateGraphListblockCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateGraphListblockCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateGraphListblockCacheUpdateResponse {
+    return new CreateGraphListblockCacheUpdateResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockCacheUpdateResponse {
+    return new CreateGraphListblockCacheUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateGraphListblockCacheUpdateResponse {
+    return new CreateGraphListblockCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateGraphListblockCacheUpdateResponse
+      | PlainMessage<CreateGraphListblockCacheUpdateResponse>
+      | undefined,
+    b:
+      | CreateGraphListblockCacheUpdateResponse
+      | PlainMessage<CreateGraphListblockCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateGraphListblockCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListblockRequest
+ */
+export class DeleteGraphListblockRequest extends Message<DeleteGraphListblockRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteGraphListblockRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListblockRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListblockRequest {
+    return new DeleteGraphListblockRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockRequest {
+    return new DeleteGraphListblockRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockRequest {
+    return new DeleteGraphListblockRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListblockRequest
+      | PlainMessage<DeleteGraphListblockRequest>
+      | undefined,
+    b:
+      | DeleteGraphListblockRequest
+      | PlainMessage<DeleteGraphListblockRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListblockRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListblockResponse
+ */
+export class DeleteGraphListblockResponse extends Message<DeleteGraphListblockResponse> {
+  constructor(data?: PartialMessage<DeleteGraphListblockResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListblockResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListblockResponse {
+    return new DeleteGraphListblockResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockResponse {
+    return new DeleteGraphListblockResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockResponse {
+    return new DeleteGraphListblockResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListblockResponse
+      | PlainMessage<DeleteGraphListblockResponse>
+      | undefined,
+    b:
+      | DeleteGraphListblockResponse
+      | PlainMessage<DeleteGraphListblockResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListblockResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListblockCacheUpdateRequest
+ */
+export class DeleteGraphListblockCacheUpdateRequest extends Message<DeleteGraphListblockCacheUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<DeleteGraphListblockCacheUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListblockCacheUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListblockCacheUpdateRequest {
+    return new DeleteGraphListblockCacheUpdateRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockCacheUpdateRequest {
+    return new DeleteGraphListblockCacheUpdateRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockCacheUpdateRequest {
+    return new DeleteGraphListblockCacheUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListblockCacheUpdateRequest
+      | PlainMessage<DeleteGraphListblockCacheUpdateRequest>
+      | undefined,
+    b:
+      | DeleteGraphListblockCacheUpdateRequest
+      | PlainMessage<DeleteGraphListblockCacheUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListblockCacheUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteGraphListblockCacheUpdateResponse
+ */
+export class DeleteGraphListblockCacheUpdateResponse extends Message<DeleteGraphListblockCacheUpdateResponse> {
+  constructor(data?: PartialMessage<DeleteGraphListblockCacheUpdateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteGraphListblockCacheUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteGraphListblockCacheUpdateResponse {
+    return new DeleteGraphListblockCacheUpdateResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockCacheUpdateResponse {
+    return new DeleteGraphListblockCacheUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteGraphListblockCacheUpdateResponse {
+    return new DeleteGraphListblockCacheUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteGraphListblockCacheUpdateResponse
+      | PlainMessage<DeleteGraphListblockCacheUpdateResponse>
+      | undefined,
+    b:
+      | DeleteGraphListblockCacheUpdateResponse
+      | PlainMessage<DeleteGraphListblockCacheUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteGraphListblockCacheUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphListblockRequest
+ */
+export class UpdateGraphListblockRequest extends Message<UpdateGraphListblockRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateGraphListblockRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphListblockRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphListblockRequest {
+    return new UpdateGraphListblockRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListblockRequest {
+    return new UpdateGraphListblockRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListblockRequest {
+    return new UpdateGraphListblockRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateGraphListblockRequest
+      | PlainMessage<UpdateGraphListblockRequest>
+      | undefined,
+    b:
+      | UpdateGraphListblockRequest
+      | PlainMessage<UpdateGraphListblockRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphListblockRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateGraphListblockResponse
+ */
+export class UpdateGraphListblockResponse extends Message<UpdateGraphListblockResponse> {
+  constructor(data?: PartialMessage<UpdateGraphListblockResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateGraphListblockResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateGraphListblockResponse {
+    return new UpdateGraphListblockResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListblockResponse {
+    return new UpdateGraphListblockResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateGraphListblockResponse {
+    return new UpdateGraphListblockResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateGraphListblockResponse
+      | PlainMessage<UpdateGraphListblockResponse>
+      | undefined,
+    b:
+      | UpdateGraphListblockResponse
+      | PlainMessage<UpdateGraphListblockResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateGraphListblockResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedGeneratorRequest
+ */
+export class CreateFeedGeneratorRequest extends Message<CreateFeedGeneratorRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedGeneratorRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedGeneratorRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedGeneratorRequest {
+    return new CreateFeedGeneratorRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorRequest {
+    return new CreateFeedGeneratorRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorRequest {
+    return new CreateFeedGeneratorRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedGeneratorRequest
+      | PlainMessage<CreateFeedGeneratorRequest>
+      | undefined,
+    b:
+      | CreateFeedGeneratorRequest
+      | PlainMessage<CreateFeedGeneratorRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedGeneratorRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedGeneratorResponse
+ */
+export class CreateFeedGeneratorResponse extends Message<CreateFeedGeneratorResponse> {
+  constructor(data?: PartialMessage<CreateFeedGeneratorResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedGeneratorResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedGeneratorResponse {
+    return new CreateFeedGeneratorResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorResponse {
+    return new CreateFeedGeneratorResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorResponse {
+    return new CreateFeedGeneratorResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedGeneratorResponse
+      | PlainMessage<CreateFeedGeneratorResponse>
+      | undefined,
+    b:
+      | CreateFeedGeneratorResponse
+      | PlainMessage<CreateFeedGeneratorResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedGeneratorResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedGeneratorSearchDBUpdateRequest
+ */
+export class CreateFeedGeneratorSearchDBUpdateRequest extends Message<CreateFeedGeneratorSearchDBUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 5;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 6;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedGeneratorSearchDBUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedGeneratorSearchDBUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 5, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedGeneratorSearchDBUpdateRequest {
+    return new CreateFeedGeneratorSearchDBUpdateRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorSearchDBUpdateRequest {
+    return new CreateFeedGeneratorSearchDBUpdateRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorSearchDBUpdateRequest {
+    return new CreateFeedGeneratorSearchDBUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedGeneratorSearchDBUpdateRequest
+      | PlainMessage<CreateFeedGeneratorSearchDBUpdateRequest>
+      | undefined,
+    b:
+      | CreateFeedGeneratorSearchDBUpdateRequest
+      | PlainMessage<CreateFeedGeneratorSearchDBUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedGeneratorSearchDBUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedGeneratorSearchDBUpdateResponse
+ */
+export class CreateFeedGeneratorSearchDBUpdateResponse extends Message<CreateFeedGeneratorSearchDBUpdateResponse> {
+  constructor(
+    data?: PartialMessage<CreateFeedGeneratorSearchDBUpdateResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedGeneratorSearchDBUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedGeneratorSearchDBUpdateResponse {
+    return new CreateFeedGeneratorSearchDBUpdateResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorSearchDBUpdateResponse {
+    return new CreateFeedGeneratorSearchDBUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedGeneratorSearchDBUpdateResponse {
+    return new CreateFeedGeneratorSearchDBUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedGeneratorSearchDBUpdateResponse
+      | PlainMessage<CreateFeedGeneratorSearchDBUpdateResponse>
+      | undefined,
+    b:
+      | CreateFeedGeneratorSearchDBUpdateResponse
+      | PlainMessage<CreateFeedGeneratorSearchDBUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedGeneratorSearchDBUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedGeneratorSearchDBUpdateRequest
+ */
+export class UpdateFeedGeneratorSearchDBUpdateRequest extends Message<UpdateFeedGeneratorSearchDBUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 5;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 6;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedGeneratorSearchDBUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedGeneratorSearchDBUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 5, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedGeneratorSearchDBUpdateRequest {
+    return new UpdateFeedGeneratorSearchDBUpdateRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorSearchDBUpdateRequest {
+    return new UpdateFeedGeneratorSearchDBUpdateRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorSearchDBUpdateRequest {
+    return new UpdateFeedGeneratorSearchDBUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedGeneratorSearchDBUpdateRequest
+      | PlainMessage<UpdateFeedGeneratorSearchDBUpdateRequest>
+      | undefined,
+    b:
+      | UpdateFeedGeneratorSearchDBUpdateRequest
+      | PlainMessage<UpdateFeedGeneratorSearchDBUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedGeneratorSearchDBUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedGeneratorSearchDBUpdateResponse
+ */
+export class UpdateFeedGeneratorSearchDBUpdateResponse extends Message<UpdateFeedGeneratorSearchDBUpdateResponse> {
+  constructor(
+    data?: PartialMessage<UpdateFeedGeneratorSearchDBUpdateResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedGeneratorSearchDBUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedGeneratorSearchDBUpdateResponse {
+    return new UpdateFeedGeneratorSearchDBUpdateResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorSearchDBUpdateResponse {
+    return new UpdateFeedGeneratorSearchDBUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorSearchDBUpdateResponse {
+    return new UpdateFeedGeneratorSearchDBUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedGeneratorSearchDBUpdateResponse
+      | PlainMessage<UpdateFeedGeneratorSearchDBUpdateResponse>
+      | undefined,
+    b:
+      | UpdateFeedGeneratorSearchDBUpdateResponse
+      | PlainMessage<UpdateFeedGeneratorSearchDBUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedGeneratorSearchDBUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedGeneratorSearchDBUpdateRequest
+ */
+export class DeleteFeedGeneratorSearchDBUpdateRequest extends Message<DeleteFeedGeneratorSearchDBUpdateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<DeleteFeedGeneratorSearchDBUpdateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedGeneratorSearchDBUpdateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedGeneratorSearchDBUpdateRequest {
+    return new DeleteFeedGeneratorSearchDBUpdateRequest().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorSearchDBUpdateRequest {
+    return new DeleteFeedGeneratorSearchDBUpdateRequest().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorSearchDBUpdateRequest {
+    return new DeleteFeedGeneratorSearchDBUpdateRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedGeneratorSearchDBUpdateRequest
+      | PlainMessage<DeleteFeedGeneratorSearchDBUpdateRequest>
+      | undefined,
+    b:
+      | DeleteFeedGeneratorSearchDBUpdateRequest
+      | PlainMessage<DeleteFeedGeneratorSearchDBUpdateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedGeneratorSearchDBUpdateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedGeneratorSearchDBUpdateResponse
+ */
+export class DeleteFeedGeneratorSearchDBUpdateResponse extends Message<DeleteFeedGeneratorSearchDBUpdateResponse> {
+  constructor(
+    data?: PartialMessage<DeleteFeedGeneratorSearchDBUpdateResponse>,
+  ) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedGeneratorSearchDBUpdateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedGeneratorSearchDBUpdateResponse {
+    return new DeleteFeedGeneratorSearchDBUpdateResponse().fromBinary(
+      bytes,
+      options,
+    )
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorSearchDBUpdateResponse {
+    return new DeleteFeedGeneratorSearchDBUpdateResponse().fromJson(
+      jsonValue,
+      options,
+    )
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorSearchDBUpdateResponse {
+    return new DeleteFeedGeneratorSearchDBUpdateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedGeneratorSearchDBUpdateResponse
+      | PlainMessage<DeleteFeedGeneratorSearchDBUpdateResponse>
+      | undefined,
+    b:
+      | DeleteFeedGeneratorSearchDBUpdateResponse
+      | PlainMessage<DeleteFeedGeneratorSearchDBUpdateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedGeneratorSearchDBUpdateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedGeneratorRequest
+ */
+export class DeleteFeedGeneratorRequest extends Message<DeleteFeedGeneratorRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedGeneratorRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedGeneratorRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedGeneratorRequest {
+    return new DeleteFeedGeneratorRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorRequest {
+    return new DeleteFeedGeneratorRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorRequest {
+    return new DeleteFeedGeneratorRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedGeneratorRequest
+      | PlainMessage<DeleteFeedGeneratorRequest>
+      | undefined,
+    b:
+      | DeleteFeedGeneratorRequest
+      | PlainMessage<DeleteFeedGeneratorRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedGeneratorRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedGeneratorResponse
+ */
+export class DeleteFeedGeneratorResponse extends Message<DeleteFeedGeneratorResponse> {
+  constructor(data?: PartialMessage<DeleteFeedGeneratorResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedGeneratorResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedGeneratorResponse {
+    return new DeleteFeedGeneratorResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorResponse {
+    return new DeleteFeedGeneratorResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedGeneratorResponse {
+    return new DeleteFeedGeneratorResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedGeneratorResponse
+      | PlainMessage<DeleteFeedGeneratorResponse>
+      | undefined,
+    b:
+      | DeleteFeedGeneratorResponse
+      | PlainMessage<DeleteFeedGeneratorResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedGeneratorResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedGeneratorRequest
+ */
+export class UpdateFeedGeneratorRequest extends Message<UpdateFeedGeneratorRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedGeneratorRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedGeneratorRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedGeneratorRequest {
+    return new UpdateFeedGeneratorRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorRequest {
+    return new UpdateFeedGeneratorRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorRequest {
+    return new UpdateFeedGeneratorRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedGeneratorRequest
+      | PlainMessage<UpdateFeedGeneratorRequest>
+      | undefined,
+    b:
+      | UpdateFeedGeneratorRequest
+      | PlainMessage<UpdateFeedGeneratorRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedGeneratorRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedGeneratorResponse
+ */
+export class UpdateFeedGeneratorResponse extends Message<UpdateFeedGeneratorResponse> {
+  constructor(data?: PartialMessage<UpdateFeedGeneratorResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedGeneratorResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedGeneratorResponse {
+    return new UpdateFeedGeneratorResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorResponse {
+    return new UpdateFeedGeneratorResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedGeneratorResponse {
+    return new UpdateFeedGeneratorResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedGeneratorResponse
+      | PlainMessage<UpdateFeedGeneratorResponse>
+      | undefined,
+    b:
+      | UpdateFeedGeneratorResponse
+      | PlainMessage<UpdateFeedGeneratorResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedGeneratorResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedThreadgateRequest
+ */
+export class CreateFeedThreadgateRequest extends Message<CreateFeedThreadgateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<CreateFeedThreadgateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedThreadgateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedThreadgateRequest {
+    return new CreateFeedThreadgateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedThreadgateRequest {
+    return new CreateFeedThreadgateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedThreadgateRequest {
+    return new CreateFeedThreadgateRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateFeedThreadgateRequest
+      | PlainMessage<CreateFeedThreadgateRequest>
+      | undefined,
+    b:
+      | CreateFeedThreadgateRequest
+      | PlainMessage<CreateFeedThreadgateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedThreadgateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateFeedThreadgateResponse
+ */
+export class CreateFeedThreadgateResponse extends Message<CreateFeedThreadgateResponse> {
+  constructor(data?: PartialMessage<CreateFeedThreadgateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateFeedThreadgateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateFeedThreadgateResponse {
+    return new CreateFeedThreadgateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedThreadgateResponse {
+    return new CreateFeedThreadgateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateFeedThreadgateResponse {
+    return new CreateFeedThreadgateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateFeedThreadgateResponse
+      | PlainMessage<CreateFeedThreadgateResponse>
+      | undefined,
+    b:
+      | CreateFeedThreadgateResponse
+      | PlainMessage<CreateFeedThreadgateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateFeedThreadgateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedThreadgateRequest
+ */
+export class DeleteFeedThreadgateRequest extends Message<DeleteFeedThreadgateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  constructor(data?: PartialMessage<DeleteFeedThreadgateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedThreadgateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedThreadgateRequest {
+    return new DeleteFeedThreadgateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedThreadgateRequest {
+    return new DeleteFeedThreadgateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedThreadgateRequest {
+    return new DeleteFeedThreadgateRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteFeedThreadgateRequest
+      | PlainMessage<DeleteFeedThreadgateRequest>
+      | undefined,
+    b:
+      | DeleteFeedThreadgateRequest
+      | PlainMessage<DeleteFeedThreadgateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedThreadgateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteFeedThreadgateResponse
+ */
+export class DeleteFeedThreadgateResponse extends Message<DeleteFeedThreadgateResponse> {
+  constructor(data?: PartialMessage<DeleteFeedThreadgateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteFeedThreadgateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteFeedThreadgateResponse {
+    return new DeleteFeedThreadgateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedThreadgateResponse {
+    return new DeleteFeedThreadgateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteFeedThreadgateResponse {
+    return new DeleteFeedThreadgateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | DeleteFeedThreadgateResponse
+      | PlainMessage<DeleteFeedThreadgateResponse>
+      | undefined,
+    b:
+      | DeleteFeedThreadgateResponse
+      | PlainMessage<DeleteFeedThreadgateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteFeedThreadgateResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedThreadgateRequest
+ */
+export class UpdateFeedThreadgateRequest extends Message<UpdateFeedThreadgateRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string rkey = 2;
+   */
+  rkey = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 3;
+   */
+  seen?: Timestamp
+
+  /**
+   * @generated from field: string cid = 4;
+   */
+  cid = ''
+
+  /**
+   * @generated from field: bytes record = 5;
+   */
+  record = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateFeedThreadgateRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedThreadgateRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rkey', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'seen', kind: 'message', T: Timestamp },
+    { no: 4, name: 'cid', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: 'record', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedThreadgateRequest {
+    return new UpdateFeedThreadgateRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedThreadgateRequest {
+    return new UpdateFeedThreadgateRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedThreadgateRequest {
+    return new UpdateFeedThreadgateRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateFeedThreadgateRequest
+      | PlainMessage<UpdateFeedThreadgateRequest>
+      | undefined,
+    b:
+      | UpdateFeedThreadgateRequest
+      | PlainMessage<UpdateFeedThreadgateRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedThreadgateRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateFeedThreadgateResponse
+ */
+export class UpdateFeedThreadgateResponse extends Message<UpdateFeedThreadgateResponse> {
+  constructor(data?: PartialMessage<UpdateFeedThreadgateResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateFeedThreadgateResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateFeedThreadgateResponse {
+    return new UpdateFeedThreadgateResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedThreadgateResponse {
+    return new UpdateFeedThreadgateResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateFeedThreadgateResponse {
+    return new UpdateFeedThreadgateResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | UpdateFeedThreadgateResponse
+      | PlainMessage<UpdateFeedThreadgateResponse>
+      | undefined,
+    b:
+      | UpdateFeedThreadgateResponse
+      | PlainMessage<UpdateFeedThreadgateResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateFeedThreadgateResponse, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.CreateActorMuteRequest
  */
 export class CreateActorMuteRequest extends Message<CreateActorMuteRequest> {
@@ -11505,5 +22079,2752 @@ export class ClearActorMutelistSubscriptionsResponse extends Message<ClearActorM
       | undefined,
   ): boolean {
     return proto3.util.equals(ClearActorMutelistSubscriptionsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateIdentityRequest
+ */
+export class UpdateIdentityRequest extends Message<UpdateIdentityRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string handle = 2;
+   */
+  handle = ''
+
+  /**
+   * @generated from field: bytes keys = 3;
+   */
+  keys = new Uint8Array(0)
+
+  /**
+   * @generated from field: bytes services = 4;
+   */
+  services = new Uint8Array(0)
+
+  constructor(data?: PartialMessage<UpdateIdentityRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateIdentityRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'handle', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'keys', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 4, name: 'services', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateIdentityRequest {
+    return new UpdateIdentityRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateIdentityRequest {
+    return new UpdateIdentityRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateIdentityRequest {
+    return new UpdateIdentityRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: UpdateIdentityRequest | PlainMessage<UpdateIdentityRequest> | undefined,
+    b: UpdateIdentityRequest | PlainMessage<UpdateIdentityRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateIdentityRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.UpdateIdentityResponse
+ */
+export class UpdateIdentityResponse extends Message<UpdateIdentityResponse> {
+  constructor(data?: PartialMessage<UpdateIdentityResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.UpdateIdentityResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): UpdateIdentityResponse {
+    return new UpdateIdentityResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateIdentityResponse {
+    return new UpdateIdentityResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): UpdateIdentityResponse {
+    return new UpdateIdentityResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | UpdateIdentityResponse
+      | PlainMessage<UpdateIdentityResponse>
+      | undefined,
+    b:
+      | UpdateIdentityResponse
+      | PlainMessage<UpdateIdentityResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(UpdateIdentityResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorRequest
+ */
+export class TombstoneActorRequest extends Message<TombstoneActorRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 2;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<TombstoneActorRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorRequest {
+    return new TombstoneActorRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorRequest {
+    return new TombstoneActorRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorRequest {
+    return new TombstoneActorRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: TombstoneActorRequest | PlainMessage<TombstoneActorRequest> | undefined,
+    b: TombstoneActorRequest | PlainMessage<TombstoneActorRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorResponse
+ */
+export class TombstoneActorResponse extends Message<TombstoneActorResponse> {
+  constructor(data?: PartialMessage<TombstoneActorResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorResponse {
+    return new TombstoneActorResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorResponse {
+    return new TombstoneActorResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorResponse {
+    return new TombstoneActorResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorResponse
+      | PlainMessage<TombstoneActorResponse>
+      | undefined,
+    b:
+      | TombstoneActorResponse
+      | PlainMessage<TombstoneActorResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorPostsRequest
+ */
+export class TombstoneActorPostsRequest extends Message<TombstoneActorPostsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorPostsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorPostsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorPostsRequest {
+    return new TombstoneActorPostsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorPostsRequest {
+    return new TombstoneActorPostsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorPostsRequest {
+    return new TombstoneActorPostsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorPostsRequest
+      | PlainMessage<TombstoneActorPostsRequest>
+      | undefined,
+    b:
+      | TombstoneActorPostsRequest
+      | PlainMessage<TombstoneActorPostsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorPostsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorPostsResponse
+ */
+export class TombstoneActorPostsResponse extends Message<TombstoneActorPostsResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorPostsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorPostsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorPostsResponse {
+    return new TombstoneActorPostsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorPostsResponse {
+    return new TombstoneActorPostsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorPostsResponse {
+    return new TombstoneActorPostsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorPostsResponse
+      | PlainMessage<TombstoneActorPostsResponse>
+      | undefined,
+    b:
+      | TombstoneActorPostsResponse
+      | PlainMessage<TombstoneActorPostsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorPostsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorLikesRequest
+ */
+export class TombstoneActorLikesRequest extends Message<TombstoneActorLikesRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorLikesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorLikesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorLikesRequest {
+    return new TombstoneActorLikesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorLikesRequest {
+    return new TombstoneActorLikesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorLikesRequest {
+    return new TombstoneActorLikesRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorLikesRequest
+      | PlainMessage<TombstoneActorLikesRequest>
+      | undefined,
+    b:
+      | TombstoneActorLikesRequest
+      | PlainMessage<TombstoneActorLikesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorLikesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorLikesResponse
+ */
+export class TombstoneActorLikesResponse extends Message<TombstoneActorLikesResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorLikesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorLikesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorLikesResponse {
+    return new TombstoneActorLikesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorLikesResponse {
+    return new TombstoneActorLikesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorLikesResponse {
+    return new TombstoneActorLikesResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorLikesResponse
+      | PlainMessage<TombstoneActorLikesResponse>
+      | undefined,
+    b:
+      | TombstoneActorLikesResponse
+      | PlainMessage<TombstoneActorLikesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorLikesResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorRepostsRequest
+ */
+export class TombstoneActorRepostsRequest extends Message<TombstoneActorRepostsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorRepostsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorRepostsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorRepostsRequest {
+    return new TombstoneActorRepostsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorRepostsRequest {
+    return new TombstoneActorRepostsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorRepostsRequest {
+    return new TombstoneActorRepostsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorRepostsRequest
+      | PlainMessage<TombstoneActorRepostsRequest>
+      | undefined,
+    b:
+      | TombstoneActorRepostsRequest
+      | PlainMessage<TombstoneActorRepostsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorRepostsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorRepostsResponse
+ */
+export class TombstoneActorRepostsResponse extends Message<TombstoneActorRepostsResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorRepostsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorRepostsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorRepostsResponse {
+    return new TombstoneActorRepostsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorRepostsResponse {
+    return new TombstoneActorRepostsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorRepostsResponse {
+    return new TombstoneActorRepostsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorRepostsResponse
+      | PlainMessage<TombstoneActorRepostsResponse>
+      | undefined,
+    b:
+      | TombstoneActorRepostsResponse
+      | PlainMessage<TombstoneActorRepostsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorRepostsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorFollowsRequest
+ */
+export class TombstoneActorFollowsRequest extends Message<TombstoneActorFollowsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorFollowsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorFollowsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorFollowsRequest {
+    return new TombstoneActorFollowsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFollowsRequest {
+    return new TombstoneActorFollowsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFollowsRequest {
+    return new TombstoneActorFollowsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorFollowsRequest
+      | PlainMessage<TombstoneActorFollowsRequest>
+      | undefined,
+    b:
+      | TombstoneActorFollowsRequest
+      | PlainMessage<TombstoneActorFollowsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorFollowsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorFollowsResponse
+ */
+export class TombstoneActorFollowsResponse extends Message<TombstoneActorFollowsResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorFollowsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorFollowsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorFollowsResponse {
+    return new TombstoneActorFollowsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFollowsResponse {
+    return new TombstoneActorFollowsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFollowsResponse {
+    return new TombstoneActorFollowsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorFollowsResponse
+      | PlainMessage<TombstoneActorFollowsResponse>
+      | undefined,
+    b:
+      | TombstoneActorFollowsResponse
+      | PlainMessage<TombstoneActorFollowsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorFollowsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorBlocksRequest
+ */
+export class TombstoneActorBlocksRequest extends Message<TombstoneActorBlocksRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorBlocksRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorBlocksRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorBlocksRequest {
+    return new TombstoneActorBlocksRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorBlocksRequest {
+    return new TombstoneActorBlocksRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorBlocksRequest {
+    return new TombstoneActorBlocksRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorBlocksRequest
+      | PlainMessage<TombstoneActorBlocksRequest>
+      | undefined,
+    b:
+      | TombstoneActorBlocksRequest
+      | PlainMessage<TombstoneActorBlocksRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorBlocksRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorBlocksResponse
+ */
+export class TombstoneActorBlocksResponse extends Message<TombstoneActorBlocksResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorBlocksResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorBlocksResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorBlocksResponse {
+    return new TombstoneActorBlocksResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorBlocksResponse {
+    return new TombstoneActorBlocksResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorBlocksResponse {
+    return new TombstoneActorBlocksResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorBlocksResponse
+      | PlainMessage<TombstoneActorBlocksResponse>
+      | undefined,
+    b:
+      | TombstoneActorBlocksResponse
+      | PlainMessage<TombstoneActorBlocksResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorBlocksResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorListblocksRequest
+ */
+export class TombstoneActorListblocksRequest extends Message<TombstoneActorListblocksRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorListblocksRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorListblocksRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorListblocksRequest {
+    return new TombstoneActorListblocksRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListblocksRequest {
+    return new TombstoneActorListblocksRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListblocksRequest {
+    return new TombstoneActorListblocksRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorListblocksRequest
+      | PlainMessage<TombstoneActorListblocksRequest>
+      | undefined,
+    b:
+      | TombstoneActorListblocksRequest
+      | PlainMessage<TombstoneActorListblocksRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorListblocksRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorListblocksResponse
+ */
+export class TombstoneActorListblocksResponse extends Message<TombstoneActorListblocksResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorListblocksResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorListblocksResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorListblocksResponse {
+    return new TombstoneActorListblocksResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListblocksResponse {
+    return new TombstoneActorListblocksResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListblocksResponse {
+    return new TombstoneActorListblocksResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorListblocksResponse
+      | PlainMessage<TombstoneActorListblocksResponse>
+      | undefined,
+    b:
+      | TombstoneActorListblocksResponse
+      | PlainMessage<TombstoneActorListblocksResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorListblocksResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorFeedgensRequest
+ */
+export class TombstoneActorFeedgensRequest extends Message<TombstoneActorFeedgensRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorFeedgensRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorFeedgensRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorFeedgensRequest {
+    return new TombstoneActorFeedgensRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFeedgensRequest {
+    return new TombstoneActorFeedgensRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFeedgensRequest {
+    return new TombstoneActorFeedgensRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorFeedgensRequest
+      | PlainMessage<TombstoneActorFeedgensRequest>
+      | undefined,
+    b:
+      | TombstoneActorFeedgensRequest
+      | PlainMessage<TombstoneActorFeedgensRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorFeedgensRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorFeedgensResponse
+ */
+export class TombstoneActorFeedgensResponse extends Message<TombstoneActorFeedgensResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorFeedgensResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorFeedgensResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorFeedgensResponse {
+    return new TombstoneActorFeedgensResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFeedgensResponse {
+    return new TombstoneActorFeedgensResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorFeedgensResponse {
+    return new TombstoneActorFeedgensResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorFeedgensResponse
+      | PlainMessage<TombstoneActorFeedgensResponse>
+      | undefined,
+    b:
+      | TombstoneActorFeedgensResponse
+      | PlainMessage<TombstoneActorFeedgensResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorFeedgensResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorListsRequest
+ */
+export class TombstoneActorListsRequest extends Message<TombstoneActorListsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorListsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorListsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorListsRequest {
+    return new TombstoneActorListsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListsRequest {
+    return new TombstoneActorListsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListsRequest {
+    return new TombstoneActorListsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorListsRequest
+      | PlainMessage<TombstoneActorListsRequest>
+      | undefined,
+    b:
+      | TombstoneActorListsRequest
+      | PlainMessage<TombstoneActorListsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorListsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorListsResponse
+ */
+export class TombstoneActorListsResponse extends Message<TombstoneActorListsResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorListsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorListsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorListsResponse {
+    return new TombstoneActorListsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListsResponse {
+    return new TombstoneActorListsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListsResponse {
+    return new TombstoneActorListsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | TombstoneActorListsResponse
+      | PlainMessage<TombstoneActorListsResponse>
+      | undefined,
+    b:
+      | TombstoneActorListsResponse
+      | PlainMessage<TombstoneActorListsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorListsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorListItemsRequest
+ */
+export class TombstoneActorListItemsRequest extends Message<TombstoneActorListItemsRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorListItemsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorListItemsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorListItemsRequest {
+    return new TombstoneActorListItemsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListItemsRequest {
+    return new TombstoneActorListItemsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListItemsRequest {
+    return new TombstoneActorListItemsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorListItemsRequest
+      | PlainMessage<TombstoneActorListItemsRequest>
+      | undefined,
+    b:
+      | TombstoneActorListItemsRequest
+      | PlainMessage<TombstoneActorListItemsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorListItemsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorListItemsResponse
+ */
+export class TombstoneActorListItemsResponse extends Message<TombstoneActorListItemsResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorListItemsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorListItemsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorListItemsResponse {
+    return new TombstoneActorListItemsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListItemsResponse {
+    return new TombstoneActorListItemsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorListItemsResponse {
+    return new TombstoneActorListItemsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorListItemsResponse
+      | PlainMessage<TombstoneActorListItemsResponse>
+      | undefined,
+    b:
+      | TombstoneActorListItemsResponse
+      | PlainMessage<TombstoneActorListItemsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorListItemsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorThreadgatesRequest
+ */
+export class TombstoneActorThreadgatesRequest extends Message<TombstoneActorThreadgatesRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<TombstoneActorThreadgatesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorThreadgatesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorThreadgatesRequest {
+    return new TombstoneActorThreadgatesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorThreadgatesRequest {
+    return new TombstoneActorThreadgatesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorThreadgatesRequest {
+    return new TombstoneActorThreadgatesRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorThreadgatesRequest
+      | PlainMessage<TombstoneActorThreadgatesRequest>
+      | undefined,
+    b:
+      | TombstoneActorThreadgatesRequest
+      | PlainMessage<TombstoneActorThreadgatesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorThreadgatesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.TombstoneActorThreadgatesResponse
+ */
+export class TombstoneActorThreadgatesResponse extends Message<TombstoneActorThreadgatesResponse> {
+  /**
+   * @generated from field: string cursor = 1;
+   */
+  cursor = ''
+
+  /**
+   * @generated from field: int32 items_affected = 2;
+   */
+  itemsAffected = 0
+
+  constructor(data?: PartialMessage<TombstoneActorThreadgatesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.TombstoneActorThreadgatesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'items_affected',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): TombstoneActorThreadgatesResponse {
+    return new TombstoneActorThreadgatesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorThreadgatesResponse {
+    return new TombstoneActorThreadgatesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): TombstoneActorThreadgatesResponse {
+    return new TombstoneActorThreadgatesResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | TombstoneActorThreadgatesResponse
+      | PlainMessage<TombstoneActorThreadgatesResponse>
+      | undefined,
+    b:
+      | TombstoneActorThreadgatesResponse
+      | PlainMessage<TombstoneActorThreadgatesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(TombstoneActorThreadgatesResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CleanupTombstonedActorRequest
+ */
+export class CleanupTombstonedActorRequest extends Message<CleanupTombstonedActorRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  constructor(data?: PartialMessage<CleanupTombstonedActorRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CleanupTombstonedActorRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CleanupTombstonedActorRequest {
+    return new CleanupTombstonedActorRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CleanupTombstonedActorRequest {
+    return new CleanupTombstonedActorRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CleanupTombstonedActorRequest {
+    return new CleanupTombstonedActorRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CleanupTombstonedActorRequest
+      | PlainMessage<CleanupTombstonedActorRequest>
+      | undefined,
+    b:
+      | CleanupTombstonedActorRequest
+      | PlainMessage<CleanupTombstonedActorRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CleanupTombstonedActorRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CleanupTombstonedActorResponse
+ */
+export class CleanupTombstonedActorResponse extends Message<CleanupTombstonedActorResponse> {
+  constructor(data?: PartialMessage<CleanupTombstonedActorResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CleanupTombstonedActorResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CleanupTombstonedActorResponse {
+    return new CleanupTombstonedActorResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CleanupTombstonedActorResponse {
+    return new CleanupTombstonedActorResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CleanupTombstonedActorResponse {
+    return new CleanupTombstonedActorResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CleanupTombstonedActorResponse
+      | PlainMessage<CleanupTombstonedActorResponse>
+      | undefined,
+    b:
+      | CleanupTombstonedActorResponse
+      | PlainMessage<CleanupTombstonedActorResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CleanupTombstonedActorResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ResurrectActorRequest
+ */
+export class ResurrectActorRequest extends Message<ResurrectActorRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp seen = 2;
+   */
+  seen?: Timestamp
+
+  constructor(data?: PartialMessage<ResurrectActorRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ResurrectActorRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'seen', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ResurrectActorRequest {
+    return new ResurrectActorRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ResurrectActorRequest {
+    return new ResurrectActorRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ResurrectActorRequest {
+    return new ResurrectActorRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: ResurrectActorRequest | PlainMessage<ResurrectActorRequest> | undefined,
+    b: ResurrectActorRequest | PlainMessage<ResurrectActorRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(ResurrectActorRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ResurrectActorResponse
+ */
+export class ResurrectActorResponse extends Message<ResurrectActorResponse> {
+  constructor(data?: PartialMessage<ResurrectActorResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ResurrectActorResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ResurrectActorResponse {
+    return new ResurrectActorResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ResurrectActorResponse {
+    return new ResurrectActorResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ResurrectActorResponse {
+    return new ResurrectActorResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ResurrectActorResponse
+      | PlainMessage<ResurrectActorResponse>
+      | undefined,
+    b:
+      | ResurrectActorResponse
+      | PlainMessage<ResurrectActorResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ResurrectActorResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SuggestedFeed
+ */
+export class SuggestedFeed extends Message<SuggestedFeed> {
+  /**
+   * @generated from field: string feed_uri = 1;
+   */
+  feedUri = ''
+
+  /**
+   * @generated from field: int64 priority = 2;
+   */
+  priority = protoInt64.zero
+
+  constructor(data?: PartialMessage<SuggestedFeed>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SuggestedFeed'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'feed_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'priority', kind: 'scalar', T: 3 /* ScalarType.INT64 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SuggestedFeed {
+    return new SuggestedFeed().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SuggestedFeed {
+    return new SuggestedFeed().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SuggestedFeed {
+    return new SuggestedFeed().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SuggestedFeed | PlainMessage<SuggestedFeed> | undefined,
+    b: SuggestedFeed | PlainMessage<SuggestedFeed> | undefined,
+  ): boolean {
+    return proto3.util.equals(SuggestedFeed, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateSuggestedFeedsRequest
+ */
+export class CreateSuggestedFeedsRequest extends Message<CreateSuggestedFeedsRequest> {
+  /**
+   * @generated from field: repeated bsky.SuggestedFeed suggested_feeds = 1;
+   */
+  suggestedFeeds: SuggestedFeed[] = []
+
+  /**
+   * @generated from field: bool trim = 2;
+   */
+  trim = false
+
+  constructor(data?: PartialMessage<CreateSuggestedFeedsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateSuggestedFeedsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'suggested_feeds',
+      kind: 'message',
+      T: SuggestedFeed,
+      repeated: true,
+    },
+    { no: 2, name: 'trim', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateSuggestedFeedsRequest {
+    return new CreateSuggestedFeedsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedFeedsRequest {
+    return new CreateSuggestedFeedsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedFeedsRequest {
+    return new CreateSuggestedFeedsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateSuggestedFeedsRequest
+      | PlainMessage<CreateSuggestedFeedsRequest>
+      | undefined,
+    b:
+      | CreateSuggestedFeedsRequest
+      | PlainMessage<CreateSuggestedFeedsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateSuggestedFeedsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateSuggestedFeedsResponse
+ */
+export class CreateSuggestedFeedsResponse extends Message<CreateSuggestedFeedsResponse> {
+  constructor(data?: PartialMessage<CreateSuggestedFeedsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateSuggestedFeedsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateSuggestedFeedsResponse {
+    return new CreateSuggestedFeedsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedFeedsResponse {
+    return new CreateSuggestedFeedsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedFeedsResponse {
+    return new CreateSuggestedFeedsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateSuggestedFeedsResponse
+      | PlainMessage<CreateSuggestedFeedsResponse>
+      | undefined,
+    b:
+      | CreateSuggestedFeedsResponse
+      | PlainMessage<CreateSuggestedFeedsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateSuggestedFeedsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SuggestedActor
+ */
+export class SuggestedActor extends Message<SuggestedActor> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: int64 priority = 2;
+   */
+  priority = protoInt64.zero
+
+  constructor(data?: PartialMessage<SuggestedActor>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SuggestedActor'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'priority', kind: 'scalar', T: 3 /* ScalarType.INT64 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SuggestedActor {
+    return new SuggestedActor().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SuggestedActor {
+    return new SuggestedActor().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SuggestedActor {
+    return new SuggestedActor().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SuggestedActor | PlainMessage<SuggestedActor> | undefined,
+    b: SuggestedActor | PlainMessage<SuggestedActor> | undefined,
+  ): boolean {
+    return proto3.util.equals(SuggestedActor, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateSuggestedActorsRequest
+ */
+export class CreateSuggestedActorsRequest extends Message<CreateSuggestedActorsRequest> {
+  /**
+   * @generated from field: repeated bsky.SuggestedActor suggested_actors = 1;
+   */
+  suggestedActors: SuggestedActor[] = []
+
+  /**
+   * @generated from field: bool trim = 2;
+   */
+  trim = false
+
+  constructor(data?: PartialMessage<CreateSuggestedActorsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateSuggestedActorsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'suggested_actors',
+      kind: 'message',
+      T: SuggestedActor,
+      repeated: true,
+    },
+    { no: 2, name: 'trim', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateSuggestedActorsRequest {
+    return new CreateSuggestedActorsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedActorsRequest {
+    return new CreateSuggestedActorsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedActorsRequest {
+    return new CreateSuggestedActorsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateSuggestedActorsRequest
+      | PlainMessage<CreateSuggestedActorsRequest>
+      | undefined,
+    b:
+      | CreateSuggestedActorsRequest
+      | PlainMessage<CreateSuggestedActorsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateSuggestedActorsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateSuggestedActorsResponse
+ */
+export class CreateSuggestedActorsResponse extends Message<CreateSuggestedActorsResponse> {
+  constructor(data?: PartialMessage<CreateSuggestedActorsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateSuggestedActorsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateSuggestedActorsResponse {
+    return new CreateSuggestedActorsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedActorsResponse {
+    return new CreateSuggestedActorsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedActorsResponse {
+    return new CreateSuggestedActorsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateSuggestedActorsResponse
+      | PlainMessage<CreateSuggestedActorsResponse>
+      | undefined,
+    b:
+      | CreateSuggestedActorsResponse
+      | PlainMessage<CreateSuggestedActorsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateSuggestedActorsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateSuggestedEntitiesRequest
+ */
+export class CreateSuggestedEntitiesRequest extends Message<CreateSuggestedEntitiesRequest> {
+  /**
+   * @generated from field: repeated bsky.SuggestedEntity suggested_entities = 1;
+   */
+  suggestedEntities: SuggestedEntity[] = []
+
+  /**
+   * @generated from field: bool trim = 2;
+   */
+  trim = false
+
+  constructor(data?: PartialMessage<CreateSuggestedEntitiesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateSuggestedEntitiesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'suggested_entities',
+      kind: 'message',
+      T: SuggestedEntity,
+      repeated: true,
+    },
+    { no: 2, name: 'trim', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateSuggestedEntitiesRequest {
+    return new CreateSuggestedEntitiesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedEntitiesRequest {
+    return new CreateSuggestedEntitiesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedEntitiesRequest {
+    return new CreateSuggestedEntitiesRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateSuggestedEntitiesRequest
+      | PlainMessage<CreateSuggestedEntitiesRequest>
+      | undefined,
+    b:
+      | CreateSuggestedEntitiesRequest
+      | PlainMessage<CreateSuggestedEntitiesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateSuggestedEntitiesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateSuggestedEntitiesResponse
+ */
+export class CreateSuggestedEntitiesResponse extends Message<CreateSuggestedEntitiesResponse> {
+  constructor(data?: PartialMessage<CreateSuggestedEntitiesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateSuggestedEntitiesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateSuggestedEntitiesResponse {
+    return new CreateSuggestedEntitiesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedEntitiesResponse {
+    return new CreateSuggestedEntitiesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateSuggestedEntitiesResponse {
+    return new CreateSuggestedEntitiesResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | CreateSuggestedEntitiesResponse
+      | PlainMessage<CreateSuggestedEntitiesResponse>
+      | undefined,
+    b:
+      | CreateSuggestedEntitiesResponse
+      | PlainMessage<CreateSuggestedEntitiesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateSuggestedEntitiesResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ActorDoNotProcessRecord
+ */
+export class ActorDoNotProcessRecord extends Message<ActorDoNotProcessRecord> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string reason = 2;
+   */
+  reason = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created = 3;
+   */
+  created?: Timestamp
+
+  /**
+   * @generated from field: google.protobuf.Timestamp expires = 4;
+   */
+  expires?: Timestamp
+
+  constructor(data?: PartialMessage<ActorDoNotProcessRecord>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ActorDoNotProcessRecord'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'reason', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'created', kind: 'message', T: Timestamp },
+    { no: 4, name: 'expires', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ActorDoNotProcessRecord {
+    return new ActorDoNotProcessRecord().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ActorDoNotProcessRecord {
+    return new ActorDoNotProcessRecord().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ActorDoNotProcessRecord {
+    return new ActorDoNotProcessRecord().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ActorDoNotProcessRecord
+      | PlainMessage<ActorDoNotProcessRecord>
+      | undefined,
+    b:
+      | ActorDoNotProcessRecord
+      | PlainMessage<ActorDoNotProcessRecord>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ActorDoNotProcessRecord, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorDNPRequest
+ */
+export class CreateActorDNPRequest extends Message<CreateActorDNPRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string reason = 2;
+   */
+  reason = ''
+
+  /**
+   * @generated from field: google.protobuf.Timestamp expires = 3;
+   */
+  expires?: Timestamp
+
+  constructor(data?: PartialMessage<CreateActorDNPRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorDNPRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'reason', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'expires', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorDNPRequest {
+    return new CreateActorDNPRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorDNPRequest {
+    return new CreateActorDNPRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorDNPRequest {
+    return new CreateActorDNPRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: CreateActorDNPRequest | PlainMessage<CreateActorDNPRequest> | undefined,
+    b: CreateActorDNPRequest | PlainMessage<CreateActorDNPRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorDNPRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateActorDNPResponse
+ */
+export class CreateActorDNPResponse extends Message<CreateActorDNPResponse> {
+  constructor(data?: PartialMessage<CreateActorDNPResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateActorDNPResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateActorDNPResponse {
+    return new CreateActorDNPResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorDNPResponse {
+    return new CreateActorDNPResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateActorDNPResponse {
+    return new CreateActorDNPResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateActorDNPResponse
+      | PlainMessage<CreateActorDNPResponse>
+      | undefined,
+    b:
+      | CreateActorDNPResponse
+      | PlainMessage<CreateActorDNPResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateActorDNPResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteActorDNPRequest
+ */
+export class DeleteActorDNPRequest extends Message<DeleteActorDNPRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  constructor(data?: PartialMessage<DeleteActorDNPRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteActorDNPRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteActorDNPRequest {
+    return new DeleteActorDNPRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorDNPRequest {
+    return new DeleteActorDNPRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorDNPRequest {
+    return new DeleteActorDNPRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: DeleteActorDNPRequest | PlainMessage<DeleteActorDNPRequest> | undefined,
+    b: DeleteActorDNPRequest | PlainMessage<DeleteActorDNPRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteActorDNPRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteActorDNPResponse
+ */
+export class DeleteActorDNPResponse extends Message<DeleteActorDNPResponse> {
+  constructor(data?: PartialMessage<DeleteActorDNPResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteActorDNPResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteActorDNPResponse {
+    return new DeleteActorDNPResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorDNPResponse {
+    return new DeleteActorDNPResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteActorDNPResponse {
+    return new DeleteActorDNPResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteActorDNPResponse
+      | PlainMessage<DeleteActorDNPResponse>
+      | undefined,
+    b:
+      | DeleteActorDNPResponse
+      | PlainMessage<DeleteActorDNPResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteActorDNPResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetDNPActorsRequest
+ */
+export class GetDNPActorsRequest extends Message<GetDNPActorsRequest> {
+  constructor(data?: PartialMessage<GetDNPActorsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetDNPActorsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetDNPActorsRequest {
+    return new GetDNPActorsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetDNPActorsRequest {
+    return new GetDNPActorsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetDNPActorsRequest {
+    return new GetDNPActorsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetDNPActorsRequest | PlainMessage<GetDNPActorsRequest> | undefined,
+    b: GetDNPActorsRequest | PlainMessage<GetDNPActorsRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetDNPActorsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetDNPActorsResponse
+ */
+export class GetDNPActorsResponse extends Message<GetDNPActorsResponse> {
+  /**
+   * @generated from field: repeated bsky.ActorDoNotProcessRecord do_not_process_records = 1;
+   */
+  doNotProcessRecords: ActorDoNotProcessRecord[] = []
+
+  constructor(data?: PartialMessage<GetDNPActorsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetDNPActorsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'do_not_process_records',
+      kind: 'message',
+      T: ActorDoNotProcessRecord,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetDNPActorsResponse {
+    return new GetDNPActorsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetDNPActorsResponse {
+    return new GetDNPActorsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetDNPActorsResponse {
+    return new GetDNPActorsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetDNPActorsResponse | PlainMessage<GetDNPActorsResponse> | undefined,
+    b: GetDNPActorsResponse | PlainMessage<GetDNPActorsResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetDNPActorsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.RunAdminToolRequest
+ */
+export class RunAdminToolRequest extends Message<RunAdminToolRequest> {
+  /**
+   * @generated from field: google.protobuf.Timestamp backfill_cutoff = 1;
+   */
+  backfillCutoff?: Timestamp
+
+  /**
+   * @generated from field: uint64 num_workers = 2;
+   */
+  numWorkers = protoInt64.zero
+
+  constructor(data?: PartialMessage<RunAdminToolRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.RunAdminToolRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'backfill_cutoff', kind: 'message', T: Timestamp },
+    {
+      no: 2,
+      name: 'num_workers',
+      kind: 'scalar',
+      T: 4 /* ScalarType.UINT64 */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): RunAdminToolRequest {
+    return new RunAdminToolRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): RunAdminToolRequest {
+    return new RunAdminToolRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): RunAdminToolRequest {
+    return new RunAdminToolRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: RunAdminToolRequest | PlainMessage<RunAdminToolRequest> | undefined,
+    b: RunAdminToolRequest | PlainMessage<RunAdminToolRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(RunAdminToolRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.RunAdminToolResponse
+ */
+export class RunAdminToolResponse extends Message<RunAdminToolResponse> {
+  constructor(data?: PartialMessage<RunAdminToolResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.RunAdminToolResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): RunAdminToolResponse {
+    return new RunAdminToolResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): RunAdminToolResponse {
+    return new RunAdminToolResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): RunAdminToolResponse {
+    return new RunAdminToolResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: RunAdminToolResponse | PlainMessage<RunAdminToolResponse> | undefined,
+    b: RunAdminToolResponse | PlainMessage<RunAdminToolResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(RunAdminToolResponse, a, b)
   }
 }
