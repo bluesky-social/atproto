@@ -130,7 +130,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const rows = await followsReq.execute()
       results.push({
         targetDid: subjectDid,
-        dids: rows.map((r) => r.subjectDid)
+        dids: rows.map((r) => r.subjectDid),
       } as FollowsFollowing)
     }
 
