@@ -15,7 +15,7 @@ describe('moderation status language tagging', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_blob_divert_test',
+      dbPostgresSchema: 'ozone_lang_test',
       ozone: {
         blobDivertUrl: `https://blob-report.com`,
         blobDivertAdminPassword: 'test-auth-token',
