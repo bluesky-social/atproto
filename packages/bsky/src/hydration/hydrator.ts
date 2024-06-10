@@ -878,6 +878,7 @@ export const mergeStates = (
     labelers: mergeMaps(stateA.labelers, stateB.labelers),
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
+    knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
   }
 }
 
