@@ -7,6 +7,7 @@ import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import { hydrationLogger } from '../logger'
 import {
   ActorHydrator,
   ProfileAggs,
@@ -195,7 +196,17 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
+    let knownFollowers: KnownFollowers = new HydrationMap()
+
+    try {
+      knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
+    } catch (err) {
+      hydrationLogger.error(
+        { err },
+        'Failed to get known followers for profiles',
+      )
+    }
+
     const knownFollowersDids = Array.from(knownFollowers.values())
       .filter(Boolean)
       .flatMap((f) => f!.followers)
