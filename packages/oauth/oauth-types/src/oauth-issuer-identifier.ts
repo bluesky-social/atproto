@@ -2,9 +2,10 @@ import { z } from 'zod'
 
 // try/catch to support running in a browser, including when process.env is
 // shimmed (e.g. by webpack)
-const ALLOW_UNSECURE = (() => {
+const ALLOW_INSECURE = (() => {
   try {
-    return process.env.NODE_ENV === 'development'
+    const env = process.env.NODE_ENV
+    return env === 'development' || env === 'test'
   } catch {
     return false
   }
@@ -26,7 +27,7 @@ export const oauthIssuerIdentifierSchema = z
     const url = new URL(value)
 
     if (url.protocol !== 'https:') {
-      if (ALLOW_UNSECURE && url.protocol === 'http:') {
+      if (ALLOW_INSECURE && url.protocol === 'http:') {
         // We'll allow HTTP in development mode
       } else {
         ctx.addIssue({
