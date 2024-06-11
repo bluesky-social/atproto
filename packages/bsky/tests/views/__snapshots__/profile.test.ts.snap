@@ -21,14 +21,14 @@ Array [
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
-        "uri": "record(2)",
+        "uri": "record(3)",
         "val": "self-label-a",
       },
       Object {
         "cid": "cids(1)",
         "cts": "1970-01-01T00:00:00.000Z",
         "src": "user(0)",
-        "uri": "record(2)",
+        "uri": "record(3)",
         "val": "self-label-b",
       },
     ],
@@ -37,6 +37,21 @@ Array [
       "blockedBy": false,
       "followedBy": "record(1)",
       "following": "record(0)",
+      "knownFollowers": Object {
+        "count": 1,
+        "followers": Array [
+          Object {
+            "did": "user(2)",
+            "handle": "carol.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "following": "record(2)",
+              "muted": false,
+            },
+          },
+        ],
+      },
       "muted": false,
     },
   },
@@ -46,9 +61,9 @@ Array [
       "labeler": false,
       "lists": 0,
     },
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
     "description": "hi im bob label_me",
-    "did": "user(2)",
+    "did": "user(3)",
     "displayName": "bobby",
     "followersCount": 2,
     "followsCount": 2,
@@ -58,6 +73,39 @@ Array [
     "postsCount": 3,
     "viewer": Object {
       "blockedBy": false,
+      "knownFollowers": Object {
+        "count": 1,
+        "followers": Array [
+          Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+            "did": "user(0)",
+            "displayName": "ali",
+            "handle": "alice.test",
+            "labels": Array [
+              Object {
+                "cid": "cids(1)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "src": "user(0)",
+                "uri": "record(3)",
+                "val": "self-label-a",
+              },
+              Object {
+                "cid": "cids(1)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "src": "user(0)",
+                "uri": "record(3)",
+                "val": "self-label-b",
+              },
+            ],
+            "viewer": Object {
+              "blockedBy": false,
+              "followedBy": "record(1)",
+              "following": "record(0)",
+              "muted": false,
+            },
+          },
+        ],
+      },
       "muted": false,
     },
   },
@@ -67,7 +115,7 @@ Array [
       "labeler": false,
       "lists": 0,
     },
-    "did": "user(4)",
+    "did": "user(2)",
     "followersCount": 2,
     "followsCount": 1,
     "handle": "carol.test",
@@ -75,7 +123,40 @@ Array [
     "postsCount": 2,
     "viewer": Object {
       "blockedBy": false,
-      "following": "record(3)",
+      "following": "record(2)",
+      "knownFollowers": Object {
+        "count": 1,
+        "followers": Array [
+          Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+            "did": "user(0)",
+            "displayName": "ali",
+            "handle": "alice.test",
+            "labels": Array [
+              Object {
+                "cid": "cids(1)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "src": "user(0)",
+                "uri": "record(3)",
+                "val": "self-label-a",
+              },
+              Object {
+                "cid": "cids(1)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "src": "user(0)",
+                "uri": "record(3)",
+                "val": "self-label-b",
+              },
+            ],
+            "viewer": Object {
+              "blockedBy": false,
+              "followedBy": "record(1)",
+              "following": "record(0)",
+              "muted": false,
+            },
+          },
+        ],
+      },
       "muted": false,
     },
   },
@@ -97,6 +178,39 @@ Array [
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(4)",
+      "knownFollowers": Object {
+        "count": 1,
+        "followers": Array [
+          Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+            "did": "user(0)",
+            "displayName": "ali",
+            "handle": "alice.test",
+            "labels": Array [
+              Object {
+                "cid": "cids(1)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "src": "user(0)",
+                "uri": "record(3)",
+                "val": "self-label-a",
+              },
+              Object {
+                "cid": "cids(1)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "src": "user(0)",
+                "uri": "record(3)",
+                "val": "self-label-b",
+              },
+            ],
+            "viewer": Object {
+              "blockedBy": false,
+              "followedBy": "record(1)",
+              "following": "record(0)",
+              "muted": false,
+            },
+          },
+        ],
+      },
       "muted": false,
     },
   },
@@ -123,14 +237,14 @@ Object {
       "cid": "cids(1)",
       "cts": "1970-01-01T00:00:00.000Z",
       "src": "user(0)",
-      "uri": "record(2)",
+      "uri": "record(3)",
       "val": "self-label-a",
     },
     Object {
       "cid": "cids(1)",
       "cts": "1970-01-01T00:00:00.000Z",
       "src": "user(0)",
-      "uri": "record(2)",
+      "uri": "record(3)",
       "val": "self-label-b",
     },
   ],
@@ -139,6 +253,21 @@ Object {
     "blockedBy": false,
     "followedBy": "record(1)",
     "following": "record(0)",
+    "knownFollowers": Object {
+      "count": 1,
+      "followers": Array [
+        Object {
+          "did": "user(2)",
+          "handle": "carol.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "following": "record(2)",
+            "muted": false,
+          },
+        },
+      ],
+    },
     "muted": false,
   },
 }
@@ -163,6 +292,39 @@ Object {
   "viewer": Object {
     "blockedBy": false,
     "followedBy": "record(0)",
+    "knownFollowers": Object {
+      "count": 1,
+      "followers": Array [
+        Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+          "did": "user(1)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(1)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(1)",
+              "uri": "record(3)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(1)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "src": "user(1)",
+              "uri": "record(3)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(2)",
+            "following": "record(1)",
+            "muted": false,
+          },
+        },
+      ],
+    },
     "muted": false,
   },
 }
@@ -188,20 +350,49 @@ Object {
       "cid": "cids(1)",
       "cts": "1970-01-01T00:00:00.000Z",
       "src": "user(0)",
-      "uri": "record(0)",
+      "uri": "record(4)",
       "val": "self-label-a",
     },
     Object {
       "cid": "cids(1)",
       "cts": "1970-01-01T00:00:00.000Z",
       "src": "user(0)",
-      "uri": "record(0)",
+      "uri": "record(4)",
       "val": "self-label-b",
     },
   ],
   "postsCount": 4,
   "viewer": Object {
     "blockedBy": false,
+    "knownFollowers": Object {
+      "count": 2,
+      "followers": Array [
+        Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+          "did": "user(2)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(1)",
+            "following": "record(0)",
+            "muted": false,
+          },
+        },
+        Object {
+          "did": "user(4)",
+          "handle": "carol.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(3)",
+            "following": "record(2)",
+            "muted": false,
+          },
+        },
+      ],
+    },
     "muted": false,
   },
 }
@@ -227,6 +418,35 @@ Object {
   "postsCount": 4,
   "viewer": Object {
     "blockedBy": false,
+    "knownFollowers": Object {
+      "count": 2,
+      "followers": Array [
+        Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+          "did": "user(2)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(1)",
+            "following": "record(0)",
+            "muted": false,
+          },
+        },
+        Object {
+          "did": "user(4)",
+          "handle": "carol.test",
+          "labels": Array [],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(3)",
+            "following": "record(2)",
+            "muted": false,
+          },
+        },
+      ],
+    },
     "muted": false,
   },
 }

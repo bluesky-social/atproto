@@ -972,10 +972,14 @@ message GetRecordTakedownResponse {
 // GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
 message GetFollowsFollowingRequest {
   string actor_did = 1;
-  string target_did = 2;
+  repeated string target_dids = 2;
+}
+message FollowsFollowing {
+  string target_did = 1;
+  repeated string dids = 2;
 }
 message GetFollowsFollowingResponse {
-  repeated string dids = 1;
+  repeated FollowsFollowing results = 1;
 }
 
 // Ping

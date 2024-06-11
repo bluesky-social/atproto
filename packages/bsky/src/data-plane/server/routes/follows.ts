@@ -1,6 +1,7 @@
 import { keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
+import { FollowsFollowing } from '../../../proto/bsky_pb'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
 
@@ -92,7 +93,49 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(follows),
     }
   },
-  async getFollowsFollowing() {
-    throw new Error('not implemented')
+
+  /**
+   * Return known followers of a given actor.
+   *
+   * Example:
+   *   - Alice follows Bob
+   *   - Bob follows Dan
+   *
+   *   If Alice (the viewer) looks at Dan's profile (the subject), she should see that Bob follows Dan
+   */
+  async getFollowsFollowing(req) {
+    const { actorDid: viewerDid, targetDids: subjectDids } = req
+
+    /*
+     * 1. Get all the people the Alice is following
+     * 2. Get all the people the Dan is followed by
+     * 3. Find the intersection
+     */
+
+    const results: FollowsFollowing[] = []
+
+    for (const subjectDid of subjectDids) {
+      const followsReq = db.db
+        .selectFrom('follow')
+        .where('follow.creator', '=', viewerDid)
+        .where(
+          'follow.subjectDid',
+          'in',
+          db.db
+            .selectFrom('follow')
+            .where('follow.subjectDid', '=', subjectDid)
+            .select(['creator']),
+        )
+        .select(['subjectDid'])
+      const rows = await followsReq.execute()
+      results.push(
+        new FollowsFollowing({
+          targetDid: subjectDid,
+          dids: rows.map((r) => r.subjectDid),
+        }),
+      )
+    }
+
+    return { results }
   },
 })

@@ -2,6 +2,7 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { mapDefined } from '@atproto/common'
 import { ImageUriBuilder } from '../image/uri'
 import { HydrationState } from '../hydration/hydrator'
+import { ProfileViewerState as HydratorProfileViewerState } from '../hydration/actor'
 import { ids } from '../lexicon/lexicons'
 import {
   ProfileViewDetailed,
@@ -107,9 +108,19 @@ export class Views {
     if (!actor) return
     const baseView = this.profile(did, state)
     if (!baseView) return
+    const knownFollowersSkeleton = state.knownFollowers?.get(did)
+    const knownFollowers = knownFollowersSkeleton
+      ? this.knownFollowers(knownFollowersSkeleton, state)
+      : undefined
     const profileAggs = state.profileAggs?.get(did)
     return {
       ...baseView,
+      viewer: baseView.viewer
+        ? {
+            ...baseView.viewer,
+            knownFollowers,
+          }
+        : undefined,
       banner: actor.profile?.banner
         ? this.imgUriBuilder.getPresetUri(
             'banner',
@@ -214,6 +225,19 @@ export class Views {
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
     }
+  }
+
+  knownFollowers(
+    knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
+    state: HydrationState,
+  ) {
+    const followers = mapDefined(knownFollowers.followers, (did) => {
+      if (this.viewerBlockExists(did, state)) {
+        return undefined
+      }
+      return this.profileBasic(did, state)
+    })
+    return { count: knownFollowers.count, followers }
   }
 
   blockedProfileViewer(
