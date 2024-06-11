@@ -137,7 +137,6 @@ export class Hydrator {
       dids,
       viewer,
     )
-
     const listUris: string[] = []
     profileViewers?.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
@@ -148,7 +147,7 @@ export class Hydrator {
       removeNonModListsFromProfileViewer(item, listState)
     })
 
-    return mergeManyStates(listState, {
+    return mergeStates(listState, {
       profileViewers,
       ctx,
     })
@@ -166,7 +165,6 @@ export class Hydrator {
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
-
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
