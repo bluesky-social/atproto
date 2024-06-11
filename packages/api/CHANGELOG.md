@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.12.18
+
+### Patch Changes
+
+- [#2557](https://github.com/bluesky-social/atproto/pull/2557) [`58abcbd8b`](https://github.com/bluesky-social/atproto/commit/58abcbd8b6e42a1f66bda6acc3ee6a2c0894e546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds "social proof": `knowFollowers` to `ViewerState` for `ProfileViewDetailed`
+  views and `app.bsky.graph.getKnownFollowers` method for listing known followers
+  of a given user.
+
 ## 0.12.17
 
 ### Patch Changes
