@@ -1,9 +1,14 @@
+import { AuthScope } from '../../auth-verifier'
 import { ActorDb } from '../db'
+import { prefInScope } from './util'
 
 export class PreferenceReader {
   constructor(public db: ActorDb) {}
 
-  async getPreferences(namespace?: string): Promise<AccountPreference[]> {
+  async getPreferences(
+    namespace: string,
+    scope: AuthScope,
+  ): Promise<AccountPreference[]> {
     const prefsRes = await this.db.db
       .selectFrom('account_pref')
       .orderBy('id')
@@ -11,6 +16,7 @@ export class PreferenceReader {
       .execute()
     return prefsRes
       .filter((pref) => !namespace || prefMatchNamespace(namespace, pref.name))
+      .filter((pref) => prefInScope(scope, pref.name))
       .map((pref) => JSON.parse(pref.valueJson))
   }
 }
