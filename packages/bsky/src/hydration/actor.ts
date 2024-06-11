@@ -154,12 +154,10 @@ export class ActorHydrator {
     viewer: string,
   ): Promise<ProfileViewerStates> {
     if (!dids.length) return new HydrationMap<ProfileViewerState>()
-
     const res = await this.dataplane.getRelationships({
       actorDid: viewer,
       targetDids: dids,
     })
-
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
       if (viewer === did) {
