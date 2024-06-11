@@ -40,6 +40,19 @@ describe('thread mutes', () => {
     )
   })
 
+  it('notes that threads are muted in viewer state', async () => {
+    const res = await agent.api.app.bsky.feed.getPosts(
+      {
+        uris: [rootPost.uriStr, replyPost.uriStr],
+      },
+      {
+        headers: await network.serviceHeaders(alice),
+      },
+    )
+    expect(res.data.posts[0].viewer?.threadMuted).toBe(true)
+    expect(res.data.posts[1].viewer?.threadMuted).toBe(true)
+  })
+
   it('prevents notifs from replies', async () => {
     await sc.reply(bob, rootPost, rootPost, 'reply')
     await sc.reply(bob, rootPost, replyPost, 'reply')
@@ -96,6 +109,19 @@ describe('thread mutes', () => {
         headers: await network.serviceHeaders(alice),
       },
     )
+  })
+
+  it('no longer notes that threads are muted in viewer state after unmuting', async () => {
+    const res = await agent.api.app.bsky.feed.getPosts(
+      {
+        uris: [rootPost.uriStr, replyPost.uriStr],
+      },
+      {
+        headers: await network.serviceHeaders(alice),
+      },
+    )
+    expect(res.data.posts[0].viewer?.threadMuted).toBe(false)
+    expect(res.data.posts[1].viewer?.threadMuted).toBe(false)
   })
 
   it('sends notifications after unmuting', async () => {

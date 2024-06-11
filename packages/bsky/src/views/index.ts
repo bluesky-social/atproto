@@ -500,6 +500,7 @@ export class Views {
         ? {
             repost: viewer.repost,
             like: viewer.like,
+            threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
           }
         : undefined,

@@ -529,6 +529,20 @@ message GetMutelistSubscriptionsResponse {
 }
 
 //
+// Thread Mutes
+//
+
+message GetThreadMutesOnSubjectsRequest {
+  string actor_did = 1;
+  repeated string thread_roots = 2;
+}
+
+message GetThreadMutesOnSubjectsResponse {
+  repeated bool muted = 1;
+}
+
+
+//
 // Blocks
 //
 
@@ -1051,6 +1065,9 @@ service Service {
   rpc GetActorMutesActorViaList(GetActorMutesActorViaListRequest) returns (GetActorMutesActorViaListResponse);
   rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
   rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
+
+  // Thread Mutes
+  rpc GetThreadMutesOnSubjects(GetThreadMutesOnSubjectsRequest) returns (GetThreadMutesOnSubjectsResponse);
 
   // Blocks
   rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);

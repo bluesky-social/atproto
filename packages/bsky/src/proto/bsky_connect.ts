@@ -146,6 +146,8 @@ import {
   GetSuggestedFeedsResponse,
   GetThreadGateRecordsRequest,
   GetThreadGateRecordsResponse,
+  GetThreadMutesOnSubjectsRequest,
+  GetThreadMutesOnSubjectsResponse,
   GetThreadRequest,
   GetThreadResponse,
   GetTimelineRequest,
@@ -549,6 +551,17 @@ export const Service = {
       name: 'GetMutelistSubscriptions',
       I: GetMutelistSubscriptionsRequest,
       O: GetMutelistSubscriptionsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Thread Mutes
+     *
+     * @generated from rpc bsky.Service.GetThreadMutesOnSubjects
+     */
+    getThreadMutesOnSubjects: {
+      name: 'GetThreadMutesOnSubjects',
+      I: GetThreadMutesOnSubjectsRequest,
+      O: GetThreadMutesOnSubjectsResponse,
       kind: MethodKind.Unary,
     },
     /**

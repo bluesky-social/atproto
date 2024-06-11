@@ -5697,6 +5697,140 @@ export class GetMutelistSubscriptionsResponse extends Message<GetMutelistSubscri
 }
 
 /**
+ * @generated from message bsky.GetThreadMutesOnSubjectsRequest
+ */
+export class GetThreadMutesOnSubjectsRequest extends Message<GetThreadMutesOnSubjectsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: repeated string thread_roots = 2;
+   */
+  threadRoots: string[] = []
+
+  constructor(data?: PartialMessage<GetThreadMutesOnSubjectsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetThreadMutesOnSubjectsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'thread_roots',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetThreadMutesOnSubjectsRequest {
+    return new GetThreadMutesOnSubjectsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsRequest {
+    return new GetThreadMutesOnSubjectsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsRequest {
+    return new GetThreadMutesOnSubjectsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetThreadMutesOnSubjectsRequest
+      | PlainMessage<GetThreadMutesOnSubjectsRequest>
+      | undefined,
+    b:
+      | GetThreadMutesOnSubjectsRequest
+      | PlainMessage<GetThreadMutesOnSubjectsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetThreadMutesOnSubjectsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetThreadMutesOnSubjectsResponse
+ */
+export class GetThreadMutesOnSubjectsResponse extends Message<GetThreadMutesOnSubjectsResponse> {
+  /**
+   * @generated from field: repeated bool muted = 1;
+   */
+  muted: boolean[] = []
+
+  constructor(data?: PartialMessage<GetThreadMutesOnSubjectsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetThreadMutesOnSubjectsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'muted',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetThreadMutesOnSubjectsResponse {
+    return new GetThreadMutesOnSubjectsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsResponse {
+    return new GetThreadMutesOnSubjectsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsResponse {
+    return new GetThreadMutesOnSubjectsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetThreadMutesOnSubjectsResponse
+      | PlainMessage<GetThreadMutesOnSubjectsResponse>
+      | undefined,
+    b:
+      | GetThreadMutesOnSubjectsResponse
+      | PlainMessage<GetThreadMutesOnSubjectsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetThreadMutesOnSubjectsResponse, a, b)
+  }
+}
+
+/**
  * - Return block uri if there is a block between users A & B (bidirectional)
  *     - hydrating (& actioning) block state on profiles
  *     - handling 3rd party blocks

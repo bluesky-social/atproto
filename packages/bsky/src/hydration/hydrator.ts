@@ -334,6 +334,16 @@ export class Hydrator {
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
+    const allRefs = [
+      ...refs,
+      ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
+      ...postUrisLayer2.map(uriToRef),
+    ]
+    const threadRefs = allRefs.map((ref) => ({
+      ...ref,
+      threadRoot: posts.get(ref.uri)?.record.reply?.root.uri ?? ref.uri,
+    }))
+
     const [
       postAggs,
       postViewers,
@@ -344,12 +354,10 @@ export class Hydrator {
       feedGenState,
       labelerState,
     ] = await Promise.all([
-      this.feed.getPostAggregates([
-        ...refs,
-        ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
-        ...postUrisLayer2.map(uriToRef),
-      ]),
-      ctx.viewer ? this.feed.getPostViewerStates(refs, ctx.viewer) : undefined,
+      this.feed.getPostAggregates(allRefs),
+      ctx.viewer
+        ? this.feed.getPostViewerStates(threadRefs, ctx.viewer)
+        : undefined,
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx),

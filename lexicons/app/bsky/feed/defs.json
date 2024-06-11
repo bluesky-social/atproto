@@ -40,6 +40,7 @@
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
         "like": { "type": "string", "format": "at-uri" },
+        "threadMuted": { "type": "boolean" },
         "replyDisabled": { "type": "boolean" }
       }
     },

@@ -5102,6 +5102,9 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
+          threadMuted: {
+            type: 'boolean',
+          },
           replyDisabled: {
             type: 'boolean',
           },

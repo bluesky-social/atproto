@@ -49,6 +49,7 @@ export function validatePostView(v: unknown): ValidationResult {
 export interface ViewerState {
   repost?: string
   like?: string
+  threadMuted?: boolean
   replyDisabled?: boolean
   [k: string]: unknown
 }
