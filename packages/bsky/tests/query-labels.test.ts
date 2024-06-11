@@ -1,10 +1,8 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import axios from 'axios'
 
 describe('label hydration', () => {
   let network: TestNetwork
-  let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
@@ -17,7 +15,6 @@ describe('label hydration', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_label_hydration',
     })
-    agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)

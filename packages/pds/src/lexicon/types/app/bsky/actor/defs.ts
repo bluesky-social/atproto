@@ -133,6 +133,7 @@ export interface ViewerState {
   blockingByList?: AppBskyGraphDefs.ListViewBasic
   following?: string
   followedBy?: string
+  knownFollowers?: KnownFollowers
   [k: string]: unknown
 }
 
@@ -146,6 +147,25 @@ export function isViewerState(v: unknown): v is ViewerState {
 
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
+}
+
+/** The subject's followers whom you also follow */
+export interface KnownFollowers {
+  count: number
+  followers: ProfileViewBasic[]
+  [k: string]: unknown
+}
+
+export function isKnownFollowers(v: unknown): v is KnownFollowers {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#knownFollowers'
+  )
+}
+
+export function validateKnownFollowers(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#knownFollowers', v)
 }
 
 export type Preferences = (

@@ -18,38 +18,30 @@ Array [
     "postsCount": 5,
     "viewer": Object {
       "blockedBy": false,
+      "knownFollowers": Object {
+        "count": 1,
+        "followers": Array [
+          Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+            "did": "user(1)",
+            "displayName": "bobby",
+            "handle": "bob.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "followedBy": "record(1)",
+              "following": "record(0)",
+              "muted": false,
+            },
+          },
+        ],
+      },
       "muted": false,
     },
   },
   Object {
     "cursor": "0000000000000__bafycid",
     "feed": Array [
-      Object {
-        "post": Object {
-          "author": Object {
-            "did": "user(0)",
-            "handle": "alice.test",
-            "labels": Array [],
-            "viewer": Object {
-              "blockedBy": false,
-              "muted": false,
-            },
-          },
-          "cid": "cids(0)",
-          "indexedAt": "1970-01-01T00:00:00.000Z",
-          "labels": Array [],
-          "likeCount": 0,
-          "record": Object {
-            "$type": "app.bsky.feed.post",
-            "createdAt": "1970-01-01T00:00:00.000Z",
-            "text": "fresh post!",
-          },
-          "replyCount": 0,
-          "repostCount": 0,
-          "uri": "record(0)",
-          "viewer": Object {},
-        },
-      },
       Object {
         "post": Object {
           "author": Object {
@@ -68,21 +60,47 @@ Array [
           "record": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
+            "text": "fresh post!",
+          },
+          "replyCount": 0,
+          "repostCount": 0,
+          "uri": "record(2)",
+          "viewer": Object {},
+        },
+      },
+      Object {
+        "post": Object {
+          "author": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "labels": Array [],
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
+          },
+          "cid": "cids(2)",
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
+          "likeCount": 0,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
             "reply": Object {
               "parent": Object {
-                "cid": "cids(3)",
-                "uri": "record(3)",
+                "cid": "cids(4)",
+                "uri": "record(5)",
               },
               "root": Object {
-                "cid": "cids(2)",
-                "uri": "record(2)",
+                "cid": "cids(3)",
+                "uri": "record(4)",
               },
             },
             "text": "thanks bob",
           },
           "replyCount": 0,
           "repostCount": 1,
-          "uri": "record(1)",
+          "uri": "record(3)",
           "viewer": Object {},
         },
         "reply": Object {
@@ -98,19 +116,19 @@ Array [
           "parent": Object {
             "$type": "app.bsky.feed.defs#postView",
             "author": Object {
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(4)@jpeg",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
               "did": "user(1)",
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
-                "followedBy": "record(5)",
-                "following": "record(4)",
+                "followedBy": "record(1)",
+                "following": "record(0)",
                 "muted": false,
               },
             },
-            "cid": "cids(3)",
+            "cid": "cids(4)",
             "embed": Object {
               "$type": "app.bsky.embed.images#view",
               "images": Array [
@@ -124,17 +142,17 @@ Array [
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [
               Object {
-                "cid": "cids(3)",
+                "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "src": "did:example:labeler",
-                "uri": "record(3)",
+                "uri": "record(5)",
                 "val": "test-label",
               },
               Object {
-                "cid": "cids(3)",
+                "cid": "cids(4)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "src": "did:example:labeler",
-                "uri": "record(3)",
+                "uri": "record(5)",
                 "val": "test-label-2",
               },
             ],
@@ -160,19 +178,19 @@ Array [
               },
               "reply": Object {
                 "parent": Object {
-                  "cid": "cids(2)",
-                  "uri": "record(2)",
+                  "cid": "cids(3)",
+                  "uri": "record(4)",
                 },
                 "root": Object {
-                  "cid": "cids(2)",
-                  "uri": "record(2)",
+                  "cid": "cids(3)",
+                  "uri": "record(4)",
                 },
               },
               "text": "hear that label_me label_me_2",
             },
             "replyCount": 1,
             "repostCount": 0,
-            "uri": "record(3)",
+            "uri": "record(5)",
             "viewer": Object {},
           },
           "root": Object {
@@ -186,7 +204,7 @@ Array [
                 "muted": false,
               },
             },
-            "cid": "cids(2)",
+            "cid": "cids(3)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 3,
@@ -197,7 +215,7 @@ Array [
             },
             "replyCount": 2,
             "repostCount": 1,
-            "uri": "record(2)",
+            "uri": "record(4)",
             "viewer": Object {},
           },
         },
@@ -374,7 +392,7 @@ Array [
               "muted": false,
             },
           },
-          "cid": "cids(2)",
+          "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
           "likeCount": 3,
@@ -385,7 +403,7 @@ Array [
           },
           "replyCount": 2,
           "repostCount": 1,
-          "uri": "record(2)",
+          "uri": "record(4)",
           "viewer": Object {},
         },
       },
@@ -452,7 +470,7 @@ Array [
         },
       },
       Object {
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(4)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
         "description": "hi im bob label_me",
         "did": "user(1)",
         "displayName": "bobby",
@@ -461,8 +479,8 @@ Array [
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "followedBy": "record(5)",
-          "following": "record(4)",
+          "followedBy": "record(1)",
+          "following": "record(0)",
           "muted": false,
         },
       },
