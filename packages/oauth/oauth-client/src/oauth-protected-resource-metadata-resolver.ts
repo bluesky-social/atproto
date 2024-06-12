@@ -1,8 +1,8 @@
 import {
   Fetch,
   FetchResponseError,
+  bindFetch,
   cancelBody,
-  fetchFailureHandler,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
@@ -15,8 +15,7 @@ import {
 } from '@atproto/oauth-types'
 import { contentMime } from './util'
 
-export type { GetCachedOptions }
-export type { OAuthProtectedResourceMetadata }
+export type { GetCachedOptions, OAuthProtectedResourceMetadata }
 
 export type ProtectedResourceMetadataCache = SimpleStore<
   string,
@@ -30,11 +29,15 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   string,
   OAuthProtectedResourceMetadata
 > {
+  private readonly fetch: Fetch<unknown>
+
   constructor(
     cache: ProtectedResourceMetadataCache,
-    private readonly fetch: Fetch = globalThis.fetch,
+    fetch: Fetch = globalThis.fetch,
   ) {
     super(async (origin, options) => this.fetchMetadata(origin, options), cache)
+
+    this.fetch = bindFetch(fetch)
   }
 
   async get(
@@ -62,9 +65,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
       redirect: 'error', // response must be 200 OK
     })
 
-    const response = await this.fetch
-      .call(null, request)
-      .catch(fetchFailureHandler)
+    const response = await this.fetch(request)
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-3.2
     if (response.status !== 200) {
@@ -73,7 +74,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
         response,
         `Unexpected status code ${response.status} for "${url}"`,
         undefined,
-        { request },
+        { cause: request },
       )
     }
 
@@ -83,7 +84,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
         response,
         `Unexpected content type for "${url}"`,
         undefined,
-        { request },
+        { cause: request },
       )
     }
 
