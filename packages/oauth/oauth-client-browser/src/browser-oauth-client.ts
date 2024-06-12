@@ -8,8 +8,12 @@ import {
   TokenSet,
 } from '@atproto/oauth-client'
 import {
+  OAuthClientId,
   OAuthClientMetadataInput,
   OAuthResponseMode,
+  atprotoLoopbackClientMetadata,
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 
@@ -19,6 +23,7 @@ import {
 } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
+import { buildLoopbackClientId } from './util.js'
 
 export type BrowserOAuthClientOptions = {
   clientMetadata?: OAuthClientMetadataInput | string | URL
@@ -116,27 +121,54 @@ export type BrowserOAuthClientLoadOptions = Omit<
   BrowserOAuthClientOptions,
   'clientMetadata'
 > & {
+  clientId: OAuthClientId | 'auto'
   signal?: AbortSignal
 }
 
 export class BrowserOAuthClient extends OAuthClient {
-  static async load(options: BrowserOAuthClientLoadOptions) {
-    const fetch = options?.fetch ?? globalThis.fetch
-    const request = new Request('/.well-known/oauth-client-metadata', {
-      redirect: 'error',
-      signal: options.signal,
-    })
-    const response = await fetch(request)
-    if (!response.ok) throw new TypeError('Failed to fetch client metadata')
+  static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
+    if (clientId === 'auto') {
+      return new BrowserOAuthClient({
+        clientMetadata: atprotoLoopbackClientMetadata(
+          buildLoopbackClientId(window.location),
+        ),
+        ...options,
+      })
+    } else if (isOAuthClientIdLoopback(clientId)) {
+      return new BrowserOAuthClient({
+        clientMetadata: atprotoLoopbackClientMetadata(clientId),
+        ...options,
+      })
+    } else if (isOAuthClientIdDiscoverable(clientId)) {
+      const fetch = options?.fetch ?? globalThis.fetch
+      const request = new Request(clientId, {
+        redirect: 'error',
+        signal: options.signal,
+      })
+      const response = await fetch(request)
 
-    const json: unknown = await response.json()
+      if (response.status !== 200) {
+        throw new TypeError(
+          `Failed to fetch client metadata: ${response.status}`,
+        )
+      }
 
-    options.signal?.throwIfAborted()
+      const mime = response.headers.get('content-type')?.split(';')[0].trim()
+      if (mime !== 'application/json') {
+        throw new TypeError(`Invalid content type: ${mime}`)
+      }
 
-    return new BrowserOAuthClient({
-      clientMetadata: oauthClientMetadataSchema.parse(json),
-      ...options,
-    })
+      const json: unknown = await response.json()
+
+      options.signal?.throwIfAborted()
+
+      return new BrowserOAuthClient({
+        clientMetadata: oauthClientMetadataSchema.parse(json),
+        ...options,
+      })
+    } else {
+      throw new TypeError('Invalid client ID')
+    }
   }
 
   readonly sessionStore: WrappedSessionStore
@@ -353,14 +385,14 @@ export class BrowserOAuthClient extends OAuthClient {
       return null
     }
 
-    const machesLocation = (url: URL) =>
+    const matchesLocation = (url: URL) =>
       location.origin === url.origin && location.pathname === url.pathname
     const redirectUrls = this.clientMetadata.redirect_uris.map(
       (uri) => new URL(uri),
     )
 
     // Only if the current URL is one of the redirect_uris
-    if (!redirectUrls.some(machesLocation)) return null
+    if (!redirectUrls.some(matchesLocation)) return null
 
     return params
   }

@@ -1,4 +1,4 @@
-import { isLoopbackHost } from './hostname.js'
+import { isLoopbackHost } from '@atproto/oauth-types'
 
 /**
  *
@@ -23,12 +23,15 @@ export function compareRedirectUri(
   if (isLoopbackHost(allowedUri.hostname)) {
     const requestUri = new URL(request_uri)
 
-    // > The authorization server MUST allow any port to be specified at the
-    // > time of the request for loopback IP redirect URIs, to accommodate
-    // > clients that obtain an available ephemeral port from the operating
-    // > system at the time of the request.
     return (
-      // allowedUri.port === requestUri.port &&
+      // > The authorization server MUST allow any port to be specified at the
+      // > time of the request for loopback IP redirect URIs, to accommodate
+      // > clients that obtain an available ephemeral port from the operating
+      // > system at the time of the request
+      //
+      // Note: We only apply this rule if the allowed URI does not have a port
+      // specified.
+      (!allowedUri.port || allowedUri.port === requestUri.port) &&
       allowedUri.hostname === requestUri.hostname &&
       allowedUri.pathname === requestUri.pathname &&
       allowedUri.protocol === requestUri.protocol &&

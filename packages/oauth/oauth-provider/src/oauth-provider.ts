@@ -11,6 +11,7 @@ import {
   OAuthClientMetadata,
   OAuthEndpointName,
   OAuthTokenType,
+  atprotoLoopbackClientMetadata,
   oauthAuthenticationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
@@ -47,6 +48,7 @@ import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidParametersError } from './errors/invalid-parameters-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { OAuthError } from './errors/oauth-error.js'
 import { UnauthorizedClientError } from './errors/unauthorized-client-error.js'
 import { WWWAuthenticateError } from './errors/www-authenticate-error.js'
 import {
@@ -267,21 +269,7 @@ export class OAuthProvider extends OAuthVerifier {
       ttl: 600e3,
     }),
 
-    loopbackMetadata = ({ origin, pathname, searchParams }) => ({
-      client_name: 'Loopback client',
-      response_types: ['code', 'code id_token'],
-      grant_types: ['authorization_code'],
-      scope: 'openid profile',
-      redirect_uris: searchParams.has('redirect_uri')
-        ? (searchParams.getAll('redirect_uri') as [string, ...string[]])
-        : (['127.0.0.1', '[::1]'].map(
-            (ip) =>
-              Object.assign(new URL(pathname, origin), { hostname: ip }).href,
-          ) as [string, ...string[]]),
-      token_endpoint_auth_method: 'none',
-      application_type: 'native',
-      dpop_bound_access_tokens: true,
-    }),
+    loopbackMetadata = atprotoLoopbackClientMetadata,
 
     // OAuthHooks & OAuthVerifierOptions
     ...rest
@@ -1034,7 +1022,11 @@ export class OAuthProvider extends OAuthVerifier {
             res.destroy()
           }
 
-          await onError?.(req, res, err, 'Unexpected error')
+          // OAuthError are used to build expected responses, so we don't log
+          // them as errors.
+          if (!(err instanceof OAuthError) || err.statusCode >= 500) {
+            await onError?.(req, res, err, 'Unexpected error')
+          }
         }
       }
 

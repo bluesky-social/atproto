@@ -1,9 +1,9 @@
 import {
-  fetchFailureHandler,
+  bindFetch,
+  Fetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
-  isIp,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 import {
@@ -13,7 +13,13 @@ import {
 } from '@atproto-labs/simple-store'
 import { Jwks, jwksSchema, Keyset } from '@atproto/jwk'
 import {
+  OAuthClientIdDiscoverable,
+  isOAuthClientIdDiscoverable,
+  isIP,
+  isOAuthClientIdLoopback,
+  OAuthClientIdLoopback,
   OAuthClientMetadata,
+  OAuthClientMetadataInput,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
 
@@ -22,19 +28,9 @@ import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js
 import { OAuthError } from '../errors/oauth-error.js'
 import { Awaitable } from '../lib/util/type.js'
 import { ClientHooks } from './client-hooks.js'
-import {
-  ClientId,
-  DiscoverableClientId,
-  isDiscoverableClientId,
-  isLoopbackClientId,
-  LoopbackClientId,
-} from './client-id.js'
+import { ClientId } from './client-id.js'
 import { ClientStore } from './client-store.js'
-import {
-  parseDiscoverableClientId,
-  parseLoopbackClientId,
-  parseRedirectUri,
-} from './client-utils.js'
+import { parseDiscoverableClientId, parseRedirectUri } from './client-utils.js'
 import { Client } from './client.js'
 
 const fetchMetadataHandler = pipe(
@@ -50,9 +46,8 @@ const fetchJwksHandler = pipe(
 )
 
 export type LoopbackMetadataGetter = (
-  this: void,
-  url: URL,
-) => Awaitable<Partial<OAuthClientMetadata>>
+  url: string,
+) => Awaitable<OAuthClientMetadataInput>
 
 export class ClientManager {
   protected readonly jwks: CachedGetter<string, Jwks>
@@ -63,23 +58,23 @@ export class ClientManager {
     protected readonly hooks: ClientHooks,
     protected readonly store: ClientStore | null,
     protected readonly loopbackMetadata: LoopbackMetadataGetter | null = null,
-    safeFetch: typeof globalThis.fetch,
+    safeFetch: Fetch,
     clientJwksCache: SimpleStore<string, Jwks>,
     clientMetadataCache: SimpleStore<string, OAuthClientMetadata>,
   ) {
+    const fetch = bindFetch(safeFetch)
+
     this.jwks = new CachedGetter(async (uri, options) => {
-      const jwks = await safeFetch(buildJsonGetRequest(uri, options)).then(
+      const jwks = await fetch(buildJsonGetRequest(uri, options)).then(
         fetchJwksHandler,
-        fetchFailureHandler,
       )
 
       return jwks
     }, clientJwksCache)
 
     this.metadata = new CachedGetter(async (uri, options) => {
-      const metadata = await safeFetch(buildJsonGetRequest(uri, options)).then(
+      const metadata = await fetch(buildJsonGetRequest(uri, options)).then(
         fetchMetadataHandler,
-        fetchFailureHandler,
       )
 
       // Validate within the getter to avoid caching invalid metadata
@@ -114,9 +109,9 @@ export class ClientManager {
   protected async getClientMetadata(
     clientId: ClientId,
   ): Promise<OAuthClientMetadata> {
-    if (isLoopbackClientId(clientId)) {
+    if (isOAuthClientIdLoopback(clientId)) {
       return this.getLoopbackClientMetadata(clientId)
-    } else if (isDiscoverableClientId(clientId)) {
+    } else if (isOAuthClientIdDiscoverable(clientId)) {
       return this.getDiscoverableClientMetadata(clientId)
     } else if (this.store) {
       return this.getStoredClientMetadata(clientId)
@@ -126,27 +121,26 @@ export class ClientManager {
   }
 
   protected async getLoopbackClientMetadata(
-    clientId: LoopbackClientId,
+    clientId: OAuthClientIdLoopback,
   ): Promise<OAuthClientMetadata> {
     const { loopbackMetadata } = this
     if (!loopbackMetadata) {
       throw new InvalidClientMetadataError('Loopback clients are not allowed')
     }
 
-    const metadataUrl = parseLoopbackClientId(clientId)
     const result = oauthClientMetadataSchema.safeParse(
-      await loopbackMetadata(metadataUrl),
+      await loopbackMetadata(clientId),
     )
 
     if (!result.success) {
       throw InvalidClientMetadataError.from(result.error)
     }
 
-    return this.validateClientMetadata(metadataUrl.href, result.data)
+    return this.validateClientMetadata(clientId, result.data)
   }
 
   protected async getDiscoverableClientMetadata(
-    clientId: DiscoverableClientId,
+    clientId: OAuthClientIdDiscoverable,
   ): Promise<OAuthClientMetadata> {
     const metadataUrl = parseDiscoverableClientId(clientId)
 
@@ -192,7 +186,7 @@ export class ClientManager {
       (scopes?.includes('offline_access') ?? false)
     ) {
       throw new InvalidClientMetadataError(
-        'Grant type "refresh_token" requires scope "offline_access"',
+        'Grant type "refresh_token" requires scope "offline_access" (and vice versa)',
       )
     }
 
@@ -217,7 +211,7 @@ export class ClientManager {
       if (metadata.client_id !== clientId) {
         throw new InvalidClientMetadataError('client_id does not match')
       }
-    } else if (isDiscoverableClientId(clientId)) {
+    } else if (isOAuthClientIdDiscoverable(clientId)) {
       // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
       throw new InvalidClientMetadataError(
         `client_id is required for discoverable clients`,
@@ -389,6 +383,12 @@ export class ClientManager {
     for (const redirectUri of metadata.redirect_uris) {
       const url = parseRedirectUri(redirectUri)
 
+      // if (url.username || url.password) {
+      //   throw new InvalidRedirectUriError(
+      //     `Redirect URI ${url} must not contain credentials`,
+      //   )
+      // }
+
       switch (true) {
         case url.hostname === 'localhost':
           // https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
@@ -421,16 +421,16 @@ export class ClientManager {
               'Loopback redirect URIs are only allowed for native apps',
             )
           }
-          if (url.port) {
-            throw new InvalidRedirectUriError(
-              `Loopback redirect URI ${url} must not contain a port`,
-            )
-          }
           if (url.protocol !== 'http:') {
             throw new InvalidRedirectUriError(
               `Loopback redirect URI ${url} must use HTTP`,
             )
           }
+
+          // Note: although validation of the redirect_uri will ignore the port
+          // we still allow it to be specified, as the spec does not forbid it.
+          // If a port number is specified, ports will need to match.
+
           continue
         }
 
@@ -490,7 +490,7 @@ export class ClientManager {
             )
           }
 
-          if (!clientUri.hostname.includes('.') || isIp(clientUri.hostname)) {
+          if (!clientUri.hostname.includes('.') || isIP(clientUri.hostname)) {
             throw new InvalidRedirectUriError(
               `Private-Use URI Scheme require a fully qualified domain name (FQDN) client_uri`,
             )

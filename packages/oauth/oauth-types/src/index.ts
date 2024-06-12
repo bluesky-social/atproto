@@ -1,5 +1,10 @@
-export * from './access-token.js'
 export * from './constants.js'
+export * from './util.js'
+
+export * from './access-token.js'
+export * from './atproto-loopback-client-metadata.js'
+export * from './oauth-client-id-discoverable.js'
+export * from './oauth-client-id-loopback.js'
 export * from './oauth-authentication-request-parameters.js'
 export * from './oauth-authorization-details.js'
 export * from './oauth-authorization-server-metadata.js'

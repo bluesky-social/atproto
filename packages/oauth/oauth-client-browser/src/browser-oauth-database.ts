@@ -10,7 +10,7 @@ import {
 } from '@atproto/oauth-types'
 
 import { DB, DBObjectStore } from './indexed-db/index.js'
-import { TupleUnion } from './utils.js'
+import { TupleUnion } from './util.js'
 
 type Item<V> = {
   value: V
