@@ -144,7 +144,7 @@ function isTokenExpiredResponse(response: Response) {
   const wwwAuth = response.headers.get('WWW-Authenticate')
   return (
     wwwAuth != null &&
-    wwwAuth.startsWith('Bearer ') &&
+    (wwwAuth.startsWith('Bearer ') || wwwAuth.startsWith('DPoP ')) &&
     wwwAuth.includes('error="invalid_token"')
   )
 }
