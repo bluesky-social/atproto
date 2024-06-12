@@ -1,4 +1,4 @@
-import { GlobalFetch, fetchFailureHandler } from '@atproto-labs/fetch'
+import { Fetch, bindFetch } from '@atproto-labs/fetch'
 import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
@@ -11,19 +11,16 @@ const ReadableStream = globalThis.ReadableStream as
   | undefined
 
 export class OAuthAgent {
-  protected dpopFetch: (
-    input: string | Request | URL,
-    init?: RequestInit | undefined,
-  ) => Promise<Response>
+  protected dpopFetch: Fetch<unknown>
 
   constructor(
     public readonly server: OAuthServerAgent,
     public readonly sub: string,
     private readonly sessionGetter: SessionGetter,
-    fetch: GlobalFetch = globalThis.fetch,
+    fetch: Fetch = globalThis.fetch,
   ) {
-    const dpopFetch = dpopFetchWrapper({
-      fetch,
+    this.dpopFetch = dpopFetchWrapper<void>({
+      fetch: bindFetch(fetch),
       iss: server.clientMetadata.client_id,
       key: server.dpopKey,
       supportedAlgs: server.serverMetadata.dpop_signing_alg_values_supported,
@@ -31,8 +28,6 @@ export class OAuthAgent {
       nonces: server.dpopNonces,
       isAuthServer: false,
     })
-
-    this.dpopFetch = (...args) => dpopFetch(...args).catch(fetchFailureHandler)
   }
 
   get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {

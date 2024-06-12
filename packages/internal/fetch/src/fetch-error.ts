@@ -1,42 +1,26 @@
-export type FetchErrorOptions = {
-  cause?: unknown
-  request?: Request
-  response?: Response
-}
-
 export class FetchError extends Error {
-  public readonly request?: Request
-  public readonly response?: Response
+  public readonly statusCode: number
 
-  constructor(
-    public readonly statusCode: number,
-    message?: string,
-    { cause, request, response }: FetchErrorOptions = {},
-  ) {
-    super(message, { cause })
-    this.request = request
-    this.response = response
-  }
+  constructor(statusCode?: number, message?: string, options?: ErrorOptions) {
+    if (statusCode == null || !message) {
+      const info = extractInfo(extractRootCause(options?.cause))
+      statusCode = statusCode ?? info[0]
+      message = message || info[1]
+    }
 
-  static async from(err: unknown) {
-    if (err instanceof FetchError) return err
-    const cause = extractCause(err)
-    const [statusCode, message] = extractInfo(cause)
-    return new FetchError(statusCode, message, { cause })
+    super(message, options)
+
+    this.statusCode = statusCode
   }
 }
 
-export const fetchFailureHandler = async (err: unknown): Promise<never> => {
-  throw await FetchError.from(err)
-}
-
-function extractCause(err: unknown): unknown {
+function extractRootCause(err: unknown): unknown {
   // Unwrap the Network error from undici (i.e. Node's internal fetch() implementation)
   // https://github.com/nodejs/undici/blob/3274c975947ce11a08508743df026f73598bfead/lib/web/fetch/index.js#L223-L228
   if (
     err instanceof TypeError &&
     err.message === 'fetch failed' &&
-    err.cause instanceof Error
+    err.cause !== undefined
   ) {
     return err.cause
   }
@@ -44,29 +28,30 @@ function extractCause(err: unknown): unknown {
   return err
 }
 
-export function extractInfo(
-  err: unknown,
-): [statusCode: number, message: string] {
+function extractInfo(err: unknown): [statusCode: number, message: string] {
   if (typeof err === 'string' && err.length > 0) {
     return [500, err]
   }
 
   if (!(err instanceof Error)) {
-    return [500, 'Unable to fetch']
+    return [500, 'Failed to fetch']
   }
 
-  if ('code' in err && typeof err.code === 'string') {
+  const code = err['code']
+  if (typeof code === 'string') {
     switch (true) {
-      case err.code === 'ENOTFOUND':
+      case code === 'ENOTFOUND':
         return [400, 'Invalid hostname']
-      case err.code === 'ECONNREFUSED':
+      case code === 'ECONNREFUSED':
         return [502, 'Connection refused']
-      case err.code === 'DEPTH_ZERO_SELF_SIGNED_CERT':
+      case code === 'DEPTH_ZERO_SELF_SIGNED_CERT':
         return [502, 'Self-signed certificate']
-      case err.code.startsWith('ERR_TLS'):
+      case code.startsWith('ERR_TLS'):
         return [502, 'TLS error']
-      case err.code.startsWith('ECONN'):
+      case code.startsWith('ECONN'):
         return [502, 'Connection error']
+      default:
+        return [500, `${code} error`]
     }
   }
 

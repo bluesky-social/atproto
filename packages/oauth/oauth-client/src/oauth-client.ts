@@ -3,7 +3,7 @@ import {
   DidResolverCached,
   DidResolverCommon,
 } from '@atproto-labs/did-resolver'
-import { GlobalFetch } from '@atproto-labs/fetch'
+import { Fetch } from '@atproto-labs/fetch'
 import {
   AppViewHandleResolver,
   CachedHandleResolver,
@@ -59,7 +59,7 @@ export type StateStore = SimpleStore<string, InternalStateData>
 export type {
   AuthorizationServerMetadataCache,
   DpopNonceCache,
-  GlobalFetch,
+  Fetch,
   Keyset,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
@@ -88,7 +88,7 @@ export type OAuthClientOptions = {
   handleResolver: HandleResolver | URL | string
   plcDirectoryUrl?: URL | string
   runtimeImplementation: RuntimeImplementation
-  fetch?: GlobalFetch
+  fetch?: Fetch
 }
 
 export class OAuthClient {
@@ -99,7 +99,7 @@ export class OAuthClient {
 
   // Services
   readonly runtime: Runtime
-  readonly fetch: GlobalFetch
+  readonly fetch: Fetch
   readonly oauthResolver: OAuthResolver
   readonly serverFactory: OAuthServerFactory
 

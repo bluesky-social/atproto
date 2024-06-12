@@ -1,4 +1,4 @@
-import { FetchError } from '@atproto-labs/fetch'
+import { FetchRequestError } from '@atproto-labs/fetch'
 import { Did, DidError, extractDidMethod } from '@atproto/did'
 import { ZodError } from 'zod'
 
@@ -46,7 +46,7 @@ export class DidResolverBase<M extends string = string>
 
       return document as ResolvedDocument<D, M>
     } catch (err) {
-      if (err instanceof FetchError) {
+      if (err instanceof FetchRequestError) {
         throw new DidError(did, err.message, 'did-fetch-error', 400, err)
       }
 

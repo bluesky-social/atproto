@@ -1,5 +1,6 @@
 import {
-  fetchFailureHandler,
+  Fetch,
+  bindFetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
@@ -19,7 +20,7 @@ export type DidPlcMethodOptions = {
   /**
    * @default globalThis.fetch
    */
-  fetch?: typeof globalThis.fetch
+  fetch?: Fetch
 
   /**
    * @default 'https://plc.directory/'
@@ -28,29 +29,28 @@ export type DidPlcMethodOptions = {
 }
 
 export class DidPlcMethod implements DidMethod<'plc'> {
-  protected readonly fetch: typeof globalThis.fetch
+  protected readonly fetch: Fetch<unknown>
 
   public readonly plcDirectoryUrl: URL
 
-  constructor({
-    plcDirectoryUrl = 'https://plc.directory/',
-    fetch = globalThis.fetch,
-  }: DidPlcMethodOptions = {}) {
-    this.plcDirectoryUrl = new URL(plcDirectoryUrl)
-    this.fetch = fetch
+  constructor(options?: DidPlcMethodOptions) {
+    this.plcDirectoryUrl = new URL(
+      options?.plcDirectoryUrl || 'https://plc.directory/',
+    )
+    this.fetch = bindFetch(options?.fetch)
   }
 
   async resolve(did: Did<'plc'>, options?: ResolveOptions) {
+    // Although the did should start with `did:plc:` (thanks to typings), we
+    // should still check if the msid is valid.
     checkDidPlc(did)
 
     const url = new URL(`/${did}`, this.plcDirectoryUrl)
 
-    return this.fetch
-      .call(null, url, {
-        redirect: 'error',
-        headers: { accept: 'application/did+ld+json,application/json' },
-        signal: options?.signal,
-      })
-      .then(fetchSuccessHandler, fetchFailureHandler)
+    return this.fetch(url, {
+      redirect: 'error',
+      headers: { accept: 'application/did+ld+json,application/json' },
+      signal: options?.signal,
+    }).then(fetchSuccessHandler)
   }
 }

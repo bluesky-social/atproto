@@ -1,7 +1,7 @@
-import { base64url } from 'multiformats/bases/base64'
-import { Fetch, cancelBody, peekJson } from '@atproto-labs/fetch'
-import { Key } from '@atproto/jwk'
+import { Fetch, FetchContext, cancelBody, peekJson } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
+import { Key } from '@atproto/jwk'
+import { base64url } from 'multiformats/bases/base64'
 
 // "undefined" in non https environments or environments without crypto
 const subtle = globalThis.crypto?.subtle as SubtleCrypto | undefined
@@ -10,7 +10,7 @@ const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
-export type DpopFetchWrapperOptions = {
+export type DpopFetchWrapperOptions<C = FetchContext> = {
   key: Key
   iss: string
   nonces: SimpleStore<string, string>
@@ -25,10 +25,10 @@ export type DpopFetchWrapperOptions = {
    * @default undefined
    */
   isAuthServer?: boolean
-  fetch?: Fetch
+  fetch?: Fetch<C>
 }
 
-export function dpopFetchWrapper({
+export function dpopFetchWrapper<C = FetchContext>({
   key,
   iss,
   supportedAlgs,
@@ -36,7 +36,7 @@ export function dpopFetchWrapper({
   sha256 = typeof subtle !== 'undefined' ? subtleSha256 : undefined,
   isAuthServer,
   fetch = globalThis.fetch,
-}: DpopFetchWrapperOptions) {
+}: DpopFetchWrapperOptions<C>): Fetch<C> {
   if (!sha256) {
     throw new TypeError(
       `crypto.subtle is not available in this environment. Please provide a sha256 function.`,
@@ -45,113 +45,101 @@ export function dpopFetchWrapper({
 
   const alg = negotiateAlg(key, supportedAlgs)
 
-  return async function (
-    this: ThisParameterType<Fetch>,
-    input: URL | RequestInfo,
-    init?: RequestInit | undefined,
-  ) {
-    return dpopFetch.call(
-      this,
-      input,
-      init,
+  return async function (this: C, input, init) {
+    if (!key.algorithms.includes(alg)) {
+      throw new TypeError(`Key does not support the algorithm ${alg}`)
+    }
+
+    const request: Request =
+      init == null && input instanceof Request
+        ? input
+        : new Request(input, init)
+
+    const authorizationHeader = request.headers.get('Authorization')
+    const ath = authorizationHeader?.startsWith('DPoP ')
+      ? await sha256(authorizationHeader.slice(5))
+      : undefined
+
+    const { method, url } = request
+    const { origin } = new URL(url)
+
+    let initNonce: string | undefined
+    try {
+      initNonce = await nonces.get(origin)
+    } catch {
+      // Ignore get errors, we will just not send a nonce
+    }
+
+    const initProof = await buildProof(
       key,
-      iss,
-      nonces,
       alg,
-      sha256,
-      isAuthServer,
-      fetch,
+      iss,
+      method,
+      url,
+      initNonce,
+      ath,
     )
-  } satisfies Fetch
-}
+    request.headers.set('DPoP', initProof)
 
-export async function dpopFetch(
-  this: ThisParameterType<Fetch>,
-  input: URL | RequestInfo,
-  init: RequestInit | undefined,
-  key: Key,
-  iss: string,
-  nonces: SimpleStore<string, string>,
-  alg: string = negotiateAlg(key, undefined),
-  sha256: (input: string) => string | PromiseLike<string> = subtleSha256,
-  isAuthServer?: boolean,
-  fetch = globalThis.fetch as Fetch,
-): Promise<Response> {
-  if (!key.algorithms.includes(alg)) {
-    throw new TypeError(`Key does not support the algorithm ${alg}`)
+    const initResponse = await fetch.call(this, request)
+
+    // Make sure the response body is consumed. Either by the caller (when the
+    // response is returned), of if an error is thrown (catch block).
+
+    const nextNonce = initResponse.headers.get('DPoP-Nonce')
+    if (!nextNonce || nextNonce === initNonce) {
+      // No nonce was returned or it is the same as the one we sent. No need to
+      // update the nonce store, or retry the request.
+      return initResponse
+    }
+
+    // Store the fresh nonce for future requests
+    try {
+      await nonces.set(origin, nextNonce)
+    } catch {
+      // Ignore set errors
+    }
+
+    const shouldRetry = await isUseDpopNonceError(initResponse, isAuthServer)
+    if (!shouldRetry) {
+      // Not a "use_dpop_nonce" error, so there is no need to retry
+      return initResponse
+    }
+
+    // If the input stream was already consumed, we cannot retry the request. A
+    // solution would be to clone() the request but that would bufferize the
+    // entire stream in memory which can lead to memory starvation. Instead, we
+    // will return the original response and let the calling code handle retries.
+
+    if (input === request) {
+      // The input request body was consumed. We cannot retry the request.
+      return initResponse
+    }
+
+    if (ReadableStream && init?.body instanceof ReadableStream) {
+      // The init body was consumed. We cannot retry the request.
+      return initResponse
+    }
+
+    // We will now retry the request with the fresh nonce.
+
+    // The initial response body must be consumed (see cancelBody's doc).
+    await cancelBody(initResponse, 'log')
+
+    const nextProof = await buildProof(
+      key,
+      alg,
+      iss,
+      method,
+      url,
+      nextNonce,
+      ath,
+    )
+    const nextRequest = new Request(input, init)
+    nextRequest.headers.set('DPoP', nextProof)
+
+    return fetch.call(this, nextRequest)
   }
-
-  const request: Request =
-    init == null && input instanceof Request ? input : new Request(input, init)
-
-  const authorizationHeader = request.headers.get('Authorization')
-  const ath = authorizationHeader?.startsWith('DPoP ')
-    ? await sha256(authorizationHeader.slice(5))
-    : undefined
-
-  const { method, url } = request
-  const { origin } = new URL(url)
-
-  let initNonce: string | undefined
-  try {
-    initNonce = await nonces.get(origin)
-  } catch {
-    // Ignore get errors, we will just not send a nonce
-  }
-
-  const initProof = await buildProof(key, alg, iss, method, url, initNonce, ath)
-  request.headers.set('DPoP', initProof)
-
-  const initResponse = await fetch.call(this, request)
-
-  // Make sure the response body is consumed. Either by the caller (when the
-  // response is returned), of if an error is thrown (catch block).
-
-  const nextNonce = initResponse.headers.get('DPoP-Nonce')
-  if (!nextNonce || nextNonce === initNonce) {
-    // No nonce was returned or it is the same as the one we sent. No need to
-    // update the nonce store, or retry the request.
-    return initResponse
-  }
-
-  // Store the fresh nonce for future requests
-  try {
-    await nonces.set(origin, nextNonce)
-  } catch {
-    // Ignore set errors
-  }
-
-  const shouldRetry = await isUseDpopNonceError(initResponse, isAuthServer)
-  if (!shouldRetry) {
-    // Not a "use_dpop_nonce" error, so there is no need to retry
-    return initResponse
-  }
-
-  // If the input stream was already consumed, we cannot retry the request. A
-  // solution would be to clone() the request but that would bufferize the
-  // entire stream in memory which can lead to memory starvation. Instead, we
-  // will return the original response and let the calling code handle retries.
-
-  if (input === request) {
-    // The input request body was consumed. We cannot retry the request.
-    return initResponse
-  }
-
-  if (ReadableStream && init?.body instanceof ReadableStream) {
-    // The init body was consumed. We cannot retry the request.
-    return initResponse
-  }
-
-  // We will now retry the request with the fresh nonce.
-
-  // The initial response body must be consumed (see cancelBody's doc).
-  await cancelBody(initResponse, 'log')
-
-  const nextProof = await buildProof(key, alg, iss, method, url, nextNonce, ath)
-  const nextRequest = new Request(input, init)
-  nextRequest.headers.set('DPoP', nextProof)
-
-  return fetch.call(this, nextRequest)
 }
 
 async function buildProof(
@@ -164,7 +152,7 @@ async function buildProof(
   ath?: string,
 ) {
   if (!key.bareJwk) {
-    throw new Error('Only asymetric keys can be used as DPoP proofs')
+    throw new Error('Only asymmetric keys can be used as DPoP proofs')
   }
 
   const now = Math.floor(Date.now() / 1e3)

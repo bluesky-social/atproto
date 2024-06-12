@@ -1,12 +1,76 @@
 import { Transformer, pipe } from '@atproto-labs/pipe'
-import { z } from 'zod'
 
-import { FetchError, FetchErrorOptions } from './fetch-error.js'
+// optional dependency for typing purposes
+import type { ZodTypeAny, ParseParams, TypeOf } from 'zod'
+
+import { FetchError } from './fetch-error.js'
 import { TransformedResponse } from './transformed-response.js'
-import { Json, MaxBytesTransformStream, ifObject, ifString } from './util.js'
+import {
+  Json,
+  MaxBytesTransformStream,
+  cancelBody,
+  ifObject,
+  ifString,
+  logCancellationError,
+} from './util.js'
 
 export type ResponseTranformer = Transformer<Response>
 export type ResponseMessageGetter = Transformer<Response, string | undefined>
+
+export class FetchResponseError extends FetchError {
+  constructor(
+    public readonly response: Response,
+    statusCode: number = response.status,
+    message: string = response.statusText,
+    options?: ErrorOptions,
+  ) {
+    super(statusCode, message, options)
+  }
+
+  static async from(
+    response: Response,
+    customMessage: string | ResponseMessageGetter = extractResponseMessage,
+    statusCode = response.status,
+    options?: ErrorOptions,
+  ) {
+    const message =
+      typeof customMessage === 'string'
+        ? customMessage
+        : typeof customMessage === 'function'
+          ? await customMessage(response)
+          : undefined
+
+    return new FetchResponseError(response, statusCode, message, options)
+  }
+}
+
+const extractResponseMessage: ResponseMessageGetter = async (response) => {
+  const mimeType = extractMime(response)
+  if (!mimeType) return undefined
+
+  try {
+    if (mimeType === 'text/plain') {
+      return await response.text()
+    } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
+      const json: unknown = await response.json()
+
+      if (typeof json === 'string') return json
+
+      const errorDescription = ifString(ifObject(json)?.['error_description'])
+      if (errorDescription) return errorDescription
+
+      const error = ifString(ifObject(json)?.['error'])
+      if (error) return error
+
+      const message = ifString(ifObject(json)?.['message'])
+      if (message) return message
+    }
+  } catch {
+    // noop
+  }
+
+  return undefined
+}
 
 export async function peekJson(
   response: Response,
@@ -65,65 +129,6 @@ export function extractMime(response: Response) {
   return contentType.split(';', 1)[0]!.trim()
 }
 
-const extractResponseMessage: ResponseMessageGetter = async (response) => {
-  const mimeType = extractMime(response)
-  if (!mimeType) return undefined
-
-  try {
-    if (mimeType === 'text/plain') {
-      return await response.text()
-    } else if (/^application\/(?:[^+]+\+)?json$/i.test(mimeType)) {
-      const json: unknown = await response.json()
-
-      if (typeof json === 'string') return json
-
-      const errorDescription = ifString(ifObject(json)?.['error_description'])
-      if (errorDescription) return errorDescription
-
-      const error = ifString(ifObject(json)?.['error'])
-      if (error) return error
-
-      const message = ifString(ifObject(json)?.['message'])
-      if (message) return message
-    }
-  } catch {
-    // noop
-  }
-
-  return undefined
-}
-
-export class FetchResponseError extends FetchError {
-  constructor(
-    response: Response,
-    statusCode: number = response.status,
-    message: string = response.statusText,
-    options?: Omit<FetchErrorOptions, 'response'>,
-  ) {
-    super(statusCode, message, { response, ...options })
-  }
-
-  static async from(
-    response: Response,
-    customMessage: string | ResponseMessageGetter = extractResponseMessage,
-    statusCode = response.status,
-    options?: Omit<FetchErrorOptions, 'response'>,
-  ) {
-    const message =
-      typeof customMessage === 'string'
-        ? customMessage
-        : typeof customMessage === 'function'
-          ? await customMessage(response)
-          : undefined
-
-    return new FetchResponseError(response, statusCode, message, options)
-  }
-}
-
-export function logCancellationError(err: unknown): void {
-  console.warn('Failed to cancel response body', err)
-}
-
 /**
  * If the transformer results in an error, ensure that the response body is
  * consumed as, in some environments (Node 👀), the response will not
@@ -144,58 +149,6 @@ export function cancelBodyOnError<T>(
     } catch (err) {
       await cancelBody(response, onCancellationError ?? undefined)
       throw err
-    }
-  }
-}
-
-/**
- * @param [onCancellationError] - Callback that will trigger to asynchronously
- * handle any error that occurs while cancelling the response body. Providing
- * this will speed up the process and avoid potential deadlocks. Defaults to
- * awaiting the cancellation operation. use `"log"` to log the error.
- * @see {@link https://undici.nodejs.org/#/?id=garbage-collection}
- * @note awaiting this function's result, when no `onCancellationError` is
- * provided, might result in a dead lock. Indeed, if the response was cloned(),
- * the response.body.cancel() method will not resolve until the other response's
- * body is consumed/cancelled.
- *
- * @example
- * ```ts
- * // Make sure response was not cloned, or that every cloned response was
- * // consumed/cancelled before awaiting this function's result.
- * await cancelBody(response)
- * ```
- * @example
- * ```ts
- * await cancelBody(response, (err) => {
- *   // No biggie, let's just log the error
- *   console.warn('Failed to cancel response body', err)
- * })
- * ```
- * @example
- * ```ts
- * // Will generate an "unhandledRejection" if an error occurs while cancelling
- * // the response body. This will likely crash the process.
- * await cancelBody(response, (err) => { throw err })
- * ```
- */
-export async function cancelBody(
-  input: Response | Request,
-  onCancellationError?: 'log' | ((err: unknown) => void),
-): Promise<void> {
-  if (
-    input.body &&
-    !input.bodyUsed &&
-    !input.body.locked &&
-    // Support for alternative fetch implementations
-    typeof input.body.cancel === 'function'
-  ) {
-    if (typeof onCancellationError === 'function') {
-      void input.body.cancel().catch(onCancellationError)
-    } else if (onCancellationError === 'log') {
-      void input.body.cancel().catch(logCancellationError)
-    } else {
-      await input.body.cancel()
     }
   }
 }
@@ -316,10 +269,10 @@ export function fetchJsonProcessor<T = Json>(
   )
 }
 
-export function fetchJsonZodProcessor<S extends z.ZodTypeAny>(
+export function fetchJsonZodProcessor<S extends ZodTypeAny>(
   schema: S,
-  params?: Partial<z.ParseParams>,
-): Transformer<ParsedJsonResponse, z.infer<S>> {
-  return async (jsonResponse: ParsedJsonResponse): Promise<z.infer<S>> =>
+  params?: Partial<ParseParams>,
+): Transformer<ParsedJsonResponse, TypeOf<S>> {
+  return async (jsonResponse: ParsedJsonResponse): Promise<TypeOf<S>> =>
     schema.parseAsync(jsonResponse.json, params)
 }

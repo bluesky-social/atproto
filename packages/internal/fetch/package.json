@@ -23,11 +23,13 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/pipe": "workspace:*",
-    "zod": "^3.23.8"
+    "@atproto-labs/pipe": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
+  },
+  "optionalDependencies": {
+    "zod": "^3.23.8"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json"

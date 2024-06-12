@@ -2,6 +2,22 @@ import { FetchError } from './fetch-error.js'
 import { asRequest } from './fetch.js'
 import { isIp } from './util.js'
 
+export class FetchRequestError extends FetchError {
+  constructor(
+    public readonly request: Request,
+    statusCode?: number,
+    message?: string,
+    options?: ErrorOptions,
+  ) {
+    super(statusCode, message, options)
+  }
+
+  static from(request: Request, cause: unknown): FetchRequestError {
+    if (cause instanceof FetchRequestError) return cause
+    return new FetchRequestError(request, undefined, undefined, { cause })
+  }
+}
+
 const extractUrl = (input: Request | string | URL) =>
   typeof input === 'string'
     ? new URL(input)
@@ -15,11 +31,17 @@ export function protocolCheckRequestTransform(protocols: Iterable<string>) {
   return (input: Request | string | URL, init?: RequestInit) => {
     const { protocol } = extractUrl(input)
 
+    const request = asRequest(input, init)
+
     if (!allowedProtocols.has(protocol)) {
-      throw new FetchError(400, `${protocol} is not allowed`)
+      throw new FetchRequestError(
+        request,
+        400,
+        `"${protocol}" protocol is not allowed`,
+      )
     }
 
-    return asRequest(input, init)
+    return request
   }
 }
 
@@ -30,16 +52,22 @@ export function requireHostHeaderTranform() {
 
     const { protocol, hostname } = extractUrl(input)
 
+    const request = asRequest(input, init)
+
     // "Host" header only makes sense in the context of an HTTP request
-    if (protocol !== 'http:' && protocol !== 'https') {
-      throw new FetchError(400, `Forbidden protocol ${protocol}`)
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      throw new FetchRequestError(
+        request,
+        400,
+        `"${protocol}" requests are not allowed`,
+      )
     }
 
     if (!hostname || isIp(hostname)) {
-      throw new FetchError(400, 'Invalid hostname')
+      throw new FetchRequestError(request, 400, 'Invalid hostname')
     }
 
-    return asRequest(input, init)
+    return request
   }
 }
 
@@ -68,9 +96,11 @@ export function forbiddenDomainNameRequestTransform(
   return async (input: Request | string | URL, init?: RequestInit) => {
     const { hostname } = extractUrl(input)
 
+    const request = asRequest(input, init)
+
     // Full domain name check
     if (denySet.has(hostname)) {
-      throw new FetchError(403, 'Forbidden hostname')
+      throw new FetchRequestError(request, 403, 'Forbidden hostname')
     }
 
     // Sub domain name check
@@ -78,11 +108,11 @@ export function forbiddenDomainNameRequestTransform(
     while (curDot !== -1) {
       const subdomain = hostname.slice(curDot + 1)
       if (denySet.has(`*.${subdomain}`)) {
-        throw new FetchError(403, 'Forbidden hostname')
+        throw new FetchRequestError(request, 403, 'Forbidden hostname')
       }
       curDot = hostname.indexOf('.', curDot + 1)
     }
 
-    return asRequest(input, init)
+    return request
   }
 }

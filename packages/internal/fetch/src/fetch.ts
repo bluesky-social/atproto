@@ -1,21 +1,32 @@
-export type GlobalFetchContext = void | null | typeof globalThis
+import { ThisParameterOverride } from './util.js'
 
-// NOT using "typeof globalThis.fetch" here because "globalThis.fetch" does not
-// have a "this" parameter, while runtimes do ensure that "fetch" is called with
-// the correct "this" parameter (either null, undefined, or window).
-export type GlobalFetch = (
-  this: GlobalFetchContext,
+export type FetchContext = void | null | typeof globalThis
+
+export type FetchBound = (
   input: string | URL | Request,
   init?: RequestInit,
 ) => Promise<Response>
 
-export type Fetch =
-  // - new line because of lint bug
-  (this: GlobalFetchContext, input: Request) => Promise<Response>
+// NOT using "typeof globalThis.fetch" here because "globalThis.fetch" does not
+// have a "this" parameter, while runtimes do ensure that "fetch" is called with
+// the correct "this" parameter (either null, undefined, or window).
 
-export function toGlobalFetch(fetch: Fetch): GlobalFetch {
-  return function (this: GlobalFetchContext, input, init) {
-    return fetch.call(this, asRequest(input, init))
+export type Fetch<C = FetchContext> = ThisParameterOverride<C, FetchBound>
+
+export type SimpleFetchBound = (input: Request) => Promise<Response>
+export type SimpleFetch<C = FetchContext> = ThisParameterOverride<
+  C,
+  SimpleFetchBound
+>
+
+export function toRequestTransformer<C, O>(
+  requestTransformer: (this: C, input: Request) => O,
+): ThisParameterOverride<
+  C,
+  (input: string | URL | Request, init?: RequestInit) => O
+> {
+  return function (this: C, input, init) {
+    return requestTransformer.call(this, asRequest(input, init))
   }
 }
 

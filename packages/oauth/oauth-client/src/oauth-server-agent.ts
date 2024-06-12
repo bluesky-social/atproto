@@ -1,9 +1,4 @@
-import {
-  GlobalFetch,
-  Json,
-  fetchFailureHandler,
-  fetchJsonProcessor,
-} from '@atproto-labs/fetch'
+import { Fetch, Json, fetchJsonProcessor, bindFetch } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { Key, Keyset, SignedJwt } from '@atproto/jwk'
 import {
@@ -44,10 +39,7 @@ export type TokenSet = {
 export type DpopNonceCache = SimpleStore<string, string>
 
 export class OAuthServerAgent {
-  protected dpopFetch: (
-    input: string | Request | URL,
-    init?: RequestInit | undefined,
-  ) => Promise<Response>
+  protected dpopFetch: Fetch<unknown>
 
   constructor(
     readonly dpopKey: Key,
@@ -57,10 +49,10 @@ export class OAuthServerAgent {
     readonly oauthResolver: OAuthResolver,
     readonly runtime: Runtime,
     readonly keyset?: Keyset,
-    fetch?: GlobalFetch,
+    fetch?: Fetch,
   ) {
-    const dpopFetch = dpopFetchWrapper({
-      fetch,
+    this.dpopFetch = dpopFetchWrapper<void>({
+      fetch: bindFetch(fetch),
       iss: clientMetadata.client_id,
       key: dpopKey,
       supportedAlgs: serverMetadata.dpop_signing_alg_values_supported,
@@ -68,8 +60,6 @@ export class OAuthServerAgent {
       nonces: dpopNonces,
       isAuthServer: true,
     })
-
-    this.dpopFetch = (...args) => dpopFetch(...args).catch(fetchFailureHandler)
   }
 
   async revoke(token: string) {

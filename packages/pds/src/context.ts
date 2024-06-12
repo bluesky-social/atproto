@@ -256,19 +256,19 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
-    // A Fetch function that protects against SSRF attacks, large responses &
+    // A fetch() function that protects against SSRF attacks, large responses &
     // known bad domains. This function can safely be used to fetch user
     // provided URLs (unless "disableSsrfProtection" is true, of course).
     const safeFetch = safeFetchWrap({
       allowHttp: cfg.fetch.disableSsrfProtection,
       responseMaxSize: 512 * 1024, // 512kB
       ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      fetch: async (request, init?: RequestInit) => {
-        fetchLogger.debug(
-          { method: init?.method ?? request.method, uri: request.url },
-          'fetch',
-        )
-        return globalThis.fetch(request, init)
+      fetch: async (input, init) => {
+        const request = input instanceof Request ? input : null
+        const method = init?.method ?? request?.method ?? 'GET'
+        const uri = request?.url ?? String(input)
+        fetchLogger.debug({ method, uri }, 'fetch')
+        return globalThis.fetch(input, init)
       },
     })
 

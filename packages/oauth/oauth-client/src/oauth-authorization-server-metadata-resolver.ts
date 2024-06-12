@@ -1,8 +1,8 @@
 import {
+  bindFetch,
+  cancelBody,
   Fetch,
   FetchResponseError,
-  cancelBody,
-  fetchFailureHandler,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
@@ -30,11 +30,12 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
   string,
   OAuthAuthorizationServerMetadata
 > {
-  constructor(
-    cache: AuthorizationServerMetadataCache,
-    private readonly fetch: Fetch = globalThis.fetch,
-  ) {
+  private readonly fetch: Fetch<unknown>
+
+  constructor(cache: AuthorizationServerMetadataCache, fetch?: Fetch) {
     super(async (issuer, options) => this.fetchMetadata(issuer, options), cache)
+
+    this.fetch = bindFetch(fetch)
   }
 
   async get(
@@ -58,9 +59,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
       redirect: 'manual', // response must be 200 OK
     })
 
-    const response = await this.fetch
-      .call(null, request)
-      .catch(fetchFailureHandler)
+    const response = await this.fetch(request)
 
     // https://datatracker.ietf.org/doc/html/rfc8414#section-3.2
     if (response.status !== 200) {
@@ -69,7 +68,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
         response,
         `Unexpected status code ${response.status} for "${url}"`,
         undefined,
-        { request },
+        { cause: request },
       )
     }
 
@@ -79,7 +78,7 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
         response,
         `Unexpected content type for "${url}"`,
         undefined,
-        { request },
+        { cause: request },
       )
     }
 

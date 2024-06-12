@@ -1,11 +1,12 @@
 import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
-  toGlobalFetch,
+  Fetch,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
   protocolCheckRequestTransform,
   requireHostHeaderTranform,
-  timeoutFetchWrap,
+  timedFetch,
+  toRequestTransformer,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 
@@ -19,16 +20,16 @@ export type SafeFetchWrapOptions = NonNullable<
  * Wrap a fetch function with safety checks so that it can be safely used
  * with user provided input (URL).
  */
-export const safeFetchWrap = ({
-  fetch = globalThis.fetch,
+export function safeFetchWrap({
+  fetch = globalThis.fetch as Fetch,
   responseMaxSize = 512 * 1024, // 512kB
   allowHttp = false,
   allowData = false,
   ssrfProtection = true,
-  timeout = 10e3 as number,
+  timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
-} = {}) =>
-  toGlobalFetch(
+} = {}): Fetch<unknown> {
+  return toRequestTransformer(
     pipe(
       /**
        * Prevent using http:, file: or data: protocols.
@@ -56,7 +57,7 @@ export const safeFetchWrap = ({
        * Since we will be fetching from the network based on user provided
        * input, let's mitigate resource exhaustion attacks by setting a timeout.
        */
-      timeoutFetchWrap({
+      timedFetch(
         timeout,
 
         /**
@@ -64,8 +65,8 @@ export const safeFetchWrap = ({
          * input, we need to make sure that the request is not vulnerable to SSRF
          * attacks.
          */
-        fetch: ssrfProtection ? ssrfFetchWrap({ fetch }) : fetch,
-      }),
+        ssrfProtection ? ssrfFetchWrap(false, fetch) : fetch,
+      ),
 
       /**
        * Since we will be fetching user owned data, we need to make sure that an
@@ -74,3 +75,4 @@ export const safeFetchWrap = ({
       fetchMaxSizeProcessor(responseMaxSize),
     ),
   )
+}

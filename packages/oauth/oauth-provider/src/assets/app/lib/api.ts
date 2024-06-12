@@ -1,8 +1,4 @@
-import {
-  fetchFailureHandler,
-  fetchJsonProcessor,
-  fetchOkProcessor,
-} from '@atproto-labs/fetch'
+import { fetchJsonProcessor, fetchOkProcessor } from '@atproto-labs/fetch'
 
 import { Account, Session } from '../types'
 
@@ -30,7 +26,7 @@ export class Api {
         credentials,
       }),
     })
-      .then(fetchOkProcessor(), fetchFailureHandler)
+      .then(fetchOkProcessor())
       .then(
         fetchJsonProcessor<{
           account: Account

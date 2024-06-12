@@ -1,12 +1,13 @@
-import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { Fetch, safeFetchWrap } from '@atproto-labs/fetch-node'
 import {
   AtprotoHandleResolver,
   HandleResolver,
 } from '@atproto-labs/handle-resolver'
+
 import {
   nodeResolveTxtDefault,
   nodeResolveTxtFactory,
-} from './node-resolve-txt-factory'
+} from './node-resolve-txt-factory.js'
 
 export type AtprotoHandleResolverNodeOptions = {
   /**
@@ -23,7 +24,7 @@ export type AtprotoHandleResolverNodeOptions = {
    *
    * @default `globalThis.fetch`
    */
-  fetch?: typeof globalThis.fetch
+  fetch?: Fetch
 }
 
 export class AtprotoHandleResolverNode

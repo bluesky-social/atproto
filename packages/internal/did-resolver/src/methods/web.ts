@@ -1,5 +1,6 @@
 import {
-  fetchFailureHandler,
+  bindFetch,
+  Fetch,
   fetchJsonProcessor,
   fetchJsonZodProcessor,
   fetchOkProcessor,
@@ -16,26 +17,24 @@ const fetchSuccessHandler = pipe(
 )
 
 export type DidWebMethodOptions = {
-  fetch?: typeof globalThis.fetch
+  fetch?: Fetch
 }
 
 export class DidWebMethod implements DidMethod<'web'> {
-  protected readonly fetch: typeof globalThis.fetch
+  protected readonly fetch: Fetch<unknown>
 
   constructor({ fetch = globalThis.fetch }: DidWebMethodOptions = {}) {
-    this.fetch = fetch
+    this.fetch = bindFetch(fetch)
   }
 
   async resolve(did: Did<'web'>, options?: ResolveOptions) {
     const didDocumentUrl = buildDidWebDocumentUrl(did)
 
-    return this.fetch
-      .call(null, didDocumentUrl, {
-        redirect: 'error',
-        headers: { accept: 'application/did+ld+json,application/json' },
-        signal: options?.signal,
-      })
-      .then(fetchSuccessHandler, fetchFailureHandler)
+    return this.fetch(didDocumentUrl, {
+      redirect: 'error',
+      headers: { accept: 'application/did+ld+json,application/json' },
+      signal: options?.signal,
+    }).then(fetchSuccessHandler)
   }
 }
 

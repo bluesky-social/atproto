@@ -1,7 +1,12 @@
 import dns, { LookupAddress } from 'node:dns'
 import { LookupFunction } from 'node:net'
 
-import { FetchError, toGlobalFetch } from '@atproto-labs/fetch'
+import {
+  Fetch,
+  FetchContext,
+  FetchRequestError,
+  toRequestTransformer,
+} from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
 import { Agent } from 'undici'
 
@@ -9,51 +14,51 @@ const { IPv4, IPv6 } = ipaddr
 
 const [NODE_VERSION] = process.versions.node.split('.').map(Number)
 
-export type SsrfSafeFetchWrapOptions = NonNullable<
-  Parameters<typeof ssrfFetchWrap>[0]
->
-export const ssrfAgent = new Agent({ connect: { lookup } })
-
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
  */
-export const ssrfFetchWrap = ({
+export function ssrfFetchWrap<C = FetchContext>(
   allowCustomPort = false,
-  fetch = globalThis.fetch,
-} = {}) => {
-  return toGlobalFetch(async (request) => {
+  fetch: Fetch<C> = globalThis.fetch,
+): Fetch<C> {
+  const ssrfAgent = new Agent({ connect: { lookup } })
+
+  return toRequestTransformer(async function (
+    this: C,
+    request,
+  ): Promise<Response> {
     const { protocol, hostname, port } = new URL(request.url)
 
     if (protocol === 'data:') {
       // No SSRF issue
-      return fetch(request)
+      return fetch.call(this, request)
     }
 
     if (protocol === 'http:' || protocol === 'https:') {
       // @ts-expect-error non-standard option
       if (request.dispatcher) {
-        throw new FetchError(
+        throw new FetchRequestError(
+          request,
           500,
           'SSRF protection cannot be used with a custom request dispatcher',
-          { request },
         )
       }
 
       // Check port (OWASP)
       if (!allowCustomPort && port !== '') {
-        throw new FetchError(
+        throw new FetchRequestError(
+          request,
           400,
           'Request port must be omitted or standard when SSRF is enabled',
-          { request },
         )
       }
 
       // Disable HTTP redirections (OWASP)
       if (request.redirect === 'follow') {
-        throw new FetchError(
+        throw new FetchRequestError(
+          request,
           500,
           'Request redirect must be "error" or "manual" when SSRF is enabled',
-          { request },
         )
       }
 
@@ -61,10 +66,14 @@ export const ssrfFetchWrap = ({
       const ip = parseIpHostname(hostname)
       if (ip) {
         if (ip.range() !== 'unicast') {
-          throw new FetchError(400, 'Hostname resolved to non-unicast address')
+          throw new FetchRequestError(
+            request,
+            400,
+            'Hostname resolved to non-unicast address',
+          )
         }
         // No additional check required
-        return fetch(request)
+        return fetch.call(this, request)
       }
 
       // Else hostname is a domain name, use DNS lookup to check if it resolves
@@ -83,7 +92,7 @@ export const ssrfFetchWrap = ({
           // used.
 
           // @ts-expect-error non-standard option
-          return fetch(request, { dispatcher: ssrfAgent })
+          return fetch.call(this, request, { dispatcher: ssrfAgent })
         }
 
         let didLookup = false
@@ -98,7 +107,7 @@ export const ssrfFetchWrap = ({
 
         try {
           // @ts-expect-error non-standard option
-          return await fetch(request, { dispatcher })
+          return await fetch.call(this, request, { dispatcher })
         } finally {
           // Free resources (we cannot await here since the response was not
           // consumed yet).
@@ -113,9 +122,11 @@ export const ssrfFetchWrap = ({
             // argument to the global fetch function.
 
             // eslint-disable-next-line no-unsafe-finally
-            throw new FetchError(500, 'Unable to enforce SSRF protection', {
+            throw new FetchRequestError(
               request,
-            })
+              500,
+              'Unable to enforce SSRF protection',
+            )
           }
         }
       }
@@ -125,7 +136,11 @@ export const ssrfFetchWrap = ({
     }
 
     // blob: about: file: all should be rejected
-    throw new FetchError(400, `Forbidden protocol "${protocol}"`, { request })
+    throw new FetchRequestError(
+      request,
+      400,
+      `Forbidden protocol "${protocol}"`,
+    )
   })
 }
 
