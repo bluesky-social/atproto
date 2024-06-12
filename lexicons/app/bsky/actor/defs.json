@@ -122,7 +122,28 @@
           "ref": "app.bsky.graph.defs#listViewBasic"
         },
         "following": { "type": "string", "format": "at-uri" },
-        "followedBy": { "type": "string", "format": "at-uri" }
+        "followedBy": { "type": "string", "format": "at-uri" },
+        "knownFollowers": {
+          "type": "ref",
+          "ref": "#knownFollowers"
+        }
+      }
+    },
+    "knownFollowers": {
+      "type": "object",
+      "description": "The subject's followers whom you also follow",
+      "required": ["count", "followers"],
+      "properties": {
+        "count": { "type": "integer" },
+        "followers": {
+          "type": "array",
+          "minLength": 0,
+          "maxLength": 5,
+          "items": {
+            "type": "ref",
+            "ref": "#profileViewBasic"
+          }
+        }
       }
     },
     "preferences": {

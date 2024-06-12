@@ -34,7 +34,7 @@ describe('handle validation', () => {
     const expectThrow = (handle: string, err: string) => {
       expect(() => ensureHandleServiceConstraints(handle, domains)).toThrow(err)
     }
-    const expectNotThrow = (handle: string, memo: string) => {
+    const expectNotThrow = (handle: string, _memo: string) => {
       expect(() =>
         ensureHandleServiceConstraints(handle, domains),
       ).not.toThrow()

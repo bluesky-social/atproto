@@ -7,12 +7,14 @@ import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import { hydrationLogger } from '../logger'
 import {
   ActorHydrator,
   ProfileAggs,
   Actors,
   ProfileViewerStates,
   ProfileViewerState,
+  KnownFollowers,
 } from './actor'
 import {
   Follows,
@@ -93,6 +95,7 @@ export type HydrationState = {
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
+  knownFollowers?: KnownFollowers
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -143,6 +146,7 @@ export class Hydrator {
     profileViewers?.forEach((item) => {
       removeNonModListsFromProfileViewer(item, listState)
     })
+
     return mergeStates(listState, {
       profileViewers,
       ctx,
@@ -190,13 +194,29 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
+    let knownFollowers: KnownFollowers = new HydrationMap()
+
+    try {
+      knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
+    } catch (err) {
+      hydrationLogger.error(
+        { err },
+        'Failed to get known followers for profiles',
+      )
+    }
+
+    const knownFollowersDids = Array.from(knownFollowers.values())
+      .filter(Boolean)
+      .flatMap((f) => f!.followers)
+    const allDids = Array.from(new Set(dids.concat(knownFollowersDids)))
     const [state, profileAggs] = await Promise.all([
-      this.hydrateProfiles(dids, ctx),
+      this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
     ])
     return {
       ...state,
       profileAggs,
+      knownFollowers,
     }
   }
 
@@ -856,6 +876,7 @@ export const mergeStates = (
     labelers: mergeMaps(stateA.labelers, stateB.labelers),
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
+    knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
   }
 }
 

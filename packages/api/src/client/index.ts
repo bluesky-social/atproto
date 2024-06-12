@@ -128,6 +128,7 @@ import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
@@ -312,6 +313,7 @@ export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
@@ -2094,6 +2096,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.getFollows', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetFollows.toKnownErr(e)
+      })
+  }
+
+  getKnownFollowers(
+    params?: AppBskyGraphGetKnownFollowers.QueryParams,
+    opts?: AppBskyGraphGetKnownFollowers.CallOptions,
+  ): Promise<AppBskyGraphGetKnownFollowers.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getKnownFollowers', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetKnownFollowers.toKnownErr(e)
       })
   }
 
