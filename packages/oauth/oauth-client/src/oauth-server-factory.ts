@@ -1,4 +1,4 @@
-import { GlobalFetch } from '@atproto-labs/fetch'
+import { Fetch } from '@atproto-labs/fetch'
 import { Key, Keyset } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
@@ -13,7 +13,7 @@ export class OAuthServerFactory {
     readonly clientMetadata: ClientMetadata,
     readonly runtime: Runtime,
     readonly resolver: OAuthResolver,
-    readonly fetch: GlobalFetch,
+    readonly fetch: Fetch,
     readonly keyset: Keyset | undefined,
     readonly dpopNonceCache: DpopNonceCache,
   ) {}
