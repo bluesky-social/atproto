@@ -66,12 +66,7 @@ export class OzoneService {
   }
 
   async seedInitialMembers() {
-    const members: Array<{ role: Member['role']; did: string }> = [
-      {
-        did: this.ctx.cfg.service.did,
-        role: 'tools.ozone.team.defs#roleAdmin',
-      },
-    ]
+    const members: Array<{ role: Member['role']; did: string }> = []
     this.ctx.cfg.access.admins.forEach((did) =>
       members.push({
         role: 'tools.ozone.team.defs#roleAdmin',
