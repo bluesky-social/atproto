@@ -115,6 +115,13 @@ describe('team management', () => {
   })
   describe('updateMember', () => {
     it('allows admins to update member', async () => {
+      const getCarol = async () => {
+        const {
+          data: { members },
+        } = await adminAgent.api.tools.ozone.team.listMembers({})
+
+        return members.find(({ did }) => did === sc.dids.carol)
+      }
       await expect(
         triageAgent.api.tools.ozone.team.updateMember({
           disabled: false,
@@ -127,13 +134,21 @@ describe('team management', () => {
         did: sc.dids.carol,
         role: 'tools.ozone.team.defs#roleAdmin',
       })
-      const {
-        data: { members },
-      } = await adminAgent.api.tools.ozone.team.listMembers({})
-
-      expect(members.find(({ did }) => did === sc.dids.carol)?.role).toEqual(
+      const carolAfterRoleChange = await getCarol()
+      expect(carolAfterRoleChange?.role).toEqual(
         'tools.ozone.team.defs#roleAdmin',
       )
+      // Verify that params that we didn't send did not get updated
+      expect(carolAfterRoleChange?.disabled).toEqual(false)
+
+      await adminAgent.api.tools.ozone.team.updateMember({
+        did: sc.dids.carol,
+        disabled: true,
+      })
+      const carolAfterDisable = await getCarol()
+      expect(carolAfterDisable?.disabled).toEqual(true)
+      // Verify that params that we didn't send did not get updated
+      expect(carolAfterDisable?.role).toEqual('tools.ozone.team.defs#roleAdmin')
     })
     it('throws error when trying to update non-existent member', async () => {
       await expect(

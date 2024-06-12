@@ -19,6 +19,10 @@
         {
           "name": "MemberNotFound",
           "description": "The member being deleted does not exist"
+        },
+        {
+          "name": "CannotDeleteSelf",
+          "description": "You can not delete yourself from the team"
         }
       ]
     }

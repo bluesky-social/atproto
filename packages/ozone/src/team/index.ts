@@ -33,7 +33,7 @@ export class TeamService {
       .orderBy('createdAt', 'asc')
       .execute()
 
-    return { members, cursor: members.slice(-1)[0]?.createdAt.toISOString() }
+    return { members, cursor: members.at(-1)?.createdAt.toISOString() }
   }
 
   async create({
@@ -83,7 +83,9 @@ export class TeamService {
         updatedAt: now,
         createdAt: now,
       })
-      .onConflict((oc) => oc.column('did').doUpdateSet({ role }))
+      .onConflict((oc) =>
+        oc.column('did').doUpdateSet({ role, updatedAt: now, lastUpdatedBy }),
+      )
       .execute()
   }
 
@@ -96,12 +98,15 @@ export class TeamService {
       >
     >,
   ): Promise<Selectable<Member>> {
+    const { role, disabled, lastUpdatedBy, updatedAt = new Date() } = updates
     const updatedMember = await this.db.db
       .updateTable('member')
       .where('did', '=', did)
       .set({
-        ...updates,
-        updatedAt: updates.updatedAt || new Date(),
+        role,
+        disabled,
+        lastUpdatedBy,
+        updatedAt,
       })
       .returningAll()
       .executeTakeFirstOrThrow()

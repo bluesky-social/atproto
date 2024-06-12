@@ -109,20 +109,6 @@ export class AuthVerifier {
     const payload = await verifyJwt(jwtStr, this.serviceDid, getSigningKey)
     const iss = payload.iss
 
-    // Always allow serviceDid to access as admin
-    if (iss === this.serviceDid) {
-      return {
-        credentials: {
-          type: 'standard',
-          iss,
-          aud: payload.aud,
-          isAdmin: true,
-          isModerator: true,
-          isTriage: true,
-        },
-      }
-    }
-
     const member = await this.teamService.getMember(iss)
 
     if (member?.disabled) {
@@ -130,7 +116,7 @@ export class AuthVerifier {
     }
 
     const { isAdmin, isModerator, isTriage } =
-      await this.teamService.getMemberRole(member)
+      this.teamService.getMemberRole(member)
 
     return {
       credentials: {

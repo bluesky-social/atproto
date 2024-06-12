@@ -13,8 +13,11 @@ export default function (server: Server, ctx: AppContext) {
       if (!access.isAdmin) {
         throw new AuthRequiredError('Must be an admin to delete a member')
       }
-      if (did === ctx.cfg.service.did) {
-        throw new InvalidRequestError('Can not delete service owner')
+      if ('did' in auth.credentials && did === auth.credentials.did) {
+        throw new InvalidRequestError(
+          'You can not delete yourself from the team',
+          'CannotDeleteSelf',
+        )
       }
       await db.transaction(async (dbTxn) => {
         const teamService = ctx.teamService(dbTxn)
