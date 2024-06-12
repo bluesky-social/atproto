@@ -80,7 +80,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createIndex('token_did_idx')
-    .unique()
     .on('token')
     .column('did')
     .execute()
