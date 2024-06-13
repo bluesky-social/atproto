@@ -367,8 +367,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       unicode-segmenter:
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.9.0
+        version: 0.9.0
       zod:
         specifier: ^3.21.4
         version: 3.21.4
@@ -10786,8 +10786,8 @@ packages:
     dependencies:
       '@fastify/busboy': 2.1.0
 
-  /unicode-segmenter@0.7.0:
-    resolution: {integrity: sha512-GgySw5Xcmz0rVL3WOsVFk9mdXPUWsgxulVrZQUcQq4HZNY5r2z8OPnTRAX+Y0GwRXPX+BuDa399PnIy6fqh8og==}
+  /unicode-segmenter@0.9.0:
+    resolution: {integrity: sha512-Y1TfI9jUxhEF6j0rKDLoNSou38jR5dd79xe8H9I12jiMm03Wwjrrk4u70u8NQz9CeamROcAQG8KEQaFhJPwBPA==}
     dev: false
 
   /unique-filename@2.0.1:
