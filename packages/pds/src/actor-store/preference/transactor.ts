@@ -4,16 +4,25 @@ import {
   AccountPreference,
   prefMatchNamespace,
 } from './reader'
+import { AuthScope } from '../../auth-verifier'
+import { prefInScope } from './util'
 
 export class PreferenceTransactor extends PreferenceReader {
   async putPreferences(
     values: AccountPreference[],
     namespace: string,
+    scope: AuthScope,
   ): Promise<void> {
     this.db.assertTransaction()
     if (!values.every((value) => prefMatchNamespace(namespace, value.$type))) {
       throw new InvalidRequestError(
         `Some preferences are not in the ${namespace} namespace`,
+      )
+    }
+    const notInScope = values.filter((val) => !prefInScope(scope, val.$type))
+    if (notInScope.length > 0) {
+      throw new InvalidRequestError(
+        `Do not have authorization to set preferences: ${notInScope.join(', ')}`,
       )
     }
     // get all current prefs for user and prep new pref rows
@@ -29,6 +38,7 @@ export class PreferenceTransactor extends PreferenceReader {
     })
     const allPrefIdsInNamespace = allPrefs
       .filter((pref) => prefMatchNamespace(namespace, pref.name))
+      .filter((pref) => prefInScope(scope, pref.name))
       .map((pref) => pref.id)
     // replace all prefs in given namespace
     if (allPrefIdsInNamespace.length) {

@@ -12,6 +12,8 @@ export const subLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:sub')
 export const labelerLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:labeler')
+export const hydrationLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:hydration')
 export const httpLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky')
 

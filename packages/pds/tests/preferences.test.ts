@@ -1,11 +1,13 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import usersSeed from './seeds/users'
+import { AuthScope } from '../dist/auth-verifier'
 
 describe('user preferences', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
+  let appPassHeaders: { authorization: string }
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -14,6 +16,16 @@ describe('user preferences', () => {
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await usersSeed(sc)
+    const appPass = await network.pds.ctx.accountManager.createAppPassword(
+      sc.dids.alice,
+      'test app pass',
+      false,
+    )
+    const res = await agent.com.atproto.server.createSession({
+      identifier: sc.dids.alice,
+      password: appPass.password,
+    })
+    appPassHeaders = { authorization: `Bearer ${res.data.accessJwt}` }
   })
 
   afterAll(async () => {
@@ -46,6 +58,7 @@ describe('user preferences', () => {
       store.pref.putPreferences(
         [{ $type: 'com.atproto.server.defs#unknown' }],
         'com.atproto',
+        AuthScope.Access,
       ),
     )
     const { data } = await agent.api.app.bsky.actor.getPreferences(
@@ -96,7 +109,7 @@ describe('user preferences', () => {
     // Ensure other prefs were not clobbered
     const otherPrefs = await network.pds.ctx.actorStore.read(
       sc.dids.alice,
-      (store) => store.pref.getPreferences('com.atproto'),
+      (store) => store.pref.getPreferences('com.atproto', AuthScope.Access),
     )
     expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])
   })
@@ -177,5 +190,58 @@ describe('user preferences', () => {
     await expect(tryPut).rejects.toThrow(
       'Input/preferences/1 must be an object which includes the "$type" property',
     )
+  })
+
+  it('does not read permissioned preferences with an app password', async () => {
+    await agent.api.app.bsky.actor.putPreferences(
+      {
+        preferences: [
+          {
+            $type: 'app.bsky.actor.defs#personalDetailsPref',
+            birthDate: new Date().toISOString(),
+          },
+        ],
+      },
+      { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+    )
+    const res = await agent.api.app.bsky.actor.getPreferences(
+      {},
+      { headers: appPassHeaders },
+    )
+    expect(res.data.preferences).toEqual([])
+  })
+
+  it('does not write permissioned preferences with an app password', async () => {
+    const tryPut = agent.api.app.bsky.actor.putPreferences(
+      {
+        preferences: [
+          {
+            $type: 'app.bsky.actor.defs#personalDetailsPref',
+            birthDate: new Date().toISOString(),
+          },
+        ],
+      },
+      { headers: appPassHeaders, encoding: 'application/json' },
+    )
+    await expect(tryPut).rejects.toThrow(
+      /Do not have authorization to set preferences/,
+    )
+  })
+
+  it('does not remove permissioned preferences with an app password', async () => {
+    await agent.api.app.bsky.actor.putPreferences(
+      {
+        preferences: [],
+      },
+      { headers: appPassHeaders, encoding: 'application/json' },
+    )
+    const res = await agent.api.app.bsky.actor.getPreferences(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    const scopedPref = res.data.preferences.find(
+      (pref) => pref.$type === 'app.bsky.actor.defs#personalDetailsPref',
+    )
+    expect(scopedPref).toBeDefined()
   })
 })

@@ -20,6 +20,7 @@ import getActorStarterPacks from './app/bsky/graph/getActorStarterPacks'
 import getBlocks from './app/bsky/graph/getBlocks'
 import getListBlocks from './app/bsky/graph/getListBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
+import getKnownFollowers from './app/bsky/graph/getKnownFollowers'
 import getFollows from './app/bsky/graph/getFollows'
 import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
@@ -78,6 +79,7 @@ export default function (server: Server, ctx: AppContext) {
   getBlocks(server, ctx)
   getListBlocks(server, ctx)
   getFollowers(server, ctx)
+  getKnownFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
   getLists(server, ctx)
