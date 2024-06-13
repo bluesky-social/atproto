@@ -2,8 +2,7 @@ name: build-and-push-bsync-aws
 on:
   push:
     branches:
-      - bsync-build
-      - services/bsync
+      - main
 env:
   REGISTRY: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
   USERNAME: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
