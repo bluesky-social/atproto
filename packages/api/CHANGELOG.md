@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.19
+
+### Patch Changes
+
+- [#2558](https://github.com/bluesky-social/atproto/pull/2558) [`7c1973841`](https://github.com/bluesky-social/atproto/commit/7c1973841dab416ae19435d37853aeea1f579d39) Thanks [@dholms](https://github.com/dholms)! - Add thread mute routes and viewer state
+
 ## 0.12.18
 
 ### Patch Changes
