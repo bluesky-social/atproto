@@ -260,6 +260,7 @@ message GetInteractionCountsResponse {
   repeated int32 likes = 1;
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
+  repeated int32 list_items = 4;
 }
 
 message GetCountsForUsersRequest {
@@ -281,9 +282,8 @@ message GetCountsForStarterPacksRequest {
 
 message GetCountsForStarterPacksResponse {
   repeated int32 feeds = 1;
-  repeated int32 list_items = 2;
-  repeated int32 joined_week = 3;
-  repeated int32 joined_all_time = 4;
+  repeated int32 joined_week = 2;
+  repeated int32 joined_all_time = 3;
 }
 
 //

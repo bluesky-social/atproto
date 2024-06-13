@@ -182,7 +182,6 @@ export class FeedHydrator {
     }, new HydrationMap<Threadgate>())
   }
 
-  // @TODO may not be supported yet by data plane
   async getLikes(uris: string[], includeTakedowns = false): Promise<Likes> {
     if (!uris.length) return new HydrationMap<Like>()
     const res = await this.dataplane.getLikeRecords({ uris })

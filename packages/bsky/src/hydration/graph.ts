@@ -31,13 +31,18 @@ export type StarterPacks = HydrationMap<StarterPack>
 
 export type StarterPackAgg = {
   feeds: number
-  listItems: number
   joinedWeek: number
   joinedAllTime: number
   listItemSampleUris?: string[] // gets set during starter pack hydration (not for basic view)
 }
 
 export type StarterPackAggs = HydrationMap<StarterPackAgg>
+
+export type ListAgg = {
+  listItems: number
+}
+
+export type ListAggs = HydrationMap<ListAgg>
 
 export type RelationshipPair = [didA: string, didB: string]
 
@@ -98,7 +103,6 @@ export class GraphHydrator {
     }, new HydrationMap<List>())
   }
 
-  // @TODO may not be supported yet by data plane
   async getListItems(
     uris: string[],
     includeTakedowns = false,
@@ -231,10 +235,19 @@ export class GraphHydrator {
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
         feeds: counts.feeds[i] ?? 0,
-        listItems: counts.listItems[i] ?? 0,
         joinedWeek: counts.joinedWeek[i] ?? 0,
         joinedAllTime: counts.joinedAllTime[i] ?? 0,
       })
     }, new HydrationMap<StarterPackAgg>())
+  }
+
+  async getListAggregates(refs: ItemRef[]) {
+    if (!refs.length) return new HydrationMap<ListAgg>()
+    const counts = await this.dataplane.getInteractionCounts({ refs })
+    return refs.reduce((acc, { uri }, i) => {
+      return acc.set(uri, {
+        listItems: counts.listItems[i] ?? 0,
+      })
+    }, new HydrationMap<ListAgg>())
   }
 }

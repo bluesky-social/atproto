@@ -1,6 +1,7 @@
 import { DAY, keyBy } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { ServiceImpl } from '@connectrpc/connect'
+import { ids } from '../../../lexicon/lexicons'
 import {
   isRecord as isStarterPackRecord,
   Record as StarterPackRecord,
@@ -8,6 +9,7 @@ import {
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll } from '../db/util'
+import { urisByCollection } from '../../../hydration/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {
@@ -21,10 +23,21 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const byUri = keyBy(res, 'uri')
+    const listUris = urisByCollection(uris).get(ids.AppBskyGraphList) ?? []
+    const countsListItems = listUris.length
+      ? await db.db
+          .selectFrom('list_item')
+          .where('listUri', 'in', listUris)
+          .select(['listUri as uri', countAll.as('count')])
+          .groupBy('listUri')
+          .execute()
+      : []
+    const listItemCountsByUri = keyBy(countsListItems, 'uri')
     return {
       likes: uris.map((uri) => byUri[uri]?.likeCount ?? 0),
       replies: uris.map((uri) => byUri[uri]?.replyCount ?? 0),
       reposts: uris.map((uri) => byUri[uri]?.repostCount ?? 0),
+      listItems: uris.map((uri) => listItemCountsByUri[uri]?.count ?? 0),
     }
   },
   async getCountsForUsers(req) {
@@ -74,17 +87,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       if (!isStarterPackRecord(record)) return cur
       return cur.set(r.uri, record)
     }, new Map<string, StarterPackRecord>())
-    const listUris = [...recordsByUri.values()].flatMap((r) => {
-      return r.list ?? []
-    })
-    const countsListItems = listUris.length
-      ? await db.db
-          .selectFrom('list_item')
-          .where('listUri', 'in', listUris)
-          .select(['listUri as uri', countAll.as('count')])
-          .groupBy('listUri')
-          .execute()
-      : []
     const countsAllTime = await db.db
       .selectFrom('profile')
       .where('joinedViaStarterPackUri', 'in', uris)
@@ -98,9 +100,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select(['joinedViaStarterPackUri as uri', countAll.as('count')])
       .groupBy('joinedViaStarterPackUri')
       .execute()
-    const countsListItemsByListUri = countsListItems.reduce((cur, item) => {
-      return cur.set(item.uri, item.count)
-    }, new Map<string, number>())
     const countsWeekByUri = countsWeek.reduce((cur, item) => {
       if (!item.uri) return cur
       return cur.set(item.uri, item.count)
@@ -111,11 +110,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }, new Map<string, number>())
     return {
       feeds: uris.map((uri) => recordsByUri.get(uri)?.feeds?.length ?? 0),
-      listItems: uris.map((uri) => {
-        const listUri = recordsByUri.get(uri)?.list
-        if (!listUri) return 0
-        return countsListItemsByListUri.get(listUri) ?? 0
-      }),
       joinedWeek: uris.map((uri) => countsWeekByUri.get(uri) ?? 0),
       joinedAllTime: uris.map((uri) => countsAllTimeByUri.get(uri) ?? 0),
     }

@@ -19,6 +19,7 @@ import {
 import {
   Follows,
   GraphHydrator,
+  ListAggs,
   ListItems,
   ListViewerStates,
   Lists,
@@ -87,6 +88,7 @@ export type HydrationState = {
   followBlocks?: FollowBlocks
   threadgates?: Threadgates
   lists?: Lists
+  listAggs?: ListAggs
   listViewers?: ListViewerStates
   listItems?: ListItems
   likes?: Likes
@@ -563,9 +565,21 @@ export class Hydrator {
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(uris, starterPacks, labels)
     }
+    // hydrate list count
+    const listUriSet = new Set<string>()
+    starterPacks.forEach((sp) => {
+      if (sp?.record.list) {
+        listUriSet.add(sp?.record.list)
+      }
+    })
+    const listUris = [...listUriSet]
+    const listAggs = await this.graph.getListAggregates(
+      listUris.map((uri) => ({ uri })),
+    )
     return mergeStates(profileState, {
       starterPacks,
       starterPackAggs,
+      listAggs,
       labels,
       ctx,
     })
@@ -997,6 +1011,7 @@ export const mergeStates = (
     followBlocks: mergeMaps(stateA.followBlocks, stateB.followBlocks),
     threadgates: mergeMaps(stateA.threadgates, stateB.threadgates),
     lists: mergeMaps(stateA.lists, stateB.lists),
+    listAggs: mergeMaps(stateA.listAggs, stateB.listAggs),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
     likes: mergeMaps(stateA.likes, stateB.likes),

@@ -3062,6 +3062,11 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   replies: number[] = []
 
+  /**
+   * @generated from field: repeated int32 list_items = 4;
+   */
+  listItems: number[] = []
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3087,6 +3092,13 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     {
       no: 3,
       name: 'replies',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 4,
+      name: 'list_items',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
@@ -3381,17 +3393,12 @@ export class GetCountsForStarterPacksResponse extends Message<GetCountsForStarte
   feeds: number[] = []
 
   /**
-   * @generated from field: repeated int32 list_items = 2;
-   */
-  listItems: number[] = []
-
-  /**
-   * @generated from field: repeated int32 joined_week = 3;
+   * @generated from field: repeated int32 joined_week = 2;
    */
   joinedWeek: number[] = []
 
   /**
-   * @generated from field: repeated int32 joined_all_time = 4;
+   * @generated from field: repeated int32 joined_all_time = 3;
    */
   joinedAllTime: number[] = []
 
@@ -3412,20 +3419,13 @@ export class GetCountsForStarterPacksResponse extends Message<GetCountsForStarte
     },
     {
       no: 2,
-      name: 'list_items',
-      kind: 'scalar',
-      T: 5 /* ScalarType.INT32 */,
-      repeated: true,
-    },
-    {
-      no: 3,
       name: 'joined_week',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
     },
     {
-      no: 4,
+      no: 3,
       name: 'joined_all_time',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,

@@ -325,6 +325,9 @@ export class Views {
     const creator = this.profileBasic(parsedUri.hostname, state)
     if (!creator) return
     const agg = state.starterPackAggs?.get(uri)
+    const listAgg = sp.record.list
+      ? state.listAggs?.get(sp.record.list)
+      : undefined
     const labels = state.labels?.getBySubject(uri) ?? []
     return {
       uri,
@@ -334,7 +337,7 @@ export class Views {
       feedCount: agg?.feeds ?? 0,
       joinedAllTimeCount: agg?.joinedAllTime ?? 0,
       joinedWeekCount: agg?.joinedWeek ?? 0,
-      listItemCount: agg?.listItems ?? 0,
+      listItemCount: listAgg?.listItems ?? 0,
       labels,
       indexedAt: sp.sortedAt.toISOString(),
     }
