@@ -50,6 +50,7 @@ Object {
         "uri": "record(4)",
         "viewer": Object {
           "like": "record(7)",
+          "threadMuted": false,
         },
       },
     },
@@ -128,7 +129,9 @@ Object {
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   "post": Object {
@@ -184,6 +187,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
+      "threadMuted": false,
     },
   },
   "replies": Array [],
@@ -236,6 +240,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -274,7 +279,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [],
     },
@@ -355,7 +362,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [
         Object {
@@ -413,6 +422,7 @@ Object {
             "uri": "record(8)",
             "viewer": Object {
               "repost": "record(9)",
+              "threadMuted": false,
             },
           },
           "replies": Array [],
@@ -469,6 +479,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -507,7 +518,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
     Object {
@@ -587,7 +600,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   ],
@@ -640,6 +655,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -678,7 +694,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
     Object {
@@ -758,7 +776,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   ],
@@ -809,7 +829,9 @@ Object {
     "replyCount": 1,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "threadMuted": false,
+    },
   },
   "replies": Array [
     Object {
@@ -848,7 +870,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(4)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [
         Object {
@@ -904,7 +928,9 @@ Object {
             "replyCount": 0,
             "repostCount": 0,
             "uri": "record(5)",
-            "viewer": Object {},
+            "viewer": Object {
+              "threadMuted": false,
+            },
           },
           "replies": Array [],
         },
@@ -958,7 +984,9 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "threadMuted": false,
+    },
   },
   "replies": Array [],
 }
@@ -1023,7 +1051,9 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "threadMuted": false,
+    },
   },
   "replies": Array [],
 }
@@ -1090,6 +1120,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
+      "threadMuted": false,
     },
   },
   "replies": Array [],
@@ -1157,6 +1188,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
+      "threadMuted": false,
     },
   },
   "replies": Array [],
@@ -1209,6 +1241,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -1289,7 +1322,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [
         Object {
@@ -1347,6 +1382,7 @@ Object {
             "uri": "record(6)",
             "viewer": Object {
               "repost": "record(7)",
+              "threadMuted": false,
             },
           },
           "replies": Array [],
@@ -1403,6 +1439,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -1483,7 +1520,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [],
     },

@@ -59,7 +59,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(0)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
     Object {
@@ -178,6 +180,7 @@ Object {
         "uri": "record(2)",
         "viewer": Object {
           "like": "record(8)",
+          "threadMuted": false,
         },
       },
     },
