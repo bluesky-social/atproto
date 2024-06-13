@@ -26,12 +26,10 @@ Array [
         },
       ],
     },
-    "feedCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "joinedAllTimeCount": 0,
     "joinedWeekCount": 0,
     "labels": Array [],
-    "listItemCount": 0,
     "record": Object {
       "$type": "app.bsky.graph.starterpack",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -65,12 +63,10 @@ Array [
         },
       ],
     },
-    "feedCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "joinedAllTimeCount": 3,
     "joinedWeekCount": 3,
     "labels": Array [],
-    "listItemCount": 3,
     "record": Object {
       "$type": "app.bsky.graph.starterpack",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -112,7 +108,6 @@ Object {
       },
     ],
   },
-  "feedCount": 1,
   "feeds": Array [
     Object {
       "cid": "cids(3)",
@@ -157,11 +152,11 @@ Object {
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
+    "listItemCount": 3,
     "name": "n/a",
     "purpose": "app.bsky.graph.defs#referencelist",
     "uri": "record(1)",
   },
-  "listItemCount": 3,
   "listItemsSample": Array [
     Object {
       "subject": Object {
@@ -238,12 +233,10 @@ Object {
       },
     ],
   },
-  "feedCount": 1,
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "joinedAllTimeCount": 3,
   "joinedWeekCount": 3,
   "labels": Array [],
-  "listItemCount": 3,
   "record": Object {
     "$type": "app.bsky.graph.starterpack",
     "createdAt": "1970-01-01T00:00:00.000Z",
