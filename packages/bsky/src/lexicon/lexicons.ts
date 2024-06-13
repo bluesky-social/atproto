@@ -6813,6 +6813,10 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
           labels: {
             type: 'array',
             items: {
@@ -6870,6 +6874,10 @@ export const schemaDict = {
           avatar: {
             type: 'string',
             format: 'uri',
+          },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
           },
           labels: {
             type: 'array',
@@ -6935,19 +6943,11 @@ export const schemaDict = {
           },
           feeds: {
             type: 'array',
-            maxLength: 50,
+            maxLength: 3,
             items: {
               type: 'ref',
               ref: 'lex:app.bsky.feed.defs#generatorView',
             },
-          },
-          feedCount: {
-            type: 'integer',
-            minimum: 0,
-          },
-          listItemCount: {
-            type: 'integer',
-            minimum: 0,
           },
           joinedWeekCount: {
             type: 'integer',
@@ -6988,10 +6988,6 @@ export const schemaDict = {
           creator: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewBasic',
-          },
-          feedCount: {
-            type: 'integer',
-            minimum: 0,
           },
           listItemCount: {
             type: 'integer',
@@ -7914,11 +7910,12 @@ export const schemaDict = {
         key: 'any',
         record: {
           type: 'object',
-          required: ['name', 'createdAt'],
+          required: ['name', 'list', 'createdAt'],
           properties: {
             name: {
               type: 'string',
-              maxLength: 64,
+              maxGraphemes: 50,
+              maxLength: 500,
               minLength: 1,
               description: 'Display name for starter pack; can not be empty.',
             },
@@ -7941,7 +7938,7 @@ export const schemaDict = {
             },
             feeds: {
               type: 'array',
-              maxLength: 50,
+              maxLength: 3,
               items: {
                 type: 'ref',
                 ref: 'lex:app.bsky.graph.starterpack#feedItem',

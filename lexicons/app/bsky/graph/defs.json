@@ -11,6 +11,7 @@
         "name": { "type": "string", "maxLength": 64, "minLength": 1 },
         "purpose": { "type": "ref", "ref": "#listPurpose" },
         "avatar": { "type": "string", "format": "uri" },
+        "listItemCount": { "type": "integer", "minimum": 0 },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
@@ -38,6 +39,7 @@
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
         "avatar": { "type": "string", "format": "uri" },
+        "listItemCount": { "type": "integer", "minimum": 0 },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
@@ -73,11 +75,9 @@
         },
         "feeds": {
           "type": "array",
-          "maxLength": 50,
+          "maxLength": 3,
           "items": { "type": "ref", "ref": "app.bsky.feed.defs#generatorView" }
         },
-        "feedCount": { "type": "integer", "minimum": 0 },
-        "listItemCount": { "type": "integer", "minimum": 0 },
         "joinedWeekCount": { "type": "integer", "minimum": 0 },
         "joinedAllTimeCount": { "type": "integer", "minimum": 0 },
         "labels": {
@@ -98,7 +98,6 @@
           "type": "ref",
           "ref": "app.bsky.actor.defs#profileViewBasic"
         },
-        "feedCount": { "type": "integer", "minimum": 0 },
         "listItemCount": { "type": "integer", "minimum": 0 },
         "joinedWeekCount": { "type": "integer", "minimum": 0 },
         "joinedAllTimeCount": { "type": "integer", "minimum": 0 },

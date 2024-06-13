@@ -289,6 +289,7 @@ export class Views {
     if (!list) {
       return undefined
     }
+    const listAgg = state.listAggs?.get(uri)
     const listViewer = state.listViewers?.get(uri)
     const labels = state.labels?.getBySubject(uri) ?? []
     const creator = new AtUri(uri).hostname
@@ -304,6 +305,7 @@ export class Views {
             cidFromBlobJson(list.record.avatar),
           )
         : undefined,
+      listItemCount: listAgg?.listItems ?? 0,
       indexedAt: list.sortedAt.toISOString(),
       labels,
       viewer: listViewer
@@ -334,7 +336,6 @@ export class Views {
       cid: sp.cid,
       record: sp.record,
       creator,
-      feedCount: agg?.feeds ?? 0,
       joinedAllTimeCount: agg?.joinedAllTime ?? 0,
       joinedWeekCount: agg?.joinedWeek ?? 0,
       listItemCount: listAgg?.listItems ?? 0,

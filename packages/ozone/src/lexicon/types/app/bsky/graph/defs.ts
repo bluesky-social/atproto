@@ -16,6 +16,7 @@ export interface ListViewBasic {
   name: string
   purpose: ListPurpose
   avatar?: string
+  listItemCount?: number
   labels?: ComAtprotoLabelDefs.Label[]
   viewer?: ListViewerState
   indexedAt?: string
@@ -43,6 +44,7 @@ export interface ListView {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
+  listItemCount?: number
   labels?: ComAtprotoLabelDefs.Label[]
   viewer?: ListViewerState
   indexedAt: string
@@ -87,8 +89,6 @@ export interface StarterPackView {
   list?: ListViewBasic
   listItemsSample?: ListItemView[]
   feeds?: AppBskyFeedDefs.GeneratorView[]
-  feedCount?: number
-  listItemCount?: number
   joinedWeekCount?: number
   joinedAllTimeCount?: number
   labels?: ComAtprotoLabelDefs.Label[]
@@ -113,7 +113,6 @@ export interface StarterPackViewBasic {
   cid: string
   record: {}
   creator: AppBskyActorDefs.ProfileViewBasic
-  feedCount?: number
   listItemCount?: number
   joinedWeekCount?: number
   joinedAllTimeCount?: number

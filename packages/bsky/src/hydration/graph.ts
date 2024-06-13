@@ -30,7 +30,6 @@ export type StarterPack = RecordInfo<StarterPackRecord>
 export type StarterPacks = HydrationMap<StarterPack>
 
 export type StarterPackAgg = {
-  feeds: number
   joinedWeek: number
   joinedAllTime: number
   listItemSampleUris?: string[] // gets set during starter pack hydration (not for basic view)
@@ -234,7 +233,6 @@ export class GraphHydrator {
     const counts = await this.dataplane.getCountsForStarterPacks({ refs })
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
-        feeds: counts.feeds[i] ?? 0,
         joinedWeek: counts.joinedWeek[i] ?? 0,
         joinedAllTime: counts.joinedAllTime[i] ?? 0,
       })

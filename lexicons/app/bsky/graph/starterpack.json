@@ -8,11 +8,12 @@
       "key": "any",
       "record": {
         "type": "object",
-        "required": ["name", "createdAt"],
+        "required": ["name", "list", "createdAt"],
         "properties": {
           "name": {
             "type": "string",
-            "maxLength": 64,
+            "maxGraphemes": 50,
+            "maxLength": 500,
             "minLength": 1,
             "description": "Display name for starter pack; can not be empty."
           },
@@ -32,7 +33,7 @@
           },
           "feeds": {
             "type": "array",
-            "maxLength": 50,
+            "maxLength": 3,
             "items": { "type": "ref", "ref": "#feedItem" }
           },
           "createdAt": { "type": "string", "format": "datetime" }

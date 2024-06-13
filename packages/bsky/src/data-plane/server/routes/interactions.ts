@@ -1,11 +1,6 @@
 import { DAY, keyBy } from '@atproto/common'
-import { jsonStringToLex } from '@atproto/lexicon'
 import { ServiceImpl } from '@connectrpc/connect'
 import { ids } from '../../../lexicon/lexicons'
-import {
-  isRecord as isStarterPackRecord,
-  Record as StarterPackRecord,
-} from '../../../lexicon/types/app/bsky/graph/starterpack'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll } from '../db/util'
@@ -75,18 +70,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const weekAgo = new Date(Date.now() - 7 * DAY)
     const uris = req.refs.map((ref) => ref.uri)
     if (uris.length === 0) {
-      return { feeds: [], joinedAllTime: [], joinedWeek: [], listItems: [] }
+      return { joinedAllTime: [], joinedWeek: [] }
     }
-    const records = await db.db
-      .selectFrom('record')
-      .where('uri', 'in', uris)
-      .selectAll()
-      .execute()
-    const recordsByUri = records.reduce((cur, r) => {
-      const record = jsonStringToLex(r.json)
-      if (!isStarterPackRecord(record)) return cur
-      return cur.set(r.uri, record)
-    }, new Map<string, StarterPackRecord>())
     const countsAllTime = await db.db
       .selectFrom('profile')
       .where('joinedViaStarterPackUri', 'in', uris)
@@ -109,7 +94,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       return cur.set(item.uri, item.count)
     }, new Map<string, number>())
     return {
-      feeds: uris.map((uri) => recordsByUri.get(uri)?.feeds?.length ?? 0),
       joinedWeek: uris.map((uri) => countsWeekByUri.get(uri) ?? 0),
       joinedAllTime: uris.map((uri) => countsAllTimeByUri.get(uri) ?? 0),
     }

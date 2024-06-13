@@ -13,7 +13,7 @@ export interface Record {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   /** Reference (AT-URI) to the list record. */
-  list?: string
+  list: string
   feeds?: FeedItem[]
   createdAt: string
   [k: string]: unknown

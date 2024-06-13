@@ -258,8 +258,9 @@ export class Hydrator {
     uris: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [lists, listViewers, labels] = await Promise.all([
+    const [lists, listAggs, listViewers, labels] = await Promise.all([
       this.graph.getLists(uris, ctx.includeTakedowns),
+      this.graph.getListAggregates(uris.map((uri) => ({ uri }))),
       ctx.viewer ? this.graph.getListViewerStates(uris, ctx.viewer) : undefined,
       this.label.getLabelsForSubjects(uris, ctx.labelers),
     ])
@@ -268,7 +269,7 @@ export class Hydrator {
       actionTakedownLabels(uris, lists, labels)
     }
 
-    return { lists, listViewers, labels, ctx }
+    return { lists, listAggs, listViewers, labels, ctx }
   }
 
   // app.bsky.graph.defs#listItemView
@@ -565,21 +566,9 @@ export class Hydrator {
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(uris, starterPacks, labels)
     }
-    // hydrate list count
-    const listUriSet = new Set<string>()
-    starterPacks.forEach((sp) => {
-      if (sp?.record.list) {
-        listUriSet.add(sp?.record.list)
-      }
-    })
-    const listUris = [...listUriSet]
-    const listAggs = await this.graph.getListAggregates(
-      listUris.map((uri) => ({ uri })),
-    )
     return mergeStates(profileState, {
       starterPacks,
       starterPackAggs,
-      listAggs,
       labels,
       ctx,
     })

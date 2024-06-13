@@ -281,9 +281,8 @@ message GetCountsForStarterPacksRequest {
 }
 
 message GetCountsForStarterPacksResponse {
-  repeated int32 feeds = 1;
-  repeated int32 joined_week = 2;
-  repeated int32 joined_all_time = 3;
+  repeated int32 joined_week = 1;
+  repeated int32 joined_all_time = 2;
 }
 
 //

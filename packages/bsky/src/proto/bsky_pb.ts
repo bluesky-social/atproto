@@ -3388,17 +3388,12 @@ export class GetCountsForStarterPacksRequest extends Message<GetCountsForStarter
  */
 export class GetCountsForStarterPacksResponse extends Message<GetCountsForStarterPacksResponse> {
   /**
-   * @generated from field: repeated int32 feeds = 1;
-   */
-  feeds: number[] = []
-
-  /**
-   * @generated from field: repeated int32 joined_week = 2;
+   * @generated from field: repeated int32 joined_week = 1;
    */
   joinedWeek: number[] = []
 
   /**
-   * @generated from field: repeated int32 joined_all_time = 3;
+   * @generated from field: repeated int32 joined_all_time = 2;
    */
   joinedAllTime: number[] = []
 
@@ -3412,20 +3407,13 @@ export class GetCountsForStarterPacksResponse extends Message<GetCountsForStarte
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'feeds',
-      kind: 'scalar',
-      T: 5 /* ScalarType.INT32 */,
-      repeated: true,
-    },
-    {
-      no: 2,
       name: 'joined_week',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
     },
     {
-      no: 3,
+      no: 2,
       name: 'joined_all_time',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
