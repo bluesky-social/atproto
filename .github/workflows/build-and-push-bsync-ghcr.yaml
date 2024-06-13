@@ -2,8 +2,7 @@ name: build-and-push-bsync-ghcr
 on:
   push:
     branches:
-      - bsync-build
-      - services/bsync
+      - main
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
