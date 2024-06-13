@@ -1,4 +1,4 @@
-import { countGrapheme } from 'unicode-segmenter/grapheme';
+import { countGrapheme } from 'unicode-segmenter/grapheme'
 import * as ui8 from 'uint8arrays'
 
 // counts the number of bytes in a utf8 string
