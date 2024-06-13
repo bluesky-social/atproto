@@ -37,7 +37,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
   async getCountsForUsers(req) {
     if (req.dids.length === 0) {
-      return { followers: [], following: [], posts: [] }
+      return {}
     }
     const { ref } = db.db.dynamic
     const res = await db.db
@@ -64,6 +64,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       posts: req.dids.map((uri) => byDid[uri]?.postsCount ?? 0),
       lists: req.dids.map((uri) => byDid[uri]?.listsCount ?? 0),
       feeds: req.dids.map((uri) => byDid[uri]?.feedGensCount ?? 0),
+      starterPacks: req.dids.map((_uri) => 0), // @TODO
     }
   },
   async getCountsForStarterPacks(req) {

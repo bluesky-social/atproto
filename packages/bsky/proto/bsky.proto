@@ -274,6 +274,7 @@ message GetCountsForUsersResponse {
   repeated int32 followers = 4;
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
+  repeated int32 starter_packs = 7;
 }
 
 message GetCountsForStarterPacksRequest {
