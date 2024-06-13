@@ -30,6 +30,8 @@ import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
+import muteThread from './app/bsky/graph/muteThread'
+import unmuteThread from './app/bsky/graph/unmuteThread'
 import getSuggestedFollowsByActor from './app/bsky/graph/getSuggestedFollowsByActor'
 import getLabelerServices from './app/bsky/labeler/getServices'
 import searchActors from './app/bsky/actor/searchActors'
@@ -87,6 +89,8 @@ export default function (server: Server, ctx: AppContext) {
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
   unmuteActorList(server, ctx)
+  muteThread(server, ctx)
+  unmuteThread(server, ctx)
   getSuggestedFollowsByActor(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)

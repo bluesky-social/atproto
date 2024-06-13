@@ -52,7 +52,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reply": Object {
       "grandparentAuthor": Object {
@@ -159,7 +161,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(3)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -201,7 +205,9 @@ Array [
         "replyCount": 3,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   },
@@ -381,7 +387,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(6)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -424,7 +432,9 @@ Array [
       "replyCount": 3,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -483,7 +493,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(13)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
 ]
@@ -567,7 +579,9 @@ Array [
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -614,6 +628,7 @@ Array [
         "uri": "record(1)",
         "viewer": Object {
           "like": "record(5)",
+          "threadMuted": false,
         },
       },
       "root": Object {
@@ -660,6 +675,7 @@ Array [
         "uri": "record(1)",
         "viewer": Object {
           "like": "record(5)",
+          "threadMuted": false,
         },
       },
     },
@@ -689,7 +705,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(6)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -721,7 +739,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(7)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
 ]
@@ -896,6 +916,7 @@ Array [
       "uri": "record(0)",
       "viewer": Object {
         "repost": "record(4)",
+        "threadMuted": false,
       },
     },
     "reason": Object {
@@ -945,7 +966,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -992,6 +1015,7 @@ Array [
         "uri": "record(6)",
         "viewer": Object {
           "like": "record(10)",
+          "threadMuted": false,
         },
       },
       "root": Object {
@@ -1038,6 +1062,7 @@ Array [
         "uri": "record(6)",
         "viewer": Object {
           "like": "record(10)",
+          "threadMuted": false,
         },
       },
     },
@@ -1153,7 +1178,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(1)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
 ]
@@ -1214,6 +1241,7 @@ Array [
       "uri": "record(0)",
       "viewer": Object {
         "repost": "record(5)",
+        "threadMuted": false,
       },
     },
     "reason": Object {
@@ -1339,7 +1367,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(4)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -1385,6 +1415,7 @@ Array [
         "viewer": Object {
           "like": "record(7)",
           "repost": "record(6)",
+          "threadMuted": false,
         },
       },
     },
@@ -1433,6 +1464,7 @@ Array [
       "viewer": Object {
         "like": "record(7)",
         "repost": "record(6)",
+        "threadMuted": false,
       },
     },
     "reason": Object {
@@ -1619,7 +1651,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(9)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -1650,7 +1684,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(12)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
 ]
@@ -1710,7 +1746,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reply": Object {
       "grandparentAuthor": Object {
@@ -1818,7 +1856,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -1864,6 +1904,7 @@ Array [
         "uri": "record(4)",
         "viewer": Object {
           "like": "record(6)",
+          "threadMuted": false,
         },
       },
     },
@@ -2045,6 +2086,7 @@ Array [
       "uri": "record(8)",
       "viewer": Object {
         "like": "record(12)",
+        "threadMuted": false,
       },
     },
   },
@@ -2092,6 +2134,7 @@ Array [
       "uri": "record(4)",
       "viewer": Object {
         "like": "record(6)",
+        "threadMuted": false,
       },
     },
   },
@@ -2153,7 +2196,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(13)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
 ]

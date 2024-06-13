@@ -247,13 +247,41 @@ export class RecordProcessor<T, S> {
     }
     for (const chunk of chunkArray(notifs, 500)) {
       runOnCommit.push(async (db) => {
-        await db.db.insertInto('notification').values(chunk).execute()
+        const filtered = await this.filterNotifsForThreadMutes(chunk)
+        await db.db.insertInto('notification').values(filtered).execute()
       })
     }
     // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
     for (const fn of runOnCommit) {
       await fn(this.appDb) // these could be backgrounded
     }
+  }
+
+  async filterNotifsForThreadMutes(notifs: Notif[]): Promise<Notif[]> {
+    const isBlocked = await Promise.all(
+      notifs.map((n) => this.isNotifBlockedByThreadMute(n)),
+    )
+    return notifs.filter((_, i) => !isBlocked[i])
+  }
+
+  async isNotifBlockedByThreadMute(notif: Notif): Promise<boolean> {
+    const subject = notif.reasonSubject
+    if (!subject) return false
+    if (subject.startsWith('did:')) return false
+    const post = await this.db
+      .selectFrom('post')
+      .select(['uri', 'replyRoot'])
+      .where('uri', '=', subject)
+      .executeTakeFirst()
+    if (!post) return false
+    const threadRoot = post.replyRoot ?? post.uri
+    const threadMute = await this.db
+      .selectFrom('thread_mute')
+      .selectAll()
+      .where('mutedByDid', '=', notif.did)
+      .where('rootUri', '=', threadRoot)
+      .executeTakeFirst()
+    return !!threadMute
   }
 
   aggregateOnCommit(indexed: S) {

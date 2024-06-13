@@ -141,8 +141,10 @@ import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -326,8 +328,10 @@ export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -2214,6 +2218,17 @@ export class AppBskyGraphNS {
       })
   }
 
+  muteThread(
+    data?: AppBskyGraphMuteThread.InputSchema,
+    opts?: AppBskyGraphMuteThread.CallOptions,
+  ): Promise<AppBskyGraphMuteThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.muteThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphMuteThread.toKnownErr(e)
+      })
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -2233,6 +2248,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.unmuteActorList', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyGraphUnmuteActorList.toKnownErr(e)
+      })
+  }
+
+  unmuteThread(
+    data?: AppBskyGraphUnmuteThread.InputSchema,
+    opts?: AppBskyGraphUnmuteThread.CallOptions,
+  ): Promise<AppBskyGraphUnmuteThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unmuteThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnmuteThread.toKnownErr(e)
       })
   }
 }
