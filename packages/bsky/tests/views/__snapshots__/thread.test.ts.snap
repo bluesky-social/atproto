@@ -10,6 +10,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -56,6 +57,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
@@ -134,6 +136,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -196,6 +199,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -283,6 +287,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -363,6 +368,7 @@ Object {
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
@@ -429,6 +435,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -515,6 +522,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -600,6 +608,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -686,6 +695,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -771,6 +781,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -817,6 +828,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -856,6 +868,7 @@ Object {
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
@@ -920,6 +933,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -975,6 +989,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1040,6 +1055,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1107,6 +1123,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1169,6 +1186,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1217,6 +1235,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -1297,6 +1316,7 @@ Object {
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
@@ -1363,6 +1383,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1411,6 +1432,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",

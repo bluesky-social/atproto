@@ -1,3 +1,4 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
@@ -21,6 +22,7 @@ export type Actor = {
   isLabeler: boolean
   allowIncomingChatsFrom?: string
   upstreamStatus?: string
+  createdAt?: Date
 }
 
 export type Actors = HydrationMap<Actor>
@@ -127,6 +129,7 @@ export class ActorHydrator {
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
+        createdAt: actor.createdAt?.toDate(),
       })
     }, new HydrationMap<Actor>())
   }

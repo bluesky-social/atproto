@@ -160,7 +160,6 @@ export class Views {
       ...basicView,
       description: actor.profile?.description || undefined,
       indexedAt: actor.sortedAt?.toISOString(),
-      createdAt: actor.profile?.createdAt,
     }
   }
 
@@ -209,6 +208,7 @@ export class Views {
           : undefined,
       viewer: this.profileViewer(did, state),
       labels,
+      createdAt: actor.createdAt?.toISOString(),
     }
   }
 

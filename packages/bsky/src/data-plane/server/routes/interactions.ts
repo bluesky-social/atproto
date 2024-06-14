@@ -1,10 +1,8 @@
 import { DAY, keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
-import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll } from '../db/util'
-import { urisByCollection } from '../../../hydration/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {
@@ -18,21 +16,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll()
       .execute()
     const byUri = keyBy(res, 'uri')
-    const listUris = urisByCollection(uris).get(ids.AppBskyGraphList) ?? []
-    const countsListItems = listUris.length
-      ? await db.db
-          .selectFrom('list_item')
-          .where('listUri', 'in', listUris)
-          .select(['listUri as uri', countAll.as('count')])
-          .groupBy('listUri')
-          .execute()
-      : []
-    const listItemCountsByUri = keyBy(countsListItems, 'uri')
     return {
       likes: uris.map((uri) => byUri[uri]?.likeCount ?? 0),
       replies: uris.map((uri) => byUri[uri]?.replyCount ?? 0),
       reposts: uris.map((uri) => byUri[uri]?.repostCount ?? 0),
-      listItems: uris.map((uri) => listItemCountsByUri[uri]?.count ?? 0),
     }
   },
   async getCountsForUsers(req) {
@@ -67,7 +54,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       starterPacks: req.dids.map((_uri) => 0), // @TODO
     }
   },
-  async getCountsForStarterPacks(req) {
+  async getStarterPackCounts(req) {
     const weekAgo = new Date(Date.now() - 7 * DAY)
     const uris = req.refs.map((ref) => ref.uri)
     if (uris.length === 0) {
@@ -97,6 +84,22 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     return {
       joinedWeek: uris.map((uri) => countsWeekByUri.get(uri) ?? 0),
       joinedAllTime: uris.map((uri) => countsAllTimeByUri.get(uri) ?? 0),
+    }
+  },
+  async getListCounts(req) {
+    const uris = req.refs.map((ref) => ref.uri)
+    if (uris.length === 0) {
+      return { listItems: [] }
+    }
+    const countsListItems = await db.db
+      .selectFrom('list_item')
+      .where('listUri', 'in', uris)
+      .select(['listUri as uri', countAll.as('count')])
+      .groupBy('listUri')
+      .execute()
+    const countsByUri = keyBy(countsListItems, 'uri')
+    return {
+      listItems: uris.map((uri) => countsByUri[uri]?.count ?? 0),
     }
   },
 })

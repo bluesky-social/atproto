@@ -230,7 +230,7 @@ export class GraphHydrator {
 
   async getStarterPackAggregates(refs: ItemRef[]) {
     if (!refs.length) return new HydrationMap<StarterPackAgg>()
-    const counts = await this.dataplane.getCountsForStarterPacks({ refs })
+    const counts = await this.dataplane.getStarterPackCounts({ refs })
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
         joinedWeek: counts.joinedWeek[i] ?? 0,
@@ -241,7 +241,7 @@ export class GraphHydrator {
 
   async getListAggregates(refs: ItemRef[]) {
     if (!refs.length) return new HydrationMap<ListAgg>()
-    const counts = await this.dataplane.getInteractionCounts({ refs })
+    const counts = await this.dataplane.getListCounts({ refs })
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
         listItems: counts.listItems[i] ?? 0,
