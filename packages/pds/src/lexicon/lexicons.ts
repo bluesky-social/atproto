@@ -3915,6 +3915,11 @@ export const schemaDict = {
             type: 'string',
             format: 'handle',
           },
+          website: {
+            type: 'string',
+            maxGraphemes: 64,
+            maxLength: 640,
+          },
           displayName: {
             type: 'string',
             maxGraphemes: 64,
@@ -3963,6 +3968,11 @@ export const schemaDict = {
             maxGraphemes: 256,
             maxLength: 2560,
           },
+          website: {
+            type: 'string',
+            maxGraphemes: 128,
+            maxLength: 1280,
+          },
           avatar: {
             type: 'string',
             format: 'uri',
@@ -4009,6 +4019,11 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 256,
             maxLength: 2560,
+          },
+          website: {
+            type: 'string',
+            maxGraphemes: 128,
+            maxLength: 1280,
           },
           avatar: {
             type: 'string',

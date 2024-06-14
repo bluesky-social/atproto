@@ -14,6 +14,7 @@ describe('Moderation', () => {
       mock.profileViewBasic({
         handle: 'bob.test',
         displayName: 'Bob',
+        website: 'https://www.bob.test',
         labels: [
           {
             src: 'did:web:bob.test',

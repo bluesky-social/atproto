@@ -84,6 +84,7 @@ export async function generateMockSetup(env: TestNetwork) {
       {
         displayName: ucfirst(user.handle).slice(0, -5),
         description: `Test user ${_i++}`,
+        website: `www.blueskytest${_i++}.com`
       },
     )
   }

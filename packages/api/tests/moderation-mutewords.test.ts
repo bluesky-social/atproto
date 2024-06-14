@@ -690,6 +690,7 @@ describe(`hasMutedWord`, () => {
           author: mock.profileViewBasic({
             handle: 'bob.test',
             displayName: 'Bob',
+            website: 'http://bob.test'
           }),
           labels: [],
         }),
@@ -717,6 +718,7 @@ describe(`hasMutedWord`, () => {
           author: mock.profileViewBasic({
             handle: 'bob.test',
             displayName: 'Bob',
+            website: 'http://bob.test'
           }),
           labels: [],
         }),
@@ -748,6 +750,7 @@ describe(`hasMutedWord`, () => {
           author: mock.profileViewBasic({
             handle: 'bob.test',
             displayName: 'Bob',
+            website: 'http://bob.test'
           }),
           labels: [],
         }),
