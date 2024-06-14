@@ -92,6 +92,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 export interface ProfileAssociated {
   lists?: number
   feedgens?: number
+  starterPacks?: number
   labeler?: boolean
   chat?: ProfileAssociatedChat
   [k: string]: unknown

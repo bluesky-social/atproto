@@ -99,6 +99,7 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
+        "starterPacks": { "type": "integer" },
         "labeler": { "type": "boolean" },
         "chat": { "type": "ref", "ref": "#profileAssociatedChat" }
       }

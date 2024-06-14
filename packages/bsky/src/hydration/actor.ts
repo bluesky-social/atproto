@@ -56,6 +56,7 @@ export type ProfileAgg = {
   posts: number
   lists: number
   feeds: number
+  starterPacks: number
 }
 
 export type ProfileAggs = HydrationMap<ProfileAgg>
@@ -214,6 +215,7 @@ export class ActorHydrator {
         posts: counts.posts[i] ?? 0,
         lists: counts.lists[i] ?? 0,
         feeds: counts.feeds[i] ?? 0,
+        starterPacks: counts.starterPacks[i] ?? 0,
       })
     }, new HydrationMap<ProfileAgg>())
   }

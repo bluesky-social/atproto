@@ -42,6 +42,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .whereRef('creator', '=', ref('profile_agg.did'))
           .select(countAll.as('val'))
           .as('listsCount'),
+        db.db
+          .selectFrom('starter_pack')
+          .whereRef('creator', '=', ref('profile_agg.did'))
+          .select(countAll.as('val'))
+          .as('starterPacksCount'),
       ])
       .execute()
     const byDid = keyBy(res, 'did')
@@ -51,7 +56,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       posts: req.dids.map((uri) => byDid[uri]?.postsCount ?? 0),
       lists: req.dids.map((uri) => byDid[uri]?.listsCount ?? 0),
       feeds: req.dids.map((uri) => byDid[uri]?.feedGensCount ?? 0),
-      starterPacks: req.dids.map((_uri) => 0), // @TODO
+      starterPacks: req.dids.map((uri) => byDid[uri]?.starterPacksCount ?? 0),
     }
   },
   async getStarterPackCounts(req) {

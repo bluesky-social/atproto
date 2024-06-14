@@ -4073,6 +4073,9 @@ export const schemaDict = {
           feedgens: {
             type: 'integer',
           },
+          starterPacks: {
+            type: 'integer',
+          },
           labeler: {
             type: 'boolean',
           },

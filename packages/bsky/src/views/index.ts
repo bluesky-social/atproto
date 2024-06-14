@@ -139,6 +139,7 @@ export class Views {
       associated: {
         lists: profileAggs?.lists,
         feedgens: profileAggs?.feeds,
+        starterPacks: profileAggs?.starterPacks,
         labeler: actor.isLabeler,
         // @TODO apply default chat policy?
         chat: actor.allowIncomingChatsFrom
