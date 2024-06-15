@@ -82,6 +82,7 @@ export function AuthorizeView({
         session={session}
         clientId={authorizeData.clientId}
         clientMetadata={authorizeData.clientMetadata}
+        clientTrusted={authorizeData.clientTrusted}
         onAccept={() => doAccept(session.account)}
         onReject={doReject}
         onBack={() => {

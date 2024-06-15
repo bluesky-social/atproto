@@ -18,7 +18,7 @@ export function declareBackendData(name: string, data: unknown) {
   return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
-export function sendApp(
+export function sendWebPage(
   res: ServerResponse,
   { status = 200, ...options }: BuildDocumentOptions & { status?: number },
 ): void {

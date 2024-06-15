@@ -1,10 +1,11 @@
+import { OAuthClientMetadata } from '@atproto/oauth-types'
 import { HTMLAttributes } from 'react'
-import { ClientMetadata } from '../types'
+
 import { ClientIdentifier } from './client-identifier'
 
 export type ClientNameProps = {
   clientId: string
-  clientMetadata: ClientMetadata
+  clientMetadata: OAuthClientMetadata
   as?: keyof JSX.IntrinsicElements
 }
 

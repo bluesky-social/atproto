@@ -1,4 +1,7 @@
-import { OAuthAuthenticationRequestParameters } from '@atproto/oauth-types'
+import {
+  OAuthAuthenticationRequestParameters,
+  OAuthClientMetadata,
+} from '@atproto/oauth-types'
 import { ServerResponse } from 'node:http'
 
 import { DeviceAccountInfo } from '../account/account-store.js'
@@ -12,7 +15,7 @@ import {
   buildCustomizationCss,
   buildCustomizationData,
 } from './customization.js'
-import { declareBackendData, sendApp } from './send-app.js'
+import { declareBackendData, sendWebPage } from './send-web-page.js'
 
 export type AuthorizationResultAuthorize = {
   issuer: string
@@ -31,23 +34,46 @@ export type AuthorizationResultAuthorize = {
   }
 }
 
-function buildAuthorizeData(data: AuthorizationResultAuthorize) {
+// TODO: find a way to share this type with the frontend code
+// (app/backend-data.ts)
+
+type Session = {
+  account: Account
+  info?: never // Prevent accidental leaks to frontend
+
+  selected: boolean
+  loginRequired: boolean
+  consentRequired: boolean
+}
+
+export type AuthorizeData = {
+  clientId: string
+  clientMetadata: OAuthClientMetadata
+  clientTrusted: boolean
+  requestUri: string
+  csrfCookie: string
+  loginHint?: string
+  newSessionsRequireConsent: boolean
+  sessions: Session[]
+}
+
+function buildAuthorizeData(data: AuthorizationResultAuthorize): AuthorizeData {
   return {
-    csrfCookie: `csrf-${data.authorize.uri}`,
-    requestUri: data.authorize.uri,
     clientId: data.client.id,
     clientMetadata: data.client.metadata,
+    clientTrusted: data.client.info.isTrusted,
+    requestUri: data.authorize.uri,
+    csrfCookie: `csrf-${data.authorize.uri}`,
     loginHint: data.parameters.login_hint,
-    newSessionsRequireConsent:
-      data.parameters.prompt === 'login' ||
-      data.parameters.prompt === 'consent',
-    sessions: data.authorize.sessions.map((session) => ({
-      account: session.account,
-
-      selected: session.selected,
-      loginRequired: session.loginRequired,
-      consentRequired: session.consentRequired,
-    })),
+    newSessionsRequireConsent: data.parameters.prompt === 'consent',
+    sessions: data.authorize.sessions.map(
+      (session): Session => ({
+        account: session.account,
+        selected: session.selected,
+        loginRequired: session.loginRequired,
+        consentRequired: session.consentRequired,
+      }),
+    ),
   }
 }
 
@@ -64,7 +90,7 @@ export async function sendAuthorizePage(
     getAsset('main.css'),
   ])
 
-  return sendApp(res, {
+  return sendWebPage(res, {
     scripts: [
       declareBackendData(
         '__customizationData',

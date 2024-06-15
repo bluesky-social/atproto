@@ -15,3 +15,12 @@ export type RequestData = {
   sub: Sub | null
   code: Code | null
 }
+
+export type RequestDataAuthorized = RequestData & {
+  sub: Sub
+  deviceId: DeviceId
+}
+
+export const isRequestDataAuthorized = (
+  data: RequestData,
+): data is RequestDataAuthorized => data.sub !== null && data.deviceId !== null

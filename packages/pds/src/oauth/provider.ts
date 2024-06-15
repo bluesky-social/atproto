@@ -61,8 +61,11 @@ export class PdsOAuthProvider extends OAuthProvider {
       // always use up-to-date token data from the token store.
       accessTokenType: AccessTokenType.id,
 
-      // TODO: make client client list configurable
-      onIsFirstPartyClient: (client) => client.id === 'https://bsky.app/',
+      onClientInfo: (clientId) => ({
+        isFirstParty: clientId === 'https://bsky.app/',
+        // @TODO make client client list configurable:
+        isTrusted: undefined,
+      }),
     })
   }
 

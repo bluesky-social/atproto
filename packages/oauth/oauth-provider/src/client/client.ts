@@ -26,6 +26,7 @@ import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-er
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
+import { ClientInfo } from './client-info.js'
 
 export class Client {
   /**
@@ -38,7 +39,8 @@ export class Client {
   constructor(
     public readonly id: ClientId,
     public readonly metadata: OAuthClientMetadata,
-    jwks: undefined | Jwks = metadata.jwks,
+    public readonly jwks: undefined | Jwks = metadata.jwks,
+    public readonly info: ClientInfo,
   ) {
     // If the remote JWKS content is provided, we don't need to fetch it again.
     this.keyGetter =

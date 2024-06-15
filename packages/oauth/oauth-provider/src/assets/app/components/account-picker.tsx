@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react'
-import { Account } from '../types'
+import { Account } from '../backend-data'
 import { clsx } from '../lib/clsx'
 
 export type AccountPickerProps = {

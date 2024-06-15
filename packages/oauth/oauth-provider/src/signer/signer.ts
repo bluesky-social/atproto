@@ -119,12 +119,6 @@ export class Signer {
       access_token?: string
     },
   ): Promise<SignedJwt> {
-    // Should be enforced by the request manager. Let's be sure.
-    // https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
-    if (!params.nonce) {
-      throw new InvalidRequestError('Missing required "nonce" parameter')
-    }
-
     // This can happen when a client is using password_grant. If a client is
     // using password_grant, it should not set "require_auth_time" to true.
     if (client.metadata.require_auth_time && extra.auth_time == null) {

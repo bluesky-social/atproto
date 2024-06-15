@@ -1,10 +1,13 @@
+import { OAuthClientMetadata } from '@atproto/oauth-types'
+
+import { Session } from '../backend-data'
 import { AcceptForm } from '../components/accept-form'
 import { LayoutTitlePage } from '../components/layout-title-page'
-import { ClientMetadata, Session } from '../types'
 
 export type AcceptViewProps = {
   clientId: string
-  clientMetadata: ClientMetadata
+  clientMetadata: OAuthClientMetadata
+  clientTrusted: boolean
   session: Session
 
   onAccept: () => void
@@ -15,6 +18,7 @@ export type AcceptViewProps = {
 export function AcceptView({
   clientId,
   clientMetadata,
+  clientTrusted,
   session,
   onAccept,
   onReject,
@@ -36,6 +40,7 @@ export function AcceptView({
         className="max-w-lg w-full"
         clientId={clientId}
         clientMetadata={clientMetadata}
+        clientTrusted={clientTrusted}
         account={account}
         onBack={onBack}
         onAccept={onAccept}

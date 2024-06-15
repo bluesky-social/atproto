@@ -13,3 +13,8 @@ export type LoopbackHost = 'localhost' | '127.0.0.1' | '[::1]'
 export function isLoopbackHost(host: unknown): host is LoopbackHost {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
 }
+
+export function isLoopbackUrl(input: URL | string): boolean {
+  const url = typeof input === 'string' ? new URL(input) : input
+  return isLoopbackHost(url.hostname)
+}

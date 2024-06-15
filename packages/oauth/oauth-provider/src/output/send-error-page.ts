@@ -8,7 +8,7 @@ import {
   buildCustomizationCss,
   buildCustomizationData,
 } from './customization.js'
-import { declareBackendData, sendApp } from './send-app.js'
+import { declareBackendData, sendWebPage } from './send-web-page.js'
 
 export async function sendErrorPage(
   res: ServerResponse,
@@ -20,7 +20,7 @@ export async function sendErrorPage(
     getAsset('main.css'),
   ])
 
-  return sendApp(res, {
+  return sendWebPage(res, {
     status: buildErrorStatus(err),
     scripts: [
       declareBackendData(

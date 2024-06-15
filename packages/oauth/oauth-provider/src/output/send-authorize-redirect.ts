@@ -7,7 +7,7 @@ import { ServerResponse } from 'node:http'
 import { Client } from '../client/client.js'
 import { html, js } from '../lib/html/index.js'
 import { Code } from '../request/code.js'
-import { sendApp } from './send-app.js'
+import { sendWebPage } from './send-web-page.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
@@ -115,7 +115,7 @@ async function writeFormPost(
   res.setHeader('Cache-Control', 'no-store')
   res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
 
-  return sendApp(res, {
+  return sendWebPage(res, {
     htmlAttrs: { lang: 'en' },
     body: html`
       <form method="post" action="${uri}">

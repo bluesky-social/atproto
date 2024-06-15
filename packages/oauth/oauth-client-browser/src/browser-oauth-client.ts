@@ -26,7 +26,7 @@ import { LoginContinuedInParentWindowError } from './errors.js'
 import { buildLoopbackClientId } from './util.js'
 
 export type BrowserOAuthClientOptions = {
-  clientMetadata?: OAuthClientMetadataInput | string | URL
+  clientMetadata?: OAuthClientMetadataInput
   handleResolver?: HandleResolver | string | URL
   responseMode?: OAuthResponseMode
   plcDirectoryUrl?: string | URL
@@ -121,20 +121,13 @@ export type BrowserOAuthClientLoadOptions = Omit<
   BrowserOAuthClientOptions,
   'clientMetadata'
 > & {
-  clientId: OAuthClientId | 'auto'
+  clientId: OAuthClientId
   signal?: AbortSignal
 }
 
 export class BrowserOAuthClient extends OAuthClient {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
-    if (clientId === 'auto') {
-      return new BrowserOAuthClient({
-        clientMetadata: atprotoLoopbackClientMetadata(
-          buildLoopbackClientId(window.location),
-        ),
-        ...options,
-      })
-    } else if (isOAuthClientIdLoopback(clientId)) {
+    if (isOAuthClientIdLoopback(clientId)) {
       return new BrowserOAuthClient({
         clientMetadata: atprotoLoopbackClientMetadata(clientId),
         ...options,
@@ -167,7 +160,7 @@ export class BrowserOAuthClient extends OAuthClient {
         ...options,
       })
     } else {
-      throw new TypeError('Invalid client ID')
+      throw new TypeError(`Invalid client id: ${clientId}`)
     }
   }
 
@@ -177,7 +170,7 @@ export class BrowserOAuthClient extends OAuthClient {
   private readonly database: BrowserOAuthDatabase
 
   constructor({
-    clientMetadata = window.location.href,
+    clientMetadata,
     handleResolver = 'https://bsky.social',
     // "fragment" is safer as it is not sent to the server
     responseMode = 'fragment',
@@ -195,17 +188,11 @@ export class BrowserOAuthClient extends OAuthClient {
 
     super({
       clientMetadata:
-        typeof clientMetadata === 'string' || clientMetadata instanceof URL
-          ? {
-              client_id: 'http://localhost/',
-              redirect_uris: [
-                new URL(clientMetadata).href.replace('localhost', '127.0.0.1'),
-              ],
-              // If the server supports then, let's also ask for an ID token
-              response_types: ['code id_token', 'code'],
-            }
+        clientMetadata == null
+          ? atprotoLoopbackClientMetadata(
+              buildLoopbackClientId(window.location),
+            )
           : clientMetadata,
-
       responseMode,
       fetch,
       runtimeImplementation: new BrowserRuntimeImplementation(crypto),

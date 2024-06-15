@@ -320,7 +320,10 @@ export class OAuthClient {
       // Prevent any kind of replay
       await this.stateStore.del(stateParam)
     } else {
-      throw new OAuthCallbackError(params, `Unexpected state "${stateParam}"`)
+      throw new OAuthCallbackError(
+        params,
+        `Unknown authorization session "${stateParam}"`,
+      )
     }
 
     try {

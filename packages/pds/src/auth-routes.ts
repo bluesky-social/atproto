@@ -1,10 +1,10 @@
 import { oauthProtectedResourceMetadataSchema } from '@atproto/oauth-provider'
-import express from 'express'
+import { Router } from 'express'
 
 import AppContext from './context'
 
-export const createRouter = ({ authProvider, cfg }: AppContext) => {
-  const router = express.Router()
+export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
+  const router = Router()
 
   const oauthProtectedResourceMetadata =
     oauthProtectedResourceMetadataSchema.parse({

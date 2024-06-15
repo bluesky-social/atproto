@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { Session } from '../backend-data'
 import { AccountPicker } from '../components/account-picker'
 import { LayoutTitlePage } from '../components/layout-title-page'
 import { SignInForm, SignInFormOutput } from '../components/sign-in-form'
-import { Session } from '../types'
 
 export type SignInViewProps = {
   sessions: readonly Session[]

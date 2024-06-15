@@ -1,10 +1,10 @@
+import { isOAuthClientIdLoopback } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
+import { constantTime } from '../lib/util/time.js'
 import { InvalidRequestError } from '../oauth-errors.js'
 import { Sub } from '../oidc/sub.js'
 import { ClientAuth } from '../token/token-store.js'
-import { constantTime } from '../lib/util/time.js'
-import { AccountHooks } from './account-hooks.js'
 import {
   Account,
   AccountInfo,
@@ -15,10 +15,7 @@ import {
 const TIMING_ATTACK_MITIGATION_DELAY = 400
 
 export class AccountManager {
-  constructor(
-    protected readonly store: AccountStore,
-    protected readonly hooks: AccountHooks,
-  ) {}
+  constructor(protected readonly store: AccountStore) {}
 
   public async signIn(
     credentials: LoginCredentials,
@@ -43,16 +40,10 @@ export class AccountManager {
     deviceId: DeviceId,
     account: Account,
     client: Client,
-    clientAuth: ClientAuth,
+    _clientAuth: ClientAuth,
   ): Promise<void> {
-    if (this.hooks.onAccountAddAuthorizedClient) {
-      const shouldAdd = await this.hooks.onAccountAddAuthorizedClient(client, {
-        deviceId,
-        account,
-        clientAuth,
-      })
-      if (!shouldAdd) return
-    }
+    // "Loopback" clients are not distinguishable from one another.
+    if (isOAuthClientIdLoopback(client.id)) return
 
     await this.store.addAuthorizedClient(deviceId, account.sub, client.id)
   }

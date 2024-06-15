@@ -10,6 +10,7 @@ import {
   OAuthClientIdentification,
   OAuthClientMetadata,
   OAuthEndpointName,
+  OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
   oauthAuthenticationRequestParametersSchema,
@@ -90,6 +91,7 @@ import {
 import { sendErrorPage } from './output/send-error-page.js'
 import { oidcPayload } from './parameters/oidc-payload.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
+import { RequestInfo } from './request/request-info.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStoreMemory } from './request/request-store-memory.js'
 import { RequestStoreRedis } from './request/request-store-redis.js'
@@ -104,7 +106,6 @@ import {
 } from './request/types.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
-import { TokenResponse } from './token/token-response.js'
 import { TokenInfo, TokenStore, asTokenStore } from './token/token-store.js'
 import {
   CodeGrantRequest,
@@ -286,7 +287,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.deviceStore = deviceStore
 
-    this.accountManager = new AccountManager(accountStore, rest)
+    this.accountManager = new AccountManager(accountStore)
     this.clientManager = new ClientManager(
       this.keyset,
       rest,
@@ -437,10 +438,11 @@ export class OAuthProvider extends OAuthVerifier {
           : { payload: input }
 
       const { uri, expiresAt } =
-        await this.requestManager.pushedAuthorizationRequest(
+        await this.requestManager.createAuthorizationRequest(
           client,
           clientAuth,
           parameters,
+          null,
           dpopJkt,
         )
 
@@ -461,11 +463,11 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  private async setupAuthorizationRequest(
+  private async loadAuthorizationRequest(
     client: Client,
     deviceId: DeviceId,
     input: AuthorizationRequestQuery,
-  ) {
+  ): Promise<RequestInfo> {
     // Load PAR
     if ('request_uri' in input) {
       return this.requestManager.get(input.request_uri, client.id, deviceId)
@@ -485,27 +487,30 @@ export class OAuthProvider extends OAuthVerifier {
           jkt: requestObject.jkt,
         }
 
-        return this.requestManager.authorizationRequest(
+        return this.requestManager.createAuthorizationRequest(
           client,
           clientAuth,
           requestObject.payload,
           deviceId,
+          null,
         )
       }
 
-      return this.requestManager.authorizationRequest(
+      return this.requestManager.createAuthorizationRequest(
         client,
         { method: 'none' },
         requestObject.payload,
         deviceId,
+        null,
       )
     }
 
-    return this.requestManager.authorizationRequest(
+    return this.requestManager.createAuthorizationRequest(
       client,
       { method: 'none' },
       input,
       deviceId,
+      null,
     )
   }
 
@@ -529,7 +534,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     try {
       const { uri, parameters, clientAuth } =
-        await this.setupAuthorizationRequest(client, deviceId, input)
+        await this.loadAuthorizationRequest(client, deviceId, input)
 
       try {
         const sessions = await this.getSessions(
@@ -586,7 +591,12 @@ export class OAuthProvider extends OAuthVerifier {
           }
         }
 
-        return { issuer, client, parameters, authorize: { uri, sessions } }
+        return {
+          issuer,
+          client,
+          parameters,
+          authorize: { uri, sessions },
+        }
       } catch (err) {
         await this.deleteRequest(uri, parameters)
 
@@ -638,7 +648,6 @@ export class OAuthProvider extends OAuthVerifier {
         parameters.prompt === 'login' ||
         this.loginRequired(client, parameters, info),
       consentRequired:
-        parameters.prompt === 'login' ||
         parameters.prompt === 'consent' ||
         !info.authorizedClients.includes(client.id),
 
@@ -746,7 +755,7 @@ export class OAuthProvider extends OAuthVerifier {
   protected async token(
     input: TokenRequest,
     dpopJkt: null | string,
-  ): Promise<TokenResponse> {
+  ): Promise<OAuthTokenResponse> {
     const client = await this.clientManager.getClient(input.client_id)
     const clientAuth = await this.authenticateClient(client, 'token', input)
 
@@ -775,7 +784,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     input: CodeGrantRequest,
     dpopJkt: null | string,
-  ): Promise<TokenResponse> {
+  ): Promise<OAuthTokenResponse> {
     try {
       const { sub, deviceId, parameters } = await this.requestManager.findCode(
         client,
@@ -784,12 +793,6 @@ export class OAuthProvider extends OAuthVerifier {
       )
 
       const { account, info } = await this.accountManager.get(deviceId, sub)
-
-      // User revoked consent while client was asking for a token (or store
-      // failed to persist the consent)
-      if (!info.authorizedClients.includes(client.id)) {
-        throw new AccessDeniedError(parameters, 'Client not trusted anymore')
-      }
 
       return await this.tokenManager.create(
         client,
@@ -804,9 +807,10 @@ export class OAuthProvider extends OAuthVerifier {
       // If a token is replayed, requestManager.findCode will throw. In that
       // case, we need to revoke any token that was issued for this code.
 
+      await this.tokenManager.revoke(input.code)
+
       // @TODO (?) in order to protect the user, we should maybe also mark the
       // account-device association as expired ?
-      await this.tokenManager.revoke(input.code)
 
       throw err
     }
@@ -817,7 +821,7 @@ export class OAuthProvider extends OAuthVerifier {
     clientAuth: ClientAuth,
     input: RefreshGrantRequest,
     dpopJkt: null | string,
-  ): Promise<TokenResponse> {
+  ): Promise<OAuthTokenResponse> {
     return this.tokenManager.refresh(client, clientAuth, input, dpopJkt)
   }
 

@@ -1,4 +1,24 @@
-import type { ClientMetadata, Session } from './types'
+import { OAuthClientMetadata } from '@atproto/oauth-types'
+
+// TODO: Find a way to share these types with the backend code
+
+export type Account = {
+  sub: string
+  aud: string
+
+  email?: string
+  name?: string
+  preferred_username?: string
+  picture?: string
+}
+
+export type Session = {
+  account: Account
+
+  selected: boolean
+  loginRequired: boolean
+  consentRequired: boolean
+}
 
 export type LinkDefinition = {
   title: string
@@ -19,7 +39,8 @@ export type ErrorData = {
 
 export type AuthorizeData = {
   clientId: string
-  clientMetadata: ClientMetadata
+  clientMetadata: OAuthClientMetadata
+  clientTrusted: boolean
   requestUri: string
   csrfCookie: string
   sessions: Session[]

@@ -14,9 +14,9 @@ export function atprotoLoopbackClientMetadata(
   return {
     client_id: clientId,
     client_name: 'Loopback client',
-    response_types: ['code', 'code id_token'],
-    grant_types: ['authorization_code'],
-    scope: 'openid profile',
+    response_types: ['code id_token', 'code'],
+    grant_types: ['authorization_code', 'implicit', 'refresh_token'],
+    scope: 'openid profile offline_access',
     redirect_uris: searchParams.has('redirect_uri')
       ? (searchParams.getAll('redirect_uri') as [string, ...string[]])
       : (['127.0.0.1', '[::1]'].map(

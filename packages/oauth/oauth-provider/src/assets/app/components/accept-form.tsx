@@ -1,14 +1,17 @@
+import { OAuthClientMetadata } from '@atproto/oauth-types'
 import { type HTMLAttributes } from 'react'
+
+import { Account } from '../backend-data'
 import { clsx } from '../lib/clsx'
-import { Account, ClientMetadata } from '../types'
+import { AccountIdentifier } from './account-identifier'
 import { ClientIdentifier } from './client-identifier'
 import { ClientName } from './client-name'
-import { AccountIdentifier } from './account-identifier'
 
 export type AcceptFormProps = {
   account: Account
   clientId: string
-  clientMetadata: ClientMetadata
+  clientMetadata: OAuthClientMetadata
+  clientTrusted: boolean
   onAccept: () => void
   acceptLabel?: string
 
@@ -23,6 +26,7 @@ export function AcceptForm({
   account,
   clientId,
   clientMetadata,
+  clientTrusted,
   onAccept,
   acceptLabel = 'Accept',
   onReject,
@@ -34,7 +38,7 @@ export function AcceptForm({
 }: AcceptFormProps & HTMLAttributes<HTMLDivElement>) {
   return (
     <div {...attrs} className={clsx('flex flex-col', attrs.className)}>
-      {clientMetadata.logo_uri && (
+      {clientTrusted && clientMetadata.logo_uri && (
         <div className="flex items-center justify-center mb-4">
           <img
             crossOrigin="anonymous"

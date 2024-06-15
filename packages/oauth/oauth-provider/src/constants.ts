@@ -18,10 +18,13 @@ export const REQUEST_ID_BYTES_LENGTH = 16 // 128 bits
 export const CODE_PREFIX = 'cod-'
 export const CODE_BYTES_LENGTH = 32
 
+export const ALLOW_LOOPBACK_CLIENT_REFRESH_TOKEN = true
+
 const SECOND = 1e3
 const MINUTE = 60 * SECOND
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
+const WEEK = 7 * DAY
 const YEAR = 365.25 * DAY
 const MONTH = YEAR / 12
 
@@ -40,8 +43,11 @@ export const AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT = 1 * MONTH
 /** 2 days */
 export const UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT = 2 * DAY
 
+/** 1 week */
+export const UNAUTHENTICATED_REFRESH_LIFETIME = 1 * WEEK
+
 /** 1 year */
-export const TOTAL_REFRESH_LIFETIME = 1 * YEAR
+export const AUTHENTICATED_REFRESH_LIFETIME = 1 * YEAR
 
 /** 5 minutes */
 export const PAR_EXPIRES_IN = 5 * MINUTE

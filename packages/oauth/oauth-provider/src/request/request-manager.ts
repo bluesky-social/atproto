@@ -21,18 +21,21 @@ import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
+import { OAuthHooks } from '../oauth-hooks.js'
 import { OIDC_SCOPE_CLAIMS } from '../oidc/claims.js'
-import { Sub } from '../oidc/sub.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
-import { RequestHooks } from './request-hooks.js'
+import {
+  isRequestDataAuthorized,
+  RequestDataAuthorized,
+} from './request-data.js'
 import { generateRequestId } from './request-id.js'
 import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
-  RequestUri,
   decodeRequestUri,
   encodeRequestUri,
+  RequestUri,
 } from './request-uri.js'
 
 export class RequestManager {
@@ -40,7 +43,7 @@ export class RequestManager {
     protected readonly store: RequestStore,
     protected readonly signer: Signer,
     protected readonly metadata: OAuthAuthorizationServerMetadata,
-    protected readonly hooks: RequestHooks,
+    protected readonly hooks: OAuthHooks,
     protected readonly pkceRequired = true,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}
@@ -49,24 +52,15 @@ export class RequestManager {
     return new Date(Date.now() + this.tokenMaxAge)
   }
 
-  async pushedAuthorizationRequest(
+  async createAuthorizationRequest(
     client: Client,
     clientAuth: ClientAuth,
     input: Readonly<OAuthAuthenticationRequestParameters>,
+    deviceId: null | DeviceId,
     dpopJkt: null | string,
   ): Promise<RequestInfo> {
-    const params = await this.validate(client, clientAuth, input, dpopJkt)
-    return this.create(client, clientAuth, params, null)
-  }
-
-  async authorizationRequest(
-    client: Client,
-    clientAuth: ClientAuth,
-    input: Readonly<OAuthAuthenticationRequestParameters>,
-    deviceId: DeviceId,
-  ): Promise<RequestInfo> {
-    const params = await this.validate(client, clientAuth, input, null)
-    return this.create(client, clientAuth, params, deviceId)
+    const parameters = await this.validate(client, clientAuth, input, dpopJkt)
+    return this.create(client, clientAuth, parameters, deviceId)
   }
 
   protected async create(
@@ -236,17 +230,19 @@ export class RequestManager {
     }
 
     // https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
+    //
+    // > nonce: REQUIRED if the Response Type of the request is "code id_token" or
+    // >   "code id_token token" and OPTIONAL when the Response Type of the
+    // >   request is "code token". It is a string value used to associate a
+    // >   Client session with an ID Token, and to mitigate replay attacks. The
+    // >   value is passed through unmodified from the Authentication Request to
+    // >   the ID Token. Sufficient entropy MUST be present in the nonce values
+    // >   used to prevent attackers from guessing values. For implementation
+    // >   notes, see Section 15.5.2.
     if (responseTypes.includes('id_token') && !parameters.nonce) {
       throw new InvalidParametersError(
         parameters,
-        'openid scope requires a nonce',
-      )
-    }
-
-    if (responseTypes.includes('id_token') && !scopes?.includes('openid')) {
-      throw new InvalidParametersError(
-        parameters,
-        '"id_token" response_type requires "openid" scope',
+        'nonce is required for implicit and hybrid flows',
       )
     }
 
@@ -276,30 +272,16 @@ export class RequestManager {
     // ATPROTO extension: if the client is not trusted, force users to consent
     // to authorization requests. We do this to avoid unauthenticated clients
     // from being able to silently re-authenticate users.
-    if (clientAuth.method === 'none') {
-      const isFirstParty = await this.hooks.onIsFirstPartyClient?.call(
-        null,
-        client,
-        { clientAuth },
-      )
-      if (isFirstParty !== true) {
-        if (parameters.prompt === 'none') {
-          throw new ConsentRequiredError(
-            parameters,
-            'Public clients are not allowed to use silent-sign-on',
-          )
-        }
-
-        if (parameters.scope?.includes('offline_access')) {
-          throw new InvalidParametersError(
-            parameters,
-            'Public clients are not allowed to request offline access',
-          )
-        }
-
-        // force "consent" for unauthenticated, third party clients
-        parameters = { ...parameters, prompt: 'consent' }
+    if (clientAuth.method === 'none' && !client.info.isFirstParty) {
+      if (parameters.prompt === 'none') {
+        throw new ConsentRequiredError(
+          parameters,
+          'Public clients are not allowed to use silent-sign-on',
+        )
       }
+
+      // force "consent" for unauthenticated, third party clients
+      parameters = { ...parameters, prompt: 'consent' }
     }
 
     return parameters
@@ -374,7 +356,7 @@ export class RequestManager {
     deviceId: DeviceId,
     account: Account,
     info: DeviceAccountInfo,
-  ): Promise<{ code?: Code; id_token?: string }> {
+  ): Promise<{ code?: Code; token?: string; id_token?: string }> {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
@@ -404,6 +386,13 @@ export class RequestManager {
       }
 
       const responseType = data.parameters.response_type.split(' ')
+
+      if (responseType.includes('token')) {
+        throw new AccessDeniedError(
+          data.parameters,
+          'Implicit "token" forbidden (use "code" with PKCE instead)',
+        )
+      }
 
       const code = responseType.includes('code')
         ? await generateCode()
@@ -440,19 +429,15 @@ export class RequestManager {
     client: Client,
     clientAuth: ClientAuth,
     code: Code,
-  ): Promise<{
-    sub: Sub
-    deviceId: DeviceId
-    parameters: OAuthAuthenticationRequestParameters
-  }> {
+  ): Promise<RequestDataAuthorized> {
     const result = await this.store.findRequestByCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
     try {
       const { data } = result
 
-      if (data.sub == null || data.deviceId == null) {
-        // Maybe the store implementation is faulty ?
+      if (!isRequestDataAuthorized(data)) {
+        // Should never happen: maybe the store implementation is faulty ?
         throw new Error('Unexpected request state')
       }
 
@@ -480,11 +465,7 @@ export class RequestManager {
         }
       }
 
-      return {
-        sub: data.sub,
-        deviceId: data.deviceId,
-        parameters: data.parameters,
-      }
+      return data
     } finally {
       // A "code" can only be used once
       await this.store.deleteRequest(result.id)

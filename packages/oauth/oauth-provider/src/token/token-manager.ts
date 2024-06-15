@@ -1,8 +1,9 @@
-import { isSignedJwt } from '@atproto/jwk'
+import { isSignedJwt, SignedJwt } from '@atproto/jwk'
 import {
   AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthenticationRequestParameters,
+  OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
 import { createHash } from 'node:crypto'
@@ -14,9 +15,10 @@ import { ClientAuth } from '../client/client-auth.js'
 import { Client } from '../client/client.js'
 import {
   AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
+  AUTHENTICATED_REFRESH_LIFETIME,
   TOKEN_MAX_AGE,
-  TOTAL_REFRESH_LIFETIME,
   UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT,
+  UNAUTHENTICATED_REFRESH_LIFETIME,
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
@@ -26,19 +28,18 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidTokenError } from '../errors/invalid-token-error.js'
 import { dateToEpoch, dateToRelativeSeconds } from '../lib/util/date.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
+import { OAuthHooks } from '../oauth-hooks.js'
 import { isCode } from '../request/code.js'
 import { Signer } from '../signer/signer.js'
 import { generateRefreshToken, isRefreshToken } from './refresh-token.js'
 import { TokenClaims } from './token-claims.js'
 import { TokenData } from './token-data.js'
-import { TokenHooks } from './token-hooks.js'
 import {
   TokenId,
   generateTokenId,
   isTokenId,
   tokenIdSchema,
 } from './token-id.js'
-import { TokenResponse } from './token-response.js'
 import { TokenInfo, TokenStore } from './token-store.js'
 import { CodeGrantRequest, RefreshGrantRequest } from './types.js'
 import {
@@ -55,7 +56,7 @@ export class TokenManager {
   constructor(
     protected readonly store: TokenStore,
     protected readonly signer: Signer,
-    protected readonly hooks: TokenHooks,
+    protected readonly hooks: OAuthHooks,
     protected readonly accessTokenType: AccessTokenType,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}
@@ -80,7 +81,7 @@ export class TokenManager {
     parameters: OAuthAuthenticationRequestParameters,
     input: CodeGrantRequest,
     dpopJkt: null | string,
-  ): Promise<TokenResponse> {
+  ): Promise<OAuthTokenResponse> {
     if (client.metadata.dpop_bound_access_tokens && !dpopJkt) {
       throw new InvalidDpopProofError('DPoP proof required')
     }
@@ -221,8 +222,7 @@ export class TokenManager {
           authorization_details: authorizationDetails,
         })
 
-    const responseTypes = parameters.response_type.split(' ')
-    const idToken = responseTypes.includes('id_token')
+    const idToken = scopes?.includes('openid')
       ? await this.signer.idToken(client, parameters, account, {
           exp: expiresAt,
           iat: now,
@@ -233,7 +233,29 @@ export class TokenManager {
         })
       : undefined
 
-    const tokenResponse: TokenResponse = {
+    return this.buildTokenResponse(
+      client,
+      accessToken,
+      refreshToken,
+      idToken,
+      expiresAt,
+      parameters,
+      account,
+      authorizationDetails,
+    )
+  }
+
+  protected async buildTokenResponse(
+    client: Client,
+    accessToken: AccessToken,
+    refreshToken: string | undefined,
+    idToken: SignedJwt | undefined,
+    expiresAt: Date,
+    parameters: OAuthAuthenticationRequestParameters,
+    account: Account,
+    authorizationDetails: null | any,
+  ): Promise<OAuthTokenResponse> {
+    const tokenResponse: OAuthTokenResponse = {
       access_token: accessToken,
       token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
       refresh_token: refreshToken,
@@ -286,7 +308,7 @@ export class TokenManager {
     clientAuth: ClientAuth,
     input: RefreshGrantRequest,
     dpopJkt: null | string,
-  ): Promise<TokenResponse> {
+  ): Promise<OAuthTokenResponse> {
     const tokenInfo = await this.store.findTokenByRefreshToken(
       input.refresh_token,
     )
@@ -314,14 +336,18 @@ export class TokenManager {
 
       const lastActivity = data.updatedAt
       const inactivityTimeout =
-        clientAuth.method === 'none'
+        clientAuth.method === 'none' && !client.info.isFirstParty
           ? UNAUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
           : AUTHENTICATED_REFRESH_INACTIVITY_TIMEOUT
       if (lastActivity.getTime() + inactivityTimeout < Date.now()) {
         throw new InvalidGrantError(`Refresh token exceeded inactivity timeout`)
       }
 
-      if (data.createdAt.getTime() + TOTAL_REFRESH_LIFETIME < Date.now()) {
+      const lifetime =
+        clientAuth.method === 'none' && !client.info.isFirstParty
+          ? UNAUTHENTICATED_REFRESH_LIFETIME
+          : AUTHENTICATED_REFRESH_LIFETIME
+      if (data.createdAt.getTime() + lifetime < Date.now()) {
         throw new InvalidGrantError(`Refresh token expired`)
       }
 
@@ -374,8 +400,13 @@ export class TokenManager {
             authorization_details,
           })
 
-      const responseTypes = parameters.response_type.split(' ')
-      const idToken = responseTypes.includes('id_token')
+      // https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.3
+      //
+      // >  In addition to the response parameters specified by OAuth 2.0, the
+      // >  following parameters MUST be included in the response:
+      // >  - id_token: ID Token value associated with the authenticated session.
+      const scopes = parameters.scope?.split(' ')
+      const idToken = scopes?.includes('openid')
         ? await this.signer.idToken(client, parameters, account, {
             exp: expiresAt,
             iat: now,
@@ -384,25 +415,16 @@ export class TokenManager {
           })
         : undefined
 
-      const tokenResponse: TokenResponse = {
-        id_token: idToken,
-        access_token: accessToken,
-        token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
-        refresh_token: nextRefreshToken,
-        scope: parameters.scope ?? '',
-        authorization_details,
-        get expires_in() {
-          return dateToRelativeSeconds(expiresAt)
-        },
-      }
-
-      await this.hooks.onTokenResponse?.call(null, tokenResponse, {
+      return this.buildTokenResponse(
         client,
+        accessToken,
+        nextRefreshToken,
+        idToken,
+        expiresAt,
         parameters,
         account,
-      })
-
-      return tokenResponse
+        authorization_details,
+      )
     } catch (err) {
       if (err instanceof InvalidRequestError) {
         // Consider the refresh token might be compromised if sanity checks
