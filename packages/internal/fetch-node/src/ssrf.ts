@@ -8,33 +8,41 @@ import {
   toRequestTransformer,
 } from '@atproto-labs/fetch'
 import ipaddr from 'ipaddr.js'
+import { isValid as isValidDomain } from 'psl'
 import { Agent } from 'undici'
 
 const { IPv4, IPv6 } = ipaddr
 
 const [NODE_VERSION] = process.versions.node.split('.').map(Number)
 
+export type SsrfFetchWrapOptions<C = FetchContext> = {
+  allowCustomPort?: boolean
+  allowUnknownTld?: boolean
+  fetch?: Fetch<C>
+}
+
 /**
  * @see {@link https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/}
  */
-export function ssrfFetchWrap<C = FetchContext>(
+export function ssrfFetchWrap<C = FetchContext>({
   allowCustomPort = false,
-  fetch: Fetch<C> = globalThis.fetch,
-): Fetch<C> {
+  allowUnknownTld = false,
+  fetch = globalThis.fetch,
+}: SsrfFetchWrapOptions<C>): Fetch<C> {
   const ssrfAgent = new Agent({ connect: { lookup } })
 
   return toRequestTransformer(async function (
     this: C,
     request,
   ): Promise<Response> {
-    const { protocol, hostname, port } = new URL(request.url)
+    const url = new URL(request.url)
 
-    if (protocol === 'data:') {
+    if (url.protocol === 'data:') {
       // No SSRF issue
       return fetch.call(this, request)
     }
 
-    if (protocol === 'http:' || protocol === 'https:') {
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
       // @ts-expect-error non-standard option
       if (request.dispatcher) {
         throw new FetchRequestError(
@@ -45,7 +53,7 @@ export function ssrfFetchWrap<C = FetchContext>(
       }
 
       // Check port (OWASP)
-      if (!allowCustomPort && port !== '') {
+      if (url.port && !allowCustomPort) {
         throw new FetchRequestError(
           request,
           400,
@@ -63,7 +71,7 @@ export function ssrfFetchWrap<C = FetchContext>(
       }
 
       // If the hostname is an IP address, it must be a unicast address.
-      const ip = parseIpHostname(hostname)
+      const ip = parseIpHostname(url.hostname)
       if (ip) {
         if (ip.range() !== 'unicast') {
           throw new FetchRequestError(
@@ -74,6 +82,14 @@ export function ssrfFetchWrap<C = FetchContext>(
         }
         // No additional check required
         return fetch.call(this, request)
+      }
+
+      if (allowUnknownTld !== true && !isValidDomain(url.hostname)) {
+        throw new FetchRequestError(
+          request,
+          400,
+          'Hostname is not a public domain',
+        )
       }
 
       // Else hostname is a domain name, use DNS lookup to check if it resolves
@@ -139,7 +155,7 @@ export function ssrfFetchWrap<C = FetchContext>(
     throw new FetchRequestError(
       request,
       400,
-      `Forbidden protocol "${protocol}"`,
+      `Forbidden protocol "${url.protocol}"`,
     )
   })
 }

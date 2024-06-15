@@ -65,7 +65,7 @@ export function safeFetchWrap({
          * input, we need to make sure that the request is not vulnerable to SSRF
          * attacks.
          */
-        ssrfProtection ? ssrfFetchWrap(false, fetch) : fetch,
+        ssrfProtection ? ssrfFetchWrap({ fetch }) : fetch,
       ),
 
       /**
