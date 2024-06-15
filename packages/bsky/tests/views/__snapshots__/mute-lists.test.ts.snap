@@ -91,7 +91,9 @@ Object {
   "replyCount": 0,
   "repostCount": 0,
   "uri": "record(0)",
-  "viewer": Object {},
+  "viewer": Object {
+    "threadMuted": false,
+  },
 }
 `;
 
@@ -141,6 +143,7 @@ Object {
     "viewer": Object {
       "like": "record(4)",
       "repost": "record(3)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -192,7 +195,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
     Object {
@@ -285,7 +290,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(9)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   ],

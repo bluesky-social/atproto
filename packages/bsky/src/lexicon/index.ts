@@ -120,8 +120,10 @@ import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelatio
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
@@ -1584,6 +1586,17 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  muteThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphMuteThread.Handler<ExtractAuth<AV>>,
+      AppBskyGraphMuteThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.muteThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   unmuteActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1603,6 +1616,17 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.unmuteActorList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphUnmuteThread.Handler<ExtractAuth<AV>>,
+      AppBskyGraphUnmuteThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.unmuteThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

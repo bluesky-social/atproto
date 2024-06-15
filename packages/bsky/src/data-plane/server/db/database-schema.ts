@@ -16,6 +16,7 @@ import * as listMute from './tables/list-mute'
 import * as listBlock from './tables/list-block'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
+import * as threadMute from './tables/thread-mute'
 import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
@@ -51,6 +52,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   listBlock.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
+  threadMute.PartialDB &
   feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &

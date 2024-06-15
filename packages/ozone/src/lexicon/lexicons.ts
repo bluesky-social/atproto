@@ -5102,6 +5102,9 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
+          threadMuted: {
+            type: 'boolean',
+          },
           replyDisabled: {
             type: 'boolean',
           },
@@ -7675,6 +7678,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphMuteThread: {
+    lexicon: 1,
+    id: 'app.bsky.graph.muteThread',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Mutes a thread preventing notifications from the thread and any of its children. Mutes are private in Bluesky. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphUnmuteActor: {
     lexicon: 1,
     id: 'app.bsky.graph.unmuteActor',
@@ -7712,6 +7739,29 @@ export const schemaDict = {
             required: ['list'],
             properties: {
               list: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphUnmuteThread: {
+    lexicon: 1,
+    id: 'app.bsky.graph.unmuteThread',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unmutes the specified thread. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
                 type: 'string',
                 format: 'at-uri',
               },
@@ -11105,8 +11155,10 @@ export const ids = {
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
+  AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',

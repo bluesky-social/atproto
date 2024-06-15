@@ -1,12 +1,14 @@
 import http from 'http'
 import events from 'events'
+import assert from 'assert'
 import express from 'express'
 import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
+import { AtUri } from '@atproto/syntax'
 import { Database } from '../server/db'
 import { Service } from '../../proto/bsync_connect'
 import { MuteOperation_Type } from '../../proto/bsync_pb'
-import assert from 'assert'
+import { ids } from '../../lexicon/lexicons'
 
 export class MockBsync {
   constructor(public server: http.Server) {}
@@ -50,15 +52,28 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             .onConflict((oc) => oc.doNothing())
             .execute()
         } else {
-          await db.db
-            .insertInto('list_mute')
-            .values({
-              mutedByDid: actorDid,
-              listUri: subject,
-              createdAt: new Date().toISOString(),
-            })
-            .onConflict((oc) => oc.doNothing())
-            .execute()
+          const uri = new AtUri(subject)
+          if (uri.collection === ids.AppBskyGraphList) {
+            await db.db
+              .insertInto('list_mute')
+              .values({
+                mutedByDid: actorDid,
+                listUri: subject,
+                createdAt: new Date().toISOString(),
+              })
+              .onConflict((oc) => oc.doNothing())
+              .execute()
+          } else {
+            await db.db
+              .insertInto('thread_mute')
+              .values({
+                mutedByDid: actorDid,
+                rootUri: subject,
+                createdAt: new Date().toISOString(),
+              })
+              .onConflict((oc) => oc.doNothing())
+              .execute()
+          }
         }
       } else if (type === MuteOperation_Type.REMOVE) {
         if (subject.startsWith('did:')) {
@@ -68,11 +83,20 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             .where('subjectDid', '=', subject)
             .execute()
         } else {
-          await db.db
-            .deleteFrom('list_mute')
-            .where('mutedByDid', '=', actorDid)
-            .where('listUri', '=', subject)
-            .execute()
+          const uri = new AtUri(subject)
+          if (uri.collection === ids.AppBskyGraphList) {
+            await db.db
+              .deleteFrom('list_mute')
+              .where('mutedByDid', '=', actorDid)
+              .where('listUri', '=', subject)
+              .execute()
+          } else {
+            await db.db
+              .deleteFrom('thread_mute')
+              .where('mutedByDid', '=', actorDid)
+              .where('rootUri', '=', subject)
+              .execute()
+          }
         }
       } else if (type === MuteOperation_Type.CLEAR) {
         await db.db

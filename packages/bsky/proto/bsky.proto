@@ -529,6 +529,20 @@ message GetMutelistSubscriptionsResponse {
 }
 
 //
+// Thread Mutes
+//
+
+message GetThreadMutesOnSubjectsRequest {
+  string actor_did = 1;
+  repeated string thread_roots = 2;
+}
+
+message GetThreadMutesOnSubjectsResponse {
+  repeated bool muted = 1;
+}
+
+
+//
 // Blocks
 //
 
@@ -1052,6 +1066,9 @@ service Service {
   rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
   rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
 
+  // Thread Mutes
+  rpc GetThreadMutesOnSubjects(GetThreadMutesOnSubjectsRequest) returns (GetThreadMutesOnSubjectsResponse);
+
   // Blocks
   rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);
   rpc GetBlocks(GetBlocksRequest) returns (GetBlocksResponse);
@@ -1139,6 +1156,10 @@ service Service {
   rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
   rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
   rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
+  
+  rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
+  rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
+  rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
 }
 
 
@@ -1245,3 +1266,23 @@ message ClearActorMutelistSubscriptionsRequest {
 }
 
 message ClearActorMutelistSubscriptionsResponse {}
+
+message CreateThreadMuteRequest {
+  string actor_did = 1;
+  string thread_root = 2;
+}
+
+message CreateThreadMuteResponse {}
+
+message DeleteThreadMuteRequest {
+  string actor_did = 1;
+  string thread_root = 2;
+}
+
+message DeleteThreadMuteResponse {}
+
+message ClearThreadMutesRequest {
+  string actor_did = 1;
+}
+
+message ClearThreadMutesResponse {}
