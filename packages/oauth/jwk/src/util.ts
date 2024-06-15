@@ -100,11 +100,31 @@ export const jwtCharsRefinement = (data: string, ctx: RefinementCtx): void => {
 /**
  * @example
  * ```ts
+ * type SegmentedString3 = SegmentedString<3> // `${string}.${string}.${string}`
+ * type SegmentedString4 = SegmentedString<4> // `${string}.${string}.${string}.${string}`
+ * ```
+ *
+ * @note
+ * This utility only provides one way type safety (A SegmentedString<4> can be
+ * assigned to SegmentedString<3> but not vice versa). The purpose of this
+ * utility is to improve DX by avoiding as many potential errors as build time.
+ * DO NOT rely on this to enforce security or data integrity.
+ */
+type SegmentedString<
+  C extends number,
+  Acc extends string[] = [string],
+> = Acc['length'] extends C
+  ? `${Acc[0]}`
+  : `${Acc[0]}.${SegmentedString<C, [string, ...Acc]>}`
+
+/**
+ * @example
+ * ```ts
  * const jwtSchema = z.string().superRefine(segmentedStringRefinementFactory(3))
  * type Jwt = z.infer<typeof jwtSchema> // `${string}.${string}.${string}`
  * ```
  */
-export const segmentedStringRefinementFactory = <const C extends number>(
+export const segmentedStringRefinementFactory = <C extends number>(
   count: C,
   minPartLength = 2,
 ) => {
@@ -114,20 +134,6 @@ export const segmentedStringRefinementFactory = <const C extends number>(
 
   const minTotalLength = count * minPartLength + (count - 1)
   const errorPrefix = `Invalid JWT format`
-
-  /**
-   * @example
-   * ```ts
-   * type SegmentedString3 = SegmentedString<3> // `${string}.${string}.${string}`
-   * type SegmentedString4 = SegmentedString<4> // `${string}.${string}.${string}.${string}`
-   * ```
-   */
-  type SegmentedString<
-    C extends number,
-    Acc extends string[] = [string],
-  > = Acc['length'] extends C
-    ? `${Acc[0]}`
-    : `${Acc[0]}.${SegmentedString<C, [string, ...Acc]>}`
 
   return (data: string, ctx: RefinementCtx): data is SegmentedString<C> => {
     if (data.length < minTotalLength) {
