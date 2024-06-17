@@ -14,6 +14,7 @@ import {
 } from './util'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
+import { dedupeStrs } from '@atproto/common'
 
 export type Post = RecordInfo<PostRecord> & { violatesThreadGate: boolean }
 export type Posts = HydrationMap<Post>
@@ -21,6 +22,7 @@ export type Posts = HydrationMap<Post>
 export type PostViewerState = {
   like?: string
   repost?: string
+  threadMuted?: boolean
 }
 
 export type PostViewerStates = HydrationMap<PostViewerState>
@@ -57,6 +59,8 @@ export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
 
+export type ThreadRef = ItemRef & { threadRoot: string }
+
 // @NOTE the feed item types in the protos for author feeds and timelines
 // technically have additional fields, not supported by the mock dataplane.
 export type FeedItem = { post: ItemRef; repost?: ItemRef }
@@ -84,11 +88,12 @@ export class FeedHydrator {
   }
 
   async getPostViewerStates(
-    refs: ItemRef[],
+    refs: ThreadRef[],
     viewer: string,
   ): Promise<PostViewerStates> {
     if (!refs.length) return new HydrationMap<PostViewerState>()
-    const [likes, reposts] = await Promise.all([
+    const threadRoots = refs.map((r) => r.threadRoot)
+    const [likes, reposts, threadMutesMap] = await Promise.all([
       this.dataplane.getLikesByActorAndSubjects({
         actorDid: viewer,
         refs,
@@ -97,13 +102,29 @@ export class FeedHydrator {
         actorDid: viewer,
         refs,
       }),
+      this.getThreadMutes(threadRoots, viewer),
     ])
-    return refs.reduce((acc, { uri }, i) => {
+    return refs.reduce((acc, { uri, threadRoot }, i) => {
       return acc.set(uri, {
         like: parseString(likes.uris[i]),
         repost: parseString(reposts.uris[i]),
+        threadMuted: threadMutesMap.get(threadRoot) ?? false,
       })
     }, new HydrationMap<PostViewerState>())
+  }
+
+  private async getThreadMutes(
+    threadRoots: string[],
+    viewer: string,
+  ): Promise<Map<string, boolean>> {
+    const deduped = dedupeStrs(threadRoots)
+    const threadMutes = await this.dataplane.getThreadMutesOnSubjects({
+      actorDid: viewer,
+      threadRoots: deduped,
+    })
+    return deduped.reduce((acc, cur, i) => {
+      return acc.set(cur, threadMutes.muted[i] ?? false)
+    }, new Map<string, boolean>())
   }
 
   async getPostAggregates(refs: ItemRef[]): Promise<PostAggs> {

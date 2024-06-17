@@ -41,7 +41,9 @@ Object {
   "replyCount": 0,
   "repostCount": 0,
   "uri": "record(0)",
-  "viewer": Object {},
+  "viewer": Object {
+    "threadMuted": false,
+  },
 }
 `;
 
@@ -126,7 +128,9 @@ Object {
   "replyCount": 0,
   "repostCount": 0,
   "uri": "record(0)",
-  "viewer": Object {},
+  "viewer": Object {
+    "threadMuted": false,
+  },
 }
 `;
 
@@ -407,7 +411,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -443,7 +449,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -564,6 +572,7 @@ Array [
       "uri": "record(5)",
       "viewer": Object {
         "like": "record(8)",
+        "threadMuted": false,
       },
     },
   },
@@ -603,7 +612,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(9)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -647,7 +658,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(10)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -690,7 +703,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(10)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   },
@@ -865,7 +880,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(11)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -1223,7 +1240,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   Object {
@@ -1344,6 +1363,7 @@ Array [
       "uri": "record(2)",
       "viewer": Object {
         "like": "record(8)",
+        "threadMuted": false,
       },
     },
   },
@@ -1383,7 +1403,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(9)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -1427,7 +1449,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(10)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -1470,7 +1494,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(10)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   },
