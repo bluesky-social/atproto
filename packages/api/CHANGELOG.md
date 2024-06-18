@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.20
+
+### Patch Changes
+
+- [#2582](https://github.com/bluesky-social/atproto/pull/2582) [`ea0f10b5d`](https://github.com/bluesky-social/atproto/commit/ea0f10b5d0d334eb587032c54d5ace9ea811cf26) Thanks [@pfrazee](https://github.com/pfrazee)! - Remove client-side enforcement of labeler limits
+
 ## 0.12.19
 
 ### Patch Changes

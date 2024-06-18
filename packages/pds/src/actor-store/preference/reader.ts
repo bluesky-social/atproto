@@ -17,7 +17,7 @@ export class PreferenceReader {
     return prefsRes
       .filter((pref) => !namespace || prefMatchNamespace(namespace, pref.name))
       .filter((pref) => prefInScope(scope, pref.name))
-      .map((pref) => JSON.parse(pref.valueJson))
+      .map((pref) => JSON.parse(pref.valueJson) as AccountPreference)
   }
 }
 

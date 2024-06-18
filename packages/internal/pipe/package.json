@@ -1,0 +1,32 @@
+{
+  "name": "@atproto-labs/pipe",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Library for combining multiple functions into a single function.",
+  "keywords": [
+    "atproto",
+    "transformer"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/internal/pipe"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}

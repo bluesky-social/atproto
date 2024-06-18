@@ -27,6 +27,7 @@ const run = async () => {
     },
     plc: { port: 2582 },
     ozone: {
+      port: 2587,
       chatUrl: 'http://localhost:2590', // must run separate chat service
       chatDid: 'did:example:chat',
     },

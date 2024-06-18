@@ -355,7 +355,7 @@ describe('agent', () => {
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create-failed')
-    expect(events[1]).toEqual('network-error')
+    expect(events[1]).toEqual('expired')
     expect(sessions.length).toEqual(2)
     expect(typeof sessions[0]).toEqual('undefined')
     expect(typeof sessions[1]).toEqual('undefined')
