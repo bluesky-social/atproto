@@ -53,6 +53,15 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     }
   }
 
+  let entrywayCfg: OzoneConfig['entryway'] = null
+  if (env.entrywayUrl || env.entrywayDid) {
+    assert(env.entrywayUrl && env.entrywayDid)
+    chatCfg = {
+      url: env.entrywayUrl,
+      did: env.entrywayDid,
+    }
+  }
+
   const cdnCfg: OzoneConfig['cdn'] = {
     paths: env.cdnPaths,
   }
@@ -81,6 +90,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     appview: appviewCfg,
     pds: pdsCfg,
     chat: chatCfg,
+    entryway: entrywayCfg,
     cdn: cdnCfg,
     identity: identityCfg,
     blobDivert: blobDivertServiceCfg,
@@ -94,6 +104,7 @@ export type OzoneConfig = {
   appview: AppviewConfig
   pds: PdsConfig | null
   chat: ChatConfig | null
+  entryway: EntrywayConfig | null
   cdn: CdnConfig
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
@@ -133,6 +144,11 @@ export type PdsConfig = {
 }
 
 export type ChatConfig = {
+  url: string
+  did: string
+}
+
+export type EntrywayConfig = {
   url: string
   did: string
 }

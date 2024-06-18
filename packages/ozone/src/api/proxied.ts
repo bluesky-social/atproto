@@ -141,4 +141,21 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  server.com.atproto.admin.searchAccounts({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.entrywayAgent) {
+        throw new Error('Entryway not configured')
+      }
+      const res = await ctx.entrywayAgent.api.com.atproto.admin.searchAccounts(
+        request.params,
+        await ctx.entrywayAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
 }

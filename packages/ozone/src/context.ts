@@ -34,6 +34,7 @@ export type AppContextOptions = {
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
   chatAgent: AtpAgent | undefined
+  entrywayAgent: AtpAgent | undefined
   blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
@@ -70,6 +71,9 @@ export class AppContext {
       : undefined
     const chatAgent = cfg.chat
       ? new AtpAgent({ service: cfg.chat.url })
+      : undefined
+    const entrywayAgent = cfg.entryway
+      ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
 
     const idResolver = new IdResolver({
@@ -127,6 +131,7 @@ export class AppContext {
         appviewAgent,
         pdsAgent,
         chatAgent,
+        entrywayAgent,
         signingKey,
         signingKeyId,
         idResolver,
@@ -178,6 +183,10 @@ export class AppContext {
 
   get chatAgent(): AtpAgent | undefined {
     return this.opts.chatAgent
+  }
+
+  get entrywayAgent(): AtpAgent | undefined {
+    return this.opts.entrywayAgent
   }
 
   get signingKey(): Keypair {
@@ -233,6 +242,13 @@ export class AppContext {
       throw new Error('No chat service configured')
     }
     return this.serviceAuthHeaders(this.cfg.chat.did)
+  }
+
+  async entrywayAuth() {
+    if (!this.cfg.entryway) {
+      throw new Error('No entryway service configured')
+    }
+    return this.serviceAuthHeaders(this.cfg.entryway.did)
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {

@@ -15,6 +15,8 @@ export const readEnv = (): OzoneEnvironment => {
     pdsDid: envStr('OZONE_PDS_DID'),
     chatUrl: envStr('OZONE_CHAT_URL'),
     chatDid: envStr('OZONE_CHAT_DID'),
+    entrywayUrl: envStr('OZONE_ENTRYWAY_URL'),
+    entrywayDid: envStr('OZONE_ENTRYWAY_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
@@ -46,6 +48,8 @@ export type OzoneEnvironment = {
   pdsDid?: string
   chatUrl?: string
   chatDid?: string
+  entrywayUrl?: string
+  entrywayDid?: string
   dbPostgresUrl?: string
   dbPostgresSchema?: string
   dbPoolSize?: number
