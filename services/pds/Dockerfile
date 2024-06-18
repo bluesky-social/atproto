@@ -22,6 +22,16 @@ COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/repo ./packages/repo
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
+COPY ./packages/oauth/jwk ./packages/oauth/jwk
+COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
+COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
+COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/internal/pipe ./packages/internal/pipe
+COPY ./packages/internal/fetch ./packages/internal/fetch
+COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
+COPY ./packages/internal/simple-store ./packages/internal/simple-store
+COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
+COPY ./packages/internal/rollup-plugin-bundle-manifest ./packages/internal/rollup-plugin-bundle-manifest
 COPY ./services/pds ./services/pds
 
 # install all deps
