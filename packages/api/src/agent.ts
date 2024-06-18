@@ -21,7 +21,6 @@ import {
 } from './types'
 import { BSKY_LABELER_DID } from './const'
 
-const MAX_LABELERS = 10
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
@@ -284,7 +283,7 @@ export class AtpAgent {
 
     reqHeaders = {
       ...reqHeaders,
-      [labelerHeaderName]: labelerHeaders.slice(0, MAX_LABELERS).join(', '),
+      [labelerHeaderName]: labelerHeaders.join(', '),
     }
 
     return reqHeaders
