@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver-node",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Node specific ATProto handle to DID resolver",
   "keywords": [
