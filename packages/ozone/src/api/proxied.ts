@@ -150,7 +150,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const res = await ctx.entrywayAgent.api.com.atproto.admin.searchAccounts(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.entrywayAuth(),
       )
       return {
         encoding: 'application/json',
