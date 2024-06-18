@@ -1,5 +1,5 @@
 ---
-"@atproto/pds": minor
+"@atproto/pds": patch
 ---
 
-Add OAuth provider capability & support for DPop signed tokens
+Add OAuth provider capability & support for DPoP signed tokens
