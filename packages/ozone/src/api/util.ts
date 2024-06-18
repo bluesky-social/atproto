@@ -20,6 +20,12 @@ import {
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
 import AppContext from '../context'
+import { Member } from '../db/schema/member'
+import {
+  ROLEADMIN,
+  ROLEMODERATOR,
+  ROLETRIAGE,
+} from '../lexicon/types/tools/ozone/team/defs'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,
@@ -122,3 +128,12 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventTag',
   'tools.ozone.moderation.defs#modEventDivert',
 ])
+
+export const getMemberRole = (role: string) => {
+  if (memberRoles.has(role)) {
+    return role as Member['role']
+  }
+  throw new InvalidRequestError('Invalid member role')
+}
+
+const memberRoles = new Set([ROLEADMIN, ROLEMODERATOR, ROLETRIAGE])

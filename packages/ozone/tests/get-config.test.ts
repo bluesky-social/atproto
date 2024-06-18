@@ -1,5 +1,6 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
+import { TOOLS_OZONE_TEAM } from '../src/lexicon'
 
 describe('get-config', () => {
   let network: TestNetwork
@@ -39,14 +40,12 @@ describe('get-config', () => {
     )
     expect(moderatorConfig.chat?.url).toBe(undefined)
     expect(moderatorConfig.viewer?.role).toEqual(
-      'tools.ozone.moderator.defs#modRoleModerator',
+      TOOLS_OZONE_TEAM.DefsRoleModerator,
     )
   })
 
   it('returns the right role for the viewer', async () => {
     const adminConfig = await getConfig('admin')
-    expect(adminConfig.viewer?.role).toBe(
-      'tools.ozone.moderator.defs#modRoleAdmin',
-    )
+    expect(adminConfig.viewer?.role).toBe(TOOLS_OZONE_TEAM.DefsRoleAdmin)
   })
 })

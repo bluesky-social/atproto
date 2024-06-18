@@ -193,6 +193,11 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -380,6 +385,11 @@ export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -413,6 +423,11 @@ export const TOOLS_OZONE_MODERATION = {
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
 }
 
 export class AtpBaseClient {
@@ -3118,12 +3133,14 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  team: ToolsOzoneTeamNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
     this.server = new ToolsOzoneServerNS(service)
+    this.team = new ToolsOzoneTeamNS(service)
   }
 }
 
@@ -3279,6 +3296,58 @@ export class ToolsOzoneServerNS {
       .call('tools.ozone.server.getConfig', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneServerGetConfig.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneTeamNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  addMember(
+    data?: ToolsOzoneTeamAddMember.InputSchema,
+    opts?: ToolsOzoneTeamAddMember.CallOptions,
+  ): Promise<ToolsOzoneTeamAddMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.addMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamAddMember.toKnownErr(e)
+      })
+  }
+
+  deleteMember(
+    data?: ToolsOzoneTeamDeleteMember.InputSchema,
+    opts?: ToolsOzoneTeamDeleteMember.CallOptions,
+  ): Promise<ToolsOzoneTeamDeleteMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.deleteMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamDeleteMember.toKnownErr(e)
+      })
+  }
+
+  listMembers(
+    params?: ToolsOzoneTeamListMembers.QueryParams,
+    opts?: ToolsOzoneTeamListMembers.CallOptions,
+  ): Promise<ToolsOzoneTeamListMembers.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.listMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamListMembers.toKnownErr(e)
+      })
+  }
+
+  updateMember(
+    data?: ToolsOzoneTeamUpdateMember.InputSchema,
+    opts?: ToolsOzoneTeamUpdateMember.CallOptions,
+  ): Promise<ToolsOzoneTeamUpdateMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.updateMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamUpdateMember.toKnownErr(e)
       })
   }
 }

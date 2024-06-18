@@ -247,6 +247,10 @@ const defaultService = (
 ): { url: string; did: string } | null => {
   const nsid = req.originalUrl.split('?')[0].replace('/xrpc/', '')
   switch (nsid) {
+    case ids.ToolsOzoneTeamAddMember:
+    case ids.ToolsOzoneTeamDeleteMember:
+    case ids.ToolsOzoneTeamUpdateMember:
+    case ids.ToolsOzoneTeamListMembers:
     case ids.ToolsOzoneCommunicationCreateTemplate:
     case ids.ToolsOzoneCommunicationDeleteTemplate:
     case ids.ToolsOzoneCommunicationUpdateTemplate:

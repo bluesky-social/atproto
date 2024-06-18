@@ -11006,6 +11006,226 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneTeamAddMember: {
+    lexicon: 1,
+    id: 'tools.ozone.team.addMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a member to the ozone team. Requires admin role.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'role'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              role: {
+                type: 'string',
+                knownValues: [
+                  'tools.ozone.team.defs#roleAdmin',
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+          },
+        },
+        errors: [
+          {
+            name: 'MemberAlreadyExists',
+            description: 'Member already exists in the team.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneTeamDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.team.defs',
+    defs: {
+      member: {
+        type: 'object',
+        required: ['did', 'role'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          profile: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastUpdatedBy: {
+            type: 'string',
+          },
+          role: {
+            type: 'string',
+            knownValues: [
+              'lex:tools.ozone.team.defs#roleAdmin',
+              'lex:tools.ozone.team.defs#roleModerator',
+              'lex:tools.ozone.team.defs#roleTriage',
+            ],
+          },
+        },
+      },
+      roleAdmin: {
+        type: 'token',
+        description:
+          'Admin role. Highest level of access, can perform all actions.',
+      },
+      roleModerator: {
+        type: 'token',
+        description: 'Moderator role. Can perform most actions.',
+      },
+      roleTriage: {
+        type: 'token',
+        description:
+          'Triage role. Mostly intended for monitoring and escalating issues.',
+      },
+    },
+  },
+  ToolsOzoneTeamDeleteMember: {
+    lexicon: 1,
+    id: 'tools.ozone.team.deleteMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete a member from ozone team. Requires admin role.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'MemberNotFound',
+            description: 'The member being deleted does not exist',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneTeamListMembers: {
+    lexicon: 1,
+    id: 'tools.ozone.team.listMembers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all members with access to the ozone service.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['members'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              members: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.team.defs#member',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneTeamUpdateMember: {
+    lexicon: 1,
+    id: 'tools.ozone.team.updateMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update a member in the ozone service. Requires admin role.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              disabled: {
+                type: 'boolean',
+              },
+              role: {
+                type: 'string',
+                knownValues: [
+                  'tools.ozone.team.defs#roleAdmin',
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+          },
+        },
+        errors: [
+          {
+            name: 'MemberNotFound',
+            description: 'The member being updated does not exist in the team',
+          },
+        ],
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -11216,4 +11436,9 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
+  ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
+  ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
+  ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',
+  ToolsOzoneTeamListMembers: 'tools.ozone.team.listMembers',
+  ToolsOzoneTeamUpdateMember: 'tools.ozone.team.updateMember',
 }
