@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.config.deleteConfig",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete all config configuration matching a key or key-value pair. Wildcards can be used for values.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["key"],
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "All config values associated with this key will be removed, unless value is specified."
+            },
+            "value": {
+              "type": "string",
+              "description": "The value of the configuration to be deleted. Wildcards (*) can be used to only remove values that match certain pattern."
+            }
+          }
+        }
+      },
+      "errors": [
+        { "name": "ConfigNotFound" }
+      ]
+    }
+  }
+}
