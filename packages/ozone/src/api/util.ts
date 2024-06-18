@@ -51,6 +51,7 @@ export const addAccountInfoToRepoViewDetail = (
     inviteNote: accountInfo.inviteNote,
     invites: accountInfo.invites,
     emailConfirmedAt: accountInfo.emailConfirmedAt,
+    deactivatedAt: accountInfo.deactivatedAt,
   }
 }
 
@@ -66,6 +67,7 @@ export const addAccountInfoToRepoView = (
     invitedBy: accountInfo.invitedBy,
     invitesDisabled: accountInfo.invitesDisabled,
     inviteNote: accountInfo.inviteNote,
+    deactivatedAt: accountInfo.deactivatedAt,
   }
 }
 

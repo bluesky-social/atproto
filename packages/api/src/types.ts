@@ -27,6 +27,8 @@ export interface AtpSessionData {
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
+  active: boolean
+  status?: string
 }
 
 /**

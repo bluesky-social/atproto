@@ -1,5 +1,61 @@
 # @atproto/api
 
+## 0.12.20
+
+### Patch Changes
+
+- [#2582](https://github.com/bluesky-social/atproto/pull/2582) [`ea0f10b5d`](https://github.com/bluesky-social/atproto/commit/ea0f10b5d0d334eb587032c54d5ace9ea811cf26) Thanks [@pfrazee](https://github.com/pfrazee)! - Remove client-side enforcement of labeler limits
+
+## 0.12.19
+
+### Patch Changes
+
+- [#2558](https://github.com/bluesky-social/atproto/pull/2558) [`7c1973841`](https://github.com/bluesky-social/atproto/commit/7c1973841dab416ae19435d37853aeea1f579d39) Thanks [@dholms](https://github.com/dholms)! - Add thread mute routes and viewer state
+
+## 0.12.18
+
+### Patch Changes
+
+- [#2557](https://github.com/bluesky-social/atproto/pull/2557) [`58abcbd8b`](https://github.com/bluesky-social/atproto/commit/58abcbd8b6e42a1f66bda6acc3ee6a2c0894e546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds "social proof": `knowFollowers` to `ViewerState` for `ProfileViewDetailed`
+  views and `app.bsky.graph.getKnownFollowers` method for listing known followers
+  of a given user.
+
+## 0.12.17
+
+### Patch Changes
+
+- [#2426](https://github.com/bluesky-social/atproto/pull/2426) [`2b21b5be2`](https://github.com/bluesky-social/atproto/commit/2b21b5be293d32c5eb5ae971c39703bc7d2224fd) Thanks [@foysalit](https://github.com/foysalit)! - Add com.atproto.admin.searchAccounts lexicon to allow searching for accounts using email address
+
+## 0.12.16
+
+### Patch Changes
+
+- [#2539](https://github.com/bluesky-social/atproto/pull/2539) [`9495af23b`](https://github.com/bluesky-social/atproto/commit/9495af23bdb328cfc71182ac80e6eb61863d7a46) Thanks [@dholms](https://github.com/dholms)! - Allow updating deactivation state through admin.updateSubjectStatus
+
+## 0.12.15
+
+### Patch Changes
+
+- [#2531](https://github.com/bluesky-social/atproto/pull/2531) [`255d5ea1f`](https://github.com/bluesky-social/atproto/commit/255d5ea1f06726547cdbe59c83bd18f2d4746912) Thanks [@dholms](https://github.com/dholms)! - Account deactivation. Current hosting status returned on session routes.
+
+## 0.12.14
+
+### Patch Changes
+
+- [#2533](https://github.com/bluesky-social/atproto/pull/2533) [`c4af6a409`](https://github.com/bluesky-social/atproto/commit/c4af6a409ea2171c3cf1d0e7c8ed496794a3f049) Thanks [@devinivy](https://github.com/devinivy)! - Support for post embeds in chat lexicons
+
+## 0.12.13
+
+### Patch Changes
+
+- [#2517](https://github.com/bluesky-social/atproto/pull/2517) [`1d4ab5d04`](https://github.com/bluesky-social/atproto/commit/1d4ab5d046aac4539658ee6d7e61882c54d5beb9) Thanks [@dholms](https://github.com/dholms)! - Add privileged flag to app password routes
+
+## 0.12.12
+
+### Patch Changes
+
+- [#2442](https://github.com/bluesky-social/atproto/pull/2442) [`1f560f021`](https://github.com/bluesky-social/atproto/commit/1f560f021c07eb9e8d76577e67fd2d7ac39cdee4) Thanks [@foysalit](https://github.com/foysalit)! - Add com.atproto.label.queryLabels endpoint on appview and allow viewing external labels through ozone
+
 ## 0.12.11
 
 ### Patch Changes

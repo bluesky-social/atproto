@@ -1,5 +1,4 @@
 import {
-  moderateProfile,
   moderatePost,
   mock,
   ModerationOpts,

@@ -25,8 +25,8 @@ describe('sequencer', () => {
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    // 10 events in userSeed
-    totalEvts = 10
+    // 14 events in userSeed
+    totalEvts = 14
   })
 
   afterAll(async () => {

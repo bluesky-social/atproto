@@ -16,6 +16,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -76,6 +77,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -126,6 +128,7 @@ import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
@@ -138,8 +141,10 @@ import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -187,6 +192,7 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -197,6 +203,7 @@ export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -257,6 +264,7 @@ export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -307,6 +315,7 @@ export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
@@ -319,8 +328,10 @@ export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -368,6 +379,7 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -563,6 +575,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
+      })
+  }
+
+  searchAccounts(
+    params?: ComAtprotoAdminSearchAccounts.QueryParams,
+    opts?: ComAtprotoAdminSearchAccounts.CallOptions,
+  ): Promise<ComAtprotoAdminSearchAccounts.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.searchAccounts', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSearchAccounts.toKnownErr(e)
       })
   }
 
@@ -1226,6 +1249,17 @@ export class ComAtprotoSyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
+      })
+  }
+
+  getRepoStatus(
+    params?: ComAtprotoSyncGetRepoStatus.QueryParams,
+    opts?: ComAtprotoSyncGetRepoStatus.CallOptions,
+  ): Promise<ComAtprotoSyncGetRepoStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getRepoStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetRepoStatus.toKnownErr(e)
       })
   }
 
@@ -2069,6 +2103,17 @@ export class AppBskyGraphNS {
       })
   }
 
+  getKnownFollowers(
+    params?: AppBskyGraphGetKnownFollowers.QueryParams,
+    opts?: AppBskyGraphGetKnownFollowers.CallOptions,
+  ): Promise<AppBskyGraphGetKnownFollowers.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getKnownFollowers', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetKnownFollowers.toKnownErr(e)
+      })
+  }
+
   getList(
     params?: AppBskyGraphGetList.QueryParams,
     opts?: AppBskyGraphGetList.CallOptions,
@@ -2173,6 +2218,17 @@ export class AppBskyGraphNS {
       })
   }
 
+  muteThread(
+    data?: AppBskyGraphMuteThread.InputSchema,
+    opts?: AppBskyGraphMuteThread.CallOptions,
+  ): Promise<AppBskyGraphMuteThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.muteThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphMuteThread.toKnownErr(e)
+      })
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -2192,6 +2248,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.unmuteActorList', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyGraphUnmuteActorList.toKnownErr(e)
+      })
+  }
+
+  unmuteThread(
+    data?: AppBskyGraphUnmuteThread.InputSchema,
+    opts?: AppBskyGraphUnmuteThread.CallOptions,
+  ): Promise<AppBskyGraphUnmuteThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unmuteThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnmuteThread.toKnownErr(e)
       })
   }
 }
@@ -3050,11 +3117,13 @@ export class ToolsOzoneNS {
   _service: AtpServiceClient
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
+    this.server = new ToolsOzoneServerNS(service)
   }
 }
 
@@ -3191,6 +3260,25 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneModerationSearchRepos.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getConfig(
+    params?: ToolsOzoneServerGetConfig.QueryParams,
+    opts?: ToolsOzoneServerGetConfig.CallOptions,
+  ): Promise<ToolsOzoneServerGetConfig.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.server.getConfig', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneServerGetConfig.toKnownErr(e)
       })
   }
 }

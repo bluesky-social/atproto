@@ -54,7 +54,7 @@ export interface MessageView {
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
-  embed?: AppBskyEmbedRecord.Main | { $type: string; [k: string]: unknown }
+  embed?: AppBskyEmbedRecord.View | { $type: string; [k: string]: unknown }
   sender: MessageViewSender
   sentAt: string
   [k: string]: unknown

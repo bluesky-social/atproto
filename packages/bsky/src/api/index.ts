@@ -19,6 +19,7 @@ import getRepostedBy from './app/bsky/feed/getRepostedBy'
 import getBlocks from './app/bsky/graph/getBlocks'
 import getListBlocks from './app/bsky/graph/getListBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
+import getKnownFollowers from './app/bsky/graph/getKnownFollowers'
 import getFollows from './app/bsky/graph/getFollows'
 import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
@@ -29,6 +30,8 @@ import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
+import muteThread from './app/bsky/graph/muteThread'
+import unmuteThread from './app/bsky/graph/unmuteThread'
 import getSuggestedFollowsByActor from './app/bsky/graph/getSuggestedFollowsByActor'
 import getLabelerServices from './app/bsky/labeler/getServices'
 import searchActors from './app/bsky/actor/searchActors'
@@ -75,6 +78,7 @@ export default function (server: Server, ctx: AppContext) {
   getBlocks(server, ctx)
   getListBlocks(server, ctx)
   getFollowers(server, ctx)
+  getKnownFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
   getLists(server, ctx)
@@ -85,6 +89,8 @@ export default function (server: Server, ctx: AppContext) {
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
   unmuteActorList(server, ctx)
+  muteThread(server, ctx)
+  unmuteThread(server, ctx)
   getSuggestedFollowsByActor(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)

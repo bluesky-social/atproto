@@ -18,6 +18,7 @@
     "no-var": "error",
     "prefer-const": "warn",
     "no-misleading-character-class": "warn",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
     "@typescript-eslint/no-unused-vars": [
       "warn",
       { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }

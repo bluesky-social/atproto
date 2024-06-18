@@ -141,4 +141,21 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  server.com.atproto.admin.searchAccounts({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      const res = await ctx.pdsAgent.api.com.atproto.admin.searchAccounts(
+        request.params,
+        await ctx.pdsAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
 }

@@ -8,14 +8,20 @@ import {
   ClearActorMutelistSubscriptionsResponse,
   ClearActorMutesRequest,
   ClearActorMutesResponse,
+  ClearThreadMutesRequest,
+  ClearThreadMutesResponse,
   CreateActorMutelistSubscriptionRequest,
   CreateActorMutelistSubscriptionResponse,
   CreateActorMuteRequest,
   CreateActorMuteResponse,
+  CreateThreadMuteRequest,
+  CreateThreadMuteResponse,
   DeleteActorMutelistSubscriptionRequest,
   DeleteActorMutelistSubscriptionResponse,
   DeleteActorMuteRequest,
   DeleteActorMuteResponse,
+  DeleteThreadMuteRequest,
+  DeleteThreadMuteResponse,
   GetActorChatDeclarationRecordsRequest,
   GetActorChatDeclarationRecordsResponse,
   GetActorFeedsRequest,
@@ -140,6 +146,8 @@ import {
   GetSuggestedFeedsResponse,
   GetThreadGateRecordsRequest,
   GetThreadGateRecordsResponse,
+  GetThreadMutesOnSubjectsRequest,
+  GetThreadMutesOnSubjectsResponse,
   GetThreadRequest,
   GetThreadResponse,
   GetTimelineRequest,
@@ -166,6 +174,8 @@ import {
   UntakedownBlobResponse,
   UntakedownRecordRequest,
   UntakedownRecordResponse,
+  UpdateActorUpstreamStatusRequest,
+  UpdateActorUpstreamStatusResponse,
   UpdateNotificationSeenRequest,
   UpdateNotificationSeenResponse,
 } from './bsky_pb'
@@ -544,6 +554,17 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * Thread Mutes
+     *
+     * @generated from rpc bsky.Service.GetThreadMutesOnSubjects
+     */
+    getThreadMutesOnSubjects: {
+      name: 'GetThreadMutesOnSubjects',
+      I: GetThreadMutesOnSubjectsRequest,
+      O: GetThreadMutesOnSubjectsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * Blocks
      *
      * @generated from rpc bsky.Service.GetBidirectionalBlock
@@ -891,6 +912,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.UpdateActorUpstreamStatus
+     */
+    updateActorUpstreamStatus: {
+      name: 'UpdateActorUpstreamStatus',
+      I: UpdateActorUpstreamStatusRequest,
+      O: UpdateActorUpstreamStatusResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.UntakedownBlob
      */
     untakedownBlob: {
@@ -971,6 +1001,33 @@ export const Service = {
       name: 'ClearActorMutelistSubscriptions',
       I: ClearActorMutelistSubscriptionsRequest,
       O: ClearActorMutelistSubscriptionsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.CreateThreadMute
+     */
+    createThreadMute: {
+      name: 'CreateThreadMute',
+      I: CreateThreadMuteRequest,
+      O: CreateThreadMuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.DeleteThreadMute
+     */
+    deleteThreadMute: {
+      name: 'DeleteThreadMute',
+      I: DeleteThreadMuteRequest,
+      O: DeleteThreadMuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.ClearThreadMutes
+     */
+    clearThreadMutes: {
+      name: 'ClearThreadMutes',
+      I: ClearThreadMutesRequest,
+      O: ClearThreadMutesResponse,
       kind: MethodKind.Unary,
     },
   },

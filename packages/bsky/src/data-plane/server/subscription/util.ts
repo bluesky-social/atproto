@@ -133,6 +133,8 @@ export function loggableMessage(msg: RepoMessage) {
     return msg
   } else if (message.isIdentity(msg)) {
     return msg
+  } else if (message.isAccount(msg)) {
+    return msg
   } else if (message.isMigrate(msg)) {
     return msg
   } else if (message.isTombstone(msg)) {

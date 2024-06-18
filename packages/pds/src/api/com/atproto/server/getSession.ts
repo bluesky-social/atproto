@@ -1,13 +1,18 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { INVALID_HANDLE } from '@atproto/syntax'
+
+import { formatAccountStatus } from '../../../../account-manager'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
 import { didDocForSession } from './util'
+import { AuthScope } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
-    auth: ctx.authVerifier.accessDeactived,
+    auth: ctx.authVerifier.accessStandard({
+      additional: [AuthScope.SignupQueued],
+    }),
     handler: async ({ auth, req }) => {
       if (ctx.entrywayAgent) {
         return resultPassthru(
@@ -20,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const did = auth.credentials.did
       const [user, didDoc] = await Promise.all([
-        ctx.accountManager.getAccount(did),
+        ctx.accountManager.getAccount(did, { includeDeactivated: true }),
         didDocForSession(ctx, did),
       ])
       if (!user) {
@@ -28,6 +33,9 @@ export default function (server: Server, ctx: AppContext) {
           `Could not find user info for account: ${did}`,
         )
       }
+
+      const { status, active } = formatAccountStatus(user)
+
       return {
         encoding: 'application/json',
         body: {
@@ -36,6 +44,8 @@ export default function (server: Server, ctx: AppContext) {
           email: user.email ?? undefined,
           didDoc,
           emailConfirmed: !!user.emailConfirmedAt,
+          active,
+          status,
         },
       }
     },

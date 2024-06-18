@@ -64,7 +64,7 @@ describe('db', () => {
 
       const row = await db.db
         .selectFrom('actor')
-        .selectAll()
+        .select(['did', 'handle', 'indexedAt'])
         .where('did', '=', 'x')
         .executeTakeFirst()
 
@@ -72,7 +72,6 @@ describe('db', () => {
         did: 'x',
         handle: 'x',
         indexedAt: 'bad-date',
-        takedownRef: null,
       })
     })
 

@@ -37,6 +37,7 @@ describe('notif service proxy', () => {
       }
       return x
     })
+    await network.pds.ctx.idResolver.did.resolve(notifDid, true)
   })
 
   afterAll(async () => {

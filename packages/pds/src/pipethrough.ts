@@ -3,7 +3,7 @@ import * as ui8 from 'uint8arrays'
 import net from 'node:net'
 import stream from 'node:stream'
 import webStream from 'node:stream/web'
-import { jsonToLex } from '@atproto/lexicon'
+import { LexValue, jsonToLex, stringifyLex } from '@atproto/lexicon'
 import {
   CatchallHandler,
   HandlerPipeThrough,
@@ -15,14 +15,15 @@ import { httpLogger } from './logger'
 import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
 
-export const proxyHandler =
-  (ctx: AppContext): CatchallHandler =>
-  async (req, res, next) => {
+export const proxyHandler = (ctx: AppContext): CatchallHandler => {
+  const accessStandard = ctx.authVerifier.accessStandard()
+  return async (req, res, next) => {
     try {
       const { url, aud } = await formatUrlAndAud(ctx, req)
-      const auth = await ctx.authVerifier.access({ req })
+      const auth = await accessStandard({ req })
       const headers = await formatHeaders(ctx, req, aud, auth.credentials.did)
-      const body = stream.Readable.toWeb(req)
+      const body: webStream.ReadableStream<Uint8Array> =
+        stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
       const proxyRes = await makeRequest(url, reqInit)
       await pipeProxyRes(proxyRes, res)
@@ -31,6 +32,7 @@ export const proxyHandler =
     }
     return next()
   }
+}
 
 export const pipethrough = async (
   ctx: AppContext,
@@ -41,6 +43,22 @@ export const pipethrough = async (
   const { url, aud } = await formatUrlAndAud(ctx, req, audOverride)
   const headers = await formatHeaders(ctx, req, aud, requester)
   const reqInit = formatReqInit(req, headers)
+  const res = await makeRequest(url, reqInit)
+  return parseProxyRes(res)
+}
+
+export const pipethroughProcedure = async (
+  ctx: AppContext,
+  req: express.Request,
+  requester: string | null,
+  body?: LexValue,
+): Promise<HandlerPipeThrough> => {
+  const { url, aud } = await formatUrlAndAud(ctx, req)
+  const headers = await formatHeaders(ctx, req, aud, requester)
+  const encodedBody = body
+    ? new TextEncoder().encode(stringifyLex(body))
+    : undefined
+  const reqInit = formatReqInit(req, headers, encodedBody)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
 }
@@ -96,7 +114,7 @@ export const formatHeaders = async (
 const formatReqInit = (
   req: express.Request,
   headers: Record<string, string>,
-  body?: Uint8Array | ReadableStream,
+  body?: Uint8Array | webStream.ReadableStream<Uint8Array>,
 ): RequestInit => {
   if (req.method === 'GET') {
     return {

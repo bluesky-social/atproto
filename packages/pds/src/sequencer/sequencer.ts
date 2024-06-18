@@ -4,11 +4,13 @@ import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitData } from '@atproto/repo'
 import {
+  AccountEvt,
   CommitEvt,
   HandleEvt,
   IdentityEvt,
   SeqEvt,
   TombstoneEvt,
+  formatSeqAccountEvt,
   formatSeqCommit,
   formatSeqHandleUpdate,
   formatSeqIdentityEvt,
@@ -23,6 +25,7 @@ import {
 } from './db'
 import { PreparedWrite } from '../repo'
 import { Crawlers } from '../crawlers'
+import { AccountStatus } from '../account-manager/helpers/account'
 
 export * from './events'
 
@@ -154,6 +157,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           time: row.sequencedAt,
           evt: evt as IdentityEvt,
         })
+      } else if (row.eventType === 'account') {
+        seqEvts.push({
+          type: 'account',
+          seq: row.seq,
+          time: row.sequencedAt,
+          evt: evt as AccountEvt,
+        })
       } else if (row.eventType === 'tombstone') {
         seqEvts.push({
           type: 'tombstone',
@@ -197,43 +207,54 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     await wait(waitTime)
   }
 
-  async sequenceEvt(evt: RepoSeqInsert) {
-    await this.db.executeWithRetry(
-      this.db.db.insertInto('repo_seq').values(evt),
+  async sequenceEvt(evt: RepoSeqInsert): Promise<number> {
+    const res = await this.db.executeWithRetry(
+      this.db.db.insertInto('repo_seq').values(evt).returningAll(),
     )
     this.crawlers.notifyOfUpdate()
+    return res[0].seq
   }
 
   async sequenceCommit(
     did: string,
     commitData: CommitData,
     writes: PreparedWrite[],
-  ) {
+  ): Promise<number> {
     const evt = await formatSeqCommit(did, commitData, writes)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceHandleUpdate(did: string, handle: string) {
+  async sequenceHandleUpdate(did: string, handle: string): Promise<number> {
     const evt = await formatSeqHandleUpdate(did, handle)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceIdentityEvt(did: string) {
-    const evt = await formatSeqIdentityEvt(did)
-    await this.sequenceEvt(evt)
+  async sequenceIdentityEvt(did: string, handle?: string): Promise<number> {
+    const evt = await formatSeqIdentityEvt(did, handle)
+    return await this.sequenceEvt(evt)
   }
 
-  async sequenceTombstone(did: string) {
+  async sequenceAccountEvt(
+    did: string,
+    status: AccountStatus,
+  ): Promise<number> {
+    const evt = await formatSeqAccountEvt(did, status)
+    return await this.sequenceEvt(evt)
+  }
+
+  async sequenceTombstone(did: string): Promise<number> {
     const evt = await formatSeqTombstone(did)
-    await this.sequenceEvt(evt)
+    return await this.sequenceEvt(evt)
   }
 
-  async deleteAllForUser(did: string) {
+  async deleteAllForUser(did: string, excludingSeqs: number[] = []) {
     await this.db.executeWithRetry(
       this.db.db
         .deleteFrom('repo_seq')
         .where('did', '=', did)
-        .where('eventType', '!=', 'tombstone'),
+        .if(excludingSeqs.length > 0, (qb) =>
+          qb.where('seq', 'not in', excludingSeqs),
+        ),
     )
   }
 }

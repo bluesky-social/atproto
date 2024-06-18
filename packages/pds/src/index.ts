@@ -9,8 +9,9 @@ import cors from 'cors'
 import http from 'http'
 import events from 'events'
 import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
-import { DAY, HOUR, MINUTE } from '@atproto/common'
+import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import API from './api'
+import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
 import * as error from './error'
@@ -33,6 +34,7 @@ export { createServer as createLexiconServer } from './lexicon'
 export * as sequencer from './sequencer'
 export { type PreparedWrite } from './repo'
 export * as repoPrepare from './repo/prepare'
+export { scripts } from './scripts'
 
 export class PDS {
   public ctx: AppContext
@@ -54,7 +56,7 @@ export class PDS {
   ): Promise<PDS> {
     const app = express()
     app.set('trust proxy', true)
-    app.use(cors())
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
 
@@ -98,6 +100,7 @@ export class PDS {
 
     server = API(server, ctx)
 
+    app.use(authRoutes.createRouter(ctx))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)

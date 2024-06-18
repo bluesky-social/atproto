@@ -19,7 +19,7 @@
     "verify:types": "tsc --build tsconfig.json",
     "format": "pnpm lint:fix && pnpm style:fix",
     "build": "pnpm --recursive --stream build",
-    "dev": "pnpm --stream '/^dev:.+$/'",
+    "dev": "NODE_ENV=development pnpm --stream '/^dev:.+$/'",
     "dev:tsc": "tsc --build tsconfig.json --watch",
     "dev:pkg": "pnpm --recursive --parallel --stream dev",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
@@ -51,7 +51,9 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/*",
+      "packages/oauth/*",
+      "packages/internal/*"
     ]
   }
 }

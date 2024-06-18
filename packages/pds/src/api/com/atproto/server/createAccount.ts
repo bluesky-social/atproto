@@ -11,7 +11,8 @@ import {
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import AppContext from '../../../../context'
-import { didDocForSession } from './util'
+import { safeResolveDidDoc } from './util'
+import { AccountStatus } from '../../../../account-manager'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -56,6 +57,8 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
 
+        didDoc = await safeResolveDidDoc(ctx, did, true)
+
         creds = await ctx.accountManager.createAccount({
           did,
           handle,
@@ -68,11 +71,11 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         if (!deactivated) {
+          await ctx.sequencer.sequenceIdentityEvt(did, handle)
+          await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
           await ctx.sequencer.sequenceCommit(did, commit, [])
-          await ctx.sequencer.sequenceIdentityEvt(did)
         }
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-        didDoc = await didDocForSession(ctx, did, true)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
       } catch (err) {
         // this will only be reached if the actor store _did not_ exist before

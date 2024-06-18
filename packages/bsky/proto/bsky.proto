@@ -334,6 +334,7 @@ message ActorInfo {
   google.protobuf.Timestamp tombstoned_at = 6;
   bool labeler = 7;
   string allow_incoming_chats_from = 8;
+  string upstream_status = 9;
 }
 
 message GetActorsResponse {
@@ -526,6 +527,20 @@ message GetMutelistSubscriptionsResponse {
   repeated string list_uris = 1;
   string cursor = 2;
 }
+
+//
+// Thread Mutes
+//
+
+message GetThreadMutesOnSubjectsRequest {
+  string actor_did = 1;
+  repeated string thread_roots = 2;
+}
+
+message GetThreadMutesOnSubjectsResponse {
+  repeated bool muted = 1;
+}
+
 
 //
 // Blocks
@@ -971,10 +986,14 @@ message GetRecordTakedownResponse {
 // GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
 message GetFollowsFollowingRequest {
   string actor_did = 1;
-  string target_did = 2;
+  repeated string target_dids = 2;
+}
+message FollowsFollowing {
+  string target_did = 1;
+  repeated string dids = 2;
 }
 message GetFollowsFollowingResponse {
-  repeated string dids = 1;
+  repeated FollowsFollowing results = 1;
 }
 
 // Ping
@@ -1046,6 +1065,9 @@ service Service {
   rpc GetActorMutesActorViaList(GetActorMutesActorViaListRequest) returns (GetActorMutesActorViaListResponse);
   rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
   rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
+
+  // Thread Mutes
+  rpc GetThreadMutesOnSubjects(GetThreadMutesOnSubjectsRequest) returns (GetThreadMutesOnSubjectsResponse);
 
   // Blocks
   rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);
@@ -1120,6 +1142,7 @@ service Service {
   rpc TakedownBlob(TakedownBlobRequest) returns (TakedownBlobResponse);
   rpc TakedownRecord(TakedownRecordRequest) returns (TakedownRecordResponse);
   rpc TakedownActor(TakedownActorRequest) returns (TakedownActorResponse);
+  rpc UpdateActorUpstreamStatus(UpdateActorUpstreamStatusRequest) returns (UpdateActorUpstreamStatusResponse);
 
   rpc UntakedownBlob(UntakedownBlobRequest) returns (UntakedownBlobResponse);
   rpc UntakedownRecord(UntakedownRecordRequest) returns (UntakedownRecordResponse);
@@ -1133,12 +1156,25 @@ service Service {
   rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
   rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
   rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
+  
+  rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
+  rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
+  rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
 }
 
 
 //
 // Write Path
 //
+
+message UpdateActorUpstreamStatusRequest {
+  string actor_did = 1;
+  bool active = 2;
+  string upstream_status = 3;
+}
+
+message UpdateActorUpstreamStatusResponse {
+}
 
 message TakedownActorRequest {
   string did = 1;
@@ -1230,3 +1266,23 @@ message ClearActorMutelistSubscriptionsRequest {
 }
 
 message ClearActorMutelistSubscriptionsResponse {}
+
+message CreateThreadMuteRequest {
+  string actor_did = 1;
+  string thread_root = 2;
+}
+
+message CreateThreadMuteResponse {}
+
+message DeleteThreadMuteRequest {
+  string actor_did = 1;
+  string thread_root = 2;
+}
+
+message DeleteThreadMuteResponse {}
+
+message ClearThreadMutesRequest {
+  string actor_did = 1;
+}
+
+message ClearThreadMutesResponse {}

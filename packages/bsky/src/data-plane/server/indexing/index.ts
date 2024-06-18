@@ -267,7 +267,23 @@ export class IndexingService {
     return indexers.find((indexer) => indexer.collection === collection)
   }
 
-  async tombstoneActor(did: string) {
+  async updateActorStatus(did: string, active: boolean, status: string = '') {
+    let upstreamStatus: string | null
+    if (active) {
+      upstreamStatus = null
+    } else if (['deactivated', 'suspended', 'takendown'].includes(status)) {
+      upstreamStatus = status
+    } else {
+      throw new Error(`Unrecognized account status: ${status}`)
+    }
+    await this.db.db
+      .updateTable('actor')
+      .set({ upstreamStatus })
+      .where('did', '=', did)
+      .execute()
+  }
+
+  async deleteActor(did: string) {
     this.db.assertNotTransaction()
     const actorIsHosted = await this.getActorIsHosted(did)
     if (actorIsHosted === false) {
