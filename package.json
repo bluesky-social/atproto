@@ -51,7 +51,9 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/*",
+      "packages/oauth/*",
+      "packages/internal/*"
     ]
   }
 }
