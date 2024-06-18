@@ -1,0 +1,72 @@
+{
+  "name": "@atproto/oauth-client-browser",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "ATPROTO OAuth client for the browser (relies on WebCrypto & Indexed DB)",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "browser",
+    "webcrypto",
+    "indexed",
+    "db"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth/oauth-client-browser"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:*",
+    "@atproto-labs/handle-resolver": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:*",
+    "@atproto/did": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/jwk-webcrypto": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@atproto/api": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-client-browser": "workspace:*",
+    "@atproto/oauth-types": "workspace:*",
+    "@atproto/xrpc": "workspace:*",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-html": "^1.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/react": "^18.2.50",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.33",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^4.13.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-serve": "^1.1.1",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "dev": "cd ./example && rollup --config rollup.config.js --watch"
+  }
+}

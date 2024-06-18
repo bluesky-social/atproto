@@ -26,7 +26,7 @@ export const ensureValidDid = (did: string): void => {
     )
   }
 
-  if (parts[0] != 'did') {
+  if (parts[0] !== 'did') {
     throw new InvalidDidError('DID requires "did:" prefix')
   }
 

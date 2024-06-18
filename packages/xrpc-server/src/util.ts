@@ -214,10 +214,23 @@ function isValidEncoding(possibleStr: string, value: string) {
   return possible.includes(normalized)
 }
 
-export function hasBody(req: express.Request) {
-  const contentLength = req.headers['content-length']
-  const transferEncoding = req.headers['transfer-encoding']
-  return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
+function parseContentLength(value: string): number {
+  if (/^\s*\d+\s*$/.test(value)) return Number(value)
+  throw new InvalidRequestError('invalid content-length header')
+}
+
+function hasBody(req: express.Request): boolean {
+  if (req.headers['content-length']) {
+    const contentLength = parseContentLength(req.headers['content-length'])
+    if (contentLength > 0) return true
+    // A content-length of 0 is still a body if there is a content-type (e.g.
+    // an empty text file)
+    if (req.headers['content-type']) return true
+  }
+
+  if (req.headers['transfer-encoding']) return true
+
+  return false
 }
 
 export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {

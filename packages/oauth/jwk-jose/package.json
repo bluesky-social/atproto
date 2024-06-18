@@ -1,0 +1,36 @@
+{
+  "name": "@atproto/jwk-jose",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "`jose` based implementation of @atproto/jwk Key's",
+  "keywords": [
+    "atproto",
+    "jwk",
+    "jose"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth/jwk-jose"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto/jwk": "workspace:*",
+    "jose": "^5.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}

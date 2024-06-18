@@ -1,5 +1,7 @@
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+
+import { formatAccountStatus } from '../../../../account-manager'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
@@ -44,6 +46,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
       }
 
+      const { status, active } = formatAccountStatus(user)
+
       return {
         encoding: 'application/json',
         body: {
@@ -52,8 +56,8 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle ?? INVALID_HANDLE,
           accessJwt: rotated.accessJwt,
           refreshJwt: rotated.refreshJwt,
-          active: user.active,
-          status: user.status,
+          active,
+          status,
         },
       }
     },

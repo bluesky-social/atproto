@@ -1,5 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { INVALID_HANDLE } from '@atproto/syntax'
+
+import { formatAccountStatus } from '../../../../account-manager'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { authPassthru, resultPassthru } from '../../../proxy'
@@ -31,6 +33,9 @@ export default function (server: Server, ctx: AppContext) {
           `Could not find user info for account: ${did}`,
         )
       }
+
+      const { status, active } = formatAccountStatus(user)
+
       return {
         encoding: 'application/json',
         body: {
@@ -39,8 +44,8 @@ export default function (server: Server, ctx: AppContext) {
           email: user.email ?? undefined,
           didDoc,
           emailConfirmed: !!user.emailConfirmedAt,
-          active: user.active,
-          status: user.status,
+          active,
+          status,
         },
       }
     },

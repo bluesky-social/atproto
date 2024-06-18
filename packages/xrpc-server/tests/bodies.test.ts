@@ -88,6 +88,20 @@ const LEXICONS: LexiconDoc[] = [
 
 const BLOB_LIMIT = 5000
 
+async function consumeInput(
+  input: Readable | string | object,
+): Promise<Buffer> {
+  if (typeof input === 'string') return Buffer.from(input)
+  if (input instanceof Readable) {
+    const buffers: Buffer[] = []
+    for await (const data of input) {
+      buffers.push(data)
+    }
+    return Buffer.concat(buffers)
+  }
+  throw new Error('Invalid input')
+}
+
 describe('Bodies', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
@@ -109,13 +123,8 @@ describe('Bodies', () => {
   server.method(
     'io.example.blobTest',
     async (ctx: { input?: xrpcServer.HandlerInput }) => {
-      if (!(ctx.input?.body instanceof Readable))
-        throw new Error('Input not readable')
-      const buffers: Buffer[] = []
-      for await (const data of ctx.input.body) {
-        buffers.push(data)
-      }
-      const cid = await cidForCbor(Buffer.concat(buffers))
+      const buffer = await consumeInput(ctx.input?.body)
+      const cid = await cidForCbor(buffer)
       return {
         encoding: 'json',
         body: { cid: cid.toString() },
@@ -180,6 +189,16 @@ describe('Bodies', () => {
       'Internal Server Error',
     )
     expect(error).toEqual(`Output must have the property "foo"`)
+  })
+
+  it('supports ArrayBuffers', async () => {
+    const bytes = randomBytes(1024)
+    const expectedCid = await cidForCbor(bytes)
+
+    const bytesResponse = await client.call('io.example.blobTest', {}, bytes, {
+      encoding: 'application/octet-stream',
+    })
+    expect(bytesResponse.data.cid).toEqual(expectedCid.toString())
   })
 
   it('supports blobs and compression', async () => {
