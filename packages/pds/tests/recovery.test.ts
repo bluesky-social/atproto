@@ -76,8 +76,12 @@ describe('recovery', () => {
     }
   }
 
-  it('works', async () => {
+  it('recovers repos based on the sequencer ', async () => {
+    // backup alice & bob
     await backup([alice, bob])
+
+    // grab rev times from intermediate repo states
+    // process a bunch of record creates, updates, and delets for alice
     const startRev = await getRev(alice)
     let middleRev = ''
     for (let i = 0; i < 100; i++) {
@@ -94,6 +98,8 @@ describe('recovery', () => {
         await sc.like(alice, ref.ref)
       }
     }
+
+    // delete bob's account
     const deleteToken = await ctx.accountManager.createEmailToken(
       bob,
       'delete_account',
@@ -103,6 +109,8 @@ describe('recovery', () => {
       did: bob,
       password: sc.accounts[bob].password,
     })
+
+    // create a new account (elli)
     await sc.createAccount('elli', {
       handle: 'elli.test',
       password: 'elli-pass',
@@ -112,34 +120,42 @@ describe('recovery', () => {
     for (let i = 0; i < 10; i++) {
       await sc.post(elli, `post-${i}`)
     }
+    // get some stats & snapshots from before we do a recovery
     const endRev = await getRev(alice)
-    const statsBefore = await getStats(alice)
     const startCarBefore = await getCar(alice, startRev)
     const middleCarBefore = await getCar(alice, middleRev)
     const endCarBefore = await getCar(alice, endRev)
     const elliStatsBefore = await getStats(elli)
+
+    // "restore" all 3 accounts to their backedup state, effectively rolling back the previous mutations
+    // deleting alice's mutations, restoring bob's account, and deleting elli's account
+    await restore([alice, bob, elli])
+
+    // run recovery operation
     const recover = new Recoverer(network.pds.ctx, {
       cursor: 0,
       concurrency: 10,
     })
-    await restore([alice, bob, elli])
     await recover.run()
-    const statsAfter = await getStats(alice)
+
+    // ensure alice's CAR is exactly the same as before the loss, including intermediate states based on tracked revs
     const startCarAfter = await getCar(alice, startRev)
     const middleCarAfter = await getCar(alice, middleRev)
     const endCarAfter = await getCar(alice, endRev)
-    const elliStatsAfter = await getStats(elli)
-    const elliCar = await getCar(elli)
-    expect(statsAfter.recordCount).toEqual(statsBefore.recordCount)
-    expect(statsAfter.rev).toEqual(statsBefore.rev)
-    expect(statsAfter.commit.toString()).toEqual(statsBefore.commit.toString())
     expect(ui8.equals(startCarAfter, startCarBefore)).toBe(true)
     expect(ui8.equals(middleCarAfter, middleCarBefore)).toBe(true)
     expect(ui8.equals(endCarAfter, endCarBefore)).toBe(true)
+
+    // ensure bob's account is re-deleted
     const attempt = getCar(bob)
     await expect(attempt).rejects.toThrow(/Could not find repo for DID/)
     const bobExists = await ctx.actorStore.exists(bob)
     expect(bobExists).toBe(false)
+
+    // ensure elli's account is restored
+    // this involves creating a new signing key for her and updating her DID document
+    const elliStatsAfter = await getStats(elli)
+    const elliCar = await getCar(elli)
     expect(elliStatsAfter.recordCount).toEqual(elliStatsBefore.recordCount)
     expect(elliStatsAfter.rev).toEqual(elliStatsBefore.rev)
     const elliKey = await ctx.actorStore.keypair(elli)
