@@ -1,4 +1,3 @@
-import PQueue from 'p-queue'
 import { cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
 import { filterDefined } from '@atproto/common'
 import AppContext from '../context'
@@ -10,55 +9,35 @@ import {
   prepareUpdate,
 } from '../repo'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { UserQueues } from './user-queues'
 
 export class Recoverer {
   cursor: number
-  main: PQueue
-  queues = new Map<string, PQueue>()
+  queues: UserQueues
 
   constructor(
     public ctx: AppContext,
     opts: { cursor: number; concurrency: number },
   ) {
     this.cursor = opts.cursor
-    this.main = new PQueue({ concurrency: opts.concurrency })
-  }
-
-  async processAll() {
-    await this.main.onIdle()
-  }
-
-  async destroy() {
-    this.main.pause()
-    this.main.clear()
-    this.queues.forEach((q) => q.clear())
-    await this.main.onIdle()
-  }
-
-  async addToUserQueue(did: string, task: () => Promise<void>) {
-    if (this.main.isPaused) return
-    return this.main.add(() => {
-      return this.getUserQueue(did).add(task)
-    })
-  }
-
-  private getUserQueue(did: string) {
-    let queue = this.queues.get(did)
-    if (!queue) {
-      queue = new PQueue({ concurrency: 1 })
-      queue.once('idle', () => this.queues.delete(did))
-      this.queues.set(did, queue)
-    }
-    return queue
+    this.queues = new UserQueues(opts.concurrency)
   }
 
   async run() {
     let done = false
     while (!done) {
       done = await this.loadNextPage()
-      await this.main.onEmpty()
+      await this.queues.onEmpty()
     }
-    await this.main.onIdle()
+    await this.queues.processAll()
+  }
+
+  async processAll() {
+    await this.queues.processAll()
+  }
+
+  async destroy() {
+    await this.queues.destroy
   }
 
   private async loadNextPage(): Promise<boolean> {
@@ -88,7 +67,7 @@ export class Recoverer {
 
   processCommit(evt: CommitEvt) {
     const did = evt.repo
-    this.addToUserQueue(did, async () => {
+    this.queues.addToUser(did, async () => {
       const writes = await parseEvtToWrites(evt)
       if (evt.since === null) {
         // bails if actor store already exists
@@ -132,7 +111,7 @@ export class Recoverer {
 
   processTombstone(evt: TombstoneEvt) {
     const did = evt.did
-    this.addToUserQueue(did, async () => {
+    this.queues.addToUser(did, async () => {
       await this.ctx.actorStore.destroy(did)
       await this.ctx.accountManager.deleteAccount(did)
     })
