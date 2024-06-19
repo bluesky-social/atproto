@@ -21,6 +21,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
+import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
@@ -208,6 +209,7 @@ export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword'
+export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials'
 export * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature'
@@ -630,6 +632,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.updateAccountPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminUpdateAccountPassword.toKnownErr(e)
+      })
+  }
+
+  updateAccountSigningKey(
+    data?: ComAtprotoAdminUpdateAccountSigningKey.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountSigningKey.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountSigningKey.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateAccountSigningKey', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateAccountSigningKey.toKnownErr(e)
       })
   }
 
