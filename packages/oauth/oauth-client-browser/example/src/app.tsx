@@ -1,65 +1,53 @@
-import { BskyAgent } from '@atproto/api'
-import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
-import { useCallback, useMemo, useState } from 'react'
-
-import LoginForm from './login-form'
-import { useOAuth } from './oauth'
-
-const client = new BrowserOAuthClient({
-  plcDirectoryUrl: 'http://localhost:2582', // dev-env
-  handleResolver: 'http://localhost:2584', // dev-env
-})
+import { useCallback, useState } from 'react'
+import { useAuthContext } from './auth/auth-provider'
 
 function App() {
-  const { agent, signedIn, signOut, loading, signIn } = useOAuth(client)
-  const [profile, setProfile] = useState<{
-    value: { displayName?: string }
-  } | null>(null)
+  const { pdsAgent, signOut } = useAuthContext()
 
-  const bskyAgent = useMemo(
-    () => (agent ? new BskyAgent(agent) : null),
-    [agent],
-  )
+  // A call that requires to be authenticated
+  const [serviceAuth, setServiceAuth] = useState<unknown>(undefined)
+  const loadServiceAuth = useCallback(async () => {
+    const serviceAuth = await pdsAgent.com.atproto.server.getServiceAuth({
+      aud: pdsAgent.getDid(),
+    })
+    console.log('serviceAuth', serviceAuth)
+    setServiceAuth(serviceAuth.data)
+  }, [pdsAgent])
 
+  // This call does not require authentication
+  const [profile, setProfile] = useState<unknown>(undefined)
   const loadProfile = useCallback(async () => {
-    if (!agent) return
-
-    const info = await agent.getInfo()
-    console.log('info', info)
-
-    if (!bskyAgent) return
-
-    // A call that requires to be authenticated
-    console.log(
-      await bskyAgent.com.atproto.server.getServiceAuth({
-        aud: agent.sub,
-      }),
-    )
-
-    // This call does not require authentication
-    const profile = await bskyAgent.com.atproto.repo.getRecord({
-      repo: agent.sub,
+    const profile = await pdsAgent.com.atproto.repo.getRecord({
+      repo: pdsAgent.getDid(),
       collection: 'app.bsky.actor.profile',
       rkey: 'self',
     })
-
     console.log(profile)
-
     setProfile(profile.data)
-  }, [agent, bskyAgent])
+  }, [pdsAgent])
 
-  return signedIn ? (
+  return (
     <div>
       <p>Logged in!</p>
+
       <button onClick={loadProfile}>Load profile</button>
       <code>
-        <pre>{profile ? JSON.stringify(profile, undefined, 2) : null}</pre>
+        <pre>
+          {profile !== undefined ? JSON.stringify(profile, undefined, 2) : null}
+        </pre>
+      </code>
+
+      <button onClick={loadServiceAuth}>Load service auth</button>
+      <code>
+        <pre>
+          {serviceAuth !== undefined
+            ? JSON.stringify(serviceAuth, undefined, 2)
+            : null}
+        </pre>
       </code>
 
       <button onClick={signOut}>Logout</button>
     </div>
-  ) : (
-    <LoginForm loading={loading} onLogin={signIn} />
   )
 }
 

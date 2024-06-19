@@ -11,7 +11,6 @@ import {
   HandleResolver,
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
-import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Key, Keyset } from '@atproto/jwk'
 import {
@@ -36,30 +35,26 @@ import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
-import { SessionGetter, SessionStore } from './session-getter.js'
+import {
+  SessionEventMap,
+  SessionGetter,
+  SessionStore,
+} from './session-getter.js'
+import { InternalStateData, StateStore } from './state-store.js'
 import { AuthorizeOptions, ClientMetadata } from './types.js'
+import { CustomEventTarget } from './util.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
-
-export type InternalStateData = {
-  iss: string
-  nonce: string
-  dpopKey: Key
-  verifier?: string
-
-  /**
-   * @note This could be parametrized to be of any type. This wasn't done for
-   * the sake of simplicity but could be added in a later development.
-   */
-  appState?: string
-}
-
-export type StateStore = SimpleStore<string, InternalStateData>
 
 // Export all types needed to construct OAuthClientOptions
 export type {
   AuthorizationServerMetadataCache,
+  DidCache,
   DpopNonceCache,
   Fetch,
+  HandleCache,
+  HandleResolver,
+  InternalStateData,
+  Key,
   Keyset,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
@@ -67,6 +62,7 @@ export type {
   ProtectedResourceMetadataCache,
   RuntimeImplementation,
   SessionStore,
+  StateStore,
 }
 
 export type OAuthClientOptions = {
@@ -91,7 +87,12 @@ export type OAuthClientOptions = {
   fetch?: Fetch
 }
 
-export class OAuthClient {
+export type OAuthClientEventMap = SessionEventMap
+export type OAuthClientEventListener<
+  T extends keyof SessionEventMap = keyof SessionEventMap,
+> = (event: CustomEvent<SessionEventMap[T]>) => void
+
+export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   // Config
   readonly clientMetadata: ClientMetadata
   readonly responseMode: OAuthResponseMode
@@ -132,6 +133,8 @@ export class OAuthClient {
     runtimeImplementation,
     keyset,
   }: OAuthClientOptions) {
+    super()
+
     this.keyset = keyset
       ? keyset instanceof Keyset
         ? keyset
@@ -177,6 +180,15 @@ export class OAuthClient {
       this.runtime,
     )
     this.stateStore = stateStore
+
+    // Proxy sessionGetter events
+    for (const type of ['deleted', 'updated'] as const) {
+      this.sessionGetter.addEventListener(type, (event) => {
+        if (!this.dispatchCustomEvent(type, event.detail)) {
+          event.preventDefault()
+        }
+      })
+    }
   }
 
   // Exposed as public API for convenience
@@ -194,10 +206,7 @@ export class OAuthClient {
     return this.identityResolver.handleResolver
   }
 
-  async authorize(
-    input: string,
-    options?: AuthorizeOptions & { signal?: AbortSignal },
-  ): Promise<URL> {
+  async authorize(input: string, options?: AuthorizeOptions): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
     if (!this.clientMetadata.redirect_uris.includes(redirectUri)) {

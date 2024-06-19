@@ -256,7 +256,7 @@ export class AtpSessionManager extends SessionManager {
       // order to refresh the session if needed. So let's create a new client
       // instance with the right fetchHandler instead of using this.client.
       const res = await new AtpClient(
-        this.fetchHandler,
+        this.fetchHandler.bind(this),
       ).com.atproto.server.getSession()
       if (res.data.did !== this.session.did) {
         throw new XRPCError(

@@ -9,7 +9,7 @@ import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { RefreshError } from './refresh-error.js'
 import { Runtime } from './runtime.js'
-import { withSignal } from './util.js'
+import { timeoutSignal, CustomEventTarget } from './util.js'
 
 export type Session = {
   dpopKey: Key
@@ -17,6 +17,15 @@ export type Session = {
 }
 
 export type SessionStore = SimpleStore<string, Session>
+
+export type SessionEventMap = {
+  updated: TokenSet
+  deleted: { sub: string }
+}
+
+export type SessionEventListener<
+  T extends keyof SessionEventMap = keyof SessionEventMap,
+> = (event: CustomEvent<SessionEventMap[T]>) => void
 
 /**
  * There are several advantages to wrapping the sessionStore in a (single)
@@ -26,6 +35,8 @@ export type SessionStore = SimpleStore<string, Session>
  * localStorage/indexedDB, will sync across multiple tabs (for a given sub).
  */
 export class SessionGetter extends CachedGetter<string, Session> {
+  private readonly eventTarget = new CustomEventTarget<SessionEventMap>()
+
   constructor(
     sessionStore: SessionStore,
     serverFactory: OAuthServerFactory,
@@ -150,6 +161,39 @@ export class SessionGetter extends CachedGetter<string, Session> {
     )
   }
 
+  addEventListener<T extends keyof SessionEventMap>(
+    type: T,
+    callback: SessionEventListener<T>,
+    options?: AddEventListenerOptions | boolean,
+  ) {
+    this.eventTarget.addEventListener(type, callback, options)
+  }
+
+  removeEventListener<T extends keyof SessionEventMap>(
+    type: T,
+    callback: SessionEventListener<T>,
+    options?: EventListenerOptions | boolean,
+  ) {
+    this.eventTarget.removeEventListener(type, callback, options)
+  }
+
+  dispatchEvent<T extends keyof SessionEventMap>(
+    type: T,
+    detail: SessionEventMap[T],
+  ): boolean {
+    return this.eventTarget.dispatchCustomEvent(type, detail)
+  }
+
+  override async setStored(sub: string, session: Session) {
+    await super.setStored(sub, session)
+    this.dispatchEvent('updated', session.tokenSet)
+  }
+
+  override async delStored(sub: string): Promise<void> {
+    await super.delStored(sub)
+    this.dispatchEvent('deleted', { sub })
+  }
+
   /**
    * @param refresh When `true`, the credentials will be refreshed even if they
    * are not expired. When `false`, the credentials will not be refreshed even
@@ -174,9 +218,9 @@ export class SessionGetter extends CachedGetter<string, Session> {
     return this.runtime.withLock(`@atproto-oauth-client-${sub}`, async () => {
       // Make sure, even if there is no signal in the options, that the request
       // will be cancelled after at most 30 seconds.
-      return withSignal({ signal: options?.signal, timeout: 30e3 }, (signal) =>
-        super.get(sub, { ...options, signal }),
-      )
+      using signal = timeoutSignal(30e3, options)
+
+      return await super.get(sub, { ...options, signal })
     })
   }
 }

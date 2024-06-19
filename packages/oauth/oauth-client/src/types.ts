@@ -17,6 +17,7 @@ export type AuthorizeOptions = {
   scope?: string
   state?: string
   ui_locales?: string
+  signal?: AbortSignal
 }
 
 export const clientMetadataSchema = oauthClientMetadataSchema.extend({

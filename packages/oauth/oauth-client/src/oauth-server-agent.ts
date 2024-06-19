@@ -20,7 +20,7 @@ import { OAuthResponseError } from './oauth-response-error.js'
 import { RefreshError } from './refresh-error.js'
 import { Runtime } from './runtime.js'
 import { ClientMetadata } from './types.js'
-import { withSignal } from './util.js'
+import { timeoutSignal } from './util.js'
 
 export type TokenSet = {
   iss: string
@@ -132,9 +132,9 @@ export class OAuthServerAgent {
     if (!sub) throw new TypeError(`Missing "sub" in token response`)
 
     // @TODO (?) make timeout configurable
-    const resolved = await withSignal({ timeout: 10e3 }, (signal) =>
-      this.oauthResolver.resolve(sub, { signal }),
-    )
+    using signal = timeoutSignal(10e3)
+
+    const resolved = await this.oauthResolver.resolve(sub, { signal })
 
     if (resolved.metadata.issuer !== this.serverMetadata.issuer) {
       // Best case scenario; the user switched PDS. Worst case scenario; a bad
