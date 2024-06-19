@@ -38,7 +38,10 @@ export class RepoTransactor extends RepoReader {
     this.storage = new SqlRepoTransactor(db, this.did, this.now)
   }
 
-  async createRepo(writes: PreparedCreate[]): Promise<CommitData> {
+  async createRepo(
+    writes: PreparedCreate[],
+    revOverride?: string,
+  ): Promise<CommitData> {
     this.db.assertTransaction()
     const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
@@ -46,6 +49,7 @@ export class RepoTransactor extends RepoReader {
       this.did,
       this.signingKey,
       writeOps,
+      revOverride,
     )
     await Promise.all([
       this.storage.applyCommit(commit, true),

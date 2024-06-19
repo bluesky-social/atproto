@@ -9,6 +9,7 @@ import {
   prepareDelete,
   prepareUpdate,
 } from '../repo'
+import { Secp256k1Keypair } from '@atproto/crypto'
 
 export class Recoverer {
   cursor: number
@@ -85,17 +86,31 @@ export class Recoverer {
     }
   }
 
-  async processCommit(evt: CommitEvt) {
+  processCommit(evt: CommitEvt) {
     const did = evt.repo
     this.addToUserQueue(did, async () => {
       const writes = await parseEvtToWrites(evt)
-      await this.ctx.actorStore.transact(did, async (actorTxn) =>
-        actorTxn.repo.processWrites(writes, undefined, evt.rev),
-      )
+      if (evt.since === null) {
+        const actorExists = await this.ctx.actorStore.exists(did)
+        if (!actorExists) {
+          const keypair = await Secp256k1Keypair.create({ exportable: true })
+          await this.ctx.actorStore.create(did, keypair)
+          await this.ctx.actorStore.transact(did, (store) =>
+            store.repo.createRepo([], evt.rev),
+          )
+        }
+      }
+      await this.ctx.actorStore.transact(did, async (actorTxn) => {
+        const root = await actorTxn.repo.storage.getRootDetailed()
+        if (root.rev >= evt.rev) {
+          return
+        }
+        await actorTxn.repo.processWrites(writes, undefined, evt.rev)
+      })
     })
   }
 
-  async processTombstone(evt: TombstoneEvt) {
+  processTombstone(evt: TombstoneEvt) {
     const did = evt.did
     this.addToUserQueue(did, async () => {
       await this.ctx.actorStore.destroy(did)
