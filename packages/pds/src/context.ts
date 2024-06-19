@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
+import * as ui8 from 'uint8arrays'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -59,6 +60,7 @@ export type AppContextOptions = {
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  entrywayAdminAgent?: AtpAgent
   safeFetch: Fetch
   authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
@@ -85,6 +87,7 @@ export class AppContext {
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public entrywayAdminAgent: AtpAgent | undefined
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public authProvider?: PdsOAuthProvider
@@ -110,6 +113,7 @@ export class AppContext {
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.entrywayAdminAgent = opts.entrywayAdminAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.authProvider = opts.authProvider
@@ -219,6 +223,14 @@ export class AppContext {
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
+    let entrywayAdminAgent: AtpAgent | undefined
+    if (cfg.entryway && secrets.entrywayAdminToken) {
+      entrywayAdminAgent = new AtpAgent({ service: cfg.entryway.url })
+      entrywayAdminAgent.api.setHeader(
+        'authorization',
+        basicAuthHeader('admin', secrets.entrywayAdminToken),
+      )
+    }
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
     const jwtPublicKey = cfg.entryway
@@ -333,6 +345,7 @@ export class AppContext {
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      entrywayAdminAgent,
       safeFetch,
       authVerifier,
       authProvider,
@@ -355,6 +368,14 @@ export class AppContext {
       keypair,
     })
   }
+}
+
+const basicAuthHeader = (username: string, password: string) => {
+  const encoded = ui8.toString(
+    ui8.fromString(`${username}:${password}`, 'utf8'),
+    'base64pad',
+  )
+  return `Basic ${encoded}`
 }
 
 export default AppContext

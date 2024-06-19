@@ -4,6 +4,7 @@ import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import { AppContext, Recoverer } from '../dist'
 import AtpAgent from '@atproto/api'
 import { rmIfExists, renameIfExists } from '@atproto/common'
+import { verifyRepoCar } from '@atproto/repo'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView
@@ -116,6 +117,7 @@ describe('recovery', () => {
     const startCarBefore = await getCar(alice, startRev)
     const middleCarBefore = await getCar(alice, middleRev)
     const endCarBefore = await getCar(alice, endRev)
+    const elliStatsBefore = await getStats(elli)
     const recover = new Recoverer(network.pds.ctx, {
       cursor: 0,
       concurrency: 10,
@@ -126,6 +128,8 @@ describe('recovery', () => {
     const startCarAfter = await getCar(alice, startRev)
     const middleCarAfter = await getCar(alice, middleRev)
     const endCarAfter = await getCar(alice, endRev)
+    const elliStatsAfter = await getStats(elli)
+    const elliCar = await getCar(elli)
     expect(statsAfter.recordCount).toEqual(statsBefore.recordCount)
     expect(statsAfter.rev).toEqual(statsBefore.rev)
     expect(statsAfter.commit.toString()).toEqual(statsBefore.commit.toString())
@@ -134,5 +138,12 @@ describe('recovery', () => {
     expect(ui8.equals(endCarAfter, endCarBefore)).toBe(true)
     const attempt = getCar(bob)
     await expect(attempt).rejects.toThrow(/Could not find repo for DID/)
+    const bobExists = await ctx.actorStore.exists(bob)
+    expect(bobExists).toBe(false)
+    expect(elliStatsAfter.recordCount).toEqual(elliStatsBefore.recordCount)
+    expect(elliStatsAfter.rev).toEqual(elliStatsBefore.rev)
+    const elliKey = await ctx.actorStore.keypair(elli)
+    const verified = await verifyRepoCar(elliCar, elli, elliKey.did())
+    expect(verified.creates.length).toEqual(elliStatsBefore.recordCount)
   })
 })

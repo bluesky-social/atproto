@@ -91,14 +91,8 @@ export class Recoverer {
     this.addToUserQueue(did, async () => {
       const writes = await parseEvtToWrites(evt)
       if (evt.since === null) {
-        const actorExists = await this.ctx.actorStore.exists(did)
-        if (!actorExists) {
-          const keypair = await Secp256k1Keypair.create({ exportable: true })
-          await this.ctx.actorStore.create(did, keypair)
-          await this.ctx.actorStore.transact(did, (store) =>
-            store.repo.createRepo([], evt.rev),
-          )
-        }
+        // bails if actor store already exists
+        await this.processRepoCreation(did, evt.rev)
       }
       await this.ctx.actorStore.transact(did, async (actorTxn) => {
         const root = await actorTxn.repo.storage.getRootDetailed()
@@ -108,6 +102,32 @@ export class Recoverer {
         await actorTxn.repo.processWrites(writes, undefined, evt.rev)
       })
     })
+  }
+
+  async processRepoCreation(did: string, rev: string) {
+    const actorExists = await this.ctx.actorStore.exists(did)
+    if (actorExists) {
+      return
+    }
+    const keypair = await Secp256k1Keypair.create({ exportable: true })
+    await this.ctx.actorStore.create(did, keypair)
+    await this.ctx.actorStore.transact(did, (store) =>
+      store.repo.createRepo([], rev),
+    )
+    if (this.ctx.entrywayAdminAgent) {
+      await this.ctx.entrywayAdminAgent.api.com.atproto.admin.updateAccountSigningKey(
+        {
+          did,
+          signingKey: keypair.did(),
+        },
+      )
+    } else {
+      await this.ctx.plcClient.updateAtprotoKey(
+        did,
+        this.ctx.plcRotationKey,
+        keypair.did(),
+      )
+    }
   }
 
   processTombstone(evt: TombstoneEvt) {
