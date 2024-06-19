@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import * as ui8 from 'uint8arrays'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
-import { AppContext, Recoverer } from '../dist'
+import { AppContext, scripts } from '../dist'
 import AtpAgent from '@atproto/api'
 import { rmIfExists, renameIfExists } from '@atproto/common'
 import { verifyRepoCar } from '@atproto/repo'
@@ -132,11 +132,7 @@ describe('recovery', () => {
     await restore([alice, bob, elli])
 
     // run recovery operation
-    const recover = new Recoverer(network.pds.ctx, {
-      cursor: 0,
-      concurrency: 10,
-    })
-    await recover.run()
+    await scripts['sequencer-recovery'](network.pds.ctx, ['0', '10'])
 
     // ensure alice's CAR is exactly the same as before the loss, including intermediate states based on tracked revs
     const startCarAfter = await getCar(alice, startRev)

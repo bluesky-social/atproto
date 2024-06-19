@@ -1,13 +1,13 @@
 import { cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
 import { filterDefined } from '@atproto/common'
-import AppContext from '../context'
-import { CommitEvt, TombstoneEvt, SeqEvt } from '../sequencer'
+import AppContext from '../../context'
+import { CommitEvt, TombstoneEvt, SeqEvt } from '../../sequencer'
 import {
   PreparedWrite,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
-} from '../repo'
+} from '../../repo'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { UserQueues } from './user-queues'
 
