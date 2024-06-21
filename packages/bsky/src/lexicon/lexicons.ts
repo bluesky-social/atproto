@@ -7705,6 +7705,46 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get views for a list of starter packs.',
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetSuggestedFollowsByActor: {
     lexicon: 1,
     id: 'app.bsky.graph.getSuggestedFollowsByActor',
@@ -8363,7 +8403,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
             knownValues: [
               'like',
               'repost',
@@ -8371,6 +8411,7 @@ export const schemaDict = {
               'mention',
               'reply',
               'quote',
+              'starterpack-joined',
             ],
           },
           reasonSubject: {
@@ -9949,6 +9990,7 @@ export const ids = {
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
   AppBskyGraphGetStarterPack: 'app.bsky.graph.getStarterPack',
+  AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',

@@ -119,6 +119,7 @@ import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -1595,6 +1596,17 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getStarterPack' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

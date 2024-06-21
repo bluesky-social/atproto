@@ -44,7 +44,7 @@ export interface Notification {
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileView
-  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
+  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'. */
   reason:
     | 'like'
     | 'repost'
@@ -52,6 +52,7 @@ export interface Notification {
     | 'mention'
     | 'reply'
     | 'quote'
+    | 'starterpack-joined'
     | (string & {})
   reasonSubject?: string
   record: {}

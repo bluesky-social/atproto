@@ -137,6 +137,7 @@ import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -327,6 +328,7 @@ export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -2208,6 +2210,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.getStarterPack', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetStarterPack.toKnownErr(e)
+      })
+  }
+
+  getStarterPacks(
+    params?: AppBskyGraphGetStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacks.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getStarterPacks', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetStarterPacks.toKnownErr(e)
       })
   }
 
