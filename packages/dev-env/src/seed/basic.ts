@@ -155,6 +155,8 @@ export default async (
     })
   }
 
+  await sc.network.processAll()
+
   return sc
 }
 
