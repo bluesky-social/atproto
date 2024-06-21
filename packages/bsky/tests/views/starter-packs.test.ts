@@ -1,6 +1,8 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
+import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
+import assert from 'assert'
 
 describe('starter packs', () => {
   let network: TestNetwork
@@ -97,5 +99,23 @@ describe('starter packs', () => {
       uris: [sp2.uriStr, sp1.uriStr],
     })
     expect(forSnapshot(starterPacks)).toMatchSnapshot()
+  })
+
+  it('generates notifications', async () => {
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
+      { limit: 3 }, // three most recent
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    expect(notifications).toHaveLength(3)
+    notifications.forEach((notif) => {
+      expect(notif.reason).toBe('starterpack-joined')
+      expect(notif.reasonSubject).toBe(sp1.uriStr)
+      expect(notif.uri).toMatch(/\/app\.bsky\.actor\.profile\/self$/)
+      assert(isProfile(notif.record), 'record is not profile')
+      expect(notif.record.joinedViaStarterPack?.uri).toBe(sp1.uriStr)
+    })
+    expect(forSnapshot(notifications)).toMatchSnapshot()
   })
 })
