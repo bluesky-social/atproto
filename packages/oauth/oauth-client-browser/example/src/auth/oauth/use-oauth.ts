@@ -7,6 +7,7 @@ import {
   BrowserOAuthClientOptions,
   LoginContinuedInParentWindowError,
   OAuthAgent,
+  OAuthClientIdLoopback,
   OAuthClientMetadataInput,
 } from '@atproto/oauth-client-browser'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -76,19 +77,23 @@ function useOAuthClient(
     plcDirectoryUrl,
   } = options
 
-  const optionsClientMetadata: null | 'auto' | OAuthClientMetadataInput =
+  const optionsClientMetadata:
+    | null
+    | 'forced'
+    | OAuthClientMetadataInput
+    | OAuthClientIdLoopback =
     !optionClient && (!clientId || clientMetadata != null)
-      ? clientMetadata || 'auto'
+      ? clientMetadata || 'forced'
       : null
 
   const fetch = useCallbackRef(options.fetch || globalThis.fetch)
 
   const oauthClientOptions = useMemo<null | BrowserOAuthClientOptions>(
     () =>
-      optionsClientMetadata
+      optionsClientMetadata && handleResolver
         ? {
             clientMetadata:
-              optionsClientMetadata === 'auto'
+              optionsClientMetadata === 'forced'
                 ? undefined
                 : optionsClientMetadata,
             handleResolver,
@@ -111,7 +116,7 @@ function useOAuthClient(
 
   const optionsLoad = useMemo<null | BrowserOAuthClientLoadOptions>(
     () =>
-      optionsClientId
+      optionsClientId && handleResolver
         ? {
             clientId: optionsClientId,
             handleResolver,

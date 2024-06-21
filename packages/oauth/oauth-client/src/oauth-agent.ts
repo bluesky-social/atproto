@@ -2,6 +2,8 @@ import { Fetch, bindFetch } from '@atproto-labs/fetch'
 import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
+import { TokenInvalidError } from './errors/token-invalid-error.js'
+import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import { OAuthServerAgent, TokenSet } from './oauth-server-agent.js'
 import { SessionGetter } from './session-getter.js'
@@ -76,7 +78,10 @@ export class OAuthAgent {
       const { tokenSet } = await this.sessionGetter.getSession(this.sub, false)
       await this.server.revoke(tokenSet.access_token)
     } finally {
-      await this.sessionGetter.delStored(this.sub)
+      await this.sessionGetter.delStored(
+        this.sub,
+        new TokenRevokedError(this.sub),
+      )
     }
   }
 
@@ -96,13 +101,13 @@ export class OAuthAgent {
     })
 
     // If the token is not expired, we don't need to refresh it
-    if (!isTokenExpiredResponse(initialResponse)) {
+    if (!isInvalidTokenResponse(initialResponse)) {
       return initialResponse
     }
 
     let tokenSetFresh: TokenSet
     try {
-      // "true" here will cause the token to be refreshed
+      // Force a refresh
       tokenSetFresh = await this.getTokenSet(true)
     } catch (err) {
       return initialResponse
@@ -123,12 +128,18 @@ export class OAuthAgent {
 
     const finalResponse = await this.dpopFetch(finalUrl, { ...init, headers })
 
-    // There is no need to keep the session in the store if the token is expired
-    // and there is no way to refresh it.
-    if (isTokenExpiredResponse(finalResponse)) {
+    // The token was successfully refreshed, but is still not accepted by the
+    // resource server. This might be due to the resource server not accepting
+    // credentials from the authorization server (e.g. because some migration
+    // occurred). Any ways, there is no point in keeping the session.
+    if (isInvalidTokenResponse(finalResponse)) {
       // TODO: Is there a "softer" way to handle this, e.g. by marking the
-      // session as "expired" and allow the user to trigger a new login?
-      await this.sessionGetter.delStored(this.sub)
+      // session as "expired" in the session store, allowing the user to trigger
+      // a new login (using login_hint/id_token_hint)?
+      await this.sessionGetter.delStored(
+        this.sub,
+        new TokenInvalidError(this.sub),
+      )
     }
 
     return finalResponse
@@ -139,7 +150,7 @@ export class OAuthAgent {
  * @see {@link https://datatracker.ietf.org/doc/html/rfc6750#section-3}
  * @see {@link https://datatracker.ietf.org/doc/html/rfc9449#name-resource-server-provided-no}
  */
-function isTokenExpiredResponse(response: Response) {
+function isInvalidTokenResponse(response: Response) {
   if (response.status !== 401) return false
   const wwwAuth = response.headers.get('WWW-Authenticate')
   return (

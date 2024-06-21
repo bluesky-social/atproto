@@ -14,12 +14,15 @@ import { IdentityResolver } from '@atproto-labs/identity-resolver'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Key, Keyset } from '@atproto/jwk'
 import {
+  OAuthClientIdDiscoverable,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
+  oauthClientMetadataSchema,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
 
 import { FALLBACK_ALG } from './constants.js'
+import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { OAuthAgent } from './oauth-agent.js'
 import {
   AuthorizationServerMetadataCache,
@@ -92,7 +95,42 @@ export type OAuthClientEventListener<
   T extends keyof SessionEventMap = keyof SessionEventMap,
 > = (event: CustomEvent<SessionEventMap[T]>) => void
 
+export type OAuthClientFetchMetadataOptions = {
+  clientId: OAuthClientIdDiscoverable
+  fetch?: Fetch
+  signal?: AbortSignal
+}
+
 export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
+  static async fetchMetadata({
+    clientId,
+    fetch = globalThis.fetch,
+    signal,
+  }: OAuthClientFetchMetadataOptions) {
+    signal?.throwIfAborted()
+
+    const request = new Request(clientId, {
+      redirect: 'error',
+      signal: signal,
+    })
+    const response = await fetch(request)
+
+    if (response.status !== 200) {
+      throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
+    }
+
+    const mime = response.headers.get('content-type')?.split(';')[0].trim()
+    if (mime !== 'application/json') {
+      throw new TypeError(`Invalid client metadata content type: ${mime}`)
+    }
+
+    const json: unknown = await response.json()
+
+    signal?.throwIfAborted()
+
+    return oauthClientMetadataSchema.parse(json)
+  }
+
   // Config
   readonly clientMetadata: ClientMetadata
   readonly responseMode: OAuthResponseMode
@@ -204,6 +242,10 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   // Exposed as public API for convenience
   get handleResolver() {
     return this.identityResolver.handleResolver
+  }
+
+  get jwks() {
+    return this.keyset?.publicJwks ?? ({ keys: [] as const } as const)
   }
 
   async authorize(input: string, options?: AuthorizeOptions): Promise<URL> {
@@ -433,14 +475,20 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async revoke(sub: string) {
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
-      allowStale: true,
-    })
+    const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
+      sub,
+      false,
+    )
 
-    const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
-
-    await server.revoke(tokenSet.access_token)
-    await this.sessionGetter.delStored(sub)
+    // NOT using `;(await this.restore(sub, false)).signOut()` because we want
+    // the tokens to be deleted even if it was not possible to fetch the issuer
+    // data.
+    try {
+      const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+      await server.revoke(tokenSet.access_token)
+    } finally {
+      await this.sessionGetter.delStored(sub, new TokenRevokedError(sub))
+    }
   }
 
   createAgent(server: OAuthServerAgent, sub: string): OAuthAgent {

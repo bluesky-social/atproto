@@ -27,35 +27,153 @@ const agent = new BskyAgent({ service: 'https://example.com' })
 
 ### Session management
 
-Log into a server or create accounts using these APIs. You'll need an active session for most methods.
+You'll need an authenticated session for most API calls. There are three ways to
+manage sessions:
+
+1. [App password based session management](#app-password-based-session-management)
+2. [OAuth based session management](#oauth-based-session-management)
+3. [Custom session management](#custom-session-management)
+
+#### App password based session management
 
 ```typescript
-import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
+import {
+  AtpSessionManager,
+  AtpSessionEvent,
+  AtpSessionData,
+} from '@atproto/api'
 
-// configure connection to the server, without account authentication
-const agent = new BskyAgent({
+// configure connection to the server (not authenticated yet)
+const sessionManager = new AtpSessionManager({
   service: 'https://example.com',
   persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
     // store the session-data for reuse
   },
 })
 
-// create a new account on the server
-await agent.createAccount({
+// Change the sessionManager state to an authenticated state either by:
+
+// 1) creating a new account on the server.
+await sessionManager.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
   handle: 'alice.example.com',
   inviteCode: 'some-code-12345-abcde',
 })
 
-// if an existing session (accessed with 'agent.session') was securely stored previously, then reuse that
-await agent.resumeSession(savedSessionData)
+// 2) if an existing session was securely stored previously, then reuse that to resume the session.
+await sessionManager.resumeSession(savedSessionData)
 
-// if no old session was available, create a new one by logging in with password (App Password)
-await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
+// 3) if no old session was available, create a new one by logging in with password (App Password)
+await sessionManager.login({
+  identifier: 'alice@mail.com',
+  password: 'hunter2',
+})
 ```
 
-### API calls
+#### OAuth based session management
+
+Depending on the environment used by your application, different OAuth clients
+are available:
+
+- [@atproto/oauth-client-browser](https://www.npmjs.com/package/@atproto/oauth-client-browser):
+  for the browser.
+- [@atproto/oauth-client-node](https://www.npmjs.com/package/@atproto/oauth-client-node): for
+  Node.js.
+- [@atproto/oauth-client](https://www.npmjs.com/package/@atproto/oauth-client):
+  Lower lever; compatible with most JS engines.
+
+```typescript
+import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
+
+const oauthClient = await BrowserOAuthClient.load({
+  clientId: 'https://my.app.com/atproto-oauth-client.json',
+})
+
+const oauthAgent = await oauthClient.init()
+
+if (!oauthAgent) {
+  // See '@atproto/oauth-client-browser' for how to authenticate
+  throw new Error('You need to authenticate first')
+}
+```
+
+Every `@atproto/oauth-client-*` implementation has a different way to obtain the
+`oauthAgent`. However, once obtained, the `OAuthAgent` can be used as a session
+manager to build an `AtpAgent` or `BskyAgent`.
+
+```typescript
+import { AtpAgent, BskyAgent } from '@atproto/api'
+
+const atpAgent = new AtpAgent(oauthAgent)
+const bskyAgent = new BskyAgent(oauthAgent)
+```
+
+#### Custom session management
+
+When you want to manage the authentication headers yourself (or if you don't
+need to authenticate at all), you can use the `CustomSessionManager`:
+
+```typescript
+import { CustomSessionManager } from '@atproto/api'
+
+const sessionManager = new CustomSessionManager({
+  service: 'https://example.com',
+  headers: {
+    Authorization: 'Bearer <foo>',
+  },
+})
+
+sessionManager.headers.set('X-My-Header', 'my-value')
+```
+
+> [!NOTE]
+>
+> Headers set on the `CustomSessionManager` will be included in all requests
+> made by the agent. Any value set by the agent while building the request will
+> **not** be overridden.
+
+> [!TIP]
+>
+> You typically won't ever need to instantiate an `CustomSessionManager`
+> directly. Instead, when instantiating an `BskyAgent`, you can pass in the
+> `CustomSessionManagerOptions` object directly.
+>
+> ```typescript
+> import { BskyAgent } from '@atproto/api'
+>
+> const agent = new BskyAgent({
+>   service: 'https://example.com',
+>   headers: {
+>     Authorization: 'Bearer <foo>',
+>   },
+> })
+> ```
+
+### Agent
+
+Once the session manager is initialized, it can be used to instantiate an agent
+to make API calls.
+
+```typescript
+import { BskyAgent } from '@atproto/api'
+
+const sessionManager = /* see previous examples */
+
+const agent = new BskyAgent(sessionManager)
+```
+
+If you don't need to perform authenticated actions, you can create an agent
+without a session manager (one will be created under the hood). For this, only a
+service URL is required.
+
+```typescript
+import { BskyAgent } from '@atproto/api'
+
+const agent = new BskyAgent({ service: 'https://example.com' })
+```
+
+#### Agent methods
 
 The agent includes methods for many common operations, including:
 
@@ -131,6 +249,9 @@ if (AppBskyFeedPost.isRecord(post)) {
   }
 }
 ```
+
+Note that the agent class will validate records for you, so you don't need to do
+this before calling the API.
 
 ### Rich text
 
@@ -291,28 +412,27 @@ const agent = new AtpAgent({ service: 'https://example.com' })
 
 ### Non-browser configuration
 
-In non-browser environments you'll need to specify a fetch polyfill. [See the example react-native polyfill here.](./docs/rn-fetch-handler.ts)
+If you environment doesn't have a built-in `fetch` implementation, you'll need
+to provide one. This will typically be done through a polyfill.
+
+### Bring your own fetch
+
+If you want to provide you own `fetch` implementation, you can do so by
+instantiating the sessionManager with a custom fetch implementation:
 
 ```typescript
 import { BskyAgent } from '@atproto/api'
 
-const agent = new BskyAgent({ service: 'https://example.com' })
+const myFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  console.log('requesting', input)
+  const response = await globalThis.fetch(input, init)
+  console.log('got response', response)
+  return response
+}
 
-// provide a custom fetch implementation (shouldn't be needed in node or the browser)
-import {
-  AtpAgentFetchHeaders,
-  AtpAgentFetchHandlerResponse,
-} from '@atproto/api'
-BskyAgent.configure({
-  async fetch(
-    httpUri: string,
-    httpMethod: string,
-    httpHeaders: AtpAgentFetchHeaders,
-    httpReqBody: any,
-  ): Promise<AtpAgentFetchHandlerResponse> {
-    // insert definition here...
-    return { status: 200 /*...*/ }
-  },
+const agent = new CustomSessionManager({
+  service: 'https://example.com',
+  fetch: myFetch,
 })
 ```
 

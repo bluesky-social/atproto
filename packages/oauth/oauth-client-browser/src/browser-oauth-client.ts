@@ -2,6 +2,7 @@ import { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
   AuthorizeOptions,
   ClientMetadata,
+  Fetch,
   OAuthAgent,
   OAuthCallbackError,
   OAuthClient,
@@ -12,9 +13,8 @@ import {
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
   OAuthClientId,
+  OAuthClientIdLoopback,
   OAuthClientMetadataInput,
-  oauthClientMetadataSchema,
-  OAuthResponseMode,
 } from '@atproto/oauth-types'
 
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
@@ -23,13 +23,12 @@ import { LoginContinuedInParentWindowError } from './errors.js'
 import { buildLoopbackClientId, TypedBroadcastChannel } from './util.js'
 
 export type BrowserOAuthClientOptions = {
-  clientMetadata?: OAuthClientMetadataInput
-  handleResolver?: HandleResolver | string | URL
-  responseMode?: OAuthResponseMode
+  clientMetadata?: OAuthClientMetadataInput | OAuthClientIdLoopback
+  handleResolver: HandleResolver | string | URL
+  responseMode?: 'query' | 'fragment'
   plcDirectoryUrl?: string | URL
 
-  crypto?: typeof globalThis.crypto
-  fetch?: typeof globalThis.fetch
+  fetch?: Fetch
 }
 
 const NAMESPACE = `@@atproto/oauth-client-browser`
@@ -71,37 +70,14 @@ export type BrowserOAuthClientLoadOptions = Omit<
 export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
     if (isOAuthClientIdLoopback(clientId)) {
-      return new BrowserOAuthClient({
-        clientMetadata: atprotoLoopbackClientMetadata(clientId),
-        ...options,
-      })
+      const clientMetadata = atprotoLoopbackClientMetadata(clientId)
+      return new BrowserOAuthClient({ clientMetadata, ...options })
     } else if (isOAuthClientIdDiscoverable(clientId)) {
-      const fetch = options?.fetch ?? globalThis.fetch
-      const request = new Request(clientId, {
-        redirect: 'error',
-        signal: options.signal,
-      })
-      const response = await fetch(request)
-
-      if (response.status !== 200) {
-        throw new TypeError(
-          `Failed to fetch client metadata: ${response.status}`,
-        )
-      }
-
-      const mime = response.headers.get('content-type')?.split(';')[0].trim()
-      if (mime !== 'application/json') {
-        throw new TypeError(`Invalid content type: ${mime}`)
-      }
-
-      const json: unknown = await response.json()
-
-      options.signal?.throwIfAborted()
-
-      return new BrowserOAuthClient({
-        clientMetadata: oauthClientMetadataSchema.parse(json),
+      const clientMetadata = await OAuthClient.fetchMetadata({
+        clientId,
         ...options,
       })
+      return new BrowserOAuthClient({ clientMetadata, ...options })
     } else {
       throw new TypeError(`Invalid client id: ${clientId}`)
     }
@@ -110,25 +86,38 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   readonly [Symbol.dispose]: () => void
 
   constructor({
-    clientMetadata = atprotoLoopbackClientMetadata(
-      buildLoopbackClientId(window.location),
-    ),
-    handleResolver = 'https://bsky.social',
-    // "fragment" is safer as it is not sent to the server
+    clientMetadata,
+    handleResolver,
+    // "fragment" is a safer default as the query params will not be sent to the server
     responseMode = 'fragment',
-    plcDirectoryUrl = 'https://plc.directory',
-    crypto = globalThis.crypto,
-    fetch = globalThis.fetch,
-  }: BrowserOAuthClientOptions = {}) {
+    plcDirectoryUrl = undefined,
+    fetch = undefined,
+  }: BrowserOAuthClientOptions) {
+    if (!globalThis.crypto?.subtle) {
+      throw new Error('WebCrypto API is required')
+    }
+
+    if (!['query', 'fragment'].includes(responseMode)) {
+      // Make sure "form_post" is not used as it is not supported in the browser
+      throw new TypeError(`Invalid response mode: ${responseMode}`)
+    }
+
     const database = new BrowserOAuthDatabase()
 
     super({
-      clientMetadata,
+      clientMetadata:
+        typeof clientMetadata === 'object'
+          ? clientMetadata
+          : atprotoLoopbackClientMetadata(
+              clientMetadata ?? buildLoopbackClientId(window.location),
+            ),
       responseMode,
       fetch,
-      runtimeImplementation: new BrowserRuntimeImplementation(crypto),
       plcDirectoryUrl,
       handleResolver,
+
+      runtimeImplementation: new BrowserRuntimeImplementation(),
+
       sessionStore: database.getSessionStore(),
       stateStore: database.getStateStore(),
 

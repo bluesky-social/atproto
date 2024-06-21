@@ -8,7 +8,7 @@ import {
 import { pipe } from '@atproto-labs/pipe'
 import { Did, checkDidPlc, didDocumentValidator } from '@atproto/did'
 
-import { DidMethod, ResolveOptions } from '../did-method.js'
+import { DidMethod, ResolveDidOptions } from '../did-method.js'
 
 const fetchSuccessHandler = pipe(
   fetchOkProcessor(),
@@ -40,7 +40,7 @@ export class DidPlcMethod implements DidMethod<'plc'> {
     this.fetch = bindFetch(options?.fetch)
   }
 
-  async resolve(did: Did<'plc'>, options?: ResolveOptions) {
+  async resolve(did: Did<'plc'>, options?: ResolveDidOptions) {
     // Although the did should start with `did:plc:` (thanks to typings), we
     // should still check if the msid is valid.
     checkDidPlc(did)

@@ -1,12 +1,14 @@
 import { SessionManager } from './session-manager'
 
-export type StatelessSessionManagerOptions = {
+export type CustomSessionManagerOptions = {
   service: string | URL
-  headers?: { [_ in string]?: null | string }
+  headers?:
+    | { [_ in string]?: null | string }
+    | Iterable<readonly [name: string, value: null | string]>
   fetch?: typeof globalThis.fetch
 }
 
-export class StatelessSessionManager extends SessionManager {
+export class CustomSessionManager extends SessionManager {
   private fetch: typeof globalThis.fetch
 
   readonly serviceUrl: URL
@@ -16,7 +18,7 @@ export class StatelessSessionManager extends SessionManager {
     service,
     headers,
     fetch = globalThis.fetch,
-  }: StatelessSessionManagerOptions) {
+  }: CustomSessionManagerOptions) {
     super()
 
     this.fetch = fetch
@@ -24,8 +26,11 @@ export class StatelessSessionManager extends SessionManager {
     this.serviceUrl = new URL(service)
     this.headers = new Map(
       headers
-        ? Object.entries(headers).filter(
-            <T extends [string, unknown]>(
+        ? (Symbol.iterator in headers
+            ? Array.from(headers)
+            : Object.entries(headers)
+          ).filter(
+            <T extends readonly [string, unknown]>(
               e: T,
             ): e is T & [T[0], NonNullable<T[1]>] => e[1] != null,
           )
@@ -45,8 +50,8 @@ export class StatelessSessionManager extends SessionManager {
     const fullUrl = new URL(url, await this.getServiceUrl())
     const headers = new Headers(reqInit.headers)
 
-    for (const [key, value] of this.headers) {
-      if (value != null) headers.set(key, value)
+    for (const [name, value] of this.headers) {
+      if (!headers.has(name)) headers.set(name, value)
     }
 
     return (0, this.fetch)(fullUrl.toString(), { ...reqInit, headers })

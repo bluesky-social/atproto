@@ -60,65 +60,65 @@ export class BskyAgent extends AtpAgent {
     return this.api.app
   }
 
-  getTimeline: typeof this.api.app.bsky.feed.getTimeline = (params, opts) =>
-    this.api.app.bsky.feed.getTimeline(params, opts)
+  getTimeline: typeof this.app.bsky.feed.getTimeline = (params, opts) =>
+    this.app.bsky.feed.getTimeline(params, opts)
 
-  getAuthorFeed: typeof this.api.app.bsky.feed.getAuthorFeed = (params, opts) =>
-    this.api.app.bsky.feed.getAuthorFeed(params, opts)
+  getAuthorFeed: typeof this.app.bsky.feed.getAuthorFeed = (params, opts) =>
+    this.app.bsky.feed.getAuthorFeed(params, opts)
 
-  getActorLikes: typeof this.api.app.bsky.feed.getActorLikes = (params, opts) =>
-    this.api.app.bsky.feed.getActorLikes(params, opts)
+  getActorLikes: typeof this.app.bsky.feed.getActorLikes = (params, opts) =>
+    this.app.bsky.feed.getActorLikes(params, opts)
 
-  getPostThread: typeof this.api.app.bsky.feed.getPostThread = (params, opts) =>
-    this.api.app.bsky.feed.getPostThread(params, opts)
+  getPostThread: typeof this.app.bsky.feed.getPostThread = (params, opts) =>
+    this.app.bsky.feed.getPostThread(params, opts)
 
-  getPost: typeof this.api.app.bsky.feed.post.get = (params) =>
-    this.api.app.bsky.feed.post.get(params)
+  getPost: typeof this.app.bsky.feed.post.get = (params) =>
+    this.app.bsky.feed.post.get(params)
 
-  getPosts: typeof this.api.app.bsky.feed.getPosts = (params, opts) =>
-    this.api.app.bsky.feed.getPosts(params, opts)
+  getPosts: typeof this.app.bsky.feed.getPosts = (params, opts) =>
+    this.app.bsky.feed.getPosts(params, opts)
 
-  getLikes: typeof this.api.app.bsky.feed.getLikes = (params, opts) =>
-    this.api.app.bsky.feed.getLikes(params, opts)
+  getLikes: typeof this.app.bsky.feed.getLikes = (params, opts) =>
+    this.app.bsky.feed.getLikes(params, opts)
 
-  getRepostedBy: typeof this.api.app.bsky.feed.getRepostedBy = (params, opts) =>
-    this.api.app.bsky.feed.getRepostedBy(params, opts)
+  getRepostedBy: typeof this.app.bsky.feed.getRepostedBy = (params, opts) =>
+    this.app.bsky.feed.getRepostedBy(params, opts)
 
-  getFollows: typeof this.api.app.bsky.graph.getFollows = (params, opts) =>
-    this.api.app.bsky.graph.getFollows(params, opts)
+  getFollows: typeof this.app.bsky.graph.getFollows = (params, opts) =>
+    this.app.bsky.graph.getFollows(params, opts)
 
-  getFollowers: typeof this.api.app.bsky.graph.getFollowers = (params, opts) =>
-    this.api.app.bsky.graph.getFollowers(params, opts)
+  getFollowers: typeof this.app.bsky.graph.getFollowers = (params, opts) =>
+    this.app.bsky.graph.getFollowers(params, opts)
 
-  getProfile: typeof this.api.app.bsky.actor.getProfile = (params, opts) =>
-    this.api.app.bsky.actor.getProfile(params, opts)
+  getProfile: typeof this.app.bsky.actor.getProfile = (params, opts) =>
+    this.app.bsky.actor.getProfile(params, opts)
 
-  getProfiles: typeof this.api.app.bsky.actor.getProfiles = (params, opts) =>
-    this.api.app.bsky.actor.getProfiles(params, opts)
+  getProfiles: typeof this.app.bsky.actor.getProfiles = (params, opts) =>
+    this.app.bsky.actor.getProfiles(params, opts)
 
-  getSuggestions: typeof this.api.app.bsky.actor.getSuggestions = (
+  getSuggestions: typeof this.app.bsky.actor.getSuggestions = (params, opts) =>
+    this.app.bsky.actor.getSuggestions(params, opts)
+
+  searchActors: typeof this.app.bsky.actor.searchActors = (params, opts) =>
+    this.app.bsky.actor.searchActors(params, opts)
+
+  searchActorsTypeahead: typeof this.app.bsky.actor.searchActorsTypeahead = (
     params,
     opts,
-  ) => this.api.app.bsky.actor.getSuggestions(params, opts)
+  ) => this.app.bsky.actor.searchActorsTypeahead(params, opts)
 
-  searchActors: typeof this.api.app.bsky.actor.searchActors = (params, opts) =>
-    this.api.app.bsky.actor.searchActors(params, opts)
-
-  searchActorsTypeahead: typeof this.api.app.bsky.actor.searchActorsTypeahead =
-    (params, opts) =>
-      this.api.app.bsky.actor.searchActorsTypeahead(params, opts)
-
-  listNotifications: typeof this.api.app.bsky.notification.listNotifications = (
+  listNotifications: typeof this.app.bsky.notification.listNotifications = (
     params,
     opts,
-  ) => this.api.app.bsky.notification.listNotifications(params, opts)
+  ) => this.app.bsky.notification.listNotifications(params, opts)
 
-  countUnreadNotifications: typeof this.api.app.bsky.notification.getUnreadCount =
-    (params, opts) =>
-      this.api.app.bsky.notification.getUnreadCount(params, opts)
+  countUnreadNotifications: typeof this.app.bsky.notification.getUnreadCount = (
+    params,
+    opts,
+  ) => this.app.bsky.notification.getUnreadCount(params, opts)
 
-  getLabelers: typeof this.api.app.bsky.labeler.getServices = (params, opts) =>
-    this.api.app.bsky.labeler.getServices(params, opts)
+  getLabelers: typeof this.app.bsky.labeler.getServices = (params, opts) =>
+    this.app.bsky.labeler.getServices(params, opts)
 
   async getLabelDefinitions(
     prefs: BskyPreferences | ModerationPrefs | string[],
@@ -155,11 +155,9 @@ export class BskyAgent extends AtpAgent {
     record: Partial<AppBskyFeedPost.Record> &
       Omit<AppBskyFeedPost.Record, 'createdAt'>,
   ) {
-    const repo = this.getDid()
-
-    record.createdAt = record.createdAt || new Date().toISOString()
-    return this.api.app.bsky.feed.post.create(
-      { repo },
+    record.createdAt ||= new Date().toISOString()
+    return this.app.bsky.feed.post.create(
+      { repo: this.getDid() },
       record as AppBskyFeedPost.Record,
     )
   }
@@ -168,17 +166,15 @@ export class BskyAgent extends AtpAgent {
     this.assertAuthenticated()
 
     const postUrip = new AtUri(postUri)
-    return await this.api.app.bsky.feed.post.delete({
+    return this.app.bsky.feed.post.delete({
       repo: postUrip.hostname,
       rkey: postUrip.rkey,
     })
   }
 
   async like(uri: string, cid: string) {
-    const repo = this.getDid()
-
-    return await this.api.app.bsky.feed.like.create(
-      { repo },
+    return this.app.bsky.feed.like.create(
+      { repo: this.getDid() },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
@@ -190,17 +186,15 @@ export class BskyAgent extends AtpAgent {
     this.assertAuthenticated()
 
     const likeUrip = new AtUri(likeUri)
-    return await this.api.app.bsky.feed.like.delete({
+    return this.app.bsky.feed.like.delete({
       repo: likeUrip.hostname,
       rkey: likeUrip.rkey,
     })
   }
 
   async repost(uri: string, cid: string) {
-    const repo = this.getDid()
-
-    return await this.api.app.bsky.feed.repost.create(
-      { repo },
+    return this.app.bsky.feed.repost.create(
+      { repo: this.getDid() },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
@@ -212,17 +206,15 @@ export class BskyAgent extends AtpAgent {
     this.assertAuthenticated()
 
     const repostUrip = new AtUri(repostUri)
-    return await this.api.app.bsky.feed.repost.delete({
+    return this.app.bsky.feed.repost.delete({
       repo: repostUrip.hostname,
       rkey: repostUrip.rkey,
     })
   }
 
   async follow(subjectDid: string) {
-    const repo = this.getDid()
-
-    return await this.api.app.bsky.graph.follow.create(
-      { repo },
+    return this.app.bsky.graph.follow.create(
+      { repo: this.getDid() },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
@@ -234,7 +226,7 @@ export class BskyAgent extends AtpAgent {
     this.assertAuthenticated()
 
     const followUrip = new AtUri(followUri)
-    return await this.api.app.bsky.graph.follow.delete({
+    return this.app.bsky.graph.follow.delete({
       repo: followUrip.hostname,
       rkey: followUrip.rkey,
     })
@@ -296,30 +288,24 @@ export class BskyAgent extends AtpAgent {
   }
 
   async mute(actor: string) {
-    return this.api.app.bsky.graph.muteActor({ actor })
+    return this.app.bsky.graph.muteActor({ actor })
   }
 
   async unmute(actor: string) {
-    return this.api.app.bsky.graph.unmuteActor({ actor })
+    return this.app.bsky.graph.unmuteActor({ actor })
   }
 
   async muteModList(uri: string) {
-    return this.api.app.bsky.graph.muteActorList({
-      list: uri,
-    })
+    return this.app.bsky.graph.muteActorList({ list: uri })
   }
 
   async unmuteModList(uri: string) {
-    return this.api.app.bsky.graph.unmuteActorList({
-      list: uri,
-    })
+    return this.app.bsky.graph.unmuteActorList({ list: uri })
   }
 
   async blockModList(uri: string) {
-    const repo = this.getDid()
-
-    return await this.api.app.bsky.graph.listblock.create(
-      { repo },
+    return this.app.bsky.graph.listblock.create(
+      { repo: this.getDid() },
       {
         subject: uri,
         createdAt: new Date().toISOString(),
@@ -330,25 +316,23 @@ export class BskyAgent extends AtpAgent {
   async unblockModList(uri: string) {
     const repo = this.getDid()
 
-    const listInfo = await this.api.app.bsky.graph.getList({
+    const listInfo = await this.app.bsky.graph.getList({
       list: uri,
       limit: 1,
     })
-    if (!listInfo.data.list.viewer?.blocked) {
-      return
+
+    const blocked = listInfo.data.list.viewer?.blocked
+    if (blocked) {
+      const { rkey } = new AtUri(blocked)
+      return this.app.bsky.graph.listblock.delete({
+        repo,
+        rkey,
+      })
     }
-    const { rkey } = new AtUri(listInfo.data.list.viewer.blocked)
-    return await this.api.app.bsky.graph.listblock.delete({
-      repo,
-      rkey,
-    })
   }
 
-  async updateSeenNotifications(seenAt?: string) {
-    seenAt = seenAt || new Date().toISOString()
-    return this.api.app.bsky.notification.updateSeen({
-      seenAt,
-    })
+  async updateSeenNotifications(seenAt = new Date().toISOString()) {
+    return this.app.bsky.notification.updateSeen({ seenAt })
   }
 
   async getPreferences(): Promise<BskyPreferences> {
@@ -475,7 +459,7 @@ export class BskyAgent extends AtpAgent {
      * If no v1 prefs exist, the user is either new, or could be old and has
      * never edited their feeds.
      */
-    if (prefs.savedFeeds === undefined) {
+    if (prefs.savedFeeds == null) {
       const { saved, pinned } = prefs.feeds
 
       if (saved && pinned) {

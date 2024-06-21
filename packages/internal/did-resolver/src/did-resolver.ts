@@ -1,6 +1,6 @@
 import { Did, DidDocument } from '@atproto/did'
 
-import { ResolveOptions } from './did-method.js'
+import { ResolveDidOptions } from './did-method.js'
 
 export type ResolvedDocument<D extends Did, M extends string = string> =
   D extends Did<infer N>
@@ -10,6 +10,6 @@ export type ResolvedDocument<D extends Did, M extends string = string> =
 export interface DidResolver<M extends string = string> {
   resolve<D extends Did>(
     did: D,
-    options?: ResolveOptions,
+    options?: ResolveDidOptions,
   ): Promise<ResolvedDocument<D, M>>
 }

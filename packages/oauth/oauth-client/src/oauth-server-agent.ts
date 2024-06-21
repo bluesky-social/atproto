@@ -1,4 +1,4 @@
-import { Fetch, Json, fetchJsonProcessor, bindFetch } from '@atproto-labs/fetch'
+import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { Key, Keyset, SignedJwt } from '@atproto/jwk'
 import {
@@ -14,10 +14,10 @@ import {
 } from '@atproto/oauth-types'
 
 import { FALLBACK_ALG } from './constants.js'
+import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
 import { OAuthResolver } from './oauth-resolver.js'
 import { OAuthResponseError } from './oauth-response-error.js'
-import { RefreshError } from './refresh-error.js'
 import { Runtime } from './runtime.js'
 import { ClientMetadata } from './types.js'
 import { timeoutSignal } from './util.js'
@@ -89,7 +89,7 @@ export class OAuthServerAgent {
 
   async refresh(tokenSet: TokenSet): Promise<TokenSet> {
     if (!tokenSet.refresh_token) {
-      throw new RefreshError(tokenSet.sub, 'No refresh token available')
+      throw new TokenRefreshError(tokenSet.sub, 'No refresh token available')
     }
 
     const tokenResponse = await this.request('token', {
@@ -99,13 +99,13 @@ export class OAuthServerAgent {
 
     try {
       if (tokenSet.sub !== tokenResponse.sub) {
-        throw new RefreshError(
+        throw new TokenRefreshError(
           tokenSet.sub,
           `Unexpected "sub" in token response (${tokenResponse.sub})`,
         )
       }
       if (tokenSet.iss !== this.serverMetadata.issuer) {
-        throw new RefreshError(tokenSet.sub, 'Issuer mismatch')
+        throw new TokenRefreshError(tokenSet.sub, 'Issuer mismatch')
       }
 
       return this.processTokenResponse(tokenResponse)

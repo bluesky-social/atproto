@@ -4,15 +4,15 @@ import { BSKY_LABELER_DID } from './const'
 import { OAuthSessionManager } from './session/oauth-session-manager'
 import { SessionManager } from './session/session-manager'
 import {
-  StatelessSessionManager,
-  StatelessSessionManagerOptions,
-} from './session/stateless-session-handler'
+  CustomSessionManager,
+  CustomSessionManagerOptions,
+} from './session/custom-session-handler'
 import { AtpAgentGlobalOpts, AtprotoServiceType } from './types'
 
 export type AtpAgentOptions =
   | SessionManager
   | OAuthAgent
-  | StatelessSessionManagerOptions
+  | CustomSessionManagerOptions
 
 export class AtpAgent {
   /**
@@ -45,11 +45,10 @@ export class AtpAgent {
         ? options
         : options instanceof OAuthAgent
           ? new OAuthSessionManager(options)
-          : new StatelessSessionManager(options)
+          : new CustomSessionManager(options)
 
-    this.api = new AtpClient((...args) =>
-      // The function needs to be "bound" to the right context
-      this.sessionManager.fetchHandler(...args),
+    this.api = new AtpClient(
+      this.sessionManager.fetchHandler.bind(this.sessionManager),
     )
     this.api.setHeader('atproto-accept-labelers', (reqLabelers) =>
       // Make sure to read the static property from the subclass in case it was
@@ -134,28 +133,28 @@ export class AtpAgent {
   /**
    * Upload a binary blob to the server
    */
-  uploadBlob: typeof this.api.com.atproto.repo.uploadBlob = (data, opts) =>
-    this.api.com.atproto.repo.uploadBlob(data, opts)
+  uploadBlob: typeof this.com.atproto.repo.uploadBlob = (data, opts) =>
+    this.com.atproto.repo.uploadBlob(data, opts)
 
   /**
    * Resolve a handle to a DID
    */
-  resolveHandle: typeof this.api.com.atproto.identity.resolveHandle = (
+  resolveHandle: typeof this.com.atproto.identity.resolveHandle = (
     params,
     opts,
-  ) => this.api.com.atproto.identity.resolveHandle(params, opts)
+  ) => this.com.atproto.identity.resolveHandle(params, opts)
 
   /**
    * Change the user's handle
    */
-  updateHandle: typeof this.api.com.atproto.identity.updateHandle = (
-    data,
-    opts,
-  ) => this.api.com.atproto.identity.updateHandle(data, opts)
+  updateHandle: typeof this.com.atproto.identity.updateHandle = (data, opts) =>
+    this.com.atproto.identity.updateHandle(data, opts)
 
   /**
    * Create a moderation report
    */
-  createModerationReport: typeof this.api.com.atproto.moderation.createReport =
-    (data, opts) => this.api.com.atproto.moderation.createReport(data, opts)
+  createModerationReport: typeof this.com.atproto.moderation.createReport = (
+    data,
+    opts,
+  ) => this.com.atproto.moderation.createReport(data, opts)
 }
