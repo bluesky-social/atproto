@@ -1024,6 +1024,17 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyGraphFollow) {
       recordInfo = state.follows?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyActorProfile) {
+      const actor = state.actors?.get(authorDid)
+      recordInfo =
+        actor && actor.profile && actor.profileCid && actor.sortedAt
+          ? {
+              record: actor.profile,
+              cid: actor.profileCid,
+              sortedAt: actor.sortedAt,
+              takedownRef: actor.profileTakedownRef,
+            }
+          : null
     }
     if (!recordInfo) return
     const labels = state.labels?.getBySubject(notif.uri) ?? []

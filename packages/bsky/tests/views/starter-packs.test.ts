@@ -6,7 +6,8 @@ describe('starter packs', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-  let sp: RecordRef
+  let sp1: RecordRef
+  let sp2: RecordRef
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -24,13 +25,13 @@ describe('starter packs', () => {
       'did:web:example.com',
       "alice's feedgen",
     )
-    sp = await sc.createStarterPack(
+    sp1 = await sc.createStarterPack(
       sc.dids.alice,
       "alice's starter pack",
       [sc.dids.bob, sc.dids.carol, sc.dids.dan],
       [feedgen.uriStr],
     )
-    await sc.createStarterPack(
+    sp2 = await sc.createStarterPack(
       sc.dids.alice,
       "alice's empty starter pack",
       [],
@@ -42,7 +43,7 @@ describe('starter packs', () => {
         email: `newskie${n}@test.com`,
         password: `newskie${n}-pass`,
       })
-      await sc.createProfile(did, `Newskie ${n}`, 'New here', [], sp)
+      await sc.createProfile(did, `Newskie ${n}`, 'New here', [], sp1)
     }
     await network.processAll()
   })
@@ -71,7 +72,7 @@ describe('starter packs', () => {
       data: { starterPack },
     } = await agent.api.app.bsky.graph.getStarterPack({
       // resolve w/ handle in uri
-      starterPack: sp.uriStr,
+      starterPack: sp1.uriStr,
     })
     expect(forSnapshot(starterPack)).toMatchSnapshot()
   })
@@ -81,11 +82,20 @@ describe('starter packs', () => {
       data: { starterPack },
     } = await agent.api.app.bsky.graph.getStarterPack({
       // resolve w/ handle in uri
-      starterPack: sp.uriStr.replace(
+      starterPack: sp1.uriStr.replace(
         sc.dids.alice,
         sc.accounts[sc.dids.alice].handle,
       ),
     })
-    expect(starterPack.uri).toBe(sp.uriStr)
+    expect(starterPack.uri).toBe(sp1.uriStr)
+  })
+
+  it('gets starter pack details', async () => {
+    const {
+      data: { starterPacks },
+    } = await agent.api.app.bsky.graph.getStarterPacks({
+      uris: [sp2.uriStr, sp1.uriStr],
+    })
+    expect(forSnapshot(starterPacks)).toMatchSnapshot()
   })
 })

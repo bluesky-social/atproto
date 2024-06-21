@@ -211,6 +211,91 @@ Object {
 }
 `;
 
+exports[`starter packs gets starter pack details 2`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 0,
+    "joinedWeekCount": 0,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [],
+      "list": "record(1)",
+      "name": "alice's empty starter pack",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 3,
+    "joinedWeekCount": 3,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [
+        Object {
+          "uri": "record(5)",
+        },
+      ],
+      "list": "record(4)",
+      "name": "alice's starter pack",
+    },
+    "uri": "record(3)",
+  },
+]
+`;
+
 exports[`starter packs gets starter pack used on profile detail 1`] = `
 Object {
   "cid": "cids(0)",
