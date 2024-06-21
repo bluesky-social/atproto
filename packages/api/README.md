@@ -83,27 +83,19 @@ are available:
 - [@atproto/oauth-client](https://www.npmjs.com/package/@atproto/oauth-client):
   Lower lever; compatible with most JS engines.
 
-```typescript
-import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
-
-const oauthClient = await BrowserOAuthClient.load({
-  clientId: 'https://my.app.com/atproto-oauth-client.json',
-})
-
-const oauthAgent = await oauthClient.init()
-
-if (!oauthAgent) {
-  // See '@atproto/oauth-client-browser' for how to authenticate
-  throw new Error('You need to authenticate first')
-}
-```
-
 Every `@atproto/oauth-client-*` implementation has a different way to obtain the
 `oauthAgent`. However, once obtained, the `OAuthAgent` can be used as a session
-manager to build an `AtpAgent` or `BskyAgent`.
+manager to build an `AtpAgent` or `BskyAgent`:
 
 ```typescript
+import { OAuthClient } from '@atproto/oauth-client'
 import { AtpAgent, BskyAgent } from '@atproto/api'
+
+const oauthClient = new OAuthClient({
+  // ...
+})
+
+const oauthAgent = await oauthClient.restore('did:plc:123')
 
 const atpAgent = new AtpAgent(oauthAgent)
 const bskyAgent = new BskyAgent(oauthAgent)

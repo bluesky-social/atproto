@@ -1,25 +1,20 @@
 # ATPROTO OAuth Client for NodeJS
 
 This package implements all the OAuth features required by [ATPROTO] (PKCE,
-etc.) to run in a NodeJS based environment.
+etc.) to run in a NodeJS based environment (Election APP or Backend).
 
 ## Setup
 
-### Client ID
+### Client configuration
 
 The `client_id` is what identifies your application to the OAuth server. It is
 used to fetch the client metadata, and to initiate the OAuth flow. The
-`client_id` must be a URL that points to the [client
-metadata](#client-metadata).
-
-### Client Metadata
+`client_id` must be a URL that points to the client metadata.
 
 Your OAuth client metadata should be hosted at a URL that corresponds to the
 `client_id` of your application. This URL should return a JSON object with the
 client metadata. The client metadata should be configured according to the
 needs of your application, and must respect the [ATPROTO].
-
-### Usage
 
 #### From a backend service
 
@@ -29,7 +24,9 @@ The `client_metadata` object will typically be build by the backend at startup.
 import { NodeOAuthClientOptions } from '@atproto/oauth-client-node'
 
 const client = new NodeOAuthClientOptions({
-  clientMetadata: (clientMetadata = {
+  // This object will be used to build the payload of the /client-metadata.json
+  // endpoint metadata, exposing the client metadata to the OAuth server.
+  clientMetadata: {
     // Must be a URL that will be exposing this metadata
     client_id: 'https://my-app.com/client-metadata.json',
     client_name: 'My App',
@@ -45,7 +42,7 @@ const client = new NodeOAuthClientOptions({
     token_endpoint_auth_method: 'client_secret_jwt',
     dpop_bound_access_tokens: true,
     jwks_uri: 'https://my-app.com/jwks.json',
-  }),
+  },
 
   // Used to authenticate the client to the token endpoint. Will be used to
   // build the jwks object to be exposed on the "jwks_uri" endpoint.
@@ -55,12 +52,14 @@ const client = new NodeOAuthClientOptions({
     JoseKey.fromImportable(process.env.PRIVATE_KEY_3),
   ]),
 
+  // Interface to store authorization state data (during authorization flows)
   stateStore: {
-    set(key: string, internalState: InternalStateData): Promise<void> {},
-    get(key: string): Promise<InternalStateData | undefined> {},
+    set(key: string, internalState: NodeSavedState): Promise<void> {},
+    get(key: string): Promise<NodeSavedState | undefined> {},
     del(key: string): Promise<void> {},
   },
 
+  // Interface to store authenticated session data
   sessionStore: {
     set(sub: string, session: Session): Promise<void> {},
     get(sub: string): Promise<Session | undefined> {},
@@ -73,21 +72,23 @@ const client = new NodeOAuthClientOptions({
 
 const app = express()
 
+// Expose the metadata and jwks
 app.get('client-metadata.json', (req, res) => res.json(client.clientMetadata))
 app.get('jwks.json', (req, res) => res.json(client.jwks))
 
+// Create an endpoint to initiate the OAuth flow
 app.get('/login', async (req, res, next) => {
   try {
     const handle = 'some-handle.bsky.social' // eg. from query string
     const state = '434321'
 
+    // Revoke any pending authentication requests if the connection is closed (optional)
     const ac = new AbortController()
     req.on('close', () => ac.abort())
 
     const url = await client.authorize(handle, {
-      state,
-      // Revoke any pending authentication request if the user closes the connection
       signal: ac.signal,
+      state,
       // Only supported if OAuth server is openid-compliant
       ui_locales: 'fr-CA fr en',
     })
@@ -98,18 +99,26 @@ app.get('/login', async (req, res, next) => {
   }
 })
 
-app.get('/callback', async (req, res, next) => {
+// Create an endpoint to handle the OAuth callback
+app.get('/atproto-oauth-callback', async (req, res, next) => {
   try {
     const params = new URLSearchParams(req.url.split('?')[1])
 
     const { agent, state } = await client.callback(params)
 
-    console.log('User authenticated as:', agent.sub)
+    // Process successful authentication here
+    console.log('Authentication was initiated with state:', state)
+
+    const did = agent.sub
+    console.log('User authenticated as:', did)
 
     const info = await agent.getInfo()
-    console.log('User info:', info)
+    constole.log('User info:', info)
 
-    console.log('Authentication was initiated with state:', state)
+    // Make Authenticated API calls
+    const bskyAgent = new BskyAgent(agent)
+    const profile = await bskyAgent.getProfile({ actor: did })
+    console.log('Bsky profile:', profile.data)
 
     res.json({ ok: true })
   } catch (err) {
@@ -117,6 +126,7 @@ app.get('/callback', async (req, res, next) => {
   }
 })
 
+// Whenever needed, restore a user's session
 async function worker() {
   const sub = 'did:plc:123'
 
@@ -128,6 +138,11 @@ async function worker() {
 
   const info = await agent.getInfo()
   console.log('User info:', info)
+
+  // Make Authenticated API calls
+  const bskyAgent = new BskyAgent(agent)
+  const profile = await bskyAgent.getProfile({ actor: did })
+  console.log('Bsky profile:', profile.data)
 }
 ```
 
@@ -140,14 +155,13 @@ The client metadata will typically contain:
 
 ```json
 {
-  // Must be the same URL as the one used to obtain this JSON object
   "client_id": "https://my-app.com/client-metadata.json",
   "client_name": "My App",
   "client_uri": "https://my-app.com",
   "logo_uri": "https://my-app.com/logo.png",
   "tos_uri": "https://my-app.com/tos",
   "policy_uri": "https://my-app.com/policy",
-  "redirect_uris": ["https://my-app.com/callback"],
+  "redirect_uris": ["https://my-app.com/atproto-oauth-callback"],
   "scope": "profile email offline_access",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
@@ -157,7 +171,8 @@ The client metadata will typically contain:
 }
 ```
 
-You can then load the client metadata asynchronously when you app is starting up.
+Instead of hard-coding the client metadata in your app, you can fetch it when
+the app starts:
 
 ```ts
 import { NodeOAuthClientOptions } from '@atproto/oauth-client-node'
@@ -166,8 +181,8 @@ const client = await NodeOAuthClientOptions.fromClientId({
   clientId: 'https://my-app.com/client-metadata.json',
 
   stateStore: {
-    set(key: string, internalState: InternalStateData): Promise<void> {},
-    get(key: string): Promise<InternalStateData | undefined> {},
+    set(key: string, internalState: NodeSavedState): Promise<void> {},
+    get(key: string): Promise<NodeSavedState | undefined> {},
     del(key: string): Promise<void> {},
   },
 
@@ -182,11 +197,97 @@ const client = await NodeOAuthClientOptions.fromClientId({
 })
 ```
 
-### Configuration
+> [!NOTE]
+>
+> There is no `keyset` in this instance. This is due to the fact that app
+> clients cannot safely store a private key. The `token_endpoint_auth_method` is
+> set to `none` in the client metadata, which means that the client will not be
+> authenticating itself to the token endpoint. This will cause sessions to have
+> a shorter lifetime. You can circumvent this by providing a "BFF" (Backend for
+> Frontend) that will perform an authenticated OAuth flow and use a session id
+> based mechanism to authenticate the client.
 
-- `stateStore`
-- `sessionStore`
-- `requestLock`
+### Common configuration options
+
+The `OAuthClient` and `OAuthAgent` classes will manage and refresh OAuth tokens
+transparently. They are also responsible to properly format the HTTP requests
+payload, using DPoP, and transparently retrying requests when the access token
+expires.
+
+For this to work, the client must be configured with the following options:
+
+#### `sessionStore`
+
+A simple key-value store to save the OAuth session data. This is used to save
+the access token, refresh token, and other session data.
+
+```ts
+const sessionStore: NodeSavedSessionStore = {
+  async set(sub: string, sessionData: NodeSavedSession) {
+    // Insert or update the session data in your database
+    await saveSessionDataToDb(sub, sessionData)
+  },
+
+  async get(sub: string) {
+    // Retrieve the session data from your database
+    const sessionData = await getSessionDataFromDb(sub)
+    if (!sessionData) return undefined
+
+    return sessionData
+  },
+
+  async del(sub: string) {
+    // Delete the session data from your database
+    await deleteSessionDataFromDb(sub)
+  },
+}
+```
+
+#### `stateStore`
+
+A simple key-value store to save the state of the OAuth
+authorization flow. This is used to prevent CSRF attacks.
+
+The implementation of the `StateStore` is similar to the
+[`sessionStore`](#sessionstore).
+
+```ts
+interface NodeSavedStateStore {
+  set: (key: string, internalState: NodeSavedState) => Promise<void>
+  get: (key: string) => Promise<NodeSavedState | undefined>
+  del: (key: string) => Promise<void>
+}
+```
+
+One notable exception is that state store items can (and should) be deleted
+after a short period of time (one hour should be more than enough).
+
+#### `requestLock`
+
+When multiple instances of the client are running, this lock will prevent
+concurrent refreshes of the same session.
+
+Here is an example implementation based on [`redlock`](https://www.npmjs.com/package/redlock):
+
+```ts
+import { RuntimeLock } from '@atproto/oauth-client-node'
+import Redis from 'ioredis'
+import Redlock from 'redlock'
+
+const redisClients = new Redis()
+const redlock = new Redlock(redisClients)
+
+const requestLock: RuntimeLock = async (key, fn) => {
+  // 30 seconds should be enough. Since we will be using one lock per user id
+  // we can be quite liberal with the lock duration here.
+  const lock = await redlock.lock(key, 45e3)
+  try {
+    return await fn()
+  } finally {
+    await redlock.unlock(lock)
+  }
+}
+```
 
 ## Usage with `@atproto/api`
 
@@ -270,7 +371,7 @@ app.get('/login', async (req, res) => {
   res.redirect(url)
 })
 
-app.get('/callback', async (req, res) => {
+app.get('/atproto-oauth-callback', async (req, res) => {
   const params = new URLSearchParams(req.url.split('?')[1])
   try {
     try {

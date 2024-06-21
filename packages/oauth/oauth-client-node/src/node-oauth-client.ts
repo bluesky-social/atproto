@@ -13,14 +13,28 @@ import {
 } from '@atproto/oauth-client'
 import { OAuthResponseMode } from '@atproto/oauth-types'
 
+import {
+  NodeSavedSessionStore,
+  NodeSavedStateStore,
+  toDpopKeyStore,
+} from './node-dpop-store.js'
+
+export type * from './node-dpop-store.js'
 export type { OAuthClientOptions, OAuthResponseMode, RuntimeLock }
 
 export type NodeOAuthClientOptions = Omit<
   OAuthClientOptions,
-  'responseMode' | 'runtimeImplementation' | 'handleResolver'
+  | 'responseMode'
+  | 'runtimeImplementation'
+  | 'handleResolver'
+  | 'sessionStore'
+  | 'stateStore'
 > & {
   fallbackNameservers?: AtprotoHandleResolverNodeOptions['fallbackNameservers']
   responseMode?: OAuthResponseMode
+
+  stateStore: NodeSavedStateStore
+  sessionStore: NodeSavedSessionStore
   requestLock?: RuntimeLock
 }
 
@@ -39,6 +53,8 @@ export class NodeOAuthClient extends OAuthClient {
     responseMode = 'query',
     fallbackNameservers,
 
+    stateStore,
+    sessionStore,
     requestLock = undefined,
 
     ...options
@@ -62,6 +78,10 @@ export class NodeOAuthClient extends OAuthClient {
         digest: (bytes, algorithm) =>
           createHash(algorithm.name).update(bytes).digest(),
       },
+
+      stateStore: toDpopKeyStore(stateStore),
+      sessionStore: toDpopKeyStore(sessionStore),
+
       ...options,
     })
   }
