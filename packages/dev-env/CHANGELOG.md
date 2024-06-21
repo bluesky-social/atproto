@@ -1,5 +1,17 @@
 # @atproto/dev-env
 
+## 0.3.28
+
+### Patch Changes
+
+- [#2460](https://github.com/bluesky-social/atproto/pull/2460) [`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24) Thanks [@foysalit](https://github.com/foysalit)! - Add DB backed team member management for ozone
+
+- Updated dependencies [[`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24)]:
+  - @atproto/ozone@0.1.26
+  - @atproto/api@0.12.21
+  - @atproto/pds@0.4.37
+  - @atproto/bsky@0.0.64
+
 ## 0.3.27
 
 ### Patch Changes

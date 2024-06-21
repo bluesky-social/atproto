@@ -12,6 +12,7 @@ import { dbLogger, loggerMiddleware } from './logger'
 import { OzoneConfig, OzoneSecrets } from './config'
 import { createServer } from './lexicon'
 import AppContext, { AppContextOptions } from './context'
+import { Member } from './db/schema/member'
 
 export * from './config'
 export { type ImageInvalidator } from './image-invalidator'
@@ -64,10 +65,45 @@ export class OzoneService {
     return new OzoneService({ ctx, app })
   }
 
+  async seedInitialMembers() {
+    const members: Array<{ role: Member['role']; did: string }> = []
+    this.ctx.cfg.access.admins.forEach((did) =>
+      members.push({
+        role: 'tools.ozone.team.defs#roleAdmin',
+        did,
+      }),
+    )
+    this.ctx.cfg.access.triage.forEach((did) =>
+      members.push({
+        role: 'tools.ozone.team.defs#roleTriage',
+        did,
+      }),
+    )
+    this.ctx.cfg.access.moderators.forEach((did) =>
+      members.push({
+        role: 'tools.ozone.team.defs#roleModerator',
+        did,
+      }),
+    )
+
+    for (const member of members) {
+      const service = this.ctx.teamService(this.ctx.db)
+      await service.upsert({
+        ...member,
+        lastUpdatedBy: this.ctx.cfg.service.did,
+      })
+    }
+  }
+
   async start(): Promise<http.Server> {
     if (this.dbStatsInterval) {
       throw new Error(`${this.constructor.name} already started`)
     }
+
+    // Any moderator that are configured via env var may not exist in the database
+    // so we need to sync them from env var to the database
+    await this.seedInitialMembers()
+
     const { db, backgroundQueue } = this.ctx
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(

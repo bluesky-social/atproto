@@ -111,15 +111,33 @@ export class TestOzone {
     return new ModeratorClient(this)
   }
 
-  addAdminDid(did: string) {
+  async addAdminDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleAdmin',
+    })
     this.ctx.cfg.access.admins.push(did)
   }
 
-  addModeratorDid(did: string) {
+  async addModeratorDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleModerator',
+    })
     this.ctx.cfg.access.moderators.push(did)
   }
 
-  addTriageDid(did: string) {
+  async addTriageDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleTriage',
+    })
     this.ctx.cfg.access.triage.push(did)
   }
 
