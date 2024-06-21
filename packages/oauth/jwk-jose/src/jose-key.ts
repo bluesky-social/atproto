@@ -1,6 +1,7 @@
 import { JwtVerifyError } from '@atproto/jwk'
 import {
   SignJWT,
+  errors,
   exportJWK,
   generateKeyPair,
   importJWK,
@@ -12,7 +13,6 @@ import {
   type JWTVerifyOptions,
   type KeyLike,
 } from 'jose'
-import { JOSEError } from 'jose/errors'
 
 import {
   Jwk,
@@ -28,6 +28,8 @@ import {
   jwkValidator,
 } from '@atproto/jwk'
 import { either } from './util'
+
+const { JOSEError } = errors
 
 export type Importable = string | KeyLike | Jwk
 

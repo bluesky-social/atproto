@@ -312,7 +312,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  get jwks(): Jwks {
+  get jwks() {
     return this.keyset.publicJwks
   }
 
