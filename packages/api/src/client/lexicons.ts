@@ -4522,7 +4522,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
                 },
               },
             },

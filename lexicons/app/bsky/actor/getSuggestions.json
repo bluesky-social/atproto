@@ -28,7 +28,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.actor.defs#profileView"
+                "ref": "app.bsky.actor.defs#profileViewDetailed"
               }
             }
           }
