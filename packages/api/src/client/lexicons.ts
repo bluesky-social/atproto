@@ -7977,7 +7977,7 @@ export const schemaDict = {
         type: 'record',
         description:
           'Record defining a starter pack of actors and feeds for new users.',
-        key: 'any',
+        key: 'tid',
         record: {
           type: 'object',
           required: ['name', 'list', 'createdAt'],

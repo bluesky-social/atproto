@@ -210,7 +210,6 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   } else if (isList(record)) {
     toCheck += ' ' + record.name
   } else if (isStarterPack(record)) {
-    toCheck += ' ' + rkey
     toCheck += ' ' + record.name
   } else if (isFeedGenerator(record)) {
     toCheck += ' ' + rkey
