@@ -232,7 +232,7 @@ describe('Bodies', () => {
   it('supports empty payload', async () => {
     const expectedCid = await cidForCbor(new Uint8Array(0))
 
-    // Using "undefined" as body to avoid encoding as JsonLD { $bytes: "<base64>" }
+    // Using "undefined" as body to avoid encoding as lexicon { $bytes: "<base64>" }
     const result = await client.call('io.example.blobTest', {}, undefined, {
       encoding: 'text/plain',
     })
