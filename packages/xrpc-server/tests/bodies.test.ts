@@ -159,7 +159,7 @@ describe('Bodies', () => {
     expect(res1.data.bar).toBe(123)
 
     await expect(client.call('io.example.validationTest', {})).rejects.toThrow(
-      `A request body is expected but none was provided`,
+      'Request encoding (Content-Type) required but not provided',
     )
     await expect(
       client.call('io.example.validationTest', {}, {}),
@@ -227,6 +227,17 @@ describe('Bodies', () => {
       },
     )
     expect(compressed.cid).toEqual(expectedCid.toString())
+  })
+
+  it('supports empty payload', async () => {
+    const expectedCid = await cidForCbor(new Uint8Array(0))
+
+    // Using "undefined" as body to avoid encoding as lexicon { $bytes: "<base64>" }
+    const result = await client.call('io.example.blobTest', {}, undefined, {
+      encoding: 'text/plain',
+    })
+
+    expect(result.data.cid).toEqual(expectedCid.toString())
   })
 
   it('supports max blob size (based on content-length)', async () => {

@@ -86,8 +86,9 @@ export function validateInput(
   lexicons: Lexicons,
 ): HandlerInput | undefined {
   // request expectation
-  const reqHasBody = hasBody(req)
-  if (reqHasBody && (def.type !== 'procedure' || !def.input)) {
+
+  const bodyPresence = getBodyPresence(req)
+  if (bodyPresence === 'present' && (def.type !== 'procedure' || !def.input)) {
     throw new InvalidRequestError(
       `A request body was provided when none was expected`,
     )
@@ -95,7 +96,7 @@ export function validateInput(
   if (def.type === 'query') {
     return
   }
-  if (!reqHasBody && def.input) {
+  if (bodyPresence === 'missing' && def.input) {
     throw new InvalidRequestError(
       `A request body is expected but none was provided`,
     )
@@ -214,23 +215,13 @@ function isValidEncoding(possibleStr: string, value: string) {
   return possible.includes(normalized)
 }
 
-function parseContentLength(value: string): number {
-  if (/^\s*\d+\s*$/.test(value)) return Number(value)
-  throw new InvalidRequestError('invalid content-length header')
-}
+type BodyPresence = 'missing' | 'empty' | 'present'
 
-function hasBody(req: express.Request): boolean {
-  if (req.headers['content-length']) {
-    const contentLength = parseContentLength(req.headers['content-length'])
-    if (contentLength > 0) return true
-    // A content-length of 0 is still a body if there is a content-type (e.g.
-    // an empty text file)
-    if (req.headers['content-type']) return true
-  }
-
-  if (req.headers['transfer-encoding']) return true
-
-  return false
+function getBodyPresence(req: express.Request): BodyPresence {
+  if (req.headers['transfer-encoding'] != null) return 'present'
+  if (req.headers['content-length'] === '0') return 'empty'
+  if (req.headers['content-length'] != null) return 'present'
+  return 'missing'
 }
 
 export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
