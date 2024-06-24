@@ -56,7 +56,7 @@ describe('admin get starter pack view', () => {
       expect(forSnapshot(result.data)).toMatchSnapshot()
     })
 
-    it('gets a starterpack withy taken down', async () => {
+    it('gets a starterpack while taken down', async () => {
       // Validate that appview returns starterpacks before takedown
       const appviewAgent = network.bsky.getClient()
       const beforeTakedownFromAppview =
