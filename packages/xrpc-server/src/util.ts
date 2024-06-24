@@ -87,7 +87,6 @@ export function validateInput(
 ): HandlerInput | undefined {
   // request expectation
 
-  // Note: getBodyPresence will also validate the content-length header
   const bodyPresence = getBodyPresence(req)
   if (bodyPresence === 'present' && (def.type !== 'procedure' || !def.input)) {
     throw new InvalidRequestError(
@@ -216,26 +215,12 @@ function isValidEncoding(possibleStr: string, value: string) {
   return possible.includes(normalized)
 }
 
-function parseContentLength(value: string): number {
-  if (/^\s*\d+\s*$/.test(value)) return Number(value)
-  throw new InvalidRequestError('invalid content-length header')
-}
-
 type BodyPresence = 'missing' | 'empty' | 'present'
 
 function getBodyPresence(req: express.Request): BodyPresence {
-  // First to ensure that the content-length is valid if present
-  if (req.headers['content-length'] != null) {
-    const length = parseContentLength(req.headers['content-length'])
-    if (length === 0) return 'empty'
-
-    return 'present'
-  }
-
-  if (req.headers['transfer-encoding'] != null) {
-    return 'present'
-  }
-
+  if (req.headers['transfer-encoding'] != null) return 'present'
+  if (req.headers['content-length'] === '0') return 'empty'
+  if (req.headers['content-length'] != null) return 'present'
   return 'missing'
 }
 
