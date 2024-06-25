@@ -34,6 +34,7 @@ import * as suggestedFeed from './tables/suggested-feed'
 import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
 import * as labeler from './tables/labeler'
+import * as starterPack from './tables/starter-pack'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -69,6 +70,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   suggestedFeed.PartialDB &
   blobTakedown.PartialDB &
   labeler.PartialDB &
+  starterPack.PartialDB &
   taggedSuggestion.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

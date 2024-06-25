@@ -7,8 +7,10 @@ Array [
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
+      "starterPacks": 0,
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "its me!",
     "did": "user(0)",
     "displayName": "ali",
@@ -60,8 +62,10 @@ Array [
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
+      "starterPacks": 0,
     },
     "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "description": "hi im bob label_me",
     "did": "user(3)",
     "displayName": "bobby",
@@ -78,6 +82,7 @@ Array [
         "followers": Array [
           Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+            "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -114,6 +119,7 @@ Array [
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
+      "starterPacks": 0,
     },
     "did": "user(2)",
     "followersCount": 2,
@@ -129,6 +135,7 @@ Array [
         "followers": Array [
           Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+            "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -168,6 +175,7 @@ Array [
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
+      "starterPacks": 0,
     },
     "did": "user(5)",
     "followersCount": 1,
@@ -183,6 +191,7 @@ Array [
         "followers": Array [
           Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+            "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -223,8 +232,10 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+  "createdAt": "1970-01-01T00:00:00.000Z",
   "description": "its me!",
   "did": "user(0)",
   "displayName": "ali",
@@ -282,6 +293,7 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "did": "user(0)",
   "followersCount": 1,
@@ -297,6 +309,7 @@ Object {
       "followers": Array [
         Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -336,8 +349,10 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+  "createdAt": "1970-01-01T00:00:00.000Z",
   "description": "its me!",
   "did": "user(0)",
   "displayName": "ali",
@@ -369,6 +384,7 @@ Object {
       "followers": Array [
         Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -404,6 +420,7 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "banner": "https://bsky.public.url/img/banner/plain/user(1)/cids(1)@jpeg",
@@ -423,6 +440,7 @@ Object {
       "followers": Array [
         Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",

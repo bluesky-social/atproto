@@ -31,9 +31,16 @@ export class MemberNotFoundError extends XRPCError {
   }
 }
 
+export class CannotDeleteSelfError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'MemberNotFound') return new MemberNotFoundError(e)
+    if (e.error === 'CannotDeleteSelf') return new CannotDeleteSelfError(e)
   }
   return e
 }

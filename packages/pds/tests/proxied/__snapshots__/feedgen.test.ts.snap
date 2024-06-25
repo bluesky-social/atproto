@@ -7,6 +7,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -100,6 +101,7 @@ Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
                 "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
+                "createdAt": "1970-01-01T00:00:00.000Z",
                 "did": "user(4)",
                 "displayName": "bobby",
                 "handle": "bob.test",

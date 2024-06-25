@@ -54,6 +54,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             ? chatDeclaration['allowIncoming']
             : undefined,
         upstreamStatus: row?.upstreamStatus ?? '',
+        createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
       }
     })
     return { actors }

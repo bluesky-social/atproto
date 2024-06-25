@@ -216,6 +216,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(11)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -244,6 +245,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(11)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -314,6 +316,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(11)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -346,6 +349,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(11)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -678,6 +682,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(14)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -706,6 +711,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(14)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -776,6 +782,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(14)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -808,6 +815,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(14)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -871,6 +879,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(3)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -913,6 +922,7 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(3)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",

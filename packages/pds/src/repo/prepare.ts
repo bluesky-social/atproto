@@ -32,6 +32,7 @@ import {
 } from './types'
 import * as lex from '../lexicon/lexicons'
 import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
+import { isRecord as isStarterPack } from '../lexicon/types/app/bsky/graph/starterpack'
 import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
 import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
@@ -207,6 +208,8 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   if (isProfile(record)) {
     toCheck += ' ' + record.displayName
   } else if (isList(record)) {
+    toCheck += ' ' + record.name
+  } else if (isStarterPack(record)) {
     toCheck += ' ' + record.name
   } else if (isFeedGenerator(record)) {
     toCheck += ' ' + rkey

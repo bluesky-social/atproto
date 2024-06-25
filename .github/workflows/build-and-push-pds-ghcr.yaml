@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - divy/starter-packs
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

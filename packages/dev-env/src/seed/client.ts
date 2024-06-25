@@ -67,6 +67,7 @@ export class SeedClient<
       displayName: string
       description: string
       avatar: { cid: string; mimeType: string }
+      joinedViaStarterPack: RecordRef | undefined
       ref: RecordRef
     }
   >
@@ -90,6 +91,18 @@ export class SeedClient<
     string,
     Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
   >
+  starterpacks: Record<
+    string,
+    Record<
+      string,
+      {
+        ref: RecordRef
+        name: string
+        list: RecordRef
+        feeds: string[]
+      }
+    >
+  >
   dids: Record<string, string>
 
   constructor(
@@ -106,6 +119,7 @@ export class SeedClient<
     this.reposts = {}
     this.lists = {}
     this.feedgens = {}
+    this.starterpacks = {}
     this.dids = {}
   }
 
@@ -141,6 +155,7 @@ export class SeedClient<
     displayName: string,
     description: string,
     selfLabels?: string[],
+    joinedViaStarterPack?: RecordRef,
   ) {
     AVATAR_IMG ??= await fs.readFile(
       '../dev-env/src/seed/img/key-portrait-small.jpg',
@@ -168,6 +183,8 @@ export class SeedClient<
                 values: selfLabels.map((val) => ({ val })),
               }
             : undefined,
+          joinedViaStarterPack: joinedViaStarterPack?.raw,
+          createdAt: new Date().toISOString(),
         },
         this.getHeaders(by),
       )
@@ -175,6 +192,7 @@ export class SeedClient<
         displayName,
         description,
         avatar: avatarBlob,
+        joinedViaStarterPack,
         ref: new RecordRef(res.uri, res.cid),
       }
     }
@@ -403,7 +421,7 @@ export class SeedClient<
   async createList(
     by: string,
     name: string,
-    purpose: 'mod' | 'curate',
+    purpose: 'mod' | 'curate' | 'reference',
     overrides?: Partial<AppBskyGraphList.Record>,
   ) {
     const res = await this.agent.api.app.bsky.graph.list.create(
@@ -413,7 +431,9 @@ export class SeedClient<
         purpose:
           purpose === 'mod'
             ? 'app.bsky.graph.defs#modlist'
-            : 'app.bsky.graph.defs#curatelist',
+            : purpose === 'curate'
+              ? 'app.bsky.graph.defs#curatelist'
+              : 'app.bsky.graph.defs#referencelist',
         createdAt: new Date().toISOString(),
         ...(overrides || {}),
       },
@@ -443,6 +463,37 @@ export class SeedClient<
     this.feedgens[by][ref.uriStr] = {
       ref: ref,
       items: {},
+    }
+    return ref
+  }
+
+  async createStarterPack(
+    by: string,
+    name: string,
+    actors: string[],
+    feeds?: string[],
+  ) {
+    const list = await this.createList(by, 'n/a', 'reference')
+    for (const did of actors) {
+      await this.addToList(by, did, list)
+    }
+    const res = await this.agent.api.app.bsky.graph.starterpack.create(
+      { repo: by },
+      {
+        name,
+        list: list.uriStr,
+        feeds: feeds?.map((uri) => ({ uri })),
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    this.starterpacks[by] ??= {}
+    const ref = new RecordRef(res.uri, res.cid)
+    this.starterpacks[by][ref.uriStr] = {
+      ref: ref,
+      list,
+      feeds: feeds ?? [],
+      name,
     }
     return ref
   }

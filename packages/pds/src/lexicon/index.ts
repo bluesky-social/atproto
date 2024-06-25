@@ -107,6 +107,7 @@ import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggeste
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -117,6 +118,8 @@ import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -194,6 +197,7 @@ export const APP_BSKY_FEED = {
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
+  DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
@@ -1472,6 +1476,17 @@ export class AppBskyGraphNS {
     this._server = server
   }
 
+  getActorStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetActorStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetActorStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getActorStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getBlocks<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1579,6 +1594,28 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPack<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPack.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPack.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPack' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

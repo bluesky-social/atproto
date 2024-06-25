@@ -22,7 +22,8 @@
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        }
+        },
+        "createdAt": { "type": "string", "format": "datetime" }
       }
     },
     "profileView": {
@@ -47,6 +48,7 @@
           "ref": "#profileAssociated"
         },
         "indexedAt": { "type": "string", "format": "datetime" },
+        "createdAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -79,7 +81,12 @@
           "type": "ref",
           "ref": "#profileAssociated"
         },
+        "joinedViaStarterPack": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#starterPackViewBasic"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
+        "createdAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -92,6 +99,7 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
+        "starterPacks": { "type": "integer" },
         "labeler": { "type": "boolean" },
         "chat": { "type": "ref", "ref": "#profileAssociatedChat" }
       }

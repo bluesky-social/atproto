@@ -8,6 +8,8 @@ export interface Profile {
   description: string | null
   avatarCid: string | null
   bannerCid: string | null
+  joinedViaStarterPackUri: string | null
+  createdAt: string
   indexedAt: string
 }
 export type PartialDB = { [tableName]: Profile }

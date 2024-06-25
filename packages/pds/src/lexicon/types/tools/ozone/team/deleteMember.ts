@@ -23,7 +23,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'MemberNotFound'
+  error?: 'MemberNotFound' | 'CannotDeleteSelf'
 }
 
 export type HandlerOutput = HandlerError | void
