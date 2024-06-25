@@ -13,6 +13,7 @@ describe('pds views with blocking', () => {
   let carolReplyToDan: { ref: RecordRef }
 
   let alice: string
+  let bob: string
   let carol: string
   let dan: string
   let danBlockUri: string
@@ -26,6 +27,7 @@ describe('pds views with blocking', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
+    bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
     // add follows to ensure blocks work even w follows
@@ -594,5 +596,16 @@ describe('pds views with blocking', () => {
     )
     const combined = [...first.data.blocks, ...second.data.blocks]
     expect(combined).toEqual(full.data.blocks)
+  })
+
+  it('returns knownFollowers with blocks filtered', async () => {
+    const carolForAlice = await agent.api.app.bsky.actor.getProfile(
+      { actor: bob },
+      { headers: await network.serviceHeaders(alice) },
+    )
+
+    const knownFollowers = carolForAlice.data.viewer?.knownFollowers
+    expect(knownFollowers?.count).toBe(1)
+    expect(knownFollowers?.followers).toHaveLength(0)
   })
 })

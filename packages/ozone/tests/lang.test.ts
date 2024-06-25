@@ -4,12 +4,10 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation status language tagging', () => {
   let network: TestNetwork
-  let agent: AtpAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 
@@ -21,7 +19,6 @@ describe('moderation status language tagging', () => {
         blobDivertAdminPassword: 'test-auth-token',
       },
     })
-    agent = network.pds.getClient()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)

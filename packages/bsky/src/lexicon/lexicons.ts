@@ -3939,6 +3939,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       profileView: {
@@ -3972,6 +3976,10 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
           indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
             type: 'string',
             format: 'datetime',
           },
@@ -4031,7 +4039,15 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
+          joinedViaStarterPack: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+          },
           indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
             type: 'string',
             format: 'datetime',
           },
@@ -4055,6 +4071,9 @@ export const schemaDict = {
             type: 'integer',
           },
           feedgens: {
+            type: 'integer',
+          },
+          starterPacks: {
             type: 'integer',
           },
           labeler: {
@@ -4106,6 +4125,29 @@ export const schemaDict = {
           followedBy: {
             type: 'string',
             format: 'at-uri',
+          },
+          knownFollowers: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#knownFollowers',
+          },
+        },
+      },
+      knownFollowers: {
+        type: 'object',
+        description: "The subject's followers whom you also follow",
+        required: ['count', 'followers'],
+        properties: {
+          count: {
+            type: 'integer',
+          },
+          followers: {
+            type: 'array',
+            minLength: 0,
+            maxLength: 5,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+            },
           },
         },
       },
@@ -4549,6 +4591,14 @@ export const schemaDict = {
               description:
                 'Self-label values, specific to the Bluesky application, on the overall account.',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            joinedViaStarterPack: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -5078,6 +5128,9 @@ export const schemaDict = {
           like: {
             type: 'string',
             format: 'at-uri',
+          },
+          threadMuted: {
+            type: 'boolean',
           },
           replyDisabled: {
             type: 'boolean',
@@ -6766,6 +6819,10 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
           labels: {
             type: 'array',
             items: {
@@ -6824,6 +6881,10 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
           labels: {
             type: 'array',
             items: {
@@ -6855,11 +6916,116 @@ export const schemaDict = {
           },
         },
       },
+      starterPackView: {
+        type: 'object',
+        required: ['uri', 'cid', 'record', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          list: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
+          },
+          listItemsSample: {
+            type: 'array',
+            maxLength: 12,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listItemView',
+            },
+          },
+          feeds: {
+            type: 'array',
+            maxLength: 3,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.defs#generatorView',
+            },
+          },
+          joinedWeekCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          joinedAllTimeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      starterPackViewBasic: {
+        type: 'object',
+        required: ['uri', 'cid', 'record', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          joinedWeekCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          joinedAllTimeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       listPurpose: {
         type: 'string',
         knownValues: [
           'app.bsky.graph.defs#modlist',
           'app.bsky.graph.defs#curatelist',
+          'app.bsky.graph.defs#referencelist',
         ],
       },
       modlist: {
@@ -6871,6 +7037,11 @@ export const schemaDict = {
         type: 'token',
         description:
           'A list of actors used for curation purposes such as list feeds or interaction gating.',
+      },
+      referencelist: {
+        type: 'token',
+        description:
+          'A list of actors used for only for reference purposes such as within a starter pack.',
       },
       listViewerState: {
         type: 'object',
@@ -6945,6 +7116,54 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetActorStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getActorStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of starter packs created by the actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
             },
           },
         },
@@ -7089,6 +7308,59 @@ export const schemaDict = {
                 type: 'string',
               },
               follows: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetKnownFollowers: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getKnownFollowers',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates accounts which follow a specified account (actor) and are followed by the viewer.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'followers'],
+            properties: {
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#profileView',
+              },
+              cursor: {
+                type: 'string',
+              },
+              followers: {
                 type: 'array',
                 items: {
                   type: 'ref',
@@ -7399,6 +7671,80 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetStarterPack: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPack',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets a view of a starter pack.',
+        parameters: {
+          type: 'params',
+          required: ['starterPack'],
+          properties: {
+            starterPack: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) of the starter pack record.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPack'],
+            properties: {
+              starterPack: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.defs#starterPackView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get views for a list of starter packs.',
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetSuggestedFollowsByActor: {
     lexicon: 1,
     id: 'app.bsky.graph.getSuggestedFollowsByActor',
@@ -7599,6 +7945,94 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphMuteThread: {
+    lexicon: 1,
+    id: 'app.bsky.graph.muteThread',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Mutes a thread preventing notifications from the thread and any of its children. Mutes are private in Bluesky. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphStarterpack: {
+    lexicon: 1,
+    id: 'app.bsky.graph.starterpack',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record defining a starter pack of actors and feeds for new users.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['name', 'list', 'createdAt'],
+          properties: {
+            name: {
+              type: 'string',
+              maxGraphemes: 50,
+              maxLength: 500,
+              minLength: 1,
+              description: 'Display name for starter pack; can not be empty.',
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            list: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to the list record.',
+            },
+            feeds: {
+              type: 'array',
+              maxLength: 3,
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.starterpack#feedItem',
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      feedItem: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphUnmuteActor: {
     lexicon: 1,
     id: 'app.bsky.graph.unmuteActor',
@@ -7636,6 +8070,29 @@ export const schemaDict = {
             required: ['list'],
             properties: {
               list: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphUnmuteThread: {
+    lexicon: 1,
+    id: 'app.bsky.graph.unmuteThread',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unmutes the specified thread. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
                 type: 'string',
                 format: 'at-uri',
               },
@@ -7946,7 +8403,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
             knownValues: [
               'like',
               'repost',
@@ -7954,6 +8411,7 @@ export const schemaDict = {
               'mention',
               'reply',
               'quote',
+              'starterpack-joined',
             ],
           },
           reasonSubject: {
@@ -9520,15 +9978,19 @@ export const ids = {
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
+  AppBskyGraphGetActorStarterPacks: 'app.bsky.graph.getActorStarterPacks',
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
+  AppBskyGraphGetKnownFollowers: 'app.bsky.graph.getKnownFollowers',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
   AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
+  AppBskyGraphGetStarterPack: 'app.bsky.graph.getStarterPack',
+  AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',
@@ -9536,8 +9998,11 @@ export const ids = {
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
+  AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
+  AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
   AppBskyLabelerDefs: 'app.bsky.labeler.defs',
   AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
   AppBskyLabelerService: 'app.bsky.labeler.service',

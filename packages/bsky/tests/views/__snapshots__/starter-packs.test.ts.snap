@@ -1,0 +1,482 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`starter packs generates notifications 1`] = `
+Array [
+  Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "New here",
+      "did": "user(0)",
+      "displayName": "Newskie 3",
+      "handle": "newskie3.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "labels": Array [],
+    "reason": "starterpack-joined",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "app.bsky.actor.profile",
+      "avatar": Object {
+        "$type": "blob",
+        "mimeType": "image/jpeg",
+        "ref": Object {
+          "$link": "cids(1)",
+        },
+        "size": 3976,
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "New here",
+      "displayName": "Newskie 3",
+      "joinedViaStarterPack": Object {
+        "cid": "cids(2)",
+        "uri": "record(1)",
+      },
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [],
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "New here",
+      "did": "user(2)",
+      "displayName": "Newskie 2",
+      "handle": "newskie2.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "cid": "cids(3)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "labels": Array [],
+    "reason": "starterpack-joined",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "app.bsky.actor.profile",
+      "avatar": Object {
+        "$type": "blob",
+        "mimeType": "image/jpeg",
+        "ref": Object {
+          "$link": "cids(1)",
+        },
+        "size": 3976,
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "New here",
+      "displayName": "Newskie 2",
+      "joinedViaStarterPack": Object {
+        "cid": "cids(2)",
+        "uri": "record(1)",
+      },
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [],
+      },
+    },
+    "uri": "record(2)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "New here",
+      "did": "user(4)",
+      "displayName": "Newskie 1",
+      "handle": "newskie1.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "cid": "cids(4)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "labels": Array [],
+    "reason": "starterpack-joined",
+    "reasonSubject": "record(1)",
+    "record": Object {
+      "$type": "app.bsky.actor.profile",
+      "avatar": Object {
+        "$type": "blob",
+        "mimeType": "image/jpeg",
+        "ref": Object {
+          "$link": "cids(1)",
+        },
+        "size": 3976,
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "New here",
+      "displayName": "Newskie 1",
+      "joinedViaStarterPack": Object {
+        "cid": "cids(2)",
+        "uri": "record(1)",
+      },
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [],
+      },
+    },
+    "uri": "record(3)",
+  },
+]
+`;
+
+exports[`starter packs gets actor starter packs. 1`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 0,
+    "joinedWeekCount": 0,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [],
+      "list": "record(1)",
+      "name": "alice's empty starter pack",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 3,
+    "joinedWeekCount": 3,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [
+        Object {
+          "uri": "record(5)",
+        },
+      ],
+      "list": "record(4)",
+      "name": "alice's starter pack",
+    },
+    "uri": "record(3)",
+  },
+]
+`;
+
+exports[`starter packs gets starter pack details 1`] = `
+Object {
+  "cid": "cids(0)",
+  "creator": Object {
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "did": "user(0)",
+    "displayName": "ali",
+    "handle": "alice.test",
+    "labels": Array [
+      Object {
+        "cid": "cids(2)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "src": "user(0)",
+        "uri": "record(3)",
+        "val": "self-label-a",
+      },
+      Object {
+        "cid": "cids(2)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "src": "user(0)",
+        "uri": "record(3)",
+        "val": "self-label-b",
+      },
+    ],
+  },
+  "feeds": Array [
+    Object {
+      "cid": "cids(3)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "src": "user(0)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "src": "user(0)",
+            "uri": "record(3)",
+            "val": "self-label-b",
+          },
+        ],
+      },
+      "did": "did:web:example.com",
+      "displayName": "alice's feedgen",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "likeCount": 0,
+      "uri": "record(2)",
+    },
+  ],
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "joinedAllTimeCount": 3,
+  "joinedWeekCount": 3,
+  "labels": Array [],
+  "list": Object {
+    "cid": "cids(4)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 3,
+    "name": "n/a",
+    "purpose": "app.bsky.graph.defs#referencelist",
+    "uri": "record(1)",
+  },
+  "listItemsSample": Array [
+    Object {
+      "subject": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+        "labels": Array [],
+      },
+      "uri": "record(4)",
+    },
+    Object {
+      "subject": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "description": "hi im bob label_me",
+        "did": "user(3)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+      },
+      "uri": "record(5)",
+    },
+    Object {
+      "subject": Object {
+        "associated": Object {
+          "chat": Object {
+            "allowIncoming": "none",
+          },
+        },
+        "did": "user(5)",
+        "handle": "dan.test",
+        "labels": Array [],
+      },
+      "uri": "record(6)",
+    },
+  ],
+  "record": Object {
+    "$type": "app.bsky.graph.starterpack",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "feeds": Array [
+      Object {
+        "uri": "record(2)",
+      },
+    ],
+    "list": "record(1)",
+    "name": "alice's starter pack",
+  },
+  "uri": "record(0)",
+}
+`;
+
+exports[`starter packs gets starter pack details 2`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 0,
+    "joinedWeekCount": 0,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [],
+      "list": "record(1)",
+      "name": "alice's empty starter pack",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "cid": "cids(3)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 3,
+    "joinedWeekCount": 3,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [
+        Object {
+          "uri": "record(5)",
+        },
+      ],
+      "list": "record(4)",
+      "name": "alice's starter pack",
+    },
+    "uri": "record(3)",
+  },
+]
+`;
+
+exports[`starter packs gets starter pack used on profile detail 1`] = `
+Object {
+  "cid": "cids(0)",
+  "creator": Object {
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "did": "user(0)",
+    "displayName": "ali",
+    "handle": "alice.test",
+    "labels": Array [
+      Object {
+        "cid": "cids(2)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "src": "user(0)",
+        "uri": "record(3)",
+        "val": "self-label-a",
+      },
+      Object {
+        "cid": "cids(2)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "src": "user(0)",
+        "uri": "record(3)",
+        "val": "self-label-b",
+      },
+    ],
+  },
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "joinedAllTimeCount": 3,
+  "joinedWeekCount": 3,
+  "labels": Array [],
+  "record": Object {
+    "$type": "app.bsky.graph.starterpack",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "feeds": Array [
+      Object {
+        "uri": "record(2)",
+      },
+    ],
+    "list": "record(1)",
+    "name": "alice's starter pack",
+  },
+  "uri": "record(0)",
+}
+`;

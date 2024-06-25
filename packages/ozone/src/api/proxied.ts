@@ -141,4 +141,64 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  server.com.atproto.admin.searchAccounts({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      const res = await ctx.pdsAgent.api.com.atproto.admin.searchAccounts(
+        request.params,
+        await ctx.pdsAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.app.bsky.graph.getStarterPack({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res = await ctx.appviewAgent.api.app.bsky.graph.getStarterPack(
+        request.params,
+        await ctx.appviewAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.app.bsky.graph.getStarterPacks({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res = await ctx.appviewAgent.api.app.bsky.graph.getStarterPacks(
+        request.params,
+        await ctx.appviewAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.app.bsky.graph.getActorStarterPacks({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res =
+        await ctx.appviewAgent.api.app.bsky.graph.getActorStarterPacks(
+          request.params,
+          await ctx.appviewAuth(),
+        )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
 }

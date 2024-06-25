@@ -13,6 +13,7 @@
 - [Crypto](./crypto): Atproto's common cryptographic operations.
 - [Syntax](./syntax): A library for identifier syntax: NSID, AT URI, handles, etc.
 - [Lexicon](./lexicon): A library for validating data using atproto's schema system.
+- [OAuth Provider](./oauth/oauth-provider): A library for supporting ATPROTO's OAuth.
 - [Repo](./repo): The "atproto repository" core implementation (a Merkle Search Tree).
 - [XRPC](./xrpc): An XRPC client implementation.
 - [XRPC Server](./xrpc-server): An XRPC server implementation.

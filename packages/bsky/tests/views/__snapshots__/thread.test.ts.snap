@@ -10,6 +10,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -50,12 +51,14 @@ Object {
         "uri": "record(4)",
         "viewer": Object {
           "like": "record(7)",
+          "threadMuted": false,
         },
       },
     },
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
@@ -128,12 +131,15 @@ Object {
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -184,6 +190,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
+      "threadMuted": false,
     },
   },
   "replies": Array [],
@@ -196,6 +203,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -236,6 +244,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -274,7 +283,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [],
     },
@@ -283,6 +294,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -355,7 +367,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [
         Object {
@@ -363,6 +377,7 @@ Object {
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
@@ -413,6 +428,7 @@ Object {
             "uri": "record(8)",
             "viewer": Object {
               "repost": "record(9)",
+              "threadMuted": false,
             },
           },
           "replies": Array [],
@@ -429,6 +445,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -469,6 +486,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -507,7 +525,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
     Object {
@@ -515,6 +535,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -587,7 +608,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   ],
@@ -600,6 +623,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -640,6 +664,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -678,7 +703,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
     Object {
@@ -686,6 +713,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -758,7 +786,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
     },
   ],
@@ -771,6 +801,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -809,7 +840,9 @@ Object {
     "replyCount": 1,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "threadMuted": false,
+    },
   },
   "replies": Array [
     Object {
@@ -817,6 +850,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -848,7 +882,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(4)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [
         Object {
@@ -856,6 +892,7 @@ Object {
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
@@ -904,7 +941,9 @@ Object {
             "replyCount": 0,
             "repostCount": 0,
             "uri": "record(5)",
-            "viewer": Object {},
+            "viewer": Object {
+              "threadMuted": false,
+            },
           },
           "replies": Array [],
         },
@@ -920,6 +959,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -958,7 +998,9 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "threadMuted": false,
+    },
   },
   "replies": Array [],
 }
@@ -975,6 +1017,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1023,7 +1066,9 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "threadMuted": false,
+    },
   },
   "replies": Array [],
 }
@@ -1040,6 +1085,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1090,6 +1136,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
+      "threadMuted": false,
     },
   },
   "replies": Array [],
@@ -1107,6 +1154,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1157,6 +1205,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
+      "threadMuted": false,
     },
   },
   "replies": Array [],
@@ -1169,6 +1218,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1209,6 +1259,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -1217,6 +1268,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -1289,7 +1341,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [
         Object {
@@ -1297,6 +1351,7 @@ Object {
           "post": Object {
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
@@ -1347,6 +1402,7 @@ Object {
             "uri": "record(6)",
             "viewer": Object {
               "repost": "record(7)",
+              "threadMuted": false,
             },
           },
           "replies": Array [],
@@ -1363,6 +1419,7 @@ Object {
   "post": Object {
     "author": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -1403,6 +1460,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "threadMuted": false,
     },
   },
   "replies": Array [
@@ -1411,6 +1469,7 @@ Object {
       "post": Object {
         "author": Object {
           "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "createdAt": "1970-01-01T00:00:00.000Z",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -1483,7 +1542,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "threadMuted": false,
+        },
       },
       "replies": Array [],
     },

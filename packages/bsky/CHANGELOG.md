@@ -1,5 +1,43 @@
 # @atproto/bsky
 
+## 0.0.65
+
+### Patch Changes
+
+- [#2553](https://github.com/bluesky-social/atproto/pull/2553) [`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02) Thanks [@devinivy](https://github.com/devinivy)! - Support for starter packs (app.bsky.graph.starterpack)
+
+- Updated dependencies [[`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02), [`615a96ddc`](https://github.com/bluesky-social/atproto/commit/615a96ddc2965251cfab060dfc43fc1a51ef4bff)]:
+  - @atproto/api@0.12.22
+  - @atproto/xrpc-server@0.5.2
+
+## 0.0.64
+
+### Patch Changes
+
+- Updated dependencies [[`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24)]:
+  - @atproto/api@0.12.21
+
+## 0.0.63
+
+### Patch Changes
+
+- Updated dependencies [[`ea0f10b5d`](https://github.com/bluesky-social/atproto/commit/ea0f10b5d0d334eb587032c54d5ace9ea811cf26)]:
+  - @atproto/api@0.12.20
+
+## 0.0.62
+
+### Patch Changes
+
+- Updated dependencies [[`7c1973841`](https://github.com/bluesky-social/atproto/commit/7c1973841dab416ae19435d37853aeea1f579d39)]:
+  - @atproto/api@0.12.19
+
+## 0.0.61
+
+### Patch Changes
+
+- Updated dependencies [[`58abcbd8b`](https://github.com/bluesky-social/atproto/commit/58abcbd8b6e42a1f66bda6acc3ee6a2c0894e546)]:
+  - @atproto/api@0.12.18
+
 ## 0.0.60
 
 ### Patch Changes

@@ -26,7 +26,7 @@ describe('datetime validation', () => {
       terminal: false,
     })
     lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length == 0) {
+      if (line.startsWith('#') || line.length === 0) {
         return
       }
       if (!isValidDatetime(line)) {
@@ -44,7 +44,7 @@ describe('datetime validation', () => {
       terminal: false,
     })
     lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length == 0) {
+      if (line.startsWith('#') || line.length === 0) {
         return
       }
       expectInvalid(line)
@@ -59,7 +59,7 @@ describe('datetime validation', () => {
       terminal: false,
     })
     lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length == 0) {
+      if (line.startsWith('#') || line.length === 0) {
         return
       }
       expectInvalid(line)

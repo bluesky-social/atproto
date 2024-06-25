@@ -1834,6 +1834,128 @@ export class GetAllLabelersResponse extends Message<GetAllLabelersResponse> {
 }
 
 /**
+ * @generated from message bsky.GetStarterPackRecordsRequest
+ */
+export class GetStarterPackRecordsRequest extends Message<GetStarterPackRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<GetStarterPackRecordsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStarterPackRecordsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStarterPackRecordsRequest {
+    return new GetStarterPackRecordsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsRequest {
+    return new GetStarterPackRecordsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsRequest {
+    return new GetStarterPackRecordsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetStarterPackRecordsRequest
+      | PlainMessage<GetStarterPackRecordsRequest>
+      | undefined,
+    b:
+      | GetStarterPackRecordsRequest
+      | PlainMessage<GetStarterPackRecordsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStarterPackRecordsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetStarterPackRecordsResponse
+ */
+export class GetStarterPackRecordsResponse extends Message<GetStarterPackRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = []
+
+  constructor(data?: PartialMessage<GetStarterPackRecordsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStarterPackRecordsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'records', kind: 'message', T: Record, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStarterPackRecordsResponse {
+    return new GetStarterPackRecordsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsResponse {
+    return new GetStarterPackRecordsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackRecordsResponse {
+    return new GetStarterPackRecordsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetStarterPackRecordsResponse
+      | PlainMessage<GetStarterPackRecordsResponse>
+      | undefined,
+    b:
+      | GetStarterPackRecordsResponse
+      | PlainMessage<GetStarterPackRecordsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStarterPackRecordsResponse, a, b)
+  }
+}
+
+/**
  * - Return follow uris where user A follows users B, C, D, …
  *     - E.g. for viewer state on `getProfiles`
  *
@@ -3104,6 +3226,11 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   feeds: number[] = []
 
+  /**
+   * @generated from field: repeated int32 starter_packs = 7;
+   */
+  starterPacks: number[] = []
+
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3154,6 +3281,13 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
     },
+    {
+      no: 7,
+      name: 'starter_packs',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
   ])
 
   static fromBinary(
@@ -3188,6 +3322,241 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
       | undefined,
   ): boolean {
     return proto3.util.equals(GetCountsForUsersResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetStarterPackCountsRequest
+ */
+export class GetStarterPackCountsRequest extends Message<GetStarterPackCountsRequest> {
+  /**
+   * @generated from field: repeated bsky.RecordRef refs = 1;
+   */
+  refs: RecordRef[] = []
+
+  constructor(data?: PartialMessage<GetStarterPackCountsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStarterPackCountsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'refs', kind: 'message', T: RecordRef, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStarterPackCountsRequest {
+    return new GetStarterPackCountsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackCountsRequest {
+    return new GetStarterPackCountsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackCountsRequest {
+    return new GetStarterPackCountsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetStarterPackCountsRequest
+      | PlainMessage<GetStarterPackCountsRequest>
+      | undefined,
+    b:
+      | GetStarterPackCountsRequest
+      | PlainMessage<GetStarterPackCountsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStarterPackCountsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetStarterPackCountsResponse
+ */
+export class GetStarterPackCountsResponse extends Message<GetStarterPackCountsResponse> {
+  /**
+   * @generated from field: repeated int32 joined_week = 1;
+   */
+  joinedWeek: number[] = []
+
+  /**
+   * @generated from field: repeated int32 joined_all_time = 2;
+   */
+  joinedAllTime: number[] = []
+
+  constructor(data?: PartialMessage<GetStarterPackCountsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetStarterPackCountsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'joined_week',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 2,
+      name: 'joined_all_time',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetStarterPackCountsResponse {
+    return new GetStarterPackCountsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackCountsResponse {
+    return new GetStarterPackCountsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetStarterPackCountsResponse {
+    return new GetStarterPackCountsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetStarterPackCountsResponse
+      | PlainMessage<GetStarterPackCountsResponse>
+      | undefined,
+    b:
+      | GetStarterPackCountsResponse
+      | PlainMessage<GetStarterPackCountsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetStarterPackCountsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetListCountsRequest
+ */
+export class GetListCountsRequest extends Message<GetListCountsRequest> {
+  /**
+   * @generated from field: repeated bsky.RecordRef refs = 1;
+   */
+  refs: RecordRef[] = []
+
+  constructor(data?: PartialMessage<GetListCountsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetListCountsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'refs', kind: 'message', T: RecordRef, repeated: true },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetListCountsRequest {
+    return new GetListCountsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetListCountsRequest {
+    return new GetListCountsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetListCountsRequest {
+    return new GetListCountsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetListCountsRequest | PlainMessage<GetListCountsRequest> | undefined,
+    b: GetListCountsRequest | PlainMessage<GetListCountsRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetListCountsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetListCountsResponse
+ */
+export class GetListCountsResponse extends Message<GetListCountsResponse> {
+  /**
+   * @generated from field: repeated int32 list_items = 1;
+   */
+  listItems: number[] = []
+
+  constructor(data?: PartialMessage<GetListCountsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetListCountsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'list_items',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetListCountsResponse {
+    return new GetListCountsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetListCountsResponse {
+    return new GetListCountsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetListCountsResponse {
+    return new GetListCountsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetListCountsResponse | PlainMessage<GetListCountsResponse> | undefined,
+    b: GetListCountsResponse | PlainMessage<GetListCountsResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetListCountsResponse, a, b)
   }
 }
 
@@ -3765,6 +4134,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   upstreamStatus = ''
 
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 10;
+   */
+  createdAt?: Timestamp
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3797,6 +4171,7 @@ export class ActorInfo extends Message<ActorInfo> {
       kind: 'scalar',
       T: 9 /* ScalarType.STRING */,
     },
+    { no: 10, name: 'created_at', kind: 'message', T: Timestamp },
   ])
 
   static fromBinary(
@@ -5693,6 +6068,140 @@ export class GetMutelistSubscriptionsResponse extends Message<GetMutelistSubscri
       | undefined,
   ): boolean {
     return proto3.util.equals(GetMutelistSubscriptionsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetThreadMutesOnSubjectsRequest
+ */
+export class GetThreadMutesOnSubjectsRequest extends Message<GetThreadMutesOnSubjectsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: repeated string thread_roots = 2;
+   */
+  threadRoots: string[] = []
+
+  constructor(data?: PartialMessage<GetThreadMutesOnSubjectsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetThreadMutesOnSubjectsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'thread_roots',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetThreadMutesOnSubjectsRequest {
+    return new GetThreadMutesOnSubjectsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsRequest {
+    return new GetThreadMutesOnSubjectsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsRequest {
+    return new GetThreadMutesOnSubjectsRequest().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetThreadMutesOnSubjectsRequest
+      | PlainMessage<GetThreadMutesOnSubjectsRequest>
+      | undefined,
+    b:
+      | GetThreadMutesOnSubjectsRequest
+      | PlainMessage<GetThreadMutesOnSubjectsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetThreadMutesOnSubjectsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetThreadMutesOnSubjectsResponse
+ */
+export class GetThreadMutesOnSubjectsResponse extends Message<GetThreadMutesOnSubjectsResponse> {
+  /**
+   * @generated from field: repeated bool muted = 1;
+   */
+  muted: boolean[] = []
+
+  constructor(data?: PartialMessage<GetThreadMutesOnSubjectsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetThreadMutesOnSubjectsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'muted',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetThreadMutesOnSubjectsResponse {
+    return new GetThreadMutesOnSubjectsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsResponse {
+    return new GetThreadMutesOnSubjectsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetThreadMutesOnSubjectsResponse {
+    return new GetThreadMutesOnSubjectsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetThreadMutesOnSubjectsResponse
+      | PlainMessage<GetThreadMutesOnSubjectsResponse>
+      | undefined,
+    b:
+      | GetThreadMutesOnSubjectsResponse
+      | PlainMessage<GetThreadMutesOnSubjectsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetThreadMutesOnSubjectsResponse, a, b)
   }
 }
 
@@ -9071,6 +9580,143 @@ export class GetLabelsResponse extends Message<GetLabelsResponse> {
 }
 
 /**
+ * @generated from message bsky.GetActorStarterPacksRequest
+ */
+export class GetActorStarterPacksRequest extends Message<GetActorStarterPacksRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActorStarterPacksRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActorStarterPacksRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActorStarterPacksRequest {
+    return new GetActorStarterPacksRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksRequest {
+    return new GetActorStarterPacksRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksRequest {
+    return new GetActorStarterPacksRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetActorStarterPacksRequest
+      | PlainMessage<GetActorStarterPacksRequest>
+      | undefined,
+    b:
+      | GetActorStarterPacksRequest
+      | PlainMessage<GetActorStarterPacksRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActorStarterPacksRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorStarterPacksResponse
+ */
+export class GetActorStarterPacksResponse extends Message<GetActorStarterPacksResponse> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetActorStarterPacksResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetActorStarterPacksResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetActorStarterPacksResponse {
+    return new GetActorStarterPacksResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksResponse {
+    return new GetActorStarterPacksResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetActorStarterPacksResponse {
+    return new GetActorStarterPacksResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | GetActorStarterPacksResponse
+      | PlainMessage<GetActorStarterPacksResponse>
+      | undefined,
+    b:
+      | GetActorStarterPacksResponse
+      | PlainMessage<GetActorStarterPacksResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetActorStarterPacksResponse, a, b)
+  }
+}
+
+/**
  * - Latest repo rev of user w/ DID
  *     - Read-after-write header in`getProfile`, `getProfiles`, `getActorLikes`, `getAuthorFeed`, `getListFeed`, `getPostThread`, `getTimeline`.  Could it be view dependent?
  *
@@ -9820,9 +10466,9 @@ export class GetFollowsFollowingRequest extends Message<GetFollowsFollowingReque
   actorDid = ''
 
   /**
-   * @generated from field: string target_did = 2;
+   * @generated from field: repeated string target_dids = 2;
    */
-  targetDid = ''
+  targetDids: string[] = []
 
   constructor(data?: PartialMessage<GetFollowsFollowingRequest>) {
     super()
@@ -9833,7 +10479,13 @@ export class GetFollowsFollowingRequest extends Message<GetFollowsFollowingReque
   static readonly typeName = 'bsky.GetFollowsFollowingRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'target_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'target_dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
   ])
 
   static fromBinary(
@@ -9872,13 +10524,74 @@ export class GetFollowsFollowingRequest extends Message<GetFollowsFollowingReque
 }
 
 /**
+ * @generated from message bsky.FollowsFollowing
+ */
+export class FollowsFollowing extends Message<FollowsFollowing> {
+  /**
+   * @generated from field: string target_did = 1;
+   */
+  targetDid = ''
+
+  /**
+   * @generated from field: repeated string dids = 2;
+   */
+  dids: string[] = []
+
+  constructor(data?: PartialMessage<FollowsFollowing>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.FollowsFollowing'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'target_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): FollowsFollowing {
+    return new FollowsFollowing().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): FollowsFollowing {
+    return new FollowsFollowing().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): FollowsFollowing {
+    return new FollowsFollowing().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: FollowsFollowing | PlainMessage<FollowsFollowing> | undefined,
+    b: FollowsFollowing | PlainMessage<FollowsFollowing> | undefined,
+  ): boolean {
+    return proto3.util.equals(FollowsFollowing, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.GetFollowsFollowingResponse
  */
 export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResponse> {
   /**
-   * @generated from field: repeated string dids = 1;
+   * @generated from field: repeated bsky.FollowsFollowing results = 1;
    */
-  dids: string[] = []
+  results: FollowsFollowing[] = []
 
   constructor(data?: PartialMessage<GetFollowsFollowingResponse>) {
     super()
@@ -9890,9 +10603,9 @@ export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResp
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     {
       no: 1,
-      name: 'dids',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
+      name: 'results',
+      kind: 'message',
+      T: FollowsFollowing,
       repeated: true,
     },
   ])
@@ -11505,5 +12218,336 @@ export class ClearActorMutelistSubscriptionsResponse extends Message<ClearActorM
       | undefined,
   ): boolean {
     return proto3.util.equals(ClearActorMutelistSubscriptionsResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateThreadMuteRequest
+ */
+export class CreateThreadMuteRequest extends Message<CreateThreadMuteRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string thread_root = 2;
+   */
+  threadRoot = ''
+
+  constructor(data?: PartialMessage<CreateThreadMuteRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateThreadMuteRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'thread_root',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateThreadMuteRequest {
+    return new CreateThreadMuteRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteRequest {
+    return new CreateThreadMuteRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteRequest {
+    return new CreateThreadMuteRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateThreadMuteRequest
+      | PlainMessage<CreateThreadMuteRequest>
+      | undefined,
+    b:
+      | CreateThreadMuteRequest
+      | PlainMessage<CreateThreadMuteRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateThreadMuteRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.CreateThreadMuteResponse
+ */
+export class CreateThreadMuteResponse extends Message<CreateThreadMuteResponse> {
+  constructor(data?: PartialMessage<CreateThreadMuteResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.CreateThreadMuteResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): CreateThreadMuteResponse {
+    return new CreateThreadMuteResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteResponse {
+    return new CreateThreadMuteResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): CreateThreadMuteResponse {
+    return new CreateThreadMuteResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | CreateThreadMuteResponse
+      | PlainMessage<CreateThreadMuteResponse>
+      | undefined,
+    b:
+      | CreateThreadMuteResponse
+      | PlainMessage<CreateThreadMuteResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(CreateThreadMuteResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteThreadMuteRequest
+ */
+export class DeleteThreadMuteRequest extends Message<DeleteThreadMuteRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  /**
+   * @generated from field: string thread_root = 2;
+   */
+  threadRoot = ''
+
+  constructor(data?: PartialMessage<DeleteThreadMuteRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteThreadMuteRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 2,
+      name: 'thread_root',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteThreadMuteRequest {
+    return new DeleteThreadMuteRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteRequest {
+    return new DeleteThreadMuteRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteRequest {
+    return new DeleteThreadMuteRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteThreadMuteRequest
+      | PlainMessage<DeleteThreadMuteRequest>
+      | undefined,
+    b:
+      | DeleteThreadMuteRequest
+      | PlainMessage<DeleteThreadMuteRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteThreadMuteRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.DeleteThreadMuteResponse
+ */
+export class DeleteThreadMuteResponse extends Message<DeleteThreadMuteResponse> {
+  constructor(data?: PartialMessage<DeleteThreadMuteResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.DeleteThreadMuteResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): DeleteThreadMuteResponse {
+    return new DeleteThreadMuteResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteResponse {
+    return new DeleteThreadMuteResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): DeleteThreadMuteResponse {
+    return new DeleteThreadMuteResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | DeleteThreadMuteResponse
+      | PlainMessage<DeleteThreadMuteResponse>
+      | undefined,
+    b:
+      | DeleteThreadMuteResponse
+      | PlainMessage<DeleteThreadMuteResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(DeleteThreadMuteResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ClearThreadMutesRequest
+ */
+export class ClearThreadMutesRequest extends Message<ClearThreadMutesRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = ''
+
+  constructor(data?: PartialMessage<ClearThreadMutesRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ClearThreadMutesRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClearThreadMutesRequest {
+    return new ClearThreadMutesRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesRequest {
+    return new ClearThreadMutesRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesRequest {
+    return new ClearThreadMutesRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ClearThreadMutesRequest
+      | PlainMessage<ClearThreadMutesRequest>
+      | undefined,
+    b:
+      | ClearThreadMutesRequest
+      | PlainMessage<ClearThreadMutesRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ClearThreadMutesRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.ClearThreadMutesResponse
+ */
+export class ClearThreadMutesResponse extends Message<ClearThreadMutesResponse> {
+  constructor(data?: PartialMessage<ClearThreadMutesResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.ClearThreadMutesResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): ClearThreadMutesResponse {
+    return new ClearThreadMutesResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesResponse {
+    return new ClearThreadMutesResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): ClearThreadMutesResponse {
+    return new ClearThreadMutesResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | ClearThreadMutesResponse
+      | PlainMessage<ClearThreadMutesResponse>
+      | undefined,
+    b:
+      | ClearThreadMutesResponse
+      | PlainMessage<ClearThreadMutesResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(ClearThreadMutesResponse, a, b)
   }
 }

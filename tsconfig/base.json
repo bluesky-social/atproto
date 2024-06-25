@@ -7,7 +7,7 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": false,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": false,
     "noImplicitAny": false,
     "noImplicitReturns": false,
     "noUnusedLocals": true,
@@ -26,6 +26,7 @@
     "resolveJsonModule": true,
     "types": [],
 
+    "noErrorTruncation": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

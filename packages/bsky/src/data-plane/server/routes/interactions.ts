@@ -1,4 +1,4 @@
-import { keyBy } from '@atproto/common'
+import { DAY, keyBy } from '@atproto/common'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
@@ -24,7 +24,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
   async getCountsForUsers(req) {
     if (req.dids.length === 0) {
-      return { followers: [], following: [], posts: [] }
+      return {}
     }
     const { ref } = db.db.dynamic
     const res = await db.db
@@ -42,6 +42,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .whereRef('creator', '=', ref('profile_agg.did'))
           .select(countAll.as('val'))
           .as('listsCount'),
+        db.db
+          .selectFrom('starter_pack')
+          .whereRef('creator', '=', ref('profile_agg.did'))
+          .select(countAll.as('val'))
+          .as('starterPacksCount'),
       ])
       .execute()
     const byDid = keyBy(res, 'did')
@@ -51,6 +56,55 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       posts: req.dids.map((uri) => byDid[uri]?.postsCount ?? 0),
       lists: req.dids.map((uri) => byDid[uri]?.listsCount ?? 0),
       feeds: req.dids.map((uri) => byDid[uri]?.feedGensCount ?? 0),
+      starterPacks: req.dids.map((uri) => byDid[uri]?.starterPacksCount ?? 0),
+    }
+  },
+  async getStarterPackCounts(req) {
+    const weekAgo = new Date(Date.now() - 7 * DAY)
+    const uris = req.refs.map((ref) => ref.uri)
+    if (uris.length === 0) {
+      return { joinedAllTime: [], joinedWeek: [] }
+    }
+    const countsAllTime = await db.db
+      .selectFrom('profile')
+      .where('joinedViaStarterPackUri', 'in', uris)
+      .select(['joinedViaStarterPackUri as uri', countAll.as('count')])
+      .groupBy('joinedViaStarterPackUri')
+      .execute()
+    const countsWeek = await db.db
+      .selectFrom('profile')
+      .where('joinedViaStarterPackUri', 'in', uris)
+      .where('createdAt', '>', weekAgo.toISOString())
+      .select(['joinedViaStarterPackUri as uri', countAll.as('count')])
+      .groupBy('joinedViaStarterPackUri')
+      .execute()
+    const countsWeekByUri = countsWeek.reduce((cur, item) => {
+      if (!item.uri) return cur
+      return cur.set(item.uri, item.count)
+    }, new Map<string, number>())
+    const countsAllTimeByUri = countsAllTime.reduce((cur, item) => {
+      if (!item.uri) return cur
+      return cur.set(item.uri, item.count)
+    }, new Map<string, number>())
+    return {
+      joinedWeek: uris.map((uri) => countsWeekByUri.get(uri) ?? 0),
+      joinedAllTime: uris.map((uri) => countsAllTimeByUri.get(uri) ?? 0),
+    }
+  },
+  async getListCounts(req) {
+    const uris = req.refs.map((ref) => ref.uri)
+    if (uris.length === 0) {
+      return { listItems: [] }
+    }
+    const countsListItems = await db.db
+      .selectFrom('list_item')
+      .where('listUri', 'in', uris)
+      .select(['listUri as uri', countAll.as('count')])
+      .groupBy('listUri')
+      .execute()
+    const countsByUri = keyBy(countsListItems, 'uri')
+    return {
+      listItems: uris.map((uri) => countsByUri[uri]?.count ?? 0),
     }
   },
 })

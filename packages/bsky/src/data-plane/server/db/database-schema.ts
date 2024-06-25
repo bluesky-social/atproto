@@ -16,6 +16,7 @@ import * as listMute from './tables/list-mute'
 import * as listBlock from './tables/list-block'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
+import * as threadMute from './tables/thread-mute'
 import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
@@ -33,6 +34,7 @@ import * as suggestedFeed from './tables/suggested-feed'
 import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
 import * as labeler from './tables/labeler'
+import * as starterPack from './tables/starter-pack'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -51,6 +53,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   listBlock.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
+  threadMute.PartialDB &
   feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
@@ -67,6 +70,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   suggestedFeed.PartialDB &
   blobTakedown.PartialDB &
   labeler.PartialDB &
+  starterPack.PartialDB &
   taggedSuggestion.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

@@ -11,6 +11,7 @@ import events from 'events'
 import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import API from './api'
+import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
 import * as error from './error'
@@ -99,6 +100,7 @@ export class PDS {
 
     server = API(server, ctx)
 
+    app.use(authRoutes.createRouter(ctx))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)

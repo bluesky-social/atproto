@@ -2,6 +2,7 @@ import express from 'express'
 import * as ui8 from 'uint8arrays'
 import { IdResolver } from '@atproto/identity'
 import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
+import { TeamService } from './team'
 
 type ReqCtx = {
   req: express.Request
@@ -47,17 +48,13 @@ type NullOutput = {
 
 export type AuthVerifierOpts = {
   serviceDid: string
-  admins: string[]
-  moderators: string[]
-  triage: string[]
   adminPassword: string
+  teamService: TeamService
 }
 
 export class AuthVerifier {
   serviceDid: string
-  admins: string[]
-  moderators: string[]
-  triage: string[]
+  teamService: TeamService
   private adminPassword: string
 
   constructor(
@@ -65,10 +62,8 @@ export class AuthVerifier {
     opts: AuthVerifierOpts,
   ) {
     this.serviceDid = opts.serviceDid
-    this.admins = opts.admins
-    this.moderators = opts.moderators
-    this.triage = opts.triage
     this.adminPassword = opts.adminPassword
+    this.teamService = opts.teamService
   }
 
   modOrAdminToken = async (
@@ -113,9 +108,16 @@ export class AuthVerifier {
     }
     const payload = await verifyJwt(jwtStr, this.serviceDid, getSigningKey)
     const iss = payload.iss
-    const isAdmin = this.admins.includes(iss)
-    const isModerator = isAdmin || this.moderators.includes(iss)
-    const isTriage = isModerator || this.triage.includes(iss)
+
+    const member = await this.teamService.getMember(iss)
+
+    if (member?.disabled) {
+      throw new AuthRequiredError('member is disabled', 'MemberDisabled')
+    }
+
+    const { isAdmin, isModerator, isTriage } =
+      this.teamService.getMemberRole(member)
+
     return {
       credentials: {
         type: 'standard',
