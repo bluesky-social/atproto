@@ -1,11 +1,11 @@
 import {
-  SeedClient,
-  TestNetwork,
-  TestOzone,
   basicSeed,
   ModeratorClient,
+  SeedClient,
+  TestAgent,
+  TestNetwork,
+  TestOzone,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import {
   REASONOTHER,
   REASONSPAM,
@@ -15,8 +15,8 @@ import { forSnapshot } from './_util'
 describe('admin get repo view', () => {
   let network: TestNetwork
   let ozone: TestOzone
-  let agent: AtpAgent
-  let pdsAgent: AtpAgent
+  let agent: TestAgent
+  let pdsAgent: TestAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 

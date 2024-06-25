@@ -1,10 +1,9 @@
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { basicSeed, SeedClient, TestAgent, TestNetwork } from '@atproto/dev-env'
 import { TOOLS_OZONE_TEAM } from '../src/lexicon'
 
 describe('get-config', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let agent: TestAgent
   let sc: SeedClient
 
   beforeAll(async () => {

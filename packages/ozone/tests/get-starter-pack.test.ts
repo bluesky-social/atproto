@@ -1,18 +1,18 @@
 import {
-  SeedClient,
-  TestNetwork,
   basicSeed,
-  TestOzone,
   RecordRef,
+  SeedClient,
+  TestAgent,
+  TestNetwork,
+  TestOzone,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
-import { forSnapshot } from './_util'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { forSnapshot } from './_util'
 
 describe('admin get starter pack view', () => {
   let network: TestNetwork
   let ozone: TestOzone
-  let agent: AtpAgent
+  let agent: TestAgent
   let sc: SeedClient
   let sp1: RecordRef
 
@@ -21,7 +21,7 @@ describe('admin get starter pack view', () => {
       dbPostgresSchema: 'ozone_admin_get_starterpack',
     })
     ozone = network.ozone
-    AtpAgent.configure({ appLabelers: [ozone.ctx.cfg.service.did] })
+    TestAgent.configure({ appLabelers: [ozone.ctx.cfg.service.did] })
     agent = ozone.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
