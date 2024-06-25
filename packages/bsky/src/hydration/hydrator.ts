@@ -102,6 +102,7 @@ export type HydrationState = {
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
   knownFollowers?: KnownFollowers
+  bidirectionalBlocks?: BidirectionalBlocks
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -110,6 +111,8 @@ type PostBlockPairs = { embed?: RelationshipPair; reply?: RelationshipPair }
 
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
+
+export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
 
 export class Hydrator {
   actor: ActorHydrator
@@ -215,13 +218,24 @@ export class Hydrator {
       )
     }
 
+    const followBlocksShape = Array.from(knownFollowers.keys()).reduce(
+      (acc, did) => {
+        const known = knownFollowers.get(did)
+        if (known) {
+          acc.set(did, known.followers)
+        }
+        return acc
+      },
+      new Map<string, string[]>(),
+    )
     const knownFollowersDids = Array.from(knownFollowers.values())
       .filter(Boolean)
       .flatMap((f) => f!.followers)
     const allDids = Array.from(new Set(dids.concat(knownFollowersDids)))
-    const [state, profileAggs] = await Promise.all([
+    const [state, profileAggs, bidirectionalBlocks] = await Promise.all([
       this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
+      this.hydrationBidirectionalBlocks(followBlocksShape),
     ])
     const starterPackUriSet = new Set<string>()
     state.actors?.forEach((actor) => {
@@ -237,6 +251,7 @@ export class Hydrator {
       profileAggs,
       knownFollowers,
       ctx,
+      bidirectionalBlocks,
     })
   }
 
@@ -737,6 +752,33 @@ export class Hydrator {
     return { follows, followBlocks }
   }
 
+  async hydrationBidirectionalBlocks(
+    didMap: Map<string, string[]>,
+  ): Promise<BidirectionalBlocks> {
+    const pairs: RelationshipPair[] = []
+
+    for (const [uri, followers] of didMap) {
+      for (const follower of followers) {
+        pairs.push([didFromUri(uri), follower])
+      }
+    }
+
+    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+    const result = new HydrationMap<HydrationMap<boolean>>()
+
+    for (const [did] of didMap) {
+      const followBlocks = new HydrationMap<boolean>()
+
+      for (const followerDid of didMap.get(did)!) {
+        followBlocks.set(followerDid, blocks.isBlocked(did, followerDid))
+      }
+
+      result.set(did, followBlocks)
+    }
+
+    return result
+  }
+
   // app.bsky.labeler.def#labelerViewDetailed
   // - labeler
   //   - profile
@@ -1022,6 +1064,10 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
+    bidirectionalBlocks: mergeMaps(
+      stateA.bidirectionalBlocks,
+      stateB.bidirectionalBlocks,
+    ),
   }
 }
 

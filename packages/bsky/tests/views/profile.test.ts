@@ -29,6 +29,13 @@ describe('pds profile views', () => {
     bob = sc.dids.bob
     dan = sc.dids.dan
     carol = sc.dids.carol
+
+    await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: carol },
+      { createdAt: new Date().toISOString(), subject: bob },
+      sc.getHeaders(carol),
+    )
+    await network.processAll()
   })
 
   afterAll(async () => {
