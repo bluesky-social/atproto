@@ -598,7 +598,7 @@ describe('pds views with blocking', () => {
     expect(combined).toEqual(full.data.blocks)
   })
 
-  it('returns knownFollowers with blocks filtered', async () => {
+  it('returns knownFollowers with 1st-order blocks filtered', async () => {
     const carolForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: bob },
       { headers: await network.serviceHeaders(alice) },
@@ -607,5 +607,38 @@ describe('pds views with blocking', () => {
     const knownFollowers = carolForAlice.data.viewer?.knownFollowers
     expect(knownFollowers?.count).toBe(1)
     expect(knownFollowers?.followers).toHaveLength(0)
+  })
+
+  it('returns knownFollowers with 2nd-order blocks filtered', async () => {
+    await sc.follow(carol, dan)
+    await sc.follow(dan, carol)
+    danBlockCarol = await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: dan },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(dan),
+    )
+    await network.processAll()
+
+    const result = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+
+    const knownFollowers = result.data.viewer?.knownFollowers
+    expect(knownFollowers?.count).toBe(2)
+    expect(knownFollowers?.followers).toHaveLength(1)
+  })
+
+  it('returns knownFollowers with 2nd-order blocks filtered from getProfiles', async () => {
+    const result = await agent.api.app.bsky.actor.getProfiles(
+      { actors: [carol] },
+      { headers: await network.serviceHeaders(alice) },
+    )
+
+    expect(result.data.profiles).toHaveLength(1)
+    const profile = result.data.profiles[0]
+    const knownFollowers = profile.viewer?.knownFollowers
+    expect(knownFollowers?.count).toBe(2)
+    expect(knownFollowers?.followers).toHaveLength(1)
   })
 })
