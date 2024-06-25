@@ -15,13 +15,15 @@ import { AccountStatus } from '../../account-manager'
 export class Recoverer {
   cursor: number
   queues: UserQueues
+  rotateKeys: boolean
 
   constructor(
     public ctx: AppContext,
-    opts: { cursor: number; concurrency: number },
+    opts: { cursor: number; concurrency: number; rotateKeys: boolean },
   ) {
     this.cursor = opts.cursor
     this.queues = new UserQueues(opts.concurrency)
+    this.rotateKeys = opts.rotateKeys
   }
 
   async run() {
@@ -94,18 +96,24 @@ export class Recoverer {
     await this.ctx.actorStore.transact(did, (store) =>
       store.repo.createRepo([], rev),
     )
+    if (this.rotateKeys) {
+      await this.updateAccountSigningKey(did, keypair.did())
+    }
+  }
+
+  async updateAccountSigningKey(did: string, signingKey: string) {
     if (this.ctx.entrywayAdminAgent) {
       await this.ctx.entrywayAdminAgent.api.com.atproto.admin.updateAccountSigningKey(
         {
           did,
-          signingKey: keypair.did(),
+          signingKey,
         },
       )
     } else {
       await this.ctx.plcClient.updateAtprotoKey(
         did,
         this.ctx.plcRotationKey,
-        keypair.did(),
+        signingKey,
       )
     }
   }
