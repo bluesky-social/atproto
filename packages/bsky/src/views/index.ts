@@ -213,6 +213,29 @@ export class Views {
     }
   }
 
+  profileKnownFollowers(
+    did: string,
+    state: HydrationState,
+  ): ProfileView | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return
+    const baseView = this.profile(did, state)
+    if (!baseView) return
+    const knownFollowersSkeleton = state.knownFollowers?.get(did)
+    const knownFollowers = knownFollowersSkeleton
+      ? this.knownFollowers(knownFollowersSkeleton, state)
+      : undefined
+    return {
+      ...baseView,
+      viewer: baseView.viewer
+        ? {
+            ...baseView.viewer,
+            knownFollowers,
+          }
+        : undefined,
+    }
+  }
+
   profileViewer(
     did: string,
     state: HydrationState,
