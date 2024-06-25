@@ -1,7 +1,7 @@
 import { cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
 import { filterDefined } from '@atproto/common'
 import AppContext from '../../context'
-import { CommitEvt, TombstoneEvt, SeqEvt } from '../../sequencer'
+import { CommitEvt, SeqEvt, AccountEvt } from '../../sequencer'
 import {
   PreparedWrite,
   prepareCreate,
@@ -10,6 +10,7 @@ import {
 } from '../../repo'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { UserQueues } from './user-queues'
+import { AccountStatus } from '../../account-manager'
 
 export class Recoverer {
   cursor: number
@@ -57,8 +58,8 @@ export class Recoverer {
 
   processEvent(evt: SeqEvt) {
     // only need to process commits & tombstones
-    if (evt.type === 'tombstone') {
-      this.processTombstone(evt.evt)
+    if (evt.type === 'account') {
+      this.processAccountEvt(evt.evt)
     }
     if (evt.type === 'commit') {
       this.processCommit(evt.evt)
@@ -109,7 +110,10 @@ export class Recoverer {
     }
   }
 
-  processTombstone(evt: TombstoneEvt) {
+  processAccountEvt(evt: AccountEvt) {
+    if (evt.status !== AccountStatus.Deleted) {
+      return
+    }
     const did = evt.did
     this.queues.addToUser(did, async () => {
       await this.ctx.actorStore.destroy(did)
