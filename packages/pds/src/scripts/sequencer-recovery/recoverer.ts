@@ -98,6 +98,8 @@ export class Recoverer {
     )
     if (this.rotateKeys) {
       await this.updateAccountSigningKey(did, keypair.did())
+    } else {
+      console.log(`skipping key rotation for ${did}`)
     }
   }
 
