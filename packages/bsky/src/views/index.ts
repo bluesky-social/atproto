@@ -115,7 +115,7 @@ export class Views {
     if (!baseView) return
     const knownFollowersSkeleton = state.knownFollowers?.get(did)
     const knownFollowers = knownFollowersSkeleton
-      ? this.knownFollowers(knownFollowersSkeleton, state)
+      ? this.knownFollowers(knownFollowersSkeleton, state, did)
       : undefined
     const profileAggs = state.profileAggs?.get(did)
     return {
@@ -240,9 +240,14 @@ export class Views {
   knownFollowers(
     knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
     state: HydrationState,
+    targetDid: string,
   ) {
+    const blocks = state.bidirectionalBlocks?.get(targetDid)
     const followers = mapDefined(knownFollowers.followers, (did) => {
       if (this.viewerBlockExists(did, state)) {
+        return undefined
+      }
+      if (blocks && blocks.get(did) === true) {
         return undefined
       }
       return this.profileBasic(did, state)
