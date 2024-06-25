@@ -1,5 +1,18 @@
 # @atproto/dev-env
 
+## 0.3.29
+
+### Patch Changes
+
+- [#2553](https://github.com/bluesky-social/atproto/pull/2553) [`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02) Thanks [@devinivy](https://github.com/devinivy)! - Support for starter packs (app.bsky.graph.starterpack)
+
+- Updated dependencies [[`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02), [`615a96ddc`](https://github.com/bluesky-social/atproto/commit/615a96ddc2965251cfab060dfc43fc1a51ef4bff)]:
+  - @atproto/ozone@0.1.27
+  - @atproto/bsky@0.0.65
+  - @atproto/api@0.12.22
+  - @atproto/pds@0.4.38
+  - @atproto/xrpc-server@0.5.2
+
 ## 0.3.28
 
 ### Patch Changes

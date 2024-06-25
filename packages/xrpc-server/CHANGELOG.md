@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.5.2
+
+### Patch Changes
+
+- [`615a96ddc`](https://github.com/bluesky-social/atproto/commit/615a96ddc2965251cfab060dfc43fc1a51ef4bff) Thanks [@devinivy](https://github.com/devinivy)! - Adjust detection of lexrpc body presence, support 0-byte bodies.
+
 ## 0.5.1
 
 ### Patch Changes
