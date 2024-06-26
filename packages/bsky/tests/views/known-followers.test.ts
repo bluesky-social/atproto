@@ -36,6 +36,18 @@ describe('known followers (social proof)', () => {
       seedClient.getHeaders(dids.sp_block_sub),
     )
 
+    // mix of blocks and non
+    await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: dids.mix_view },
+      { createdAt: new Date().toISOString(), subject: dids.mix_fp_block_res },
+      seedClient.getHeaders(dids.mix_view),
+    )
+    await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: dids.mix_sub_1 },
+      { createdAt: new Date().toISOString(), subject: dids.mix_sp_block_res },
+      seedClient.getHeaders(dids.mix_sub_1),
+    )
+
     await network.processAll()
   })
 
@@ -103,7 +115,7 @@ describe('known followers (social proof)', () => {
     expect(knownFollowers?.followers).toHaveLength(0)
   })
 
-  it('returns knownFollowers with 2nd-order blocks filtered from getProfiles', async () => {
+  it('getProfiles: filters second-party blocks', async () => {
     const result = await agent.api.app.bsky.actor.getProfiles(
       { actors: [dids.sp_block_sub] },
       { headers: await network.serviceHeaders(dids.sp_block_view) },
@@ -114,5 +126,28 @@ describe('known followers (social proof)', () => {
     const knownFollowers = profile.viewer?.knownFollowers
     expect(knownFollowers?.count).toBe(1)
     expect(knownFollowers?.followers).toHaveLength(0)
+  })
+
+  it('getProfiles: mix of results', async () => {
+    const result = await agent.api.app.bsky.actor.getProfiles(
+      { actors: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3] },
+      { headers: await network.serviceHeaders(dids.mix_view) },
+    )
+
+    expect(result.data.profiles).toHaveLength(3)
+
+    const [sub_1, sub_2, sub_3] = result.data.profiles
+
+    const sub_1_kf = sub_1.viewer?.knownFollowers
+    expect(sub_1_kf?.count).toBe(3)
+    expect(sub_1_kf?.followers).toHaveLength(1)
+
+    const sub_2_kf = sub_2.viewer?.knownFollowers
+    expect(sub_2_kf?.count).toBe(3)
+    expect(sub_2_kf?.followers).toHaveLength(2)
+
+    const sub_3_kf = sub_3.viewer?.knownFollowers
+    expect(sub_3_kf?.count).toBe(3)
+    expect(sub_3_kf?.followers).toHaveLength(2)
   })
 })

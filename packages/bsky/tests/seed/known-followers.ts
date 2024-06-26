@@ -41,6 +41,17 @@ const users = {
   sp_block_sub: createUser('sp-block-sub'),
   sp_block_res_1: createUser('sp-block-res-1'),
   sp_block_view: createUser('sp-block-view'),
+
+  /*
+   * Mix of known followers and blocks.
+   */
+  mix_sub_1: createUser('mix-sub-1'),
+  mix_sub_2: createUser('mix-sub-2'),
+  mix_sub_3: createUser('mix-sub-3'),
+  mix_res: createUser('mix-res'),
+  mix_fp_block_res: createUser('mix-fp-block-res'),
+  mix_sp_block_res: createUser('mix-sp-block-res'),
+  mix_view: createUser('mix-view'),
 }
 
 export async function knownFollowersSeed(
@@ -58,6 +69,14 @@ export async function knownFollowersSeed(
   await sc.createAccount('sp_block_res_1', users.sp_block_res_1)
   await sc.createAccount('sp_block_view', users.sp_block_view)
 
+  await sc.createAccount('mix_sub_1', users.mix_sub_1)
+  await sc.createAccount('mix_sub_2', users.mix_sub_2)
+  await sc.createAccount('mix_sub_3', users.mix_sub_3)
+  await sc.createAccount('mix_res', users.mix_res)
+  await sc.createAccount('mix_fp_block_res', users.mix_fp_block_res)
+  await sc.createAccount('mix_sp_block_res', users.mix_sp_block_res)
+  await sc.createAccount('mix_view', users.mix_view)
+
   const dids = sc.dids
 
   await sc.follow(dids.base_res_1, dids.base_sub)
@@ -68,6 +87,19 @@ export async function knownFollowersSeed(
 
   await sc.follow(dids.sp_block_res_1, dids.sp_block_sub)
   await sc.follow(dids.sp_block_view, dids.sp_block_res_1)
+
+  await sc.follow(dids.mix_res, dids.mix_sub_1)
+  await sc.follow(dids.mix_res, dids.mix_sub_2)
+  await sc.follow(dids.mix_res, dids.mix_sub_3)
+  await sc.follow(dids.mix_fp_block_res, dids.mix_sub_1)
+  await sc.follow(dids.mix_fp_block_res, dids.mix_sub_2)
+  await sc.follow(dids.mix_fp_block_res, dids.mix_sub_3)
+  await sc.follow(dids.mix_sp_block_res, dids.mix_sub_1)
+  await sc.follow(dids.mix_sp_block_res, dids.mix_sub_2)
+  await sc.follow(dids.mix_sp_block_res, dids.mix_sub_3)
+  await sc.follow(dids.mix_view, dids.mix_res)
+  await sc.follow(dids.mix_view, dids.mix_fp_block_res)
+  await sc.follow(dids.mix_view, dids.mix_sp_block_res)
 
   await sc.network.processAll()
 
