@@ -235,7 +235,7 @@ export class Hydrator {
     const [state, profileAggs, bidirectionalBlocks] = await Promise.all([
       this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
-      this.hydrationBidirectionalBlocks(followBlocksShape),
+      this.hydrateBidirectionalBlocks(followBlocksShape),
     ])
     const starterPackUriSet = new Set<string>()
     state.actors?.forEach((actor) => {
@@ -752,14 +752,14 @@ export class Hydrator {
     return { follows, followBlocks }
   }
 
-  async hydrationBidirectionalBlocks(
+  async hydrateBidirectionalBlocks(
     didMap: Map<string, string[]>,
   ): Promise<BidirectionalBlocks> {
     const pairs: RelationshipPair[] = []
 
-    for (const [uri, followers] of didMap) {
-      for (const follower of followers) {
-        pairs.push([didFromUri(uri), follower])
+    for (const [target, constituents] of didMap) {
+      for (const follower of constituents) {
+        pairs.push([target, follower])
       }
     }
 
