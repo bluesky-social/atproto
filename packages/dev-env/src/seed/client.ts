@@ -156,7 +156,13 @@ export class SeedClient<
     description: string,
     selfLabels?: string[],
     joinedViaStarterPack?: RecordRef,
-  ) {
+  ): Promise<{
+    displayName: string
+    description: string
+    avatar: { cid: string; mimeType: string }
+    ref: RecordRef
+    joinedViaStarterPack?: RecordRef
+  }> {
     AVATAR_IMG ??= await fs.readFile(
       '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
