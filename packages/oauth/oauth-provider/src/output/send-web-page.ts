@@ -15,7 +15,8 @@ export function declareBackendData(name: string, data: unknown) {
   // to prevent other scripts from deducing the value of the variable. The "app"
   // script will read the global variable and then unset it. See
   // "readBackendData" in "src/assets/app/backend-data.ts".
-  return js`window[${name}]=${data};document.currentScript.remove();`
+  return js`window[${name}]=${data};`
+  // return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
 export function sendWebPage(

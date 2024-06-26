@@ -47,7 +47,7 @@ export class TestPds {
       inviteRequired: false,
       fetchDisableSsrfProtection: true,
       serviceName: 'Development PDS',
-      primaryColor: '#ffcb1e',
+      brandColor: '#ffcb1e',
       errorColor: undefined,
       logoUrl:
         'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',

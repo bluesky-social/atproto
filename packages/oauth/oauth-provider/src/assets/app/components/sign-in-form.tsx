@@ -7,7 +7,10 @@ import {
 } from 'react'
 
 import { clsx } from '../lib/clsx'
+import { Button } from './button'
 import { ErrorCard } from './error-card'
+import { InputText } from './input-text'
+import { InputCheckbox } from './input-checkbox'
 
 export type SignInFormOutput = {
   username: string
@@ -48,7 +51,7 @@ export type SignInFormProps = {
 }
 
 export function SignInForm({
-  title = 'Sign in',
+  title = 'Account',
 
   onSubmit,
   submitAria = 'Next',
@@ -60,7 +63,7 @@ export function SignInForm({
 
   usernameDefault = '',
   usernameReadonly = false,
-  usernameLabel = 'Email address or handle',
+  usernameLabel = 'Username or email address',
   usernameAria = usernameLabel,
   usernamePlaceholder = usernameLabel,
   usernamePattern,
@@ -74,7 +77,7 @@ export function SignInForm({
   passwordWarning = (
     <>
       <p className="font-bold">Warning</p>
-      <p className="text-sm">
+      <p className="">
         Please verify the domain name of the website before entering your
         password. Never enter your password on a domain you do not trust.
       </p>
@@ -135,142 +138,115 @@ export function SignInForm({
       className={clsx('flex flex-col', className)}
       onSubmit={doSubmit}
     >
-      <p className="font-medium p-4">{title}</p>
-      <fieldset
-        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
-        disabled={loading}
-      >
-        <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-          <span className="w-8 text-center text-base leading-[1.6]">@</span>
-          <input
-            name="username"
-            type="text"
-            onChange={() => setErrorMessage(null)}
-            className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
-            placeholder={usernamePlaceholder}
-            aria-label={usernameAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="username"
-            spellCheck="false"
-            dir="auto"
-            enterKeyHint="next"
-            required
-            defaultValue={usernameDefault}
-            readOnly={usernameReadonly}
-            disabled={usernameReadonly}
-            pattern={usernamePattern}
-            title={usernameTitle}
-          />
-        </div>
+      <p className="font-medium mb-1 text-slate-600 dark:text-slate-400">
+        {title}
+      </p>
 
-        <hr className="border-slate-200 dark:border-slate-700" />
+      <fieldset disabled={loading}>
+        <InputText
+          icon={
+            <svg className="w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M12 4a8 8 0 1 0 4.21 14.804 1 1 0 0 1 1.054 1.7A9.958 9.958 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 1.104-.27 2.31-.949 3.243-.716.984-1.849 1.6-3.331 1.465a4.207 4.207 0 0 1-2.93-1.585c-.94 1.21-2.388 1.94-3.985 1.715-2.53-.356-4.04-2.91-3.682-5.458.358-2.547 2.514-4.586 5.044-4.23.905.127 1.68.536 2.286 1.126a1 1 0 0 1 1.964.368l-.515 3.545v.002a2.222 2.222 0 0 0 1.999 2.526c.75.068 1.212-.21 1.533-.65.358-.493.566-1.245.566-2.067a8 8 0 0 0-8-8Zm-.112 5.13c-1.195-.168-2.544.819-2.784 2.529-.24 1.71.784 3.03 1.98 3.198 1.195.168 2.543-.819 2.784-2.529.24-1.71-.784-3.03-1.98-3.198Z"
+              ></path>
+            </svg>
+          }
+          name="username"
+          type="text"
+          onChange={() => setErrorMessage(null)}
+          placeholder={usernamePlaceholder}
+          aria-label={usernameAria}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="username"
+          spellCheck="false"
+          dir="auto"
+          enterKeyHint="next"
+          required
+          defaultValue={usernameDefault}
+          readOnly={usernameReadonly}
+          disabled={usernameReadonly}
+          pattern={usernamePattern}
+          title={usernameTitle}
+        />
 
-        <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-          <span className="w-8 text-center text-2xl leading-[1.6]">*</span>
-          <input
-            name="password"
-            type="password"
-            onChange={() => setErrorMessage(null)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setTimeout(setFocused, 100, false)}
-            className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder={passwordPlaceholder}
-            aria-label={passwordAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="current-password"
-            dir="auto"
-            enterKeyHint="done"
-            spellCheck="false"
-            required
-            pattern={passwordPattern}
-            title={passwordTitle}
-          />
-        </div>
+        <InputText
+          className="mt-4"
+          icon={
+            <svg className="w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M7 7a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h1V7Zm-1 4v9h12v-9H6Zm9-2H9V7a3 3 0 1 1 6 0v2Zm-3 4a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-3a1 1 0 0 1 1-1Z"
+              ></path>
+            </svg>
+          }
+          name="password"
+          type="password"
+          onChange={() => setErrorMessage(null)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(setFocused, 100, false)}
+          placeholder={passwordPlaceholder}
+          aria-label={passwordAria}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="current-password"
+          dir="auto"
+          enterKeyHint="done"
+          spellCheck="false"
+          required
+          pattern={passwordPattern}
+          title={passwordTitle}
+        />
 
         {passwordWarning && (
-          <>
-            <hr
-              className="border-slate-200 dark:border-slate-700 transition-all"
-              style={{ borderTopWidth: focused ? '1px' : '0px' }}
-            />
-            <div
-              className="bg-slate-100 dark:bg-slate-800 overflow-hidden transition-all"
-              style={{
-                display: 'grid',
-                gridTemplateRows: focused ? '1fr' : '0fr',
-              }}
-            >
-              <div className="flex items-center justify-start overflow-hidden">
-                <div className="py-1 px-2">
-                  <svg
-                    className="fill-current h-4 w-4 text-error"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
-                  </svg>
-                </div>
-                <div className="py-2 px-4">{passwordWarning}</div>
-              </div>
-            </div>
-          </>
+          <ErrorCard
+            className="my-2 transition-all overflow-hidden"
+            style={{
+              display: 'grid',
+              gridTemplateRows: focused ? '1fr' : '0fr',
+            }}
+            role="status"
+          >
+            {passwordWarning}
+          </ErrorCard>
         )}
 
         {rememberVisible && (
-          <>
-            <hr className="border-slate-200 dark:border-slate-700" />
-
-            <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-              <span className="w-8 flex items-center justify-center">
-                <input
-                  className="text-primary"
-                  id="remember"
-                  name="remember"
-                  type="checkbox"
-                  defaultChecked={rememberDefault}
-                  aria-label={rememberAria}
-                  onChange={() => setErrorMessage(null)}
-                />
-              </span>
-
-              <label
-                htmlFor="remember"
-                className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6]"
-              >
-                {rememberLabel}
-              </label>
-            </div>
-          </>
+          <InputCheckbox
+            className="mt-2"
+            name="remember"
+            type="checkbox"
+            defaultChecked={rememberDefault}
+            aria-label={rememberAria}
+            onChange={() => setErrorMessage(null)}
+          >
+            {rememberLabel}
+          </InputCheckbox>
         )}
       </fieldset>
 
-      {errorMessage && <ErrorCard className="mt-4" message={errorMessage} />}
+      {errorMessage && <ErrorCard className="mt-4">{errorMessage}</ErrorCard>}
 
       <div className="flex-auto" />
 
-      <div className="p-4 flex flex-wrap items-center justify-start">
-        <button
-          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
+      <div className="mt-4 flex flex-wrap items-center justify-start">
+        <Button
+          className="order-last"
+          color="brand"
           type="submit"
-          role="Button"
           aria-label={submitAria}
-          disabled={loading}
+          loading={loading}
         >
           {submitLabel}
-        </button>
+        </Button>
 
         {onCancel && (
-          <button
-            className="py-2 bg-transparent text-primary rounded-md font-light"
-            type="button"
-            role="Button"
-            aria-label={cancelAria}
-            onClick={onCancel}
-          >
+          <Button aria-label={cancelAria} onClick={onCancel}>
             {cancelLabel}
-          </button>
+          </Button>
         )}
 
         <div className="flex-auto" />

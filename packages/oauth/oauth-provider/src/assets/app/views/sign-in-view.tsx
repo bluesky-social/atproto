@@ -104,10 +104,7 @@ export function SignInView({
   }
 
   return (
-    <LayoutTitlePage
-      title="Sign in as..."
-      subtitle="Select an account to continue."
-    >
+    <LayoutTitlePage title="Sign in" subtitle="Select from an existing account">
       <AccountPicker
         className="max-w-lg w-full"
         accounts={accounts}

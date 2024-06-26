@@ -10,7 +10,7 @@ export type ErrorViewProps = {
 export function ErrorView({ errorData, customizationData }: ErrorViewProps) {
   return (
     <LayoutWelcome {...customizationData}>
-      <ErrorCard message={getUserFriendlyMessage(errorData)} />
+      <ErrorCard>{getUserFriendlyMessage(errorData)}</ErrorCard>
     </LayoutWelcome>
   )
 }

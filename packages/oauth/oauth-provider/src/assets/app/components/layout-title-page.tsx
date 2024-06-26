@@ -23,7 +23,7 @@ export function LayoutTitlePage({
     >
       <div className="w-1/2 hidden p-4 md:grid content-center justify-items-end text-right dark:bg-transparent dark:border-r bg-slate-100 dark:bg-slate-800 dark:border-slate-700">
         {title && (
-          <h1 className="text-3xl lg:text-5xl mt-4 font-semibold mb-4 text-primary">
+          <h1 className="text-3xl lg:text-5xl mt-4 font-semibold mb-4 text-brand">
             {title}
           </h1>
         )}

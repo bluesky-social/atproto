@@ -166,13 +166,13 @@ export function SignUpAccountForm({
 
       {children && <div className="mt-4">{children}</div>}
 
-      {errorMessage && <ErrorCard className="mt-2" message={errorMessage} />}
+      {errorMessage && <ErrorCard className="mt-2">{errorMessage}</ErrorCard>}
 
       <div className="flex-auto"></div>
 
       <div className="p-4 flex flex-wrap items-center justify-start">
         <button
-          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
+          className="py-2 bg-transparent text-brand rounded-md font-semibold order-last"
           type="submit"
           role="Button"
           aria-label={submitAria}
@@ -183,7 +183,7 @@ export function SignUpAccountForm({
 
         {onCancel && (
           <button
-            className="py-2 bg-transparent text-primary rounded-md font-light"
+            className="py-2 bg-transparent text-brand rounded-md font-light"
             type="button"
             role="Button"
             aria-label={cancelAria}

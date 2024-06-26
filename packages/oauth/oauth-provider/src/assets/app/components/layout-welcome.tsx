@@ -46,7 +46,7 @@ export function LayoutWelcome({
               href={link.href}
               rel={link.rel}
               target="_blank"
-              className="m-2 md:m-4 text-xs md:text-sm text-primary hover:underline"
+              className="m-2 md:m-4 text-xs md:text-sm text-brand hover:underline"
             >
               {link.title}
             </a>

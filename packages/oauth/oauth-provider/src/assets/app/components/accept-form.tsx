@@ -6,6 +6,7 @@ import { clsx } from '../lib/clsx'
 import { AccountIdentifier } from './account-identifier'
 import { ClientIdentifier } from './client-identifier'
 import { ClientName } from './client-name'
+import { Button } from './button'
 
 export type AcceptFormProps = {
   account: Account
@@ -53,7 +54,7 @@ export function AcceptForm({
         clientId={clientId}
         clientMetadata={clientMetadata}
         as="h1"
-        className="text-2xl font-semibold text-center text-primary"
+        className="text-2xl font-semibold text-center text-brand"
       />
 
       <p className="mt-4">
@@ -64,48 +65,45 @@ export function AcceptForm({
 
       <p className="mt-4">
         By clicking <b>{acceptLabel}</b>, you allow this application to access
-        your information in accordance to its{' '}
+        your information in accordance to their{' '}
         <a
           href={clientMetadata.tos_uri}
           rel="nofollow noopener"
           target="_blank"
-          className="text-primary underline"
+          className="text-brand underline"
         >
           terms of service
+        </a>
+        {' and '}
+        <a
+          href={clientMetadata.policy_uri}
+          rel="nofollow noopener"
+          target="_blank"
+          className="text-brand underline"
+        >
+          privacy policy
         </a>
         .
       </p>
 
       <div className="flex-auto" />
 
-      <div className="p-4 flex flex-wrap items-center justify-between">
-        <button
-          type="button"
-          onClick={onAccept}
-          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
-        >
+      <div className="mt-4 flex flex-wrap items-center justify-between">
+        <Button onClick={onAccept} className="order-last" color="brand">
           {acceptLabel}
-        </button>
+        </Button>
 
         {onBack && (
-          <button
-            type="button"
-            onClick={() => onBack()}
-            className="mr-2 py-2 bg-transparent text-primary rounded-md font-light"
-          >
+          <Button onClick={() => onBack()} className="mr-2">
             {backLabel}
-          </button>
+          </Button>
         )}
 
         <div className="flex-auto"></div>
 
-        <button
-          type="button"
-          onClick={onReject}
-          className="mr-2 py-2 bg-transparent text-primary rounded-md font-light"
-        >
+        <Button onClick={onReject} className="mr-2">
           {rejectLabel}
-        </button>
+        </Button>
       </div>
     </div>
   )

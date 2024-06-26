@@ -5,7 +5,7 @@
 /* Matches colors defined in tailwind.config.js */
 @layer base {
   :root {
-    --color-primary: 255 115 179;
+    --color-brand: 255 115 179;
     --color-error: 235 65 49;
   }
 }
