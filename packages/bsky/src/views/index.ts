@@ -268,6 +268,10 @@ export class Views {
       if (this.viewerBlockExists(did, state)) {
         return undefined
       }
+      if (this.actorIsNoHosted(did, state)) {
+        // @TODO only needed right now to work around getProfile's { includeTakedowns: true }
+        return undefined
+      }
       return this.profileBasic(did, state)
     })
     return { count: knownFollowers.count, followers }
