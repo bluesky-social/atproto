@@ -124,7 +124,7 @@ const presentation = (input: {
 }) => {
   const { ctx, skeleton, hydration } = input
   const actors = mapDefined(skeleton.dids, (did) =>
-    ctx.views.profile(did, hydration),
+    ctx.views.profileKnownFollowers(did, hydration),
   )
   return {
     actors,
