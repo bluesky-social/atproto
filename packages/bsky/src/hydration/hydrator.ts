@@ -36,11 +36,13 @@ import {
 } from './label'
 import {
   HydrationMap,
-  Merges,
   RecordInfo,
   ItemRef,
   didFromUri,
   urisByCollection,
+  mergeMaps,
+  mergeNestedMaps,
+  mergeManyMaps,
 } from './util'
 import {
   FeedGenAggs,
@@ -1064,25 +1066,15 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
-    bidirectionalBlocks: mergeMaps(
+    bidirectionalBlocks: mergeNestedMaps(
       stateA.bidirectionalBlocks,
       stateB.bidirectionalBlocks,
     ),
   }
 }
 
-const mergeMaps = <M extends Merges>(mapA?: M, mapB?: M): M | undefined => {
-  if (!mapA) return mapB
-  if (!mapB) return mapA
-  return mapA.merge(mapB)
-}
-
 const mergeManyStates = (...states: HydrationState[]) => {
   return states.reduce(mergeStates, {} as HydrationState)
-}
-
-const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
-  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
 }
 
 const actionTakedownLabels = <T>(
