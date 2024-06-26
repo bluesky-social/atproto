@@ -766,10 +766,10 @@ export class Hydrator {
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
     const result = new HydrationMap<HydrationMap<boolean>>()
 
-    for (const [did] of didMap) {
+    for (const [did, targetDids] of didMap) {
       const followBlocks = new HydrationMap<boolean>()
 
-      for (const followerDid of didMap.get(did)!) {
+      for (const followerDid of targetDids) {
         followBlocks.set(followerDid, blocks.isBlocked(did, followerDid))
       }
 
