@@ -20,23 +20,30 @@ describe('known followers (social proof)', () => {
     seedClient = network.getSeedClient()
 
     await knownFollowersSeed(seedClient)
+
     dids = seedClient.dids
 
-    // first-party block — fp_block_view blocks fp_block_res_1
+    /*
+     * First-party block
+     */
     await pdsAgent.api.app.bsky.graph.block.create(
       { repo: dids.fp_block_view },
       { createdAt: new Date().toISOString(), subject: dids.fp_block_res_1 },
       seedClient.getHeaders(dids.fp_block_view),
     )
 
-    // second-party block — sp_block_sub blocks sp_block_res_1
+    /*
+     * Second-party block
+     */
     await pdsAgent.api.app.bsky.graph.block.create(
       { repo: dids.sp_block_sub },
       { createdAt: new Date().toISOString(), subject: dids.sp_block_res_1 },
       seedClient.getHeaders(dids.sp_block_sub),
     )
 
-    // mix of blocks and non
+    /*
+     * Mix of blocks and non
+     */
     await pdsAgent.api.app.bsky.graph.block.create(
       { repo: dids.mix_view },
       { createdAt: new Date().toISOString(), subject: dids.mix_fp_block_res },
