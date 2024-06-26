@@ -15,10 +15,10 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.courierClient.pushNotifications({
         notifications: [
           {
-            id: 'mark-read-generic',
+            id: `${viewer}-${seenAt}`,
             clientControlled: true,
             recipientDid: viewer,
-            alwaysDeliver: true,
+            alwaysDeliver: false,
             collapseKey: 'mark-read-generic',
             timestamp: Timestamp.fromDate(new Date()),
             additional: Struct.fromJson({
