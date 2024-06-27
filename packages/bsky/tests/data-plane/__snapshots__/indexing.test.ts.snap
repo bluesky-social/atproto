@@ -7,6 +7,7 @@ Array [
       "feedgens": 0,
       "labeler": false,
       "lists": 0,
+      "starterPacks": 0,
     },
     "description": "freshening things up",
     "did": "user(0)",
@@ -23,6 +24,7 @@ Array [
         "followers": Array [
           Object {
             "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+            "createdAt": "1970-01-01T00:00:00.000Z",
             "did": "user(1)",
             "displayName": "bobby",
             "handle": "bob.test",
@@ -121,6 +123,7 @@ Array [
             "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+              "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(1)",
               "displayName": "bobby",
               "handle": "bob.test",
@@ -485,6 +488,7 @@ Array [
       },
       Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "did": "user(1)",
         "displayName": "bobby",
@@ -521,6 +525,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -587,6 +592,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -685,6 +691,7 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "did": "user(0)",
   "displayName": "dan",
@@ -710,6 +717,7 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "did": "user(0)",
   "displayName": "danny",
@@ -735,6 +743,7 @@ Object {
     "feedgens": 0,
     "labeler": false,
     "lists": 0,
+    "starterPacks": 0,
   },
   "did": "user(0)",
   "followersCount": 0,

@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.12.22
+
+### Patch Changes
+
+- [#2553](https://github.com/bluesky-social/atproto/pull/2553) [`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02) Thanks [@devinivy](https://github.com/devinivy)! - Support for starter packs (app.bsky.graph.starterpack)
+
+## 0.12.21
+
+### Patch Changes
+
+- [#2460](https://github.com/bluesky-social/atproto/pull/2460) [`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24) Thanks [@foysalit](https://github.com/foysalit)! - Add DB backed team member management for ozone
+
 ## 0.12.20
 
 ### Patch Changes

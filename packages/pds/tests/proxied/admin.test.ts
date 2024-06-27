@@ -38,7 +38,7 @@ describe('proxies admin requests', () => {
       inviteCode: invite.code,
     })
     moderator = modAccount.did
-    network.ozone.addModeratorDid(moderator)
+    await network.ozone.addModeratorDid(moderator)
 
     await network.processAll()
   })

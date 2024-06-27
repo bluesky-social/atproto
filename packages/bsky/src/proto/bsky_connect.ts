@@ -40,6 +40,8 @@ import {
   GetActorRepostsResponse,
   GetActorsRequest,
   GetActorsResponse,
+  GetActorStarterPacksRequest,
+  GetActorStarterPacksResponse,
   GetActorTakedownRequest,
   GetActorTakedownResponse,
   GetAllLabelersRequest,
@@ -104,6 +106,8 @@ import {
   GetListBlockRecordsResponse,
   GetListCountRequest,
   GetListCountResponse,
+  GetListCountsRequest,
+  GetListCountsResponse,
   GetListFeedRequest,
   GetListFeedResponse,
   GetListItemRecordsRequest,
@@ -140,6 +144,10 @@ import {
   GetRepostsByActorAndSubjectsResponse,
   GetRepostsBySubjectRequest,
   GetRepostsBySubjectResponse,
+  GetStarterPackCountsRequest,
+  GetStarterPackCountsResponse,
+  GetStarterPackRecordsRequest,
+  GetStarterPackRecordsResponse,
   GetSuggestedEntitiesRequest,
   GetSuggestedEntitiesResponse,
   GetSuggestedFeedsRequest,
@@ -311,6 +319,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetStarterPackRecords
+     */
+    getStarterPackRecords: {
+      name: 'GetStarterPackRecords',
+      I: GetStarterPackRecordsRequest,
+      O: GetStarterPackRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * Follows
      *
      * @generated from rpc bsky.Service.GetActorFollowsActors
@@ -424,6 +441,24 @@ export const Service = {
       name: 'GetCountsForUsers',
       I: GetCountsForUsersRequest,
       O: GetCountsForUsersResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetStarterPackCounts
+     */
+    getStarterPackCounts: {
+      name: 'GetStarterPackCounts',
+      I: GetStarterPackCountsRequest,
+      O: GetStarterPackCountsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetListCounts
+     */
+    getListCounts: {
+      name: 'GetListCounts',
+      I: GetListCountsRequest,
+      O: GetListCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -798,6 +833,17 @@ export const Service = {
       name: 'GetAllLabelers',
       I: GetAllLabelersRequest,
       O: GetAllLabelersResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Starter packs
+     *
+     * @generated from rpc bsky.Service.GetActorStarterPacks
+     */
+    getActorStarterPacks: {
+      name: 'GetActorStarterPacks',
+      I: GetActorStarterPacksRequest,
+      O: GetActorStarterPacksResponse,
       kind: MethodKind.Unary,
     },
     /**

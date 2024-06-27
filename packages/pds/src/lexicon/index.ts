@@ -108,6 +108,7 @@ import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggeste
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -118,6 +119,8 @@ import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -164,6 +167,10 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -191,12 +198,18 @@ export const APP_BSKY_FEED = {
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
+  DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -1475,6 +1488,17 @@ export class AppBskyGraphNS {
     this._server = server
   }
 
+  getActorStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetActorStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetActorStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getActorStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getBlocks<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1582,6 +1606,28 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPack<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPack.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPack.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPack' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2055,12 +2101,14 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
+    this.team = new ToolsOzoneTeamNS(server)
   }
 }
 
@@ -2216,6 +2264,58 @@ export class ToolsOzoneServerNS {
     >,
   ) {
     const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneTeamNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  addMember<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamAddMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamAddMember.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.addMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteMember<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamDeleteMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamDeleteMember.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.deleteMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamListMembers.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamListMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.listMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateMember<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneTeamUpdateMember.Handler<ExtractAuth<AV>>,
+      ToolsOzoneTeamUpdateMember.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.team.updateMember' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

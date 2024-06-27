@@ -3968,6 +3968,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       profileView: {
@@ -4001,6 +4005,10 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
           indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
             type: 'string',
             format: 'datetime',
           },
@@ -4060,7 +4068,15 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociated',
           },
+          joinedViaStarterPack: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+          },
           indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
             type: 'string',
             format: 'datetime',
           },
@@ -4084,6 +4100,9 @@ export const schemaDict = {
             type: 'integer',
           },
           feedgens: {
+            type: 'integer',
+          },
+          starterPacks: {
             type: 'integer',
           },
           labeler: {
@@ -4601,6 +4620,14 @@ export const schemaDict = {
               description:
                 'Self-label values, specific to the Bluesky application, on the overall account.',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            joinedViaStarterPack: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -6821,6 +6848,10 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
           labels: {
             type: 'array',
             items: {
@@ -6879,6 +6910,10 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
           labels: {
             type: 'array',
             items: {
@@ -6910,11 +6945,116 @@ export const schemaDict = {
           },
         },
       },
+      starterPackView: {
+        type: 'object',
+        required: ['uri', 'cid', 'record', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          list: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
+          },
+          listItemsSample: {
+            type: 'array',
+            maxLength: 12,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listItemView',
+            },
+          },
+          feeds: {
+            type: 'array',
+            maxLength: 3,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.feed.defs#generatorView',
+            },
+          },
+          joinedWeekCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          joinedAllTimeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      starterPackViewBasic: {
+        type: 'object',
+        required: ['uri', 'cid', 'record', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          listItemCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          joinedWeekCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          joinedAllTimeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       listPurpose: {
         type: 'string',
         knownValues: [
           'app.bsky.graph.defs#modlist',
           'app.bsky.graph.defs#curatelist',
+          'app.bsky.graph.defs#referencelist',
         ],
       },
       modlist: {
@@ -6926,6 +7066,11 @@ export const schemaDict = {
         type: 'token',
         description:
           'A list of actors used for curation purposes such as list feeds or interaction gating.',
+      },
+      referencelist: {
+        type: 'token',
+        description:
+          'A list of actors used for only for reference purposes such as within a starter pack.',
       },
       listViewerState: {
         type: 'object',
@@ -7000,6 +7145,54 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetActorStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getActorStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of starter packs created by the actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
             },
           },
         },
@@ -7507,6 +7700,80 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetStarterPack: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPack',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets a view of a starter pack.',
+        parameters: {
+          type: 'params',
+          required: ['starterPack'],
+          properties: {
+            starterPack: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) of the starter pack record.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPack'],
+            properties: {
+              starterPack: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.defs#starterPackView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get views for a list of starter packs.',
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetSuggestedFollowsByActor: {
     lexicon: 1,
     id: 'app.bsky.graph.getSuggestedFollowsByActor',
@@ -7726,6 +7993,70 @@ export const schemaDict = {
                 format: 'at-uri',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphStarterpack: {
+    lexicon: 1,
+    id: 'app.bsky.graph.starterpack',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Record defining a starter pack of actors and feeds for new users.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['name', 'list', 'createdAt'],
+          properties: {
+            name: {
+              type: 'string',
+              maxGraphemes: 50,
+              maxLength: 500,
+              minLength: 1,
+              description: 'Display name for starter pack; can not be empty.',
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            list: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to the list record.',
+            },
+            feeds: {
+              type: 'array',
+              maxLength: 3,
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.starterpack#feedItem',
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      feedItem: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -8101,7 +8432,7 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', and 'starterpack-joined'.",
             knownValues: [
               'like',
               'repost',
@@ -8109,6 +8440,7 @@ export const schemaDict = {
               'mention',
               'reply',
               'quote',
+              'starterpack-joined',
             ],
           },
           reasonSubject: {
@@ -11035,6 +11367,230 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneTeamAddMember: {
+    lexicon: 1,
+    id: 'tools.ozone.team.addMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a member to the ozone team. Requires admin role.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'role'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              role: {
+                type: 'string',
+                knownValues: [
+                  'tools.ozone.team.defs#roleAdmin',
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+          },
+        },
+        errors: [
+          {
+            name: 'MemberAlreadyExists',
+            description: 'Member already exists in the team.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneTeamDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.team.defs',
+    defs: {
+      member: {
+        type: 'object',
+        required: ['did', 'role'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          profile: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastUpdatedBy: {
+            type: 'string',
+          },
+          role: {
+            type: 'string',
+            knownValues: [
+              'lex:tools.ozone.team.defs#roleAdmin',
+              'lex:tools.ozone.team.defs#roleModerator',
+              'lex:tools.ozone.team.defs#roleTriage',
+            ],
+          },
+        },
+      },
+      roleAdmin: {
+        type: 'token',
+        description:
+          'Admin role. Highest level of access, can perform all actions.',
+      },
+      roleModerator: {
+        type: 'token',
+        description: 'Moderator role. Can perform most actions.',
+      },
+      roleTriage: {
+        type: 'token',
+        description:
+          'Triage role. Mostly intended for monitoring and escalating issues.',
+      },
+    },
+  },
+  ToolsOzoneTeamDeleteMember: {
+    lexicon: 1,
+    id: 'tools.ozone.team.deleteMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete a member from ozone team. Requires admin role.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'MemberNotFound',
+            description: 'The member being deleted does not exist',
+          },
+          {
+            name: 'CannotDeleteSelf',
+            description: 'You can not delete yourself from the team',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneTeamListMembers: {
+    lexicon: 1,
+    id: 'tools.ozone.team.listMembers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all members with access to the ozone service.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['members'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              members: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.team.defs#member',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneTeamUpdateMember: {
+    lexicon: 1,
+    id: 'tools.ozone.team.updateMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update a member in the ozone service. Requires admin role.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              disabled: {
+                type: 'boolean',
+              },
+              role: {
+                type: 'string',
+                knownValues: [
+                  'tools.ozone.team.defs#roleAdmin',
+                  'tools.ozone.team.defs#roleModerator',
+                  'tools.ozone.team.defs#roleTriage',
+                ],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+          },
+        },
+        errors: [
+          {
+            name: 'MemberNotFound',
+            description: 'The member being updated does not exist in the team',
+          },
+        ],
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -11169,6 +11725,7 @@ export const ids = {
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
+  AppBskyGraphGetActorStarterPacks: 'app.bsky.graph.getActorStarterPacks',
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
@@ -11179,6 +11736,8 @@ export const ids = {
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
+  AppBskyGraphGetStarterPack: 'app.bsky.graph.getStarterPack',
+  AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',
@@ -11187,6 +11746,7 @@ export const ids = {
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
+  AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
@@ -11247,4 +11807,9 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
+  ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
+  ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
+  ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',
+  ToolsOzoneTeamListMembers: 'tools.ozone.team.listMembers',
+  ToolsOzoneTeamUpdateMember: 'tools.ozone.team.updateMember',
 }

@@ -16,6 +16,7 @@ import getActorLikes from './app/bsky/feed/getActorLikes'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
+import getActorStarterPacks from './app/bsky/graph/getActorStarterPacks'
 import getBlocks from './app/bsky/graph/getBlocks'
 import getListBlocks from './app/bsky/graph/getListBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
@@ -26,6 +27,8 @@ import getLists from './app/bsky/graph/getLists'
 import getListMutes from './app/bsky/graph/getListMutes'
 import getMutes from './app/bsky/graph/getMutes'
 import getRelationships from './app/bsky/graph/getRelationships'
+import getStarterPack from './app/bsky/graph/getStarterPack'
+import getStarterPacks from './app/bsky/graph/getStarterPacks'
 import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
@@ -75,6 +78,7 @@ export default function (server: Server, ctx: AppContext) {
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
+  getActorStarterPacks(server, ctx)
   getBlocks(server, ctx)
   getListBlocks(server, ctx)
   getFollowers(server, ctx)
@@ -85,6 +89,8 @@ export default function (server: Server, ctx: AppContext) {
   getListMutes(server, ctx)
   getMutes(server, ctx)
   getRelationships(server, ctx)
+  getStarterPack(server, ctx)
+  getStarterPacks(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)

@@ -126,6 +126,7 @@ import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -136,6 +137,8 @@ import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -143,6 +146,7 @@ import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
@@ -194,6 +198,11 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -314,6 +323,7 @@ export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
+export * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -324,6 +334,8 @@ export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -331,6 +343,7 @@ export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
@@ -382,6 +395,11 @@ export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -409,12 +427,18 @@ export const APP_BSKY_FEED = {
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
+  DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
 }
 
 export class AtpBaseClient {
@@ -2073,6 +2097,7 @@ export class AppBskyGraphNS {
   list: ListRecord
   listblock: ListblockRecord
   listitem: ListitemRecord
+  starterpack: StarterpackRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -2081,6 +2106,18 @@ export class AppBskyGraphNS {
     this.list = new ListRecord(service)
     this.listblock = new ListblockRecord(service)
     this.listitem = new ListitemRecord(service)
+    this.starterpack = new StarterpackRecord(service)
+  }
+
+  getActorStarterPacks(
+    params?: AppBskyGraphGetActorStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetActorStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetActorStarterPacks.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getActorStarterPacks', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetActorStarterPacks.toKnownErr(e)
+      })
   }
 
   getBlocks(
@@ -2190,6 +2227,28 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.getRelationships', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetRelationships.toKnownErr(e)
+      })
+  }
+
+  getStarterPack(
+    params?: AppBskyGraphGetStarterPack.QueryParams,
+    opts?: AppBskyGraphGetStarterPack.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPack.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getStarterPack', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetStarterPack.toKnownErr(e)
+      })
+  }
+
+  getStarterPacks(
+    params?: AppBskyGraphGetStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacks.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getStarterPacks', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetStarterPacks.toKnownErr(e)
       })
   }
 
@@ -2580,6 +2639,71 @@ export class ListitemRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.listitem', ...params },
+      { headers },
+    )
+  }
+}
+
+export class StarterpackRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphStarterpack.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.starterpack',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphStarterpack.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.starterpack',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphStarterpack.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.starterpack'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.starterpack', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.starterpack', ...params },
       { headers },
     )
   }
@@ -3131,12 +3255,14 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  team: ToolsOzoneTeamNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
     this.server = new ToolsOzoneServerNS(service)
+    this.team = new ToolsOzoneTeamNS(service)
   }
 }
 
@@ -3292,6 +3418,58 @@ export class ToolsOzoneServerNS {
       .call('tools.ozone.server.getConfig', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneServerGetConfig.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneTeamNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  addMember(
+    data?: ToolsOzoneTeamAddMember.InputSchema,
+    opts?: ToolsOzoneTeamAddMember.CallOptions,
+  ): Promise<ToolsOzoneTeamAddMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.addMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamAddMember.toKnownErr(e)
+      })
+  }
+
+  deleteMember(
+    data?: ToolsOzoneTeamDeleteMember.InputSchema,
+    opts?: ToolsOzoneTeamDeleteMember.CallOptions,
+  ): Promise<ToolsOzoneTeamDeleteMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.deleteMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamDeleteMember.toKnownErr(e)
+      })
+  }
+
+  listMembers(
+    params?: ToolsOzoneTeamListMembers.QueryParams,
+    opts?: ToolsOzoneTeamListMembers.CallOptions,
+  ): Promise<ToolsOzoneTeamListMembers.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.listMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamListMembers.toKnownErr(e)
+      })
+  }
+
+  updateMember(
+    data?: ToolsOzoneTeamUpdateMember.InputSchema,
+    opts?: ToolsOzoneTeamUpdateMember.CallOptions,
+  ): Promise<ToolsOzoneTeamUpdateMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.updateMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamUpdateMember.toKnownErr(e)
       })
   }
 }

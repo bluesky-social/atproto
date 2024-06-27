@@ -1,4 +1,4 @@
-import { Server } from '../../lexicon'
+import { Server, TOOLS_OZONE_TEAM } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,10 +22,10 @@ export default function (server: Server, ctx: AppContext) {
           },
           viewer: {
             role: auth.credentials.isAdmin
-              ? 'tools.ozone.moderator.defs#modRoleAdmin'
+              ? TOOLS_OZONE_TEAM.DefsRoleAdmin
               : auth.credentials.isModerator
-                ? 'tools.ozone.moderator.defs#modRoleModerator'
-                : 'tools.ozone.moderator.defs#modRoleTriage',
+                ? TOOLS_OZONE_TEAM.DefsRoleModerator
+                : TOOLS_OZONE_TEAM.DefsRoleTriage,
           },
         },
       }

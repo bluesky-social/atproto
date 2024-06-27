@@ -6,6 +6,7 @@ import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generato
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   HydrationMap,
+  ItemRef,
   RecordInfo,
   parseRecord,
   parseString,
@@ -58,7 +59,6 @@ export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
 
-export type ItemRef = { uri: string; cid?: string }
 export type ThreadRef = ItemRef & { threadRoot: string }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
@@ -203,7 +203,6 @@ export class FeedHydrator {
     }, new HydrationMap<Threadgate>())
   }
 
-  // @TODO may not be supported yet by data plane
   async getLikes(uris: string[], includeTakedowns = false): Promise<Likes> {
     if (!uris.length) return new HydrationMap<Like>()
     const res = await this.dataplane.getLikeRecords({ uris })

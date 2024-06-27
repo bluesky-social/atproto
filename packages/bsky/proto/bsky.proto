@@ -137,6 +137,13 @@ message GetAllLabelersResponse {
   repeated Record records = 2;
 }
 
+message GetStarterPackRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetStarterPackRecordsResponse {
+  repeated Record records = 1;
+}
 
 //
 // Follows
@@ -266,6 +273,24 @@ message GetCountsForUsersResponse {
   repeated int32 followers = 4;
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
+  repeated int32 starter_packs = 7;
+}
+
+message GetStarterPackCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetStarterPackCountsResponse {
+  repeated int32 joined_week = 1;
+  repeated int32 joined_all_time = 2;
+}
+
+message GetListCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetListCountsResponse {
+  repeated int32 list_items = 1;
 }
 
 //
@@ -335,6 +360,7 @@ message ActorInfo {
   bool labeler = 7;
   string allow_incoming_chats_from = 8;
   string upstream_status = 9;
+  google.protobuf.Timestamp created_at = 10;
 }
 
 message GetActorsResponse {
@@ -908,6 +934,21 @@ message GetLabelsResponse {
 }
 
 //
+// Starter packs
+//
+
+message GetActorStarterPacksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorStarterPacksResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+//
 // Sync
 //
 
@@ -1022,6 +1063,7 @@ service Service {
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
+  rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1042,6 +1084,8 @@ service Service {
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
   rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
+  rpc GetStarterPackCounts(GetStarterPackCountsRequest) returns (GetStarterPackCountsResponse);
+  rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);
 
   // Profile
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
@@ -1112,6 +1156,9 @@ service Service {
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
   rpc GetAllLabelers(GetAllLabelersRequest) returns (GetAllLabelersResponse);
+
+  // Starter packs
+  rpc GetActorStarterPacks(GetActorStarterPacksRequest) returns (GetActorStarterPacksResponse);
 
   // Sync
   rpc GetLatestRev(GetLatestRevRequest) returns (GetLatestRevResponse);
