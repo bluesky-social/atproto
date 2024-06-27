@@ -1,5 +1,4 @@
 import { cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
-import { filterDefined } from '@atproto/common'
 import AppContext from '../../context'
 import { CommitEvt, SeqEvt, AccountEvt } from '../../sequencer'
 import {
@@ -40,7 +39,7 @@ export class Recoverer {
   }
 
   async destroy() {
-    await this.queues.destroy
+    await this.queues.destroy()
   }
 
   private async loadNextPage(): Promise<boolean> {
@@ -99,7 +98,7 @@ export class Recoverer {
     if (this.rotateKeys) {
       await this.updateAccountSigningKey(did, keypair.did())
     } else {
-      console.log(`skipping key rotation for ${did}`)
+      console.warn(`skipping key rotation for ${did}`)
     }
   }
 
@@ -165,5 +164,5 @@ const parseEvtToWrites = async (evt: CommitEvt): Promise<PreparedWrite[]> => {
       }
     }),
   )
-  return filterDefined(writesUnfiltered)
+  return writesUnfiltered.filter((w) => w !== undefined) as PreparedWrite[]
 }

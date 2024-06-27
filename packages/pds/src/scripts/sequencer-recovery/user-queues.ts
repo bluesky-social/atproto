@@ -36,6 +36,6 @@ export class UserQueues {
     this.main.pause()
     this.main.clear()
     this.queues.forEach((q) => q.clear())
-    await this.processAll
+    await this.processAll()
   }
 }

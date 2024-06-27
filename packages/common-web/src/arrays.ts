@@ -21,7 +21,3 @@ export const mapDefined = <T, S>(
   }
   return output
 }
-
-export const filterDefined = <T>(arr: (T | undefined)[]): T[] => {
-  return arr.filter((item) => item !== undefined) as T[]
-}
