@@ -220,24 +220,23 @@ export class Hydrator {
       )
     }
 
-    const followBlocksShape = Array.from(knownFollowers.keys()).reduce(
-      (acc, did) => {
-        const known = knownFollowers.get(did)
-        if (known) {
-          acc.set(did, known.followers)
-        }
-        return acc
-      },
-      new Map<string, string[]>(),
-    )
-    const knownFollowersDids = Array.from(knownFollowers.values())
+    const subjectsToKnownFollowersMap = Array.from(
+      knownFollowers.keys(),
+    ).reduce((acc, did) => {
+      const known = knownFollowers.get(did)
+      if (known) {
+        acc.set(did, known.followers)
+      }
+      return acc
+    }, new Map<string, string[]>())
+    const allKnownFollowerDids = Array.from(knownFollowers.values())
       .filter(Boolean)
       .flatMap((f) => f!.followers)
-    const allDids = Array.from(new Set(dids.concat(knownFollowersDids)))
+    const allDids = Array.from(new Set(dids.concat(allKnownFollowerDids)))
     const [state, profileAggs, bidirectionalBlocks] = await Promise.all([
       this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
-      this.hydrateBidirectionalBlocks(followBlocksShape),
+      this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap),
     ])
     const starterPackUriSet = new Set<string>()
     state.actors?.forEach((actor) => {
@@ -769,13 +768,13 @@ export class Hydrator {
     const result = new HydrationMap<HydrationMap<boolean>>()
 
     for (const [did, targetDids] of didMap) {
-      const followBlocks = new HydrationMap<boolean>()
+      const didBlocks = new HydrationMap<boolean>()
 
-      for (const followerDid of targetDids) {
-        followBlocks.set(followerDid, blocks.isBlocked(did, followerDid))
+      for (const targetDid of targetDids) {
+        didBlocks.set(targetDid, blocks.isBlocked(did, targetDid))
       }
 
-      result.set(did, followBlocks)
+      result.set(did, didBlocks)
     }
 
     return result
