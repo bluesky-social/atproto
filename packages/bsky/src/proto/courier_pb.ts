@@ -175,6 +175,11 @@ export class Notification extends Message<Notification> {
    */
   additional?: Struct
 
+  /**
+   * @generated from field: bool client_controlled = 9;
+   */
+  clientControlled = false
+
   constructor(data?: PartialMessage<Notification>) {
     super()
     proto3.util.initPartial(data, this)
@@ -206,6 +211,12 @@ export class Notification extends Message<Notification> {
     },
     { no: 7, name: 'timestamp', kind: 'message', T: Timestamp },
     { no: 8, name: 'additional', kind: 'message', T: Struct },
+    {
+      no: 9,
+      name: 'client_controlled',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
   ])
 
   static fromBinary(
