@@ -1,4 +1,4 @@
-import { cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
+import { BlockMap, cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
 import AppContext from '../../context'
 import { CommitEvt, SeqEvt, AccountEvt } from '../../sequencer'
 import {
@@ -14,15 +14,13 @@ import { AccountStatus } from '../../account-manager'
 export class Recoverer {
   cursor: number
   queues: UserQueues
-  rotateKeys: boolean
 
   constructor(
     public ctx: AppContext,
-    opts: { cursor: number; concurrency: number; rotateKeys: boolean },
+    opts: { cursor: number; concurrency: number },
   ) {
     this.cursor = opts.cursor
     this.queues = new UserQueues(opts.concurrency)
-    this.rotateKeys = opts.rotateKeys
   }
 
   async run() {
@@ -70,7 +68,7 @@ export class Recoverer {
   processCommit(evt: CommitEvt) {
     const did = evt.repo
     this.queues.addToUser(did, async () => {
-      const writes = await parseEvtToWrites(evt)
+      const { writes, blocks } = await parseCommitEvt(evt)
       if (evt.since === null) {
         // bails if actor store already exists
         await this.processRepoCreation(did, evt.rev)
@@ -80,7 +78,15 @@ export class Recoverer {
         if (root.rev >= evt.rev) {
           return
         }
-        await actorTxn.repo.processWrites(writes, undefined, evt.rev)
+        const commit = await actorTxn.repo.formatCommit(writes)
+        commit.newBlocks = blocks
+        commit.cid = evt.commit
+        commit.rev = evt.rev
+        await Promise.all([
+          actorTxn.repo.storage.applyCommit(commit),
+          actorTxn.repo.indexWrites(writes, commit.rev),
+          actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
+        ])
       })
     })
   }
@@ -95,11 +101,7 @@ export class Recoverer {
     await this.ctx.actorStore.transact(did, (store) =>
       store.repo.createRepo([], rev),
     )
-    if (this.rotateKeys) {
-      await this.updateAccountSigningKey(did, keypair.did())
-    } else {
-      console.warn(`skipping key rotation for ${did}`)
-    }
+    console.log(`created repo and keypair for ${did}`)
   }
 
   async updateAccountSigningKey(did: string, signingKey: string) {
@@ -131,7 +133,12 @@ export class Recoverer {
   }
 }
 
-const parseEvtToWrites = async (evt: CommitEvt): Promise<PreparedWrite[]> => {
+const parseCommitEvt = async (
+  evt: CommitEvt,
+): Promise<{
+  writes: PreparedWrite[]
+  blocks: BlockMap
+}> => {
   const did = evt.repo
   const evtCar = await readCar(evt.blocks)
   const writesUnfiltered = await Promise.all(
@@ -164,5 +171,11 @@ const parseEvtToWrites = async (evt: CommitEvt): Promise<PreparedWrite[]> => {
       }
     }),
   )
-  return writesUnfiltered.filter((w) => w !== undefined) as PreparedWrite[]
+  const writes = writesUnfiltered.filter(
+    (w) => w !== undefined,
+  ) as PreparedWrite[]
+  return {
+    writes,
+    blocks: evtCar.blocks,
+  }
 }

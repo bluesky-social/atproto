@@ -21,6 +21,9 @@ export const rotateKeys = async (ctx: AppContext, args: string[]) => {
     queue.add(async () => {
       try {
         await updatePlcSigningKey(ctx, did)
+        await ctx.actorStore.transact(did, async (actorTxn) => {
+          await actorTxn.repo.processWrites([])
+        })
         console.log(`updated key for: ${did}`)
       } catch (err) {
         console.error(`failed to update key for ${did}: ${err}`)

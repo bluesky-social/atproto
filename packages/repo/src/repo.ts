@@ -38,7 +38,6 @@ export class Repo extends ReadableRepo {
     did: string,
     keypair: crypto.Keypair,
     initialWrites: RecordCreateOp[] = [],
-    revOverride?: string,
   ): Promise<CommitData> {
     const newBlocks = new BlockMap()
 
@@ -52,7 +51,7 @@ export class Repo extends ReadableRepo {
     const diff = await DataDiff.of(data, null)
     newBlocks.addMap(diff.newMstBlocks)
 
-    const rev = revOverride ?? TID.nextStr()
+    const rev = TID.nextStr()
     const commit = await util.signCommit(
       {
         did,
@@ -116,7 +115,6 @@ export class Repo extends ReadableRepo {
   async formatCommit(
     toWrite: RecordWriteOp | RecordWriteOp[],
     keypair: crypto.Keypair,
-    revOverride?: string,
   ): Promise<CommitData> {
     const writes = Array.isArray(toWrite) ? toWrite : [toWrite]
     const leaves = new BlockMap()
@@ -148,7 +146,7 @@ export class Repo extends ReadableRepo {
     }
     newBlocks.addMap(addedLeaves.blocks)
 
-    const rev = revOverride ?? TID.nextStr(this.commit.rev)
+    const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(
       {
         did: this.did,

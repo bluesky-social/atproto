@@ -4,7 +4,6 @@ import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import { AppContext, scripts } from '../dist'
 import AtpAgent from '@atproto/api'
 import { rmIfExists, renameIfExists } from '@atproto/common'
-import { verifyRepoCar } from '@atproto/repo'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView
@@ -125,6 +124,8 @@ describe('recovery', () => {
     const startCarBefore = await getCar(alice, startRev)
     const middleCarBefore = await getCar(alice, middleRev)
     const endCarBefore = await getCar(alice, endRev)
+    const aliceStatsBefore = await getStats(alice)
+    const elliCarBefore = await getCar(elli)
     const elliStatsBefore = await getStats(elli)
 
     // "restore" all 3 accounts to their backedup state, effectively rolling back the previous mutations
@@ -138,9 +139,11 @@ describe('recovery', () => {
     const startCarAfter = await getCar(alice, startRev)
     const middleCarAfter = await getCar(alice, middleRev)
     const endCarAfter = await getCar(alice, endRev)
+    const aliceStatsAfter = await getStats(alice)
     expect(ui8.equals(startCarAfter, startCarBefore)).toBe(true)
     expect(ui8.equals(middleCarAfter, middleCarBefore)).toBe(true)
     expect(ui8.equals(endCarAfter, endCarBefore)).toBe(true)
+    expect(aliceStatsAfter).toMatchObject(aliceStatsBefore)
 
     // ensure bob's account is re-deleted
     const attempt = getCar(bob)
@@ -148,14 +151,14 @@ describe('recovery', () => {
     const bobExists = await ctx.actorStore.exists(bob)
     expect(bobExists).toBe(false)
 
-    // ensure elli's account is restored
+    // ensure elli's CAR is exactly the same as before the loss
     // this involves creating a new signing key for her and updating her DID document
+    const elliCarAfter = await getCar(elli)
     const elliStatsAfter = await getStats(elli)
-    const elliCar = await getCar(elli)
-    expect(elliStatsAfter.recordCount).toEqual(elliStatsBefore.recordCount)
-    expect(elliStatsAfter.rev).toEqual(elliStatsBefore.rev)
+    expect(ui8.equals(elliCarAfter, elliCarBefore)).toBe(true)
+    expect(elliStatsAfter).toMatchObject(elliStatsBefore)
+    // it creates a new keypair for elli
     const elliKey = await ctx.actorStore.keypair(elli)
-    const verified = await verifyRepoCar(elliCar, elli, elliKey.did())
-    expect(verified.creates.length).toEqual(elliStatsBefore.recordCount)
+    expect(elliKey.did()).toBeDefined()
   })
 })

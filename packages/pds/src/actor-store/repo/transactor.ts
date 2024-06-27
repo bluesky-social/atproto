@@ -38,10 +38,7 @@ export class RepoTransactor extends RepoReader {
     this.storage = new SqlRepoTransactor(db, this.did, this.now)
   }
 
-  async createRepo(
-    writes: PreparedCreate[],
-    revOverride?: string,
-  ): Promise<CommitData> {
+  async createRepo(writes: PreparedCreate[]): Promise<CommitData> {
     this.db.assertTransaction()
     const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
@@ -49,7 +46,6 @@ export class RepoTransactor extends RepoReader {
       this.did,
       this.signingKey,
       writeOps,
-      revOverride,
     )
     await Promise.all([
       this.storage.applyCommit(commit, true),
@@ -59,13 +55,9 @@ export class RepoTransactor extends RepoReader {
     return commit
   }
 
-  async processWrites(
-    writes: PreparedWrite[],
-    swapCommitCid?: CID,
-    revOverride?: string,
-  ) {
+  async processWrites(writes: PreparedWrite[], swapCommitCid?: CID) {
     this.db.assertTransaction()
-    const commit = await this.formatCommit(writes, swapCommitCid, revOverride)
+    const commit = await this.formatCommit(writes, swapCommitCid)
     await Promise.all([
       // persist the commit to repo storage
       this.storage.applyCommit(commit),
@@ -80,7 +72,6 @@ export class RepoTransactor extends RepoReader {
   async formatCommit(
     writes: PreparedWrite[],
     swapCommit?: CID,
-    revOverride?: string,
   ): Promise<CommitData> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
@@ -124,11 +115,7 @@ export class RepoTransactor extends RepoReader {
 
     const repo = await Repo.load(this.storage, currRoot.cid)
     const writeOps = writes.map(writeToOp)
-    const commit = await repo.formatCommit(
-      writeOps,
-      this.signingKey,
-      revOverride,
-    )
+    const commit = await repo.formatCommit(writeOps, this.signingKey)
 
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
