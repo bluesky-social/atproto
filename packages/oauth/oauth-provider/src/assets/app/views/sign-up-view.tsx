@@ -58,7 +58,7 @@ export function SignUpView({
       title="Create Account"
       subtitle="We're so excited to have you join us!"
     >
-      <div className="max-w-lg w-full flex flex-col">
+      <div className="flex flex-col">
         <p className="mt-4 text-slate-400 dark:text-slate-600">
           {stepName(step, stepCount)}
         </p>

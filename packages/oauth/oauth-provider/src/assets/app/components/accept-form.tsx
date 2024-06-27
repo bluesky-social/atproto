@@ -1,27 +1,31 @@
 import { OAuthClientMetadata } from '@atproto/oauth-types'
-import { type HTMLAttributes } from 'react'
+import { FormEvent } from 'react'
 
 import { Account } from '../backend-data'
-import { clsx } from '../lib/clsx'
+import { Override } from '../lib/util'
 import { AccountIdentifier } from './account-identifier'
+import { Button } from './button'
 import { ClientIdentifier } from './client-identifier'
 import { ClientName } from './client-name'
-import { Button } from './button'
+import { FormCard, FormCardProps } from './form-card'
 
-export type AcceptFormProps = {
-  account: Account
-  clientId: string
-  clientMetadata: OAuthClientMetadata
-  clientTrusted: boolean
-  onAccept: () => void
-  acceptLabel?: string
+export type AcceptFormProps = Override<
+  FormCardProps,
+  {
+    account: Account
+    clientId: string
+    clientMetadata: OAuthClientMetadata
+    clientTrusted: boolean
+    onAccept: () => void
+    acceptLabel?: string
 
-  onReject: () => void
-  rejectLabel?: string
+    onReject: () => void
+    rejectLabel?: string
 
-  onBack?: () => void
-  backLabel?: string
-}
+    onBack?: () => void
+    backLabel?: string
+  }
+>
 
 export function AcceptForm({
   account,
@@ -35,12 +39,31 @@ export function AcceptForm({
   onBack,
   backLabel = 'Back',
 
-  ...attrs
-}: AcceptFormProps & HTMLAttributes<HTMLDivElement>) {
+  ...props
+}: AcceptFormProps) {
+  const doSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    onAccept()
+  }
+
   return (
-    <div {...attrs} className={clsx('flex flex-col', attrs.className)}>
+    <FormCard
+      onSubmit={doSubmit}
+      title={<ClientName clientId={clientId} clientMetadata={clientMetadata} />}
+      cancel={onBack && <Button onClick={onBack}>{backLabel}</Button>}
+      actions={
+        <>
+          <Button type="submit" color="brand">
+            {acceptLabel}
+          </Button>
+
+          <Button onClick={onReject}>{rejectLabel}</Button>
+        </>
+      }
+      {...props}
+    >
       {clientTrusted && clientMetadata.logo_uri && (
-        <div className="flex items-center justify-center mb-4">
+        <div key="logo" className="flex items-center justify-center">
           <img
             crossOrigin="anonymous"
             src={clientMetadata.logo_uri}
@@ -50,20 +73,13 @@ export function AcceptForm({
         </div>
       )}
 
-      <ClientName
-        clientId={clientId}
-        clientMetadata={clientMetadata}
-        as="h1"
-        className="text-2xl font-semibold text-center text-brand"
-      />
-
-      <p className="mt-4">
+      <p>
         <ClientIdentifier clientId={clientId} clientMetadata={clientMetadata} />{' '}
         is asking for permission to access your{' '}
         <AccountIdentifier account={account} /> account.
       </p>
 
-      <p className="mt-4">
+      <p>
         By clicking <b>{acceptLabel}</b>, you allow this application to access
         your information in accordance to their{' '}
         <a
@@ -85,26 +101,6 @@ export function AcceptForm({
         </a>
         .
       </p>
-
-      <div className="flex-auto" />
-
-      <div className="mt-4 flex flex-wrap items-center justify-between">
-        <Button onClick={onAccept} className="order-last" color="brand">
-          {acceptLabel}
-        </Button>
-
-        {onBack && (
-          <Button onClick={() => onBack()} className="mr-2">
-            {backLabel}
-          </Button>
-        )}
-
-        <div className="flex-auto"></div>
-
-        <Button onClick={onReject} className="mr-2">
-          {rejectLabel}
-        </Button>
-      </div>
-    </div>
+    </FormCard>
   )
 }

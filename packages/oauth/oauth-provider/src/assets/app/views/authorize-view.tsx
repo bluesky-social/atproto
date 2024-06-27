@@ -19,6 +19,7 @@ export function AuthorizeView({
   customizationData,
 }: AuthorizeViewProps) {
   const forceSignIn = authorizeData?.loginHint != null
+  console.error('forceSignIn', forceSignIn)
 
   const [view, setView] = useState<
     'welcome' | 'sign-in' | 'sign-up' | 'accept' | 'done'
@@ -85,10 +86,14 @@ export function AuthorizeView({
         clientTrusted={authorizeData.clientTrusted}
         onAccept={() => doAccept(session.account)}
         onReject={doReject}
-        onBack={() => {
-          setSession(null)
-          setView(sessions.length ? 'sign-in' : 'welcome')
-        }}
+        onBack={
+          forceSignIn
+            ? undefined
+            : () => {
+                setSession(null)
+                setView(sessions.length ? 'sign-in' : 'welcome')
+              }
+        }
       />
     )
   }

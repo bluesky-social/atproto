@@ -18,6 +18,7 @@ export default {
       colors: {
         brand: 'rgb(var(--color-brand) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
+        warning: 'rgb(var(--color-warning) / <alpha-value>)',
       },
     },
   },

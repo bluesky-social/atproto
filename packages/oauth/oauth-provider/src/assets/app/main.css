@@ -7,5 +7,6 @@
   :root {
     --color-brand: 255 115 179;
     --color-error: 235 65 49;
+    --color-warning: 255 201 73;
   }
 }

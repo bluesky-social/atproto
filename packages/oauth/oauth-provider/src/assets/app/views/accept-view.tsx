@@ -39,7 +39,6 @@ export function AcceptView({
       }
     >
       <AcceptForm
-        className="max-w-lg w-full"
         clientId={clientId}
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}

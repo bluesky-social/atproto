@@ -6,36 +6,40 @@ import {
   useState,
 } from 'react'
 
-import { clsx } from '../lib/clsx'
-import { ErrorCard } from './error-card'
+import { Button } from './button'
+import { FormCard, FormCardProps } from './form-card'
+import { Override } from '../lib/util'
 
 export type SignUpAccountFormOutput = {
   username: string
   password: string
 }
 
-export type SignUpAccountFormProps = {
-  onSubmit: (credentials: SignUpAccountFormOutput) => void | PromiseLike<void>
-  submitLabel?: ReactNode
-  submitAria?: string
+export type SignUpAccountFormProps = Override<
+  FormCardProps,
+  {
+    onSubmit: (credentials: SignUpAccountFormOutput) => void | PromiseLike<void>
+    submitLabel?: ReactNode
+    submitAria?: string
 
-  onCancel?: () => void
-  cancelLabel?: ReactNode
-  cancelAria?: string
+    onCancel?: () => void
+    cancelLabel?: ReactNode
+    cancelAria?: string
 
-  username?: string
-  usernamePlaceholder?: string
-  usernameLabel?: string
-  usernameAria?: string
-  usernamePattern?: string
-  usernameTitle?: string
+    username?: string
+    usernamePlaceholder?: string
+    usernameLabel?: string
+    usernameAria?: string
+    usernamePattern?: string
+    usernameTitle?: string
 
-  passwordPlaceholder?: string
-  passwordLabel?: string
-  passwordAria?: string
-  passwordPattern?: string
-  passwordTitle?: string
-}
+    passwordPlaceholder?: string
+    passwordLabel?: string
+    passwordAria?: string
+    passwordPattern?: string
+    passwordTitle?: string
+  }
+>
 
 export function SignUpAccountForm({
   onSubmit,
@@ -59,9 +63,8 @@ export function SignUpAccountForm({
   passwordPattern,
   passwordTitle,
 
-  className,
   children,
-  ...attrs
+  ...props
 }: SignUpAccountFormProps &
   Omit<FormHTMLAttributes<HTMLFormElement>, keyof SignUpAccountFormProps>) {
   const [loading, setLoading] = useState(false)
@@ -98,20 +101,34 @@ export function SignUpAccountForm({
   )
 
   return (
-    <form
-      {...attrs}
-      className={clsx('flex flex-col', className)}
+    <FormCard
+      disabled={loading}
+      append={children}
+      error={errorMessage}
       onSubmit={doSubmit}
-    >
-      <fieldset disabled={loading}>
-        <label className="text-sm font-medium" htmlFor="username">
-          {usernameLabel}
-        </label>
-
-        <div
-          id="username"
-          className="mb-4 relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
+      cancel={
+        onCancel && (
+          <Button aria-label={cancelAria} onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+        )
+      }
+      actions={
+        <Button
+          color="brand"
+          type="submit"
+          aria-label={submitAria}
+          disabled={loading}
         >
+          {submitLabel}
+        </Button>
+      }
+      {...props}
+    >
+      <label className="text-sm font-medium block">
+        <p>{usernameLabel}</p>
+
+        <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
           <span className="w-6 ml-1 text-center text-base">@</span>
           <input
             name="username"
@@ -132,15 +149,12 @@ export function SignUpAccountForm({
             title={usernameTitle}
           />
         </div>
+      </label>
 
-        <label className="text-sm font-medium" htmlFor="password">
-          {passwordLabel}
-        </label>
+      <label className="text-sm font-medium block">
+        <p>{passwordLabel}</p>
 
-        <div
-          id="password"
-          className="mb-4 relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
-        >
+        <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
           <span className="w-6 ml-1 text-center text-2xl font-light -mb-2">
             *
           </span>
@@ -162,40 +176,8 @@ export function SignUpAccountForm({
             title={passwordTitle}
           />
         </div>
-      </fieldset>
-
-      {children && <div className="mt-4">{children}</div>}
-
-      {errorMessage && <ErrorCard className="mt-2">{errorMessage}</ErrorCard>}
-
-      <div className="flex-auto"></div>
-
-      <div className="p-4 flex flex-wrap items-center justify-start">
-        <button
-          className="py-2 bg-transparent text-brand rounded-md font-semibold order-last"
-          type="submit"
-          role="Button"
-          aria-label={submitAria}
-          disabled={loading}
-        >
-          {submitLabel}
-        </button>
-
-        {onCancel && (
-          <button
-            className="py-2 bg-transparent text-brand rounded-md font-light"
-            type="button"
-            role="Button"
-            aria-label={cancelAria}
-            onClick={onCancel}
-          >
-            {cancelLabel}
-          </button>
-        )}
-
-        <div className="flex-auto" />
-      </div>
-    </form>
+      </label>
+    </FormCard>
   )
 }
 

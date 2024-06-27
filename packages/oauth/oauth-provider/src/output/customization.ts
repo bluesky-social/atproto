@@ -1,5 +1,5 @@
 // Matches colors defined in tailwind.config.js
-const colorNames = ['brand', 'error'] as const
+const colorNames = ['brand', 'error', 'warning'] as const
 type ColorName = (typeof colorNames)[number]
 const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)

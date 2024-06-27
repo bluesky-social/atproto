@@ -1,47 +1,37 @@
-import { forwardRef, HTMLAttributes, ReactNode, useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { clsx } from '../lib/clsx'
+import { InputLayout, InputLayoutProps } from './input-layout'
 
-export const InputContainer = forwardRef<
-  HTMLDivElement,
-  {
-    className?: string
-    icon?: ReactNode
-    children?: ReactNode
-  } & HTMLAttributes<HTMLDivElement>
->(({ className, icon, children, onFocus, onBlur, ...props }, ref) => {
-  const [focused, setFocused] = useState(false)
+export type InputContainerProps = InputLayoutProps
 
-  return (
-    <div
-      ref={ref}
-      className={clsx(
-        'px-1 h-12 flex flex-wrap items-center justify-stretch',
-        'rounded-lg',
-        'bg-gray-100 dark:bg-slate-800 has-[:focus]:bg-slate-700',
-        'border-solid border-2 border-transparent hover:border-gray-400 dark:hover:border-gray-500 has-[:focus]:border-brand hover:has-[:focus]:border-brand',
-        className,
-      )}
-      onFocus={(event) => {
-        setFocused(true)
-        onFocus?.(event)
-      }}
-      onBlur={(event) => {
-        setFocused(false)
-        onBlur?.(event)
-      }}
-      {...props}
-    >
-      {icon && (
-        <div
-          className={clsx(
-            'w-8 max-h-10 flex items-center justify-center',
-            focused ? 'text-brand' : 'text-gray-500',
-          )}
-        >
-          {icon}
-        </div>
-      )}
-      <div className="w-[1px] min-w-0 flex-auto relative">{children}</div>
-    </div>
-  )
-})
+export const InputContainer = forwardRef<HTMLDivElement, InputContainerProps>(
+  ({ className, onFocus, icon, onBlur, ...props }, ref) => {
+    const [focused, setFocused] = useState(false)
+
+    return (
+      <InputLayout
+        ref={ref}
+        className={clsx(
+          // Background
+          'bg-gray-100 has-[:focus]:bg-slate-200',
+          'dark:bg-slate-800 dark:has-[:focus]:bg-slate-700',
+          // Border
+          'outline-none',
+          'border-solid border-2 border-transparent hover:border-gray-400 has-[:focus]:border-brand hover:has-[:focus]:border-brand',
+          'dark:hover:border-gray-500',
+          className,
+        )}
+        onFocus={(event) => {
+          onFocus?.(event)
+          if (!event.defaultPrevented) setFocused(true)
+        }}
+        onBlur={(event) => {
+          onBlur?.(event)
+          if (!event.defaultPrevented) setFocused(false)
+        }}
+        icon={<div className={focused ? 'text-brand' : undefined}>{icon}</div>}
+        {...props}
+      />
+    )
+  },
+)
