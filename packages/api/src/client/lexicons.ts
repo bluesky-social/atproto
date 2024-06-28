@@ -4923,6 +4923,7 @@ export const schemaDict = {
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
               'lex:app.bsky.labeler.defs#labelerView',
+              'lex:app.bsky.graph.defs#starterPackViewBasic',
             ],
           },
         },
