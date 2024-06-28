@@ -201,4 +201,19 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  server.app.bsky.actor.searchActorsTypeahead({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res =
+        await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
+          request.params,
+          await ctx.appviewAuth(),
+        )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
 }
