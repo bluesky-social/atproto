@@ -1,4 +1,11 @@
-import { BlockMap, cborToLexRecord, parseDataKey, readCar } from '@atproto/repo'
+import {
+  BlockMap,
+  CidSet,
+  CommitData,
+  cborToLexRecord,
+  parseDataKey,
+  readCar,
+} from '@atproto/repo'
 import AppContext from '../../context'
 import { CommitEvt, SeqEvt, AccountEvt } from '../../sequencer'
 import {
@@ -70,8 +77,11 @@ export class Recoverer {
     this.queues.addToUser(did, async () => {
       const { writes, blocks } = await parseCommitEvt(evt)
       if (evt.since === null) {
-        // bails if actor store already exists
-        await this.processRepoCreation(did, evt.rev)
+        const actorExists = await this.ctx.actorStore.exists(did)
+        if (!actorExists) {
+          await this.processRepoCreation(evt, writes, blocks)
+          return
+        }
       }
       await this.ctx.actorStore.transact(did, async (actorTxn) => {
         const root = await actorTxn.repo.storage.getRootDetailed()
@@ -91,34 +101,30 @@ export class Recoverer {
     })
   }
 
-  async processRepoCreation(did: string, rev: string) {
-    const actorExists = await this.ctx.actorStore.exists(did)
-    if (actorExists) {
-      return
-    }
+  async processRepoCreation(
+    evt: CommitEvt,
+    writes: PreparedWrite[],
+    blocks: BlockMap,
+  ) {
+    const did = evt.repo
     const keypair = await Secp256k1Keypair.create({ exportable: true })
     await this.ctx.actorStore.create(did, keypair)
-    await this.ctx.actorStore.transact(did, (store) =>
-      store.repo.createRepo([], rev),
+    const commit: CommitData = {
+      cid: evt.commit,
+      rev: evt.rev,
+      since: evt.since,
+      prev: evt.prev,
+      newBlocks: blocks,
+      removedCids: new CidSet(),
+    }
+    await this.ctx.actorStore.transact(did, (actorTxn) =>
+      Promise.all([
+        actorTxn.repo.storage.applyCommit(commit, true),
+        actorTxn.repo.indexWrites(writes, commit.rev),
+        actorTxn.repo.blob.processWriteBlobs(commit.rev, writes),
+      ]),
     )
     console.log(`created repo and keypair for ${did}`)
-  }
-
-  async updateAccountSigningKey(did: string, signingKey: string) {
-    if (this.ctx.entrywayAdminAgent) {
-      await this.ctx.entrywayAdminAgent.api.com.atproto.admin.updateAccountSigningKey(
-        {
-          did,
-          signingKey,
-        },
-      )
-    } else {
-      await this.ctx.plcClient.updateAtprotoKey(
-        did,
-        this.ctx.plcRotationKey,
-        signingKey,
-      )
-    }
   }
 
   processAccountEvt(evt: AccountEvt) {

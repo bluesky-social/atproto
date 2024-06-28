@@ -4,6 +4,7 @@ import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import { AppContext, scripts } from '../dist'
 import AtpAgent from '@atproto/api'
 import { rmIfExists, renameIfExists } from '@atproto/common'
+import { verifyRepoCar } from '@atproto/repo'
 
 describe('recovery', () => {
   let network: TestNetworkNoAppView
@@ -12,6 +13,7 @@ describe('recovery', () => {
   let agent: AtpAgent
   let alice: string
   let bob: string
+  let elli: string
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -115,7 +117,7 @@ describe('recovery', () => {
       password: 'elli-pass',
       email: 'elli@test.com',
     })
-    const elli = sc.dids.elli
+    elli = sc.dids.elli
     for (let i = 0; i < 10; i++) {
       await sc.post(elli, `post-${i}`)
     }
@@ -160,5 +162,17 @@ describe('recovery', () => {
     // it creates a new keypair for elli
     const elliKey = await ctx.actorStore.keypair(elli)
     expect(elliKey.did()).toBeDefined()
+  })
+
+  it('rotates keys for users', async () => {
+    await scripts['rotate-keys'](network.pds.ctx, [elli])
+    const elliKey = await ctx.actorStore.keypair(elli)
+
+    const plcData = await ctx.plcClient.getDocumentData(elli)
+    expect(plcData.verificationMethods['atproto']).toEqual(elliKey.did())
+
+    // it correctly resigned elli's repo
+    const elliCar = await getCar(elli)
+    await verifyRepoCar(elliCar, elli, elliKey.did())
   })
 })

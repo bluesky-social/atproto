@@ -1,5 +1,5 @@
 import AppContext from '../../context'
-import { parseIntArg } from '../common'
+import { parseIntArg } from '../util'
 import { Recoverer } from './recoverer'
 
 export const sequencerRecovery = async (ctx: AppContext, args: string[]) => {
