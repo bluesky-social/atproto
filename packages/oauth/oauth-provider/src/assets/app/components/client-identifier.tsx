@@ -20,7 +20,7 @@ export function ClientIdentifier({
   ...attrs
 }: ClientIdentifierProps & HTMLAttributes<Element>) {
   if (isOAuthClientIdLoopback(clientId)) {
-    return <As {...attrs}>An application on your computer</As>
+    return <As {...attrs}>An application on your device</As>
   }
 
   if (isOAuthClientIdDiscoverable(clientId)) {

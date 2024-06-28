@@ -32,7 +32,7 @@ export function LayoutTitlePage({
       <div
         className={clsx(
           'px-6 pt-4',
-          'max-w-lg',
+          'md:max-w-lg',
           'md:grid md:content-center md:justify-items-end',
           'md:self-stretch',
           'md:w-1/2 md:max-w-fix md:p-4',
@@ -54,7 +54,7 @@ export function LayoutTitlePage({
         )}
       </div>
 
-      <div className="max-w-lg w-full px-6 md:px-12">{children}</div>
+      <div className="w-full px-6 md:max-w-3xl md:px-12">{children}</div>
     </div>
   )
 }

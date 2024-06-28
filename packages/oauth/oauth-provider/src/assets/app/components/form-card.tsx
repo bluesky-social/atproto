@@ -6,9 +6,7 @@ import { Override } from '../lib/util'
 export type FormCardProps = Override<
   FormHTMLAttributes<HTMLFormElement>,
   {
-    title?: ReactNode
     append?: ReactNode
-    disabled?: boolean
     error?: ReactNode
     cancel?: ReactNode
     actions?: ReactNode
@@ -16,43 +14,19 @@ export type FormCardProps = Override<
 >
 
 export const FormCard = forwardRef<HTMLFormElement, FormCardProps>(
-  (
-    {
-      actions,
-      cancel,
-      append,
-      className,
-      disabled,
-      children,
-      error,
-      title,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ actions, cancel, append, className, children, error, ...props }, ref) => {
     return (
-      <form ref={ref} className={clsx('flex flex-col', className)} {...props}>
-        {title && (
-          <p
-            key="title"
-            className="font-medium mb-1 text-slate-600 dark:text-slate-400"
-          >
-            {title}
-          </p>
-        )}
+      <form
+        ref={ref}
+        className={clsx('flex flex-col py-4 space-y-4', className)}
+        {...props}
+      >
+        <div className="space-y-4">{children}</div>
 
-        <fieldset className="flex flex-col space-y-4" disabled={disabled}>
-          {children}
-        </fieldset>
-
-        {append && (
-          <div key="append" className="mt-4">
-            {append}
-          </div>
-        )}
+        {append && <div key="append">{append}</div>}
 
         {error && (
-          <InfoCard key="error" role="alert" className="mt-4">
+          <InfoCard key="error" role="alert">
             {error}
           </InfoCard>
         )}
@@ -60,7 +34,7 @@ export const FormCard = forwardRef<HTMLFormElement, FormCardProps>(
         {(actions || cancel) && (
           <div
             key="buttons"
-            className="py-4 flex flex-wrap flex-row-reverse items-center justify-end space-x-reverse space-x-2"
+            className="flex flex-wrap flex-row-reverse items-center justify-end space-x-reverse space-x-2"
           >
             {actions}
             <div className="flex-auto" />

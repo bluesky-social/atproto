@@ -9,6 +9,7 @@ import {
 import { Button } from './button'
 import { FormCard, FormCardProps } from './form-card'
 import { Override } from '../lib/util'
+import { Fieldset } from './fieldset'
 
 export type SignUpAccountFormOutput = {
   username: string
@@ -102,7 +103,6 @@ export function SignUpAccountForm({
 
   return (
     <FormCard
-      disabled={loading}
       append={children}
       error={errorMessage}
       onSubmit={doSubmit}
@@ -125,58 +125,60 @@ export function SignUpAccountForm({
       }
       {...props}
     >
-      <label className="text-sm font-medium block">
-        <p>{usernameLabel}</p>
+      <Fieldset disabled={loading}>
+        <label className="text-sm font-medium block">
+          <p>{usernameLabel}</p>
 
-        <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
-          <span className="w-6 ml-1 text-center text-base">@</span>
-          <input
-            name="username"
-            type="text"
-            onChange={() => setErrorMessage(null)}
-            className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
-            placeholder={usernamePlaceholder}
-            aria-label={usernameAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="username"
-            spellCheck="false"
-            dir="auto"
-            enterKeyHint="next"
-            required
-            defaultValue={defaultUsername}
-            pattern={usernamePattern}
-            title={usernameTitle}
-          />
-        </div>
-      </label>
+          <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
+            <span className="w-6 ml-1 text-center text-base">@</span>
+            <input
+              name="username"
+              type="text"
+              onChange={() => setErrorMessage(null)}
+              className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
+              placeholder={usernamePlaceholder}
+              aria-label={usernameAria}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              spellCheck="false"
+              dir="auto"
+              enterKeyHint="next"
+              required
+              defaultValue={defaultUsername}
+              pattern={usernamePattern}
+              title={usernameTitle}
+            />
+          </div>
+        </label>
 
-      <label className="text-sm font-medium block">
-        <p>{passwordLabel}</p>
+        <label className="text-sm font-medium block">
+          <p>{passwordLabel}</p>
 
-        <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
-          <span className="w-6 ml-1 text-center text-2xl font-light -mb-2">
-            *
-          </span>
-          <input
-            name="password"
-            type="password"
-            onChange={() => setErrorMessage(null)}
-            className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder={passwordPlaceholder}
-            aria-label={passwordAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="new-password"
-            dir="auto"
-            enterKeyHint="done"
-            spellCheck="false"
-            required
-            pattern={passwordPattern}
-            title={passwordTitle}
-          />
-        </div>
-      </label>
+          <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
+            <span className="w-6 ml-1 text-center text-2xl font-light -mb-2">
+              *
+            </span>
+            <input
+              name="password"
+              type="password"
+              onChange={() => setErrorMessage(null)}
+              className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+              placeholder={passwordPlaceholder}
+              aria-label={passwordAria}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="new-password"
+              dir="auto"
+              enterKeyHint="done"
+              spellCheck="false"
+              required
+              pattern={passwordPattern}
+              title={passwordTitle}
+            />
+          </div>
+        </label>
+      </Fieldset>
     </FormCard>
   )
 }

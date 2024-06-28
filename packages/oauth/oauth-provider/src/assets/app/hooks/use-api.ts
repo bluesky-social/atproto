@@ -8,6 +8,8 @@ import { useCsrfToken } from './use-csrf-token'
 export type SignInCredentials = {
   username: string
   password: string
+  emailOtp?: string
+
   remember?: boolean
 }
 

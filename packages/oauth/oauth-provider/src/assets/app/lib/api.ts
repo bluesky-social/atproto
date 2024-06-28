@@ -1,4 +1,4 @@
-import { fetchJsonProcessor, fetchOkProcessor } from '@atproto-labs/fetch'
+import { FetchResponseError, Json } from '@atproto-labs/fetch'
 
 import { Account, Session } from '../backend-data'
 
@@ -15,7 +15,7 @@ export class Api {
     password: string
     remember?: boolean
   }): Promise<Session> {
-    const { json } = await fetch('/oauth/authorize/sign-in', {
+    const response = await fetch('/oauth/authorize/sign-in', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       mode: 'same-origin',
@@ -26,20 +26,40 @@ export class Api {
         credentials,
       }),
     })
-      .then(fetchOkProcessor())
-      .then(
-        fetchJsonProcessor<{
-          account: Account
-          consentRequired: boolean
-        }>(),
-      )
 
-    return {
-      account: json.account,
+    const json: Json = await response.json()
 
-      selected: true,
-      loginRequired: false,
-      consentRequired: this.newSessionsRequireConsent || json.consentRequired,
+    if (response.ok) {
+      const data = json as {
+        account: Account
+        consentRequired: boolean
+      }
+
+      return {
+        account: data.account,
+
+        selected: true,
+        loginRequired: false,
+        consentRequired: this.newSessionsRequireConsent || data.consentRequired,
+      }
+    } else if (
+      response.status === 400 &&
+      json?.['error'] === 'invalid_request' &&
+      json?.['error_description'] === 'Invalid credentials'
+    ) {
+      throw new InvalidCredentialsError()
+    } else if (
+      response.status === 401 &&
+      json?.['error'] === 'second_authentication_factor_required'
+    ) {
+      const data = json as {
+        type: 'emailOtp'
+        hint: string
+      }
+
+      throw new SecondAuthenticationFactorRequiredError(data.type, data.hint)
+    } else {
+      throw new FetchResponseError(response)
     }
   }
 
@@ -60,5 +80,20 @@ export class Api {
     url.searchParams.set('csrf_token', this.csrfToken)
 
     return url
+  }
+}
+
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super('Invalid credentials')
+  }
+}
+
+export class SecondAuthenticationFactorRequiredError extends Error {
+  constructor(
+    public type: 'emailOtp',
+    public hint: string,
+  ) {
+    super(`${type} authentication factor required (hint: ${hint})`)
   }
 }

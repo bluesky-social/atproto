@@ -9,7 +9,7 @@ import {
   Account,
   AccountInfo,
   AccountStore,
-  LoginCredentials,
+  SignInCredentials,
 } from './account-store.js'
 
 const TIMING_ATTACK_MITIGATION_DELAY = 400
@@ -18,7 +18,7 @@ export class AccountManager {
   constructor(protected readonly store: AccountStore) {}
 
   public async signIn(
-    credentials: LoginCredentials,
+    credentials: SignInCredentials,
     deviceId: DeviceId,
   ): Promise<AccountInfo> {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
