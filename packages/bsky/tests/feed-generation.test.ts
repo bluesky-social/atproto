@@ -34,6 +34,7 @@ describe('feed generation', () => {
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
   let feedUriNeedsAuth: string
+  let starterPackRef: { uri: string; cid: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -237,6 +238,85 @@ describe('feed generation', () => {
         embed: {
           $type: 'app.bsky.embed.record',
           record: feedUriPrimeRef.raw,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+    await network.processAll()
+    const view = await agent.api.app.bsky.feed.getPosts(
+      { uris: [res.uri] },
+      { headers: await network.serviceHeaders(sc.dids.bob) },
+    )
+    expect(view.data.posts.length).toBe(1)
+    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
+  })
+
+  it('embeds starter pack records in posts', async () => {
+    const listRes = await pdsAgent.api.app.bsky.graph.list.create(
+      {
+        repo: sc.dids.alice,
+      },
+      {
+        name: 'awesome starter pack!',
+        description: '',
+        descriptionFacets: [],
+        avatar: undefined,
+        createdAt: new Date().toISOString(),
+        purpose: 'app.bsky.graph.defs#referencelist',
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    const starterPackRes = await pdsAgent.api.app.bsky.graph.starterpack.create(
+      {
+        repo: sc.dids.alice,
+      },
+      {
+        name: 'awesome starter pack!',
+        description: '',
+        descriptionFacets: [],
+        feeds: [],
+        list: listRes.uri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    starterPackRef = {
+      uri: starterPackRes.uri,
+      cid: starterPackRes.cid,
+    }
+    const res = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'sick starter pack!',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: starterPackRef,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+    await network.processAll()
+    const view = await agent.api.app.bsky.feed.getPosts(
+      { uris: [res.uri] },
+      { headers: await network.serviceHeaders(sc.dids.bob) },
+    )
+    expect(view.data.posts.length).toBe(1)
+    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
+  })
+
+  it('does not embed taken-down starter pack records in posts', async () => {
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: starterPackRef.uri,
+    })
+    const res = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'annoying starter pack',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: starterPackRef,
         },
         createdAt: new Date().toISOString(),
       },
