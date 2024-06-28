@@ -277,7 +277,7 @@ describe('pds views with blocking from block lists', () => {
   it('does not return blocked accounts in actor search', async () => {
     const resCarol = await agent.api.app.bsky.actor.searchActors(
       {
-        term: 'dan.test',
+        q: 'dan.test',
       },
       { headers: await network.serviceHeaders(carol) },
     )
@@ -285,7 +285,7 @@ describe('pds views with blocking from block lists', () => {
 
     const resDan = await agent.api.app.bsky.actor.searchActors(
       {
-        term: 'carol.test',
+        q: 'carol.test',
       },
       { headers: await network.serviceHeaders(dan) },
     )
@@ -295,7 +295,7 @@ describe('pds views with blocking from block lists', () => {
   it('does not return blocked accounts in actor search typeahead', async () => {
     const resCarol = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: 'dan.test',
+        q: 'dan.test',
       },
       { headers: await network.serviceHeaders(carol) },
     )
@@ -303,7 +303,7 @@ describe('pds views with blocking from block lists', () => {
 
     const resDan = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: 'carol.test',
+        q: 'carol.test',
       },
       { headers: await network.serviceHeaders(dan) },
     )

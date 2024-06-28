@@ -10,8 +10,6 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead */
-  term?: string
   q?: string
   limit: number
   cursor?: string

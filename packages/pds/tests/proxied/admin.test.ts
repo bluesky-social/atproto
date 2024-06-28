@@ -184,7 +184,7 @@ describe('proxies admin requests', () => {
 
   it('searches repos.', async () => {
     const { data: result } = await agent.api.tools.ozone.moderation.searchRepos(
-      { term: 'alice' },
+      { q: 'alice' },
       { headers: sc.getHeaders(moderator) },
     )
     expect(forSnapshot(result.repos)).toMatchSnapshot()

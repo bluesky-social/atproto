@@ -4639,10 +4639,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            term: {
-              type: 'string',
-              description: "DEPRECATED: use 'q' instead.",
-            },
             q: {
               type: 'string',
               description:
@@ -4692,10 +4688,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            term: {
-              type: 'string',
-              description: "DEPRECATED: use 'q' instead.",
-            },
             q: {
               type: 'string',
               description: 'Search query prefix; not a full query string.',
