@@ -202,6 +202,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     return super.revoke(sub)
   }
 
+  signIn(
+    input: string,
+    options: AuthorizeOptions & { display: 'popup' },
+  ): Promise<OAuthAgent>
+  signIn(input: string, options?: AuthorizeOptions): Promise<never>
   async signIn(input: string, options?: AuthorizeOptions) {
     if (options?.display === 'popup') {
       return this.signInPopup(input, options)
@@ -210,14 +215,27 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
   }
 
-  async signInRedirect(input: string, options?: AuthorizeOptions) {
+  async signInRedirect(
+    input: string,
+    options?: AuthorizeOptions,
+  ): Promise<never> {
     const url = await this.authorize(input, options)
 
     window.location.href = url.href
 
     // back-forward cache
     return new Promise<never>((resolve, reject) => {
-      setTimeout(() => reject(new Error('User navigated back')), 5e3)
+      setTimeout(
+        (err: Error) => {
+          // Take the opportunity to proactively cancel the pending request
+          this.abortRequest(url).then(
+            () => reject(err),
+            (reason) => reject(new AggregateError([err, reason])),
+          )
+        },
+        5e3,
+        new Error('User navigated back'),
+      )
     })
   }
 

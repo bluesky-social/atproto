@@ -348,6 +348,13 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     )
   }
 
+  async abortRequest(authorizeUrl: URL) {
+    const requestUri = authorizeUrl.searchParams.get('request_uri')
+    if (!requestUri) return
+
+    // @TODO find a way to actually do this
+  }
+
   async callback(params: URLSearchParams): Promise<{
     agent: OAuthAgent
     state: string | null
