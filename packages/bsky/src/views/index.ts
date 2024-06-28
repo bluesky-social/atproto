@@ -966,7 +966,7 @@ export class Views {
     } else if (parsedUri.collection === ids.AppBskyGraphStarterpack) {
       const view = this.starterPackBasic(uri, state)
       if (!view) return this.embedNotFound(uri)
-      view.$type = 'app.bsky.starterpack.defs#starterPackViewBasic'
+      view.$type = 'app.bsky.graph.defs#starterPackViewBasic'
       return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
