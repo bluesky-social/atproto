@@ -152,10 +152,108 @@ following optional configuration options:
 
 Once the `client` is setup, it can be used to initiate & manage OAuth sessions.
 
+### Initializing the client
+
+The client will manage the sessions for you. In order to do so, it must first
+initialize itself. Note that this operation must be performed once (and **only
+once**) whenever the web app is loaded.
+
+```typescript
+const result: undefined | { agent: OAuthAgent; state?: string } =
+  await client.init()
+
+if (result) {
+  const { agent, state } = result
+  if (state != null) {
+    console.log(`${agent.sub} was successfully authenticated (state: ${state})`)
+  } else {
+    console.log(`${agent.sub} was restored (last active session)`)
+  }
+}
+```
+
+The return value can be used to determine if the client was able to restore the
+last used session (`agent` is defined) or if the current navigation is the
+result of an authorization redirect (both `agent` and `state` are defined).
+
+### Initiating an OAuth flow
+
+In order to initial an OAuth flow, we must fist determine which PDS the
+authentication flow will be initiated from. This means that the user must
+provide one of the following information:
+
+- The user's ATPROTO handle
+- The user's ATPROTO DID
+- A PDS/Entryway URL
+
+Using that information, the OAuthClient will resolve all the needed information
+to initiate the OAuth flow, and redirect the user to the OAuth server.
+
+```typescript
+try {
+  await client.signIn('my.handle.com', {
+    state: 'some value needed later',
+    prompt: 'none', // Attempt to sign in without user interaction (SSO)
+    ui_locales: 'fr-CA fr en', // Only supported by some OAuth servers (requires OpenID Connect support + i18n support)
+    signal: new AbortController().signal,
+  })
+
+  console.log('Never executed')
+} catch (err) {
+  console.log('The user aborted the authorization process by navigating "back"')
+}
+```
+
+The returned promise will never resolve (because the user will be redirected to
+the OAuth server). The promise will reject if the user cancels the sign in
+(using an `AbortSignal`), or if the user navigates back from the OAuth server
+(because of browser's back-forward cache).
+
+### Handling the OAuth response
+
+When the user is redirected back to the application, the OAuth response will be
+available in the URL. The `BrowserOAuthClient` will automatically detect the
+response and handle it when `client.init()` is called.
+
+### Restoring a session
+
+The client keeps an internal store of all the sessions that it manages.
+Regardless of the agent that was returned from the `client.init()` call,
+any other session can be loaded into a new agent using the `client.restore()`
+method.
+
+```ts
+const aliceAgent = await client.restore('did:plc:alice')
+const bobAgent = await client.restore('did:plc:bob')
+```
+
+In its current form, the client does not expose methods to list all sessions
+in its store. The app will have to keep track of those itself.
+
+### Watching for session invalidation
+
+The client will emit events whenever a session becomes unavailable, allowing to
+trigger global behaviors (e.g. show the login page).
+
+```ts
+client.addEventListener(
+  'deleted',
+  (
+    event: CustomEvent<{
+      sub: string
+      cause: TokenRefreshError | TokenRevokedError | TokenInvalidError
+    }>,
+  ) => {
+    const { sub, cause } = event.detail
+    console.error(`Session for ${sub} is no longer available (cause: ${cause})`)
+  },
+)
+```
+
 ## Usage with `@atproto/api`
 
-The `@atproto/api` package provides a way to interact with the com.atproto and
-app.bsky XRPC lexicons. The `OAuthAgent` can be used directly as session
+The `@atproto/api` package provides a way to interact with the `com.atproto` and
+`app.bsky` XRPC lexicons. The `OAuthAgent` can be used directly as session
 manager for `AtpAgent` and `BskyAgent`.
 
 ```ts
