@@ -3066,70 +3066,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncGetCheckout: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getCheckout',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetHead: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getHead',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HeadNotFound',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoSyncGetLatestCommit: {
     lexicon: 1,
     id: 'com.atproto.sync.getLatestCommit',
@@ -11640,8 +11576,6 @@ export const ids = {
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
-  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
-  ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
