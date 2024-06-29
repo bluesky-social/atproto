@@ -3,9 +3,13 @@
 3jzfcijpj2z21
 0000000000000
 
+# case-sensitive
+3JZFCIJPJ2Z2A
+
 # too long/short
 3jzfcijpj2z2aa
 3jzfcijpj2z2
+222
 
 # old dashes syntax not actually supported (TTTT-TTT-TTTT-CC)
 3jzf-cij-pj2z-2a
