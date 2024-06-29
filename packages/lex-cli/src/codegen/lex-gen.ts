@@ -11,6 +11,9 @@ import {
   LexCidLink,
   LexBytes,
   LexIpldType,
+  LexXrpcParametersProperty,
+  LexRef,
+  PROPERTY_VALID_REF_TYPES,
 } from '@atproto/lexicon'
 import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 
@@ -19,7 +22,7 @@ interface Commentable<T> {
 }
 export function genComment<T>(
   commentable: Commentable<T>,
-  def: LexUserType,
+  def: LexUserType | LexRef,
 ): T {
   if (def.description) {
     commentable.addJsDoc({ description: def.description })
@@ -257,6 +260,28 @@ export function genPrimitiveOrBlob(
   )
 }
 
+function genXrpcParam(lexicons: Lexicons, param: LexXrpcParametersProperty) {
+  if (param.type === 'array') {
+    return primitiveToType(param.items) + '[]'
+  }
+
+  if (param.type === 'ref') {
+    const resolved = lexicons.getDefOrThrow(param.ref)
+    if (!PROPERTY_VALID_REF_TYPES.includes(resolved.type)) {
+      throw new Error(
+        `Invalid ref type ${resolved.type} for ${
+          param.ref
+        }, expected one of ${PROPERTY_VALID_REF_TYPES.join(', ')}`,
+      )
+    }
+
+    // We can safely cast to LexPrimitive here because we've already checked
+    return primitiveToType(resolved as LexPrimitive)
+  }
+
+  return primitiveToType(param)
+}
+
 export function genXrpcParams(
   file: SourceFile,
   lexicons: Lexicons,
@@ -285,10 +310,7 @@ export function genXrpcParams(
       genComment(
         iface.addProperty({
           name: `${paramKey}${req ? '' : '?'}`,
-          type:
-            paramDef.type === 'array'
-              ? primitiveToType(paramDef.items) + '[]'
-              : primitiveToType(paramDef),
+          type: genXrpcParam(lexicons, paramDef),
         }),
         paramDef,
       )

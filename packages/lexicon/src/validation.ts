@@ -39,7 +39,9 @@ export function assertValidXrpcInput(
 ) {
   if (def.input?.schema) {
     // loop: all input schema definitions
-    return assertValidOneOf(lexicons, 'Input', def.input.schema, value, true)
+    return assertValidOneOf(lexicons, 'Input', def.input.schema, value, [
+      'object',
+    ])
   }
 }
 
@@ -50,7 +52,9 @@ export function assertValidXrpcOutput(
 ) {
   if (def.output?.schema) {
     // loop: all output schema definitions
-    return assertValidOneOf(lexicons, 'Output', def.output.schema, value, true)
+    return assertValidOneOf(lexicons, 'Output', def.output.schema, value, [
+      'object',
+    ])
   }
 }
 
@@ -61,12 +65,8 @@ export function assertValidXrpcMessage(
 ) {
   if (def.message?.schema) {
     // loop: all output schema definitions
-    return assertValidOneOf(
-      lexicons,
-      'Message',
-      def.message.schema,
-      value,
-      true,
-    )
+    return assertValidOneOf(lexicons, 'Message', def.message.schema, value, [
+      'object',
+    ])
   }
 }

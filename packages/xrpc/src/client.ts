@@ -93,7 +93,13 @@ export class ServiceClient {
     }
 
     const httpMethod = getMethodSchemaHTTPMethod(def)
-    const httpUri = constructMethodCallUri(methodNsid, def, this.uri, params)
+    const httpUri = constructMethodCallUri(
+      this.baseClient.lex,
+      methodNsid,
+      def,
+      this.uri,
+      params,
+    )
     const httpHeaders = constructMethodCallHeaders(def, data, {
       headers: {
         ...this.headers,
