@@ -1,5 +1,6 @@
 import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { TID } from '@atproto/common-web'
+import AwaitLock from 'await-lock'
 import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,
@@ -50,6 +51,8 @@ declare global {
 }
 
 export class BskyAgent extends AtpAgent {
+  _prefsLock = new AwaitLock()
+
   clone() {
     const inst = new BskyAgent({
       service: this.service,
@@ -1096,15 +1099,20 @@ async function updatePreferences(
     prefs: AppBskyActorDefs.Preferences,
   ) => AppBskyActorDefs.Preferences | false,
 ) {
-  const res = await agent.app.bsky.actor.getPreferences({})
-  const newPrefs = cb(res.data.preferences)
-  if (newPrefs === false) {
-    return res.data.preferences
+  try {
+    await agent._prefsLock.acquireAsync()
+    const res = await agent.app.bsky.actor.getPreferences({})
+    const newPrefs = cb(res.data.preferences)
+    if (newPrefs === false) {
+      return res.data.preferences
+    }
+    await agent.app.bsky.actor.putPreferences({
+      preferences: newPrefs,
+    })
+    return newPrefs
+  } finally {
+    agent._prefsLock.release()
   }
-  await agent.app.bsky.actor.putPreferences({
-    preferences: newPrefs,
-  })
-  return newPrefs
 }
 
 /**

@@ -26,6 +26,7 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
+    "await-lock": "^2.2.2",
     "multiformats": "^9.9.0",
     "tlds": "^1.234.0"
   },
