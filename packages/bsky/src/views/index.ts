@@ -959,6 +959,11 @@ export class Views {
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.labeler.defs#labelerView'
       return this.recordEmbedWrapper(view, withTypeTag)
+    } else if (parsedUri.collection === ids.AppBskyGraphStarterpack) {
+      const view = this.starterPackBasic(uri, state)
+      if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.graph.defs#starterPackViewBasic'
+      return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
   }

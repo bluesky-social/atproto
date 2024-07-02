@@ -59,6 +59,7 @@ import {
   FeedItem,
 } from './feed'
 import { ParsedLabelers } from '../util'
+import starterPack from '../data-plane/server/indexing/plugins/starter-pack'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
@@ -368,6 +369,10 @@ export class Hydrator {
       ...(urisLayer1ByCollection.get(ids.AppBskyLabelerService) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyLabelerService) ?? []),
     ].map((uri) => new AtUri(uri).hostname)
+    const nestedStarterPackUris = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
+    ]
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
@@ -390,6 +395,7 @@ export class Hydrator {
       listState,
       feedGenState,
       labelerState,
+      starterPackState,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
@@ -401,6 +407,7 @@ export class Hydrator {
       this.hydrateLists([...nestedListUris, ...gateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
+      this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -411,6 +418,7 @@ export class Hydrator {
       listState,
       feedGenState,
       labelerState,
+      starterPackState,
       {
         posts,
         postAggs,
