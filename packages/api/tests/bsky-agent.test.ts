@@ -277,7 +277,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -317,7 +317,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -357,7 +357,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -397,7 +397,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -441,7 +441,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -488,7 +488,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -535,7 +535,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -582,7 +582,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -629,7 +629,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -676,7 +676,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -729,7 +729,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -776,7 +776,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -823,7 +823,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -870,7 +870,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -917,7 +917,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -971,7 +971,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -1025,7 +1025,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -1079,7 +1079,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
 
@@ -1133,7 +1133,7 @@ describe('agent', () => {
           tags: ['foo', 'bar'],
         },
         bskyAppState: {
-          dismissedNudges: [],
+          queuedNudges: [],
         },
       })
     })
@@ -1254,11 +1254,11 @@ describe('agent', () => {
           },
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
-            dismissedNudges: ['one'],
+            queuedNudges: ['one'],
           },
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
-            dismissedNudges: ['two'],
+            queuedNudges: ['two'],
           },
         ],
       })
@@ -1313,7 +1313,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1369,7 +1370,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1426,7 +1428,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1479,7 +1482,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1532,7 +1536,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1585,7 +1590,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1601,7 +1607,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
-      await agent.bskyAppDismissNudge('three')
+      await agent.bskyAppQueueNudges('three')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -1650,7 +1656,8 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
-          dismissedNudges: ['two', 'three'],
+          activeProgressGuide: undefined,
+          queuedNudges: ['two', 'three'],
         },
       })
 
@@ -1659,7 +1666,7 @@ describe('agent', () => {
         [
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
-            dismissedNudges: ['two', 'three'],
+            queuedNudges: ['two', 'three'],
           },
           {
             $type: 'app.bsky.actor.defs#adultContentPref',
@@ -2784,7 +2791,7 @@ describe('agent', () => {
       })
     })
 
-    describe('dismissed nudges', () => {
+    describe('queued nudges', () => {
       let agent: BskyAgent
 
       beforeAll(async () => {
@@ -2796,34 +2803,67 @@ describe('agent', () => {
         })
       })
 
-      it('dismissNudge (true)', async () => {
-        await agent.bskyAppDismissNudge('first')
+      it('queueNudges & dismissNudges', async () => {
+        await agent.bskyAppQueueNudges('first')
         await expect(agent.getPreferences()).resolves.toHaveProperty(
-          'bskyAppState.dismissedNudges',
+          'bskyAppState.queuedNudges',
           ['first'],
         )
-        await agent.bskyAppDismissNudge('first')
+        await agent.bskyAppQueueNudges(['second', 'third'])
         await expect(agent.getPreferences()).resolves.toHaveProperty(
-          'bskyAppState.dismissedNudges',
-          ['first'],
+          'bskyAppState.queuedNudges',
+          ['first', 'second', 'third'],
         )
-        await agent.bskyAppDismissNudge('second')
+        await agent.bskyAppDismissNudges('second')
         await expect(agent.getPreferences()).resolves.toHaveProperty(
-          'bskyAppState.dismissedNudges',
-          ['first', 'second'],
+          'bskyAppState.queuedNudges',
+          ['first', 'third'],
+        )
+        await agent.bskyAppDismissNudges(['first', 'third'])
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.queuedNudges',
+          [],
         )
       })
+    })
 
-      it('dismissNudge (false)', async () => {
-        await agent.bskyAppDismissNudge('first', false)
+    describe('guided tours', () => {
+      let agent: BskyAgent
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user12.test',
+          email: 'user12@test.com',
+          password: 'password',
+        })
+      })
+
+      it('setActiveProgressGuide', async () => {
+        await agent.bskyAppSetActiveProgressGuide({
+          guide: 'test-guide',
+          numThings: 0,
+        })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
-          'bskyAppState.dismissedNudges',
-          ['second'],
+          'bskyAppState.activeProgressGuide.guide',
+          'test-guide',
         )
-        await agent.bskyAppDismissNudge('first', false)
+        await agent.bskyAppSetActiveProgressGuide({
+          guide: 'test-guide',
+          numThings: 1,
+        })
         await expect(agent.getPreferences()).resolves.toHaveProperty(
-          'bskyAppState.dismissedNudges',
-          ['second'],
+          'bskyAppState.activeProgressGuide.guide',
+          'test-guide',
+        )
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.activeProgressGuide.numThings',
+          1,
+        )
+        await agent.bskyAppSetActiveProgressGuide(undefined)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.activeProgressGuide',
+          undefined,
         )
       })
     })

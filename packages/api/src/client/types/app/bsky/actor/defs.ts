@@ -458,10 +458,11 @@ export function validateLabelerPrefItem(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
 }
 
-/** A grab bag of state that's specific to the bsky.app program. Third-party apps probably shouldn't muck with this. */
+/** A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this. */
 export interface BskyAppStatePref {
-  /** An array of tokens which identify nudges (modals, popups) that the user has seen and dismissed, and which therefore don't need to be shown again. */
-  dismissedNudges?: string[]
+  activeProgressGuide?: BskyAppProgressGuide
+  /** An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user. */
+  queuedNudges?: string[]
   [k: string]: unknown
 }
 
@@ -475,4 +476,22 @@ export function isBskyAppStatePref(v: unknown): v is BskyAppStatePref {
 
 export function validateBskyAppStatePref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#bskyAppStatePref', v)
+}
+
+/** If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress. */
+export interface BskyAppProgressGuide {
+  guide: string
+  [k: string]: unknown
+}
+
+export function isBskyAppProgressGuide(v: unknown): v is BskyAppProgressGuide {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#bskyAppProgressGuide'
+  )
+}
+
+export function validateBskyAppProgressGuide(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#bskyAppProgressGuide', v)
 }

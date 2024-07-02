@@ -394,7 +394,7 @@ export class BskyAgent extends AtpAgent {
         tags: [],
       },
       bskyAppState: {
-        dismissedNudges: [],
+        queuedNudges: [],
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})
@@ -489,7 +489,8 @@ export class BskyAgent extends AtpAgent {
       ) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
-        prefs.bskyAppState.dismissedNudges = v.dismissedNudges || []
+        prefs.bskyAppState.queuedNudges = v.queuedNudges || []
+        prefs.bskyAppState.activeProgressGuide = v.activeProgressGuide
       }
     }
 
@@ -1047,31 +1048,75 @@ export class BskyAgent extends AtpAgent {
     await updateHiddenPost(this, postUri, 'unhide')
   }
 
-  async bskyAppDismissNudge(nudge: string, isDismissed = true) {
+  async bskyAppQueueNudges(nudges: string | string[]) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      let bskyAppStatePref = prefs.findLast(
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isBskyAppStatePref(pref) &&
           AppBskyActorDefs.validateBskyAppStatePref(pref).success,
       )
 
       bskyAppStatePref = bskyAppStatePref || {}
-      if (isDismissed) {
-        if (!Array.isArray(bskyAppStatePref.dismissedNudges)) {
-          bskyAppStatePref.dismissedNudges = [nudge]
-        } else {
-          if (!bskyAppStatePref.dismissedNudges.includes(nudge)) {
-            bskyAppStatePref.dismissedNudges.push(nudge)
-          }
-        }
-      } else {
-        if (!Array.isArray(bskyAppStatePref.dismissedNudges)) {
-          bskyAppStatePref.dismissedNudges = []
-        } else {
-          bskyAppStatePref.dismissedNudges =
-            bskyAppStatePref.dismissedNudges.filter((v) => v !== nudge)
-        }
-      }
+      nudges = Array.isArray(nudges) ? nudges : [nudges]
+      bskyAppStatePref.queuedNudges = (
+        bskyAppStatePref.queuedNudges || []
+      ).concat(nudges)
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  async bskyAppDismissNudges(nudges: string | string[]) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      nudges = Array.isArray(nudges) ? nudges : [nudges]
+      bskyAppStatePref.queuedNudges = (
+        bskyAppStatePref.queuedNudges || []
+      ).filter((nudge) => !nudges.includes(nudge))
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
+        .concat([
+          {
+            ...bskyAppStatePref,
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+          },
+        ])
+    })
+  }
+
+  async bskyAppSetActiveProgressGuide(
+    guide: AppBskyActorDefs.BskyAppProgressGuide | undefined,
+  ) {
+    if (
+      guide &&
+      !AppBskyActorDefs.validateBskyAppProgressGuide(guide).success
+    ) {
+      throw new Error('Invalid progress guide')
+    }
+
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let bskyAppStatePref: AppBskyActorDefs.BskyAppStatePref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isBskyAppStatePref(pref) &&
+          AppBskyActorDefs.validateBskyAppStatePref(pref).success,
+      )
+
+      bskyAppStatePref = bskyAppStatePref || {}
+      bskyAppStatePref.activeProgressGuide = guide
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))

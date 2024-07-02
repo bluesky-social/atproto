@@ -128,6 +128,7 @@ export interface BskyPreferences {
   birthDate: Date | undefined
   interests: BskyInterestsPreference
   bskyAppState: {
-    dismissedNudges: string[]
+    queuedNudges: string[]
+    activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
   }
 }
