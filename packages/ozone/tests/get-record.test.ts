@@ -64,6 +64,9 @@ describe('admin get record view', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: sc.posts[sc.dids.alice][0].ref.uriStr,
+    })
   })
 
   it('gets a record by uri, even when taken down.', async () => {
