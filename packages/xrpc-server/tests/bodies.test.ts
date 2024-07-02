@@ -1,6 +1,6 @@
 import * as http from 'http'
 import { Readable } from 'stream'
-import { gzipSync } from 'zlib'
+import { brotliCompressSync, deflateSync, gzipSync } from 'zlib'
 import getPort from 'get-port'
 import { LexiconDoc } from '@atproto/lexicon'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
@@ -111,10 +111,14 @@ describe('Bodies', () => {
   })
   server.method(
     'io.example.validationTest',
-    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => ({
-      encoding: 'json',
-      body: ctx.input?.body,
-    }),
+    (ctx: { params: xrpcServer.Params; input?: xrpcServer.HandlerInput }) => {
+      if (ctx.input?.body instanceof Readable)
+        throw new Error('Input is readable')
+      return {
+        encoding: 'json',
+        body: ctx.input?.body ?? null,
+      }
+    },
   )
   server.method('io.example.validationTestTwo', () => ({
     encoding: 'json',
@@ -211,6 +215,9 @@ describe('Bodies', () => {
       bytes,
       {
         encoding: 'application/octet-stream',
+        headers: {
+          'content-encoding': 'identity',
+        },
       },
     )
     expect(uncompressed.cid).toEqual(expectedCid.toString())
@@ -218,11 +225,11 @@ describe('Bodies', () => {
     const { data: compressed } = await client.call(
       'io.example.blobTest',
       {},
-      gzipSync(bytes),
+      brotliCompressSync(deflateSync(gzipSync(bytes))),
       {
         encoding: 'application/octet-stream',
         headers: {
-          'content-encoding': 'gzip',
+          'content-encoding': 'gzip, deflate, br, identity',
         },
       },
     )
