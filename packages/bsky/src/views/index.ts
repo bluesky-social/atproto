@@ -2,7 +2,6 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { mapDefined } from '@atproto/common'
 import { ImageUriBuilder } from '../image/uri'
 import { HydrationState } from '../hydration/hydrator'
-import { ProfileViewerState as HydratorProfileViewerState } from '../hydration/actor'
 import { ids } from '../lexicon/lexicons'
 import {
   ProfileViewDetailed,
@@ -113,10 +112,7 @@ export class Views {
     if (!actor) return
     const baseView = this.profile(did, state)
     if (!baseView) return
-    const knownFollowersSkeleton = state.knownFollowers?.get(did)
-    const knownFollowers = knownFollowersSkeleton
-      ? this.knownFollowers(knownFollowersSkeleton, state)
-      : undefined
+    const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
     return {
       ...baseView,
@@ -221,10 +217,7 @@ export class Views {
     if (!actor) return
     const baseView = this.profile(did, state)
     if (!baseView) return
-    const knownFollowersSkeleton = state.knownFollowers?.get(did)
-    const knownFollowers = knownFollowersSkeleton
-      ? this.knownFollowers(knownFollowersSkeleton, state)
-      : undefined
+    const knownFollowers = this.knownFollowers(did, state)
     return {
       ...baseView,
       viewer: baseView.viewer
@@ -260,19 +253,22 @@ export class Views {
     }
   }
 
-  knownFollowers(
-    knownFollowers: Required<HydratorProfileViewerState>['knownFollowers'],
-    state: HydrationState,
-  ) {
-    const followers = mapDefined(knownFollowers.followers, (did) => {
-      if (this.viewerBlockExists(did, state)) {
+  knownFollowers(did: string, state: HydrationState) {
+    const knownFollowers = state.knownFollowers?.get(did)
+    if (!knownFollowers) return
+    const blocks = state.bidirectionalBlocks?.get(did)
+    const followers = mapDefined(knownFollowers.followers, (followerDid) => {
+      if (this.viewerBlockExists(followerDid, state)) {
         return undefined
       }
-      if (this.actorIsNoHosted(did, state)) {
+      if (blocks?.get(followerDid) === true) {
+        return undefined
+      }
+      if (this.actorIsNoHosted(followerDid, state)) {
         // @TODO only needed right now to work around getProfile's { includeTakedowns: true }
         return undefined
       }
-      return this.profileBasic(did, state)
+      return this.profileBasic(followerDid, state)
     })
     return { count: knownFollowers.count, followers }
   }
