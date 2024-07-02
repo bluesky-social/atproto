@@ -3343,7 +3343,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'List blob CIDso for an account, since some repo revision. Does not require auth; implemented by PDS.',
+          'List blob CIDs for an account, since some repo revision. Does not require auth; implemented by PDS.',
         parameters: {
           type: 'params',
           required: ['did'],
