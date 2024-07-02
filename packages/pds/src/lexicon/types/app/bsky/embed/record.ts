@@ -41,6 +41,7 @@ export interface View {
     | AppBskyFeedDefs.GeneratorView
     | AppBskyGraphDefs.ListView
     | AppBskyLabelerDefs.LabelerView
+    | AppBskyGraphDefs.StarterPackViewBasic
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
