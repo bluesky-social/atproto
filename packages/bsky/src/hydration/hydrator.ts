@@ -754,27 +754,24 @@ export class Hydrator {
   }
 
   async hydrateBidirectionalBlocks(
-    didMap: Map<string, string[]>,
+    didMap: Map<string, string[]>, // DID -> DID[]
   ): Promise<BidirectionalBlocks> {
     const pairs: RelationshipPair[] = []
-
-    for (const [target, constituents] of didMap) {
-      for (const follower of constituents) {
-        pairs.push([target, follower])
+    for (const [source, targets] of didMap) {
+      for (const target of targets) {
+        pairs.push([source, target])
       }
     }
 
-    const blocks = await this.graph.getBidirectionalBlocks(pairs)
     const result = new HydrationMap<HydrationMap<boolean>>()
+    const blocks = await this.graph.getBidirectionalBlocks(pairs)
 
-    for (const [did, targetDids] of didMap) {
+    for (const [source, targets] of didMap) {
       const didBlocks = new HydrationMap<boolean>()
-
-      for (const targetDid of targetDids) {
-        didBlocks.set(targetDid, blocks.isBlocked(did, targetDid))
+      for (const target of targets) {
+        didBlocks.set(target, blocks.isBlocked(source, target))
       }
-
-      result.set(did, didBlocks)
+      result.set(source, didBlocks)
     }
 
     return result
