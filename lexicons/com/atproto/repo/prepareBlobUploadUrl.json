@@ -1,0 +1,50 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.prepareBlobUploadUrl",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Prepare a (usually signed) URL from to upload a blob too before referencing within a record. May receive different urls depending on blob metadata and the application that it is inteded for. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["mimetype", "size", "collection"],
+          "properties": {
+            "mimetype": {
+              "type": "string",
+              "description": "Mimetype of the blob."
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Size of the blob in bytes."
+            },
+            "collection": {
+              "type": "string",
+              "format": "nsid",
+              "description": "Collection of the record that the blob is intended for."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["url", "uploadId"],
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "uploadId": {
+              "type": "string",
+              "description": "An opaque identifier string to be passed back in com.atproto.repo.finalizeBlobUpload."
+            }
+          }
+        }
+      }
+    }
+  }
+}

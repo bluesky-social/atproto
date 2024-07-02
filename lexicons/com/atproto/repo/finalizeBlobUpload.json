@@ -1,0 +1,31 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.finalizeBlobUpload",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notifies a PDS that a blob has been finished uploading through a url from com.atproto.repo.getBlobUploadUrl. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["blob", "uploadId"],
+          "properties": {
+            "blob": { "type": "blob" },
+            "uploadId": {
+              "type": "string",
+              "description": "An opaque identifier string received alongside the upload url from com.atproto.repo.getBlobUploadUrl."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  }
+}
