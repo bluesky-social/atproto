@@ -63,6 +63,25 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
+  async saveBlobRef(blobRef: BlobRef) {
+    await this.db.db
+      .insertInto('blob')
+      .values({
+        cid: blobRef.ref.toString(),
+        size: blobRef.size,
+        tempKey: null,
+        mimeType: blobRef.mimeType,
+        createdAt: new Date().toISOString(),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('cid')
+          .doUpdateSet({ tempKey: null })
+          .where('blob.tempKey', 'is not', null),
+      )
+      .execute()
+  }
+
   async trackUntetheredBlob(metadata: BlobMetadata) {
     const { tempKey, size, cid, mimeType, width, height } = metadata
     const found = await this.db.db

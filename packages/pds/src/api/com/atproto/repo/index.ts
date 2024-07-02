@@ -10,6 +10,8 @@ import putRecord from './putRecord'
 import uploadBlob from './uploadBlob'
 import listMissingBlobs from './listMissingBlobs'
 import importRepo from './importRepo'
+import prepareBlobUploadUrl from './prepareBlobUploadUrl'
+import finalizeBlobUpload from './finalizeBlobUpload'
 
 export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
@@ -22,4 +24,6 @@ export default function (server: Server, ctx: AppContext) {
   uploadBlob(server, ctx)
   listMissingBlobs(server, ctx)
   importRepo(server, ctx)
+  prepareBlobUploadUrl(server, ctx)
+  finalizeBlobUpload(server, ctx)
 }
