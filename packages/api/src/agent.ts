@@ -1,13 +1,14 @@
 import { OAuthAgent } from '@atproto/oauth-client'
 import { AtpClient } from './client'
 import { BSKY_LABELER_DID } from './const'
-import { OAuthSessionManager } from './session/oauth-session-manager'
-import { SessionManager } from './session/session-manager'
 import {
   CustomSessionManager,
   CustomSessionManagerOptions,
 } from './session/custom-session-handler'
+import { OAuthSessionManager } from './session/oauth-session-manager'
+import { SessionManager } from './session/session-manager'
 import { AtpAgentGlobalOpts, AtprotoServiceType } from './types'
+import { trim } from './util'
 
 export type AtpAgentOptions =
   | SessionManager
@@ -19,6 +20,9 @@ export class AtpAgent {
    * The labelers to be used across all requests with the takedown capability
    */
   static appLabelers: readonly string[] = [BSKY_LABELER_DID]
+  static get labelersHeader() {
+    return this.appLabelers.map((str) => `${str};redact`)
+  }
 
   /**
    * Configures the AtpAgent globally.
@@ -29,11 +33,11 @@ export class AtpAgent {
     }
   }
 
-  api: AtpClient
-  labelersHeader: readonly string[] = []
-  proxyHeader?: string
-
   readonly sessionManager: SessionManager
+  readonly api: AtpClient
+
+  protected proxyHeader?: string
+  protected labelersHeader: readonly string[] = []
 
   get com() {
     return this.api.com
@@ -47,22 +51,19 @@ export class AtpAgent {
           ? new OAuthSessionManager(options)
           : new CustomSessionManager(options)
 
-    this.api = new AtpClient(
-      this.sessionManager.fetchHandler.bind(this.sessionManager),
-    )
-    this.api.setHeader('atproto-accept-labelers', (reqLabelers) =>
-      // Make sure to read the static property from the subclass in case it was
-      // overridden.
-      (this.constructor as typeof AtpAgent).appLabelers
-        .map((str) => `${str};redact`)
-        .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
-        // Besides labelers configured via appLabelers and labelersHeader
-        // respect any additional labelers configured via the request headers
-        .concat(reqLabelers?.split(',').map((str) => str.trim()) ?? [])
-        .join(', '),
+    this.api = new AtpClient((url, init) =>
+      this.sessionManager.fetchHandler(url, init),
     )
 
     this.api.setHeader('atproto-proxy', () => this.proxyHeader ?? null)
+    this.api.setHeader('atproto-accept-labelers', (reqLabelers) =>
+      [
+        // Make sure to read the static property from the subclass
+        ...(this.constructor as typeof AtpAgent).labelersHeader,
+        ...this.labelersHeader,
+        ...(reqLabelers?.split(',').map(trim) ?? []),
+      ].join(', '),
+    )
   }
 
   clone(): AtpAgent {
@@ -118,7 +119,7 @@ export class AtpAgent {
    * methods in BskyAgent instances.
    */
   configureLabelersHeader(labelerDids: readonly string[]) {
-    this.labelersHeader = labelerDids
+    this.labelersHeader = labelerDids.filter((str) => str.startsWith('did:'))
   }
 
   /**
