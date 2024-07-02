@@ -185,6 +185,7 @@ export type Preferences = (
   | MutedWordsPref
   | HiddenPostsPref
   | BskyAppStatePref
+  | LabelersPref
   | { $type: string; [k: string]: unknown }
 )[]
 

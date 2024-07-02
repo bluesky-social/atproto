@@ -169,7 +169,8 @@
           "#interestsPref",
           "#mutedWordsPref",
           "#hiddenPostsPref",
-          "#bskyAppStatePref"
+          "#bskyAppStatePref",
+          "#labelersPref"
         ]
       }
     },

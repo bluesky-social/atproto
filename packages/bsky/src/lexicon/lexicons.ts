@@ -4167,6 +4167,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#mutedWordsPref',
             'lex:app.bsky.actor.defs#hiddenPostsPref',
             'lex:app.bsky.actor.defs#bskyAppStatePref',
+            'lex:app.bsky.actor.defs#labelersPref',
           ],
         },
       },
