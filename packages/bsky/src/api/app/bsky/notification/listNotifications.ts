@@ -80,6 +80,11 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { skeleton, params, ctx } = input
+
+  if (params.detailed === 1) {
+    return ctx.hydrator.hydrateNotificationsDetailed(skeleton.notifs, params.hydrateCtx)
+  }
+
   return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
 }
 

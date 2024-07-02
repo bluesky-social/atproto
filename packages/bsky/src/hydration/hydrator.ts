@@ -713,6 +713,36 @@ export class Hydrator {
     })
   }
 
+  async hydrateNotificationsDetailed(
+    notifs: Notification[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const uris = notifs.map((notif) => notif.uri)
+    const collections = urisByCollection(uris)
+    const postUris = collections.get(ids.AppBskyFeedPost) ?? []
+    const likeUris = collections.get(ids.AppBskyFeedLike) ?? []
+    const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
+    const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
+    const [posts, likes, reposts, follows, labels, profileState] =
+      await Promise.all([
+        this.feed.getPosts(postUris), // reason: mention, reply, quote
+        this.feed.getLikes(likeUris), // reason: like
+        this.feed.getReposts(repostUris), // reason: repost
+        this.graph.getFollows(followUris), // reason: follow
+        this.label.getLabelsForSubjects(uris, ctx.labelers),
+        this.hydrateProfilesDetailed(uris.map(didFromUri), ctx),
+      ])
+    actionTakedownLabels(postUris, posts, labels)
+    return mergeStates(profileState, {
+      posts,
+      likes,
+      reposts,
+      follows,
+      labels,
+      ctx,
+    })
+  }
+
   // provides partial hydration state withing getFollows / getFollowers, mainly for applying rules
   async hydrateFollows(uris: string[]): Promise<HydrationState> {
     const follows = await this.graph.getFollows(uris)

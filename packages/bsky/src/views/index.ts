@@ -1040,7 +1040,7 @@ export class Views {
     if (!notif.timestamp || !notif.reason) return
     const uri = new AtUri(notif.uri)
     const authorDid = uri.hostname
-    const author = this.profile(authorDid, state)
+    const author = this.profileDetailed(authorDid, state)
     if (!author) return
     let recordInfo: RecordInfo<Record<string, unknown>> | null | undefined
     if (uri.collection === ids.AppBskyFeedPost) {

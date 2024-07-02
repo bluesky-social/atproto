@@ -15,7 +15,8 @@
             "default": 50
           },
           "cursor": { "type": "string" },
-          "seenAt": { "type": "string", "format": "datetime" }
+          "seenAt": { "type": "string", "format": "datetime" },
+          "detailed": { "type": "integer", "default": 0 }
         }
       },
       "output": {
