@@ -36,10 +36,12 @@ import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
+import * as ComAtprotoRepoFinalizeBlobUpload from './types/com/atproto/repo/finalizeBlobUpload'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
+import * as ComAtprotoRepoPrepareBlobUploadUrl from './types/com/atproto/repo/prepareBlobUploadUrl'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerActivateAccount from './types/com/atproto/server/activateAccount'
@@ -605,6 +607,17 @@ export class ComAtprotoRepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  finalizeBlobUpload<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoFinalizeBlobUpload.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoFinalizeBlobUpload.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.finalizeBlobUpload' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRecord<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -646,6 +659,17 @@ export class ComAtprotoRepoNS {
     >,
   ) {
     const nsid = 'com.atproto.repo.listRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  prepareBlobUploadUrl<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoRepoPrepareBlobUploadUrl.Handler<ExtractAuth<AV>>,
+      ComAtprotoRepoPrepareBlobUploadUrl.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.repo.prepareBlobUploadUrl' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -1529,6 +1529,41 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoFinalizeBlobUpload: {
+    lexicon: 1,
+    id: 'com.atproto.repo.finalizeBlobUpload',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Notifies a PDS that a blob has been finished uploading through a url from com.atproto.repo.getBlobUploadUrl. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blob', 'uploadId'],
+            properties: {
+              blob: {
+                type: 'blob',
+              },
+              uploadId: {
+                type: 'string',
+                description:
+                  'An opaque identifier string received alongside the upload url from com.atproto.repo.getBlobUploadUrl.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoGetRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.getRecord',
@@ -1740,6 +1775,59 @@ export const schemaDict = {
           },
           value: {
             type: 'unknown',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoPrepareBlobUploadUrl: {
+    lexicon: 1,
+    id: 'com.atproto.repo.prepareBlobUploadUrl',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Prepare a (usually signed) URL from to upload a blob too before referencing within a record. May receive different urls depending on blob metadata and the application that it is inteded for. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['mimetype', 'size', 'collection'],
+            properties: {
+              mimetype: {
+                type: 'string',
+                description: 'Mimetype of the blob.',
+              },
+              size: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Size of the blob in bytes.',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description:
+                  'Collection of the record that the blob is intended for.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'uploadId'],
+            properties: {
+              url: {
+                type: 'string',
+                format: 'uri',
+              },
+              uploadId: {
+                type: 'string',
+                description:
+                  'An opaque identifier string to be passed back in com.atproto.repo.finalizeBlobUpload.',
+              },
+            },
           },
         },
       },
@@ -9919,10 +10007,12 @@ export const ids = {
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
+  ComAtprotoRepoFinalizeBlobUpload: 'com.atproto.repo.finalizeBlobUpload',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoImportRepo: 'com.atproto.repo.importRepo',
   ComAtprotoRepoListMissingBlobs: 'com.atproto.repo.listMissingBlobs',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
+  ComAtprotoRepoPrepareBlobUploadUrl: 'com.atproto.repo.prepareBlobUploadUrl',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
