@@ -395,6 +395,7 @@ export class BskyAgent extends AtpAgent {
       },
       bskyAppState: {
         queuedNudges: [],
+        activeProgressGuide: undefined,
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})

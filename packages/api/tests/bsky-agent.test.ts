@@ -277,6 +277,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -317,6 +318,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -357,6 +359,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -397,6 +400,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -441,6 +445,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -488,6 +493,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -535,6 +541,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -582,6 +589,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -629,6 +637,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -676,6 +685,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -729,6 +739,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -776,6 +787,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -823,6 +835,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -870,6 +883,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -917,6 +931,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -971,6 +986,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -1025,6 +1041,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -1079,6 +1096,7 @@ describe('agent', () => {
           tags: [],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -1133,6 +1151,7 @@ describe('agent', () => {
           tags: ['foo', 'bar'],
         },
         bskyAppState: {
+          activeProgressGuide: undefined,
           queuedNudges: [],
         },
       })
@@ -1258,6 +1277,7 @@ describe('agent', () => {
           },
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            activeProgressGuide: undefined,
             queuedNudges: ['two'],
           },
         ],
