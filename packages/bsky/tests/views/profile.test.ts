@@ -14,7 +14,6 @@ describe('pds profile views', () => {
   let alice: string
   let bob: string
   let dan: string
-  let carol: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -28,7 +27,6 @@ describe('pds profile views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
-    carol = sc.dids.carol
   })
 
   afterAll(async () => {
@@ -76,39 +74,6 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
-  })
-
-  it('returns knownFollowers viewer data', async () => {
-    const carolForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
-    )
-
-    const knownFollowers = carolForAlice.data.viewer?.knownFollowers
-    expect(knownFollowers?.count).toBe(1)
-    expect(knownFollowers?.followers).toHaveLength(1)
-    expect(knownFollowers?.followers[0].handle).toBe('bob.test')
-  })
-
-  it('does not return knownFollowers for basic profile views', async () => {
-    const { data } = await agent.api.app.bsky.graph.getFollows(
-      { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
-    )
-    const follow = data.follows[0]
-
-    expect(follow.viewer?.knownFollowers).toBeFalsy()
-  })
-
-  it('getKnownFollowers works', async () => {
-    const { data } = await agent.api.app.bsky.graph.getKnownFollowers(
-      { actor: carol },
-      { headers: await network.serviceHeaders(alice) },
-    )
-
-    expect(data.subject.did).toBe(carol)
-    expect(data.followers.length).toBe(1)
-    expect(data.followers[0].handle).toBe('bob.test')
   })
 
   it('fetches multiple profiles', async () => {

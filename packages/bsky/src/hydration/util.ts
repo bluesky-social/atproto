@@ -25,6 +25,34 @@ export type RecordInfo<T> = {
   takedownRef: string | undefined
 }
 
+export const mergeMaps = <V, M extends HydrationMap<V>>(
+  mapA?: M,
+  mapB?: M,
+): M | undefined => {
+  if (!mapA) return mapB
+  if (!mapB) return mapA
+  return mapA.merge(mapB)
+}
+
+export const mergeNestedMaps = <V, M extends HydrationMap<HydrationMap<V>>>(
+  mapA?: M,
+  mapB?: M,
+): M | undefined => {
+  if (!mapA) return mapB
+  if (!mapB) return mapA
+
+  for (const [key, map] of mapB) {
+    const merged = mergeMaps(mapA.get(key) ?? undefined, map ?? undefined)
+    mapA.set(key, merged ?? null)
+  }
+
+  return mapA
+}
+
+export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
+  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
+}
+
 export type ItemRef = { uri: string; cid?: string }
 
 export const parseRecord = <T>(
