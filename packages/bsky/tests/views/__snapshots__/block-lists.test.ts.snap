@@ -7,6 +7,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -129,7 +130,9 @@ Object {
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
   },
 }
@@ -153,6 +156,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -201,7 +205,9 @@ Object {
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "threadMuted": false,
+      },
     },
     "replies": Array [],
   },
@@ -215,6 +221,7 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -255,6 +262,7 @@ Object {
       "viewer": Object {
         "like": "record(4)",
         "repost": "record(3)",
+        "threadMuted": false,
       },
     },
     "replies": Array [
@@ -295,6 +303,7 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -325,6 +334,7 @@ Object {
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
+      "listItemCount": 0,
       "name": "new list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -338,6 +348,7 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -368,6 +379,7 @@ Object {
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
+      "listItemCount": 3,
       "name": "alice blocks",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(4)",
@@ -388,6 +400,7 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -418,6 +431,7 @@ Object {
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
+      "listItemCount": 0,
       "name": "new list",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
@@ -430,6 +444,7 @@ Object {
       "cid": "cids(3)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -460,6 +475,7 @@ Object {
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
+      "listItemCount": 3,
       "name": "alice blocks",
       "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
@@ -506,6 +522,7 @@ Object {
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "listItemCount": 3,
             "name": "alice blocks",
             "purpose": "app.bsky.graph.defs#modlist",
             "uri": "record(0)",
@@ -522,6 +539,7 @@ Object {
     Object {
       "subject": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "did": "user(4)",
         "displayName": "bobby",
@@ -536,6 +554,7 @@ Object {
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
+            "listItemCount": 3,
             "name": "alice blocks",
             "purpose": "app.bsky.graph.defs#modlist",
             "uri": "record(0)",
@@ -555,6 +574,7 @@ Object {
     "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -585,6 +605,7 @@ Object {
     "description": "big list of blocks",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
+    "listItemCount": 3,
     "name": "alice blocks",
     "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",

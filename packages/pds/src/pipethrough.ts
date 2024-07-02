@@ -22,7 +22,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const { url, aud } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req })
       const headers = await formatHeaders(ctx, req, aud, auth.credentials.did)
-      const body = stream.Readable.toWeb(req)
+      const body: webStream.ReadableStream<Uint8Array> =
+        stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
       const proxyRes = await makeRequest(url, reqInit)
       await pipeProxyRes(proxyRes, res)
@@ -113,7 +114,7 @@ export const formatHeaders = async (
 const formatReqInit = (
   req: express.Request,
   headers: Record<string, string>,
-  body?: Uint8Array | ReadableStream,
+  body?: Uint8Array | webStream.ReadableStream<Uint8Array>,
 ): RequestInit => {
   if (req.method === 'GET') {
     return {
@@ -246,6 +247,10 @@ const defaultService = (
 ): { url: string; did: string } | null => {
   const nsid = req.originalUrl.split('?')[0].replace('/xrpc/', '')
   switch (nsid) {
+    case ids.ToolsOzoneTeamAddMember:
+    case ids.ToolsOzoneTeamDeleteMember:
+    case ids.ToolsOzoneTeamUpdateMember:
+    case ids.ToolsOzoneTeamListMembers:
     case ids.ToolsOzoneCommunicationCreateTemplate:
     case ids.ToolsOzoneCommunicationDeleteTemplate:
     case ids.ToolsOzoneCommunicationUpdateTemplate:

@@ -22,7 +22,7 @@
     "graphemer": "^1.4.0",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0",
-    "zod": "^3.21.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "jest": "^28.1.2"

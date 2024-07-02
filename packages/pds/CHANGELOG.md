@@ -1,5 +1,64 @@
 # @atproto/pds
 
+## 0.4.39
+
+### Patch Changes
+
+- [#2492](https://github.com/bluesky-social/atproto/pull/2492) [`bc861a2c2`](https://github.com/bluesky-social/atproto/commit/bc861a2c25b4151fb7e070dc20d5e1e07da21863) Thanks [@pfrazee](https://github.com/pfrazee)! - Added bsky app state preference and improved protections against race conditions in preferences sdk
+
+- Updated dependencies [[`bc861a2c2`](https://github.com/bluesky-social/atproto/commit/bc861a2c25b4151fb7e070dc20d5e1e07da21863)]:
+  - @atproto/api@0.12.23
+
+## 0.4.38
+
+### Patch Changes
+
+- [#2553](https://github.com/bluesky-social/atproto/pull/2553) [`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02) Thanks [@devinivy](https://github.com/devinivy)! - Support for starter packs (app.bsky.graph.starterpack)
+
+- Updated dependencies [[`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02), [`615a96ddc`](https://github.com/bluesky-social/atproto/commit/615a96ddc2965251cfab060dfc43fc1a51ef4bff)]:
+  - @atproto/api@0.12.22
+  - @atproto/xrpc-server@0.5.2
+
+## 0.4.37
+
+### Patch Changes
+
+- [#2460](https://github.com/bluesky-social/atproto/pull/2460) [`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24) Thanks [@foysalit](https://github.com/foysalit)! - Add DB backed team member management for ozone
+
+- Updated dependencies [[`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24)]:
+  - @atproto/api@0.12.21
+
+## 0.4.36
+
+### Patch Changes
+
+- Updated dependencies [[`ea0f10b5d`](https://github.com/bluesky-social/atproto/commit/ea0f10b5d0d334eb587032c54d5ace9ea811cf26)]:
+  - @atproto/api@0.12.20
+
+## 0.4.35
+
+### Patch Changes
+
+- [#2482](https://github.com/bluesky-social/atproto/pull/2482) [`a8d6c1123`](https://github.com/bluesky-social/atproto/commit/a8d6c112359f5c4c0cfbe2df63443ed275f2a646) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add OAuth provider capability & support for DPoP signed tokens
+
+- Updated dependencies [[`a8d6c1123`](https://github.com/bluesky-social/atproto/commit/a8d6c112359f5c4c0cfbe2df63443ed275f2a646)]:
+  - @atproto/oauth-provider@0.1.0
+  - @atproto-labs/fetch-node@0.1.0
+
+## 0.4.34
+
+### Patch Changes
+
+- Updated dependencies [[`7c1973841`](https://github.com/bluesky-social/atproto/commit/7c1973841dab416ae19435d37853aeea1f579d39)]:
+  - @atproto/api@0.12.19
+
+## 0.4.33
+
+### Patch Changes
+
+- Updated dependencies [[`58abcbd8b`](https://github.com/bluesky-social/atproto/commit/58abcbd8b6e42a1f66bda6acc3ee6a2c0894e546)]:
+  - @atproto/api@0.12.18
+
 ## 0.4.32
 
 ### Patch Changes

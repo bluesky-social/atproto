@@ -1,9 +1,10 @@
 import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as BlockRecord } from '../lexicon/types/app/bsky/graph/block'
+import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
-import { HydrationMap, RecordInfo, parseRecord } from './util'
+import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 import { FollowInfo } from '../proto/bsky_pb'
 
 export type List = RecordInfo<ListRecord>
@@ -24,6 +25,23 @@ export type Follow = RecordInfo<FollowRecord>
 export type Follows = HydrationMap<Follow>
 
 export type Block = RecordInfo<BlockRecord>
+
+export type StarterPack = RecordInfo<StarterPackRecord>
+export type StarterPacks = HydrationMap<StarterPack>
+
+export type StarterPackAgg = {
+  joinedWeek: number
+  joinedAllTime: number
+  listItemSampleUris?: string[] // gets set during starter pack hydration (not for basic view)
+}
+
+export type StarterPackAggs = HydrationMap<StarterPackAgg>
+
+export type ListAgg = {
+  listItems: number
+}
+
+export type ListAggs = HydrationMap<ListAgg>
 
 export type RelationshipPair = [didA: string, didB: string]
 
@@ -84,7 +102,6 @@ export class GraphHydrator {
     }, new HydrationMap<List>())
   }
 
-  // @TODO may not be supported yet by data plane
   async getListItems(
     uris: string[],
     includeTakedowns = false,
@@ -194,5 +211,41 @@ export class GraphHydrator {
       limit,
     })
     return { followers: res.followers, cursor: res.cursor }
+  }
+
+  async getStarterPacks(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<StarterPacks> {
+    if (!uris.length) return new HydrationMap<StarterPack>()
+    const res = await this.dataplane.getStarterPackRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<StarterPackRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<StarterPack>())
+  }
+
+  async getStarterPackAggregates(refs: ItemRef[]) {
+    if (!refs.length) return new HydrationMap<StarterPackAgg>()
+    const counts = await this.dataplane.getStarterPackCounts({ refs })
+    return refs.reduce((acc, { uri }, i) => {
+      return acc.set(uri, {
+        joinedWeek: counts.joinedWeek[i] ?? 0,
+        joinedAllTime: counts.joinedAllTime[i] ?? 0,
+      })
+    }, new HydrationMap<StarterPackAgg>())
+  }
+
+  async getListAggregates(refs: ItemRef[]) {
+    if (!refs.length) return new HydrationMap<ListAgg>()
+    const counts = await this.dataplane.getListCounts({ refs })
+    return refs.reduce((acc, { uri }, i) => {
+      return acc.set(uri, {
+        listItems: counts.listItems[i] ?? 0,
+      })
+    }, new HydrationMap<ListAgg>())
   }
 }

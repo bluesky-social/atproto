@@ -51,7 +51,7 @@ export class Database<Schema> {
   }
 
   async transactionNoRetry<T>(
-    fn: (db: Database<Schema>) => Promise<T>,
+    fn: (db: Database<Schema>) => T | Promise<T>,
   ): Promise<T> {
     this.assertNotTransaction()
     const leakyTxPlugin = new LeakyTxPlugin()
@@ -60,22 +60,25 @@ export class Database<Schema> {
       .transaction()
       .execute(async (txn) => {
         const dbTxn = new Database(txn)
-        const txRes = await fn(dbTxn)
-          .catch(async (err) => {
-            leakyTxPlugin.endTx()
-            // ensure that all in-flight queries are flushed & the connection is open
-            await dbTxn.db.getExecutor().provideConnection(async () => {})
-            throw err
-          })
-          .finally(() => leakyTxPlugin.endTx())
-        const hooks = dbTxn.commitHooks
-        return { hooks, txRes }
+        try {
+          const txRes = await fn(dbTxn)
+          leakyTxPlugin.endTx()
+          const hooks = dbTxn.commitHooks
+          return { hooks, txRes }
+        } catch (err) {
+          leakyTxPlugin.endTx()
+          // ensure that all in-flight queries are flushed & the connection is open
+          await txn.getExecutor().provideConnection(async () => {})
+          throw err
+        }
       })
     hooks.map((hook) => hook())
     return txRes
   }
 
-  async transaction<T>(fn: (db: Database<Schema>) => Promise<T>): Promise<T> {
+  async transaction<T>(
+    fn: (db: Database<Schema>) => T | Promise<T>,
+  ): Promise<T> {
     return retrySqlite(() => this.transactionNoRetry(fn))
   }
 

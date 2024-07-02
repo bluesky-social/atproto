@@ -77,7 +77,8 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
   {
     const re = TAG_REGEX
     while ((match = re.exec(text.utf16))) {
-      let [, leading, tag] = match
+      const leading = match[1]
+      let tag = match[2]
 
       if (!tag) continue
 

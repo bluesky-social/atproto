@@ -27,7 +27,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: packages/*/dist
+          path: |
+            packages/*/dist
+            packages/*/*/dist
           retention-days: 1
   test:
     name: Test

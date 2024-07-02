@@ -1,5 +1,43 @@
 # @atproto/api
 
+## 0.12.23
+
+### Patch Changes
+
+- [#2492](https://github.com/bluesky-social/atproto/pull/2492) [`bc861a2c2`](https://github.com/bluesky-social/atproto/commit/bc861a2c25b4151fb7e070dc20d5e1e07da21863) Thanks [@pfrazee](https://github.com/pfrazee)! - Added bsky app state preference and improved protections against race conditions in preferences sdk
+
+## 0.12.22
+
+### Patch Changes
+
+- [#2553](https://github.com/bluesky-social/atproto/pull/2553) [`af7d3912a`](https://github.com/bluesky-social/atproto/commit/af7d3912a3b304a752ed72947eaa8cf28b35ec02) Thanks [@devinivy](https://github.com/devinivy)! - Support for starter packs (app.bsky.graph.starterpack)
+
+## 0.12.21
+
+### Patch Changes
+
+- [#2460](https://github.com/bluesky-social/atproto/pull/2460) [`3ad051996`](https://github.com/bluesky-social/atproto/commit/3ad0519961e2437aa4870bf1358e6c275dcdee24) Thanks [@foysalit](https://github.com/foysalit)! - Add DB backed team member management for ozone
+
+## 0.12.20
+
+### Patch Changes
+
+- [#2582](https://github.com/bluesky-social/atproto/pull/2582) [`ea0f10b5d`](https://github.com/bluesky-social/atproto/commit/ea0f10b5d0d334eb587032c54d5ace9ea811cf26) Thanks [@pfrazee](https://github.com/pfrazee)! - Remove client-side enforcement of labeler limits
+
+## 0.12.19
+
+### Patch Changes
+
+- [#2558](https://github.com/bluesky-social/atproto/pull/2558) [`7c1973841`](https://github.com/bluesky-social/atproto/commit/7c1973841dab416ae19435d37853aeea1f579d39) Thanks [@dholms](https://github.com/dholms)! - Add thread mute routes and viewer state
+
+## 0.12.18
+
+### Patch Changes
+
+- [#2557](https://github.com/bluesky-social/atproto/pull/2557) [`58abcbd8b`](https://github.com/bluesky-social/atproto/commit/58abcbd8b6e42a1f66bda6acc3ee6a2c0894e546) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds "social proof": `knowFollowers` to `ViewerState` for `ProfileViewDetailed`
+  views and `app.bsky.graph.getKnownFollowers` method for listing known followers
+  of a given user.
+
 ## 0.12.17
 
 ### Patch Changes

@@ -276,6 +276,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -312,6 +316,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -350,6 +358,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -386,6 +398,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -427,6 +443,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -472,6 +492,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -515,6 +539,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -560,6 +588,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -604,6 +636,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -647,6 +683,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -698,6 +738,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -741,6 +785,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -786,6 +834,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -830,6 +882,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -873,6 +929,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -925,6 +985,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -975,6 +1039,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
 
@@ -1027,6 +1095,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
+        },
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -1077,6 +1149,10 @@ describe('agent', () => {
         },
         interests: {
           tags: ['foo', 'bar'],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: [],
         },
       })
     })
@@ -1195,6 +1271,15 @@ describe('agent', () => {
             sort: 'newest',
             prioritizeFollowedUsers: false,
           },
+          {
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            queuedNudges: ['one'],
+          },
+          {
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            activeProgressGuide: undefined,
+            queuedNudges: ['two'],
+          },
         ],
       })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
@@ -1246,6 +1331,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1299,6 +1388,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1354,6 +1447,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
+        },
       })
 
       await agent.removeLabeler('did:plc:other')
@@ -1403,6 +1500,10 @@ describe('agent', () => {
         },
         interests: {
           tags: [],
+        },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
         },
       })
 
@@ -1454,6 +1555,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1504,6 +1609,10 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two'],
+        },
       })
 
       await agent.setFeedViewPrefs('home', {
@@ -1518,6 +1627,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
+      await agent.bskyAppQueueNudges('three')
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
@@ -1565,11 +1675,19 @@ describe('agent', () => {
         interests: {
           tags: [],
         },
+        bskyAppState: {
+          activeProgressGuide: undefined,
+          queuedNudges: ['two', 'three'],
+        },
       })
 
       const res = await agent.app.bsky.actor.getPreferences()
       expect(res.data.preferences.sort(byType)).toStrictEqual(
         [
+          {
+            $type: 'app.bsky.actor.defs#bskyAppStatePref',
+            queuedNudges: ['two', 'three'],
+          },
           {
             $type: 'app.bsky.actor.defs#adultContentPref',
             enabled: false,
@@ -2690,6 +2808,83 @@ describe('agent', () => {
             pinned: true,
           },
         ])
+      })
+    })
+
+    describe('queued nudges', () => {
+      let agent: BskyAgent
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user11.test',
+          email: 'user11@test.com',
+          password: 'password',
+        })
+      })
+
+      it('queueNudges & dismissNudges', async () => {
+        await agent.bskyAppQueueNudges('first')
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.queuedNudges',
+          ['first'],
+        )
+        await agent.bskyAppQueueNudges(['second', 'third'])
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.queuedNudges',
+          ['first', 'second', 'third'],
+        )
+        await agent.bskyAppDismissNudges('second')
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.queuedNudges',
+          ['first', 'third'],
+        )
+        await agent.bskyAppDismissNudges(['first', 'third'])
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.queuedNudges',
+          [],
+        )
+      })
+    })
+
+    describe('guided tours', () => {
+      let agent: BskyAgent
+
+      beforeAll(async () => {
+        agent = new BskyAgent({ service: network.pds.url })
+        await agent.createAccount({
+          handle: 'user12.test',
+          email: 'user12@test.com',
+          password: 'password',
+        })
+      })
+
+      it('setActiveProgressGuide', async () => {
+        await agent.bskyAppSetActiveProgressGuide({
+          guide: 'test-guide',
+          numThings: 0,
+        })
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.activeProgressGuide.guide',
+          'test-guide',
+        )
+        await agent.bskyAppSetActiveProgressGuide({
+          guide: 'test-guide',
+          numThings: 1,
+        })
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.activeProgressGuide.guide',
+          'test-guide',
+        )
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.activeProgressGuide.numThings',
+          1,
+        )
+        await agent.bskyAppSetActiveProgressGuide(undefined)
+        await expect(agent.getPreferences()).resolves.toHaveProperty(
+          'bskyAppState.activeProgressGuide',
+          undefined,
+        )
       })
     })
 

@@ -113,7 +113,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       inviteCode,
     })
 
-    ozone.addAdminDid(ozoneDid)
+    await ozone.addAdminDid(ozoneDid)
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
@@ -152,9 +152,9 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processAll(timeout?: number) {
     await this.pds.processAll()
+    await this.ozone.processAll()
     await this.processFullSubscription(timeout)
     await this.bsky.sub.background.processAll()
-    await this.ozone.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

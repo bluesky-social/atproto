@@ -7,6 +7,7 @@ import * as blobPushEvent from './blob_push_event'
 import * as label from './label'
 import * as signingKey from './signing_key'
 import * as communicationTemplate from './communication_template'
+import * as member from './member'
 
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
@@ -15,7 +16,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   repoPushEvent.PartialDB &
   recordPushEvent.PartialDB &
   blobPushEvent.PartialDB &
-  communicationTemplate.PartialDB
+  communicationTemplate.PartialDB &
+  member.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

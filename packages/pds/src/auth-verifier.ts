@@ -1,12 +1,18 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+
+import {
+  OAuthError,
+  OAuthVerifier,
+  WWWAuthenticateError,
+} from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
+  XRPCError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
-import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
@@ -16,6 +22,8 @@ import { getVerificationMaterial } from '@atproto/common'
 
 type ReqCtx = {
   req: express.Request
+  // StreamAuthVerifier does not have "res"
+  res?: express.Response
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
@@ -94,7 +102,12 @@ type ValidatedBearer = {
   audience: string | undefined
 }
 
+type ValidatedRefreshBearer = ValidatedBearer & {
+  tokenId: string
+}
+
 export type AuthVerifierOpts = {
+  publicUrl: string
   jwtKey: KeyObject
   adminPass: string
   dids: {
@@ -105,6 +118,7 @@ export type AuthVerifierOpts = {
 }
 
 export class AuthVerifier {
+  private _publicUrl: string
   private _jwtKey: KeyObject
   private _adminPass: string
   public dids: AuthVerifierOpts['dids']
@@ -112,8 +126,10 @@ export class AuthVerifier {
   constructor(
     public accountManager: AccountManager,
     public idResolver: IdResolver,
+    public oauthVerifier: OAuthVerifier,
     opts: AuthVerifierOpts,
   ) {
+    this._publicUrl = opts.publicUrl
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
     this.dids = opts.dids
@@ -125,7 +141,7 @@ export class AuthVerifier {
     (opts: Partial<AccessOpts> = {}) =>
     (ctx: ReqCtx): Promise<AccessOutput> => {
       return this.validateAccessToken(
-        ctx.req,
+        ctx,
         [
           AuthScope.Access,
           AuthScope.AppPassPrivileged,
@@ -140,7 +156,7 @@ export class AuthVerifier {
     (opts: Partial<AccessOpts> = {}) =>
     (ctx: ReqCtx): Promise<AccessOutput> => {
       return this.validateAccessToken(
-        ctx.req,
+        ctx,
         [AuthScope.Access, ...(opts.additional ?? [])],
         opts,
       )
@@ -149,7 +165,7 @@ export class AuthVerifier {
   accessPrivileged =
     (opts: Partial<AccessOpts> = {}) =>
     (ctx: ReqCtx): Promise<AccessOutput> => {
-      return this.validateAccessToken(ctx.req, [
+      return this.validateAccessToken(ctx, [
         AuthScope.Access,
         AuthScope.AppPassPrivileged,
         ...(opts.additional ?? []),
@@ -157,55 +173,56 @@ export class AuthVerifier {
     }
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
-    const { did, scope, token, audience, payload } =
-      await this.validateBearerToken(ctx.req, [AuthScope.Refresh], {
-        // when using entryway, proxying refresh credentials
-        audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
-      })
-    if (!payload.jti) {
-      throw new AuthRequiredError(
-        'Unexpected missing refresh token id',
-        'MissingTokenId',
-      )
-    }
+    const { did, scope, token, tokenId, audience } =
+      await this.validateRefreshToken(ctx)
+
     return {
       credentials: {
         type: 'refresh',
         did,
         scope,
         audience,
-        tokenId: payload.jti,
+        tokenId,
       },
       artifacts: token,
     }
   }
 
-  adminToken = (ctx: ReqCtx): AdminTokenOutput => {
-    const parsed = parseBasicAuth(ctx.req.headers.authorization || '')
-    if (!parsed) {
-      throw new AuthRequiredError()
+  refreshExpired = async (ctx: ReqCtx): Promise<RefreshOutput> => {
+    const { did, scope, token, tokenId, audience } =
+      await this.validateRefreshToken(ctx, { clockTolerance: Infinity })
+
+    return {
+      credentials: {
+        type: 'refresh',
+        did,
+        scope,
+        audience,
+        tokenId,
+      },
+      artifacts: token,
     }
-    const { username, password } = parsed
-    if (username !== 'admin' || password !== this._adminPass) {
-      throw new AuthRequiredError()
-    }
-    return { credentials: { type: 'admin_token' } }
+  }
+
+  adminToken = async (ctx: ReqCtx): Promise<AdminTokenOutput> => {
+    this.setAuthHeaders(ctx)
+    return this.validateAdminToken(ctx)
   }
 
   optionalAccessOrAdminToken = async (
     ctx: ReqCtx,
   ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
-    if (isBearerToken(ctx.req)) {
+    if (isAccessToken(ctx.req)) {
       return await this.accessStandard()(ctx)
     } else if (isBasicToken(ctx.req)) {
       return await this.adminToken(ctx)
     } else {
-      return this.null()
+      return this.null(ctx)
     }
   }
 
-  userDidAuth = async (reqCtx: ReqCtx): Promise<UserDidOutput> => {
-    const payload = await this.verifyServiceJwt(reqCtx, {
+  userDidAuth = async (ctx: ReqCtx): Promise<UserDidOutput> => {
+    const payload = await this.verifyServiceJwt(ctx, {
       aud: this.dids.entryway ?? this.dids.pds,
       iss: null,
     })
@@ -219,20 +236,20 @@ export class AuthVerifier {
   }
 
   userDidAuthOptional = async (
-    reqCtx: ReqCtx,
+    ctx: ReqCtx,
   ): Promise<UserDidOutput | NullOutput> => {
-    if (isBearerToken(reqCtx.req)) {
-      return await this.userDidAuth(reqCtx)
+    if (isBearerToken(ctx.req)) {
+      return await this.userDidAuth(ctx)
     } else {
-      return this.null()
+      return this.null(ctx)
     }
   }
 
-  modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
+  modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
     if (!this.dids.modService) {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
     }
-    const payload = await this.verifyServiceJwt(reqCtx, {
+    const payload = await this.verifyServiceJwt(ctx, {
       aud: null,
       iss: [this.dids.modService, `${this.dids.modService}#atproto_labeler`],
     })
@@ -255,25 +272,74 @@ export class AuthVerifier {
   }
 
   moderator = async (
-    reqCtx: ReqCtx,
+    ctx: ReqCtx,
   ): Promise<AdminTokenOutput | ModServiceOutput> => {
-    if (isBearerToken(reqCtx.req)) {
-      return this.modService(reqCtx)
+    if (isBearerToken(ctx.req)) {
+      return this.modService(ctx)
     } else {
-      return this.adminToken(reqCtx)
+      return this.adminToken(ctx)
     }
   }
 
-  async validateBearerToken(
-    req: express.Request,
+  protected async validateAdminToken({
+    req,
+  }: ReqCtx): Promise<AdminTokenOutput> {
+    const parsed = parseBasicAuth(req.headers.authorization)
+    if (!parsed) {
+      throw new AuthRequiredError()
+    }
+    const { username, password } = parsed
+    if (username !== 'admin' || password !== this._adminPass) {
+      throw new AuthRequiredError()
+    }
+
+    return { credentials: { type: 'admin_token' } }
+  }
+
+  protected async validateRefreshToken(
+    ctx: ReqCtx,
+    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience'>,
+  ): Promise<ValidatedRefreshBearer> {
+    const result = await this.validateBearerToken(ctx, [AuthScope.Refresh], {
+      ...verifyOptions,
+      // when using entryway, proxying refresh credentials
+      audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
+    })
+    const tokenId = result.payload.jti
+    if (!tokenId) {
+      throw new AuthRequiredError(
+        'Unexpected missing refresh token id',
+        'MissingTokenId',
+      )
+    }
+    return { ...result, tokenId }
+  }
+
+  protected async validateBearerToken(
+    ctx: ReqCtx,
     scopes: AuthScope[],
     verifyOptions?: jose.JWTVerifyOptions,
   ): Promise<ValidatedBearer> {
-    const token = bearerTokenFromReq(req)
+    this.setAuthHeaders(ctx)
+
+    const token = bearerTokenFromReq(ctx.req)
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const payload = await verifyJwt({ key: this._jwtKey, token, verifyOptions })
+
+    const { payload, protectedHeader } = await this.jwtVerify(
+      token,
+      verifyOptions,
+    )
+
+    if (protectedHeader.typ === 'dpop+jwt') {
+      // @TODO we should make sure that bearer access tokens do have their "typ"
+      // claim, and allow list the possible value(s) here (typically "at+jwt"),
+      // instead of using a deny list. This would be more secure & future proof
+      // against new token types that would be introduced in the future
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+
     const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
@@ -282,6 +348,10 @@ export class AuthVerifier {
       aud !== undefined &&
       (typeof aud !== 'string' || !aud.startsWith('did:'))
     ) {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if ((payload.cnf as any)?.jkt) {
+      // DPoP bound tokens must not be usable as regular Bearer tokens
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
@@ -296,22 +366,45 @@ export class AuthVerifier {
     }
   }
 
-  async validateAccessToken(
-    req: express.Request,
+  protected async validateAccessToken(
+    ctx: ReqCtx,
     scopes: AuthScope[],
-    opts?: { checkTakedown?: boolean; checkDeactivated?: boolean },
+    {
+      checkTakedown = false,
+      checkDeactivated = false,
+    }: { checkTakedown?: boolean; checkDeactivated?: boolean } = {},
   ): Promise<AccessOutput> {
-    const { did, scope, token, audience } = await this.validateBearerToken(
-      req,
-      scopes,
-      { audience: this.dids.pds },
-    )
-    const { checkTakedown = false, checkDeactivated = false } = opts ?? {}
+    this.setAuthHeaders(ctx)
+
+    let accessOutput: AccessOutput
+
+    const [type] = parseAuthorizationHeader(ctx.req.headers.authorization)
+    switch (type) {
+      case AuthType.BEARER: {
+        accessOutput = await this.validateBearerAccessToken(ctx, scopes)
+        break
+      }
+      case AuthType.DPOP: {
+        accessOutput = await this.validateDpopAccessToken(ctx, scopes)
+        break
+      }
+      case null:
+        throw new AuthRequiredError(undefined, 'AuthMissing')
+      default:
+        throw new InvalidRequestError(
+          'Unexpected authorization type',
+          'InvalidToken',
+        )
+    }
+
     if (checkTakedown || checkDeactivated) {
-      const found = await this.accountManager.getAccount(did, {
-        includeDeactivated: true,
-        includeTakenDown: true,
-      })
+      const found = await this.accountManager.getAccount(
+        accessOutput.credentials.did,
+        {
+          includeDeactivated: true,
+          includeTakenDown: true,
+        },
+      )
       if (!found) {
         // will be turned into ExpiredToken for the client if proxied by entryway
         throw new ForbiddenError('Account not found', 'AccountNotFound')
@@ -329,6 +422,82 @@ export class AuthVerifier {
         )
       }
     }
+
+    return accessOutput
+  }
+
+  protected async validateDpopAccessToken(
+    ctx: ReqCtx,
+    scopes: AuthScope[],
+  ): Promise<AccessOutput> {
+    if (!scopes.includes(AuthScope.Access)) {
+      throw new InvalidRequestError(
+        'DPoP access token cannot be used for this request',
+        'InvalidToken',
+      )
+    }
+
+    this.setAuthHeaders(ctx)
+
+    const { req, res } = ctx
+
+    // https://datatracker.ietf.org/doc/html/rfc9449#section-8.2
+    if (res) {
+      const dpopNonce = this.oauthVerifier.nextDpopNonce()
+      if (dpopNonce) {
+        res.setHeader('DPoP-Nonce', dpopNonce)
+        res.appendHeader('Access-Control-Expose-Headers', 'DPoP-Nonce')
+      }
+    }
+
+    try {
+      const url = new URL(req.originalUrl || req.url, this._publicUrl)
+      const result = await this.oauthVerifier.authenticateRequest(
+        req.method,
+        url,
+        req.headers,
+        { audience: [this.dids.pds] },
+      )
+
+      const { sub } = result.claims
+      if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+        throw new InvalidRequestError('Malformed token', 'InvalidToken')
+      }
+
+      return {
+        credentials: {
+          type: 'access',
+          did: result.claims.sub,
+          scope: AuthScope.Access,
+          audience: this.dids.pds,
+        },
+        artifacts: result.token,
+      }
+    } catch (err) {
+      // Make sure to include any WWW-Authenticate header in the response
+      // (particularly useful for DPoP's "use_dpop_nonce" error)
+      if (res && err instanceof WWWAuthenticateError) {
+        res.setHeader('WWW-Authenticate', err.wwwAuthenticateHeader)
+        res.appendHeader('Access-Control-Expose-Headers', 'WWW-Authenticate')
+      }
+
+      if (err instanceof OAuthError) {
+        throw new XRPCError(err.status, err.error_description, err.error)
+      }
+
+      throw err
+    }
+  }
+
+  protected async validateBearerAccessToken(
+    ctx: ReqCtx,
+    scopes: AuthScope[],
+  ): Promise<AccessOutput> {
+    const { did, scope, token, audience } = await this.validateBearerToken(
+      ctx,
+      scopes,
+      { audience: this.dids.pds },
+    )
     return {
       credentials: {
         type: 'access',
@@ -340,10 +509,12 @@ export class AuthVerifier {
     }
   }
 
-  async verifyServiceJwt(
-    reqCtx: ReqCtx,
+  protected async verifyServiceJwt(
+    ctx: ReqCtx,
     opts: { aud: string | null; iss: string[] | null },
   ) {
+    this.setAuthHeaders(ctx)
+
     const getSigningKey = async (
       iss: string,
       forceRefresh: boolean,
@@ -369,7 +540,7 @@ export class AuthVerifier {
       return didKey
     }
 
-    const jwtStr = bearerTokenFromReq(reqCtx.req)
+    const jwtStr = bearerTokenFromReq(ctx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
@@ -377,7 +548,8 @@ export class AuthVerifier {
     return { iss: payload.iss, aud: payload.aud }
   }
 
-  null(): NullOutput {
+  protected null(ctx: ReqCtx): NullOutput {
+    this.setAuthHeaders(ctx)
     return {
       credentials: null,
     }
@@ -395,59 +567,93 @@ export class AuthVerifier {
       return auth.credentials.did === did
     }
   }
+
+  protected async jwtVerify(
+    token: string,
+    verifyOptions?: jose.JWTVerifyOptions,
+  ) {
+    try {
+      return await jose.jwtVerify(token, this._jwtKey, verifyOptions)
+    } catch (err) {
+      if (err?.['code'] === 'ERR_JWT_EXPIRED') {
+        throw new InvalidRequestError('Token has expired', 'ExpiredToken')
+      }
+      throw new InvalidRequestError(
+        'Token could not be verified',
+        'InvalidToken',
+      )
+    }
+  }
+
+  protected setAuthHeaders({ res }: ReqCtx) {
+    if (res) {
+      res.setHeader('Cache-Control', 'private')
+      vary(res, 'Authorization')
+    }
+  }
 }
 
 // HELPERS
 // ---------
 
-const BEARER = 'Bearer '
-const BASIC = 'Basic '
+enum AuthType {
+  BASIC = 'Basic',
+  BEARER = 'Bearer',
+  DPOP = 'DPoP',
+}
+
+export const parseAuthorizationHeader = (
+  authorization?: string,
+): [type: null] | [type: AuthType, token: string] => {
+  const result = authorization?.split(' ', 3)
+  if (result?.length === 2) {
+    for (const [name, type] of Object.entries(AuthType)) {
+      // authorization type is case-insensitive
+      if (name === result[0].toUpperCase()) {
+        return [type, result[1]] as [type: AuthType, token: string]
+      }
+    }
+  }
+
+  return [null] as [type: null]
+}
+
+const isAccessToken = (req: express.Request): boolean => {
+  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  return type === AuthType.BEARER || type === AuthType.DPOP
+}
 
 const isBearerToken = (req: express.Request): boolean => {
-  return req.headers.authorization?.startsWith(BEARER) ?? false
+  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  return type === AuthType.BEARER
 }
 
 const isBasicToken = (req: express.Request): boolean => {
-  return req.headers.authorization?.startsWith(BASIC) ?? false
+  const [type] = parseAuthorizationHeader(req.headers.authorization)
+  return type === AuthType.BASIC
 }
 
 const bearerTokenFromReq = (req: express.Request) => {
-  const header = req.headers.authorization || ''
-  if (!header.startsWith(BEARER)) return null
-  return header.slice(BEARER.length)
-}
-
-const verifyJwt = async (params: {
-  key: KeyObject
-  token: string
-  verifyOptions?: jose.JWTVerifyOptions
-}): Promise<jose.JWTPayload> => {
-  const { key, token, verifyOptions } = params
-  try {
-    const result = await jose.jwtVerify(token, key, verifyOptions)
-    return result.payload
-  } catch (err) {
-    if (err?.['code'] === 'ERR_JWT_EXPIRED') {
-      throw new InvalidRequestError('Token has expired', 'ExpiredToken')
-    }
-    throw new InvalidRequestError('Token could not be verified', 'InvalidToken')
-  }
+  const [type, token] = parseAuthorizationHeader(req.headers.authorization)
+  return type === AuthType.BEARER ? token : null
 }
 
 export const parseBasicAuth = (
-  token: string,
+  authorizationHeader?: string,
 ): { username: string; password: string } | null => {
-  if (!token.startsWith(BASIC)) return null
-  const b64 = token.slice(BASIC.length)
-  let parsed: string[]
   try {
-    parsed = ui8.toString(ui8.fromString(b64, 'base64pad'), 'utf8').split(':')
+    const [type, b64] = parseAuthorizationHeader(authorizationHeader)
+    if (type !== AuthType.BASIC) return null
+    const decoded = Buffer.from(b64, 'base64').toString('utf8')
+    // We must not use split(':') because the password can contain colons
+    const colon = decoded.indexOf(':')
+    if (colon === -1) return null
+    const username = decoded.slice(0, colon)
+    const password = decoded.slice(colon + 1)
+    return { username, password }
   } catch (err) {
     return null
   }
-  const [username, password] = parsed
-  if (!username || !password) return null
-  return { username, password }
 }
 
 const authScopes = new Set(Object.values(AuthScope))
@@ -465,3 +671,17 @@ export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
 }
 
 const keyEncoder = new KeyEncoder('secp256k1')
+
+function vary(res: express.Response, value: string) {
+  const current = res.getHeader('Vary')
+  if (current == null || typeof current === 'number') {
+    res.setHeader('Vary', value)
+  } else {
+    const alreadyIncluded = Array.isArray(current)
+      ? current.some((value) => value.includes(value))
+      : current.includes(value)
+    if (!alreadyIncluded) {
+      res.appendHeader('Vary', value)
+    }
+  }
+}
