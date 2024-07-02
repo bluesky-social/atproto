@@ -30,7 +30,7 @@ export class AtpAgent {
   }
 
   api: AtpClient
-  labelersHeader: string[] = []
+  labelersHeader: readonly string[] = []
   proxyHeader?: string
 
   readonly sessionManager: SessionManager
@@ -117,7 +117,7 @@ export class AtpAgent {
    * NOTE: this is called automatically by getPreferences() and the relevant moderation config
    * methods in BskyAgent instances.
    */
-  configureLabelersHeader(labelerDids: string[]) {
+  configureLabelersHeader(labelerDids: readonly string[]) {
     this.labelersHeader = labelerDids
   }
 
