@@ -87,6 +87,10 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
         sort: 'oldest',
       },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
+      },
     })
   })
 
@@ -136,6 +140,10 @@ describe('agent', () => {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
       },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
+      },
     })
     expect(agent.labelersHeader).toStrictEqual(['did:plc:other'])
 
@@ -167,6 +175,10 @@ describe('agent', () => {
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
+      },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
       },
     })
     expect(agent.labelersHeader).toStrictEqual([])
@@ -223,6 +235,10 @@ describe('agent', () => {
       threadViewPrefs: {
         sort: 'oldest',
         prioritizeFollowedUsers: true,
+      },
+      bskyAppState: {
+        activeProgressGuide: undefined,
+        queuedNudges: [],
       },
     })
   })

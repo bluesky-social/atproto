@@ -168,7 +168,8 @@
           "#threadViewPref",
           "#interestsPref",
           "#mutedWordsPref",
-          "#hiddenPostsPref"
+          "#hiddenPostsPref",
+          "#bskyAppStatePref"
         ]
       }
     },
@@ -390,6 +391,30 @@
           "type": "string",
           "format": "did"
         }
+      }
+    },
+    "bskyAppStatePref": {
+      "description": "A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this.",
+      "type": "object",
+      "properties": {
+        "activeProgressGuide": {
+          "type": "ref",
+          "ref": "#bskyAppProgressGuide"
+        },
+        "queuedNudges": {
+          "description": "An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user.",
+          "type": "array",
+          "maxLength": 1000,
+          "items": { "type": "string", "maxLength": 100 }
+        }
+      }
+    },
+    "bskyAppProgressGuide": {
+      "description": "If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress.",
+      "type": "object",
+      "required": ["guide"],
+      "properties": {
+        "guide": { "type": "string", "maxLength": 100 }
       }
     }
   }

@@ -5,7 +5,7 @@ This is the service entrypoint for the bsky appview. The entrypoint command shou
 - `BSKY_PUBLIC_URL` - (required) the public url of the appview, e.g. `https://api.bsky.app`.
 - `BSKY_DID_PLC_URL` - (required) the url of the PLC service used for looking up did documents, e.g. `https://plc.directory`.
 - `BSKY_DATAPLANE_URL` - (required) the url where the backing dataplane service lives.
-- `BSKY_SERVICE_SIGNING_KEY` - (required) the public signing key in the form of a `did:key`, used for service-to-service auth. Advertised in the appview's `did:web`` document.
+- `BSKY_SERVICE_SIGNING_KEY` - (required) the public signing key in the form of a `did:key`, used for service-to-service auth. Advertised in the appview's `did:web` document.
 - `BSKY_ADMIN_PASSWORDS` - (alt. `BSKY_ADMIN_PASSWORD`) (required) comma-separated list of admin passwords used for role-based auth.
 - `NODE_ENV` - (recommended) for production usage, should be set to `production`. Otherwise all responses are validated on their way out. There may be other effects of not setting this to `production`, as dependencies may also implement debug modes based on its value.
 - `BSKY_VERSION` - (recommended) version of the bsky service. This is advertised by the health endpoint.

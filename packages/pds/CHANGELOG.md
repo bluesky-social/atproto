@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.39
+
+### Patch Changes
+
+- [#2492](https://github.com/bluesky-social/atproto/pull/2492) [`bc861a2c2`](https://github.com/bluesky-social/atproto/commit/bc861a2c25b4151fb7e070dc20d5e1e07da21863) Thanks [@pfrazee](https://github.com/pfrazee)! - Added bsky app state preference and improved protections against race conditions in preferences sdk
+
+- Updated dependencies [[`bc861a2c2`](https://github.com/bluesky-social/atproto/commit/bc861a2c25b4151fb7e070dc20d5e1e07da21863)]:
+  - @atproto/api@0.12.23
+
 ## 0.4.38
 
 ### Patch Changes
