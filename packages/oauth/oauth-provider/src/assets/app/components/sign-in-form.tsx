@@ -1,11 +1,4 @@
-import {
-  ReactNode,
-  SyntheticEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { ReactNode, SyntheticEvent, useCallback, useState } from 'react'
 
 import {
   InvalidCredentialsError,
