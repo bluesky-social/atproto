@@ -6,8 +6,9 @@ import {
   SeedClient,
   basicSeed,
   ModeratorClient,
+  TestAgent,
 } from '@atproto/dev-env'
-import AtpAgent, { ToolsOzoneModerationEmitEvent } from '@atproto/api'
+import { ToolsOzoneModerationEmitEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import {
@@ -28,9 +29,9 @@ describe('moderation', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let mockInvalidator: MockInvalidator
-  let agent: AtpAgent
-  let bskyAgent: AtpAgent
-  let pdsAgent: AtpAgent
+  let agent: TestAgent
+  let bskyAgent: TestAgent
+  let pdsAgent: TestAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 

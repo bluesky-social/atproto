@@ -1,7 +1,8 @@
 import { JwkError } from './errors.js'
 import { Jwk } from './jwk.js'
 
-declare const process: undefined | { versions?: { node?: string } }
+// Copy variable to prevent bundlers from automatically polyfilling "process" (e.g. parcel)
+const { process } = globalThis
 const IS_NODE_RUNTIME =
   typeof process !== 'undefined' && typeof process?.versions?.node === 'string'
 

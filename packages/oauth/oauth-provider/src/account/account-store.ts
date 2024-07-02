@@ -1,20 +1,26 @@
+import z from 'zod'
+
 import { ClientId } from '../client/client-id.js'
 import { DeviceId } from '../device/device-id.js'
 import { Awaitable } from '../lib/util/type.js'
 import { Sub } from '../oidc/sub.js'
 import { Account } from './account.js'
 
-export type LoginCredentials = {
-  username: string
-  password: string
+export const signInCredentialsSchema = z.object({
+  username: z.string(),
+  password: z.string(),
 
   /**
    * If false, the account must not be returned from
    * {@link AccountStore.listDeviceAccounts}. Note that this only makes sense when
    * used with a device ID.
    */
-  remember?: boolean
-}
+  remember: z.boolean().optional().default(false),
+
+  emailOtp: z.string().optional(),
+})
+
+export type SignInCredentials = z.TypeOf<typeof signInCredentialsSchema>
 
 export type DeviceAccountInfo = {
   remembered: boolean
@@ -32,7 +38,7 @@ export type AccountInfo = {
 
 export interface AccountStore {
   authenticateAccount(
-    credentials: LoginCredentials,
+    credentials: SignInCredentials,
     deviceId: DeviceId,
   ): Awaitable<AccountInfo | null>
 

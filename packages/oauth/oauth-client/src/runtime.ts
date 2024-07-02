@@ -5,10 +5,22 @@ import { requestLocalLock } from './lock.js'
 import {
   DigestAlgorithm,
   RuntimeImplementation,
+  RuntimeLock,
 } from './runtime-implementation.js'
 
 export class Runtime {
-  constructor(protected implementation: RuntimeImplementation) {}
+  readonly hasImplementationLock: boolean
+  readonly usingLock: RuntimeLock
+
+  constructor(protected implementation: RuntimeImplementation) {
+    const { requestLock } = implementation
+
+    this.hasImplementationLock = requestLock != null
+    this.usingLock =
+      requestLock?.bind(implementation) ||
+      // Falling back to a local lock
+      requestLocalLock
+  }
 
   public async generateKey(algs: string[]): Promise<Key> {
     const algsSorted = Array.from(algs).sort(compareAlgos)
@@ -24,22 +36,6 @@ export class Runtime {
   public async generateNonce(length = 16): Promise<string> {
     const bytes = await this.implementation.getRandomValues(length)
     return base64url.baseEncode(bytes)
-  }
-
-  get hasLock() {
-    return !!this.implementation.requestLock
-  }
-
-  public async withLock<T>(
-    name: string,
-    fn: () => T | PromiseLike<T>,
-  ): Promise<T> {
-    if (this.implementation.requestLock) {
-      return this.implementation.requestLock(name, fn)
-    } else {
-      // Falling back to a local lock
-      return requestLocalLock(name, fn)
-    }
   }
 
   public async validateIdTokenClaims(

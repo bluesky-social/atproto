@@ -1,12 +1,12 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { BackgroundQueue } from '@atproto/bsky'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
+import { TestAgent } from './agent'
 
 export * from '@atproto/bsky'
 
@@ -106,9 +106,7 @@ export class TestBsky {
   }
 
   getClient() {
-    const agent = new AtpAgent({ service: this.url })
-    agent.configureLabelersHeader([EXAMPLE_LABELER])
-    return agent
+    return new TestAgent({ service: this.url })
   }
 
   adminAuth(): string {

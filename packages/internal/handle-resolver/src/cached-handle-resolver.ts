@@ -1,6 +1,10 @@
 import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-import { ResolveOptions, HandleResolver, ResolvedHandle } from './types.js'
+import {
+  HandleResolver,
+  ResolvedHandle,
+  ResolveHandleOptions,
+} from './types.js'
 
 export type HandleCache = SimpleStore<string, ResolvedHandle>
 
@@ -25,7 +29,7 @@ export class CachedHandleResolver implements HandleResolver {
 
   async resolve(
     handle: string,
-    options?: ResolveOptions,
+    options?: ResolveHandleOptions,
   ): Promise<ResolvedHandle> {
     return this.getter.get(handle, options)
   }

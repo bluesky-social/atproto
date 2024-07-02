@@ -9,6 +9,7 @@ import {
   UnsecuredJWT,
   createLocalJWKSet,
   createRemoteJWKSet,
+  errors,
   jwtVerify,
   type JWTPayload,
   type JWTVerifyGetKey,
@@ -18,7 +19,6 @@ import {
   type ResolvedKey,
   type UnsecuredResult,
 } from 'jose'
-import { JOSEError } from 'jose/errors'
 
 import { CLIENT_ASSERTION_MAX_AGE, JAR_MAX_AGE } from '../constants.js'
 import { InvalidClientError } from '../errors/invalid-client-error.js'
@@ -27,6 +27,8 @@ import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { ClientAuth, authJwkThumbprint } from './client-auth.js'
 import { ClientId } from './client-id.js'
 import { ClientInfo } from './client-info.js'
+
+const { JOSEError } = errors
 
 export class Client {
   /**

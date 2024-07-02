@@ -5,8 +5,8 @@ import {
   TestOzone,
   ModeratorClient,
   createOzoneDid,
+  TestAgent,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LABELER_HEADER_NAME } from '../src/util'
 
@@ -14,8 +14,8 @@ describe('labels from 3p labelers', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let thirdPartyLabeler: TestOzone
-  let agent: AtpAgent
-  let thirdPartyAgent: AtpAgent
+  let agent: TestAgent
+  let thirdPartyAgent: TestAgent
   let sc: SeedClient
   let modClient: ModeratorClient
   let thirdPartyModClient: ModeratorClient

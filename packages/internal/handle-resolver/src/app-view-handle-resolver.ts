@@ -2,7 +2,7 @@ import z from 'zod'
 
 import {
   HandleResolver,
-  ResolveOptions,
+  ResolveHandleOptions,
   ResolvedHandle,
   isResolvedHandle,
 } from './types.js'
@@ -47,7 +47,7 @@ export class AppViewHandleResolver implements HandleResolver {
 
   public async resolve(
     handle: string,
-    options?: ResolveOptions,
+    options?: ResolveHandleOptions,
   ): Promise<ResolvedHandle> {
     const url = new URL(
       '/xrpc/com.atproto.identity.resolveHandle',

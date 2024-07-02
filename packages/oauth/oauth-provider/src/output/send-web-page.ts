@@ -15,13 +15,14 @@ export function declareBackendData(name: string, data: unknown) {
   // to prevent other scripts from deducing the value of the variable. The "app"
   // script will read the global variable and then unset it. See
   // "readBackendData" in "src/assets/app/backend-data.ts".
-  return js`window[${name}]=${data};document.currentScript.remove();`
+  return js`window[${name}]=${data};`
+  // return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
-export function sendWebPage(
+export async function sendWebPage(
   res: ServerResponse,
   { status = 200, ...options }: BuildDocumentOptions & { status?: number },
-): void {
+): Promise<void> {
   // @TODO: make these headers configurable (?)
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
@@ -52,7 +53,7 @@ export function sendWebPage(
 
   const html = buildDocument(options)
 
-  writeHtml(res, html.toString(), status)
+  return writeHtml(res, html.toString(), status)
 }
 
 function assetToHash(asset: Html | AssetRef): string {

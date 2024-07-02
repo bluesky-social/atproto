@@ -85,10 +85,14 @@ export function AuthorizeView({
         clientTrusted={authorizeData.clientTrusted}
         onAccept={() => doAccept(session.account)}
         onReject={doReject}
-        onBack={() => {
-          setSession(null)
-          setView(sessions.length ? 'sign-in' : 'welcome')
-        }}
+        onBack={
+          forceSignIn
+            ? undefined
+            : () => {
+                setSession(null)
+                setView(sessions.length ? 'sign-in' : 'welcome')
+              }
+        }
       />
     )
   }

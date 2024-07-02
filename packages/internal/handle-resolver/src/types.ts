@@ -1,6 +1,6 @@
 import { Did, isAtprotoDidWeb, isDidPlc } from '@atproto/did'
 
-export type ResolveOptions = {
+export type ResolveHandleOptions = {
   signal?: AbortSignal
   noCache?: boolean
 }
@@ -27,7 +27,10 @@ export interface HandleResolver {
    * is found. `null` should only be returned if no unexpected behavior occurred
    * during the resolution process.
    * @throws Error if the resolution method fails due to an unexpected error, or
-   * if the resolution is aborted ({@link ResolveOptions}).
+   * if the resolution is aborted ({@link ResolveHandleOptions}).
    */
-  resolve(handle: string, options?: ResolveOptions): Promise<ResolvedHandle>
+  resolve(
+    handle: string,
+    options?: ResolveHandleOptions,
+  ): Promise<ResolvedHandle>
 }

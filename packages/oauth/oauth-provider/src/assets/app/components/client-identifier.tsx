@@ -1,4 +1,8 @@
-import { OAuthClientMetadata } from '@atproto/oauth-types'
+import {
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
+  OAuthClientMetadata,
+} from '@atproto/oauth-types'
 import { HTMLAttributes } from 'react'
 
 import { UrlViewer } from './url-viewer'
@@ -15,18 +19,13 @@ export function ClientIdentifier({
   as: As = 'span',
   ...attrs
 }: ClientIdentifierProps & HTMLAttributes<Element>) {
-  if (clientMetadata.client_uri) {
-    return (
-      <UrlViewer
-        as={As}
-        {...attrs}
-        url={clientMetadata.client_uri}
-        proto
-        path
-      />
-    )
+  if (isOAuthClientIdLoopback(clientId)) {
+    return <As {...attrs}>An application on your device</As>
   }
 
-  // Fallback to the client ID
-  return <As {...attrs}>{clientId}</As>
+  if (isOAuthClientIdDiscoverable(clientId)) {
+    return <UrlViewer as={As} {...attrs} url={clientId} proto path />
+  }
+
+  return <As {...attrs}>{clientMetadata.client_name || clientId}</As>
 }

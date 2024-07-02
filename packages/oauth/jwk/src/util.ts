@@ -13,6 +13,24 @@ export type RequiredKey<T, K extends string> = Simplify<
       } & Omit<T, K>
 >
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type DeepReadonly<T> = T extends Function
+  ? T
+  : T extends object
+    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+    : T extends readonly (infer U)[]
+      ? readonly DeepReadonly<U>[]
+      : T
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type UnReadonly<T> = T extends Function
+  ? T
+  : T extends object
+    ? { -readonly [K in keyof T]: UnReadonly<T[K]> }
+    : T extends readonly (infer U)[]
+      ? UnReadonly<U>[]
+      : T
+
 export const isDefined = <T>(i: T | undefined): i is T => i !== undefined
 
 export const preferredOrderCmp =

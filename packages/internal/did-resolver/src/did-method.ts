@@ -1,6 +1,6 @@
 import { Did, DidDocument } from '@atproto/did'
 
-export type ResolveOptions = {
+export type ResolveDidOptions = {
   signal?: AbortSignal
   noCache?: boolean
 }
@@ -8,7 +8,7 @@ export type ResolveOptions = {
 export interface DidMethod<Method extends string> {
   resolve: (
     did: Did<Method>,
-    options?: ResolveOptions,
+    options?: ResolveDidOptions,
   ) => DidDocument | PromiseLike<DidDocument>
 }
 

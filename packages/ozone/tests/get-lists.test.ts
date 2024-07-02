@@ -5,15 +5,16 @@ import {
   basicSeed,
   ModeratorClient,
   RecordRef,
+  TestAgent,
 } from '@atproto/dev-env'
-import AtpAgent, { BSKY_LABELER_DID } from '@atproto/api'
+import { BSKY_LABELER_DID } from '@atproto/api'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('admin get lists', () => {
   let network: TestNetwork
   let ozone: TestOzone
-  let agent: AtpAgent
-  let appviewAgent: AtpAgent
+  let agent: TestAgent
+  let appviewAgent: TestAgent
   let sc: SeedClient
   let modClient: ModeratorClient
   let alicesList: RecordRef
@@ -29,12 +30,12 @@ describe('admin get lists', () => {
     modClient = ozone.getModClient()
     await basicSeed(sc)
     alicesList = await sc.createList(sc.dids.alice, "Alice's List", 'mod')
-    AtpAgent.configure({ appLabelers: [ozone.ctx.cfg.service.did] })
+    TestAgent.configure({ appLabelers: [ozone.ctx.cfg.service.did] })
     await network.processAll()
   })
 
   afterAll(async () => {
-    AtpAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
+    TestAgent.configure({ appLabelers: [BSKY_LABELER_DID] })
     await network.close()
   })
 

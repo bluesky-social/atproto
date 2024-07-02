@@ -7,13 +7,15 @@ import {
   JwtVerifyError,
 } from './errors.js'
 import { Jwk } from './jwk.js'
-import { Jwks } from './jwks.js'
+import { Jwks, JwksPub } from './jwks.js'
 import { unsafeDecodeJwt } from './jwt-decode.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { Key } from './key.js'
 import {
+  DeepReadonly,
   Override,
+  UnReadonly,
   cachedGetter,
   isDefined,
   matchesAny,
@@ -80,6 +82,10 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
     this.keys = Object.freeze(keys)
   }
 
+  get size(): number {
+    return this.keys.length
+  }
+
   @cachedGetter
   get signAlgorithms(): readonly string[] {
     const algorithms = new Set<string>()
@@ -95,14 +101,14 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
   }
 
   @cachedGetter
-  get publicJwks(): Jwks {
+  get publicJwks(): DeepReadonly<JwksPub> {
     return {
       keys: Array.from(this, extractPublicJwk).filter(isDefined),
     }
   }
 
   @cachedGetter
-  get privateJwks(): Jwks {
+  get privateJwks(): DeepReadonly<Jwks> {
     return {
       keys: Array.from(this, extractPrivateJwk).filter(isDefined),
     }
@@ -236,5 +242,10 @@ export class Keyset<K extends Key = Key> implements Iterable<K> {
       default:
         throw JwtVerifyError.from(errors, ERR_JWT_INVALID)
     }
+  }
+
+  toJSON(): JwksPub {
+    // Make a copy to prevent mutation of the original keyset
+    return structuredClone(this.publicJwks) as UnReadonly<JwksPub>
   }
 }

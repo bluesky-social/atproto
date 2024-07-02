@@ -1,6 +1,9 @@
-import AtpAgent, { ComAtprotoServerCreateAccount } from '@atproto/api'
+import AtpAgent, {
+  ComAtprotoServerCreateAccount,
+  AtpSessionManager,
+} from '@atproto/api'
 import * as crypto from '@atproto/crypto'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestAgent, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
 import { DAY } from '@atproto/common'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
@@ -8,7 +11,7 @@ import { genInvCodes } from '../src/api/com/atproto/server/util'
 describe('account', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
-  let agent: AtpAgent
+  let agent: TestAgent
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -321,7 +324,7 @@ describe('account', () => {
 
 const createInviteCode = async (
   network: TestNetworkNoAppView,
-  agent: AtpAgent,
+  agent: TestAgent,
   uses: number,
   forAccount?: string,
 ): Promise<string> => {
@@ -335,7 +338,7 @@ const createInviteCode = async (
   return res.data.code
 }
 
-const createAccountWithInvite = async (agent: AtpAgent, code: string) => {
+const createAccountWithInvite = async (agent: TestAgent, code: string) => {
   const name = crypto.randomStr(5, 'base32')
   const res = await agent.api.com.atproto.server.createAccount({
     email: `${name}@test.com`,
@@ -350,7 +353,7 @@ const createAccountWithInvite = async (agent: AtpAgent, code: string) => {
 }
 
 const createAccountsWithInvite = async (
-  agent: AtpAgent,
+  agent: TestAgent,
   code: string,
   count = 0,
 ) => {
@@ -361,16 +364,19 @@ const createAccountsWithInvite = async (
 
 const makeLoggedInAccount = async (
   network: TestNetworkNoAppView,
-  agent: AtpAgent,
+  agent: TestAgent,
 ): Promise<{ did: string; agent: AtpAgent }> => {
   const code = await createInviteCode(network, agent, 1)
   const account = await createAccountWithInvite(agent, code)
   const did = account.did
-  const loggedInAgent = new AtpAgent({ service: agent.service.toString() })
-  await loggedInAgent.login({
+  const sessionMgr = new AtpSessionManager({
+    service: agent.service.toString(),
+  })
+  await sessionMgr.login({
     identifier: account.handle,
     password: account.password,
   })
+  const loggedInAgent = new AtpAgent(sessionMgr)
   return {
     did,
     agent: loggedInAgent,

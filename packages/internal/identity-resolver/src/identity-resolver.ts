@@ -1,12 +1,12 @@
 import {
   Did,
   DidDocument,
-  ResolveOptions as DidResolveOptions,
+  ResolveDidOptions as DidResolveOptions,
   DidResolver,
   DidService,
 } from '@atproto-labs/did-resolver'
 import {
-  ResolveOptions as HandleResolveOptions,
+  ResolveHandleOptions as HandleResolveOptions,
   HandleResolver,
   ResolvedHandle,
   isResolvedHandle,

@@ -1,9 +1,8 @@
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { TestNetwork, SeedClient, basicSeed, TestAgent } from '@atproto/dev-env'
 
 describe('communication-templates', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let agent: TestAgent
   let sc: SeedClient
 
   beforeAll(async () => {

@@ -1,11 +1,10 @@
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { SeedClient, TestAgent, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
 
 describe('team management', () => {
   let network: TestNetwork
-  let adminAgent: AtpAgent
-  let triageAgent: AtpAgent
+  let adminAgent: TestAgent
+  let triageAgent: TestAgent
   let sc: SeedClient
 
   beforeAll(async () => {

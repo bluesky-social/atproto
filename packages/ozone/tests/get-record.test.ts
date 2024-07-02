@@ -4,8 +4,8 @@ import {
   basicSeed,
   TestOzone,
   ModeratorClient,
+  TestAgent,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import {
   REASONOTHER,
@@ -16,7 +16,7 @@ import { forSnapshot } from './_util'
 describe('admin get record view', () => {
   let network: TestNetwork
   let ozone: TestOzone
-  let agent: AtpAgent
+  let agent: TestAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 

@@ -6,9 +6,9 @@ import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
 import { createSecretKeyObject } from '@atproto/pds'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
-import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const'
+import { ADMIN_PASSWORD, JWT_SECRET } from './const'
+import { TestAgent } from './agent'
 
 export class TestPds {
   constructor(
@@ -47,7 +47,7 @@ export class TestPds {
       inviteRequired: false,
       fetchDisableSsrfProtection: true,
       serviceName: 'Development PDS',
-      primaryColor: '#ffcb1e',
+      brandColor: '#ffcb1e',
       errorColor: undefined,
       logoUrl:
         'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
@@ -71,10 +71,8 @@ export class TestPds {
     return this.server.ctx
   }
 
-  getClient(): AtpAgent {
-    const agent = new AtpAgent({ service: this.url })
-    agent.configureLabelersHeader([EXAMPLE_LABELER])
-    return agent
+  getClient() {
+    return new TestAgent({ service: this.url })
   }
 
   adminAuth(): string {

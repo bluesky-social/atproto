@@ -10,6 +10,7 @@ import AtpAgent, {
   AppBskyFeedLike,
   AppBskyFeedRepost,
   AppBskyGraphFollow,
+  AtpSessionManager,
 } from '@atproto/api'
 import { TestNetwork, SeedClient, usersSeed, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
@@ -546,10 +547,12 @@ describe('indexing', () => {
 
     it('indexes handle for a fresh did', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: network.pds.url })
+      const sessionMgr = new AtpSessionManager({
+        service: network.pds.url,
+      })
       const {
         data: { did },
-      } = await sessionAgent.createAccount({
+      } = await sessionMgr.createAccount({
         email: 'did1@test.com',
         handle: 'did1.test',
         password: 'password',
@@ -561,10 +564,13 @@ describe('indexing', () => {
 
     it('reindexes handle for existing did when forced', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: network.pds.url })
+      const sessionMgr = new AtpSessionManager({
+        service: network.pds.url,
+      })
+      const sessionAgent = new AtpAgent(sessionMgr)
       const {
         data: { did },
-      } = await sessionAgent.createAccount({
+      } = await sessionMgr.createAccount({
         email: 'did2@test.com',
         handle: 'did2.test',
         password: 'password',
@@ -582,10 +588,12 @@ describe('indexing', () => {
 
     it('handles profile aggregations out of order', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: network.pds.url })
+      const sessionMgr = new AtpSessionManager({
+        service: network.pds.url,
+      })
       const {
         data: { did },
-      } = await sessionAgent.createAccount({
+      } = await sessionMgr.createAccount({
         email: 'did3@test.com',
         handle: 'did3.test',
         password: 'password',

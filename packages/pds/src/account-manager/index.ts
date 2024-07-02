@@ -7,12 +7,12 @@ import {
   DeviceId,
   DeviceStore,
   FoundRequestResult,
-  LoginCredentials,
   NewTokenData,
   RefreshToken,
   RequestData,
   RequestId,
   RequestStore,
+  SignInCredentials,
   TokenData,
   TokenId,
   TokenInfo,
@@ -32,8 +32,8 @@ import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
 import * as auth from './helpers/auth'
 import * as authRequest from './helpers/authorization-request'
-import * as deviceAccount from './helpers/device-account'
 import * as device from './helpers/device'
+import * as deviceAccount from './helpers/device-account'
 import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
 import * as password from './helpers/password'
@@ -42,8 +42,7 @@ import * as scrypt from './helpers/scrypt'
 import * as token from './helpers/token'
 import * as usedRefreshToken from './helpers/used-refresh-token'
 
-export { AccountStatus } from './helpers/account'
-export { formatAccountStatus } from './helpers/account'
+export { AccountStatus, formatAccountStatus } from './helpers/account'
 
 export class AccountManager
   implements AccountStore, RequestStore, DeviceStore, TokenStore
@@ -487,7 +486,7 @@ export class AccountManager
   // AccountStore
 
   async authenticateAccount(
-    { username: identifier, password, remember = false }: LoginCredentials,
+    { username: identifier, password, remember = false }: SignInCredentials,
     deviceId: DeviceId,
   ): Promise<AccountInfo | null> {
     try {

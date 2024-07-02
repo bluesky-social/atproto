@@ -9,9 +9,9 @@ TypeScript client library for talking to [atproto](https://atproto.com) services
 
 ```typescript
 import { LexiconDoc } from '@atproto/lexicon'
-import xrpc from '@atproto/xrpc'
+import { XrpcClient } from '@atproto/xrpc'
 
-const pingLexicon: LexiconDoc = {
+const pingLexicon = {
   lexicon: 1,
   id: 'io.example.ping',
   defs: {
@@ -32,44 +32,69 @@ const pingLexicon: LexiconDoc = {
       },
     },
   },
-}
-xrpc.addLexicon(pingLexicon)
+} satisfies LexiconDoc
 
-const res1 = await xrpc.call('https://example.com', 'io.example.ping', {
+const xrpc = new XrpcClient('https://ping.example.com', [
+  // Any number of lexicon here
+  pingLexicon,
+])
+
+const res1 = await xrpc.call('io.example.ping', {
   message: 'hello world',
 })
 res1.encoding // => 'application/json'
 res1.body // => {message: 'hello world'}
-const res2 = await xrpc
-  .service('https://example.com')
-  .call('io.example.ping', { message: 'hello world' })
-res2.encoding // => 'application/json'
-res2.body // => {message: 'hello world'}
+```
 
-const writeJsonLexicon: LexiconDoc = {
-  lexicon: 1,
-  id: 'io.example.writeJsonFile',
-  defs: {
-    main: {
-      type: 'procedure',
-      description: 'Write a JSON file',
-      parameters: {
-        type: 'params',
-        properties: { fileName: { type: 'string' } },
-      },
-      input: {
-        encoding: 'application/json',
-      },
-    },
+### With a custom fetch handler
+
+```typescript
+import { XrpcClient } from '@atproto/xrpc'
+
+const session = {
+  serviceUrl: 'https://ping.example.com',
+  token: '<my-token>',
+  async refreshToken() {
+    const { token } = await fetch('https://auth.example.com/refresh', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.token}` },
+    }).then((res) => res.json())
+
+    this.token = token
+
+    return token
   },
 }
-xrpc.addLexicon(writeJsonLexicon)
 
-const res3 = await xrpc.service('https://example.com').call(
-  'io.example.writeJsonFile',
-  { fileName: 'foo.json' }, // query parameters
-  { hello: 'world', thisIs: 'the file to write' }, // input body
-)
+const sessionBasedFetch: FetchHandler = async (
+  url: string,
+  init: RequestInit,
+) => {
+  const headers = new Headers(init.headers)
+
+  headers.set('Authorization', `Bearer ${session.token}`)
+
+  const response = await fetch(new URL(url, session.serviceUrl), {
+    ...init,
+    headers,
+  })
+
+  if (response.status === 401) {
+    // Refresh token, then try again.
+    const newToken = await session.refreshToken()
+    headers.set('Authorization', `Bearer ${newToken}`)
+    return fetch(new URL(url, session.serviceUrl), { ...init, headers })
+  }
+
+  return response
+}
+
+const xrpc = new XrpcClient(sessionBasedFetch, [
+  // Any number of lexicon here
+  pingLexicon,
+])
+
+//
 ```
 
 ## License

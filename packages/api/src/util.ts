@@ -3,6 +3,8 @@ import { TID } from '@atproto/common-web'
 
 import { AppBskyActorDefs } from './client'
 
+export const trim = (str: string) => str.trim()
+
 export function sanitizeMutedWordValue(value: string) {
   return (
     value

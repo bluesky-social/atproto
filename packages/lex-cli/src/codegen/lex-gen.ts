@@ -335,11 +335,11 @@ export function genXrpcInput(
       )
     }
   } else if (def.type === 'procedure' && def.input?.encoding) {
-    //= export type InputSchema = string | Uint8Array
+    //= export type InputSchema = string | Uint8Array | Blob
     file.addTypeAlias({
       isExported: true,
       name: 'InputSchema',
-      type: 'string | Uint8Array',
+      type: 'string | Uint8Array | Blob',
     })
   } else {
     //= export type InputSchema = undefined

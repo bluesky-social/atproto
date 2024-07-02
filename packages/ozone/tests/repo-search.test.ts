@@ -1,15 +1,15 @@
 import {
   ModeratorClient,
   SeedClient,
+  TestAgent,
   TestNetwork,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { paginateAll } from './_util'
 
 describe('admin repo search view', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let agent: TestAgent
   let sc: SeedClient
   let modClient: ModeratorClient
   let headers: { [s: string]: string }

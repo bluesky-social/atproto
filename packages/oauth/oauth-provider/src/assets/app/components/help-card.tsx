@@ -33,7 +33,7 @@ export function HelpCard({
         href={helpLink.href}
         rel={helpLink.rel}
         target="_blank"
-        className="text-primary"
+        className="text-brand"
       >
         Contact {helpLink.title}
       </a>

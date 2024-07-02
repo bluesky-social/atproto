@@ -24,6 +24,7 @@
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/lexicon": "workspace:^",
+    "@atproto/oauth-client": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "await-lock": "^2.2.2",
