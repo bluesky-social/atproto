@@ -38,13 +38,9 @@ export function hasMutedWord({
   const tags = ([] as string[])
     .concat(outlineTags || [])
     .concat(
-      facets
-        ?.filter((facet) => {
-          return facet.features.find((feature) =>
-            AppBskyRichtextFacet.isTag(feature),
-          )
-        })
-        .map((t) => t.features[0].tag as string) || [],
+      (facets || []).flatMap((facet) =>
+        facet.features.filter(AppBskyRichtextFacet.isTag).map((tag) => tag.tag),
+      ),
     )
     .map((t) => t.toLowerCase())
 

@@ -680,6 +680,60 @@ describe(`hasMutedWord`, () => {
     })
   })
 
+  describe(`facet with multiple features`, () => {
+    it(`multiple tags`, () => {
+      const match = hasMutedWord({
+        mutedWords: [{ value: 'bad', targets: ['content'] }],
+        text: 'tags',
+        facets: [
+          {
+            features: [
+              {
+                $type: 'app.bsky.richtext.facet#tag',
+                tag: 'good',
+              },
+              {
+                $type: 'app.bsky.richtext.facet#tag',
+                tag: 'bad',
+              },
+            ],
+            index: {
+              byteEnd: 4,
+              byteStart: 0,
+            },
+          },
+        ],
+      })
+      expect(match).toBe(true)
+    })
+
+    it(`other features`, () => {
+      const match = hasMutedWord({
+        mutedWords: [{ value: 'bad', targets: ['content'] }],
+        text: 'test',
+        facets: [
+          {
+            features: [
+              {
+                $type: 'com.example.richtext.facet#other',
+                foo: 'bar',
+              },
+              {
+                $type: 'app.bsky.richtext.facet#tag',
+                tag: 'bad',
+              },
+            ],
+            index: {
+              byteEnd: 4,
+              byteStart: 0,
+            },
+          },
+        ],
+      })
+      expect(match).toBe(true)
+    })
+  })
+
   describe(`doesn't mute own post`, () => {
     it(`does mute if it isn't own post`, () => {
       const res = moderatePost(
