@@ -127,4 +127,8 @@ export interface BskyPreferences {
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
+  bskyAppState: {
+    queuedNudges: string[]
+    activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
+  }
 }

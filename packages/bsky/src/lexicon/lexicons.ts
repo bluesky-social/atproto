@@ -3343,7 +3343,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'List blob CIDso for an account, since some repo revision. Does not require auth; implemented by PDS.',
+          'List blob CIDs for an account, since some repo revision. Does not require auth; implemented by PDS.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -4166,6 +4166,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#interestsPref',
             'lex:app.bsky.actor.defs#mutedWordsPref',
             'lex:app.bsky.actor.defs#hiddenPostsPref',
+            'lex:app.bsky.actor.defs#bskyAppStatePref',
           ],
         },
       },
@@ -4404,6 +4405,39 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+      bskyAppStatePref: {
+        description:
+          "A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this.",
+        type: 'object',
+        properties: {
+          activeProgressGuide: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#bskyAppProgressGuide',
+          },
+          queuedNudges: {
+            description:
+              'An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user.',
+            type: 'array',
+            maxLength: 1000,
+            items: {
+              type: 'string',
+              maxLength: 100,
+            },
+          },
+        },
+      },
+      bskyAppProgressGuide: {
+        description:
+          'If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress.',
+        type: 'object',
+        required: ['guide'],
+        properties: {
+          guide: {
+            type: 'string',
+            maxLength: 100,
           },
         },
       },
