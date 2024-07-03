@@ -47,6 +47,53 @@ Object {
 }
 `;
 
+exports[`feed generation does not embed taken-down starter pack records in posts 1`] = `
+Object {
+  "author": Object {
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "did": "user(0)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+  },
+  "cid": "cids(0)",
+  "embed": Object {
+    "$type": "app.bsky.embed.record#view",
+    "record": Object {
+      "$type": "app.bsky.embed.record#viewNotFound",
+      "notFound": true,
+      "uri": "record(1)",
+    },
+  },
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
+  "likeCount": 0,
+  "record": Object {
+    "$type": "app.bsky.feed.post",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "embed": Object {
+      "$type": "app.bsky.embed.record",
+      "record": Object {
+        "cid": "cids(2)",
+        "uri": "record(1)",
+      },
+    },
+    "text": "annoying starter pack",
+  },
+  "replyCount": 0,
+  "repostCount": 0,
+  "uri": "record(0)",
+  "viewer": Object {
+    "threadMuted": false,
+  },
+}
+`;
+
 exports[`feed generation embeds feed generator records in posts 1`] = `
 Object {
   "author": Object {
@@ -124,6 +171,95 @@ Object {
       },
     },
     "text": "cool feed!",
+  },
+  "replyCount": 0,
+  "repostCount": 0,
+  "uri": "record(0)",
+  "viewer": Object {
+    "threadMuted": false,
+  },
+}
+`;
+
+exports[`feed generation embeds starter pack records in posts 1`] = `
+Object {
+  "author": Object {
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "did": "user(0)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
+  },
+  "cid": "cids(0)",
+  "embed": Object {
+    "$type": "app.bsky.embed.record#view",
+    "record": Object {
+      "$type": "app.bsky.graph.defs#starterPackViewBasic",
+      "cid": "cids(2)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "did": "user(2)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [
+          Object {
+            "cid": "cids(3)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "src": "user(2)",
+            "uri": "record(5)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(3)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "src": "user(2)",
+            "uri": "record(5)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(4)",
+          "following": "record(3)",
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "joinedAllTimeCount": 0,
+      "joinedWeekCount": 0,
+      "labels": Array [],
+      "record": Object {
+        "$type": "app.bsky.graph.starterpack",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "description": "",
+        "descriptionFacets": Array [],
+        "feeds": Array [],
+        "list": "record(2)",
+        "name": "awesome starter pack!",
+      },
+      "uri": "record(1)",
+    },
+  },
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
+  "likeCount": 0,
+  "record": Object {
+    "$type": "app.bsky.feed.post",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "embed": Object {
+      "$type": "app.bsky.embed.record",
+      "record": Object {
+        "cid": "cids(2)",
+        "uri": "record(1)",
+      },
+    },
+    "text": "sick starter pack!",
   },
   "replyCount": 0,
   "repostCount": 0,
