@@ -673,7 +673,7 @@ export class Hydrator {
   //     - list basic
   async hydrateReposts(uris: string[], ctx: HydrateCtx) {
     const [reposts, profileState] = await Promise.all([
-      this.feed.getReposts(uris),
+      this.feed.getReposts(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
     return mergeStates(profileState, { reposts, ctx })
