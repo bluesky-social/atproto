@@ -103,6 +103,7 @@ export default async (
   await sc.like(dan, sc.posts[alice][1].ref)
   await sc.like(alice, sc.posts[carol][0].ref, createdAtMicroseconds())
   await sc.like(bob, sc.posts[carol][0].ref, createdAtTimezone())
+  await sc.block(bob, carol)
 
   const replyImg = await sc.uploadFile(
     bob,

@@ -661,7 +661,7 @@ export class Hydrator {
   //     - list basic
   async hydrateLikes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
-      this.feed.getLikes(uris),
+      this.feed.getLikes(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
     return mergeStates(profileState, { likes, ctx })
