@@ -202,6 +202,34 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.feed.getLikes({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res = await ctx.appviewAgent.api.app.bsky.feed.getLikes(
+        request.params,
+        await ctx.appviewAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.app.bsky.feed.getRepostedBy({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      const res = await ctx.appviewAgent.api.app.bsky.feed.getRepostedBy(
+        request.params,
+        await ctx.appviewAuth(),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
