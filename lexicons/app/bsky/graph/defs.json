@@ -8,7 +8,12 @@
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "name": { "type": "string", "maxLength": 64, "minLength": 1 },
+        "name": {
+          "type": "string",
+          "maxGraphemes": 64,
+          "maxLength": 640,
+          "minLength": 1
+        },
         "purpose": { "type": "ref", "ref": "#listPurpose" },
         "avatar": { "type": "string", "format": "uri" },
         "listItemCount": { "type": "integer", "minimum": 0 },
@@ -27,7 +32,12 @@
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
-        "name": { "type": "string", "maxLength": 64, "minLength": 1 },
+        "name": {
+          "type": "string",
+          "maxGraphemes": 6,
+          "maxLength": 640,
+          "minLength": 1
+        },
         "purpose": { "type": "ref", "ref": "#listPurpose" },
         "description": {
           "type": "string",
