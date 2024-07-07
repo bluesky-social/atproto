@@ -6895,7 +6895,7 @@ export const schemaDict = {
           },
           name: {
             type: 'string',
-            maxGraphemes: 6,
+            maxGraphemes: 64,
             maxLength: 640,
             minLength: 1,
           },

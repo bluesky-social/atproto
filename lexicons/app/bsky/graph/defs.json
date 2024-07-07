@@ -34,7 +34,7 @@
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "name": {
           "type": "string",
-          "maxGraphemes": 6,
+          "maxGraphemes": 64,
           "maxLength": 640,
           "minLength": 1
         },
