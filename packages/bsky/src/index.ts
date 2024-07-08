@@ -118,7 +118,9 @@ export class BskyAppView {
     })
 
     if (config.statsigKey) {
-      Statsig.initialize(config.statsigKey)
+      Statsig.initialize(config.statsigKey, {
+        environment: { tier: config.statsigEnv },
+      })
     }
 
     const ctx = new AppContext({

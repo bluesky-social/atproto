@@ -36,6 +36,7 @@ export interface ServerConfigValues {
   // misc/dev
   blobCacheLocation?: string
   statsigKey?: string
+  statsigEnv?: string
 }
 
 export class ServerConfig {
@@ -104,6 +105,7 @@ export class ServerConfig {
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     const statsigKey = process.env.BSKY_STATSIG_KEY || undefined
+    const statsigEnv = process.env.NODE_ENV || 'development'
     return new ServerConfig({
       version,
       debugMode,
@@ -135,6 +137,7 @@ export class ServerConfig {
       adminPasswords,
       modServiceDid,
       statsigKey,
+      statsigEnv,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -270,6 +273,10 @@ export class ServerConfig {
 
   get statsigKey() {
     return this.cfg.statsigKey
+  }
+
+  get statsigEnv() {
+    return this.cfg.statsigEnv
   }
 }
 
