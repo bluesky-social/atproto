@@ -1,4 +1,4 @@
-import {sha256Hex} from '@atproto/crypto'
+import { sha256Hex } from '@atproto/crypto'
 
 export async function didToStatsigUser(did: string) {
   const userID = await sha256Hex(did)
