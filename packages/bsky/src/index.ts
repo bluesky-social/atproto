@@ -120,7 +120,7 @@ export class BskyAppView {
     if (config.statsigKey) {
       Statsig.initialize(config.statsigKey, {
         environment: { tier: config.statsigEnv },
-      })
+      }).catch((_) => {})
     }
 
     const ctx = new AppContext({
