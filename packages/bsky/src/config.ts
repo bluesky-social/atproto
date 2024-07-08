@@ -35,6 +35,7 @@ export interface ServerConfigValues {
   labelsFromIssuerDids?: string[]
   // misc/dev
   blobCacheLocation?: string
+  statsigKey?: string
 }
 
 export class ServerConfig {
@@ -102,6 +103,7 @@ export class ServerConfig {
     assert(modServiceDid)
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+    const statsigKey = process.env.BSKY_STATSIG_KEY || undefined
     return new ServerConfig({
       version,
       debugMode,
@@ -132,6 +134,7 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
+      statsigKey,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -263,6 +266,10 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get statsigKey() {
+    return this.cfg.statsigKey
   }
 }
 

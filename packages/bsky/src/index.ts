@@ -8,6 +8,7 @@ import compression from 'compression'
 import AtpAgent from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import { DAY, SECOND } from '@atproto/common'
+import { Statsig } from 'statsig-node'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -115,6 +116,10 @@ export class BskyAppView {
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
     })
+
+    if (config.statsigKey) {
+      Statsig.initialize(config.statsigKey)
+    }
 
     const ctx = new AppContext({
       cfg: config,
