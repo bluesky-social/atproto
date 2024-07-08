@@ -66,7 +66,7 @@ const presentation = (
   const { listUris, cursor } = skeleton
   const lists = mapDefined(listUris, (uri) => {
     return ctx.views.list(uri, hydration)
-  })
+  }).filter((list) => list.purpose !== 'app.bsky.graph.defs#referencelist')
   return { lists, cursor }
 }
 
