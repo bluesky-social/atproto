@@ -105,7 +105,7 @@ export class ServerConfig {
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     const statsigKey = process.env.BSKY_STATSIG_KEY || undefined
-    const statsigEnv = process.env.NODE_ENV || 'development'
+    const statsigEnv = process.env.BSKY_STATSIG_ENV || 'development'
     return new ServerConfig({
       version,
       debugMode,
