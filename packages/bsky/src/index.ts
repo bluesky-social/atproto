@@ -8,7 +8,6 @@ import compression from 'compression'
 import AtpAgent from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import { DAY, SECOND } from '@atproto/common'
-import { Statsig } from 'statsig-node'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -24,6 +23,7 @@ import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -117,11 +117,10 @@ export class BskyAppView {
       adminPasses: config.adminPasswords,
     })
 
-    if (config.statsigKey) {
-      Statsig.initialize(config.statsigKey, {
-        environment: { tier: config.statsigEnv },
-      }).catch((_) => {})
-    }
+    const featureGates = new FeatureGates({
+      apiKey: config.statsigKey,
+      env: config.statsigEnv,
+    })
 
     const ctx = new AppContext({
       cfg: config,
@@ -135,6 +134,7 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       authVerifier,
+      featureGates,
     })
 
     let server = createServer({
@@ -168,10 +168,12 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
+    await this.ctx.featureGates.start()
     return server
   }
 
   async destroy(): Promise<void> {
+    this.ctx.featureGates.destroy()
     await this.terminator?.terminate()
   }
 }

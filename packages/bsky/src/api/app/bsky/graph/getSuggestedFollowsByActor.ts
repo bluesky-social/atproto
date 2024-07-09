@@ -1,6 +1,5 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Statsig } from 'statsig-node'
 import AtpAgent from '@atproto/api'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
@@ -15,7 +14,6 @@ import {
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
-import { didToStatsigUser, gates } from '../../../../util/statsig'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedFollowsByActor = createPipeline(
@@ -58,15 +56,18 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
+  const gates = ctx.featureGates
   const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
   if (!relativeToDid) {
     throw new InvalidRequestError('Actor not found')
   }
 
-  const statsigUser = await didToStatsigUser(params.hydrateCtx.viewer)
   if (
     ctx.suggestionsAgent &&
-    Statsig.checkGateSync(statsigUser, gates.newSuggestedFollowsByActor)
+    gates.check(
+      await gates.user({ did: params.hydrateCtx.viewer }),
+      gates.ids.NewSuggestedFollowsByActor,
+    )
   ) {
     const res =
       await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
@@ -126,6 +127,7 @@ type Context = {
   hydrator: Hydrator
   views: Views
   suggestionsAgent: AtpAgent | undefined
+  featureGates: AppContext['featureGates']
 }
 
 type Params = QueryParams & {
