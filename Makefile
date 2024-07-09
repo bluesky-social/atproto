@@ -20,11 +20,11 @@ test: ## Run all tests
 
 .PHONY: run-dev-env
 run-dev-env: ## Run a "development environment" shell
-	cd packages/dev-env; pnpm run start
+	cd packages/dev-env; NODE_ENV=development pnpm run start
 
 .PHONY: run-dev-env-logged
 run-dev-env-logged: ## Run a "development environment" shell (with logging)
-	LOG_ENABLED=true cd packages/dev-env; pnpm run start | pnpm exec pino-pretty
+	LOG_ENABLED=true cd packages/dev-env; NODE_ENV=development pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files

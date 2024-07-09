@@ -36,11 +36,13 @@ import {
 } from './label'
 import {
   HydrationMap,
-  Merges,
   RecordInfo,
   ItemRef,
   didFromUri,
   urisByCollection,
+  mergeMaps,
+  mergeNestedMaps,
+  mergeManyMaps,
 } from './util'
 import {
   FeedGenAggs,
@@ -57,6 +59,7 @@ import {
   FeedItem,
 } from './feed'
 import { ParsedLabelers } from '../util'
+import starterPack from '../data-plane/server/indexing/plugins/starter-pack'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
@@ -102,6 +105,7 @@ export type HydrationState = {
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
   knownFollowers?: KnownFollowers
+  bidirectionalBlocks?: BidirectionalBlocks
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -110,6 +114,8 @@ type PostBlockPairs = { embed?: RelationshipPair; reply?: RelationshipPair }
 
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
+
+export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
 
 export class Hydrator {
   actor: ActorHydrator
@@ -215,13 +221,23 @@ export class Hydrator {
       )
     }
 
-    const knownFollowersDids = Array.from(knownFollowers.values())
+    const subjectsToKnownFollowersMap = Array.from(
+      knownFollowers.keys(),
+    ).reduce((acc, did) => {
+      const known = knownFollowers.get(did)
+      if (known) {
+        acc.set(did, known.followers)
+      }
+      return acc
+    }, new Map<string, string[]>())
+    const allKnownFollowerDids = Array.from(knownFollowers.values())
       .filter(Boolean)
       .flatMap((f) => f!.followers)
-    const allDids = Array.from(new Set(dids.concat(knownFollowersDids)))
-    const [state, profileAggs] = await Promise.all([
+    const allDids = Array.from(new Set(dids.concat(allKnownFollowerDids)))
+    const [state, profileAggs, bidirectionalBlocks] = await Promise.all([
       this.hydrateProfiles(allDids, ctx),
       this.actor.getProfileAggregates(dids),
+      this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap),
     ])
     const starterPackUriSet = new Set<string>()
     state.actors?.forEach((actor) => {
@@ -237,6 +253,7 @@ export class Hydrator {
       profileAggs,
       knownFollowers,
       ctx,
+      bidirectionalBlocks,
     })
   }
 
@@ -352,6 +369,10 @@ export class Hydrator {
       ...(urisLayer1ByCollection.get(ids.AppBskyLabelerService) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyLabelerService) ?? []),
     ].map((uri) => new AtUri(uri).hostname)
+    const nestedStarterPackUris = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
+    ]
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
@@ -374,6 +395,7 @@ export class Hydrator {
       listState,
       feedGenState,
       labelerState,
+      starterPackState,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
@@ -385,6 +407,7 @@ export class Hydrator {
       this.hydrateLists([...nestedListUris, ...gateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
+      this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -395,6 +418,7 @@ export class Hydrator {
       listState,
       feedGenState,
       labelerState,
+      starterPackState,
       {
         posts,
         postAggs,
@@ -661,7 +685,7 @@ export class Hydrator {
   //     - list basic
   async hydrateLikes(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
-      this.feed.getLikes(uris),
+      this.feed.getLikes(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
     return mergeStates(profileState, { likes, ctx })
@@ -673,7 +697,7 @@ export class Hydrator {
   //     - list basic
   async hydrateReposts(uris: string[], ctx: HydrateCtx) {
     const [reposts, profileState] = await Promise.all([
-      this.feed.getReposts(uris),
+      this.feed.getReposts(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
     return mergeStates(profileState, { reposts, ctx })
@@ -735,6 +759,30 @@ export class Hydrator {
       }
     }
     return { follows, followBlocks }
+  }
+
+  async hydrateBidirectionalBlocks(
+    didMap: Map<string, string[]>, // DID -> DID[]
+  ): Promise<BidirectionalBlocks> {
+    const pairs: RelationshipPair[] = []
+    for (const [source, targets] of didMap) {
+      for (const target of targets) {
+        pairs.push([source, target])
+      }
+    }
+
+    const result = new HydrationMap<HydrationMap<boolean>>()
+    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+
+    for (const [source, targets] of didMap) {
+      const didBlocks = new HydrationMap<boolean>()
+      for (const target of targets) {
+        didBlocks.set(target, blocks.isBlocked(source, target))
+      }
+      result.set(source, didBlocks)
+    }
+
+    return result
   }
 
   // app.bsky.labeler.def#labelerViewDetailed
@@ -1022,21 +1070,15 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
+    bidirectionalBlocks: mergeNestedMaps(
+      stateA.bidirectionalBlocks,
+      stateB.bidirectionalBlocks,
+    ),
   }
-}
-
-const mergeMaps = <M extends Merges>(mapA?: M, mapB?: M): M | undefined => {
-  if (!mapA) return mapB
-  if (!mapB) return mapA
-  return mapA.merge(mapB)
 }
 
 const mergeManyStates = (...states: HydrationState[]) => {
   return states.reduce(mergeStates, {} as HydrationState)
-}
-
-const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
-  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
 }
 
 const actionTakedownLabels = <T>(

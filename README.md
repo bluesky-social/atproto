@@ -23,7 +23,7 @@ This repository contains Bluesky's reference implementation of AT Protocol, and 
 
 **TypeScript Services:**
 
-- `pds`: "Personal Data Server", hosting repo content for atproto accounts. Most implementation code in `packages/pds`, with runtime wrapper in `services/pds`. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting in the [federation sandbox network](https://atproto.com/blog/federation-developer-sandbox).
+- `pds`: "Personal Data Server", hosting repo content for atproto accounts. Most implementation code in `packages/pds`, with runtime wrapper in `services/pds`. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting.
 - `bsky`: AppView implementation of the `app.bsky.*` API endpoints. Running on main network at `api.bsky.app`. Most implementation code in `packages/bsky`, with runtime wrapper in `services/bsky`.
 
 **Lexicons:** for both the `com.atproto.*` and `app.bsky.*` are canonically versioned in this repo, for now, under `./lexicons/`. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI.

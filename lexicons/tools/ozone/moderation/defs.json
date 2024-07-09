@@ -30,7 +30,8 @@
             "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
-            "#modEventDivert"
+            "#modEventDivert",
+            "#modEventTag"
           ]
         },
         "subject": {
@@ -76,7 +77,8 @@
             "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
-            "#modEventDivert"
+            "#modEventDivert",
+            "#modEventTag"
           ]
         },
         "subject": {
