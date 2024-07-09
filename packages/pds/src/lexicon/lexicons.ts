@@ -8712,7 +8712,7 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
-            relative_to_did: {
+            relativeToDid: {
               type: 'string',
               format: 'did',
               description:

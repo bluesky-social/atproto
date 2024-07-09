@@ -73,7 +73,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
       await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
         {
           viewer: params.hydrateCtx.viewer ?? undefined,
-          relative_to_did: relativeToDid,
+          relativeToDid,
         },
         { headers: params.headers },
       )
