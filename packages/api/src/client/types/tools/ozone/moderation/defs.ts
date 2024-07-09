@@ -29,6 +29,7 @@ export interface ModEventView {
     | ModEventEmail
     | ModEventResolveAppeal
     | ModEventDivert
+    | ModEventTag
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
@@ -72,6 +73,7 @@ export interface ModEventViewDetail {
     | ModEventEmail
     | ModEventResolveAppeal
     | ModEventDivert
+    | ModEventTag
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView

@@ -10114,6 +10114,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
+              'lex:tools.ozone.moderation.defs#modEventTag',
             ],
           },
           subject: {
@@ -10177,6 +10178,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
+              'lex:tools.ozone.moderation.defs#modEventTag',
             ],
           },
           subject: {
