@@ -1,7 +1,7 @@
+import murmur from 'murmurhash'
 import { Struct, Timestamp } from '@bufbuild/protobuf'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import murmur from 'murmurhash'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
