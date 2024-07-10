@@ -14,11 +14,12 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - uses: actions/setup-node@v3
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
@@ -39,11 +40,12 @@ jobs:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - uses: actions/setup-node@v3
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
@@ -58,15 +60,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - uses: actions/setup-node@v3
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm i --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
           name: dist
