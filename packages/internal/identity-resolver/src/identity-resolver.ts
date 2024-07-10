@@ -1,12 +1,12 @@
 import {
   Did,
   DidDocument,
-  ResolveOptions as DidResolveOptions,
+  ResolveDidOptions,
   DidResolver,
   DidService,
 } from '@atproto-labs/did-resolver'
 import {
-  ResolveOptions as HandleResolveOptions,
+  ResolveHandleOptions,
   HandleResolver,
   ResolvedHandle,
   isResolvedHandle,
@@ -18,7 +18,7 @@ export type ResolvedIdentity = {
   pds: URL
 }
 
-export type ResolveOptions = DidResolveOptions & HandleResolveOptions
+export type ResolveIdentityOptions = ResolveDidOptions & ResolveHandleOptions
 
 export class IdentityResolver {
   constructor(
@@ -28,7 +28,7 @@ export class IdentityResolver {
 
   public async resolve(
     input: string,
-    options?: ResolveOptions,
+    options?: ResolveIdentityOptions,
   ): Promise<ResolvedIdentity> {
     const did = isResolvedHandle(input)
       ? input // Already a did

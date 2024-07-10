@@ -31,13 +31,14 @@ export function AcceptView({
       subtitle={
         <>
           Grant access to your{' '}
-          <b>{account.preferred_username || account.email || account.sub}</b>{' '}
-          account.
+          <b className="text-black dark:text-white">
+            {account.preferred_username || account.email || account.sub}
+          </b>{' '}
+          account
         </>
       }
     >
       <AcceptForm
-        className="max-w-lg w-full"
         clientId={clientId}
         clientMetadata={clientMetadata}
         clientTrusted={clientTrusted}

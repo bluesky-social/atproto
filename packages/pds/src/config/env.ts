@@ -19,8 +19,9 @@ export const readEnv = (): ServerEnvironment => {
     devMode: envBool('PDS_DEV_MODE'),
 
     // branding
-    primaryColor: envStr('PDS_PRIMARY_COLOR'),
+    brandColor: envStr('PDS_PRIMARY_COLOR'),
     errorColor: envStr('PDS_ERROR_COLOR'),
+    warningColor: envStr('PDS_WARNING_COLOR'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
@@ -139,8 +140,9 @@ export type ServerEnvironment = {
   devMode?: boolean
 
   // branding
-  primaryColor?: string
+  brandColor?: string
   errorColor?: string
+  warningColor?: string
 
   // database
   dataDirectory?: string

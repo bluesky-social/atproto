@@ -1,21 +1,8 @@
 // Matches colors defined in tailwind.config.js
-const colorNames = ['primary', 'error'] as const
+const colorNames = ['brand', 'error', 'warning'] as const
 type ColorName = (typeof colorNames)[number]
 const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)
-
-export type FieldDefinition = {
-  label?: string
-  placeholder?: string
-  pattern?: string
-  title?: string
-}
-
-export type ExtraFieldDefinition = FieldDefinition & {
-  type: 'text' | 'password' | 'date' | 'captcha'
-  required?: boolean
-  [_: string]: unknown
-}
 
 export type Customization = {
   name?: string
@@ -75,13 +62,15 @@ function parseColor(color: string): undefined | ParsedColor {
     return undefined
   }
 
-  const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+  const rgbMatch = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/)
   if (rgbMatch) {
     const [, r, g, b] = rgbMatch
     return { r: parseInt(r, 10), g: parseInt(g, 10), b: parseInt(b, 10) }
   }
 
-  const rgbaMatch = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)/)
+  const rgbaMatch = color.match(
+    /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/,
+  )
   if (rgbaMatch) {
     const [, r, g, b, a] = rgbaMatch
     return {

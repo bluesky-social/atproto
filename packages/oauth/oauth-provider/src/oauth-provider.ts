@@ -24,8 +24,9 @@ import {
   AccountInfo,
   AccountStore,
   DeviceAccountInfo,
-  LoginCredentials,
+  SignInCredentials,
   asAccountStore,
+  signInCredentialsSchema,
 } from './account/account-store.js'
 import { Account } from './account/account.js'
 import { authorizeAssetsMiddleware } from './assets/assets-middleware.js'
@@ -312,7 +313,7 @@ export class OAuthProvider extends OAuthVerifier {
     )
   }
 
-  get jwks(): Jwks {
+  get jwks() {
     return this.keyset.publicJwks
   }
 
@@ -637,13 +638,26 @@ export class OAuthProvider extends OAuthVerifier {
   > {
     const accounts = await this.accountManager.list(deviceId)
 
+    const hint = parameters.login_hint
+    const matchesHint = (account: Account): boolean =>
+      (!!account.sub && account.sub === hint) ||
+      (!!account.preferred_username && account.preferred_username === hint)
+
     return accounts.map(({ account, info }) => ({
       account,
       info,
 
       selected:
         parameters.prompt !== 'select_account' &&
-        parameters.login_hint === account.sub,
+        matchesHint(account) &&
+        // If an account uses the sub of another account as preferred_username,
+        // there might be multiple accounts matching the hint. In that case,
+        // selecting the account automatically may have unexpected results (i.e.
+        // not able to login using desired account).
+        accounts.reduce(
+          (acc, a) => acc + (matchesHint(a.account) ? 1 : 0),
+          0,
+        ) === 1,
       loginRequired:
         parameters.prompt === 'login' ||
         this.loginRequired(client, parameters, info),
@@ -651,14 +665,13 @@ export class OAuthProvider extends OAuthVerifier {
         parameters.prompt === 'consent' ||
         !info.authorizedClients.includes(client.id),
 
-      matchesHint:
-        parameters.login_hint === account.sub || parameters.login_hint == null,
+      matchesHint: hint == null || matchesHint(account),
     }))
   }
 
   protected async signIn(
     deviceId: DeviceId,
-    credentials: LoginCredentials,
+    credentials: SignInCredentials,
   ): Promise<AccountInfo> {
     return this.accountManager.signIn(credentials, deviceId)
   }
@@ -990,7 +1003,7 @@ export class OAuthProvider extends OAuthVerifier {
      * Wrap an OAuth endpoint in a middleware that will set the appropriate
      * response headers and format the response as JSON.
      */
-    const dynamicJson = <T, TReq extends Req, TRes extends Res, Json>(
+    const jsonHandler = <T, TReq extends Req, TRes extends Res, Json>(
       buildJson: (this: T, req: TReq, res: TRes) => Json | Promise<Json>,
       status?: number,
     ): Handler<T, TReq, TRes> =>
@@ -1030,6 +1043,37 @@ export class OAuthProvider extends OAuthVerifier {
           // them as errors.
           if (!(err instanceof OAuthError) || err.statusCode >= 500) {
             await onError?.(req, res, err, 'Unexpected error')
+          }
+        }
+      }
+
+    const navigationHandler = <T, TReq extends Req, TRes extends Res>(
+      handler: (this: T, req: TReq, res: TRes) => void | Promise<void>,
+    ): Handler<T, TReq, TRes> =>
+      async function (req, res) {
+        res.setHeader('Cache-Control', 'no-store')
+        res.setHeader('Pragma', 'no-cache')
+
+        try {
+          validateFetchMode(req, res, ['navigate'])
+          validateSameOrigin(req, res, issuerOrigin)
+
+          await handler.call(this, req, res)
+
+          // Should never happen (fool proofing)
+          if (!res.headersSent) {
+            throw new Error('Navigation handler did not send a response')
+          }
+        } catch (err) {
+          await onError?.(
+            req,
+            res,
+            err,
+            `Failed to handle navigation request to "${req.url}"`,
+          )
+
+          if (!res.headersSent) {
+            await sendErrorPage(res, err, server.customization)
           }
         }
       }
@@ -1077,7 +1121,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.post(
       '/oauth/par',
-      dynamicJson(async function (req, _res) {
+      jsonHandler(async function (req, _res) {
         const input = await validateRequestPayload(
           req,
           pushedAuthorizationRequestSchema,
@@ -1100,7 +1144,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.post(
       '/oauth/token',
-      dynamicJson(async function (req, _res) {
+      jsonHandler(async function (req, _res) {
         const input = await validateRequestPayload(req, tokenRequestSchema)
 
         const dpopJkt = await server.checkDpopProof(
@@ -1115,7 +1159,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.post(
       '/oauth/revoke',
-      dynamicJson(async function (req, res) {
+      jsonHandler(async function (req, res) {
         const input = await validateRequestPayload(req, revokeSchema)
 
         try {
@@ -1128,10 +1172,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.get(
       '/oauth/revoke',
-      dynamicJson(async function (req, res) {
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
-
+      navigationHandler(async function (req, res) {
         const query = Object.fromEntries(this.url.searchParams)
         const input = revokeSchema.parse(query, { path: ['query'] })
 
@@ -1152,7 +1193,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.post(
       '/oauth/introspect',
-      dynamicJson(async function (req, _res) {
+      jsonHandler(async function (req, _res) {
         const input = await validateRequestPayload(req, introspectSchema)
         return server.introspect(input)
       }),
@@ -1204,10 +1245,10 @@ export class OAuthProvider extends OAuthVerifier {
         },
         {
           '': 'application/json',
-          'application/json': dynamicJson(async function (_req, _res) {
+          'application/json': jsonHandler(async function (_req, _res) {
             return this.data
           }),
-          'application/jwt': dynamicJson(async function (_req, res) {
+          'application/jwt': jsonHandler(async function (_req, res) {
             const jwt = await server.signUserinfo(this.data)
             res.writeHead(200, { 'Content-Type': 'application/jwt' }).end(jwt)
             return undefined
@@ -1220,13 +1261,9 @@ export class OAuthProvider extends OAuthVerifier {
 
     router.use(authorizeAssetsMiddleware())
 
-    router.get('/oauth/authorize', async function (req, res) {
-      try {
-        res.setHeader('Cache-Control', 'no-store')
-
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
-
+    router.get(
+      '/oauth/authorize',
+      navigationHandler(async function (req, res) {
         const query = Object.fromEntries(this.url.searchParams)
         const input = await authorizationRequestQuerySchema.parseAsync(query, {
           path: ['query'],
@@ -1237,66 +1274,62 @@ export class OAuthProvider extends OAuthVerifier {
 
         switch (true) {
           case 'redirect' in data: {
-            return await sendAuthorizeRedirect(res, data)
+            return sendAuthorizeRedirect(res, data)
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return await sendAuthorizePage(res, data, server.customization)
+            return sendAuthorizePage(res, data, server.customization)
           }
           default: {
             // Should never happen
             throw new Error('Unexpected authorization result')
           }
         }
-      } catch (err) {
-        await onError?.(req, res, err, 'Failed to setup authorize')
-
-        if (!res.headersSent) {
-          await sendErrorPage(res, err, server.customization)
-        }
-      }
-    })
+      }),
+    )
 
     const signInPayloadSchema = z.object({
       csrf_token: z.string(),
       request_uri: requestUriSchema,
       client_id: clientIdSchema,
-      credentials: z.object({
-        username: z.string(),
-        password: z.string(),
-        remember: z.boolean().optional().default(false),
+      credentials: signInCredentialsSchema,
+    })
+
+    router.post(
+      '/oauth/authorize/sign-in',
+      jsonHandler(async function (req, res) {
+        validateFetchMode(req, res, ['same-origin'])
+        validateSameOrigin(req, res, issuerOrigin)
+
+        const input = await validateRequestPayload(req, signInPayloadSchema)
+
+        validateReferer(req, res, {
+          origin: issuerOrigin,
+          pathname: '/oauth/authorize',
+        })
+        validateCsrfToken(
+          req,
+          res,
+          input.csrf_token,
+          csrfCookie(input.request_uri),
+        )
+
+        const { deviceId } = await deviceManager.load(req, res)
+
+        const { account, info } = await server.signIn(
+          deviceId,
+          input.credentials,
+        )
+
+        // Prevent fixation attacks
+        await deviceManager.rotate(req, res, deviceId)
+
+        return {
+          account,
+          consentRequired: !info.authorizedClients.includes(input.client_id),
+        }
       }),
-    })
-
-    router.post('/oauth/authorize/sign-in', async function (req, res) {
-      validateFetchMode(req, res, ['same-origin'])
-      validateSameOrigin(req, res, issuerOrigin)
-
-      const input = await validateRequestPayload(req, signInPayloadSchema)
-
-      validateReferer(req, res, {
-        origin: issuerOrigin,
-        pathname: '/oauth/authorize',
-      })
-      validateCsrfToken(
-        req,
-        res,
-        input.csrf_token,
-        csrfCookie(input.request_uri),
-      )
-
-      const { deviceId } = await deviceManager.load(req, res)
-
-      const { account, info } = await server.signIn(deviceId, input.credentials)
-
-      // Prevent fixation attacks
-      await deviceManager.rotate(req, res, deviceId)
-
-      return writeJson(res, {
-        account,
-        consentRequired: !info.authorizedClients.includes(input.client_id),
-      })
-    })
+    )
 
     const acceptQuerySchema = z.object({
       csrf_token: z.string(),
@@ -1305,13 +1338,9 @@ export class OAuthProvider extends OAuthVerifier {
       account_sub: z.string(),
     })
 
-    router.get('/oauth/authorize/accept', async function (req, res) {
-      try {
-        res.setHeader('Cache-Control', 'no-store')
-
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
-
+    router.get(
+      '/oauth/authorize/accept',
+      navigationHandler(async function (req, res) {
         const query = Object.fromEntries(this.url.searchParams)
         const input = await acceptQuerySchema.parseAsync(query, {
           path: ['query'],
@@ -1343,14 +1372,8 @@ export class OAuthProvider extends OAuthVerifier {
         )
 
         return await sendAuthorizeRedirect(res, data)
-      } catch (err) {
-        await onError?.(req, res, err, 'Failed to accept authorization request')
-
-        if (!res.headersSent) {
-          await sendErrorPage(res, err, server.customization)
-        }
-      }
-    })
+      }),
+    )
 
     const rejectQuerySchema = z.object({
       csrf_token: z.string(),
@@ -1358,13 +1381,9 @@ export class OAuthProvider extends OAuthVerifier {
       client_id: clientIdSchema,
     })
 
-    router.get('/oauth/authorize/reject', async function (req, res) {
-      try {
-        res.setHeader('Cache-Control', 'no-store')
-
-        validateFetchMode(req, res, ['navigate'])
-        validateSameOrigin(req, res, issuerOrigin)
-
+    router.get(
+      '/oauth/authorize/reject',
+      navigationHandler(async function (req, res) {
         const query = Object.fromEntries(this.url.searchParams)
         const input = await rejectQuerySchema.parseAsync(query, {
           path: ['query'],
@@ -1395,14 +1414,8 @@ export class OAuthProvider extends OAuthVerifier {
         )
 
         return await sendAuthorizeRedirect(res, data)
-      } catch (err) {
-        await onError?.(req, res, err, 'Failed to reject authorization request')
-
-        if (!res.headersSent) {
-          await sendErrorPage(res, err, server.customization)
-        }
-      }
-    })
+      }),
+    )
 
     return router
   }

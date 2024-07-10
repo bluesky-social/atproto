@@ -5,22 +5,9 @@ import {
 } from '@atproto/oauth-client-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const CURRENT_AUTHENTICATED_SUB = 'CURRENT_AUTHENTICATED_SUB'
-
 export function useOAuth(client: BrowserOAuthClient) {
   const [agent, setAgent] = useState<null | OAuthAgent>(null)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Ignore init step
-    if (loading) return
-
-    if (agent) {
-      localStorage.setItem(CURRENT_AUTHENTICATED_SUB, agent.sub)
-    } else {
-      localStorage.removeItem(CURRENT_AUTHENTICATED_SUB)
-    }
-  }, [loading, agent])
 
   const clientRef = useRef<typeof client>()
   useEffect(() => {
@@ -31,11 +18,8 @@ export function useOAuth(client: BrowserOAuthClient) {
     setLoading(true)
     setAgent(null)
 
-    const subToLoad =
-      localStorage.getItem(CURRENT_AUTHENTICATED_SUB) || undefined
-
     client
-      .init(subToLoad)
+      .init()
       .then(async (r) => {
         if (clientRef.current !== client) return
 
@@ -47,7 +31,6 @@ export function useOAuth(client: BrowserOAuthClient) {
         if (clientRef.current !== client) return
         if (err instanceof LoginContinuedInParentWindowError) return
 
-        localStorage.removeItem(CURRENT_AUTHENTICATED_SUB)
         setAgent(null)
       })
       .finally(() => {
@@ -63,7 +46,6 @@ export function useOAuth(client: BrowserOAuthClient) {
     const clear = ({ detail }: { detail: { sub: string } }) => {
       if (detail.sub === agent.sub) {
         setAgent(null)
-        setLoading(true)
       }
     }
 

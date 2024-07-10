@@ -1,8 +1,10 @@
 import { JwtVerifyError } from '@atproto/jwk'
-import { JOSEError } from 'jose/errors'
+import { errors } from 'jose'
 import { ZodError } from 'zod'
 
 import { OAuthError } from '../errors/oauth-error.js'
+
+const { JOSEError } = errors
 
 const INVALID_REQUEST = 'invalid_request'
 const SERVER_ERROR = 'server_error'

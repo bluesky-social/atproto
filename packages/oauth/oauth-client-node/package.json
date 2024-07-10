@@ -1,0 +1,48 @@
+{
+  "name": "@atproto/oauth-client-node",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "ATPROTO OAuth client for the NodeJS",
+  "keywords": [
+    "atproto",
+    "oauth",
+    "client",
+    "node"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/oauth/oauth-client-node"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:*",
+    "@atproto-labs/handle-resolver-node": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:*",
+    "@atproto/did": "workspace:*",
+    "@atproto/jwk": "workspace:*",
+    "@atproto/jwk-jose": "workspace:*",
+    "@atproto/jwk-webcrypto": "workspace:*",
+    "@atproto/oauth-client": "workspace:*",
+    "@atproto/oauth-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@atproto/api": "workspace:*",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  }
+}

@@ -105,7 +105,7 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
           .catch(async (err) => {
             if (storedValue !== undefined) {
               if (await this.options?.deleteOnError?.(err, key, storedValue)) {
-                await this.delStored(key)
+                await this.delStored(key, err)
               }
             }
             throw err
@@ -154,7 +154,7 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
     }
   }
 
-  async delStored(key: K): Promise<void> {
+  async delStored(key: K, _cause?: unknown): Promise<void> {
     await this.store.del(key)
   }
 }
