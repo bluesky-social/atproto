@@ -2,6 +2,7 @@ import { Statsig, StatsigUser } from 'statsig-node'
 import { sha256Hex } from '@atproto/crypto'
 
 import { featureGatesLogger } from './logger'
+import type { ServerConfig } from './config'
 
 export type Config = {
   apiKey?: string
@@ -25,7 +26,11 @@ export class FeatureGates {
   async start() {
     try {
       if (this.config.apiKey) {
-        // special handling for test env, see `ServerConfig`
+        /**
+         * Special handling in test mode, see {@link ServerConfig}
+         *
+         * {@link https://docs.statsig.com/server/nodejsServerSDK#local-overrides}
+         */
         await this.statsig.initialize(this.config.apiKey, {
           localMode: this.config.env === 'test',
           environment: {
