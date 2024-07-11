@@ -161,6 +161,7 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    await this.ctx.featureGates.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -168,7 +169,6 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    await this.ctx.featureGates.start()
     return server
   }
 
