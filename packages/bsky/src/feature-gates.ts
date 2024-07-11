@@ -1,6 +1,8 @@
 import { Statsig, StatsigUser } from 'statsig-node'
 import { sha256Hex } from '@atproto/crypto'
 
+import { featureGatesLogger } from './logger'
+
 export type Config = {
   apiKey?: string
   env?: 'development' | 'staging' | 'production' | string
@@ -32,7 +34,8 @@ export class FeatureGates {
         })
         this.ready = true
       }
-    } catch (_) {
+    } catch (err) {
+      featureGatesLogger.error({ err }, 'Failed to initialize StatSig')
       this.ready = false
     }
   }
