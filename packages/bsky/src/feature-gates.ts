@@ -23,20 +23,11 @@ export class FeatureGates {
   async start() {
     try {
       if (this.config.apiKey) {
+        // special handling for test env, see `ServerConfig`
         await this.statsig.initialize(this.config.apiKey, {
+          localMode: this.config.env === 'test',
           environment: {
             tier: this.config.env || 'development',
-          },
-        })
-        this.ready = true
-      } else if (process.env.NODE_ENV === 'test') {
-        /**
-         * @see https://docs.statsig.com/server/nodejsServerSDK#local-overrides
-         */
-        await this.statsig.initialize('secret-key', {
-          localMode: true,
-          environment: {
-            tier: 'test',
           },
         })
         this.ready = true
