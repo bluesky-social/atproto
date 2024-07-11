@@ -79,3 +79,9 @@ export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
     }
   }
 }
+
+export type Did = `did:${string}`
+
+// @TODO use tools from @atproto/did
+export const isDid = (str: unknown): str is Did =>
+  typeof str === 'string' && str.startsWith('did:')

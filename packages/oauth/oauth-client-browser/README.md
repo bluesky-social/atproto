@@ -254,13 +254,15 @@ client.addEventListener(
 ## Usage with `@atproto/api`
 
 The `@atproto/api` package provides a way to interact with the `com.atproto` and
-`app.bsky` XRPC lexicons through the `ApiAgent` interface. The `agent` returned
-by the `BrowserOAuthClient` extend the `ApiAgent` class, allowing to use the
-`BrowserOAuthClient` as a regular `ApiAgent` (akin to `AtpAgent` class
+`app.bsky` XRPC lexicons through the `Agent` interface. The `agent` returned
+by the `BrowserOAuthClient` extend the `Agent` class, allowing to use the
+`BrowserOAuthClient` as a regular `Agent` (akin to `AtpAgent` class
 instances).
 
 ```typescript
 const aliceAgent = await client.restore('did:plc:alice')
+
+await aliceAgent.getProfile({ actor: aliceAgent.did })
 ```
 
 Any refresh of the credentials will happen under the hood, and the new tokens

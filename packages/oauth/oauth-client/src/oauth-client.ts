@@ -24,6 +24,7 @@ import {
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { OAuthAgent } from './oauth-agent.js'
+import { OAuthAtpAgent } from './oauth-atp-agent.js'
 import {
   AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
@@ -367,7 +368,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async callback(params: URLSearchParams): Promise<{
-    agent: OAuthAgent
+    agent: OAuthAtpAgent
     state: string | null
   }> {
     const responseJwt = params.get('response')
@@ -478,7 +479,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
    *
    * @param refresh See {@link SessionGetter.getSession}
    */
-  async restore(sub: string, refresh?: boolean): Promise<OAuthAgent> {
+  async restore(sub: string, refresh?: boolean): Promise<OAuthAtpAgent> {
     const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
       sub,
       refresh,
@@ -509,7 +510,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
   }
 
-  createAgent(server: OAuthServerAgent, sub: string): OAuthAgent {
+  createAgent(server: OAuthServerAgent, sub: string): OAuthAtpAgent {
     const oauthAgent = new OAuthAgent(
       server,
       sub,
@@ -517,6 +518,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       this.fetch,
     )
 
-    return oauthAgent
+    return new OAuthAtpAgent(oauthAgent)
   }
 }

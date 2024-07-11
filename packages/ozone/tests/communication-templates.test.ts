@@ -1,5 +1,5 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
 describe('communication-templates', () => {
   let network: TestNetwork

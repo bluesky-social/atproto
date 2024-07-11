@@ -6,7 +6,7 @@ import { AtpAgent } from '@atproto/api'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidAndKey, OzoneConfig } from './types'
-import { ADMIN_PASSWORD } from './const'
+import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
 import { createDidAndKey } from './util'
 import { ModeratorClient } from './moderator-client'
 
@@ -103,8 +103,10 @@ export class TestOzone {
     return this.server.ctx
   }
 
-  getClient() {
-    return new AtpAgent({ service: this.url })
+  getClient(): AtpAgent {
+    const agent = new AtpAgent({ service: this.url })
+    agent.configureLabelers([EXAMPLE_LABELER])
+    return agent
   }
 
   getModClient() {

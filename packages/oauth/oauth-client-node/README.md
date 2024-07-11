@@ -280,6 +280,69 @@ const requestLock: RuntimeLock = async (key, fn) => {
 }
 ```
 
+## Usage with `@atproto/api`
+
+`@atproto/oauth-client-*` packages all return an `ApiClient` instance upon
+successful authentication. This instance can be used to make authenticated
+requests using all the `ApiClient` methods defined in [[API]] (non exhaustive
+list of examples below). Any refresh of the credentials will happen under the
+hood, and the new tokens will be saved in the session store.
+
+```ts
+const agent = await client.restore('did:plc:123')
+
+// Feeds and content
+await agent.getTimeline(params, opts)
+await agent.getAuthorFeed(params, opts)
+await agent.getPostThread(params, opts)
+await agent.getPost(params)
+await agent.getPosts(params, opts)
+await agent.getLikes(params, opts)
+await agent.getRepostedBy(params, opts)
+await agent.post(record)
+await agent.deletePost(postUri)
+await agent.like(uri, cid)
+await agent.deleteLike(likeUri)
+await agent.repost(uri, cid)
+await agent.deleteRepost(repostUri)
+await agent.uploadBlob(data, opts)
+
+// Social graph
+await agent.getFollows(params, opts)
+await agent.getFollowers(params, opts)
+await agent.follow(did)
+await agent.deleteFollow(followUri)
+
+// Actors
+await agent.getProfile(params, opts)
+await agent.upsertProfile(updateFn)
+await agent.getProfiles(params, opts)
+await agent.getSuggestions(params, opts)
+await agent.searchActors(params, opts)
+await agent.searchActorsTypeahead(params, opts)
+await agent.mute(did)
+await agent.unmute(did)
+await agent.muteModList(listUri)
+await agent.unmuteModList(listUri)
+await agent.blockModList(listUri)
+await agent.unblockModList(listUri)
+
+// Notifications
+await agent.listNotifications(params, opts)
+await agent.countUnreadNotifications(params, opts)
+await agent.updateSeenNotifications()
+
+// Identity
+await agent.resolveHandle(params, opts)
+await agent.updateHandle(params, opts)
+
+// etc.
+
+if (agent instanceof OAuthAtpAgent) {
+  agent.signOut()
+}
+```
+
 ## Advances use-cases
 
 ### Listening for session updates and deletion
