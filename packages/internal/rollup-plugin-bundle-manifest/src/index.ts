@@ -46,6 +46,7 @@ export default function bundleManifest({
             data: data
               ? Buffer.from(chunk.source).toString('base64')
               : undefined,
+            // @ts-ignore
             mime: mime.getType(extname(fileName)) || undefined,
             sha256: createHash('sha256').update(chunk.source).digest('base64'),
           }

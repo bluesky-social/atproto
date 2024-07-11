@@ -17,6 +17,7 @@ export const readEnv = (): ServerEnvironment => {
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
     devMode: envBool('PDS_DEV_MODE'),
+    blobServiceUrl: envStr('PDS_BLOB_SERVICE_URL'),
 
     // branding
     primaryColor: envStr('PDS_PRIMARY_COLOR'),
@@ -137,6 +138,7 @@ export type ServerEnvironment = {
   acceptingImports?: boolean
   blobUploadLimit?: number
   devMode?: boolean
+  blobServiceUrl?: string
 
   // branding
   primaryColor?: string

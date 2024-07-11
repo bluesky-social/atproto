@@ -37,10 +37,12 @@ import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
+import * as ComAtprotoRepoFinalizeBlobUpload from './types/com/atproto/repo/finalizeBlobUpload'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 import * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
+import * as ComAtprotoRepoPrepareBlobUploadUrl from './types/com/atproto/repo/prepareBlobUploadUrl'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
@@ -233,10 +235,12 @@ export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
+export * as ComAtprotoRepoFinalizeBlobUpload from './types/com/atproto/repo/finalizeBlobUpload'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 export * as ComAtprotoRepoListMissingBlobs from './types/com/atproto/repo/listMissingBlobs'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
+export * as ComAtprotoRepoPrepareBlobUploadUrl from './types/com/atproto/repo/prepareBlobUploadUrl'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
@@ -842,6 +846,17 @@ export class ComAtprotoRepoNS {
       })
   }
 
+  finalizeBlobUpload(
+    data?: ComAtprotoRepoFinalizeBlobUpload.InputSchema,
+    opts?: ComAtprotoRepoFinalizeBlobUpload.CallOptions,
+  ): Promise<ComAtprotoRepoFinalizeBlobUpload.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.finalizeBlobUpload', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoFinalizeBlobUpload.toKnownErr(e)
+      })
+  }
+
   getRecord(
     params?: ComAtprotoRepoGetRecord.QueryParams,
     opts?: ComAtprotoRepoGetRecord.CallOptions,
@@ -883,6 +898,17 @@ export class ComAtprotoRepoNS {
       .call('com.atproto.repo.listRecords', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoRepoListRecords.toKnownErr(e)
+      })
+  }
+
+  prepareBlobUploadUrl(
+    data?: ComAtprotoRepoPrepareBlobUploadUrl.InputSchema,
+    opts?: ComAtprotoRepoPrepareBlobUploadUrl.CallOptions,
+  ): Promise<ComAtprotoRepoPrepareBlobUploadUrl.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.prepareBlobUploadUrl', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoPrepareBlobUploadUrl.toKnownErr(e)
       })
   }
 

@@ -19,7 +19,10 @@ export default function (server: Server, ctx: AppContext) {
       const cid = CID.parse(params.cid)
       const found = await ctx.actorStore.read(params.did, async (store) => {
         try {
-          return await store.repo.blob.getBlob(cid)
+          if (!ctx.cfg.service.blobServiceUrl) {
+            return await store.repo.blob.getBlob(cid)
+          }
+          // TODO: Redirect to blob service
         } catch (err) {
           if (err instanceof BlobNotFoundError) {
             throw new InvalidRequestError('Blob not found')
