@@ -1,0 +1,31 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.sets.add",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add values to a specific set",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "values"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the set to add values to"
+            },
+            "values": {
+              "type": "array",
+              "minLength": 1,
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of string values to add to the set"
+            }
+          }
+        }
+      }
+    }
+  }
+}

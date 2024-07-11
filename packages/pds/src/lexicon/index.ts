@@ -166,6 +166,12 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
 import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneSetsAdd from './types/tools/ozone/sets/add'
+import * as ToolsOzoneSetsGet from './types/tools/ozone/sets/get'
+import * as ToolsOzoneSetsQuerySets from './types/tools/ozone/sets/querySets'
+import * as ToolsOzoneSetsRemove from './types/tools/ozone/sets/remove'
+import * as ToolsOzoneSetsRemoveSet from './types/tools/ozone/sets/removeSet'
+import * as ToolsOzoneSetsUpsertSet from './types/tools/ozone/sets/upsertSet'
 import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
 import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
 import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
@@ -2089,6 +2095,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
+  sets: ToolsOzoneSetsNS
   team: ToolsOzoneTeamNS
 
   constructor(server: Server) {
@@ -2096,6 +2103,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
+    this.sets = new ToolsOzoneSetsNS(server)
     this.team = new ToolsOzoneTeamNS(server)
   }
 }
@@ -2252,6 +2260,80 @@ export class ToolsOzoneServerNS {
     >,
   ) {
     const nsid = 'tools.ozone.server.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneSetsNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  add<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetsAdd.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetsAdd.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.sets.add' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  get<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetsGet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetsGet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.sets.get' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  querySets<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetsQuerySets.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetsQuerySets.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.sets.querySets' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  remove<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetsRemove.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetsRemove.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.sets.remove' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeSet<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetsRemoveSet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetsRemoveSet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.sets.removeSet' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  upsertSet<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneSetsUpsertSet.Handler<ExtractAuth<AV>>,
+      ToolsOzoneSetsUpsertSet.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.sets.upsertSet' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

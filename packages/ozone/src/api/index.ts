@@ -22,6 +22,12 @@ import listMembers from './team/listMembers'
 import getConfig from './server/getConfig'
 import chat from './chat'
 import proxied from './proxied'
+import setAdd from './set/add'
+import setGet from './set/get'
+import querySets from './set/querySets'
+import upsertSet from './set/upsertSet'
+import setRemove from './set/remove'
+import removeSet from './set/removeSet'
 
 export * as health from './health'
 
@@ -50,5 +56,11 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
+  setAdd(server, ctx)
+  setGet(server, ctx)
+  querySets(server, ctx)
+  upsertSet(server, ctx)
+  setRemove(server, ctx)
+  removeSet(server, ctx)
   return server
 }

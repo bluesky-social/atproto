@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.sets.remove",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove values from a specific set",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "values"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the set to remove values from"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of string values to remove from the set"
+            }
+          }
+        }
+      }
+    }
+  }
+}

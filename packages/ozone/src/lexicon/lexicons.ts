@@ -11376,6 +11376,264 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneSetsAdd: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.add',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add values to a specific set',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name', 'values'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the set to add values to',
+              },
+              values: {
+                type: 'array',
+                minLength: 1,
+                items: {
+                  type: 'string',
+                },
+                description: 'Array of string values to add to the set',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSetsDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.defs',
+    defs: {
+      set: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            minLength: 3,
+            maxLength: 128,
+          },
+          description: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 1024,
+          },
+        },
+      },
+      setView: {
+        type: 'object',
+        required: ['name', 'setSize', 'createdAt', 'updatedAt'],
+        properties: {
+          name: {
+            type: 'string',
+            minLength: 3,
+            maxLength: 128,
+          },
+          description: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 1024,
+          },
+          setSize: {
+            type: 'integer',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSetsGet: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.get',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a specific set and its values',
+        parameters: {
+          type: 'params',
+          required: ['name'],
+          properties: {
+            name: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 100,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['set', 'values'],
+            properties: {
+              set: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.sets.defs#set',
+              },
+              values: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSetsQuerySets: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.querySets',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Query available sets',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            namePrefix: {
+              type: 'string',
+            },
+            sortBy: {
+              type: 'string',
+              enum: ['name', 'createdAt', 'updatedAt'],
+              default: 'name',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sets'],
+            properties: {
+              sets: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.sets.defs#setView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSetsRemove: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.remove',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove values from a specific set',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name', 'values'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the set to remove values from',
+              },
+              values: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Array of string values to remove from the set',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSetsRemoveSet: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.removeSet',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove an entire set',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the set to remove',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSetsUpsertSet: {
+    lexicon: 1,
+    id: 'tools.ozone.sets.upsertSet',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create or update set metadata',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.sets.defs#set',
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.sets.defs#set',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneTeamAddMember: {
     lexicon: 1,
     id: 'tools.ozone.team.addMember',
@@ -11814,6 +12072,13 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
+  ToolsOzoneSetsAdd: 'tools.ozone.sets.add',
+  ToolsOzoneSetsDefs: 'tools.ozone.sets.defs',
+  ToolsOzoneSetsGet: 'tools.ozone.sets.get',
+  ToolsOzoneSetsQuerySets: 'tools.ozone.sets.querySets',
+  ToolsOzoneSetsRemove: 'tools.ozone.sets.remove',
+  ToolsOzoneSetsRemoveSet: 'tools.ozone.sets.removeSet',
+  ToolsOzoneSetsUpsertSet: 'tools.ozone.sets.upsertSet',
   ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
   ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
   ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',

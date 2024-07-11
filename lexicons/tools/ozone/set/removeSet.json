@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.sets.removeSet",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove an entire set",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the set to remove"
+            }
+          }
+        }
+      }
+    }
+  }
+}
