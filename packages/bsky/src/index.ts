@@ -173,8 +173,8 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.featureGates.destroy()
     await this.terminator?.terminate()
+    this.ctx.featureGates.destroy()
   }
 }
 
