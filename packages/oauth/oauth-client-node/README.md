@@ -18,7 +18,7 @@ needs of your application, and must respect the [ATPROTO].
 
 #### From a backend service
 
-The `client_metadata` object will typically be build by the backend at startup.
+The `client_metadata` object will typically be built by the backend at startup.
 
 ```ts
 import { NodeOAuthClientOptions } from '@atproto/oauth-client-node'
