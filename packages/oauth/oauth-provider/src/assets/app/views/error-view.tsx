@@ -25,11 +25,12 @@ export function ErrorView({
 
 function getUserFriendlyMessage(errorData?: ErrorData) {
   const desc = errorData?.error_description
-  switch (true) {
-    case desc?.startsWith('Unknown request_uri'): // Request was removed from database
-    case desc === 'This request has expired':
-      return 'This sign-in session has expired'
-    default:
-      return desc || 'An unknown error occurred'
+  if (
+    desc === 'This request has expired' ||
+    desc?.startsWith('Unknown request_uri') // Request was removed from database
+  ) {
+    return 'This sign-in session has expired'
+  } else {
+    return desc || 'An unknown error occurred'
   }
 }
