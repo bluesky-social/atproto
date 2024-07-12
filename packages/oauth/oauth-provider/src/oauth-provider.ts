@@ -76,20 +76,17 @@ import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
 import { Userinfo } from './oidc/userinfo.js'
+import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
   buildErrorPayload,
   buildErrorStatus,
 } from './output/build-error-payload.js'
 import { Customization } from './output/customization.js'
-import {
-  AuthorizationResultAuthorize,
-  sendAuthorizePage,
-} from './output/send-authorize-page.js'
+import { OutputManager } from './output/output-manager.js'
 import {
   AuthorizationResultRedirect,
   sendAuthorizeRedirect,
 } from './output/send-authorize-redirect.js'
-import { sendErrorPage } from './output/send-error-page.js'
 import { oidcPayload } from './parameters/oidc-payload.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { RequestInfo } from './request/request-info.js'
@@ -975,6 +972,7 @@ export class OAuthProvider extends OAuthVerifier {
       : undefined,
   }: RouterOptions<Req, Res> = {}) {
     const deviceManager = new DeviceManager(this.deviceStore)
+    const outputManager = new OutputManager(this.customization)
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const server = this
@@ -1073,7 +1071,7 @@ export class OAuthProvider extends OAuthVerifier {
           )
 
           if (!res.headersSent) {
-            await sendErrorPage(res, err, server.customization)
+            await outputManager.sendErrorPage(res, err)
           }
         }
       }
@@ -1278,7 +1276,7 @@ export class OAuthProvider extends OAuthVerifier {
           }
           case 'authorize' in data: {
             await setupCsrfToken(req, res, csrfCookie(data.authorize.uri))
-            return sendAuthorizePage(res, data, server.customization)
+            return outputManager.sendAuthorizePage(res, data)
           }
           default: {
             // Should never happen

@@ -23,6 +23,7 @@ export async function sendWebPage(
   { status = 200, ...options }: BuildDocumentOptions & { status?: number },
 ): Promise<void> {
   // @TODO: make these headers configurable (?)
+  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
