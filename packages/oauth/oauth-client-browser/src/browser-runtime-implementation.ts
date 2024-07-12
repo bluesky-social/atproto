@@ -46,7 +46,15 @@ export class BrowserRuntimeImplementation implements RuntimeImplementation {
     data: Uint8Array,
     { name }: DigestAlgorithm,
   ): Promise<Uint8Array> {
-    const buf = await crypto.subtle.digest(`SHA-${name.slice(3)}`, data)
-    return new Uint8Array(buf)
+    switch (name) {
+      case 'sha256':
+      case 'sha384':
+      case 'sha512': {
+        const buf = await crypto.subtle.digest(`SHA-${name.slice(3)}`, data)
+        return new Uint8Array(buf)
+      }
+      default:
+        throw new Error(`Unsupported digest algorithm: ${name}`)
+    }
   }
 }
