@@ -347,11 +347,20 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     )
   }
 
+  /**
+   * This method allows the client to proactively revoke the request_uri it
+   * created through PAR.
+   */
   async abortRequest(authorizeUrl: URL) {
     const requestUri = authorizeUrl.searchParams.get('request_uri')
     if (!requestUri) return
 
-    // @TODO find a way to actually do this
+    // @NOTE This is not implemented here because, 1) the request server should
+    // invalidate the request_uri after some delay anyways, and 2) I am not sure
+    // that the revocation endpoint is even supposed to support this (and I
+    // don't want to spend the time checking now).
+
+    // @TODO investigate actual necessity & feasibility of this feature
   }
 
   async callback(params: URLSearchParams): Promise<{
