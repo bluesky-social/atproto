@@ -117,6 +117,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
     }
 
+    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
     const mime = response.headers.get('content-type')?.split(';')[0].trim()
     if (mime !== 'application/json') {
       response.body?.cancel?.()
