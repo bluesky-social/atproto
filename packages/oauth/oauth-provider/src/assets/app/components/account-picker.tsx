@@ -44,6 +44,7 @@ export function AccountPicker({
 }: AccountPickerProps) {
   return (
     <FormCard
+      {...props}
       cancel={
         onBack && (
           <Button onClick={onBack} aria-label={backAria}>
@@ -51,15 +52,6 @@ export function AccountPicker({
           </Button>
         )
       }
-      // actions={
-      //   onOther && (
-      //     <Button onClick={onOther} aria-label={otherAria}>
-      //       {otherLabel}
-      //       <CaretRight className="h-4 ml-2" />
-      //     </Button>
-      //   )
-      // }
-      {...props}
     >
       <Fieldset title="Sign in as...">
         {accounts.map((account) => {
