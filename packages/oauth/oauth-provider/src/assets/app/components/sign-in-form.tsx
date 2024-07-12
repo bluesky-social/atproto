@@ -261,7 +261,6 @@ export function SignInForm({
         <Fieldset key="remember" title={sessionSection} disabled={loading}>
           <InputCheckbox
             name="remember"
-            type="checkbox"
             defaultChecked={rememberDefault}
             aria-label={rememberAria}
           >
