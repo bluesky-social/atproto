@@ -39,7 +39,8 @@ import { Client } from './client.js'
 
 const fetchMetadataHandler = pipe(
   fetchOkProcessor(),
-  fetchJsonProcessor('application/json', false),
+  // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
+  fetchJsonProcessor('application/json', true),
   fetchJsonZodProcessor(oauthClientMetadataSchema),
 )
 

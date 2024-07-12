@@ -11,16 +11,18 @@ import {
   HandleResolver,
 } from '@atproto-labs/handle-resolver'
 import { IdentityResolver } from '@atproto-labs/identity-resolver'
-import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Key, Keyset } from '@atproto/jwk'
 import {
+  OAuthClientIdDiscoverable,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
+  oauthClientMetadataSchema,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
 
 import { FALLBACK_ALG } from './constants.js'
+import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { OAuthAgent } from './oauth-agent.js'
 import {
   AuthorizationServerMetadataCache,
@@ -36,30 +38,26 @@ import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
-import { SessionGetter, SessionStore } from './session-getter.js'
+import {
+  SessionEventMap,
+  SessionGetter,
+  SessionStore,
+} from './session-getter.js'
+import { InternalStateData, StateStore } from './state-store.js'
 import { AuthorizeOptions, ClientMetadata } from './types.js'
+import { CustomEventTarget } from './util.js'
 import { validateClientMetadata } from './validate-client-metadata.js'
-
-export type InternalStateData = {
-  iss: string
-  nonce: string
-  dpopKey: Key
-  verifier?: string
-
-  /**
-   * @note This could be parametrized to be of any type. This wasn't done for
-   * the sake of simplicity but could be added in a later development.
-   */
-  appState?: string
-}
-
-export type StateStore = SimpleStore<string, InternalStateData>
 
 // Export all types needed to construct OAuthClientOptions
 export type {
   AuthorizationServerMetadataCache,
+  DidCache,
   DpopNonceCache,
   Fetch,
+  HandleCache,
+  HandleResolver,
+  InternalStateData,
+  Key,
   Keyset,
   OAuthClientMetadata,
   OAuthClientMetadataInput,
@@ -67,6 +65,7 @@ export type {
   ProtectedResourceMetadataCache,
   RuntimeImplementation,
   SessionStore,
+  StateStore,
 }
 
 export type OAuthClientOptions = {
@@ -91,7 +90,47 @@ export type OAuthClientOptions = {
   fetch?: Fetch
 }
 
-export class OAuthClient {
+export type OAuthClientEventMap = SessionEventMap
+
+export type OAuthClientFetchMetadataOptions = {
+  clientId: OAuthClientIdDiscoverable
+  fetch?: Fetch
+  signal?: AbortSignal
+}
+
+export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
+  static async fetchMetadata({
+    clientId,
+    fetch = globalThis.fetch,
+    signal,
+  }: OAuthClientFetchMetadataOptions) {
+    signal?.throwIfAborted()
+
+    const request = new Request(clientId, {
+      redirect: 'error',
+      signal: signal,
+    })
+    const response = await fetch(request)
+
+    if (response.status !== 200) {
+      response.body?.cancel?.()
+      throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
+    }
+
+    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
+    const mime = response.headers.get('content-type')?.split(';')[0].trim()
+    if (mime !== 'application/json') {
+      response.body?.cancel?.()
+      throw new TypeError(`Invalid client metadata content type: ${mime}`)
+    }
+
+    const json: unknown = await response.json()
+
+    signal?.throwIfAborted()
+
+    return oauthClientMetadataSchema.parse(json)
+  }
+
   // Config
   readonly clientMetadata: ClientMetadata
   readonly responseMode: OAuthResponseMode
@@ -132,6 +171,8 @@ export class OAuthClient {
     runtimeImplementation,
     keyset,
   }: OAuthClientOptions) {
+    super()
+
     this.keyset = keyset
       ? keyset instanceof Keyset
         ? keyset
@@ -177,6 +218,15 @@ export class OAuthClient {
       this.runtime,
     )
     this.stateStore = stateStore
+
+    // Proxy sessionGetter events
+    for (const type of ['deleted', 'updated'] as const) {
+      this.sessionGetter.addEventListener(type, (event) => {
+        if (!this.dispatchCustomEvent(type, event.detail)) {
+          event.preventDefault()
+        }
+      })
+    }
   }
 
   // Exposed as public API for convenience
@@ -194,10 +244,11 @@ export class OAuthClient {
     return this.identityResolver.handleResolver
   }
 
-  async authorize(
-    input: string,
-    options?: AuthorizeOptions & { signal?: AbortSignal },
-  ): Promise<URL> {
+  get jwks() {
+    return this.keyset?.publicJwks ?? ({ keys: [] as const } as const)
+  }
+
+  async authorize(input: string, options?: AuthorizeOptions): Promise<URL> {
     const redirectUri =
       options?.redirect_uri ?? this.clientMetadata.redirect_uris[0]
     if (!this.clientMetadata.redirect_uris.includes(redirectUri)) {
@@ -239,7 +290,9 @@ export class OAuthClient {
       code_challenge_method: pkce?.method,
       nonce,
       state,
-      login_hint: identity?.did || undefined,
+      login_hint: identity
+        ? input // If input is a handle or a DID, use it as a login_hint
+        : undefined,
       response_mode: this.responseMode,
       response_type:
         // Negotiate by using the order in the client metadata
@@ -295,6 +348,22 @@ export class OAuthClient {
     throw new Error(
       'Server does not support pushed authorization requests (PAR)',
     )
+  }
+
+  /**
+   * This method allows the client to proactively revoke the request_uri it
+   * created through PAR.
+   */
+  async abortRequest(authorizeUrl: URL) {
+    const requestUri = authorizeUrl.searchParams.get('request_uri')
+    if (!requestUri) return
+
+    // @NOTE This is not implemented here because, 1) the request server should
+    // invalidate the request_uri after some delay anyways, and 2) I am not sure
+    // that the revocation endpoint is even supposed to support this (and I
+    // don't want to spend the time checking now).
+
+    // @TODO investigate actual necessity & feasibility of this feature
   }
 
   async callback(params: URLSearchParams): Promise<{
@@ -424,17 +493,30 @@ export class OAuthClient {
   }
 
   async revoke(sub: string) {
-    const { dpopKey, tokenSet } = await this.sessionGetter.get(sub, {
-      allowStale: true,
-    })
+    const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
+      sub,
+      false,
+    )
 
-    const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
-
-    await server.revoke(tokenSet.access_token)
-    await this.sessionGetter.delStored(sub)
+    // NOT using `;(await this.restore(sub, false)).signOut()` because we want
+    // the tokens to be deleted even if it was not possible to fetch the issuer
+    // data.
+    try {
+      const server = await this.serverFactory.fromIssuer(tokenSet.iss, dpopKey)
+      await server.revoke(tokenSet.access_token)
+    } finally {
+      await this.sessionGetter.delStored(sub, new TokenRevokedError(sub))
+    }
   }
 
   createAgent(server: OAuthServerAgent, sub: string): OAuthAgent {
-    return new OAuthAgent(server, sub, this.sessionGetter, this.fetch)
+    const oauthAgent = new OAuthAgent(
+      server,
+      sub,
+      this.sessionGetter,
+      this.fetch,
+    )
+
+    return oauthAgent
   }
 }

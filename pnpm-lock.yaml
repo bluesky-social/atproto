@@ -879,6 +879,43 @@ importers:
         specifier: ^5.3.3
         version: 5.4.4
 
+  packages/oauth/oauth-client-node:
+    dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:*
+        version: link:../../internal/did-resolver
+      '@atproto-labs/handle-resolver-node':
+        specifier: workspace:*
+        version: link:../../internal/handle-resolver-node
+      '@atproto-labs/simple-store':
+        specifier: workspace:*
+        version: link:../../internal/simple-store
+      '@atproto/did':
+        specifier: workspace:*
+        version: link:../../did
+      '@atproto/jwk':
+        specifier: workspace:*
+        version: link:../jwk
+      '@atproto/jwk-jose':
+        specifier: workspace:*
+        version: link:../jwk-jose
+      '@atproto/jwk-webcrypto':
+        specifier: workspace:*
+        version: link:../jwk-webcrypto
+      '@atproto/oauth-client':
+        specifier: workspace:*
+        version: link:../oauth-client
+      '@atproto/oauth-types':
+        specifier: workspace:*
+        version: link:../oauth-types
+    devDependencies:
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../../api
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.4
+
   packages/oauth/oauth-provider:
     dependencies:
       '@atproto-labs/fetch':

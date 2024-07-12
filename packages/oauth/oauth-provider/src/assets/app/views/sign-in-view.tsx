@@ -44,11 +44,12 @@ export function SignInView({
         subtitle="Confirm your password to continue"
       >
         <SignInForm
-          className="max-w-lg w-full"
           onSubmit={onSignIn}
           onCancel={clearSession}
           cancelAria="Back" // to account picker
-          usernameDefault={session.account.preferred_username}
+          usernameDefault={
+            session.account.preferred_username || session.account.sub
+          }
           usernameReadonly={true}
           rememberDefault={true}
         />
@@ -60,7 +61,6 @@ export function SignInView({
     return (
       <LayoutTitlePage title="Sign in" subtitle="Enter your password">
         <SignInForm
-          className="max-w-lg w-full"
           onSubmit={onSignIn}
           onCancel={onBack}
           cancelAria="Back"
@@ -77,12 +77,7 @@ export function SignInView({
         title="Sign in"
         subtitle="Enter your username and password"
       >
-        <SignInForm
-          className="max-w-lg w-full"
-          onSubmit={onSignIn}
-          onCancel={onBack}
-          cancelAria="Back"
-        />
+        <SignInForm onSubmit={onSignIn} onCancel={onBack} cancelAria="Back" />
       </LayoutTitlePage>
     )
   }
@@ -94,7 +89,6 @@ export function SignInView({
         subtitle="Enter your username and password"
       >
         <SignInForm
-          className="max-w-lg w-full"
           onSubmit={onSignIn}
           onCancel={() => setShowSignInForm(false)}
           cancelAria="Back" // to account picker
@@ -104,12 +98,8 @@ export function SignInView({
   }
 
   return (
-    <LayoutTitlePage
-      title="Sign in as..."
-      subtitle="Select an account to continue."
-    >
+    <LayoutTitlePage title="Sign in" subtitle="Select from an existing account">
       <AccountPicker
-        className="max-w-lg w-full"
         accounts={accounts}
         onAccount={(a) => setSession(a.sub)}
         onOther={() => setShowSignInForm(true)}

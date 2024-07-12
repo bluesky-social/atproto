@@ -16,6 +16,24 @@ export function validateClientMetadata(
   input: OAuthClientMetadataInput,
   keyset?: Keyset,
 ): ClientMetadata {
+  if (input.jwks) {
+    if (!keyset) {
+      throw new TypeError(`Keyset must not be provided when jwks is provided`)
+    }
+    for (const key of input.jwks.keys) {
+      if (!key.kid) {
+        throw new TypeError(`Key must have a "kid" property`)
+      } else if (!keyset.has(key.kid)) {
+        throw new TypeError(`Key with kid "${key.kid}" not found in keyset`)
+      }
+    }
+  }
+
+  // Allow to pass a keyset and omit the jwks/jwks_uri properties
+  if (!input.jwks && !input.jwks_uri && keyset?.size) {
+    input = { ...input, jwks: keyset.toJSON() }
+  }
+
   const metadata = clientMetadataSchema.parse(input)
 
   // ATPROTO uses client metadata discovery

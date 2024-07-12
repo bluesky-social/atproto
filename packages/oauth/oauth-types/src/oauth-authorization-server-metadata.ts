@@ -74,6 +74,9 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
 
   // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
   protected_resources: z.array(z.string().url()).optional(),
+
+  // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+  client_id_metadata_document_supported: z.boolean().optional(),
 })
 
 export type OAuthAuthorizationServerMetadata = z.infer<

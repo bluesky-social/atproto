@@ -1,8 +1,9 @@
 import { CLIENT_ASSERTION_TYPE_JWT_BEARER } from '@atproto/oauth-types'
-import { KeyLike, calculateJwkThumbprint, exportJWK } from 'jose'
-import { JOSEError } from 'jose/errors'
+import { KeyLike, calculateJwkThumbprint, errors, exportJWK } from 'jose'
 
 import { InvalidClientError } from '../errors/invalid-client-error.js'
+
+const { JOSEError } = errors
 
 export type ClientAuth =
   | { method: 'none' }
