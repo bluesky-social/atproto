@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.29
+
+### Patch Changes
+
+- [#2635](https://github.com/bluesky-social/atproto/pull/2635) [`2f40203fb`](https://github.com/bluesky-social/atproto/commit/2f40203fb453934aaf5d353b680d89b8a1febd0f) Thanks [@dholms](https://github.com/dholms)! - Add in-memory did cachee
+
+- Updated dependencies [[`ed5810179`](https://github.com/bluesky-social/atproto/commit/ed5810179006f254f2035fe1f0e3c4798080cfe0), [`0529bec99`](https://github.com/bluesky-social/atproto/commit/0529bec99183439829a3553f45ac7203763144c3)]:
+  - @atproto/api@0.12.24
+
 ## 0.1.28
 
 ### Patch Changes

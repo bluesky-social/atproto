@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.12.24
+
+### Patch Changes
+
+- [#2613](https://github.com/bluesky-social/atproto/pull/2613) [`ed5810179`](https://github.com/bluesky-social/atproto/commit/ed5810179006f254f2035fe1f0e3c4798080cfe0) Thanks [@haileyok](https://github.com/haileyok)! - Support for starter packs in record embed views.
+
+- [#2554](https://github.com/bluesky-social/atproto/pull/2554) [`0529bec99`](https://github.com/bluesky-social/atproto/commit/0529bec99183439829a3553f45ac7203763144c3) Thanks [@sugyan](https://github.com/sugyan)! - Add missing `getPreferences` union return types
+
 ## 0.12.23
 
 ### Patch Changes
