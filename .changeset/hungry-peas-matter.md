@@ -2,4 +2,4 @@
 "@atproto/pds": patch
 ---
 
-Allow configuring "warning" color in oauth interface
+Use new version of @atproto/oauth-provider with improved UI.
