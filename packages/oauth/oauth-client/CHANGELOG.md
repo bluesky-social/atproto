@@ -1,5 +1,20 @@
 # @atproto/oauth-client
 
+## 0.1.1
+
+### Patch Changes
+
+- [#2633](https://github.com/bluesky-social/atproto/pull/2633) [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add event emitting capability to OAuthClient
+
+- Updated dependencies [[`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10), [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10), [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10), [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10)]:
+  - @atproto/oauth-types@0.1.1
+  - @atproto/jwk@0.1.1
+  - @atproto-labs/identity-resolver@0.1.1
+  - @atproto-labs/handle-resolver@0.1.1
+  - @atproto-labs/did-resolver@0.1.1
+  - @atproto-labs/simple-store@0.1.1
+  - @atproto-labs/simple-store-memory@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # @atproto/bsky
 
+## 0.0.68
+
+### Patch Changes
+
+- [#2633](https://github.com/bluesky-social/atproto/pull/2633) [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Obfuscate request headers in logs using utils from @atproto/common
+
+- Updated dependencies [[`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10)]:
+  - @atproto/common@0.4.1
+  - @atproto/crypto@0.4.0
+  - @atproto/repo@0.4.1
+  - @atproto/xrpc-server@0.5.3
+
 ## 0.0.67
 
 ### Patch Changes
