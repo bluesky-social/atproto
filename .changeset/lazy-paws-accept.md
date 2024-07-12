@@ -1,5 +1,5 @@
 ---
-"@atproto/oauth-client-node": minor
+"@atproto/oauth-client-node": patch
 ---
 
 Create NodeJS OAuth SDK

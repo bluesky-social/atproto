@@ -1,5 +1,5 @@
 ---
-"@atproto/common": minor
+"@atproto/common": patch
 ---
 
 Add obfuscation utilities

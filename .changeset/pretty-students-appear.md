@@ -1,5 +1,5 @@
 ---
-"@atproto/oauth-provider": minor
+"@atproto/oauth-provider": patch
 ---
 
 Add 2FA support
