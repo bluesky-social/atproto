@@ -8712,6 +8712,12 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            relativeToDid: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account to get suggestions relative to. If not provided, suggestions will be based on the viewer.',
+            },
           },
         },
         output: {

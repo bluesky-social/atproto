@@ -23,6 +23,7 @@ import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -116,6 +117,11 @@ export class BskyAppView {
       adminPasses: config.adminPasswords,
     })
 
+    const featureGates = new FeatureGates({
+      apiKey: config.statsigKey,
+      env: config.statsigEnv,
+    })
+
     const ctx = new AppContext({
       cfg: config,
       dataplane,
@@ -128,6 +134,7 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       authVerifier,
+      featureGates,
     })
 
     let server = createServer({
@@ -154,6 +161,7 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    await this.ctx.featureGates.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -166,6 +174,7 @@ export class BskyAppView {
 
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
+    this.ctx.featureGates.destroy()
   }
 }
 

@@ -11,6 +11,7 @@ import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { CourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
@@ -32,6 +33,7 @@ export class AppContext {
       bsyncClient: BsyncClient
       courierClient: CourierClient
       authVerifier: AuthVerifier
+      featureGates: FeatureGates
     },
   ) {}
 
@@ -81,6 +83,10 @@ export class AppContext {
 
   get authVerifier(): AuthVerifier {
     return this.opts.authVerifier
+  }
+
+  get featureGates(): FeatureGates {
+    return this.opts.featureGates
   }
 
   async serviceAuthJwt(aud: string) {
