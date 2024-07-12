@@ -113,11 +113,13 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     const response = await fetch(request)
 
     if (response.status !== 200) {
+      response.body?.cancel?.()
       throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
     }
 
     const mime = response.headers.get('content-type')?.split(';')[0].trim()
     if (mime !== 'application/json') {
+      response.body?.cancel?.()
       throw new TypeError(`Invalid client metadata content type: ${mime}`)
     }
 
