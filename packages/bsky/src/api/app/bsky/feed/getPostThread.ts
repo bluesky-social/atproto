@@ -1,5 +1,4 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
@@ -29,9 +28,13 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
-      const { viewer } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, include3pBlocks } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        include3pBlocks,
+      })
 
       let result: OutputSchema
       try {
