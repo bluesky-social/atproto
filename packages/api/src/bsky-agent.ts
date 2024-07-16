@@ -939,8 +939,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * Add a muted word to user preferences. If called in succession, this
-   * method must be called sequentially, not in parallel.
+   * Add a muted word to user preferences.
    */
   async addMutedWord(
     mutedWord: Pick<MutedWord, 'value' | 'targets' | 'actors' | 'expiresAt'>,
@@ -992,9 +991,7 @@ export class BskyAgent extends AtpAgent {
    * Convenience method to sequentially add muted words to user preferences
    */
   async addMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
-    for (const word of newMutedWords) {
-      await this.addMutedWord(word)
-    }
+    await Promise.all(newMutedWords.map((word) => this.addMutedWord(word)))
   }
 
   /**
@@ -1056,8 +1053,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * Remove a muted word from user preferences. If called in succession, this
-   * method must be called sequentially, not in parallel.
+   * Remove a muted word from user preferences.
    */
   async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
@@ -1096,13 +1092,10 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * Convenience method to sequentially remove muted words from user
-   * preferences
+   * Convenience method to remove muted words from user preferences
    */
   async removeMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
-    for (const word of mutedWords) {
-      await this.removeMutedWord(word)
-    }
+    await Promise.all(mutedWords.map((word) => this.removeMutedWord(word)))
   }
 
   async hidePost(postUri: string) {
