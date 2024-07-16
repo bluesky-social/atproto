@@ -5,10 +5,12 @@ export type ResolveHandleOptions = {
   noCache?: boolean
 }
 
+export type AtprotoIdentityDidMethods = 'plc' | 'web'
+
 /**
  * @see {@link https://atproto.com/specs/did#blessed-did-methods}
  */
-export type ResolvedHandle = null | Did<'plc' | 'web'>
+export type ResolvedHandle = null | Did<AtprotoIdentityDidMethods>
 
 export { type Did }
 
