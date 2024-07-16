@@ -93,6 +93,14 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
       throw new TypeError(`Invalid issuer ${metadata.issuer}`)
     }
 
+    // ATPROTO requires client_id_metadata_document
+    // http://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+    if (metadata.client_id_metadata_document_supported !== true) {
+      throw new TypeError(
+        `Authorization server "${issuer}" does not support client_id_metadata_document`,
+      )
+    }
+
     return metadata
   }
 }
