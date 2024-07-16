@@ -52,6 +52,8 @@ export function hasMutedWord({
     const mutedWord = mute.value.toLowerCase()
     const postText = text.toLowerCase()
 
+    if (mute.expiresAt && mute.expiresAt < new Date().toISOString()) continue
+
     // `content` applies to tags as well
     if (tags.includes(mutedWord)) return true
     // rest of the checks are for `content` only
