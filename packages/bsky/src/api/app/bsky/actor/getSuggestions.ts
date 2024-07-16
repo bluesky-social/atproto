@@ -1,4 +1,4 @@
-import { mapDefined } from '@atproto/common'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
@@ -12,6 +12,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { resHeaders } from '../../../util'
+import AtpAgent from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
@@ -25,13 +26,27 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { viewer, labelers }
-      const result = await getSuggestions({ ...params, hydrateCtx }, ctx)
-
+      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
+      const headers = noUndefinedVals({
+        'accept-language': req.headers['accept-language'],
+        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+          ? req.headers['x-bsky-topics'].join(',')
+          : req.headers['x-bsky-topics'],
+      })
+      const { resHeaders: resultHeaders, ...result } = await getSuggestions(
+        { ...params, hydrateCtx, headers },
+        ctx,
+      )
+      const suggestionsResHeaders = noUndefinedVals({
+        'content-language': resultHeaders?.['content-language'],
+      })
       return {
         encoding: 'application/json',
         body: result,
-        headers: resHeaders({ labelers }),
+        headers: {
+          ...suggestionsResHeaders,
+          ...resHeaders({ labelers: hydrateCtx.labelers }),
+        },
       }
     },
   })
@@ -43,21 +58,38 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   const viewer = params.hydrateCtx.viewer
-  // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
-  const suggestions = await ctx.dataplane.getFollowSuggestions({
-    actorDid: viewer ?? undefined,
-    cursor: params.cursor,
-    limit: params.limit,
-  })
-  let dids = suggestions.dids
-  if (viewer !== null) {
-    const follows = await ctx.dataplane.getActorFollowsActors({
-      actorDid: viewer,
-      targetDids: dids,
+  if (ctx.suggestionsAgent) {
+    const res =
+      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
+        {
+          viewer: viewer ?? undefined,
+          limit: params.limit,
+          cursor: params.cursor,
+        },
+        { headers: params.headers },
+      )
+    return {
+      dids: res.data.actors.map((a) => a.did),
+      cursor: res.data.cursor,
+      resHeaders: res.headers,
+    }
+  } else {
+    // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
+    const suggestions = await ctx.dataplane.getFollowSuggestions({
+      actorDid: viewer ?? undefined,
+      cursor: params.cursor,
+      limit: params.limit,
     })
-    dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
+    let dids = suggestions.dids
+    if (viewer !== null) {
+      const follows = await ctx.dataplane.getActorFollowsActors({
+        actorDid: viewer,
+        targetDids: dids,
+      })
+      dids = dids.filter((did, i) => !follows.uris[i] && did !== viewer)
+    }
+    return { dids, cursor: parseString(suggestions.cursor) }
   }
-  return { dids, cursor: parseString(suggestions.cursor) }
 }
 
 const hydration = async (input: {
@@ -92,15 +124,17 @@ const presentation = (input: {
 }) => {
   const { ctx, skeleton, hydration } = input
   const actors = mapDefined(skeleton.dids, (did) =>
-    ctx.views.profile(did, hydration),
+    ctx.views.profileKnownFollowers(did, hydration),
   )
   return {
     actors,
     cursor: skeleton.cursor,
+    resHeaders: skeleton.resHeaders,
   }
 }
 
 type Context = {
+  suggestionsAgent: AtpAgent | undefined
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
@@ -108,6 +142,11 @@ type Context = {
 
 type Params = QueryParams & {
   hydrateCtx: HydrateCtx
+  headers: Record<string, string>
 }
 
-type Skeleton = { dids: string[]; cursor?: string }
+type Skeleton = {
+  dids: string[]
+  cursor?: string
+  resHeaders?: Record<string, string>
+}

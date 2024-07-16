@@ -26,11 +26,14 @@ describe('account', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account',
       pds: {
+        contactEmailAddress: 'abuse@example.com',
         termsOfServiceUrl: 'https://example.com/tos',
         privacyPolicyUrl: 'https://example.com/privacy-policy',
       },
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     mailer = network.pds.ctx.mailer
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getClient()
@@ -58,6 +61,7 @@ describe('account', () => {
       'https://example.com/privacy-policy',
     )
     expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
+    expect(res.data.contact?.email).toBe('abuse@example.com')
   })
 
   it('fails on invalid handles', async () => {

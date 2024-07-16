@@ -88,7 +88,10 @@ export class ConsecutiveList<T> {
 
 export class ConsecutiveItem<T> {
   isComplete = false
-  constructor(private consecutive: ConsecutiveList<T>, public value: T) {}
+  constructor(
+    private consecutive: ConsecutiveList<T>,
+    public value: T,
+  ) {}
 
   complete() {
     this.isComplete = true
@@ -129,6 +132,8 @@ export function loggableMessage(msg: RepoMessage) {
   } else if (message.isHandle(msg)) {
     return msg
   } else if (message.isIdentity(msg)) {
+    return msg
+  } else if (message.isAccount(msg)) {
     return msg
   } else if (message.isMigrate(msg)) {
     return msg

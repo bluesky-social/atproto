@@ -6,13 +6,27 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import {
+  RateLimiter,
+  RateLimiterCreator,
+  RateLimiterOpts,
+  createServiceAuthHeaders,
+} from '@atproto/xrpc-server'
+import {
+  JoseKey,
+  Fetch,
+  safeFetchWrap,
+  OAuthVerifier,
+} from '@atproto/oauth-provider'
+
 import { ServerConfig, ServerSecrets } from './config'
+import { PdsOAuthProvider } from './oauth/provider'
 import {
   AuthVerifier,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier'
+import { fetchLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
@@ -23,16 +37,13 @@ import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { ActorStore, ActorStoreReader } from './actor-store'
-import { LocalViewer } from './read-after-write/viewer'
+import { ActorStore } from './actor-store'
+import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
 
 export type AppContextOptions = {
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
-  localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  localViewer: LocalViewerCreator
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqliteCache
@@ -42,11 +53,14 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
+  ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   appViewAgent?: AtpAgent
   moderationAgent?: AtpAgent
   reportingAgent?: AtpAgent
   entrywayAgent?: AtpAgent
+  safeFetch: Fetch
+  authProvider?: PdsOAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -55,10 +69,7 @@ export type AppContextOptions = {
 export class AppContext {
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
-  public localViewer: (
-    actorStore: ActorStoreReader,
-    actorKey: crypto.Keypair,
-  ) => LocalViewer
+  public localViewer: LocalViewerCreator
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
   public didCache: DidSqliteCache
@@ -68,12 +79,15 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
+  public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public appViewAgent: AtpAgent | undefined
   public moderationAgent: AtpAgent | undefined
   public reportingAgent: AtpAgent | undefined
   public entrywayAgent: AtpAgent | undefined
+  public safeFetch: Fetch
   public authVerifier: AuthVerifier
+  public authProvider?: PdsOAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -90,12 +104,15 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
+    this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.moderationAgent = opts.moderationAgent
     this.reportingAgent = opts.reportingAgent
     this.entrywayAgent = opts.entrywayAgent
+    this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
+    this.authProvider = opts.authProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -113,6 +130,7 @@ export class AppContext {
             endpoint: cfg.blobstore.endpoint,
             forcePathStyle: cfg.blobstore.forcePathStyle,
             credentials: cfg.blobstore.credentials,
+            uploadTimeoutMs: cfg.blobstore.uploadTimeoutMs,
           })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
@@ -165,6 +183,30 @@ export class AppContext {
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
+    let ratelimitCreator: RateLimiterCreator | undefined = undefined
+    if (cfg.rateLimits.enabled) {
+      const bypassSecret = cfg.rateLimits.bypassKey
+      const bypassIps = cfg.rateLimits.bypassIps
+      if (cfg.rateLimits.mode === 'redis') {
+        if (!redisScratch) {
+          throw new Error('Redis not set up for ratelimiting mode: `redis`')
+        }
+        ratelimitCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.redis(redisScratch, {
+            bypassSecret,
+            bypassIps,
+            ...opts,
+          })
+      } else {
+        ratelimitCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.memory({
+            bypassSecret,
+            bypassIps,
+            ...opts,
+          })
+      }
+    }
+
     const appViewAgent = cfg.bskyAppView
       ? new AtpAgent({ service: cfg.bskyAppView.url })
       : undefined
@@ -179,27 +221,18 @@ export class AppContext {
       : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const jwtPublicKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : null
+
     const accountManager = new AccountManager(
+      backgroundQueue,
       cfg.db.accountDbLoc,
       jwtSecretKey,
       cfg.service.did,
       cfg.db.disableWalAutoCheckpoint,
     )
     await accountManager.migrateOrThrow()
-
-    const jwtKey = cfg.entryway
-      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
-      : jwtSecretKey
-
-    const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      jwtKey, // @TODO support multiple keys?
-      adminPass: secrets.adminPassword,
-      dids: {
-        pds: cfg.service.did,
-        entryway: cfg.entryway?.did,
-        modService: cfg.modService?.did,
-      },
-    })
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
@@ -223,6 +256,64 @@ export class AppContext {
       appviewCdnUrlPattern: cfg.bskyAppView?.cdnUrlPattern,
     })
 
+    // A fetch() function that protects against SSRF attacks, large responses &
+    // known bad domains. This function can safely be used to fetch user
+    // provided URLs (unless "disableSsrfProtection" is true, of course).
+    const safeFetch = safeFetchWrap({
+      allowHttp: cfg.fetch.disableSsrfProtection,
+      responseMaxSize: 512 * 1024, // 512kB
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
+      fetch: async (input, init) => {
+        const request = input instanceof Request ? input : null
+        const method = init?.method ?? request?.method ?? 'GET'
+        const uri = request?.url ?? String(input)
+        fetchLogger.debug({ method, uri }, 'fetch')
+        return globalThis.fetch(input, init)
+      },
+    })
+
+    const authProvider = cfg.oauth.provider
+      ? new PdsOAuthProvider({
+          issuer: cfg.oauth.issuer,
+          keyset: [
+            // Note: OpenID compatibility would require an RS256 private key in this list
+            await JoseKey.fromKeyLike(jwtSecretKey, undefined, 'HS256'),
+          ],
+          accountManager,
+          actorStore,
+          localViewer,
+          redis: redisScratch,
+          dpopSecret: secrets.dpopSecret,
+          customization: cfg.oauth.provider.customization,
+          safeFetch,
+        })
+      : undefined
+
+    const oauthVerifier: OAuthVerifier =
+      authProvider ?? // OAuthProvider extends OAuthVerifier
+      new OAuthVerifier({
+        issuer: cfg.oauth.issuer,
+        keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
+        dpopSecret: secrets.dpopSecret,
+        redis: redisScratch,
+      })
+
+    const authVerifier = new AuthVerifier(
+      accountManager,
+      idResolver,
+      oauthVerifier,
+      {
+        publicUrl: cfg.service.publicUrl,
+        jwtKey: jwtPublicKey ?? jwtSecretKey,
+        adminPass: secrets.adminPassword,
+        dids: {
+          pds: cfg.service.did,
+          entryway: cfg.entryway?.did,
+          modService: cfg.modService?.did,
+        },
+      },
+    )
+
     return new AppContext({
       actorStore,
       blobstore,
@@ -236,12 +327,15 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
+      ratelimitCreator,
       crawlers,
       appViewAgent,
       moderationAgent,
       reportingAgent,
       entrywayAgent,
+      safeFetch,
       authVerifier,
+      authProvider,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),

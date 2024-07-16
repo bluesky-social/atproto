@@ -3,6 +3,7 @@ export interface Actor {
   handle: string | null
   indexedAt: string
   takedownRef: string | null
+  upstreamStatus: string | null
 }
 
 export const tableName = 'actor'

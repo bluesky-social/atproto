@@ -36,6 +36,7 @@ describe('account deletion', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     mailer = ctx.mailer
     agent = new AtpAgent({ service: network.pds.url })
@@ -142,10 +143,18 @@ describe('account deletion', () => {
     expect(updatedDbContents.userAccounts).toEqual(
       initialDbContents.userAccounts.filter((row) => row.did !== carol.did),
     )
-    // check all seqs for this did are gone, except for the tombstone
+    // check we didn't touch other user seqs
     expect(
-      updatedDbContents.repoSeqs.filter((row) => row.eventType !== 'tombstone'),
+      updatedDbContents.repoSeqs.filter((row) => row.did !== carol.did),
     ).toEqual(initialDbContents.repoSeqs.filter((row) => row.did !== carol.did))
+    // check all seqs for this did are gone, except for the tombstone & account events
+    expect(
+      updatedDbContents.repoSeqs
+        .filter((row) => row.did === carol.did)
+        .every(
+          (row) => row.eventType === 'tombstone' || row.eventType === 'account',
+        ),
+    ).toBe(true)
     // check we do have a tombstone for this did
     expect(
       updatedDbContents.repoSeqs.filter(
@@ -182,6 +191,13 @@ describe('account deletion', () => {
     await expect(attempt1).rejects.toThrow(BlobNotFoundError)
     const attempt2 = blobstore.getBytes(second)
     await expect(attempt2).rejects.toThrow(BlobNotFoundError)
+  })
+
+  it('maintains blobs from other actors', async () => {
+    const bobBlobstore = network.pds.ctx.blobstore(sc.dids.bob)
+    const [img] = sc.replies[sc.dids.bob][0].images
+    const attempt = bobBlobstore.getBytes(img.image.ref)
+    await expect(attempt).resolves.toBeDefined()
   })
 
   it('can delete an empty user', async () => {

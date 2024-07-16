@@ -15,7 +15,7 @@ export interface QueryParams {
   collection: string
   /** Record Key */
   rkey: string
-  /** An optional past commit CID. */
+  /** DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit */
   commit?: string
 }
 
@@ -31,6 +31,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?:
+    | 'RecordNotFound'
+    | 'RepoNotFound'
+    | 'RepoTakendown'
+    | 'RepoSuspended'
+    | 'RepoDeactivated'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

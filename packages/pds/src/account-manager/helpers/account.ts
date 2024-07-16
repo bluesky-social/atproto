@@ -16,7 +16,15 @@ export type AvailabilityFlags = {
   includeDeactivated?: boolean
 }
 
-const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
+export enum AccountStatus {
+  Active = 'active',
+  Takendown = 'takendown',
+  Suspended = 'suspended',
+  Deleted = 'deleted',
+  Deactivated = 'deactivated',
+}
+
+export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
   return db.db
@@ -172,7 +180,10 @@ export const updateEmail = async (
     await db.executeWithRetry(
       db.db
         .updateTable('account')
-        .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+        .set({
+          email: email.toLowerCase(),
+          emailConfirmedAt: null,
+        })
         .where('did', '=', did),
     )
   } catch (err) {
@@ -196,19 +207,21 @@ export const setEmailConfirmedAt = async (
   )
 }
 
-export const getAccountTakedownStatus = async (
+export const getAccountAdminStatus = async (
   db: AccountDb,
   did: string,
-): Promise<StatusAttr | null> => {
+): Promise<{ takedown: StatusAttr; deactivated: StatusAttr } | null> => {
   const res = await db.db
     .selectFrom('actor')
-    .select('takedownRef')
+    .select(['takedownRef', 'deactivatedAt'])
     .where('did', '=', did)
     .executeTakeFirst()
   if (!res) return null
-  return res.takedownRef
+  const takedown = res.takedownRef
     ? { applied: true, ref: res.takedownRef }
     : { applied: false }
+  const deactivated = res.deactivatedAt ? { applied: true } : { applied: false }
+  return { takedown, deactivated }
 }
 
 export const updateAccountTakedownStatus = async (
@@ -250,4 +263,21 @@ export const activateAccount = async (db: AccountDb, did: string) => {
       })
       .where('did', '=', did),
   )
+}
+
+export const formatAccountStatus = (
+  account: null | {
+    takedownRef: string | null
+    deactivatedAt: string | null
+  },
+) => {
+  if (!account) {
+    return { active: false, status: AccountStatus.Deleted } as const
+  } else if (account.takedownRef) {
+    return { active: false, status: AccountStatus.Takendown } as const
+  } else if (account.deactivatedAt) {
+    return { active: false, status: AccountStatus.Deactivated } as const
+  } else {
+    return { active: true, status: undefined } as const
+  }
 }

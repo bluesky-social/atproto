@@ -4,11 +4,21 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { assertValidDidDocumentForService } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
-    auth: ctx.authVerifier.accessNotAppPassword,
-    handler: async ({ auth }) => {
+    auth: ctx.authVerifier.accessFull(),
+    handler: async ({ auth, req }) => {
+      // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.activateAccount(
+          undefined,
+          authPassthru(req, true),
+        )
+        return
+      }
+
       const requester = auth.credentials.did
 
       await assertValidDidDocumentForService(ctx, requester)
@@ -36,7 +46,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // @NOTE: we're over-emitting for now for backwards compatibility, can reduce this in the future
-      await ctx.sequencer.sequenceIdentityEvt(requester)
+      const status = await ctx.accountManager.getAccountStatus(requester)
+      await ctx.sequencer.sequenceAccountEvt(requester, status)
       await ctx.sequencer.sequenceHandleUpdate(
         requester,
         account.handle ?? INVALID_HANDLE,

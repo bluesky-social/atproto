@@ -19,6 +19,12 @@ export default async (sc: SeedClient) => {
     users.bob.selfLabels,
   )
 
+  await sc.agent.api.chat.bsky.actor.declaration.create(
+    { repo: sc.dids.dan },
+    { allowIncoming: 'none' },
+    sc.getHeaders(sc.dids.dan),
+  )
+
   return sc
 }
 

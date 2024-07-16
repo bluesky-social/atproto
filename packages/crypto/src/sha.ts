@@ -2,6 +2,7 @@ import * as noble from '@noble/hashes/sha256'
 import * as uint8arrays from 'uint8arrays'
 
 // takes either bytes of utf8 input
+// @TODO this can be sync
 export const sha256 = async (
   input: Uint8Array | string,
 ): Promise<Uint8Array> => {
@@ -10,6 +11,7 @@ export const sha256 = async (
   return noble.sha256(bytes)
 }
 
+// @TODO this can be sync
 export const sha256Hex = async (
   input: Uint8Array | string,
 ): Promise<string> => {

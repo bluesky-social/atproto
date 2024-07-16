@@ -1,13 +1,13 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { CommitData } from '@atproto/repo'
-import { PreparedWrite } from '@atproto/pds/src/repo'
-import * as sequencer from '@atproto/pds/src/sequencer'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { DatabaseSchemaType } from '../../../src/data-plane/server/db/database-schema'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { PreparedWrite, sequencer } from '@atproto/pds'
+import { CommitData } from '@atproto/repo'
 import { ids } from '../../../src/lexicon/lexicons'
 import { forSnapshot } from '../../_util'
-import { Database } from '../../../src'
+
+type Database = TestNetwork['bsky']['db']
 
 describe('sync', () => {
   let network: TestNetwork
@@ -86,7 +86,7 @@ describe('sync', () => {
       const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
       evt.blocks = new Uint8Array() // bad blocks
       seqEvt.event = cborEncode(evt)
-      await network.pds.ctx.sequencer.sequenceEvt(seqEvt)
+      return await network.pds.ctx.sequencer.sequenceEvt(seqEvt)
     }
     // create account and index the initial commit event
     await sc.createAccount('jack', {

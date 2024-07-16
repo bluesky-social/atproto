@@ -31,14 +31,18 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer, includeTakedowns }
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
 
       const result = await getFollowers({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -104,20 +108,19 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton, params } = input
   const { subjectDid, followUris, cursor } = skeleton
-  const isTakendown = (did: string) =>
-    ctx.views.actorIsTakendown(did, hydration)
+  const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
   if (
     !subject ||
-    (!params.hydrateCtx.includeTakedowns && isTakendown(subjectDid))
+    (!params.hydrateCtx.includeTakedowns && isNoHosted(subjectDid))
   ) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
   const followers = mapDefined(followUris, (followUri) => {
     const followerDid = didFromUri(followUri)
-    if (!params.hydrateCtx.includeTakedowns && isTakendown(followerDid)) {
+    if (!params.hydrateCtx.includeTakedowns && isNoHosted(followerDid)) {
       return
     }
     return ctx.views.profile(didFromUri(followUri), hydration)

@@ -56,7 +56,7 @@ export class TestOzone {
       version: '0.0.0',
       port,
       didPlcUrl: config.plcUrl,
-      publicUrl: 'https://ozone.public.url',
+      publicUrl: url,
       serverDid,
       signingKeyHex,
       ...config,
@@ -111,15 +111,33 @@ export class TestOzone {
     return new ModeratorClient(this)
   }
 
-  addAdminDid(did: string) {
+  async addAdminDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleAdmin',
+    })
     this.ctx.cfg.access.admins.push(did)
   }
 
-  addModeratorDid(did: string) {
+  async addModeratorDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleModerator',
+    })
     this.ctx.cfg.access.moderators.push(did)
   }
 
-  addTriageDid(did: string) {
+  async addTriageDid(did: string) {
+    await this.ctx.teamService(this.ctx.db).create({
+      did,
+      disabled: false,
+      lastUpdatedBy: this.ctx.cfg.service.did,
+      role: 'tools.ozone.team.defs#roleTriage',
+    })
     this.ctx.cfg.access.triage.push(did)
   }
 
@@ -128,8 +146,8 @@ export class TestOzone {
       role === 'admin'
         ? this.adminAccnt
         : role === 'moderator'
-        ? this.moderatorAccnt
-        : this.triageAccnt
+          ? this.moderatorAccnt
+          : this.triageAccnt
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,

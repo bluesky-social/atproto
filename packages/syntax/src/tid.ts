@@ -1,5 +1,5 @@
 export const ensureValidTid = (tid: string): void => {
-  if (tid.length != 13) {
+  if (tid.length !== 13) {
     throw new InvalidTidError('TID must be 13 characters')
   }
   // simple regex to enforce most constraints via just regex and length.

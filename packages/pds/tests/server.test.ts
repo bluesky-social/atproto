@@ -64,7 +64,7 @@ describe('server', () => {
       await axios.post(
         `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
         {
-          data: 'x'.repeat(100 * 1024), // 100kb
+          data: 'x'.repeat(150 * 1024), // 150kb
         },
         { headers: sc.getHeaders(alice) },
       )

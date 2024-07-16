@@ -8,6 +8,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/pds ./packages/pds
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
@@ -21,14 +22,22 @@ COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/repo ./packages/repo
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
+COPY ./packages/oauth/jwk ./packages/oauth/jwk
+COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
+COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
+COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/internal/pipe ./packages/internal/pipe
+COPY ./packages/internal/fetch ./packages/internal/fetch
+COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
+COPY ./packages/internal/simple-store ./packages/internal/simple-store
+COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
+COPY ./packages/internal/rollup-plugin-bundle-manifest ./packages/internal/rollup-plugin-bundle-manifest
 COPY ./services/pds ./services/pds
 
 # install all deps
 RUN pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
-RUN ATP_BUILD_SHALLOW=true pnpm build > /dev/null
-# update main with publishConfig
-RUN pnpm update-main-to-dist > /dev/null
+RUN pnpm build > /dev/null
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
@@ -57,7 +66,7 @@ ENV UV_USE_IO_URING=0
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "index.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "--require=./tracer.js", "index.js"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"

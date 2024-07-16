@@ -30,42 +30,36 @@ describe('ozone query labels', () => {
         src: EXAMPLE_LABELER,
         uri: 'did:example:blah',
         val: 'spam',
-        neg: false,
         cts: new Date().toISOString(),
       },
       {
         src: EXAMPLE_LABELER,
         uri: 'did:example:blah',
         val: 'impersonation',
-        neg: false,
         cts: new Date().toISOString(),
       },
       {
         src: EXAMPLE_LABELER,
         uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde',
         val: 'spam',
-        neg: false,
         cts: new Date().toISOString(),
       },
       {
         src: EXAMPLE_LABELER,
         uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg',
         val: 'spam',
-        neg: false,
         cts: new Date().toISOString(),
       },
       {
         src: EXAMPLE_LABELER,
         uri: 'at://did:example:blah/app.bsky.actor.profile/self',
         val: 'spam',
-        neg: false,
         cts: new Date().toISOString(),
       },
       {
         src: EXAMPLE_LABELER,
         uri: 'did:example:thing',
         val: 'spam',
-        neg: false,
         cts: new Date().toISOString(),
       },
     ]
@@ -157,12 +151,14 @@ describe('ozone query labels', () => {
     const newSigningKey = await Secp256k1Keypair.create()
     const newSigningKeyId = await getSigningKeyId(ctx.db, newSigningKey.did())
     ctx.devOverride({
+      // @ts-ignore
       modService: ModerationService.creator(
         newSigningKey,
         newSigningKeyId,
         ctx.cfg,
         modSrvc.backgroundQueue,
         ctx.idResolver,
+        // @ts-ignore
         modSrvc.eventPusher,
         modSrvc.appviewAgent,
         ctx.serviceAuthHeaders,

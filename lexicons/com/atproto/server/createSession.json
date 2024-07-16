@@ -15,7 +15,8 @@
               "type": "string",
               "description": "Handle or other identifier supported by the server for the authenticating user."
             },
-            "password": { "type": "string" }
+            "password": { "type": "string" },
+            "authFactorToken": { "type": "string" }
           }
         }
       },
@@ -31,11 +32,21 @@
             "did": { "type": "string", "format": "did" },
             "didDoc": { "type": "unknown" },
             "email": { "type": "string" },
-            "emailConfirmed": { "type": "boolean" }
+            "emailConfirmed": { "type": "boolean" },
+            "emailAuthFactor": { "type": "boolean" },
+            "active": { "type": "boolean" },
+            "status": {
+              "type": "string",
+              "description": "If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.",
+              "knownValues": ["takendown", "suspended", "deactivated"]
+            }
           }
         }
       },
-      "errors": [{ "name": "AccountTakedown" }]
+      "errors": [
+        { "name": "AccountTakedown" },
+        { "name": "AuthFactorTokenRequired" }
+      ]
     }
   }
 }

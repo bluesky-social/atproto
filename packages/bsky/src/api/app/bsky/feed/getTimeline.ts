@@ -26,16 +26,19 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      const result = await getTimeline({ ...params, hydrateCtx }, ctx)
+      const result = await getTimeline(
+        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        ctx,
+      )
 
       const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
 
       return {
         encoding: 'application/json',
         body: result,
-        headers: resHeaders({ labelers, repoRev }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers, repoRev }),
       }
     },
   })
@@ -86,7 +89,8 @@ const noBlocksOrMutes = (inputs: {
       !bam.authorBlocked &&
       !bam.authorMuted &&
       !bam.originatorBlocked &&
-      !bam.originatorMuted
+      !bam.originatorMuted &&
+      !bam.ancestorAuthorBlocked
     )
   })
   return skeleton

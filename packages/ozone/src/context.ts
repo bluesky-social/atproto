@@ -1,5 +1,6 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
@@ -17,18 +18,28 @@ import {
 import { BlobDiverter } from './daemon/blob-diverter'
 import { AuthVerifier } from './auth-verifier'
 import { ImageInvalidator } from './image-invalidator'
-import { getSigningKeyId } from './util'
+import { TeamService, TeamServiceCreator } from './team'
+import {
+  defaultLabelerHeader,
+  getSigningKeyId,
+  LABELER_HEADER_NAME,
+  ParsedLabelers,
+  parseLabelerHeader,
+} from './util'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
+  chatAgent: AtpAgent | undefined
   blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
+  didCache: DidCache
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
@@ -37,7 +48,10 @@ export type AppContextOptions = {
 }
 
 export class AppContext {
-  constructor(private opts: AppContextOptions, private secrets: OzoneSecrets) {}
+  constructor(
+    private opts: AppContextOptions,
+    private secrets: OzoneSecrets,
+  ) {}
 
   static async fromConfig(
     cfg: OzoneConfig,
@@ -57,9 +71,17 @@ export class AppContext {
     const pdsAgent = cfg.pds
       ? new AtpAgent({ service: cfg.pds.url })
       : undefined
+    const chatAgent = cfg.chat
+      ? new AtpAgent({ service: cfg.chat.url })
+      : undefined
 
+    const didCache = new MemoryCache(
+      cfg.identity.cacheStaleTTL,
+      cfg.identity.cacheMaxTTL,
+    )
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
+      didCache,
     })
 
     const createAuthHeaders = (aud: string) =>
@@ -93,15 +115,14 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
+    const teamService = TeamService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
     const authVerifier = new AuthVerifier(idResolver, {
       serviceDid: cfg.service.did,
-      admins: cfg.access.admins,
-      moderators: cfg.access.moderators,
-      triage: cfg.access.triage,
       adminPassword: secrets.adminPassword,
+      teamService: teamService(db),
     })
 
     return new AppContext(
@@ -110,10 +131,13 @@ export class AppContext {
         cfg,
         modService,
         communicationTemplateService,
+        teamService,
         appviewAgent,
         pdsAgent,
+        chatAgent,
         signingKey,
         signingKeyId,
+        didCache,
         idResolver,
         backgroundQueue,
         sequencer,
@@ -153,12 +177,20 @@ export class AppContext {
     return this.opts.communicationTemplateService
   }
 
+  get teamService(): TeamServiceCreator {
+    return this.opts.teamService
+  }
+
   get appviewAgent(): AtpAgent {
     return this.opts.appviewAgent
   }
 
   get pdsAgent(): AtpAgent | undefined {
     return this.opts.pdsAgent
+  }
+
+  get chatAgent(): AtpAgent | undefined {
+    return this.opts.chatAgent
   }
 
   get signingKey(): Keypair {
@@ -171,6 +203,10 @@ export class AppContext {
 
   get plcClient(): plc.Client {
     return new plc.Client(this.cfg.identity.plcUrl)
+  }
+
+  get didCache(): DidCache {
+    return this.opts.didCache
   }
 
   get idResolver(): IdResolver {
@@ -209,11 +245,30 @@ export class AppContext {
     return this.serviceAuthHeaders(this.cfg.appview.did)
   }
 
+  async chatAuth() {
+    if (!this.cfg.chat) {
+      throw new Error('No chat service configured')
+    }
+    return this.serviceAuthHeaders(this.cfg.chat.did)
+  }
+
   devOverride(overrides: Partial<AppContextOptions>) {
     this.opts = {
       ...this.opts,
       ...overrides,
     }
+  }
+
+  reqLabelers(req: express.Request): ParsedLabelers {
+    const val = req.header(LABELER_HEADER_NAME)
+    let parsed: ParsedLabelers | null
+    try {
+      parsed = parseLabelerHeader(val, this.cfg.service.did)
+    } catch (err) {
+      parsed = null
+    }
+    if (!parsed) return defaultLabelerHeader([])
+    return parsed
   }
 }
 export default AppContext

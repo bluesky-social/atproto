@@ -7,6 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import AtpAgent from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
+import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -22,6 +23,7 @@ import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -29,6 +31,7 @@ export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
+export { BackgroundQueue } from './data-plane/server/background'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -47,7 +50,7 @@ export class BskyAppView {
   }): BskyAppView {
     const { config, signingKey } = opts
     const app = express()
-    app.use(cors())
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
 
@@ -73,11 +76,22 @@ export class BskyAppView {
     const searchAgent = config.searchUrl
       ? new AtpAgent({ service: config.searchUrl })
       : undefined
+
+    const suggestionsAgent = config.suggestionsUrl
+      ? new AtpAgent({ service: config.suggestionsUrl })
+      : undefined
+    if (suggestionsAgent && config.suggestionsApiKey) {
+      suggestionsAgent.api.setHeader(
+        'authorization',
+        `Bearer ${config.suggestionsApiKey}`,
+      )
+    }
+
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane)
+    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
     const views = new Views(imgUriBuilder)
 
     const bsyncClient = createBsyncClient({
@@ -98,14 +112,21 @@ export class BskyAppView {
 
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
+      alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
+    })
+
+    const featureGates = new FeatureGates({
+      apiKey: config.statsigKey,
+      env: config.statsigEnv,
     })
 
     const ctx = new AppContext({
       cfg: config,
       dataplane,
       searchAgent,
+      suggestionsAgent,
       hydrator,
       views,
       signingKey,
@@ -113,6 +134,7 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       authVerifier,
+      featureGates,
     })
 
     let server = createServer({
@@ -139,6 +161,7 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    await this.ctx.featureGates.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -151,6 +174,7 @@ export class BskyAppView {
 
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
+    this.ctx.featureGates.destroy()
   }
 }
 

@@ -1,6 +1,7 @@
 import path from 'node:path'
 import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
+import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -22,6 +23,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
+    contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
@@ -54,6 +56,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     blobstoreCfg = {
       provider: 's3',
       bucket: env.blobstoreS3Bucket,
+      uploadTimeoutMs: env.blobstoreS3UploadTimeoutMs || 20000,
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
@@ -232,6 +235,55 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
+  const fetchCfg: ServerConfig['fetch'] = {
+    disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
+  }
+
+  const oauthCfg: ServerConfig['oauth'] = entrywayCfg
+    ? {
+        issuer: entrywayCfg.url,
+        provider: false,
+      }
+    : {
+        issuer: serviceCfg.publicUrl,
+        provider: {
+          customization: {
+            name: env.serviceName ?? 'Personal PDS',
+            logo: env.logoUrl,
+            colors: {
+              brand: env.brandColor,
+              error: env.errorColor,
+              warning: env.warningColor,
+            },
+            links: [
+              {
+                title: 'Home',
+                href: env.homeUrl,
+                rel: 'bookmark',
+              },
+              {
+                title: 'Terms of Service',
+                href: env.termsOfServiceUrl,
+                rel: 'terms-of-service',
+              },
+              {
+                title: 'Privacy Policy',
+                href: env.privacyPolicyUrl,
+                rel: 'privacy-policy',
+              },
+              {
+                title: 'Support',
+                href: env.supportUrl,
+                rel: 'help',
+              },
+            ].filter(
+              (f): f is typeof f & { href: NonNullable<(typeof f)['href']> } =>
+                f.href != null,
+            ),
+          },
+        },
+      }
+
   return {
     service: serviceCfg,
     db: dbCfg,
@@ -249,6 +301,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
+    fetch: fetchCfg,
+    oauth: oauthCfg,
   }
 }
 
@@ -269,6 +323,8 @@ export type ServerConfig = {
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
+  fetch: FetchConfig
+  oauth: OAuthConfig
 }
 
 export type ServiceConfig = {
@@ -281,6 +337,7 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
   acceptingImports: boolean
   blobUploadLimit: number
+  contactEmailAddress?: string
   devMode: boolean
 }
 
@@ -303,6 +360,7 @@ export type S3BlobstoreConfig = {
   region?: string
   endpoint?: string
   forcePathStyle?: boolean
+  uploadTimeoutMs?: number
   credentials?: {
     accessKeyId: string
     secretAccessKey: string
@@ -331,6 +389,19 @@ export type EntrywayConfig = {
   did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
+}
+
+export type FetchConfig = {
+  disableSsrfProtection: boolean
+}
+
+export type OAuthConfig = {
+  issuer: string
+  provider:
+    | false
+    | {
+        customization: Customization
+      }
 }
 
 export type InvitesConfig =

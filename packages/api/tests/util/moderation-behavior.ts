@@ -63,9 +63,9 @@ expect.extend({
   toBeModerationResult(
     actual: ModerationUI,
     expected: ModerationTestSuiteResultFlag[] | undefined,
-    context: string = '',
+    context = '',
     stringifiedResult: string | undefined = undefined,
-    ignoreCause = false,
+    _ignoreCause = false,
   ) {
     const fail = (msg: string) => ({
       pass: false,

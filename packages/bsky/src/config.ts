@@ -7,6 +7,7 @@ export interface ServerConfigValues {
   port?: number
   publicUrl?: string
   serverDid: string
+  alternateAudienceDids: string[]
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -20,6 +21,8 @@ export interface ServerConfigValues {
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
   searchUrl?: string
+  suggestionsUrl?: string
+  suggestionsApiKey?: string
   cdnUrl?: string
   blobRateLimitBypassKey?: string
   blobRateLimitBypassHostname?: string
@@ -32,6 +35,8 @@ export interface ServerConfigValues {
   labelsFromIssuerDids?: string[]
   // misc/dev
   blobCacheLocation?: string
+  statsigKey?: string
+  statsigEnv?: string
 }
 
 export class ServerConfig {
@@ -46,6 +51,9 @@ export class ServerConfig {
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
+    const alternateAudienceDids = process.env.BSKY_ALT_AUDIENCE_DIDS
+      ? process.env.BSKY_ALT_AUDIENCE_DIDS.split(',')
+      : []
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
@@ -55,6 +63,8 @@ export class ServerConfig {
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
       undefined
+    const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
+    const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -94,16 +104,27 @@ export class ServerConfig {
     assert(modServiceDid)
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+    const statsigKey =
+      process.env.NODE_ENV === 'test'
+        ? 'secret-key'
+        : process.env.BSKY_STATSIG_KEY || undefined
+    const statsigEnv =
+      process.env.NODE_ENV === 'test'
+        ? 'test'
+        : process.env.BSKY_STATSIG_ENV || 'development'
     return new ServerConfig({
       version,
       debugMode,
       port,
       publicUrl,
       serverDid,
+      alternateAudienceDids,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       searchUrl,
+      suggestionsUrl,
+      suggestionsApiKey,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -121,6 +142,8 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
+      statsigKey,
+      statsigEnv,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -156,6 +179,10 @@ export class ServerConfig {
 
   get serverDid() {
     return this.cfg.serverDid
+  }
+
+  get alternateAudienceDids() {
+    return this.cfg.alternateAudienceDids
   }
 
   get dataplaneUrls() {
@@ -206,6 +233,14 @@ export class ServerConfig {
     return this.cfg.searchUrl
   }
 
+  get suggestionsUrl() {
+    return this.cfg.suggestionsUrl
+  }
+
+  get suggestionsApiKey() {
+    return this.cfg.suggestionsApiKey
+  }
+
   get cdnUrl() {
     return this.cfg.cdnUrl
   }
@@ -240,6 +275,14 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get statsigKey() {
+    return this.cfg.statsigKey
+  }
+
+  get statsigEnv() {
+    return this.cfg.statsigEnv
   }
 }
 

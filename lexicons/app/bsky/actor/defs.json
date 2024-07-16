@@ -13,12 +13,17 @@
           "maxGraphemes": 64,
           "maxLength": 640
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        }
+        },
+        "createdAt": { "type": "string", "format": "datetime" }
       }
     },
     "profileView": {
@@ -37,8 +42,13 @@
           "maxGraphemes": 256,
           "maxLength": 2560
         },
-        "avatar": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
+        "createdAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -62,8 +72,8 @@
           "maxGraphemes": 256,
           "maxLength": 2560
         },
-        "avatar": { "type": "string" },
-        "banner": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" },
+        "banner": { "type": "string", "format": "uri" },
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
@@ -71,7 +81,12 @@
           "type": "ref",
           "ref": "#profileAssociated"
         },
+        "joinedViaStarterPack": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#starterPackViewBasic"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
+        "createdAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
@@ -84,7 +99,19 @@
       "properties": {
         "lists": { "type": "integer" },
         "feedgens": { "type": "integer" },
-        "labeler": { "type": "boolean" }
+        "starterPacks": { "type": "integer" },
+        "labeler": { "type": "boolean" },
+        "chat": { "type": "ref", "ref": "#profileAssociatedChat" }
+      }
+    },
+    "profileAssociatedChat": {
+      "type": "object",
+      "required": ["allowIncoming"],
+      "properties": {
+        "allowIncoming": {
+          "type": "string",
+          "knownValues": ["all", "none", "following"]
+        }
       }
     },
     "viewerState": {
@@ -103,7 +130,28 @@
           "ref": "app.bsky.graph.defs#listViewBasic"
         },
         "following": { "type": "string", "format": "at-uri" },
-        "followedBy": { "type": "string", "format": "at-uri" }
+        "followedBy": { "type": "string", "format": "at-uri" },
+        "knownFollowers": {
+          "type": "ref",
+          "ref": "#knownFollowers"
+        }
+      }
+    },
+    "knownFollowers": {
+      "type": "object",
+      "description": "The subject's followers whom you also follow",
+      "required": ["count", "followers"],
+      "properties": {
+        "count": { "type": "integer" },
+        "followers": {
+          "type": "array",
+          "minLength": 0,
+          "maxLength": 5,
+          "items": {
+            "type": "ref",
+            "ref": "#profileViewBasic"
+          }
+        }
       }
     },
     "preferences": {
@@ -114,12 +162,15 @@
           "#adultContentPref",
           "#contentLabelPref",
           "#savedFeedsPref",
+          "#savedFeedsPrefV2",
           "#personalDetailsPref",
           "#feedViewPref",
           "#threadViewPref",
           "#interestsPref",
           "#mutedWordsPref",
-          "#hiddenPostsPref"
+          "#hiddenPostsPref",
+          "#bskyAppStatePref",
+          "#labelersPref"
         ]
       }
     },
@@ -143,6 +194,38 @@
         "visibility": {
           "type": "string",
           "knownValues": ["ignore", "show", "warn", "hide"]
+        }
+      }
+    },
+    "savedFeed": {
+      "type": "object",
+      "required": ["id", "type", "value", "pinned"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "knownValues": ["feed", "list", "timeline"]
+        },
+        "value": {
+          "type": "string"
+        },
+        "pinned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "savedFeedsPrefV2": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#savedFeed"
+          }
         }
       }
     },
@@ -320,6 +403,30 @@
           "type": "string",
           "format": "did"
         }
+      }
+    },
+    "bskyAppStatePref": {
+      "description": "A grab bag of state that's specific to the bsky.app program. Third-party apps shouldn't use this.",
+      "type": "object",
+      "properties": {
+        "activeProgressGuide": {
+          "type": "ref",
+          "ref": "#bskyAppProgressGuide"
+        },
+        "queuedNudges": {
+          "description": "An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user.",
+          "type": "array",
+          "maxLength": 1000,
+          "items": { "type": "string", "maxLength": 100 }
+        }
+      }
+    },
+    "bskyAppProgressGuide": {
+      "description": "If set, an active progress guide. Once completed, can be set to undefined. Should have unspecced fields tracking progress.",
+      "type": "object",
+      "required": ["guide"],
+      "properties": {
+        "guide": { "type": "string", "maxLength": 100 }
       }
     }
   }

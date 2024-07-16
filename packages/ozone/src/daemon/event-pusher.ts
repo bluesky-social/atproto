@@ -12,7 +12,7 @@ import { Insertable, Selectable } from 'kysely'
 type EventSubject = InputSchema['subject']
 
 type PollState = {
-  timer?: NodeJS.Timer
+  timer?: NodeJS.Timeout
   promise: Promise<void>
 }
 

@@ -6,6 +6,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./tsconfig ./tsconfig
 COPY ./packages/bsky ./packages/bsky
 COPY ./packages/api ./packages/api
 COPY ./packages/common ./packages/common
@@ -22,9 +23,7 @@ COPY ./services/bsky ./services/bsky
 # install all deps
 RUN pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
-RUN ATP_BUILD_SHALLOW=true pnpm build > /dev/null
-# update main with publishConfig
-RUN pnpm update-main-to-dist > /dev/null
+RUN pnpm build > /dev/null
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir

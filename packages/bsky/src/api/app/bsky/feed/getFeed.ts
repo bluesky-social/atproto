@@ -42,10 +42,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
+        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
+          ? req.headers['x-bsky-topics'].join(',')
+          : req.headers['x-bsky-topics'],
       })
       // @NOTE feed cursors should not be affected by appview swap
       const {
@@ -60,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
         body: result,
         headers: {
           ...(feedResHeaders ?? {}),
-          ...resHeaders({ labelers }),
+          ...resHeaders({ labelers: hydrateCtx.labelers }),
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }
@@ -82,7 +85,7 @@ const skeleton = async (
 
   return {
     cursor,
-    items: algoItems.map(toFeedItem),
+    items: algoItems,
     timerSkele: timerSkele.stop(),
     timerHydr: new ServerTimer('hydr').start(),
     resHeaders,
@@ -111,7 +114,8 @@ const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
       !bam.authorBlocked &&
       !bam.authorMuted &&
       !bam.originatorBlocked &&
-      !bam.originatorMuted
+      !bam.originatorMuted &&
+      !bam.ancestorAuthorBlocked
     )
   })
   return skeleton
@@ -122,7 +126,12 @@ const presentation = (
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) => {
-    return ctx.views.feedViewPost(item, hydration)
+    const post = ctx.views.feedViewPost(item, hydration)
+    if (!post) return
+    return {
+      ...post,
+      feedContext: item.feedContext,
+    }
   }).slice(0, params.limit)
   return {
     feed,
@@ -142,7 +151,7 @@ type Params = GetFeedParams & {
 }
 
 type Skeleton = {
-  items: FeedItem[]
+  items: AlgoResponseItem[]
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
   resHeaders?: Record<string, string>
   cursor?: string
@@ -224,9 +233,12 @@ const skeletonFromFeedGen = async (
 
   const { feed: feedSkele, ...skele } = skeleton
   const feedItems = feedSkele.map((item) => ({
-    itemUri:
-      typeof item.reason?.repost === 'string' ? item.reason.repost : item.post,
-    postUri: item.post,
+    post: { uri: item.post },
+    repost:
+      typeof item.reason?.repost === 'string'
+        ? { uri: item.reason.repost }
+        : undefined,
+    feedContext: item.feedContext,
   }))
 
   return { ...skele, resHeaders, feedItems }
@@ -238,15 +250,6 @@ export type AlgoResponse = {
   cursor?: string
 }
 
-export type AlgoResponseItem = {
-  itemUri: string
-  postUri: string
+export type AlgoResponseItem = FeedItem & {
+  feedContext?: string
 }
-
-export const toFeedItem = (feedItem: AlgoResponseItem): FeedItem => ({
-  post: { uri: feedItem.postUri },
-  repost:
-    feedItem.itemUri === feedItem.postUri
-      ? undefined
-      : { uri: feedItem.itemUri },
-})

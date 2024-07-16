@@ -21,8 +21,6 @@ import {
 } from './types'
 import { BSKY_LABELER_DID } from './const'
 
-const MAX_MOD_AUTHORITIES = 3
-const MAX_LABELERS = 10
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
@@ -91,6 +89,7 @@ export class AtpAgent {
     inst.labelersHeader = this.labelersHeader
     inst.proxyHeader = this.proxyHeader
     inst.pdsUrl = this.pdsUrl
+    inst.api.xrpc.uri = this.pdsUrl || this.service
   }
 
   withProxy(serviceType: AtprotoServiceType, did: string) {
@@ -147,6 +146,8 @@ export class AtpAgent {
         did: res.data.did,
         email: opts.email,
         emailConfirmed: false,
+        emailAuthFactor: false,
+        active: true,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -172,6 +173,7 @@ export class AtpAgent {
       const res = await this.api.com.atproto.server.createSession({
         identifier: opts.identifier,
         password: opts.password,
+        authFactorToken: opts.authFactorToken,
       })
       this.session = {
         accessJwt: res.data.accessJwt,
@@ -180,6 +182,9 @@ export class AtpAgent {
         did: res.data.did,
         email: res.data.email,
         emailConfirmed: res.data.emailConfirmed,
+        emailAuthFactor: res.data.emailAuthFactor,
+        active: res.data.active ?? true,
+        status: res.data.status,
       }
       this._updateApiEndpoint(res.data.didDoc)
       return res
@@ -214,6 +219,9 @@ export class AtpAgent {
       this.session.email = res.data.email
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
+      this.session.emailAuthFactor = res.data.emailAuthFactor
+      this.session.active = res.data.active ?? true
+      this.session.status = res.data.status
       this._updateApiEndpoint(res.data.didDoc)
       this._persistSession?.('update', this.session)
       return res
@@ -258,14 +266,26 @@ export class AtpAgent {
         'atproto-proxy': this.proxyHeader,
       }
     }
+
+    const labelerHeaderName = 'atproto-accept-labelers'
+    const labelerHeaders = AtpAgent.appLabelers
+      .map((str) => `${str};redact`)
+      .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
+
+    // Besides labelers configured via appLabelers and labelersHeader
+    // respect any additional labelers configured via the request headers
+    if (reqHeaders[labelerHeaderName]) {
+      labelerHeaders.push(
+        // Allow for headers to be comma-separated with or without spaces in between by trimming after split
+        ...reqHeaders[labelerHeaderName].split(',').map((str) => str.trim()),
+      )
+    }
+
     reqHeaders = {
       ...reqHeaders,
-      'atproto-accept-labelers': AtpAgent.appLabelers
-        .map((str) => `${str};redact`)
-        .concat(this.labelersHeader.filter((str) => str.startsWith('did:')))
-        .slice(0, MAX_LABELERS)
-        .join(', '),
+      [labelerHeaderName]: labelerHeaders.join(', '),
     }
+
     return reqHeaders
   }
 

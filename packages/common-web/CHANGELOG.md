@@ -1,5 +1,17 @@
 # @atproto/common-web
 
+## 0.3.0
+
+### Minor Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
+## 0.2.4
+
+### Patch Changes
+
+- [#2302](https://github.com/bluesky-social/atproto/pull/2302) [`4eaadc0ac`](https://github.com/bluesky-social/atproto/commit/4eaadc0acb6b73b9745dd7a2b929d02e58083ab0) Thanks [@dholms](https://github.com/dholms)! - Added methods for parsing labeler verification methods and services in DID Documents
+
 ## 0.2.3
 
 ### Patch Changes

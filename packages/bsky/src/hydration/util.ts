@@ -5,13 +5,17 @@ import * as ui8 from 'uint8arrays'
 import { lexicons } from '../lexicon/lexicons'
 import { Record } from '../proto/bsky_pb'
 
-export class HydrationMap<T> extends Map<string, T | null> {
-  merge(map: HydrationMap<T>): HydrationMap<T> {
+export class HydrationMap<T> extends Map<string, T | null> implements Merges {
+  merge(map: HydrationMap<T>): this {
     map.forEach((val, key) => {
       this.set(key, val)
     })
     return this
   }
+}
+
+export interface Merges {
+  merge<T extends this>(map: T): this
 }
 
 export type RecordInfo<T> = {
@@ -20,6 +24,36 @@ export type RecordInfo<T> = {
   sortedAt: Date
   takedownRef: string | undefined
 }
+
+export const mergeMaps = <V, M extends HydrationMap<V>>(
+  mapA?: M,
+  mapB?: M,
+): M | undefined => {
+  if (!mapA) return mapB
+  if (!mapB) return mapA
+  return mapA.merge(mapB)
+}
+
+export const mergeNestedMaps = <V, M extends HydrationMap<HydrationMap<V>>>(
+  mapA?: M,
+  mapB?: M,
+): M | undefined => {
+  if (!mapA) return mapB
+  if (!mapB) return mapA
+
+  for (const [key, map] of mapB) {
+    const merged = mergeMaps(mapA.get(key) ?? undefined, map ?? undefined)
+    mapA.set(key, merged ?? null)
+  }
+
+  return mapA
+}
+
+export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
+  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
+}
+
+export type ItemRef = { uri: string; cid?: string }
 
 export const parseRecord = <T>(
   entry: Record,
@@ -63,9 +97,7 @@ export const parseRecordBytes = <T>(
   return parseJsonBytes(bytes) as T
 }
 
-export const parseJsonBytes = (
-  bytes: Uint8Array | undefined,
-): JSON | undefined => {
+export const parseJsonBytes = (bytes: Uint8Array | undefined): unknown => {
   if (!bytes || bytes.byteLength === 0) return
   const parsed = JSON.parse(ui8.toString(bytes, 'utf8'))
   return parsed ?? undefined

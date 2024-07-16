@@ -35,6 +35,7 @@ describe('handles', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
     })
+    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
     agent = network.pds.getClient()

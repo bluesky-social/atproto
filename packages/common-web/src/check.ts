@@ -1,10 +1,11 @@
-import { ZodError } from 'zod'
+// Explicitly not using "zod" types here to avoid mismatching types due to
+// version differences.
 
 export interface Checkable<T> {
   parse: (obj: unknown) => T
   safeParse: (
     obj: unknown,
-  ) => { success: true; data: T } | { success: false; error: ZodError }
+  ) => { success: true; data: T } | { success: false; error: Error }
 }
 
 export interface Def<T> {

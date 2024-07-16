@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { viewer, labelers }
+      const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
 
       if (clearlyBadCursor(params.cursor)) {
         return {
@@ -53,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
           feeds: feedViews,
           cursor,
         },
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

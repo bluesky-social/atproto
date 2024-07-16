@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
-import { createSecretKeyObject } from '@atproto/pds/src/auth-verifier'
+import { createSecretKeyObject } from '@atproto/pds'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
@@ -45,6 +45,16 @@ export class TestPds {
       modServiceDid: 'did:example:invalid',
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
+      fetchDisableSsrfProtection: true,
+      serviceName: 'Development PDS',
+      brandColor: '#ffcb1e',
+      errorColor: undefined,
+      logoUrl:
+        'https://uxwing.com/wp-content/themes/uxwing/download/animals-and-birds/bee-icon.png',
+      homeUrl: 'https://bsky.social/',
+      termsOfServiceUrl: 'https://bsky.social/about/support/tos',
+      privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
+      supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
       ...config,
     }
     const cfg = pds.envToCfg(env)

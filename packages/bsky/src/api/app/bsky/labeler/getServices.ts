@@ -10,11 +10,11 @@ export default function (server: Server, ctx: AppContext) {
       const { dids, detailed } = params
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-
-      const hydration = await ctx.hydrator.hydrateLabelers(dids, {
+      const hydrateCtx = await ctx.hydrator.createContext({
         viewer,
         labelers,
       })
+      const hydration = await ctx.hydrator.hydrateLabelers(dids, hydrateCtx)
 
       const views = mapDefined(dids, (did) => {
         if (detailed) {
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           views,
         },
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })

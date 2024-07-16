@@ -26,6 +26,9 @@ export interface AtpSessionData {
   did: string
   email?: string
   emailConfirmed?: boolean
+  emailAuthFactor?: boolean
+  active: boolean
+  status?: string
 }
 
 /**
@@ -50,6 +53,7 @@ export interface AtpAgentOpts {
 export interface AtpAgentLoginOpts {
   identifier: string
   password: string
+  authFactorToken?: string | undefined
 }
 
 /**
@@ -110,13 +114,21 @@ export interface BskyInterestsPreference {
  * Bluesky preferences
  */
 export interface BskyPreferences {
+  /**
+   * @deprecated use `savedFeeds`
+   */
   feeds: {
     saved?: string[]
     pinned?: string[]
   }
+  savedFeeds: AppBskyActorDefs.SavedFeed[]
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   interests: BskyInterestsPreference
+  bskyAppState: {
+    queuedNudges: string[]
+    activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
+  }
 }

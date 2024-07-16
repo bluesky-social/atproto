@@ -7,7 +7,11 @@ Object {
       "$type": "app.bsky.labeler.defs#labelerView",
       "cid": "cids(0)",
       "creator": Object {
+        "associated": Object {
+          "labeler": true,
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -17,7 +21,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -25,7 +28,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -50,7 +52,11 @@ Object {
       "$type": "app.bsky.labeler.defs#labelerView",
       "cid": "cids(3)",
       "creator": Object {
+        "associated": Object {
+          "labeler": true,
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "did": "user(2)",
         "displayName": "bobby",
@@ -79,7 +85,11 @@ Object {
       "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(0)",
       "creator": Object {
+        "associated": Object {
+          "labeler": true,
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -89,7 +99,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-a",
@@ -97,7 +106,6 @@ Object {
           Object {
             "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
             "src": "user(0)",
             "uri": "record(3)",
             "val": "self-label-b",
@@ -130,7 +138,11 @@ Object {
       "$type": "app.bsky.labeler.defs#labelerViewDetailed",
       "cid": "cids(3)",
       "creator": Object {
+        "associated": Object {
+          "labeler": true,
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+        "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "did": "user(2)",
         "displayName": "bobby",

@@ -4,17 +4,15 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
+import {
+  ComAtprotoModerationDefs,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import {
   REASONMISLEADING,
   REASONSPAM,
-  REASONAPPEAL,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  REVIEWCLOSED,
-  REVIEWOPEN,
-  REVIEWESCALATED,
-} from '@atproto/api/src/client/types/tools/ozone/moderation/defs'
+import { REVIEWESCALATED } from '../src/lexicon/types/tools/ozone/moderation/defs'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork
@@ -74,26 +72,26 @@ describe('moderation-appeals', () => {
         subject: getBobsPostSubject(),
       })
 
-      await assertBobsPostStatus(REVIEWOPEN, undefined)
+      await assertBobsPostStatus(ToolsOzoneModerationDefs.REVIEWOPEN, undefined)
 
       // Create a report as normal user with appeal type
       expect(
         sc.createReport({
           reportedBy: sc.dids.carol,
-          reasonType: REASONAPPEAL,
+          reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
           reason: 'appealing',
           subject: getBobsPostSubject(),
         }),
       ).rejects.toThrow('You cannot appeal this report')
 
       // Verify that the appeal status did not change
-      await assertBobsPostStatus(REVIEWOPEN, undefined)
+      await assertBobsPostStatus(ToolsOzoneModerationDefs.REVIEWOPEN, undefined)
 
       // Emit report event as moderator
       await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONAPPEAL,
+          reportType: ComAtprotoModerationDefs.REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
       })
@@ -113,13 +111,13 @@ describe('moderation-appeals', () => {
       // Verify that the appeal status on carol's post is undefined
       await assertSubjectStatus(
         getCarolPostSubject().uri,
-        REVIEWOPEN,
+        ToolsOzoneModerationDefs.REVIEWOPEN,
         undefined,
       )
 
       await sc.createReport({
         reportedBy: sc.dids.carol,
-        reasonType: REASONAPPEAL,
+        reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
         reason: 'appealing',
         subject: getCarolPostSubject(),
       })
@@ -144,7 +142,7 @@ describe('moderation-appeals', () => {
       await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONAPPEAL,
+          reportType: ComAtprotoModerationDefs.REASONAPPEAL,
         },
         subject: getBobsPostSubject(),
       })
@@ -185,7 +183,7 @@ describe('moderation-appeals', () => {
       await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONAPPEAL,
+          reportType: ComAtprotoModerationDefs.REASONAPPEAL,
         },
         subject: getAlicesPostSubject(),
       })
@@ -235,7 +233,11 @@ describe('moderation-appeals', () => {
       })
 
       // Assert that status moved on to reviewClosed while appealed status is still true
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, true)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        ToolsOzoneModerationDefs.REVIEWCLOSED,
+        true,
+      )
 
       // Emit a resolveAppeal event
       await modClient.emitEvent({
@@ -247,7 +249,11 @@ describe('moderation-appeals', () => {
       })
 
       // Assert that status stayed the same while appealed status is still true
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, false)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        ToolsOzoneModerationDefs.REVIEWCLOSED,
+        false,
+      )
     })
   })
 })

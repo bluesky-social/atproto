@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`bsky actor likes feed views does not include reference lists in getActorLists 1`] = `
+Array [
+  Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "description": "",
+    "descriptionFacets": Array [],
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "listItemCount": 0,
+    "name": "cool curate list!",
+    "purpose": "app.bsky.graph.defs#curatelist",
+    "uri": "record(0)",
+  },
+]
+`;

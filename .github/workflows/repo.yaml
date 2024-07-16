@@ -14,44 +14,64 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - uses: actions/setup-node@v3
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
       - run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            packages/*/dist
+            packages/*/*/dist
+          retention-days: 1
   test:
     name: Test
+    needs: build
     strategy:
       matrix:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - uses: actions/setup-node@v3
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: packages
       - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
   verify:
     name: Verify
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - uses: actions/setup-node@v3
+          run_install: false
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm i --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: packages
       - run: pnpm verify

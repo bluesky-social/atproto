@@ -20,6 +20,12 @@ import {
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
 import AppContext from '../context'
+import { Member } from '../db/schema/member'
+import {
+  ROLEADMIN,
+  ROLEMODERATOR,
+  ROLETRIAGE,
+} from '../lexicon/types/tools/ozone/team/defs'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,
@@ -51,6 +57,7 @@ export const addAccountInfoToRepoViewDetail = (
     inviteNote: accountInfo.inviteNote,
     invites: accountInfo.invites,
     emailConfirmedAt: accountInfo.emailConfirmedAt,
+    deactivatedAt: accountInfo.deactivatedAt,
   }
 }
 
@@ -66,6 +73,7 @@ export const addAccountInfoToRepoView = (
     invitedBy: accountInfo.invitedBy,
     invitesDisabled: accountInfo.invitesDisabled,
     inviteNote: accountInfo.inviteNote,
+    deactivatedAt: accountInfo.deactivatedAt,
   }
 }
 
@@ -112,8 +120,20 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventReport',
   'tools.ozone.moderation.defs#modEventMute',
   'tools.ozone.moderation.defs#modEventUnmute',
+  'tools.ozone.moderation.defs#modEventMuteReporter',
+  'tools.ozone.moderation.defs#modEventUnmuteReporter',
   'tools.ozone.moderation.defs#modEventReverseTakedown',
   'tools.ozone.moderation.defs#modEventEmail',
   'tools.ozone.moderation.defs#modEventResolveAppeal',
   'tools.ozone.moderation.defs#modEventTag',
+  'tools.ozone.moderation.defs#modEventDivert',
 ])
+
+export const getMemberRole = (role: string) => {
+  if (memberRoles.has(role)) {
+    return role as Member['role']
+  }
+  throw new InvalidRequestError('Invalid member role')
+}
+
+const memberRoles = new Set([ROLEADMIN, ROLEMODERATOR, ROLETRIAGE])

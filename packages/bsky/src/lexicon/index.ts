@@ -17,6 +17,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -73,6 +74,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -104,29 +106,54 @@ import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -137,9 +164,24 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
+export const APP_BSKY_FEED = {
+  DefsRequestLess: 'app.bsky.feed.defs#requestLess',
+  DefsRequestMore: 'app.bsky.feed.defs#requestMore',
+  DefsClickthroughItem: 'app.bsky.feed.defs#clickthroughItem',
+  DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
+  DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
+  DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
+  DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
+  DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
+  DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
+  DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
+  DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
+}
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
+  DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -150,11 +192,13 @@ export class Server {
   xrpc: XrpcServer
   com: ComNS
   app: AppNS
+  chat: ChatNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.chat = new ChatNS(this)
   }
 }
 
@@ -284,6 +328,17 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  searchAccounts<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminSearchAccounts.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminSearchAccounts.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.searchAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -955,6 +1010,17 @@ export class ComAtprotoSyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRepoStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoSyncGetRepoStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoSyncGetRepoStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.sync.getRepoStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listBlobs<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1361,6 +1427,17 @@ export class AppBskyFeedNS {
     const nsid = 'app.bsky.feed.searchPosts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  sendInteractions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedSendInteractions.Handler<ExtractAuth<AV>>,
+      AppBskyFeedSendInteractions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.sendInteractions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class AppBskyGraphNS {
@@ -1368,6 +1445,17 @@ export class AppBskyGraphNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getActorStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetActorStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetActorStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getActorStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getBlocks<AV extends AuthVerifier>(
@@ -1400,6 +1488,17 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getKnownFollowers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetKnownFollowers.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetKnownFollowers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getKnownFollowers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1469,6 +1568,28 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getStarterPack<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPack.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPack.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPack' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getStarterPacks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetStarterPacks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetStarterPacks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getStarterPacks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSuggestedFollowsByActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1502,6 +1623,17 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  muteThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphMuteThread.Handler<ExtractAuth<AV>>,
+      AppBskyGraphMuteThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.muteThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   unmuteActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1521,6 +1653,17 @@ export class AppBskyGraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.unmuteActorList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphUnmuteThread.Handler<ExtractAuth<AV>>,
+      AppBskyGraphUnmuteThread.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.unmuteThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -1622,6 +1765,17 @@ export class AppBskyUnspeccedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getSuggestionsSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetSuggestionsSkeleton.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetSuggestionsSkeleton.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestionsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getTaggedSuggestions<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1652,6 +1806,241 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatNS {
+  _server: Server
+  bsky: ChatBskyNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.bsky = new ChatBskyNS(server)
+  }
+}
+
+export class ChatBskyNS {
+  _server: Server
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.actor = new ChatBskyActorNS(server)
+    this.convo = new ChatBskyConvoNS(server)
+    this.moderation = new ChatBskyModerationNS(server)
+  }
+}
+
+export class ChatBskyActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyActorDeleteAccount.Handler<ExtractAuth<AV>>,
+      ChatBskyActorDeleteAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  exportAccountData<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyActorExportAccountData.Handler<ExtractAuth<AV>>,
+      ChatBskyActorExportAccountData.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.actor.exportAccountData' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyConvoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteMessageForSelf<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoDeleteMessageForSelf.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoDeleteMessageForSelf.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.deleteMessageForSelf' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoForMembers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetConvoForMembers.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetConvoForMembers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLog<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetLog.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetLog.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getLog' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessages<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoGetMessages.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoGetMessages.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getMessages' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  leaveConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoLeaveConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoLeaveConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.leaveConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listConvos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoListConvos.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoListConvos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.listConvos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  muteConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoMuteConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoMuteConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.muteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessage<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessage.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessage.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendMessageBatch<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoSendMessageBatch.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoSendMessageBatch.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.sendMessageBatch' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmuteConvo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUnmuteConvo.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUnmuteConvo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.unmuteConvo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateRead<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyConvoUpdateRead.Handler<ExtractAuth<AV>>,
+      ChatBskyConvoUpdateRead.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.updateRead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ChatBskyModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorMetadata<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationGetActorMetadata.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationGetActorMetadata.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getActorMetadata' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMessageContext<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationGetMessageContext.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationGetMessageContext.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.getMessageContext' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateActorAccess<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ChatBskyModerationUpdateActorAccess.Handler<ExtractAuth<AV>>,
+      ChatBskyModerationUpdateActorAccess.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'chat.bsky.moderation.updateActorAccess' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

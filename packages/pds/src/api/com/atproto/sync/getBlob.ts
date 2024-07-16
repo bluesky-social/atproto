@@ -3,17 +3,19 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BlobNotFoundError } from '@atproto/repo'
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
     auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, res, auth }) => {
-      if (!ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
-        const available = await ctx.accountManager.isRepoAvailable(params.did)
-        if (!available) {
-          throw new InvalidRequestError('Blob not found')
-        }
-      }
+      const { did } = params
+      await assertRepoAvailability(
+        ctx,
+        did,
+        ctx.authVerifier.isUserOrAdmin(auth, did),
+      )
+
       const cid = CID.parse(params.cid)
       const found = await ctx.actorStore.read(params.did, async (store) => {
         try {

@@ -28,10 +28,12 @@ import { formatLabel, signLabel } from './util'
 import { LabelRow } from '../db/schema/label'
 import { dbLogger } from '../logger'
 import { httpLogger } from '../logger'
+import { ParsedLabelers } from '../util'
 
 export type AuthHeaders = {
   headers: {
     authorization: string
+    'atproto-accept-labelers'?: string
   }
 }
 
@@ -108,6 +110,7 @@ export class ModerationViews {
 
     if (
       [
+        'tools.ozone.moderation.defs#modEventMuteReporter',
         'tools.ozone.moderation.defs#modEventTakedown',
         'tools.ozone.moderation.defs#modEventMute',
       ].includes(event.action)
@@ -157,6 +160,7 @@ export class ModerationViews {
       eventView.event = {
         ...eventView.event,
         reportType: event.meta?.reportType ?? undefined,
+        isReporterMuted: !!event.meta?.isReporterMuted,
       }
     }
 
@@ -208,10 +212,14 @@ export class ModerationViews {
     }
   }
 
-  async repoDetail(did: string): Promise<RepoViewDetail | undefined> {
-    const [repos, labels] = await Promise.all([
+  async repoDetail(
+    did: string,
+    labelers?: ParsedLabelers,
+  ): Promise<RepoViewDetail | undefined> {
+    const [repos, localLabels, externalLabels] = await Promise.all([
       this.repos([did]),
       this.labels(did),
+      this.getExternalLabels([did], labelers),
     ])
     const repo = repos.get(did)
     if (!repo) return
@@ -221,7 +229,7 @@ export class ModerationViews {
       moderation: {
         ...repo.moderation,
       },
-      labels,
+      labels: [...localLabels, ...externalLabels],
     }
   }
 
@@ -291,6 +299,7 @@ export class ModerationViews {
 
   async recordDetail(
     subject: RecordSubject,
+    labelers?: ParsedLabelers,
   ): Promise<RecordViewDetail | undefined> {
     const [records, subjectStatusesResult] = await Promise.all([
       this.records([subject]),
@@ -301,9 +310,10 @@ export class ModerationViews {
 
     const status = subjectStatusesResult.get(subject.uri)
 
-    const [blobs, labels, subjectStatus] = await Promise.all([
+    const [blobs, labels, externalLabels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
+      this.getExternalLabels([record.uri], labelers),
       status ? this.formatSubjectStatus(status) : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
@@ -311,6 +321,7 @@ export class ModerationViews {
       cid: record.cid,
       record: record.value,
     })
+
     return {
       ...record,
       blobs,
@@ -318,7 +329,29 @@ export class ModerationViews {
         ...record.moderation,
         subjectStatus,
       },
-      labels: [...labels, ...selfLabels],
+      labels: [...labels, ...selfLabels, ...externalLabels],
+    }
+  }
+
+  async getExternalLabels(
+    subjects: string[],
+    labelers?: ParsedLabelers,
+  ): Promise<Label[]> {
+    if (!labelers?.dids.length && !labelers?.redact.size) return []
+    try {
+      const {
+        data: { labels },
+      } = await this.appviewAgent.api.com.atproto.label.queryLabels({
+        uriPatterns: subjects,
+        sources: labelers.dids,
+      })
+      return labels
+    } catch (err) {
+      httpLogger.error(
+        { err, subjects, labelers },
+        'failed to resolve labels from appview',
+      )
+      return []
     }
   }
 
@@ -500,6 +533,7 @@ export class ModerationViews {
       lastReportedAt: status.lastReportedAt ?? undefined,
       lastAppealedAt: status.lastAppealedAt ?? undefined,
       muteUntil: status.muteUntil ?? undefined,
+      muteReportingUntil: status.muteReportingUntil ?? undefined,
       suspendUntil: status.suspendUntil ?? undefined,
       takendown: status.takendown ?? undefined,
       appealed: status.appealed ?? undefined,
@@ -573,6 +607,6 @@ export function getSelfLabels(details: {
       ? normalizeDatetimeAlways(record.createdAt)
       : new Date(0).toISOString()
   return record.labels.values.map(({ val }) => {
-    return { src, uri, cid, val, cts, neg: false }
+    return { src, uri, cid, val, cts }
   })
 }

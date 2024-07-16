@@ -16,19 +16,25 @@ import getActorLikes from './app/bsky/feed/getActorLikes'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
+import getActorStarterPacks from './app/bsky/graph/getActorStarterPacks'
 import getBlocks from './app/bsky/graph/getBlocks'
 import getListBlocks from './app/bsky/graph/getListBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
+import getKnownFollowers from './app/bsky/graph/getKnownFollowers'
 import getFollows from './app/bsky/graph/getFollows'
 import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
 import getListMutes from './app/bsky/graph/getListMutes'
 import getMutes from './app/bsky/graph/getMutes'
 import getRelationships from './app/bsky/graph/getRelationships'
+import getStarterPack from './app/bsky/graph/getStarterPack'
+import getStarterPacks from './app/bsky/graph/getStarterPacks'
 import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
+import muteThread from './app/bsky/graph/muteThread'
+import unmuteThread from './app/bsky/graph/unmuteThread'
 import getSuggestedFollowsByActor from './app/bsky/graph/getSuggestedFollowsByActor'
 import getLabelerServices from './app/bsky/labeler/getServices'
 import searchActors from './app/bsky/actor/searchActors'
@@ -46,6 +52,7 @@ import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
 import fetchLabels from './com/atproto/temp/fetchLabels'
+import queryLabels from './com/atproto/label/queryLabels'
 
 export * as health from './health'
 
@@ -71,19 +78,25 @@ export default function (server: Server, ctx: AppContext) {
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
+  getActorStarterPacks(server, ctx)
   getBlocks(server, ctx)
   getListBlocks(server, ctx)
   getFollowers(server, ctx)
+  getKnownFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
   getLists(server, ctx)
   getListMutes(server, ctx)
   getMutes(server, ctx)
   getRelationships(server, ctx)
+  getStarterPack(server, ctx)
+  getStarterPacks(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
   unmuteActorList(server, ctx)
+  muteThread(server, ctx)
+  unmuteThread(server, ctx)
   getSuggestedFollowsByActor(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
@@ -102,5 +115,6 @@ export default function (server: Server, ctx: AppContext) {
   resolveHandle(server, ctx)
   getRecord(server, ctx)
   fetchLabels(server, ctx)
+  queryLabels(server, ctx)
   return server
 }

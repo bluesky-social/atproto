@@ -1,4 +1,6 @@
-'use strict' /* eslint-disable */
+/* eslint-env node */
+
+'use strict'
 
 const dd = require('dd-trace')
 

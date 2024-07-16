@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
+import * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs'
 import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 import * as ComAtprotoServerDefs from '../../../com/atproto/server/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
@@ -22,13 +23,18 @@ export interface ModEventView {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventUnmute
+    | ModEventMuteReporter
+    | ModEventUnmuteReporter
     | ModEventEmail
     | ModEventResolveAppeal
     | ModEventDivert
+    | ModEventTag
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
     | ComAtprotoRepoStrongRef.Main
+    | ChatBskyConvoDefs.MessageRef
     | { $type: string; [k: string]: unknown }
   subjectBlobCids: string[]
   createdBy: string
@@ -61,9 +67,13 @@ export interface ModEventViewDetail {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventUnmute
+    | ModEventMuteReporter
+    | ModEventUnmuteReporter
     | ModEventEmail
     | ModEventResolveAppeal
     | ModEventDivert
+    | ModEventTag
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -105,6 +115,7 @@ export interface SubjectStatusView {
   /** Sticky comment on the subject. */
   comment?: string
   muteUntil?: string
+  muteReportingUntil?: string
   lastReviewedBy?: string
   lastReviewedAt?: string
   lastReportedAt?: string
@@ -237,6 +248,8 @@ export function validateModEventComment(v: unknown): ValidationResult {
 /** Report a subject */
 export interface ModEventReport {
   comment?: string
+  /** Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject. */
+  isReporterMuted?: boolean
   reportType: ComAtprotoModerationDefs.ReasonType
   [k: string]: unknown
 }
@@ -346,6 +359,53 @@ export function validateModEventUnmute(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.moderation.defs#modEventUnmute', v)
 }
 
+/** Mute incoming reports from an account */
+export interface ModEventMuteReporter {
+  comment?: string
+  /** Indicates how long the account should remain muted. */
+  durationInHours: number
+  [k: string]: unknown
+}
+
+export function isModEventMuteReporter(v: unknown): v is ModEventMuteReporter {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventMuteReporter'
+  )
+}
+
+export function validateModEventMuteReporter(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#modEventMuteReporter',
+    v,
+  )
+}
+
+/** Unmute incoming reports from an account */
+export interface ModEventUnmuteReporter {
+  /** Describe reasoning behind the reversal. */
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventUnmuteReporter(
+  v: unknown,
+): v is ModEventUnmuteReporter {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#modEventUnmuteReporter'
+  )
+}
+
+export function validateModEventUnmuteReporter(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#modEventUnmuteReporter',
+    v,
+  )
+}
+
 /** Keep a log of outgoing email to a user */
 export interface ModEventEmail {
   /** The subject line of the email sent to the user. */
@@ -420,6 +480,7 @@ export interface RepoView {
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invitesDisabled?: boolean
   inviteNote?: string
+  deactivatedAt?: string
   [k: string]: unknown
 }
 
@@ -448,6 +509,7 @@ export interface RepoViewDetail {
   invitesDisabled?: boolean
   inviteNote?: string
   emailConfirmedAt?: string
+  deactivatedAt?: string
   [k: string]: unknown
 }
 

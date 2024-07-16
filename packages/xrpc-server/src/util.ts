@@ -33,7 +33,7 @@ export function decodeQueryParams(
     const property = def.parameters?.properties?.[k]
     if (property) {
       if (property.type === 'array') {
-        const vals: typeof val[] = []
+        const vals: (typeof val)[] = []
         decoded[k] = val
           ? vals
               .concat(val) // Cast to array
@@ -86,8 +86,9 @@ export function validateInput(
   lexicons: Lexicons,
 ): HandlerInput | undefined {
   // request expectation
-  const reqHasBody = hasBody(req)
-  if (reqHasBody && (def.type !== 'procedure' || !def.input)) {
+
+  const bodyPresence = getBodyPresence(req)
+  if (bodyPresence === 'present' && (def.type !== 'procedure' || !def.input)) {
     throw new InvalidRequestError(
       `A request body was provided when none was expected`,
     )
@@ -95,7 +96,7 @@ export function validateInput(
   if (def.type === 'query') {
     return
   }
-  if (!reqHasBody && def.input) {
+  if (bodyPresence === 'missing' && def.input) {
     throw new InvalidRequestError(
       `A request body is expected but none was provided`,
     )
@@ -214,10 +215,13 @@ function isValidEncoding(possibleStr: string, value: string) {
   return possible.includes(normalized)
 }
 
-export function hasBody(req: express.Request) {
-  const contentLength = req.headers['content-length']
-  const transferEncoding = req.headers['transfer-encoding']
-  return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
+type BodyPresence = 'missing' | 'empty' | 'present'
+
+function getBodyPresence(req: express.Request): BodyPresence {
+  if (req.headers['transfer-encoding'] != null) return 'present'
+  if (req.headers['content-length'] === '0') return 'empty'
+  if (req.headers['content-length'] != null) return 'present'
+  return 'missing'
 }
 
 export function processBodyAsBytes(req: express.Request): Promise<Uint8Array> {
@@ -282,7 +286,10 @@ export function serverTimingHeader(timings: ServerTiming[]) {
 export class ServerTimer implements ServerTiming {
   public duration?: number
   private startMs?: number
-  constructor(public name: string, public description?: string) {}
+  constructor(
+    public name: string,
+    public description?: string,
+  ) {}
   start() {
     this.startMs = Date.now()
     return this

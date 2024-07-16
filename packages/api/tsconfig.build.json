@@ -1,4 +1,9 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "extends": "../../tsconfig/isomorphic.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noUnusedLocals": false
+  },
+  "include": ["./src"]
 }

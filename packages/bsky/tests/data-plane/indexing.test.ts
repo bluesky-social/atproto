@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
-import * as pdsRepo from '@atproto/pds/src/repo/prepare'
+import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import AtpAgent, {
@@ -489,12 +489,12 @@ describe('indexing', () => {
       // const { db: pdsDb, services: pdsServices } = network.pds.ctx
       // Create a good and a bad post record
       const writes = await Promise.all([
-        pdsRepo.prepareCreate({
+        repoPrepare.prepareCreate({
           did: sc.dids.alice,
           collection: ids.AppBskyFeedPost,
           record: { text: 'valid', createdAt: new Date().toISOString() },
         }),
-        pdsRepo.prepareCreate({
+        repoPrepare.prepareCreate({
           did: sc.dids.alice,
           collection: ids.AppBskyFeedPost,
           record: { text: 0 },
@@ -614,14 +614,14 @@ describe('indexing', () => {
     })
   })
 
-  describe('tombstoneActor', () => {
+  describe('deleteActor', () => {
     it('does not unindex actor when they are still being hosted by their pds', async () => {
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       // Attempt indexing tombstone
-      await network.bsky.sub.indexingSvc.tombstoneActor(sc.dids.alice)
+      await network.bsky.sub.indexingSvc.deleteActor(sc.dids.alice)
       const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
@@ -648,7 +648,7 @@ describe('indexing', () => {
       })
       await network.pds.ctx.backgroundQueue.processAll()
       // Index tombstone
-      await network.bsky.sub.indexingSvc.tombstoneActor(alice)
+      await network.bsky.sub.indexingSvc.deleteActor(alice)
       const getProfileAfter = agent.api.app.bsky.actor.getProfile(
         { actor: alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },

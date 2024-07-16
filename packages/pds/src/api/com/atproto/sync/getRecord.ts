@@ -6,19 +6,19 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { byteIterableToStream } from '@atproto/common'
 import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
     auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did, collection, rkey } = params
-      // takedown check for anyone other than an admin or the user
-      if (!ctx.authVerifier.isUserOrAdmin(auth, did)) {
-        const available = await ctx.accountManager.isRepoAvailable(did)
-        if (!available) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-      }
+      await assertRepoAvailability(
+        ctx,
+        did,
+        ctx.authVerifier.isUserOrAdmin(auth, did),
+      )
+
       // must open up the db outside of store interface so that we can close the file handle after finished streaming
       const actorDb = await ctx.actorStore.openDb(did)
 

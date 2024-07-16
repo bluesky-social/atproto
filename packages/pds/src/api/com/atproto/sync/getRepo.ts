@@ -6,19 +6,18 @@ import {
   RepoRootNotFoundError,
   SqlRepoReader,
 } from '../../../../actor-store/repo/sql-repo-reader'
+import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
     auth: ctx.authVerifier.optionalAccessOrAdminToken,
     handler: async ({ params, auth }) => {
       const { did, since } = params
-      // takedown check for anyone other than an admin or the user
-      if (!ctx.authVerifier.isUserOrAdmin(auth, did)) {
-        const available = await ctx.accountManager.isRepoAvailable(did)
-        if (!available) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-      }
+      await assertRepoAvailability(
+        ctx,
+        did,
+        ctx.authVerifier.isUserOrAdmin(auth, did),
+      )
 
       const carStream = await getCarStream(ctx, did, since)
 

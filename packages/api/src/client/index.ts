@@ -16,6 +16,7 @@ import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -76,6 +77,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -118,27 +120,35 @@ import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
 import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
+import * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+import * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+import * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+import * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+import * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -149,9 +159,30 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
+import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
+import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
+import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
+import * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
+import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+import * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+import * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+import * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+import * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+import * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
@@ -165,6 +196,12 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+import * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+import * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+import * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+import * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+import * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+import * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
@@ -175,6 +212,7 @@ export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAcc
 export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -235,6 +273,7 @@ export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncGetRepoStatus from './types/com/atproto/sync/getRepoStatus'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -277,27 +316,35 @@ export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+export * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
 export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
+export * as AppBskyGraphGetActorStarterPacks from './types/app/bsky/graph/getActorStarterPacks'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+export * as AppBskyGraphGetKnownFollowers from './types/app/bsky/graph/getKnownFollowers'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
+export * as AppBskyGraphGetStarterPack from './types/app/bsky/graph/getStarterPack'
+export * as AppBskyGraphGetStarterPacks from './types/app/bsky/graph/getStarterPacks'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
+export * as AppBskyGraphMuteThread from './types/app/bsky/graph/muteThread'
+export * as AppBskyGraphStarterpack from './types/app/bsky/graph/starterpack'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+export * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 export * as AppBskyLabelerDefs from './types/app/bsky/labeler/defs'
 export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service'
@@ -308,9 +355,30 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
+export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
+export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
+export * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
+export * as ChatBskyConvoDefs from './types/chat/bsky/convo/defs'
+export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
+export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo'
+export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers'
+export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog'
+export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages'
+export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo'
+export * as ChatBskyConvoListConvos from './types/chat/bsky/convo/listConvos'
+export * as ChatBskyConvoMuteConvo from './types/chat/bsky/convo/muteConvo'
+export * as ChatBskyConvoSendMessage from './types/chat/bsky/convo/sendMessage'
+export * as ChatBskyConvoSendMessageBatch from './types/chat/bsky/convo/sendMessageBatch'
+export * as ChatBskyConvoUnmuteConvo from './types/chat/bsky/convo/unmuteConvo'
+export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead'
+export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata'
+export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext'
+export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
@@ -324,6 +392,12 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos'
+export * as ToolsOzoneServerGetConfig from './types/tools/ozone/server/getConfig'
+export * as ToolsOzoneTeamAddMember from './types/tools/ozone/team/addMember'
+export * as ToolsOzoneTeamDefs from './types/tools/ozone/team/defs'
+export * as ToolsOzoneTeamDeleteMember from './types/tools/ozone/team/deleteMember'
+export * as ToolsOzoneTeamListMembers from './types/tools/ozone/team/listMembers'
+export * as ToolsOzoneTeamUpdateMember from './types/tools/ozone/team/updateMember'
 
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -334,15 +408,35 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
   DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
+export const APP_BSKY_FEED = {
+  DefsRequestLess: 'app.bsky.feed.defs#requestLess',
+  DefsRequestMore: 'app.bsky.feed.defs#requestMore',
+  DefsClickthroughItem: 'app.bsky.feed.defs#clickthroughItem',
+  DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
+  DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
+  DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
+  DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
+  DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
+  DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
+  DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
+  DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
+}
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
+  DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',
   DefsReviewClosed: 'tools.ozone.moderation.defs#reviewClosed',
   DefsReviewNone: 'tools.ozone.moderation.defs#reviewNone',
+}
+export const TOOLS_OZONE_TEAM = {
+  DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
+  DefsRoleModerator: 'tools.ozone.team.defs#roleModerator',
+  DefsRoleTriage: 'tools.ozone.team.defs#roleTriage',
 }
 
 export class AtpBaseClient {
@@ -362,6 +456,7 @@ export class AtpServiceClient {
   xrpc: XrpcServiceClient
   com: ComNS
   app: AppNS
+  chat: ChatNS
   tools: ToolsNS
 
   constructor(baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
@@ -369,6 +464,7 @@ export class AtpServiceClient {
     this.xrpc = xrpcService
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.chat = new ChatNS(this)
     this.tools = new ToolsNS(this)
   }
 
@@ -503,6 +599,17 @@ export class ComAtprotoAdminNS {
       .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
+      })
+  }
+
+  searchAccounts(
+    params?: ComAtprotoAdminSearchAccounts.QueryParams,
+    opts?: ComAtprotoAdminSearchAccounts.CallOptions,
+  ): Promise<ComAtprotoAdminSearchAccounts.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.searchAccounts', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSearchAccounts.toKnownErr(e)
       })
   }
 
@@ -1169,6 +1276,17 @@ export class ComAtprotoSyncNS {
       })
   }
 
+  getRepoStatus(
+    params?: ComAtprotoSyncGetRepoStatus.QueryParams,
+    opts?: ComAtprotoSyncGetRepoStatus.CallOptions,
+  ): Promise<ComAtprotoSyncGetRepoStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getRepoStatus', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetRepoStatus.toKnownErr(e)
+      })
+  }
+
   listBlobs(
     params?: ComAtprotoSyncListBlobs.QueryParams,
     opts?: ComAtprotoSyncListBlobs.CallOptions,
@@ -1637,6 +1755,17 @@ export class AppBskyFeedNS {
         throw AppBskyFeedSearchPosts.toKnownErr(e)
       })
   }
+
+  sendInteractions(
+    data?: AppBskyFeedSendInteractions.InputSchema,
+    opts?: AppBskyFeedSendInteractions.CallOptions,
+  ): Promise<AppBskyFeedSendInteractions.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.sendInteractions', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedSendInteractions.toKnownErr(e)
+      })
+  }
 }
 
 export class GeneratorRecord {
@@ -1955,6 +2084,7 @@ export class AppBskyGraphNS {
   list: ListRecord
   listblock: ListblockRecord
   listitem: ListitemRecord
+  starterpack: StarterpackRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -1963,6 +2093,18 @@ export class AppBskyGraphNS {
     this.list = new ListRecord(service)
     this.listblock = new ListblockRecord(service)
     this.listitem = new ListitemRecord(service)
+    this.starterpack = new StarterpackRecord(service)
+  }
+
+  getActorStarterPacks(
+    params?: AppBskyGraphGetActorStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetActorStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetActorStarterPacks.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getActorStarterPacks', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetActorStarterPacks.toKnownErr(e)
+      })
   }
 
   getBlocks(
@@ -1995,6 +2137,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.getFollows', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetFollows.toKnownErr(e)
+      })
+  }
+
+  getKnownFollowers(
+    params?: AppBskyGraphGetKnownFollowers.QueryParams,
+    opts?: AppBskyGraphGetKnownFollowers.CallOptions,
+  ): Promise<AppBskyGraphGetKnownFollowers.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getKnownFollowers', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetKnownFollowers.toKnownErr(e)
       })
   }
 
@@ -2064,6 +2217,28 @@ export class AppBskyGraphNS {
       })
   }
 
+  getStarterPack(
+    params?: AppBskyGraphGetStarterPack.QueryParams,
+    opts?: AppBskyGraphGetStarterPack.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPack.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getStarterPack', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetStarterPack.toKnownErr(e)
+      })
+  }
+
+  getStarterPacks(
+    params?: AppBskyGraphGetStarterPacks.QueryParams,
+    opts?: AppBskyGraphGetStarterPacks.CallOptions,
+  ): Promise<AppBskyGraphGetStarterPacks.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getStarterPacks', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetStarterPacks.toKnownErr(e)
+      })
+  }
+
   getSuggestedFollowsByActor(
     params?: AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
     opts?: AppBskyGraphGetSuggestedFollowsByActor.CallOptions,
@@ -2102,6 +2277,17 @@ export class AppBskyGraphNS {
       })
   }
 
+  muteThread(
+    data?: AppBskyGraphMuteThread.InputSchema,
+    opts?: AppBskyGraphMuteThread.CallOptions,
+  ): Promise<AppBskyGraphMuteThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.muteThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphMuteThread.toKnownErr(e)
+      })
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -2121,6 +2307,17 @@ export class AppBskyGraphNS {
       .call('app.bsky.graph.unmuteActorList', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyGraphUnmuteActorList.toKnownErr(e)
+      })
+  }
+
+  unmuteThread(
+    data?: AppBskyGraphUnmuteThread.InputSchema,
+    opts?: AppBskyGraphUnmuteThread.CallOptions,
+  ): Promise<AppBskyGraphUnmuteThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unmuteThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnmuteThread.toKnownErr(e)
       })
   }
 }
@@ -2434,6 +2631,71 @@ export class ListitemRecord {
   }
 }
 
+export class StarterpackRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphStarterpack.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.starterpack',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphStarterpack.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.starterpack',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphStarterpack.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.starterpack'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.starterpack', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.starterpack', ...params },
+      { headers },
+    )
+  }
+}
+
 export class AppBskyLabelerNS {
   _service: AtpServiceClient
   service: ServiceRecord
@@ -2608,6 +2870,22 @@ export class AppBskyUnspeccedNS {
       })
   }
 
+  getSuggestionsSkeleton(
+    params?: AppBskyUnspeccedGetSuggestionsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestionsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestionsSkeleton.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.unspecced.getSuggestionsSkeleton',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedGetSuggestionsSkeleton.toKnownErr(e)
+      })
+  }
+
   getTaggedSuggestions(
     params?: AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
     opts?: AppBskyUnspeccedGetTaggedSuggestions.CallOptions,
@@ -2642,6 +2920,313 @@ export class AppBskyUnspeccedNS {
   }
 }
 
+export class ChatNS {
+  _service: AtpServiceClient
+  bsky: ChatBskyNS
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.bsky = new ChatBskyNS(service)
+  }
+}
+
+export class ChatBskyNS {
+  _service: AtpServiceClient
+  actor: ChatBskyActorNS
+  convo: ChatBskyConvoNS
+  moderation: ChatBskyModerationNS
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.actor = new ChatBskyActorNS(service)
+    this.convo = new ChatBskyConvoNS(service)
+    this.moderation = new ChatBskyModerationNS(service)
+  }
+}
+
+export class ChatBskyActorNS {
+  _service: AtpServiceClient
+  declaration: DeclarationRecord
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+    this.declaration = new DeclarationRecord(service)
+  }
+
+  deleteAccount(
+    data?: ChatBskyActorDeleteAccount.InputSchema,
+    opts?: ChatBskyActorDeleteAccount.CallOptions,
+  ): Promise<ChatBskyActorDeleteAccount.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.actor.deleteAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyActorDeleteAccount.toKnownErr(e)
+      })
+  }
+
+  exportAccountData(
+    params?: ChatBskyActorExportAccountData.QueryParams,
+    opts?: ChatBskyActorExportAccountData.CallOptions,
+  ): Promise<ChatBskyActorExportAccountData.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.actor.exportAccountData', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyActorExportAccountData.toKnownErr(e)
+      })
+  }
+}
+
+export class DeclarationRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ChatBskyActorDeclaration.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'chat.bsky.actor.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ChatBskyActorDeclaration.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'chat.bsky.actor.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: ChatBskyActorDeclaration.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'chat.bsky.actor.declaration'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection: 'chat.bsky.actor.declaration',
+        rkey: 'self',
+        ...params,
+        record,
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'chat.bsky.actor.declaration', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ChatBskyConvoNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  deleteMessageForSelf(
+    data?: ChatBskyConvoDeleteMessageForSelf.InputSchema,
+    opts?: ChatBskyConvoDeleteMessageForSelf.CallOptions,
+  ): Promise<ChatBskyConvoDeleteMessageForSelf.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.deleteMessageForSelf', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoDeleteMessageForSelf.toKnownErr(e)
+      })
+  }
+
+  getConvo(
+    params?: ChatBskyConvoGetConvo.QueryParams,
+    opts?: ChatBskyConvoGetConvo.CallOptions,
+  ): Promise<ChatBskyConvoGetConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getConvo', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetConvo.toKnownErr(e)
+      })
+  }
+
+  getConvoForMembers(
+    params?: ChatBskyConvoGetConvoForMembers.QueryParams,
+    opts?: ChatBskyConvoGetConvoForMembers.CallOptions,
+  ): Promise<ChatBskyConvoGetConvoForMembers.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getConvoForMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetConvoForMembers.toKnownErr(e)
+      })
+  }
+
+  getLog(
+    params?: ChatBskyConvoGetLog.QueryParams,
+    opts?: ChatBskyConvoGetLog.CallOptions,
+  ): Promise<ChatBskyConvoGetLog.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getLog', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetLog.toKnownErr(e)
+      })
+  }
+
+  getMessages(
+    params?: ChatBskyConvoGetMessages.QueryParams,
+    opts?: ChatBskyConvoGetMessages.CallOptions,
+  ): Promise<ChatBskyConvoGetMessages.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.getMessages', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetMessages.toKnownErr(e)
+      })
+  }
+
+  leaveConvo(
+    data?: ChatBskyConvoLeaveConvo.InputSchema,
+    opts?: ChatBskyConvoLeaveConvo.CallOptions,
+  ): Promise<ChatBskyConvoLeaveConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.leaveConvo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoLeaveConvo.toKnownErr(e)
+      })
+  }
+
+  listConvos(
+    params?: ChatBskyConvoListConvos.QueryParams,
+    opts?: ChatBskyConvoListConvos.CallOptions,
+  ): Promise<ChatBskyConvoListConvos.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.listConvos', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoListConvos.toKnownErr(e)
+      })
+  }
+
+  muteConvo(
+    data?: ChatBskyConvoMuteConvo.InputSchema,
+    opts?: ChatBskyConvoMuteConvo.CallOptions,
+  ): Promise<ChatBskyConvoMuteConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.muteConvo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoMuteConvo.toKnownErr(e)
+      })
+  }
+
+  sendMessage(
+    data?: ChatBskyConvoSendMessage.InputSchema,
+    opts?: ChatBskyConvoSendMessage.CallOptions,
+  ): Promise<ChatBskyConvoSendMessage.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.sendMessage', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoSendMessage.toKnownErr(e)
+      })
+  }
+
+  sendMessageBatch(
+    data?: ChatBskyConvoSendMessageBatch.InputSchema,
+    opts?: ChatBskyConvoSendMessageBatch.CallOptions,
+  ): Promise<ChatBskyConvoSendMessageBatch.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.sendMessageBatch', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoSendMessageBatch.toKnownErr(e)
+      })
+  }
+
+  unmuteConvo(
+    data?: ChatBskyConvoUnmuteConvo.InputSchema,
+    opts?: ChatBskyConvoUnmuteConvo.CallOptions,
+  ): Promise<ChatBskyConvoUnmuteConvo.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.unmuteConvo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoUnmuteConvo.toKnownErr(e)
+      })
+  }
+
+  updateRead(
+    data?: ChatBskyConvoUpdateRead.InputSchema,
+    opts?: ChatBskyConvoUpdateRead.CallOptions,
+  ): Promise<ChatBskyConvoUpdateRead.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.convo.updateRead', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyConvoUpdateRead.toKnownErr(e)
+      })
+  }
+}
+
+export class ChatBskyModerationNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getActorMetadata(
+    params?: ChatBskyModerationGetActorMetadata.QueryParams,
+    opts?: ChatBskyModerationGetActorMetadata.CallOptions,
+  ): Promise<ChatBskyModerationGetActorMetadata.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.getActorMetadata', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyModerationGetActorMetadata.toKnownErr(e)
+      })
+  }
+
+  getMessageContext(
+    params?: ChatBskyModerationGetMessageContext.QueryParams,
+    opts?: ChatBskyModerationGetMessageContext.CallOptions,
+  ): Promise<ChatBskyModerationGetMessageContext.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.getMessageContext', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyModerationGetMessageContext.toKnownErr(e)
+      })
+  }
+
+  updateActorAccess(
+    data?: ChatBskyModerationUpdateActorAccess.InputSchema,
+    opts?: ChatBskyModerationUpdateActorAccess.CallOptions,
+  ): Promise<ChatBskyModerationUpdateActorAccess.Response> {
+    return this._service.xrpc
+      .call('chat.bsky.moderation.updateActorAccess', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ChatBskyModerationUpdateActorAccess.toKnownErr(e)
+      })
+  }
+}
+
 export class ToolsNS {
   _service: AtpServiceClient
   ozone: ToolsOzoneNS
@@ -2656,11 +3241,15 @@ export class ToolsOzoneNS {
   _service: AtpServiceClient
   communication: ToolsOzoneCommunicationNS
   moderation: ToolsOzoneModerationNS
+  server: ToolsOzoneServerNS
+  team: ToolsOzoneTeamNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.communication = new ToolsOzoneCommunicationNS(service)
     this.moderation = new ToolsOzoneModerationNS(service)
+    this.server = new ToolsOzoneServerNS(service)
+    this.team = new ToolsOzoneTeamNS(service)
   }
 }
 
@@ -2797,6 +3386,77 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ToolsOzoneModerationSearchRepos.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneServerNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getConfig(
+    params?: ToolsOzoneServerGetConfig.QueryParams,
+    opts?: ToolsOzoneServerGetConfig.CallOptions,
+  ): Promise<ToolsOzoneServerGetConfig.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.server.getConfig', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneServerGetConfig.toKnownErr(e)
+      })
+  }
+}
+
+export class ToolsOzoneTeamNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  addMember(
+    data?: ToolsOzoneTeamAddMember.InputSchema,
+    opts?: ToolsOzoneTeamAddMember.CallOptions,
+  ): Promise<ToolsOzoneTeamAddMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.addMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamAddMember.toKnownErr(e)
+      })
+  }
+
+  deleteMember(
+    data?: ToolsOzoneTeamDeleteMember.InputSchema,
+    opts?: ToolsOzoneTeamDeleteMember.CallOptions,
+  ): Promise<ToolsOzoneTeamDeleteMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.deleteMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamDeleteMember.toKnownErr(e)
+      })
+  }
+
+  listMembers(
+    params?: ToolsOzoneTeamListMembers.QueryParams,
+    opts?: ToolsOzoneTeamListMembers.CallOptions,
+  ): Promise<ToolsOzoneTeamListMembers.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.listMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamListMembers.toKnownErr(e)
+      })
+  }
+
+  updateMember(
+    data?: ToolsOzoneTeamUpdateMember.InputSchema,
+    opts?: ToolsOzoneTeamUpdateMember.CallOptions,
+  ): Promise<ToolsOzoneTeamUpdateMember.Response> {
+    return this._service.xrpc
+      .call('tools.ozone.team.updateMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneTeamUpdateMember.toKnownErr(e)
       })
   }
 }

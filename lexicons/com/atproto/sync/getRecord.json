@@ -19,13 +19,20 @@
           "commit": {
             "type": "string",
             "format": "cid",
-            "description": "An optional past commit CID."
+            "description": "DEPRECATED: referenced a repo commit by CID, and retrieved record as of that commit"
           }
         }
       },
       "output": {
         "encoding": "application/vnd.ipld.car"
-      }
+      },
+      "errors": [
+        { "name": "RecordNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
     }
   }
 }

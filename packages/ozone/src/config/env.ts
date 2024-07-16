@@ -13,12 +13,16 @@ export const readEnv = (): OzoneEnvironment => {
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
     pdsUrl: envStr('OZONE_PDS_URL'),
     pdsDid: envStr('OZONE_PDS_DID'),
+    chatUrl: envStr('OZONE_CHAT_URL'),
+    chatDid: envStr('OZONE_CHAT_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
+    didCacheStaleTTL: envInt('OZONE_DID_CACHE_STALE_TTL'),
+    didCacheMaxTTL: envInt('OZONE_DID_CACHE_MAX_TTL'),
     cdnPaths: envList('OZONE_CDN_PATHS'),
     adminDids: envList('OZONE_ADMIN_DIDS'),
     moderatorDids: envList('OZONE_MODERATOR_DIDS'),
@@ -42,12 +46,16 @@ export type OzoneEnvironment = {
   appviewPushEvents?: boolean
   pdsUrl?: string
   pdsDid?: string
+  chatUrl?: string
+  chatDid?: string
   dbPostgresUrl?: string
   dbPostgresSchema?: string
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
   didPlcUrl?: string
+  didCacheStaleTTL?: number
+  didCacheMaxTTL?: number
   cdnPaths?: string[]
   adminDids: string[]
   moderatorDids: string[]

@@ -41,6 +41,7 @@ export interface View {
     | AppBskyFeedDefs.GeneratorView
     | AppBskyGraphDefs.ListView
     | AppBskyLabelerDefs.LabelerView
+    | AppBskyGraphDefs.StarterPackViewBasic
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
@@ -62,6 +63,9 @@ export interface ViewRecord {
   /** The record data itself. */
   value: {}
   labels?: ComAtprotoLabelDefs.Label[]
+  replyCount?: number
+  repostCount?: number
+  likeCount?: number
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View

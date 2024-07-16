@@ -1,8 +1,6 @@
 import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
-import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {
@@ -64,6 +62,7 @@ describe('auth', () => {
       handle: account.handle,
       email,
       emailConfirmed: false,
+      active: true,
     })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
@@ -93,6 +92,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      active: true,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -137,6 +137,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      active: true,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -283,7 +284,9 @@ describe('auth', () => {
     )
     await expect(
       createSession({ identifier: 'iris.test', password: 'password' }),
-    ).rejects.toThrow(CreateSession.AccountTakedownError)
+    ).rejects.toMatchObject({
+      error: 'AccountTakedown',
+    })
   })
 
   it('actor takedown disallows refresh session.', async () => {
@@ -305,8 +308,8 @@ describe('auth', () => {
         headers: { authorization: network.pds.adminAuth() },
       },
     )
-    await expect(refreshSession(account.refreshJwt)).rejects.toThrow(
-      RefreshSession.AccountTakedownError,
-    )
+    await expect(refreshSession(account.refreshJwt)).rejects.toMatchObject({
+      error: 'AccountTakedown',
+    })
   })
 })

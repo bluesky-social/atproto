@@ -102,8 +102,10 @@ export class RepoSubscription {
         await this.handleUpdateHandle(msg)
       } else if (message.isIdentity(msg)) {
         await this.handleIdentityEvt(msg)
+      } else if (message.isAccount(msg)) {
+        await this.handleAccountEvt(msg)
       } else if (message.isTombstone(msg)) {
-        await this.handleTombstone(msg)
+        // Ignore tombstones
       } else if (message.isMigrate(msg)) {
         // Ignore migrations
       } else {
@@ -134,9 +136,8 @@ export class RepoSubscription {
         return
       }
       if (msg.rebase) {
-        const needsReindex = await this.indexingSvc.checkCommitNeedsIndexing(
-          root,
-        )
+        const needsReindex =
+          await this.indexingSvc.checkCommitNeedsIndexing(root)
         if (needsReindex) {
           await this.indexingSvc.indexRepo(msg.repo, rootCid.toString())
         }
@@ -198,8 +199,12 @@ export class RepoSubscription {
     await this.indexingSvc.indexHandle(msg.did, msg.time, true)
   }
 
-  private async handleTombstone(msg: message.Tombstone) {
-    await this.indexingSvc.tombstoneActor(msg.did)
+  private async handleAccountEvt(msg: message.Account) {
+    if (msg.active === false && msg.status === 'deleted') {
+      await this.indexingSvc.deleteActor(msg.did)
+    } else {
+      await this.indexingSvc.updateActorStatus(msg.did, msg.active, msg.status)
+    }
   }
 
   private getSubscription() {
@@ -269,6 +274,8 @@ function getMessageDetails(msg: Message):
   } else if (message.isHandle(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isIdentity(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isAccount(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }
   } else if (message.isMigrate(msg)) {
     return { seq: msg.seq, repo: msg.did, message: msg }

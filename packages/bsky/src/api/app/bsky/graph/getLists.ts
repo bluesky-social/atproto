@@ -1,12 +1,13 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists'
+import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs'
 import AppContext from '../../../../context'
 import {
   createPipeline,
   HydrationFnInput,
-  noRules,
   PresentationFnInput,
+  RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
@@ -14,19 +15,28 @@ import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getLists = createPipeline(skeleton, hydration, noRules, presentation)
+  const getLists = createPipeline(
+    skeleton,
+    hydration,
+    noReferenceLists,
+    presentation,
+  )
   server.app.bsky.graph.getLists({
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
-      const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = { labelers, viewer }
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
       const result = await getLists({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
-        headers: resHeaders({ labelers }),
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
@@ -53,6 +63,17 @@ const hydration = async (
   const { ctx, params, skeleton } = input
   const { listUris } = skeleton
   return ctx.hydrator.hydrateLists(listUris, params.hydrateCtx)
+}
+
+const noReferenceLists = (
+  input: RulesFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, hydration } = input
+  skeleton.listUris = skeleton.listUris.filter((uri) => {
+    const list = hydration.lists?.get(uri)
+    return list?.record.purpose !== REFERENCELIST
+  })
+  return skeleton
 }
 
 const presentation = (

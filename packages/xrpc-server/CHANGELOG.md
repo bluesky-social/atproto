@@ -1,5 +1,47 @@
 # @atproto/xrpc-server
 
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [[`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10)]:
+  - @atproto/common@0.4.1
+  - @atproto/crypto@0.4.0
+
+## 0.5.2
+
+### Patch Changes
+
+- [`615a96ddc`](https://github.com/bluesky-social/atproto/commit/615a96ddc2965251cfab060dfc43fc1a51ef4bff) Thanks [@devinivy](https://github.com/devinivy)! - Adjust detection of lexrpc body presence, support 0-byte bodies.
+
+## 0.5.1
+
+### Patch Changes
+
+- [#2384](https://github.com/bluesky-social/atproto/pull/2384) [`cd4fcc709`](https://github.com/bluesky-social/atproto/commit/cd4fcc709fe8d725a4af769ce21f53711fe5622a) Thanks [@dholms](https://github.com/dholms)! - Add configurable catchall
+
+## 0.5.0
+
+### Minor Changes
+
+- [#2169](https://github.com/bluesky-social/atproto/pull/2169) [`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build system rework, stop bundling dependencies.
+
+### Patch Changes
+
+- Updated dependencies [[`f689bd51a`](https://github.com/bluesky-social/atproto/commit/f689bd51a2f4e02d4eca40eb2568a1fcb95494e9)]:
+  - @atproto/lexicon@0.4.0
+  - @atproto/common@0.4.0
+  - @atproto/crypto@0.4.0
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.3.4
+  - @atproto/lexicon@0.3.3
+  - @atproto/crypto@0.3.0
+
 ## 0.4.3
 
 ### Patch Changes

@@ -5,8 +5,12 @@ import {
   isModEventDivert,
   isModEventEmail,
   isModEventLabel,
+  isModEventMuteReporter,
   isModEventReverseTakedown,
+  isModEventTag,
   isModEventTakedown,
+  isModEventUnmuteReporter,
+  ModEventTag,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
@@ -113,6 +117,17 @@ const handleModerationEvent = async ({
     await ctx.blobDiverter.uploadBlobOnService(subject.info())
   }
 
+  if (
+    (isModEventMuteReporter(event) || isModEventUnmuteReporter(event)) &&
+    !subject.isRepo()
+  ) {
+    throw new InvalidRequestError('Subject must be a repo when muting reporter')
+  }
+
+  if (isModEventTag(event)) {
+    assertTagAuth(event, auth)
+  }
+
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
 
@@ -203,6 +218,31 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const TAG_AUTH: Record<string, 'triage' | 'moderator' | 'admin'> = {
+  'chat-disabled': 'moderator',
+}
+
+const assertTagAuth = (
+  event: ModEventTag,
+  auth: ModeratorOutput | AdminTokenOutput,
+) => {
+  // admins can add/remove any tag
+  if (auth.credentials.isAdmin) return
+
+  for (const tag of Object.keys(TAG_AUTH)) {
+    if (event.add.includes(tag) || event.remove.includes(tag)) {
+      if (TAG_AUTH[tag] === 'admin' && !auth.credentials.isAdmin) {
+        throw new Error(`Must be an admin to add tag: ${tag}`)
+      } else if (
+        TAG_AUTH[tag] === 'moderator' &&
+        !auth.credentials.isModerator
+      ) {
+        throw new Error(`Must be a full moderator to add tag: ${tag}`)
+      }
+    }
+  }
 }
 
 const validateLabels = (labels: string[]) => {

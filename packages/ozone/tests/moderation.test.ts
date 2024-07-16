@@ -1,5 +1,6 @@
 import {
   TestNetwork,
+  TestOzone,
   ImageRef,
   RecordRef,
   SeedClient,
@@ -20,12 +21,8 @@ import {
   REVIEWESCALATED,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
 import { EventReverser } from '../src'
-import { TestOzone } from '@atproto/dev-env/src/ozone'
 import { ImageInvalidator } from '../src/image-invalidator'
-import {
-  UNSPECCED_TAKEDOWN_BLOBS_LABEL,
-  UNSPECCED_TAKEDOWN_LABEL,
-} from '../src/mod-service/types'
+import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -151,6 +148,45 @@ describe('moderation', () => {
         reportedBy: sc.dids.carol,
       })
       await expect(promiseB).resolves.toBeDefined()
+    })
+
+    it('creates reports of a DM chat.', async () => {
+      const messageId1 = 'testmessageid1'
+      const messageId2 = 'testmessageid2'
+      const reportA = await sc.createReport({
+        reportedBy: sc.dids.alice,
+        reasonType: REASONSPAM,
+        subject: {
+          $type: 'chat.bsky.convo.defs#messageRef',
+          did: sc.dids.carol,
+          messageId: messageId1,
+          convoId: 'testconvoid1',
+        },
+      })
+      const reportB = await sc.createReport({
+        reportedBy: sc.dids.carol,
+        reasonType: REASONOTHER,
+        reason: 'defamation',
+        subject: {
+          $type: 'chat.bsky.convo.defs#messageRef',
+          did: sc.dids.carol,
+          messageId: messageId2,
+          // @TODO convoId intentionally missing, restore once this behavior is deprecated
+        },
+      })
+      expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
+      const events = await ozone.ctx.db.db
+        .selectFrom('moderation_event')
+        .selectAll()
+        .where('subjectMessageId', 'in', [messageId1, messageId2])
+        .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+        .execute()
+      expect(events.length).toBe(2)
+      expect(
+        events.every(
+          (row) => row.subjectType === 'chat.bsky.convo.defs#messageRef',
+        ),
+      ).toBe(true)
     })
   })
 
@@ -542,10 +578,7 @@ describe('moderation', () => {
       )
       expect(bskyRes1.data.takedown?.applied).toBe(true)
 
-      const takedownLabel1 = await getLabel(
-        sc.dids.bob,
-        UNSPECCED_TAKEDOWN_LABEL,
-      )
+      const takedownLabel1 = await getLabel(sc.dids.bob, TAKEDOWN_LABEL)
       expect(takedownLabel1).toBeDefined()
 
       // cleanup
@@ -570,52 +603,7 @@ describe('moderation', () => {
       )
       expect(bskyRes2.data.takedown?.applied).toBe(false)
 
-      const takedownLabel2 = await getLabel(
-        sc.dids.bob,
-        UNSPECCED_TAKEDOWN_LABEL,
-      )
-      expect(takedownLabel2).toBeUndefined()
-    })
-
-    it('fans out record takedowns', async () => {
-      const post = sc.posts[sc.dids.bob][0].ref
-      const uri = post.uriStr
-      await modClient.performTakedown({
-        subject: recordSubject(post),
-      })
-      await ozone.processAll()
-
-      const pdsRes1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
-        { uri },
-        { headers: network.pds.adminAuthHeaders() },
-      )
-      expect(pdsRes1.data.takedown?.applied).toBe(true)
-
-      const bskyRes1 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
-        { uri },
-        { headers: network.bsky.adminAuthHeaders() },
-      )
-      expect(bskyRes1.data.takedown?.applied).toBe(true)
-
-      const takedownLabel1 = await getLabel(uri, UNSPECCED_TAKEDOWN_LABEL)
-      expect(takedownLabel1).toBeDefined()
-
-      // cleanup
-      await modClient.performReverseTakedown({ subject: recordSubject(post) })
-      await ozone.processAll()
-
-      const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
-        { uri },
-        { headers: network.pds.adminAuthHeaders() },
-      )
-      expect(pdsRes2.data.takedown?.applied).toBe(false)
-      const bskyRes2 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
-        { uri },
-        { headers: network.bsky.adminAuthHeaders() },
-      )
-      expect(bskyRes2.data.takedown?.applied).toBe(false)
-
-      const takedownLabel2 = await getLabel(uri, UNSPECCED_TAKEDOWN_LABEL)
+      const takedownLabel2 = await getLabel(sc.dids.bob, TAKEDOWN_LABEL)
       expect(takedownLabel2).toBeUndefined()
     })
 
@@ -687,6 +675,7 @@ describe('moderation', () => {
       // In the actual app, this will be instantiated and run on server startup
       const reverser = new EventReverser(
         network.ozone.ctx.db,
+        // @ts-expect-error Error due to circular dependency with the dev-env package
         network.ozone.ctx.modService,
       )
       await reverser.findAndRevertDueActions()
@@ -711,22 +700,6 @@ describe('moderation', () => {
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
       })
-    })
-
-    it('serves label when authed', async () => {
-      const { data: unauthed } = await agent.api.com.atproto.temp.fetchLabels(
-        {},
-      )
-      expect(unauthed.labels.map((l) => l.val)).not.toContain(
-        UNSPECCED_TAKEDOWN_LABEL,
-      )
-      const { data: authed } = await agent.api.com.atproto.temp.fetchLabels(
-        {},
-        { headers: network.bsky.adminAuthHeaders() },
-      )
-      expect(authed.labels.map((l) => l.val)).toContain(
-        UNSPECCED_TAKEDOWN_LABEL,
-      )
     })
 
     async function emitLabelEvent(
@@ -860,14 +833,6 @@ describe('moderation', () => {
       expect(res.data.takedown?.applied).toBe(true)
     })
 
-    it('creates a takedown blobs label', async () => {
-      const label = await getLabel(
-        post.ref.uriStr,
-        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
-      )
-      expect(label).toBeDefined()
-    })
-
     it('restores blob when action is reversed.', async () => {
       await modClient.performReverseTakedown({
         subject: recordSubject(post.ref),
@@ -897,30 +862,6 @@ describe('moderation', () => {
         { headers: network.pds.adminAuthHeaders() },
       )
       expect(res.data.takedown?.applied).toBe(false)
-    })
-
-    it('serves label when authed', async () => {
-      const { data: unauthed } = await agent.api.com.atproto.temp.fetchLabels(
-        {},
-      )
-      expect(unauthed.labels.map((l) => l.val)).not.toContain(
-        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
-      )
-      const { data: authed } = await agent.api.com.atproto.temp.fetchLabels(
-        {},
-        { headers: network.bsky.adminAuthHeaders() },
-      )
-      expect(authed.labels.map((l) => l.val)).toContain(
-        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
-      )
-    })
-
-    it('negates takedown blobs label on reversal', async () => {
-      const label = await getLabel(
-        post.ref.uriStr,
-        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
-      )
-      expect(label).toBeUndefined()
     })
   })
 })

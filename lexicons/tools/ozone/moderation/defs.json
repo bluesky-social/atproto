@@ -25,16 +25,21 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventUnmute",
+            "#modEventMuteReporter",
+            "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
-            "#modEventDivert"
+            "#modEventDivert",
+            "#modEventTag"
           ]
         },
         "subject": {
           "type": "union",
           "refs": [
             "com.atproto.admin.defs#repoRef",
-            "com.atproto.repo.strongRef"
+            "com.atproto.repo.strongRef",
+            "chat.bsky.convo.defs#messageRef"
           ]
         },
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
@@ -67,9 +72,13 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventUnmute",
+            "#modEventMuteReporter",
+            "#modEventUnmuteReporter",
             "#modEventEmail",
             "#modEventResolveAppeal",
-            "#modEventDivert"
+            "#modEventDivert",
+            "#modEventTag"
           ]
         },
         "subject": {
@@ -125,6 +134,10 @@
           "description": "Sticky comment on the subject."
         },
         "muteUntil": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "muteReportingUntil": {
           "type": "string",
           "format": "datetime"
         },
@@ -242,6 +255,10 @@
         "comment": {
           "type": "string"
         },
+        "isReporterMuted": {
+          "type": "boolean",
+          "description": "Set to true if the reporter was muted from reporting at the time of the event. These reports won't impact the reviewState of the subject."
+        },
         "reportType": {
           "type": "ref",
           "ref": "com.atproto.moderation.defs#reasonType"
@@ -293,6 +310,28 @@
     "modEventUnmute": {
       "type": "object",
       "description": "Unmute action on a subject",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventMuteReporter": {
+      "type": "object",
+      "description": "Mute incoming reports from an account",
+      "required": ["durationInHours"],
+      "properties": {
+        "comment": { "type": "string" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the account should remain muted."
+        }
+      }
+    },
+    "modEventUnmuteReporter": {
+      "type": "object",
+      "description": "Unmute incoming reports from an account",
       "properties": {
         "comment": {
           "type": "string",
@@ -368,7 +407,8 @@
           "ref": "com.atproto.server.defs#inviteCode"
         },
         "invitesDisabled": { "type": "boolean" },
-        "inviteNote": { "type": "string" }
+        "inviteNote": { "type": "string" },
+        "deactivatedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoViewDetail": {
@@ -404,7 +444,8 @@
         },
         "invitesDisabled": { "type": "boolean" },
         "inviteNote": { "type": "string" },
-        "emailConfirmedAt": { "type": "string", "format": "datetime" }
+        "emailConfirmedAt": { "type": "string", "format": "datetime" },
+        "deactivatedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoViewNotFound": {
