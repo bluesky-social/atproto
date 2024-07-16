@@ -846,4 +846,58 @@ describe(`hasMutedWord`, () => {
       jest.useRealTimers()
     })
   })
+
+  describe(`actor-based mute words`, () => {
+    const viewer = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: false,
+        labels: {},
+        labelers: [],
+        mutedWords: [
+          {
+            value: 'words',
+            targets: ['content'],
+            actors: ['did:web:bob.test'],
+          },
+        ],
+        hiddenPosts: [],
+      },
+      labelDefs: {},
+    }
+
+    it(`muted actor`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        viewer,
+      )
+      expect(res.causes[0].type).toBe('mute-word')
+    })
+
+    it(`non-muted actor`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'carla.test',
+            displayName: 'Carla',
+          }),
+          labels: [],
+        }),
+        viewer,
+      )
+      expect(res.causes.length).toBe(0)
+    })
+  })
 })
