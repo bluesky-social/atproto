@@ -988,7 +988,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * Convenience method to sequentially add muted words to user preferences
+   * Convenience method to add muted words to user preferences
    */
   async addMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
     await Promise.all(newMutedWords.map((word) => this.addMutedWord(word)))
@@ -1002,8 +1002,7 @@ export class BskyAgent extends AtpAgent {
   }
 
   /**
-   * Update a muted word in user preferences. If called in succession, this
-   * method must be called sequentially, not in parallel.
+   * Update a muted word in user preferences.
    */
   async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
