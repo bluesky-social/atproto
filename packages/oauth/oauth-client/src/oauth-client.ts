@@ -257,16 +257,10 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError('Invalid redirect_uri')
     }
 
-    const signal = options?.signal
-    const { identity, metadata } = /^https?:\/\//.test(input)
-      ? // Allow using an entryway url directly as login input (e.g. when the
-        // user forgot their handle, or when the handle does not resolve to a
-        // DID)
-        {
-          identity: undefined,
-          metadata: await this.oauthResolver.resolveMetadata(input, { signal }),
-        }
-      : await this.oauthResolver.resolve(input, { signal })
+    const { identity, metadata } = await this.oauthResolver.resolve(
+      input,
+      options,
+    )
 
     const nonce = await this.runtime.generateNonce()
     const pkce = await this.runtime.generatePKCE()
