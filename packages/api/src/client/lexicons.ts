@@ -4358,13 +4358,11 @@ export const schemaDict = {
               ref: 'lex:app.bsky.actor.defs#mutedWordTarget',
             },
           },
-          actors: {
-            type: 'array',
-            description: 'The accounts for which this muted word applies.',
-            items: {
-              type: 'string',
-              format: 'did',
-            },
+          actorTarget: {
+            type: 'string',
+            description:
+              'Groups of users to apply the muted word to. If undefined, applies to all users.',
+            knownValues: ['all', 'exclude-following'],
           },
           expiresAt: {
             type: 'string',

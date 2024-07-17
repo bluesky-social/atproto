@@ -942,7 +942,10 @@ export class BskyAgent extends AtpAgent {
    * Add a muted word to user preferences.
    */
   async addMutedWord(
-    mutedWord: Pick<MutedWord, 'value' | 'targets' | 'actors' | 'expiresAt'>,
+    mutedWord: Pick<
+      MutedWord,
+      'value' | 'targets' | 'actorTarget' | 'expiresAt'
+    >,
   ) {
     const sanitizedValue = sanitizeMutedWordValue(mutedWord.value)
 
@@ -959,7 +962,7 @@ export class BskyAgent extends AtpAgent {
         id: TID.nextStr(),
         value: sanitizedValue,
         targets: mutedWord.targets || [],
-        actors: mutedWord.actors || [],
+        actorTarget: mutedWord.actorTarget || 'all',
         expiresAt: mutedWord.expiresAt || undefined,
       }
 
@@ -1025,7 +1028,7 @@ export class BskyAgent extends AtpAgent {
               id: existingItem.id || TID.nextStr(),
               value: sanitizeMutedWordValue(updated.value),
               targets: updated.targets || [],
-              actors: updated.actors || [],
+              actorTarget: updated.actorTarget || 'all',
               expiresAt: updated.expiresAt || undefined,
             }
           } else {

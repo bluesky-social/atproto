@@ -766,4 +766,144 @@ describe(`hasMutedWord`, () => {
       expect(res.causes.length).toBe(0)
     })
   })
+
+  describe(`timed mute words`, () => {
+    it(`non-expired word`, () => {
+      jest.useFakeTimers()
+      const now = Date.now()
+
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:alice.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [
+              {
+                value: 'words',
+                targets: ['content'],
+                expiresAt: new Date(now + 1e3).toISOString(),
+              },
+            ],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+
+      expect(res.causes[0].type).toBe('mute-word')
+
+      jest.useRealTimers()
+    })
+
+    it(`expired word`, () => {
+      jest.useFakeTimers()
+      const now = Date.now()
+
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:alice.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [
+              {
+                value: 'words',
+                targets: ['content'],
+                expiresAt: new Date(now - 1e3).toISOString(),
+              },
+            ],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+
+      expect(res.causes.length).toBe(0)
+
+      jest.useRealTimers()
+    })
+  })
+
+  describe(`actor-based mute words`, () => {
+    const viewer = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: false,
+        labels: {},
+        labelers: [],
+        mutedWords: [
+          {
+            value: 'words',
+            targets: ['content'],
+            actorTarget: 'exclude-following',
+          },
+        ],
+        hiddenPosts: [],
+      },
+      labelDefs: {},
+    }
+
+    it(`followed actor`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+            viewer: {
+              following: 'true',
+            },
+          }),
+          labels: [],
+        }),
+        viewer,
+      )
+      expect(res.causes.length).toBe(0)
+    })
+
+    it(`non-followed actor`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'carla.test',
+            displayName: 'Carla',
+            viewer: {
+              following: undefined,
+            },
+          }),
+          labels: [],
+        }),
+        viewer,
+      )
+      expect(res.causes[0].type).toBe('mute-word')
+    })
+  })
 })

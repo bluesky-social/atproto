@@ -1772,7 +1772,7 @@ describe('agent', () => {
           await agent.addMutedWord({
             value: 'word',
             targets: ['content'],
-            actors: [],
+            actorTarget: 'all',
             expiresAt,
           })
 
@@ -1783,7 +1783,7 @@ describe('agent', () => {
 
           expect(word!.id).toBeTruthy()
           expect(word!.targets).toEqual(['content'])
-          expect(word!.actors).toEqual([])
+          expect(word!.actorTarget).toEqual('all')
           expect(word!.expiresAt).toEqual(expiresAt)
         })
 
@@ -1975,11 +1975,11 @@ describe('agent', () => {
           ).toHaveProperty('targets', ['content'])
         })
 
-        it('updates actors', async () => {
+        it('updates actorTarget', async () => {
           await agent.addMutedWord({
             value: 'value',
             targets: ['content'],
-            actors: ['did:plc:fake'],
+            actorTarget: 'all',
           })
 
           const a = await agent.getPreferences()
@@ -1989,14 +1989,14 @@ describe('agent', () => {
 
           await agent.updateMutedWord({
             ...word!,
-            actors: ['did:plc:fake2'],
+            actorTarget: 'exclude-following',
           })
 
           const b = await agent.getPreferences()
 
           expect(
             b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
-          ).toHaveProperty('actors', ['did:plc:fake2'])
+          ).toHaveProperty('actorTarget', 'exclude-following')
         })
 
         it('updates expiresAt', async () => {
