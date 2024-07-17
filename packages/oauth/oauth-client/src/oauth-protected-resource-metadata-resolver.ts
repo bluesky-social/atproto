@@ -67,7 +67,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     const request = new Request(url, {
       signal: options?.signal,
       headers,
-      redirect: 'error', // response must be 200 OK
+      redirect: 'manual', // response must be 200 OK
     })
 
     const response = await this.fetch(request)
