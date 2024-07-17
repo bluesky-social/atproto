@@ -152,7 +152,7 @@ function checkMutedWords(
         facets: subject.record.facets,
         outlineTags: subject.record.tags,
         languages: subject.record.langs,
-        actors: [postAuthor],
+        actor: postAuthor,
       })
     ) {
       return true
@@ -169,7 +169,7 @@ function checkMutedWords(
             mutedWords,
             text: image.alt,
             languages: subject.record.langs,
-            actors: [postAuthor],
+            actor: postAuthor,
           })
         ) {
           return true
@@ -193,7 +193,7 @@ function checkMutedWords(
             facets: embeddedPost.facets,
             outlineTags: embeddedPost.tags,
             languages: embeddedPost.langs,
-            actors: [embedAuthor],
+            actor: embedAuthor,
           })
         ) {
           return true
@@ -207,7 +207,7 @@ function checkMutedWords(
                 mutedWords,
                 text: image.alt,
                 languages: embeddedPost.langs,
-                actors: [embedAuthor],
+                actor: embedAuthor,
               })
             ) {
               return true
@@ -223,7 +223,7 @@ function checkMutedWords(
               mutedWords,
               text: external.title + ' ' + external.description,
               languages: [],
-              actors: [embedAuthor],
+              actor: embedAuthor,
             })
           ) {
             return true
@@ -239,7 +239,7 @@ function checkMutedWords(
                 mutedWords,
                 text: external.title + ' ' + external.description,
                 languages: [],
-                actors: [embedAuthor],
+                actor: embedAuthor,
               })
             ) {
               return true
@@ -256,7 +256,7 @@ function checkMutedWords(
                   languages: AppBskyFeedPost.isRecord(embeddedPost.record)
                     ? embeddedPost.langs
                     : [],
-                  actors: [embedAuthor],
+                  actor: embedAuthor,
                 })
               ) {
                 return true
@@ -274,7 +274,7 @@ function checkMutedWords(
           mutedWords,
           text: external.title + ' ' + external.description,
           languages: [],
-          actors: [postAuthor],
+          actor: postAuthor,
         })
       ) {
         return true
@@ -297,7 +297,7 @@ function checkMutedWords(
             facets: post.facets,
             outlineTags: post.tags,
             languages: post.langs,
-            actors: [embedAuthor],
+            actor: embedAuthor,
           })
         ) {
           return true
@@ -314,7 +314,7 @@ function checkMutedWords(
               languages: AppBskyFeedPost.isRecord(subject.record)
                 ? subject.record.langs
                 : [],
-              actors: [embedAuthor],
+              actor: embedAuthor,
             })
           ) {
             return true

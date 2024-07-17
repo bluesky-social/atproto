@@ -858,7 +858,7 @@ describe(`hasMutedWord`, () => {
           {
             value: 'words',
             targets: ['content'],
-            actors: ['did:web:bob.test'],
+            actorTarget: 'exclude-following',
           },
         ],
         hiddenPosts: [],
@@ -866,7 +866,7 @@ describe(`hasMutedWord`, () => {
       labelDefs: {},
     }
 
-    it(`muted actor`, () => {
+    it(`followed actor`, () => {
       const res = moderatePost(
         mock.postView({
           record: mock.post({
@@ -875,15 +875,18 @@ describe(`hasMutedWord`, () => {
           author: mock.profileViewBasic({
             handle: 'bob.test',
             displayName: 'Bob',
+            viewer: {
+              following: 'true',
+            },
           }),
           labels: [],
         }),
         viewer,
       )
-      expect(res.causes[0].type).toBe('mute-word')
+      expect(res.causes.length).toBe(0)
     })
 
-    it(`non-muted actor`, () => {
+    it(`non-followed actor`, () => {
       const res = moderatePost(
         mock.postView({
           record: mock.post({
@@ -892,12 +895,15 @@ describe(`hasMutedWord`, () => {
           author: mock.profileViewBasic({
             handle: 'carla.test',
             displayName: 'Carla',
+            viewer: {
+              following: undefined,
+            },
           }),
           labels: [],
         }),
         viewer,
       )
-      expect(res.causes.length).toBe(0)
+      expect(res.causes[0].type).toBe('mute-word')
     })
   })
 })

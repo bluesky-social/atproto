@@ -27,14 +27,14 @@ export function hasMutedWord({
   facets,
   outlineTags,
   languages,
-  actors = [],
+  actor,
 }: {
   mutedWords: AppBskyActorDefs.MutedWord[]
   text: string
   facets?: AppBskyRichtextFacet.Main[]
   outlineTags?: string[]
   languages?: string[]
-  actors?: AppBskyActorDefs.ProfileView[]
+  actor?: AppBskyActorDefs.ProfileView
 }) {
   const exception = LANGUAGE_EXCEPTIONS.includes(languages?.[0] || '')
   const tags = ([] as string[])
@@ -57,12 +57,11 @@ export function hasMutedWord({
     // expired, ignore
     if (mute.expiresAt && mute.expiresAt < new Date().toISOString()) continue
 
-    // check for targeted users
-    const hasTargetedUsers = Boolean(mute.actors?.length)
-    const isTargetedUser = mute.actors?.some((a) =>
-      actors.some((_a) => a === _a.did),
+    if (
+      mute.actorTarget === 'exclude-following' &&
+      Boolean(actor?.viewer?.following)
     )
-    if (hasTargetedUsers && !isTargetedUser) continue
+      continue
 
     // `content` applies to tags as well
     if (tags.includes(mutedWord)) return true
