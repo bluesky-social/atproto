@@ -7,26 +7,22 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
-export interface QueryParams {
-  priority?: boolean
-  seenAt?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  count: number
+export interface InputSchema {
+  priority: boolean
   [k: string]: unknown
 }
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
   success: boolean
   headers: Headers
-  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

@@ -12,6 +12,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {
   limit: number
+  priority?: boolean
   cursor?: string
   seenAt?: string
 }
@@ -21,6 +22,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   notifications: Notification[]
+  priority?: boolean
   seenAt?: string
   [k: string]: unknown
 }
