@@ -59,12 +59,12 @@ import {
   FeedItem,
 } from './feed'
 import { ParsedLabelers } from '../util'
-import starterPack from '../data-plane/server/indexing/plugins/starter-pack'
 
 export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
+  include3pBlocks = this.vals.include3pBlocks
   constructor(private vals: HydrateCtxVals) {}
   copy<V extends Partial<HydrateCtxVals>>(vals?: V): HydrateCtx & V {
     return new HydrateCtx({ ...this.vals, ...vals }) as HydrateCtx & V
@@ -75,6 +75,7 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
+  include3pBlocks?: boolean
 }
 
 export type HydrationState = {
@@ -914,6 +915,7 @@ export class Hydrator {
       labelers: availableLabelers,
       viewer: vals.viewer,
       includeTakedowns: vals.includeTakedowns,
+      include3pBlocks: vals.include3pBlocks,
     })
   }
 
