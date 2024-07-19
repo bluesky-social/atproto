@@ -38,6 +38,7 @@ import {
   RecordSubject,
   RepoSubject,
   subjectFromStatusRow,
+  SubjectInfo,
 } from './subject'
 import { jsonb } from '../db/types'
 import { LabelChannel } from '../db/schema/label'
@@ -49,6 +50,7 @@ import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
+import { Snapshot } from './snapshot'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -112,6 +114,18 @@ export class ModerationService {
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
+  }
+
+  async getStatus(
+    subject: ModSubject,
+  ): Promise<ModerationSubjectStatusRow | null> {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', subject.did)
+      .where('recordPath', '=', subject.recordPath ?? '')
+      .selectAll()
+      .executeTakeFirst()
+    return result ?? null
   }
 
   async getEventOrThrow(id: number): Promise<ModerationEventRow> {
@@ -357,11 +371,11 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    const subjectStatus = await adjustModerationSubjectStatus(
-      this.db,
-      modEvent,
-      subject.blobCids,
-    )
+    // These are independent operations and can be done in parallel
+    const [subjectStatus] = await Promise.all([
+      adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids),
+      this.attemptSnapshot(subjectInfo),
+    ])
 
     return { event: modEvent, subjectStatus }
   }
@@ -831,16 +845,23 @@ export class ModerationService {
     }
   }
 
-  async getStatus(
-    subject: ModSubject,
-  ): Promise<ModerationSubjectStatusRow | null> {
-    const result = await this.db.db
-      .selectFrom('moderation_subject_status')
-      .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath ?? '')
-      .selectAll()
-      .executeTakeFirst()
-    return result ?? null
+  async getSnapshot(subjectInfo: SubjectInfo) {
+    const snapshot = new Snapshot(this.db, this.views)
+    return snapshot.fetch(
+      subjectInfo.subjectDid,
+      subjectInfo.subjectUri,
+      subjectInfo.subjectCid,
+    )
+  }
+
+  async attemptSnapshot(subjectInfo: SubjectInfo) {
+    if (!this.cfg.service.snapshotEnabled) return
+    const snapshot = new Snapshot(this.db, this.views)
+    return snapshot.attempt(
+      subjectInfo.subjectDid,
+      subjectInfo.subjectUri,
+      subjectInfo.subjectCid,
+    )
   }
 
   // This is used to check if the reporter of an incoming report is muted from reporting

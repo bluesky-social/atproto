@@ -85,7 +85,7 @@ export const subjectFromStatusRow = (
   }
 }
 
-type SubjectInfo = {
+export type SubjectInfo = {
   subjectType:
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'

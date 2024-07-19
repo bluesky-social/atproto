@@ -15,6 +15,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     did: env.serverDid,
     version: env.version,
     devMode: env.devMode,
+    snapshotEnabled: env.snapshotEnabled,
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -109,6 +110,7 @@ export type ServiceConfig = {
   did: string
   version?: string
   devMode?: boolean
+  snapshotEnabled?: boolean
 }
 
 export type BlobDivertConfig = {
