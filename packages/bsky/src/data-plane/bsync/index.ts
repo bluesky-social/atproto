@@ -129,6 +129,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           .onConflict((oc) =>
             oc.column('did').doUpdateSet({ priorityNotifs: priority }),
           )
+          .execute()
       }
       return {}
     },

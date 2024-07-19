@@ -270,12 +270,18 @@ describe('notification views', () => {
   it('fetches notifications with explicit priority', async () => {
     const priority = await agent.api.app.bsky.notification.listNotifications(
       { priority: true },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
+    // only notifs from follow (alice)
+    expect(
+      priority.data.notifications.every(
+        (notif) => ![sc.dids.bob, sc.dids.dan].includes(notif.author.did),
+      ),
+    ).toBe(true)
     expect(forSnapshot(priority.data)).toMatchSnapshot()
     const noPriority = await agent.api.app.bsky.notification.listNotifications(
       { priority: false },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     expect(forSnapshot(noPriority.data)).toMatchSnapshot()
   })
@@ -285,14 +291,20 @@ describe('notification views', () => {
       { priority: true },
       {
         encoding: 'application/json',
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(sc.dids.carol),
       },
     )
     await network.processAll()
     const notifs = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
+    // only notifs from follow (alice)
+    expect(
+      notifs.data.notifications.every(
+        (notif) => ![sc.dids.bob, sc.dids.dan].includes(notif.author.did),
+      ),
+    ).toBe(true)
     expect(forSnapshot(notifs.data)).toMatchSnapshot()
   })
 
@@ -302,6 +314,6 @@ describe('notification views', () => {
         { cursor: '90210::bafycid' },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(notifs).toEqual({ notifications: [], priority: false })
+    expect(notifs).toMatchObject({ notifications: [] })
   })
 })
