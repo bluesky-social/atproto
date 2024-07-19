@@ -132,8 +132,8 @@ describe('notifications', () => {
         httpVersion: '1.1',
         baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
       })
-      const tryScanMuteOperations1 = unauthedClient.scanMuteOperations({})
-      await expect(tryScanMuteOperations1).rejects.toEqual(
+      const tryScanNotifOperations1 = unauthedClient.scanNotifOperations({})
+      await expect(tryScanNotifOperations1).rejects.toEqual(
         new ConnectError('missing auth', Code.Unauthenticated),
       )
       // bad auth
@@ -142,13 +142,13 @@ describe('notifications', () => {
         baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
         interceptors: [authWithApiKey('key-bad')],
       })
-      const tryScanMuteOperations2 = badauthedClient.scanMuteOperations({})
-      await expect(tryScanMuteOperations2).rejects.toEqual(
+      const tryScanNotifOperations2 = badauthedClient.scanNotifOperations({})
+      await expect(tryScanNotifOperations2).rejects.toEqual(
         new ConnectError('invalid api key', Code.Unauthenticated),
       )
     })
 
-    it('pages over created mute ops.', async () => {
+    it('pages over created notif ops.', async () => {
       // add 100 notif ops
       for (let i = 0; i < 100; ++i) {
         await client.addNotifOperation({

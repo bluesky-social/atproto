@@ -54,7 +54,6 @@ const skeleton = async (
   if (clearlyBadCursor(params.cursor)) {
     return { notifs: [], priority }
   }
-  // actor
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
       actorDid: viewer,

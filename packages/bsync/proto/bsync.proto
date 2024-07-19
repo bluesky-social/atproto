@@ -3,8 +3,6 @@ syntax = "proto3";
 package bsync;
 option go_package = "./;bsync";
 
-import "google/protobuf/timestamp.proto";
-
 //
 // Sync
 //
