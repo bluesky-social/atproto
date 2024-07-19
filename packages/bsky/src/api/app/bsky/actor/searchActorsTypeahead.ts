@@ -82,10 +82,14 @@ const hydration = async (
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration } = inputs
-  skeleton.dids = skeleton.dids.filter(
-    (did) => !ctx.views.viewerBlockExists(did, hydration),
-  )
+  const { ctx, skeleton, hydration, params } = inputs
+  skeleton.dids = skeleton.dids.filter((did) => {
+    // Always display exact matches so that users can find profiles that they have blocked
+    const isExactMatch =
+      hydration.actors?.get(did)?.handle?.toLowerCase() ===
+      params.q?.toLowerCase()
+    return isExactMatch || !ctx.views.viewerBlockExists(did, hydration)
+  })
   return skeleton
 }
 
