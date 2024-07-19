@@ -4139,6 +4139,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   createdAt?: Timestamp
 
+  /**
+   * @generated from field: bool priority_notifications = 11;
+   */
+  priorityNotifications = false
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super()
     proto3.util.initPartial(data, this)
@@ -4172,6 +4177,12 @@ export class ActorInfo extends Message<ActorInfo> {
       T: 9 /* ScalarType.STRING */,
     },
     { no: 10, name: 'created_at', kind: 'message', T: Timestamp },
+    {
+      no: 11,
+      name: 'priority_notifications',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
   ])
 
   static fromBinary(
@@ -6884,6 +6895,11 @@ export class GetNotificationsRequest extends Message<GetNotificationsRequest> {
    */
   cursor = ''
 
+  /**
+   * @generated from field: bool priority = 4;
+   */
+  priority = false
+
   constructor(data?: PartialMessage<GetNotificationsRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -6895,6 +6911,7 @@ export class GetNotificationsRequest extends Message<GetNotificationsRequest> {
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: 'priority', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
@@ -6961,6 +6978,11 @@ export class Notification extends Message<Notification> {
    */
   timestamp?: Timestamp
 
+  /**
+   * @generated from field: bool priority = 6;
+   */
+  priority = false
+
   constructor(data?: PartialMessage<Notification>) {
     super()
     proto3.util.initPartial(data, this)
@@ -6984,6 +7006,7 @@ export class Notification extends Message<Notification> {
       T: 9 /* ScalarType.STRING */,
     },
     { no: 5, name: 'timestamp', kind: 'message', T: Timestamp },
+    { no: 6, name: 'priority', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
@@ -7099,6 +7122,11 @@ export class UpdateNotificationSeenRequest extends Message<UpdateNotificationSee
    */
   timestamp?: Timestamp
 
+  /**
+   * @generated from field: bool priority = 3;
+   */
+  priority = false
+
   constructor(data?: PartialMessage<UpdateNotificationSeenRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -7109,6 +7137,7 @@ export class UpdateNotificationSeenRequest extends Message<UpdateNotificationSee
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
     { no: 2, name: 'timestamp', kind: 'message', T: Timestamp },
+    { no: 3, name: 'priority', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
@@ -7212,6 +7241,11 @@ export class GetNotificationSeenRequest extends Message<GetNotificationSeenReque
    */
   actorDid = ''
 
+  /**
+   * @generated from field: bool priority = 2;
+   */
+  priority = false
+
   constructor(data?: PartialMessage<GetNotificationSeenRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -7221,6 +7255,7 @@ export class GetNotificationSeenRequest extends Message<GetNotificationSeenReque
   static readonly typeName = 'bsky.GetNotificationSeenRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'priority', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
@@ -7325,6 +7360,11 @@ export class GetUnreadNotificationCountRequest extends Message<GetUnreadNotifica
    */
   actorDid = ''
 
+  /**
+   * @generated from field: bool priority = 2;
+   */
+  priority = false
+
   constructor(data?: PartialMessage<GetUnreadNotificationCountRequest>) {
     super()
     proto3.util.initPartial(data, this)
@@ -7334,6 +7374,7 @@ export class GetUnreadNotificationCountRequest extends Message<GetUnreadNotifica
   static readonly typeName = 'bsky.GetUnreadNotificationCountRequest'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: 'actor_did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'priority', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
   ])
 
   static fromBinary(
