@@ -130,7 +130,7 @@ import * as AppBskyGraphUnmuteThread from './types/app/bsky/graph/unmuteThread'
 import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
-import * as AppBskyNotificationPutNotificationPreferences from './types/app/bsky/notification/putNotificationPreferences'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -1746,16 +1746,14 @@ export class AppBskyNotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  putNotificationPreferences<AV extends AuthVerifier>(
+  putPreferences<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyNotificationPutNotificationPreferences.Handler<ExtractAuth<AV>>,
-      AppBskyNotificationPutNotificationPreferences.HandlerReqCtx<
-        ExtractAuth<AV>
-      >
+      AppBskyNotificationPutPreferences.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationPutPreferences.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.notification.putNotificationPreferences' // @ts-ignore
+    const nsid = 'app.bsky.notification.putPreferences' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

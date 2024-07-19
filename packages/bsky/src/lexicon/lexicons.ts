@@ -8484,9 +8484,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyNotificationPutNotificationPreferences: {
+  AppBskyNotificationPutPreferences: {
     lexicon: 1,
-    id: 'app.bsky.notification.putNotificationPreferences',
+    id: 'app.bsky.notification.putPreferences',
     defs: {
       main: {
         type: 'procedure',
@@ -10083,8 +10083,7 @@ export const ids = {
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
-  AppBskyNotificationPutNotificationPreferences:
-    'app.bsky.notification.putNotificationPreferences',
+  AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
