@@ -1,4 +1,9 @@
 import { Code, ConnectError } from '@connectrpc/connect'
+import {
+  InvalidDidError,
+  ensureValidAtUri,
+  ensureValidDid,
+} from '@atproto/syntax'
 
 export const validCursor = (cursor: string): number | null => {
   if (cursor === '') return null
@@ -22,4 +27,25 @@ export const combineSignals = (a: AbortSignal, b: AbortSignal) => {
     })
   }
   return controller.signal
+}
+
+export const isValidDid = (did: string) => {
+  try {
+    ensureValidDid(did)
+    return true
+  } catch (err) {
+    if (err instanceof InvalidDidError) {
+      return false
+    }
+    throw err
+  }
+}
+
+export const isValidAtUri = (uri: string) => {
+  try {
+    ensureValidAtUri(uri)
+    return true
+  } catch {
+    return false
+  }
 }

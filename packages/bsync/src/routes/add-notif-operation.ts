@@ -1,17 +1,24 @@
 import { sql } from 'kysely'
-import { ServiceImpl } from '@connectrpc/connect'
+import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../proto/bsync_connect'
 import { AddNotifOperationResponse } from '../proto/bsync_pb'
 import AppContext from '../context'
 import { authWithApiKey } from './auth'
 import Database from '../db'
 import { createNotifOpChannel } from '../db/schema/notif_op'
+import { isValidDid } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async addNotifOperation(req, handlerCtx) {
     authWithApiKey(ctx, handlerCtx)
     const { db } = ctx
     const { actorDid, priority } = req
+    if (!isValidDid(actorDid)) {
+      throw new ConnectError(
+        'actor_did must be a valid did',
+        Code.InvalidArgument,
+      )
+    }
     const id = await db.transaction(async (txn) => {
       // create notif op
       const id = await createNotifOp(txn, actorDid, priority)
