@@ -6,12 +6,21 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
-      const { seenAt } = input.body
       const viewer = auth.credentials.iss
-      await ctx.dataplane.updateNotificationSeen({
-        actorDid: viewer,
-        timestamp: Timestamp.fromDate(new Date(seenAt)),
-      })
+      const seenAt = new Date(input.body.seenAt)
+      // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
+      await Promise.all([
+        ctx.dataplane.updateNotificationSeen({
+          actorDid: viewer,
+          timestamp: Timestamp.fromDate(seenAt),
+          priority: false,
+        }),
+        ctx.dataplane.updateNotificationSeen({
+          actorDid: viewer,
+          timestamp: Timestamp.fromDate(seenAt),
+          priority: true,
+        }),
+      ])
     },
   })
 }
