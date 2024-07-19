@@ -1,9 +1,8 @@
 import { Selectable } from 'kysely'
-import { NotifOperation_Setting } from '../../proto/bsync_pb'
 
 export interface NotifItem {
   actorDid: string
-  setting: NotifOperation_Setting // integer enum: 1->normal, 2->priority
+  priority: boolean
   fromId: number
 }
 

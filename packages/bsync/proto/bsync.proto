@@ -44,19 +44,14 @@ message ScanMuteOperationsResponse {
 }
 
 message NotifOperation {
-  enum Setting {
-    SETTING_UNSPECIFIED = 0;
-    SETTING_UNFILTERED = 1;
-    SETTING_PRIORITY = 2;
-  }
   string id = 1;
   string actor_did = 2;
-  Setting setting = 3;
+  optional bool priority = 3;
 }
 
 message AddNotifOperationRequest {
   string actor_did = 1;
-  NotifOperation.Setting setting = 2;
+  optional bool priority = 2;
 }
 
 message AddNotifOperationResponse {

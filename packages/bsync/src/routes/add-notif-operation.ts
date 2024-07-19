@@ -1,10 +1,7 @@
 import { sql } from 'kysely'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../proto/bsync_connect'
-import {
-  AddNotifOperationResponse,
-  NotifOperation_Setting,
-} from '../proto/bsync_pb'
+import { AddNotifOperationResponse } from '../proto/bsync_pb'
 import AppContext from '../context'
 import { authWithApiKey } from './auth'
 import Database from '../db'
@@ -14,18 +11,13 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async addNotifOperation(req, handlerCtx) {
     authWithApiKey(ctx, handlerCtx)
     const { db } = ctx
-    const { actorDid, setting } = req
+    const { actorDid, priority } = req
     const id = await db.transaction(async (txn) => {
       // create notif op
-      const id = await createNotifOp(txn, actorDid, setting)
+      const id = await createNotifOp(txn, actorDid, priority)
       // update notif state
-      if (
-        [
-          NotifOperation_Setting.UNFILTERED,
-          NotifOperation_Setting.PRIORITY,
-        ].includes(setting)
-      ) {
-        await updateNotifItem(txn, id, actorDid, setting)
+      if (priority !== undefined) {
+        await updateNotifItem(txn, id, actorDid, priority)
       }
       return id
     })
@@ -33,7 +25,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       operation: {
         id: String(id),
         actorDid,
-        setting,
+        priority,
       },
     })
   },
@@ -42,14 +34,14 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
 const createNotifOp = async (
   db: Database,
   actorDid: string,
-  setting: NotifOperation_Setting,
+  priority: boolean | undefined,
 ) => {
   const { ref } = db.db.dynamic
   const { id } = await db.db
     .insertInto('notif_op')
     .values({
       actorDid,
-      setting,
+      priority,
     })
     .returning('id')
     .executeTakeFirstOrThrow()
@@ -61,20 +53,21 @@ const updateNotifItem = async (
   db: Database,
   fromId: number,
   actorDid: string,
-  setting: NotifOperation_Setting,
+  priority: boolean,
 ) => {
   const { ref } = db.db.dynamic
   await db.db
     .insertInto('notif_item')
     .values({
       actorDid,
-      setting,
+      priority,
       fromId,
     })
     .onConflict((oc) =>
-      oc
-        .column('actorDid')
-        .doUpdateSet({ fromId: sql`${ref('excluded.fromId')}` }),
+      oc.column('actorDid').doUpdateSet({
+        priority: sql`${ref('excluded.priority')}`,
+        fromId: sql`${ref('excluded.fromId')}`,
+      }),
     )
     .execute()
 }

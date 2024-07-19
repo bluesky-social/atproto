@@ -56,7 +56,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       operations: ops.map((op) => ({
         id: op.id.toString(),
         actorDid: op.actorDid,
-        setting: op.setting,
+        priority: op.priority ?? undefined,
       })),
       cursor: lastOp.id.toString(),
     })

@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('notif_op')
     .addColumn('id', 'bigserial', (col) => col.primaryKey())
     .addColumn('actorDid', 'varchar', (col) => col.notNull())
-    .addColumn('setting', 'int2', (col) => col.notNull()) // integer enum: 1->normal, 2->priority
+    .addColumn('priority', 'boolean')
     .addColumn('createdAt', 'timestamptz', (col) =>
       col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`),
     )
@@ -13,7 +13,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('notif_item')
     .addColumn('actorDid', 'varchar', (col) => col.primaryKey())
-    .addColumn('setting', 'int2', (col) => col.notNull()) // integer enum: 1->normal, 2->priority
+    .addColumn('priority', 'boolean', (col) => col.notNull())
     .addColumn('fromId', 'bigint', (col) => col.notNull())
     .execute()
 }
