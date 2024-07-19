@@ -104,7 +104,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const lastSeenNotifs = timestamp.toDate().toISOString()
     await db.db
       .insertInto('actor_state')
-      .values({ did: actorDid, lastSeenNotifs })
+      .values({ did: actorDid, lastSeenNotifs, priorityNotifs: false })
       .onConflict((oc) =>
         oc.column('did').doUpdateSet({
           lastSeenNotifs: excluded(db.db, 'lastSeenNotifs'),
