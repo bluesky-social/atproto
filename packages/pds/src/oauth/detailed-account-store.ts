@@ -2,7 +2,7 @@ import {
   AccountInfo,
   AccountStore,
   DeviceId,
-  LoginCredentials,
+  SignInCredentials,
 } from '@atproto/oauth-provider'
 
 import { AccountManager } from '../account-manager/index'
@@ -50,7 +50,7 @@ export class DetailedAccountStore implements AccountStore {
   }
 
   async authenticateAccount(
-    credentials: LoginCredentials,
+    credentials: SignInCredentials,
     deviceId: DeviceId,
   ): Promise<AccountInfo | null> {
     const accountInfo = await this.accountManager.authenticateAccount(

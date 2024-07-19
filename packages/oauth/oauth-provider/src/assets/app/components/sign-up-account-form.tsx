@@ -6,36 +6,41 @@ import {
   useState,
 } from 'react'
 
-import { clsx } from '../lib/clsx'
-import { ErrorCard } from './error-card'
+import { Button } from './button'
+import { FormCard, FormCardProps } from './form-card'
+import { Override } from '../lib/util'
+import { Fieldset } from './fieldset'
 
 export type SignUpAccountFormOutput = {
   username: string
   password: string
 }
 
-export type SignUpAccountFormProps = {
-  onSubmit: (credentials: SignUpAccountFormOutput) => void | PromiseLike<void>
-  submitLabel?: ReactNode
-  submitAria?: string
+export type SignUpAccountFormProps = Override<
+  FormCardProps,
+  {
+    onSubmit: (credentials: SignUpAccountFormOutput) => void | PromiseLike<void>
+    submitLabel?: ReactNode
+    submitAria?: string
 
-  onCancel?: () => void
-  cancelLabel?: ReactNode
-  cancelAria?: string
+    onCancel?: () => void
+    cancelLabel?: ReactNode
+    cancelAria?: string
 
-  username?: string
-  usernamePlaceholder?: string
-  usernameLabel?: string
-  usernameAria?: string
-  usernamePattern?: string
-  usernameTitle?: string
+    username?: string
+    usernamePlaceholder?: string
+    usernameLabel?: string
+    usernameAria?: string
+    usernamePattern?: string
+    usernameTitle?: string
 
-  passwordPlaceholder?: string
-  passwordLabel?: string
-  passwordAria?: string
-  passwordPattern?: string
-  passwordTitle?: string
-}
+    passwordPlaceholder?: string
+    passwordLabel?: string
+    passwordAria?: string
+    passwordPattern?: string
+    passwordTitle?: string
+  }
+>
 
 export function SignUpAccountForm({
   onSubmit,
@@ -59,9 +64,8 @@ export function SignUpAccountForm({
   passwordPattern,
   passwordTitle,
 
-  className,
   children,
-  ...attrs
+  ...props
 }: SignUpAccountFormProps &
   Omit<FormHTMLAttributes<HTMLFormElement>, keyof SignUpAccountFormProps>) {
   const [loading, setLoading] = useState(false)
@@ -98,104 +102,84 @@ export function SignUpAccountForm({
   )
 
   return (
-    <form
-      {...attrs}
-      className={clsx('flex flex-col', className)}
+    <FormCard
+      append={children}
+      error={errorMessage}
       onSubmit={doSubmit}
-    >
-      <fieldset disabled={loading}>
-        <label className="text-sm font-medium" htmlFor="username">
-          {usernameLabel}
-        </label>
-
-        <div
-          id="username"
-          className="mb-4 relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
-        >
-          <span className="w-6 ml-1 text-center text-base">@</span>
-          <input
-            name="username"
-            type="text"
-            onChange={() => setErrorMessage(null)}
-            className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
-            placeholder={usernamePlaceholder}
-            aria-label={usernameAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="username"
-            spellCheck="false"
-            dir="auto"
-            enterKeyHint="next"
-            required
-            defaultValue={defaultUsername}
-            pattern={usernamePattern}
-            title={usernameTitle}
-          />
-        </div>
-
-        <label className="text-sm font-medium" htmlFor="password">
-          {passwordLabel}
-        </label>
-
-        <div
-          id="password"
-          className="mb-4 relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
-        >
-          <span className="w-6 ml-1 text-center text-2xl font-light -mb-2">
-            *
-          </span>
-          <input
-            name="password"
-            type="password"
-            onChange={() => setErrorMessage(null)}
-            className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder={passwordPlaceholder}
-            aria-label={passwordAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="new-password"
-            dir="auto"
-            enterKeyHint="done"
-            spellCheck="false"
-            required
-            pattern={passwordPattern}
-            title={passwordTitle}
-          />
-        </div>
-      </fieldset>
-
-      {children && <div className="mt-4">{children}</div>}
-
-      {errorMessage && <ErrorCard className="mt-2" message={errorMessage} />}
-
-      <div className="flex-auto"></div>
-
-      <div className="p-4 flex flex-wrap items-center justify-start">
-        <button
-          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
+      cancel={
+        onCancel && (
+          <Button aria-label={cancelAria} onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+        )
+      }
+      actions={
+        <Button
+          color="brand"
           type="submit"
-          role="Button"
           aria-label={submitAria}
           disabled={loading}
         >
           {submitLabel}
-        </button>
+        </Button>
+      }
+      {...props}
+    >
+      <Fieldset disabled={loading}>
+        <label className="text-sm font-medium block">
+          <p>{usernameLabel}</p>
 
-        {onCancel && (
-          <button
-            className="py-2 bg-transparent text-primary rounded-md font-light"
-            type="button"
-            role="Button"
-            aria-label={cancelAria}
-            onClick={onCancel}
-          >
-            {cancelLabel}
-          </button>
-        )}
+          <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
+            <span className="w-6 ml-1 text-center text-base">@</span>
+            <input
+              name="username"
+              type="text"
+              onChange={() => setErrorMessage(null)}
+              className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
+              placeholder={usernamePlaceholder}
+              aria-label={usernameAria}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              spellCheck="false"
+              dir="auto"
+              enterKeyHint="next"
+              required
+              defaultValue={defaultUsername}
+              pattern={usernamePattern}
+              title={usernameTitle}
+            />
+          </div>
+        </label>
 
-        <div className="flex-auto" />
-      </div>
-    </form>
+        <label className="text-sm font-medium block">
+          <p>{passwordLabel}</p>
+
+          <div className="relative flex flex-wrap items-center justify-stretch rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100">
+            <span className="w-6 ml-1 text-center text-2xl font-light -mb-2">
+              *
+            </span>
+            <input
+              name="password"
+              type="password"
+              onChange={() => setErrorMessage(null)}
+              className="relative m-1 block w-[1px] min-w-0 flex-auto leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
+              placeholder={passwordPlaceholder}
+              aria-label={passwordAria}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="new-password"
+              dir="auto"
+              enterKeyHint="done"
+              spellCheck="false"
+              required
+              pattern={passwordPattern}
+              title={passwordTitle}
+            />
+          </div>
+        </label>
+      </Fieldset>
+    </FormCard>
   )
 }
 

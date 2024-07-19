@@ -1,53 +1,35 @@
 import { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
   AuthorizeOptions,
+  ClientMetadata,
+  Fetch,
   OAuthAgent,
   OAuthCallbackError,
   OAuthClient,
-  Session,
-  TokenSet,
+  SessionEventMap,
 } from '@atproto/oauth-client'
 import {
-  OAuthClientId,
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
   atprotoLoopbackClientMetadata,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
-  oauthClientMetadataSchema,
+  OAuthClientIdDiscoverable,
+  OAuthClientIdLoopback,
+  OAuthClientMetadataInput,
 } from '@atproto/oauth-types'
 
-import {
-  BrowserOAuthDatabase,
-  DatabaseStore,
-} from './browser-oauth-database.js'
+import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
-import { buildLoopbackClientId } from './util.js'
+import { buildLoopbackClientId, TypedBroadcastChannel } from './util.js'
 
 export type BrowserOAuthClientOptions = {
   clientMetadata?: OAuthClientMetadataInput
-  handleResolver?: HandleResolver | string | URL
-  responseMode?: OAuthResponseMode
+  handleResolver: HandleResolver | string | URL
+  responseMode?: 'query' | 'fragment'
   plcDirectoryUrl?: string | URL
 
-  crypto?: typeof globalThis.crypto
-  fetch?: typeof globalThis.fetch
+  fetch?: Fetch
 }
-
-type EventDetails = {
-  updated: TokenSet
-  deleted: { sub: string }
-}
-
-type CustomEventListener<T extends keyof EventDetails = keyof EventDetails> = (
-  event: CustomEvent<EventDetails[T]>,
-) => void
-
-const initEvent = <T extends keyof EventDetails>(
-  type: T,
-  detail: EventDetails[T],
-) => new CustomEvent(type, { detail, cancelable: false, bubbles: false })
 
 const NAMESPACE = `@@atproto/oauth-client-browser`
 
@@ -68,137 +50,72 @@ type PopupChannelAckData = {
 
 type PopupChannelData = PopupChannelResultData | PopupChannelAckData
 
-//- Deleted channel
+//- State synchronization channel
 
-const deletedChannel = new BroadcastChannel(`${NAMESPACE}(deleted-channel)`)
+type SyncChannelMessage = {
+  [K in keyof SessionEventMap]: [K, SessionEventMap[K]]
+}[keyof SessionEventMap]
 
-type WrappedSessionStore = Disposable & DatabaseStore<Session>
-const wrapSessionStore = (
-  dbStore: DatabaseStore<Session>,
-  eventTarget: EventTarget,
-) => {
-  const store: WrappedSessionStore = {
-    getKeys: async () => {
-      return dbStore.getKeys()
-    },
-    get: async (sub) => {
-      return dbStore.get(sub)
-    },
-    set: async (sub, session) => {
-      await dbStore.set(sub, session)
-
-      eventTarget.dispatchEvent(initEvent('updated', session.tokenSet))
-    },
-    del: async (sub) => {
-      await dbStore.del(sub)
-      deletedChannel.postMessage(sub)
-
-      eventTarget.dispatchEvent(initEvent('deleted', { sub }))
-    },
-    clear: async () => {
-      await dbStore.clear?.()
-    },
-    [Symbol.dispose]: () => {
-      deletedChannel.removeEventListener('message', onMessage)
-    },
-  }
-
-  const onMessage = (event: MessageEvent<string>) => {
-    // Listen for "deleted" events from other windows. The content will already
-    // have been deleted from the store so we only need to notify the listeners.
-    if (event.source !== window) {
-      const sub = event.data
-      eventTarget.dispatchEvent(initEvent('deleted', { sub }))
-    }
-  }
-
-  deletedChannel.addEventListener('message', onMessage)
-
-  return store
-}
+const syncChannel: TypedBroadcastChannel<SyncChannelMessage> =
+  new BroadcastChannel(`${NAMESPACE}(synchronization-channel)`)
 
 export type BrowserOAuthClientLoadOptions = Omit<
   BrowserOAuthClientOptions,
   'clientMetadata'
 > & {
-  clientId: OAuthClientId
+  clientId: OAuthClientIdDiscoverable | OAuthClientIdLoopback
   signal?: AbortSignal
 }
 
-export class BrowserOAuthClient extends OAuthClient {
+export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
     if (isOAuthClientIdLoopback(clientId)) {
-      return new BrowserOAuthClient({
-        clientMetadata: atprotoLoopbackClientMetadata(clientId),
-        ...options,
-      })
+      const clientMetadata = atprotoLoopbackClientMetadata(clientId)
+      return new BrowserOAuthClient({ clientMetadata, ...options })
     } else if (isOAuthClientIdDiscoverable(clientId)) {
-      const fetch = options?.fetch ?? globalThis.fetch
-      const request = new Request(clientId, {
-        redirect: 'error',
-        signal: options.signal,
-      })
-      const response = await fetch(request)
-
-      if (response.status !== 200) {
-        throw new TypeError(
-          `Failed to fetch client metadata: ${response.status}`,
-        )
-      }
-
-      const mime = response.headers.get('content-type')?.split(';')[0].trim()
-      if (mime !== 'application/json') {
-        throw new TypeError(`Invalid content type: ${mime}`)
-      }
-
-      const json: unknown = await response.json()
-
-      options.signal?.throwIfAborted()
-
-      return new BrowserOAuthClient({
-        clientMetadata: oauthClientMetadataSchema.parse(json),
+      const clientMetadata = await OAuthClient.fetchMetadata({
+        clientId,
         ...options,
       })
+      return new BrowserOAuthClient({ clientMetadata, ...options })
     } else {
       throw new TypeError(`Invalid client id: ${clientId}`)
     }
   }
 
-  readonly sessionStore: WrappedSessionStore
-
-  private readonly eventTarget: EventTarget
-  private readonly database: BrowserOAuthDatabase
+  readonly [Symbol.dispose]: () => void
 
   constructor({
-    clientMetadata,
-    handleResolver = 'https://bsky.social',
-    // "fragment" is safer as it is not sent to the server
+    handleResolver,
+    clientMetadata = atprotoLoopbackClientMetadata(
+      buildLoopbackClientId(window.location),
+    ),
+    // "fragment" is a safer default as the query params will not be sent to the server
     responseMode = 'fragment',
-    plcDirectoryUrl = 'https://plc.directory',
-    crypto = globalThis.crypto,
-    fetch = globalThis.fetch,
-  }: BrowserOAuthClientOptions = {}) {
+    plcDirectoryUrl = undefined,
+    fetch = undefined,
+  }: BrowserOAuthClientOptions) {
+    if (!globalThis.crypto?.subtle) {
+      throw new Error('WebCrypto API is required')
+    }
+
+    if (!['query', 'fragment'].includes(responseMode)) {
+      // Make sure "form_post" is not used as it is not supported in the browser
+      throw new TypeError(`Invalid response mode: ${responseMode}`)
+    }
+
     const database = new BrowserOAuthDatabase()
 
-    const eventTarget = new EventTarget()
-    const sessionStore = wrapSessionStore(
-      database.getSessionStore(),
-      eventTarget,
-    )
-
     super({
-      clientMetadata:
-        clientMetadata == null
-          ? atprotoLoopbackClientMetadata(
-              buildLoopbackClientId(window.location),
-            )
-          : clientMetadata,
+      clientMetadata,
       responseMode,
       fetch,
-      runtimeImplementation: new BrowserRuntimeImplementation(crypto),
       plcDirectoryUrl,
       handleResolver,
-      sessionStore,
+
+      runtimeImplementation: new BrowserRuntimeImplementation(),
+
+      sessionStore: database.getSessionStore(),
       stateStore: database.getStateStore(),
 
       didCache: database.getDidCache(),
@@ -210,57 +127,84 @@ export class BrowserOAuthClient extends OAuthClient {
         database.getProtectedResourceMetadataCache(),
     })
 
-    this.sessionStore = sessionStore
+    // TODO: replace with AsyncDisposableStack once they are standardized
+    const ac = new AbortController()
+    const { signal } = ac
+    this[Symbol.dispose] = () => ac.abort()
 
-    this.eventTarget = eventTarget
-    this.database = database
+    signal.addEventListener('abort', () => database[Symbol.asyncDispose](), {
+      once: true,
+    })
 
-    fixLocation(this.clientMetadata)
-  }
+    // Keep track of the current session
 
-  addEventListener<T extends keyof EventDetails>(
-    type: T,
-    callback: CustomEventListener<T> | null,
-    options?: AddEventListenerOptions | boolean,
-  ) {
-    this.eventTarget.addEventListener(type, callback as EventListener, options)
-  }
+    this.addEventListener('deleted', ({ detail: { sub } }) => {
+      if (localStorage.getItem(`${NAMESPACE}(sub)`) === sub) {
+        localStorage.removeItem(`${NAMESPACE}(sub)`)
+      }
+    })
 
-  removeEventListener(
-    type: string,
-    callback: CustomEventListener | null,
-    options?: EventListenerOptions | boolean,
-  ) {
-    this.eventTarget.removeEventListener(
-      type,
-      callback as EventListener,
-      options,
+    // Session synchronization across tabs
+
+    for (const type of ['deleted', 'updated'] as const) {
+      this.sessionGetter.addEventListener(type, ({ detail }) => {
+        // Notify other tabs when a session is deleted or updated
+        syncChannel.postMessage([type, detail] as SyncChannelMessage)
+      })
+    }
+
+    syncChannel.addEventListener(
+      'message',
+      (event) => {
+        if (event.source !== window) {
+          // Trigger listeners when an event is received from another tab
+          const [type, detail] = event.data
+          this.dispatchCustomEvent(type, detail)
+        }
+      },
+      // Remove the listener when the client is disposed
+      { signal },
     )
   }
 
-  async restoreAll() {
-    const subs = await this.sessionStore.getKeys()
-    return Object.fromEntries(
-      await Promise.all(
-        subs.map(async (sub) => [sub, await this.restore(sub, false)] as const),
-      ),
-    )
-  }
+  async init(refresh?: boolean) {
+    await fixLocation(this.clientMetadata)
 
-  async init(sub?: string, refresh?: boolean) {
     const signInResult = await this.signInCallback()
     if (signInResult) {
+      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.agent.sub)
       return signInResult
-    } else if (sub) {
-      const agent = await this.restore(sub, refresh)
-      return { agent }
+    }
+
+    const sub = localStorage.getItem(`${NAMESPACE}(sub)`)
+    if (sub) {
+      try {
+        const agent = await this.restore(sub, refresh)
+        return { agent }
+      } catch (err) {
+        localStorage.removeItem(`${NAMESPACE}(sub)`)
+        throw err
+      }
     }
   }
 
-  async signIn(
+  async restore(sub: string, refresh?: boolean) {
+    const agent = await super.restore(sub, refresh)
+    localStorage.setItem(`${NAMESPACE}(sub)`, agent.sub)
+    return agent
+  }
+
+  async revoke(sub: string) {
+    localStorage.removeItem(`${NAMESPACE}(sub)`)
+    return super.revoke(sub)
+  }
+
+  signIn(
     input: string,
-    options?: AuthorizeOptions & { signal?: AbortSignal },
-  ) {
+    options: AuthorizeOptions & { display: 'popup' },
+  ): Promise<OAuthAgent>
+  signIn(input: string, options?: AuthorizeOptions): Promise<never>
+  async signIn(input: string, options?: AuthorizeOptions) {
     if (options?.display === 'popup') {
       return this.signInPopup(input, options)
     } else {
@@ -268,20 +212,33 @@ export class BrowserOAuthClient extends OAuthClient {
     }
   }
 
-  async signInRedirect(input: string, options?: AuthorizeOptions) {
+  async signInRedirect(
+    input: string,
+    options?: AuthorizeOptions,
+  ): Promise<never> {
     const url = await this.authorize(input, options)
 
     window.location.href = url.href
 
     // back-forward cache
     return new Promise<never>((resolve, reject) => {
-      setTimeout(() => reject(new Error('User navigated back')), 5e3)
+      setTimeout(
+        (err: Error) => {
+          // Take the opportunity to proactively cancel the pending request
+          this.abortRequest(url).then(
+            () => reject(err),
+            (reason) => reject(new AggregateError([err, reason])),
+          )
+        },
+        5e3,
+        new Error('User navigated back'),
+      )
     })
   }
 
   async signInPopup(
     input: string,
-    options?: Omit<AuthorizeOptions, 'state'> & { signal?: AbortSignal },
+    options?: Omit<AuthorizeOptions, 'state'>,
   ): Promise<OAuthAgent> {
     // Open new window asap to prevent popup busting by browsers
     const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'
@@ -346,7 +303,7 @@ export class BrowserOAuthClient extends OAuthClient {
           const sub = result.value
           try {
             options?.signal?.throwIfAborted()
-            resolve(await this.restore(sub))
+            resolve(await this.restore(sub, false))
           } catch (err) {
             reject(err)
             void this.revoke(sub)
@@ -394,7 +351,8 @@ export class BrowserOAuthClient extends OAuthClient {
     // the following code to run again if the user refreshes the page)
     history.replaceState(null, '', location.pathname)
 
-    const sendResult = (message: PopupChannelResultData) => {
+    // Utility function to send the result of the popup to the parent window
+    const sendPopupResult = (message: PopupChannelResultData) => {
       const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
 
       return new Promise<boolean>((resolve) => {
@@ -405,10 +363,6 @@ export class BrowserOAuthClient extends OAuthClient {
           resolve(result)
         }
 
-        const onTimeout = () => {
-          cleanup(false)
-        }
-
         const onMessage = ({ data }: MessageEvent<PopupChannelData>) => {
           if ('ack' in data && message.key === data.key) cleanup(true)
         }
@@ -416,14 +370,14 @@ export class BrowserOAuthClient extends OAuthClient {
         popupChannel.addEventListener('message', onMessage)
         popupChannel.postMessage(message)
         // Receiving of "ack" should be very fast, giving it 500 ms anyway
-        const timer = setTimeout(onTimeout, 500)
+        const timer = setTimeout(cleanup, 500, false)
       })
     }
 
     return this.callback(params)
       .then(async (result) => {
         if (result.state?.startsWith(POPUP_STATE_PREFIX)) {
-          const receivedByParent = await sendResult({
+          const receivedByParent = await sendPopupResult({
             key: result.state.slice(POPUP_STATE_PREFIX.length),
             result: {
               status: 'fulfilled',
@@ -444,7 +398,7 @@ export class BrowserOAuthClient extends OAuthClient {
           err instanceof OAuthCallbackError &&
           err.state?.startsWith(POPUP_STATE_PREFIX)
         ) {
-          await sendResult({
+          await sendPopupResult({
             key: err.state.slice(POPUP_STATE_PREFIX.length),
             result: {
               status: 'rejected',
@@ -472,10 +426,8 @@ export class BrowserOAuthClient extends OAuthClient {
       })
   }
 
-  async [Symbol.asyncDispose]() {
-    // TODO This should be implemented using a DisposableStack
-    await this.sessionStore[Symbol.dispose]()
-    await this.database[Symbol.asyncDispose]()
+  dispose() {
+    this[Symbol.dispose]()
   }
 }
 
@@ -488,8 +440,8 @@ export class BrowserOAuthClient extends OAuthClient {
  * is shared by origin, so we must ensure to be on the same origin as the
  * redirect uris.
  */
-function fixLocation(clientMetadata: OAuthClientMetadataInput) {
-  if (clientMetadata.client_id !== 'http://localhost/') return
+function fixLocation(clientMetadata: ClientMetadata) {
+  if (!isOAuthClientIdLoopback(clientMetadata.client_id)) return
   if (window.location.hostname !== 'localhost') return
 
   const locationUrl = new URL(window.location.href)
@@ -497,13 +449,15 @@ function fixLocation(clientMetadata: OAuthClientMetadataInput) {
   for (const uri of clientMetadata.redirect_uris) {
     const url = new URL(uri)
     if (
-      url.port === locationUrl.port &&
+      (url.hostname === '127.0.0.1' || url.hostname === '[::1]') &&
+      (!url.port || url.port === locationUrl.port) &&
       url.protocol === locationUrl.protocol &&
-      (url.hostname === '127.0.0.1' || url.hostname === '[::1]')
+      url.pathname === locationUrl.pathname
     ) {
-      window.location.hostname = url.hostname
+      url.port = locationUrl.port
+      window.location.href = url.href
 
-      // Prevent APP from loading on the wrong hostname
+      // Prevent init() on the wrong origin
       throw new Error('Redirecting to loopback IP...')
     }
   }

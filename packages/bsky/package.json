@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.66",
+  "version": "0.0.68",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -54,6 +54,7 @@
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
     "sharp": "^0.32.6",
+    "statsig-node": "^5.23.1",
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"

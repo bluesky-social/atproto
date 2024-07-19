@@ -13,6 +13,8 @@ export interface QueryParams {
   viewer?: string
   limit?: number
   cursor?: string
+  /** DID of the account to get suggestions relative to. If not provided, suggestions will be based on the viewer. */
+  relativeToDid?: string
 }
 
 export type InputSchema = undefined

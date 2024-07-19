@@ -18,11 +18,12 @@ export function declareBackendData(name: string, data: unknown) {
   return js`window[${name}]=${data};document.currentScript.remove();`
 }
 
-export function sendWebPage(
+export async function sendWebPage(
   res: ServerResponse,
   { status = 200, ...options }: BuildDocumentOptions & { status?: number },
-): void {
+): Promise<void> {
   // @TODO: make these headers configurable (?)
+  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
@@ -52,7 +53,7 @@ export function sendWebPage(
 
   const html = buildDocument(options)
 
-  writeHtml(res, html.toString(), status)
+  return writeHtml(res, html.toString(), status)
 }
 
 function assetToHash(asset: Html | AssetRef): string {

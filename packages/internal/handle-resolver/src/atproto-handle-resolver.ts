@@ -6,7 +6,11 @@ import {
   WellKnownHandleResolver,
   WellKnownHandleResolverOptions,
 } from './internal-resolvers/well-known-handler-resolver.js'
-import { HandleResolver, ResolveOptions, ResolvedHandle } from './types.js'
+import {
+  HandleResolver,
+  ResolveHandleOptions,
+  ResolvedHandle,
+} from './types.js'
 
 export type { ResolveTxt }
 export type AtprotoHandleResolverOptions = WellKnownHandleResolverOptions & {
@@ -37,7 +41,7 @@ export class AtprotoHandleResolver implements HandleResolver {
 
   async resolve(
     handle: string,
-    options?: ResolveOptions,
+    options?: ResolveHandleOptions,
   ): Promise<ResolvedHandle> {
     options?.signal?.throwIfAborted()
 

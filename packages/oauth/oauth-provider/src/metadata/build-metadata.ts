@@ -161,5 +161,8 @@ export function buildMetadata(
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
     protected_resources: customMetadata?.protected_resources,
+
+    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+    client_id_metadata_document_supported: true,
   }
 }

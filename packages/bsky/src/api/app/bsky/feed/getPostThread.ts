@@ -28,11 +28,13 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
-      const { viewer, include3pBlocks } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, include3pBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
+        includeTakedowns,
         include3pBlocks,
       })
 

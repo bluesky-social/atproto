@@ -1,21 +1,8 @@
 // Matches colors defined in tailwind.config.js
-const colorNames = ['primary', 'error'] as const
+const colorNames = ['brand', 'error', 'warning'] as const
 type ColorName = (typeof colorNames)[number]
 const isColorName = (name: string): name is ColorName =>
   (colorNames as readonly string[]).includes(name)
-
-export type FieldDefinition = {
-  label?: string
-  placeholder?: string
-  pattern?: string
-  title?: string
-}
-
-export type ExtraFieldDefinition = FieldDefinition & {
-  type: 'text' | 'password' | 'date' | 'captcha'
-  required?: boolean
-  [_: string]: unknown
-}
 
 export type Customization = {
   name?: string
@@ -41,56 +28,91 @@ export function buildCustomizationData({
 }
 
 export function buildCustomizationCss(customization?: Customization) {
-  if (!customization?.colors) return ''
+  const vars = Array.from(buildCustomizationVars(customization))
+  if (vars.length) return `:root { ${vars.join(' ')} }`
 
-  const vars = Object.entries(customization.colors)
-    .filter((e) => isColorName(e[0]) && e[1] != null)
-    .map(([name, value]) => [name, parseColor(value)] as const)
-    .filter((e): e is [ColorName, ParsedColor] => e[1] != null)
-    // alpha not supported by tailwind (it does not work that way)
-    .map(([name, { r, g, b }]) => `--color-${name}: ${r} ${g} ${b};`)
-
-  return `:root { ${vars.join(' ')} }`
+  return ''
 }
 
-type ParsedColor = { r: number; g: number; b: number; a?: number }
-function parseColor(color: string): undefined | ParsedColor {
+export function* buildCustomizationVars(customization?: Customization) {
+  if (customization?.colors) {
+    for (const [name, value] of Object.entries(customization.colors)) {
+      if (!isColorName(name)) {
+        throw new TypeError(`Invalid color name: ${name}`)
+      }
+
+      // Skip undefined values
+      if (value === undefined) continue
+
+      const { r, g, b, a } = parseColor(value)
+
+      // Tailwind does not apply alpha values to base colors
+      if (a !== undefined) throw new TypeError('Alpha not supported')
+
+      yield `--color-${name}: ${r} ${g} ${b};`
+    }
+  }
+}
+
+type RgbaColor = { r: number; g: number; b: number; a?: number }
+function parseColor(color: unknown): RgbaColor {
+  if (typeof color !== 'string') {
+    throw new TypeError(`Invalid color value: ${typeof color}`)
+  }
+
   if (color.startsWith('#')) {
     if (color.length === 4 || color.length === 5) {
-      const [r, g, b, a] = color
-        .slice(1)
-        .split('')
-        .map((c) => parseInt(c + c, 16))
+      const r = parseUi8Hex(color.slice(1, 2))
+      const g = parseUi8Hex(color.slice(2, 3))
+      const b = parseUi8Hex(color.slice(3, 4))
+      const a = color.length > 4 ? parseUi8Hex(color.slice(4, 5)) : undefined
       return { r, g, b, a }
     }
 
     if (color.length === 7 || color.length === 9) {
-      const r = parseInt(color.slice(1, 3), 16)
-      const g = parseInt(color.slice(3, 5), 16)
-      const b = parseInt(color.slice(5, 7), 16)
-      const a = color.length > 8 ? parseInt(color.slice(7, 9), 16) : undefined
+      const r = parseUi8Hex(color.slice(1, 3))
+      const g = parseUi8Hex(color.slice(3, 5))
+      const b = parseUi8Hex(color.slice(5, 7))
+      const a = color.length > 8 ? parseUi8Hex(color.slice(7, 9)) : undefined
       return { r, g, b, a }
     }
 
-    return undefined
+    throw new TypeError(`Invalid hex color: ${color}`)
   }
 
-  const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+  const rgbMatch = color.match(
+    /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/,
+  )
   if (rgbMatch) {
-    const [, r, g, b] = rgbMatch
-    return { r: parseInt(r, 10), g: parseInt(g, 10), b: parseInt(b, 10) }
+    const r = parseUi8Dec(rgbMatch[1])
+    const g = parseUi8Dec(rgbMatch[2])
+    const b = parseUi8Dec(rgbMatch[3])
+    return { r, g, b }
   }
 
-  const rgbaMatch = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)/)
+  const rgbaMatch = color.match(
+    /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/,
+  )
   if (rgbaMatch) {
-    const [, r, g, b, a] = rgbaMatch
-    return {
-      r: parseInt(r, 10),
-      g: parseInt(g, 10),
-      b: parseInt(b, 10),
-      a: parseInt(a, 10),
-    }
+    const r = parseUi8Dec(rgbaMatch[1])
+    const g = parseUi8Dec(rgbaMatch[2])
+    const b = parseUi8Dec(rgbaMatch[3])
+    const a = parseUi8Dec(rgbaMatch[4])
+    return { r, g, b, a }
   }
 
-  return undefined
+  throw new TypeError(`Unsupported color format: ${color}`)
+}
+
+function parseUi8Hex(v: string) {
+  return asUi8(parseInt(v, 16))
+}
+
+function parseUi8Dec(v: string) {
+  return asUi8(parseInt(v, 10))
+}
+
+function asUi8(v: number) {
+  if (v >= 0 && v <= 255 && v === (v | 0)) return v
+  throw new TypeError(`Invalid color component: ${v}`)
 }

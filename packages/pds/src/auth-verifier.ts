@@ -605,17 +605,26 @@ enum AuthType {
 export const parseAuthorizationHeader = (
   authorization?: string,
 ): [type: null] | [type: AuthType, token: string] => {
-  const result = authorization?.split(' ', 3)
-  if (result?.length === 2) {
-    for (const [name, type] of Object.entries(AuthType)) {
-      // authorization type is case-insensitive
-      if (name === result[0].toUpperCase()) {
-        return [type, result[1]] as [type: AuthType, token: string]
-      }
-    }
+  if (!authorization) return [null]
+
+  const result = authorization.split(' ')
+  if (result.length !== 2) {
+    throw new InvalidRequestError(
+      'Malformed authorization header',
+      'InvalidToken',
+    )
   }
 
-  return [null] as [type: null]
+  // authorization type is case-insensitive
+  const authType = result[0].toUpperCase()
+
+  const type = Object.hasOwn(AuthType, authType) ? AuthType[authType] : null
+  if (type) return [type, result[1]]
+
+  throw new InvalidRequestError(
+    `Unsupported authorization type: ${result[0]}`,
+    'InvalidToken',
+  )
 }
 
 const isAccessToken = (req: express.Request): boolean => {

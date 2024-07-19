@@ -1,6 +1,6 @@
 import {
-  ResolveOptions,
   HandleResolver,
+  ResolveHandleOptions,
   ResolvedHandle,
   isResolvedHandle,
 } from '../types.js'
@@ -26,7 +26,7 @@ export class WellKnownHandleResolver implements HandleResolver {
 
   public async resolve(
     handle: string,
-    options?: ResolveOptions,
+    options?: ResolveHandleOptions,
   ): Promise<ResolvedHandle> {
     const url = new URL('/.well-known/atproto-did', `https://${handle}`)
 

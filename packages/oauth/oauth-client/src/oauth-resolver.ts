@@ -1,5 +1,5 @@
 import {
-  ResolveOptions as IdentityResolveOptions,
+  ResolveIdentityOptions,
   IdentityResolver,
   ResolvedIdentity,
 } from '@atproto-labs/identity-resolver'
@@ -13,7 +13,7 @@ import {
 import { OAuthProtectedResourceMetadataResolver } from './oauth-protected-resource-metadata-resolver.js'
 
 export type { GetCachedOptions }
-export type ResolveOptions = GetCachedOptions & IdentityResolveOptions
+export type ResolveOAuthOptions = GetCachedOptions & ResolveIdentityOptions
 
 export class OAuthResolver {
   constructor(
@@ -24,7 +24,7 @@ export class OAuthResolver {
 
   public async resolveIdentity(
     input: string,
-    options?: IdentityResolveOptions,
+    options?: ResolveIdentityOptions,
   ): Promise<ResolvedIdentity> {
     try {
       return await this.identityResolver.resolve(input, options)
@@ -93,7 +93,7 @@ export class OAuthResolver {
 
   public async resolve(
     input: string,
-    options?: ResolveOptions,
+    options?: ResolveOAuthOptions,
   ): Promise<{
     identity: ResolvedIdentity
     metadata: OAuthAuthorizationServerMetadata

@@ -8712,6 +8712,12 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            relativeToDid: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account to get suggestions relative to. If not provided, suggestions will be based on the viewer.',
+            },
           },
         },
         output: {
@@ -10114,6 +10120,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
+              'lex:tools.ozone.moderation.defs#modEventTag',
             ],
           },
           subject: {
@@ -10177,6 +10184,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventEmail',
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
+              'lex:tools.ozone.moderation.defs#modEventTag',
             ],
           },
           subject: {

@@ -8,3 +8,6 @@ export function upsert<T>(
     ? [...arr, item]
     : [...arr.slice(0, idx), item, ...arr.slice(idx + 1)]
 }
+
+export type Simplify<T> = { [K in keyof T]: T[K] } & NonNullable<unknown>
+export type Override<T, U> = Simplify<Omit<T, keyof U> & U>

@@ -31,7 +31,7 @@ export function SignUpDisclaimer({
                 href={l.href}
                 rel={l.rel}
                 target="_blank"
-                className="text-primary underline"
+                className="text-brand underline"
               >
                 {l.title}
               </a>
