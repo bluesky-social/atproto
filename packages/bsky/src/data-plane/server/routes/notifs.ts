@@ -3,7 +3,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Timestamp } from '@bufbuild/protobuf'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
-import { countAll, excluded, notSoftDeletedClause } from '../db/util'
+import { countAll, notSoftDeletedClause } from '../db/util'
 import { TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -68,23 +68,37 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getNotificationSeen(req) {
+    const { actorDid, priority } = req
     const res = await db.db
       .selectFrom('actor_state')
-      .where('did', '=', req.actorDid)
+      .where('did', '=', actorDid)
       .selectAll()
       .executeTakeFirst()
     if (!res) {
       return {}
     }
+    const lastSeen =
+      priority && res.lastSeenPriorityNotifs
+        ? res.lastSeenPriorityNotifs
+        : res.lastSeenNotifs
     return {
-      timestamp: Timestamp.fromDate(new Date(res.lastSeenNotifs)),
-      priority: res.priorityNotifs,
+      timestamp: Timestamp.fromDate(new Date(lastSeen)),
     }
   },
 
   async getUnreadNotificationCount(req) {
     const { actorDid, priority } = req
     const { ref } = db.db.dynamic
+    const lastSeenRes = await db.db
+      .selectFrom('actor_state')
+      .where('did', '=', actorDid)
+      .selectAll()
+      .executeTakeFirst()
+    const lastSeen =
+      priority && lastSeenRes?.lastSeenPriorityNotifs
+        ? lastSeenRes.lastSeenPriorityNotifs
+        : lastSeenRes?.lastSeenNotifs
+
     const result = await db.db
       .selectFrom('notification')
       .select(countAll.as('count'))
@@ -95,11 +109,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where(notSoftDeletedClause(ref('actor')))
       // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
       .where('notification.did', '=', actorDid)
-      .where(
-        'notification.sortAt',
-        '>',
-        sql`coalesce(${ref('actor_state.lastSeenNotifs')}, ${''})`,
-      )
+      .where('notification.sortAt', '>', lastSeen ?? '')
       .if(priority, (qb) =>
         qb.whereExists(
           db.db
@@ -121,15 +131,29 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     if (!timestamp) {
       return
     }
-    const lastSeenNotifs = timestamp.toDate().toISOString()
+    const timestampIso = timestamp.toDate().toISOString()
+    let builder = db.db
+      .updateTable('actor_state')
+      .where('did', '=', actorDid)
+      .returningAll()
+    if (priority) {
+      builder = builder.set({ lastSeenPriorityNotifs: timestampIso })
+    } else {
+      builder = builder.set({ lastSeenNotifs: timestampIso })
+    }
+    const updateRes = await builder.executeTakeFirst()
+    if (updateRes) {
+      return
+    }
     await db.db
       .insertInto('actor_state')
-      .values({ did: actorDid, lastSeenNotifs, priorityNotifs: priority })
-      .onConflict((oc) =>
-        oc.column('did').doUpdateSet({
-          lastSeenNotifs: excluded(db.db, 'lastSeenNotifs'),
-        }),
-      )
+      .values({
+        did: actorDid,
+        lastSeenNotifs: timestampIso,
+        priorityNotifs: priority,
+        lastSeenPriorityNotifs: priority ? timestampIso : undefined,
+      })
+      .onConflict((oc) => oc.doNothing())
       .executeTakeFirst()
   },
 })
