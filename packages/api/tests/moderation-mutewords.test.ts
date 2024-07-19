@@ -769,7 +769,6 @@ describe(`hasMutedWord`, () => {
 
   describe(`timed mute words`, () => {
     it(`non-expired word`, () => {
-      jest.useFakeTimers()
       const now = Date.now()
 
       const res = moderatePost(
@@ -803,12 +802,9 @@ describe(`hasMutedWord`, () => {
       )
 
       expect(res.causes[0].type).toBe('mute-word')
-
-      jest.useRealTimers()
     })
 
     it(`expired word`, () => {
-      jest.useFakeTimers()
       const now = Date.now()
 
       const res = moderatePost(
@@ -842,8 +838,6 @@ describe(`hasMutedWord`, () => {
       )
 
       expect(res.causes.length).toBe(0)
-
-      jest.useRealTimers()
     })
   })
 
