@@ -267,12 +267,41 @@ describe('notification views', () => {
     )
   })
 
+  it('fetches notifications with explicit priority', async () => {
+    const priority = await agent.api.app.bsky.notification.listNotifications(
+      { priority: true },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(forSnapshot(priority.data)).toMatchSnapshot()
+    const noPriority = await agent.api.app.bsky.notification.listNotifications(
+      { priority: false },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(forSnapshot(noPriority.data)).toMatchSnapshot()
+  })
+
+  it('fetches notifications with default priority', async () => {
+    await agent.api.app.bsky.notification.putPreferences(
+      { priority: true },
+      {
+        encoding: 'application/json',
+        headers: await network.serviceHeaders(alice),
+      },
+    )
+    await network.processAll()
+    const notifs = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(forSnapshot(notifs.data)).toMatchSnapshot()
+  })
+
   it('fails open on clearly bad cursor.', async () => {
     const { data: notifs } =
       await agent.api.app.bsky.notification.listNotifications(
         { cursor: '90210::bafycid' },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(notifs).toEqual({ notifications: [] })
+    expect(notifs).toEqual({ notifications: [], priority: false })
   })
 })
