@@ -1000,7 +1000,12 @@ export class BskyAgent extends AtpAgent {
   /**
    * @deprecated use `addMutedWords` or `addMutedWord` instead
    */
-  async upsertMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
+  async upsertMutedWords(
+    mutedWords: Pick<
+      MutedWord,
+      'value' | 'targets' | 'actorTarget' | 'expiresAt'
+    >[],
+  ) {
     await this.addMutedWords(mutedWords)
   }
 
@@ -1026,7 +1031,8 @@ export class BskyAgent extends AtpAgent {
             }
             return {
               id: existingItem.id || TID.nextStr(),
-              value: sanitizeMutedWordValue(updated.value),
+              value:
+                sanitizeMutedWordValue(updated.value) || existingItem.value,
               targets: updated.targets || [],
               actorTarget: updated.actorTarget || 'all',
               expiresAt: updated.expiresAt || undefined,

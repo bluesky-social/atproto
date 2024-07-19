@@ -2024,6 +2024,29 @@ describe('agent', () => {
             b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
           ).toHaveProperty('expiresAt', expiresAt2)
         })
+
+        it(`doesn't update if value is sanitized to be falsy`, async () => {
+          await agent.addMutedWord({
+            value: 'rug',
+            targets: ['content'],
+          })
+
+          const a = await agent.getPreferences()
+          const word = a.moderationPrefs.mutedWords.find(
+            (m) => m.value === 'rug',
+          )
+
+          await agent.updateMutedWord({
+            ...word!,
+            value: '',
+          })
+
+          const b = await agent.getPreferences()
+
+          expect(
+            b.moderationPrefs.mutedWords.find((m) => m.id === word!.id),
+          ).toHaveProperty('value', 'rug')
+        })
       })
 
       describe('removeMutedWord', () => {
