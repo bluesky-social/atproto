@@ -7,6 +7,7 @@ import {
   TAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
 } from './util'
+import { graphemeLen } from '@atproto/common-web'
 
 export type Facet = AppBskyRichtextFacet.Main
 
@@ -76,7 +77,6 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
   }
   {
     const re = TAG_REGEX
-    const segmenter = new Intl.Segmenter()
     while ((match = re.exec(text.utf16))) {
       const leading = match[1]
       let tag = match[2]
@@ -86,7 +86,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       // strip ending punctuation and any spaces
       tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
 
-      if (tag.length === 0 || [...segmenter.segment(tag)].length > 64) continue
+      if (tag.length === 0 || graphemeLen(tag) > 64) continue
 
       const index = match.index + leading.length
 
