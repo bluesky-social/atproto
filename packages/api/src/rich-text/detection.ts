@@ -85,7 +85,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       // strip ending punctuation and any spaces
       tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
 
-      if (tag.length === 0 || tag.length > 64) continue
+      if (tag.length === 0 || [...new Intl.Segmenter().segment(tag)].length > 64) continue
 
       const index = match.index + leading.length
 
