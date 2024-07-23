@@ -1,15 +1,11 @@
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { ActorService } from '../../../../services/actor'
 import { createPipeline } from '../../../../pipeline'
-import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
+import { clearlyBadCursor, resHeaders } from '../../../util'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostQuotes = createPipeline(
@@ -20,117 +16,92 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getPostQuotes({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const feedService = ctx.services.feed(db)
-      const actorService = ctx.services.actor(db)
-      const viewer = auth.credentials.iss
-
-      const result = await getPostQuotes(
-        { ...params, viewer },
-        { db, feedService, actorService },
-      )
+    handler: async ({ params, auth, req }) => {
+      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        includeTakedowns,
+      })
+      const result = await getPostQuotes({ ...params, viewer }, ctx)
 
       return {
         encoding: 'application/json',
         body: result,
+        headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { db } = ctx
-  const { limit, cursor, uri, cid } = params
-  const { ref } = db.db.dynamic
-
-  if (TimeCidKeyset.clearlyBad(cursor)) {
-    return { params, feedItems: [] }
+const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { feedItems: [] }
   }
 
-  let builder = db.db
-    .selectFrom('quote')
-    .where('quote.subject', '=', uri)
-    .select(['quote.uri', 'quote.cid', 'quote.sortAt'])
+  const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubjectSorted({
+    subject: { uri: params.uri, cid: params.cid },
+    cursor: params.cursor,
+    limit: params.limit,
+  })
 
-  if (cid) {
-    builder = builder.where('quote.subjectCid', '=', cid)
+  return {
+    feedItems: quotesRes.uris,
   }
-
-  const keyset = new TimeCidKeyset(ref('quote.sortAt'), ref('quote.cid'))
-  builder = paginate(builder, {
-    limit,
-    cursor,
-    keyset,
-  })
-
-  const quotes = await builder.execute()
-  const uris = quotes.map((q) => q.uri)
-  const feedItems = await ctx.feedService.postUrisToFeedItems(uris)
-  return { params, feedItems, cursor: keyset.packFromResult(quotes) }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
-  })
-  return { ...state, ...hydrated }
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  return await ctx.hydrator.hydratePosts(skeleton.feedItems, params.hydrateCtx)
 }
 
-const noBlocks = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.feedItems = state.feedItems.filter((item) => {
-    if (!viewer) return true
-    return !state.bam.block([viewer, item.postAuthorDid])
+const noBlocks = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.feedItems = skeleton.feedItems.filter((item) => {
+    return !ctx.views.viewerBlockExists(item.postAuthorDid, hydration)
   })
-  return state
+  return skeleton
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService, actorService } = ctx
-  const { params, feedItems, cursor, profiles } = state
-  const { uri, cid } = params
-  const actors = actorService.views.profileBasicPresentation(
-    Object.keys(profiles),
-    state,
-    params.viewer,
-  )
-  const postViews = feedItems.flatMap((item) => {
-    return (
-      feedService.views.formatPostView(
-        item.postUri,
-        actors,
-        state.posts,
-        state.threadgates,
-        state.embeds,
-        state.labels,
-        state.lists,
-        params.viewer,
-      ) ?? []
-    )
+const presentation = (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, params, skeleton, hydration } = inputs
+  const postViews = mapDefined(skeleton.feedItems, (uri) => {
+    return ctx.views.post(uri, hydration)
   })
-  return { posts: postViews, cursor, uri, cid }
+  return {
+    posts: postViews,
+    cursor: skeleton.cursor,
+    uri: params.uri,
+    cid: params.cid,
+  }
 }
 
 type Context = {
-  db: Database
-  feedService: FeedService
-  actorService: ActorService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & { viewer: string | null }
 
-type SkeletonState = {
-  params: Params
-  feedItems: FeedRow[]
+type Skeleton = {
+  feedItems: any[] // @TODO
   cursor?: string
 }
-
-type HydrationState = SkeletonState & FeedHydrationState
