@@ -44,7 +44,7 @@ const skeleton = async (inputs: {
     return { feedItems: [] }
   }
 
-  const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubjectSorted({
+  const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubject({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,

@@ -4,7 +4,7 @@ import { Database } from '../db'
 import { paginate, TimeCidKeyset } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getQuotesBySubjectSorted(req) {
+  async getQuotesBySubject(req) {
     const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 

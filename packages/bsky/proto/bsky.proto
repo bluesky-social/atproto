@@ -258,6 +258,23 @@ message GetActorLikesResponse {
 }
 
 //
+// Quotes
+//
+
+message GetQuotesBySubjectRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetQuotesBySubjectResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
+// - return post uris that quote the given subject uri
+
+//
 // Interactions
 //
 message GetInteractionCountsRequest {
@@ -1095,6 +1112,9 @@ service Service {
   rpc GetRepostsBySubject(GetRepostsBySubjectRequest) returns (GetRepostsBySubjectResponse);
   rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
+
+  // Quotes
+  rpc GetQuotesBySubject(GetQuotesBySubjectRequest) returns (GetQuotesBySubjectResponse);
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
