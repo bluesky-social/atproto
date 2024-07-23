@@ -1835,6 +1835,13 @@ describe('agent', () => {
           ).toBeTruthy()
         })
 
+        it(`includes apostrophes e.g. Bluesky's`, async () => {
+          await agent.addMutedWord({ value: `Bluesky's`, targets: [] })
+          const { mutedWords } = (await agent.getPreferences()).moderationPrefs
+
+          expect(mutedWords.find((m) => m.value === `Bluesky's`)).toBeTruthy()
+        })
+
         describe(`invalid characters`, () => {
           it('#<zws>, no insert', async () => {
             await agent.addMutedWord({ value: '#​', targets: [] })
