@@ -112,9 +112,9 @@ import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-import * as AppBskyFeedGetPostQuotes from './types/app/bsky/feed/getPostQuotes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -311,9 +311,9 @@ export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGene
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
-export * as AppBskyFeedGetPostQuotes from './types/app/bsky/feed/getPostQuotes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -1698,17 +1698,6 @@ export class AppBskyFeedNS {
       })
   }
 
-  getPostQuotes(
-    params?: AppBskyFeedGetPostQuotes.QueryParams,
-    opts?: AppBskyFeedGetPostQuotes.CallOptions,
-  ): Promise<AppBskyFeedGetPostQuotes.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getPostQuotes', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetPostQuotes.toKnownErr(e)
-      })
-  }
-
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -1728,6 +1717,17 @@ export class AppBskyFeedNS {
       .call('app.bsky.feed.getPosts', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetPosts.toKnownErr(e)
+      })
+  }
+
+  getQuotes(
+    params?: AppBskyFeedGetQuotes.QueryParams,
+    opts?: AppBskyFeedGetQuotes.CallOptions,
+  ): Promise<AppBskyFeedGetQuotes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getQuotes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetQuotes.toKnownErr(e)
       })
   }
 

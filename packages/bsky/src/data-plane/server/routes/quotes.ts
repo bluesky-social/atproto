@@ -25,7 +25,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const quotes = await builder.execute()
 
     return {
-      uris: quotes.map((q) => q.uri),
+      refs: quotes.map((q) => ({ uri: q.uri, cid: q.cid })),
       cursor: keyset.packFromResult(quotes),
     }
   },

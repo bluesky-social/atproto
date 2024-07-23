@@ -3172,9 +3172,9 @@ export class GetQuotesBySubjectRequest extends Message<GetQuotesBySubjectRequest
  */
 export class GetQuotesBySubjectResponse extends Message<GetQuotesBySubjectResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.RecordRef refs = 1;
    */
-  uris: string[] = []
+  refs: RecordRef[] = []
 
   /**
    * @generated from field: string cursor = 2;
@@ -3189,13 +3189,7 @@ export class GetQuotesBySubjectResponse extends Message<GetQuotesBySubjectRespon
   static readonly runtime: typeof proto3 = proto3
   static readonly typeName = 'bsky.GetQuotesBySubjectResponse'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    {
-      no: 1,
-      name: 'uris',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
-      repeated: true,
-    },
+    { no: 1, name: 'refs', kind: 'message', T: RecordRef, repeated: true },
     { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
   ])
 
@@ -3312,6 +3306,11 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   replies: number[] = []
 
+  /**
+   * @generated from field: repeated int32 quotes = 4;
+   */
+  quotes: number[] = []
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3337,6 +3336,13 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     {
       no: 3,
       name: 'replies',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 4,
+      name: 'quotes',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,

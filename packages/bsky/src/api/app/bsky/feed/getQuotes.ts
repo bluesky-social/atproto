@@ -1,5 +1,4 @@
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
 import { clearlyBadCursor, resHeaders } from '../../../util'
@@ -10,17 +9,15 @@ import {
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { mapDefined } from '@atproto/common'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
+import { ItemRef } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getPostQuotes = createPipeline(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
-  server.app.bsky.feed.getPostQuotes({
+  const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
+  server.app.bsky.feed.getQuotes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
+      console.log('getPostQuotes', 'starting')
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -28,7 +25,8 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getPostQuotes({ ...params, hydrateCtx }, ctx)
+      console.log('getPostQuotes', 'hydrateCtx', hydrateCtx)
+      const result = await getQuotes({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -43,9 +41,10 @@ const skeleton = async (inputs: {
   ctx: Context
   params: Params
 }): Promise<Skeleton> => {
+  console.log('getPostQuotes', 'skeleton')
   const { ctx, params } = inputs
   if (clearlyBadCursor(params.cursor)) {
-    return { feedItems: [] }
+    return { refs: [] }
   }
 
   const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubject({
@@ -55,7 +54,7 @@ const skeleton = async (inputs: {
   })
 
   return {
-    feedItems: quotesRes.uris,
+    refs: quotesRes.refs,
   }
 }
 
@@ -65,7 +64,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydratePosts(skeleton.feedItems, params.hydrateCtx)
+  return await ctx.hydrator.hydratePosts(skeleton.refs, params.hydrateCtx)
 }
 
 const noBlocks = (inputs: {
@@ -74,8 +73,8 @@ const noBlocks = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.feedItems = skeleton.feedItems.filter((item) => {
-    return !ctx.views.viewerBlockExists(item.postAuthorDid, hydration)
+  skeleton.refs = skeleton.refs.filter((ref) => {
+    return !ctx.views.viewerBlockExists(ref.uri, hydration)
   })
   return skeleton
 }
@@ -87,9 +86,10 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const postViews = mapDefined(skeleton.feedItems, (uri) => {
-    return ctx.views.post(uri, hydration)
+  const postViews = mapDefined(skeleton.refs, (ref) => {
+    return ctx.views.post(ref.uri, hydration)
   })
+  console.log('getPostQuotes', 'presentation', postViews)
   return {
     posts: postViews,
     cursor: skeleton.cursor,
@@ -106,6 +106,6 @@ type Context = {
 type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  feedItems: any[] // @TODO
+  refs: ItemRef[]
   cursor?: string
 }

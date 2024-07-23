@@ -13,6 +13,7 @@ import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
 import searchPosts from './app/bsky/feed/searchPosts'
 import getActorLikes from './app/bsky/feed/getActorLikes'
+import getQuotes from './app/bsky/feed/getQuotes'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
@@ -54,7 +55,6 @@ import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
 import fetchLabels from './com/atproto/temp/fetchLabels'
 import queryLabels from './com/atproto/label/queryLabels'
-import getPostQuotes from './app/bsky/feed/getPostQuotes'
 
 export * as health from './health'
 
@@ -73,6 +73,7 @@ export default function (server: Server, ctx: AppContext) {
   getFeedGenerators(server, ctx)
   getLikes(server, ctx)
   getListFeed(server, ctx)
+  getQuotes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
   searchPosts(server, ctx)
@@ -111,7 +112,6 @@ export default function (server: Server, ctx: AppContext) {
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
-  getPostQuotes(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

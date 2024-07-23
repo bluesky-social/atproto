@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.getPostQuotes",
+  "id": "app.bsky.feed.getQuotes",
   "defs": {
     "main": {
       "type": "query",

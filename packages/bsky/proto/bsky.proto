@@ -268,7 +268,7 @@ message GetQuotesBySubjectRequest {
 }
 
 message GetQuotesBySubjectResponse {
-  repeated string uris = 1;
+  repeated RecordRef refs = 1;
   string cursor = 2;
 }
 
@@ -285,6 +285,7 @@ message GetInteractionCountsResponse {
   repeated int32 likes = 1;
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
+  repeated int32 quotes = 4;
 }
 
 message GetCountsForUsersRequest {

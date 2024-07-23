@@ -367,6 +367,23 @@ const deleteFn = async (
   }
   if (deletedPosts) {
     deletedEmbeds.push(deletedPosts)
+
+    await db.deleteFrom('quote').where('uri', '=', uriStr).execute()
+    await db
+      .insertInto('post_agg')
+      .values({
+        uri: deletedPosts.embedUri,
+        quoteCount: db
+          .selectFrom('quote')
+          .where('quote.subjectCid', '=', deletedPosts.embedCid)
+          .select(countAll.as('count')),
+      })
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({ quoteCount: excluded(db, 'quoteCount') }),
+      )
+      .execute()
   }
   return deleted
     ? {
