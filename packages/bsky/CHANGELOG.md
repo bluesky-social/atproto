@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.69
+
+### Patch Changes
+
+- [#2648](https://github.com/bluesky-social/atproto/pull/2648) [`76c91f832`](https://github.com/bluesky-social/atproto/commit/76c91f8325363c95e25349e8e236aa2f70e63d5b) Thanks [@dholms](https://github.com/dholms)! - Support for priority notifications
+
+- Updated dependencies [[`12dcdb668`](https://github.com/bluesky-social/atproto/commit/12dcdb668c8ec0f8a89689c326ab3e9dbc6d2f3c), [`76c91f832`](https://github.com/bluesky-social/atproto/commit/76c91f8325363c95e25349e8e236aa2f70e63d5b)]:
+  - @atproto/api@0.12.25
+
 ## 0.0.68
 
 ### Patch Changes
