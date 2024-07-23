@@ -1,5 +1,11 @@
 # @atproto/bsync
 
+## 0.0.5
+
+### Patch Changes
+
+- [#2648](https://github.com/bluesky-social/atproto/pull/2648) [`76c91f832`](https://github.com/bluesky-social/atproto/commit/76c91f8325363c95e25349e8e236aa2f70e63d5b) Thanks [@dholms](https://github.com/dholms)! - Support for priority notifications
+
 ## 0.0.4
 
 ### Patch Changes
