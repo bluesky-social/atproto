@@ -3,7 +3,11 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getReposted
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
 import { clearlyBadCursor, resHeaders } from '../../../util'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { mapDefined } from '@atproto/common'
 
@@ -24,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      const result = await getPostQuotes({ ...params, viewer }, ctx)
+      const result = await getPostQuotes({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -99,7 +103,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   feedItems: any[] // @TODO
