@@ -361,6 +361,7 @@ message ActorInfo {
   string allow_incoming_chats_from = 8;
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
+  bool priority_notifications = 11;
 }
 
 message GetActorsResponse {
@@ -648,6 +649,7 @@ message GetNotificationsRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
+  bool priority = 4;
 }
 
 message Notification {
@@ -656,6 +658,7 @@ message Notification {
   string reason = 3;
   string reason_subject = 4;
   google.protobuf.Timestamp timestamp = 5;
+  bool priority = 6;
 }
 
 message GetNotificationsResponse {
@@ -668,6 +671,7 @@ message GetNotificationsResponse {
 message UpdateNotificationSeenRequest {
   string actor_did = 1;
   google.protobuf.Timestamp timestamp = 2;
+  bool priority = 3;
 }
 
 message UpdateNotificationSeenResponse {}
@@ -676,6 +680,7 @@ message UpdateNotificationSeenResponse {}
 //     - hydrating read state onto notifications
 message GetNotificationSeenRequest {
   string actor_did = 1;
+  bool priority = 2;
 }
 
 message GetNotificationSeenResponse {
@@ -686,6 +691,7 @@ message GetNotificationSeenResponse {
 //     - `getUnreadCount`
 message GetUnreadNotificationCountRequest {
   string actor_did = 1;
+  bool priority = 2;
 }
 
 message GetUnreadNotificationCountResponse {
@@ -1203,7 +1209,7 @@ service Service {
   rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
   rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
   rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
-  
+
   rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);

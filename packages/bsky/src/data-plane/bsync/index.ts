@@ -116,6 +116,28 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       throw new Error('not implemented')
     },
 
+    async addNotifOperation(req) {
+      const { actorDid, priority } = req
+      if (priority !== undefined) {
+        await db.db
+          .insertInto('actor_state')
+          .values({
+            did: actorDid,
+            priorityNotifs: priority,
+            lastSeenNotifs: new Date().toISOString(),
+          })
+          .onConflict((oc) =>
+            oc.column('did').doUpdateSet({ priorityNotifs: priority }),
+          )
+          .execute()
+      }
+      return {}
+    },
+
+    async scanNotifOperations() {
+      throw new Error('not implemented')
+    },
+
     async ping() {
       return {}
     },

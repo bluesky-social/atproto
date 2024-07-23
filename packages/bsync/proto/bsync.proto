@@ -41,6 +41,33 @@ message ScanMuteOperationsResponse {
   string cursor = 2;
 }
 
+message NotifOperation {
+  string id = 1;
+  string actor_did = 2;
+  optional bool priority = 3;
+}
+
+message AddNotifOperationRequest {
+  string actor_did = 1;
+  optional bool priority = 2;
+}
+
+message AddNotifOperationResponse {
+  NotifOperation operation = 1;
+}
+
+message ScanNotifOperationsRequest {
+  string cursor = 1;
+  int32 limit = 2;
+}
+
+message ScanNotifOperationsResponse {
+  repeated NotifOperation operations = 1;
+  string cursor = 2;
+}
+
+
+
 // Ping
 message PingRequest {}
 message PingResponse {}
@@ -50,6 +77,8 @@ service Service {
   // Sync
   rpc AddMuteOperation(AddMuteOperationRequest) returns (AddMuteOperationResponse);
   rpc ScanMuteOperations(ScanMuteOperationsRequest) returns (ScanMuteOperationsResponse);
+  rpc AddNotifOperation(AddNotifOperationRequest) returns (AddNotifOperationResponse);
+  rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }

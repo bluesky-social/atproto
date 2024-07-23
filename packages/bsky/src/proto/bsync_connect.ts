@@ -6,10 +6,14 @@
 import {
   AddMuteOperationRequest,
   AddMuteOperationResponse,
+  AddNotifOperationRequest,
+  AddNotifOperationResponse,
   PingRequest,
   PingResponse,
   ScanMuteOperationsRequest,
   ScanMuteOperationsResponse,
+  ScanNotifOperationsRequest,
+  ScanNotifOperationsResponse,
 } from './bsync_pb'
 import { MethodKind } from '@bufbuild/protobuf'
 
@@ -37,6 +41,24 @@ export const Service = {
       name: 'ScanMuteOperations',
       I: ScanMuteOperationsRequest,
       O: ScanMuteOperationsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsync.Service.AddNotifOperation
+     */
+    addNotifOperation: {
+      name: 'AddNotifOperation',
+      I: AddNotifOperationRequest,
+      O: AddNotifOperationResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsync.Service.ScanNotifOperations
+     */
+    scanNotifOperations: {
+      name: 'ScanNotifOperations',
+      I: ScanNotifOperationsRequest,
+      O: ScanNotifOperationsResponse,
       kind: MethodKind.Unary,
     },
     /**
