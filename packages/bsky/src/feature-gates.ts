@@ -1,4 +1,4 @@
-import { Statsig, StatsigUser } from 'statsig-node'
+import Statsig, { StatsigUser } from 'statsig-node'
 import { sha256Hex } from '@atproto/crypto'
 
 import { featureGatesLogger } from './logger'
