@@ -17,7 +17,6 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getQuotes({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      console.log('getPostQuotes', 'starting')
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -25,9 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
       })
-      console.log('getPostQuotes', 'hydrateCtx', hydrateCtx)
       const result = await getQuotes({ ...params, hydrateCtx }, ctx)
-
       return {
         encoding: 'application/json',
         body: result,
@@ -41,7 +38,6 @@ const skeleton = async (inputs: {
   ctx: Context
   params: Params
 }): Promise<Skeleton> => {
-  console.log('getPostQuotes', 'skeleton')
   const { ctx, params } = inputs
   if (clearlyBadCursor(params.cursor)) {
     return { refs: [] }
@@ -89,7 +85,6 @@ const presentation = (inputs: {
   const postViews = mapDefined(skeleton.refs, (ref) => {
     return ctx.views.post(ref.uri, hydration)
   })
-  console.log('getPostQuotes', 'presentation', postViews)
   return {
     posts: postViews,
     cursor: skeleton.cursor,
