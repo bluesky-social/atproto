@@ -1,33 +1,45 @@
+import z from 'zod'
 import * as common from '@atproto/common'
-import { MINUTE } from '@atproto/common'
+import { MINUTE, check } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import * as ui8 from 'uint8arrays'
 import { AuthRequiredError } from './types'
 
-type ServiceJwtPayload = {
+type ServiceJwtParams = {
   iss: string
   aud: string
   exp?: number
+  scope?: string[]
+  keypair: crypto.Keypair
+  excludeNonce?: boolean
 }
 
-type ServiceJwtParams = ServiceJwtPayload & {
-  keypair: crypto.Keypair
+type ServiceJwtPayload = {
+  iss: string
+  aud: string
+  exp: number
+  scope?: string[]
+  nonce?: string
 }
 
 export const createServiceJwt = async (
   params: ServiceJwtParams,
 ): Promise<string> => {
-  const { iss, aud, keypair } = params
+  const { iss, aud, excludeNonce, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
+  const scope = params.scope !== undefined ? params.scope.join(' ') : undefined
+  const nonce = excludeNonce ? undefined : await crypto.randomStr(32, 'hex')
   const header = {
     typ: 'JWT',
     alg: keypair.jwtAlg,
   }
-  const payload = {
+  const payload = common.noUndefinedVals({
     iss,
     aud,
     exp,
-  }
+    scope,
+    nonce,
+  })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
   const toSign = ui8.fromString(toSignStr, 'utf8')
   const sig = await keypair.sign(toSign)
@@ -117,20 +129,22 @@ const parseB64UrlToJson = (b64: string) => {
   return JSON.parse(common.b64UrlToUtf8(b64))
 }
 
-const parsePayload = (b64: string): JwtPayload => {
+const parsePayload = (b64: string): ServiceJwtPayload => {
   const payload = parseB64UrlToJson(b64)
   if (!payload || typeof payload !== 'object') {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
-  } else if (typeof payload.exp !== 'number') {
-    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
-  } else if (typeof payload.iss !== 'string') {
+  }
+  if (!check.is(payload, jwtPayloadSchema)) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
-  return payload
+  const { iss, aud, exp, scope, nonce } = payload
+  return { iss, aud, exp, nonce, scope: scope ? scope.split(' ') : undefined }
 }
 
-type JwtPayload = {
-  iss: string
-  aud: string
-  exp: number
-}
+const jwtPayloadSchema = z.object({
+  iss: z.string(),
+  aud: z.string(),
+  exp: z.number(),
+  scope: z.string().optional(),
+  nonce: z.string().optional(),
+})
