@@ -5595,6 +5595,7 @@ export const schemaDict = {
           properties: {
             targets: {
               type: 'array',
+              maxLength: 1000,
               items: {
                 type: 'string',
                 format: 'at-uri',
