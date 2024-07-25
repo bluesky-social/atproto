@@ -31,7 +31,11 @@
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert",
-            "#modEventTag"
+            "#modEventTag",
+            "#accountEventDelete",
+            "#accountEventDeactivate",
+            "#recordEventUpdate",
+            "#recordEventDelete"
           ]
         },
         "subject": {
@@ -78,7 +82,11 @@
             "#modEventEmail",
             "#modEventResolveAppeal",
             "#modEventDivert",
-            "#modEventTag"
+            "#modEventTag",
+            "#accountEventDelete",
+            "#accountEventDeactivate",
+            "#recordEventUpdate",
+            "#recordEventDelete"
           ]
         },
         "subject": {
@@ -384,6 +392,34 @@
           "type": "string",
           "description": "Additional comment about added/removed tags."
         }
+      }
+    },
+    "accountEventDelete": {
+      "type": "object",
+      "description": "Logs account deletion event on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "properties": {
+        "comment": { "type": "string" }
+      }
+    },
+    "accountEventDeactivate": {
+      "type": "object",
+      "description": "Logs account deactivation event on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "properties": {
+        "comment": { "type": "string" }
+      }
+    },
+    "recordEventUpdate": {
+      "type": "object",
+      "description": "Logs update event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "properties": {
+        "comment": { "type": "string" }
+      }
+    },
+    "recordEventDelete": {
+      "type": "object",
+      "description": "Logs deletion event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
+      "properties": {
+        "comment": { "type": "string" }
       }
     },
     "repoView": {
