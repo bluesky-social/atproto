@@ -2607,6 +2607,19 @@ export const schemaDict = {
               description:
                 'The DID of the service that the token will be used to authenticate with',
             },
+            exp: {
+              type: 'integer',
+              description:
+                'The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope.',
+            },
+            scope: {
+              type: 'array',
+              description:
+                'An array of scopes to include in the requested token. Each scope should take the form of an XRPC method name (NSID).',
+              items: {
+                type: 'string',
+              },
+            },
           },
         },
         output: {
@@ -2621,6 +2634,13 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'BadExpiration',
+            description:
+              'Indicates that the requested expiration date is not a valid. May be in the past or may be reliant on the requested scopes.',
+          },
+        ],
       },
     },
   },
