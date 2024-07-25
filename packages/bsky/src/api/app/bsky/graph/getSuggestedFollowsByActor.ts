@@ -121,7 +121,7 @@ const presentation = (
   const { suggestedDids, headers } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profileDetailed(did, hydration),
-  )
+  ).filter((profile) => Boolean(profile.viewer?.following) === false)
   return { suggestions, headers }
 }
 
