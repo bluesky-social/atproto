@@ -35,6 +35,7 @@ import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
 import * as labeler from './tables/labeler'
 import * as starterPack from './tables/starter-pack'
+import * as detach from './tables/detach'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -71,7 +72,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   blobTakedown.PartialDB &
   labeler.PartialDB &
   starterPack.PartialDB &
-  taggedSuggestion.PartialDB
+  taggedSuggestion.PartialDB &
+  detach.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
