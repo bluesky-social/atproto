@@ -71,6 +71,7 @@ type AccessOutput = {
     did: string
     scope: AuthScope
     audience: string | undefined
+    isPrivileged: boolean
   }
   artifacts: string
 }
@@ -470,6 +471,7 @@ export class AuthVerifier {
           did: result.claims.sub,
           scope: AuthScope.Access,
           audience: this.dids.pds,
+          isPrivileged: true,
         },
         artifacts: result.token,
       }
@@ -498,12 +500,17 @@ export class AuthVerifier {
       scopes,
       { audience: this.dids.pds },
     )
+    const isPrivileged = [
+      AuthScope.Access,
+      AuthScope.AppPassPrivileged,
+    ].includes(scope)
     return {
       credentials: {
         type: 'access',
         did,
         scope,
         audience,
+        isPrivileged,
       },
       artifacts: token,
     }

@@ -3,10 +3,11 @@ import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/oauth-provider'
 import { HOUR, MINUTE } from '@atproto/common'
+import { PRIVILEGED_METHODS } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
-    auth: ctx.authVerifier.accessPrivileged(),
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
       const { aud, scope } = params
@@ -28,6 +29,15 @@ export default function (server: Server, ctx: AppContext) {
             'cannot request a scope-less token with an expiration more than a minute in the future',
             'BadExpiration',
           )
+        }
+      }
+      if (!auth.credentials.isPrivileged && scope) {
+        for (const nsid of scope) {
+          if (PRIVILEGED_METHODS.includes(nsid)) {
+            throw new InvalidRequestError(
+              `cannot request a service auth token with the following scope with an app password: ${nsid}`,
+            )
+          }
         }
       }
       const keypair = await ctx.actorStore.keypair(did)

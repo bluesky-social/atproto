@@ -21,6 +21,9 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
     try {
       const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req })
+      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.includes(nsid)) {
+        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+      }
       const headers = await formatHeaders(ctx, req, aud, auth.credentials.did, [
         nsid,
       ])
@@ -248,6 +251,24 @@ export const parseProxyRes = async (res: Response) => {
 
 // Utils
 // -------------------
+
+export const PRIVILEGED_METHODS = [
+  ids.ChatBskyActorDeleteAccount,
+  ids.ChatBskyActorExportAccountData,
+  ids.ChatBskyConvoDeleteMessageForSelf,
+  ids.ChatBskyConvoGetConvo,
+  ids.ChatBskyConvoGetConvoForMembers,
+  ids.ChatBskyConvoGetLog,
+  ids.ChatBskyConvoGetMessages,
+  ids.ChatBskyConvoLeaveConvo,
+  ids.ChatBskyConvoListConvos,
+  ids.ChatBskyConvoMuteConvo,
+  ids.ChatBskyConvoSendMessage,
+  ids.ChatBskyConvoSendMessageBatch,
+  ids.ChatBskyConvoUnmuteConvo,
+  ids.ChatBskyConvoUpdateRead,
+  ids.ComAtprotoServerCreateAccount,
+]
 
 const parseReqNsid = (req: express.Request): string => {
   return req.originalUrl.split('?')[0].replace('/xrpc/', '')
