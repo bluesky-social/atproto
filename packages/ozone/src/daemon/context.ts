@@ -9,6 +9,7 @@ import { EventReverser } from './event-reverser'
 import { ModerationService, ModerationServiceCreator } from '../mod-service'
 import { BackgroundQueue } from '../background'
 import { getSigningKeyId } from '../util'
+import { SnapshotCleaner } from './snapshot-cleaner'
 
 export type DaemonContextOptions = {
   db: Database
@@ -17,6 +18,7 @@ export type DaemonContextOptions = {
   signingKey: Keypair
   eventPusher: EventPusher
   eventReverser: EventReverser
+  snapshotCleaner: SnapshotCleaner | null
 }
 
 export class DaemonContext {
@@ -65,6 +67,9 @@ export class DaemonContext {
     )
 
     const eventReverser = new EventReverser(db, modService)
+    const snapshotCleaner = cfg.snapshot?.isEnabled
+      ? new SnapshotCleaner(db, cfg.snapshot?.expiration)
+      : null
 
     return new DaemonContext({
       db,
@@ -73,6 +78,7 @@ export class DaemonContext {
       signingKey,
       eventPusher,
       eventReverser,
+      snapshotCleaner,
       ...(overrides ?? {}),
     })
   }
@@ -95,6 +101,10 @@ export class DaemonContext {
 
   get eventReverser(): EventReverser {
     return this.opts.eventReverser
+  }
+
+  get snapshotCleaner(): SnapshotCleaner | null {
+    return this.opts.snapshotCleaner
   }
 }
 

@@ -5,7 +5,7 @@ import { ModerationViews } from './views'
 export class Snapshot {
   constructor(
     private db: Database,
-    private views: ModerationViews,
+    private views?: ModerationViews,
   ) {}
 
   async fetch(did: string, uri: string | null, cid: string | null) {
@@ -37,6 +37,10 @@ export class Snapshot {
   }
 
   async saveRepoSnapshot(did: string) {
+    if (!this.views) {
+      throw new Error('Viewer not configured')
+    }
+
     const repoData = await this.views.getAccoutInfosByDid([did])
     const repo = repoData.get(did)
     if (repo) {
@@ -45,6 +49,10 @@ export class Snapshot {
   }
 
   async saveRecordSnapshot(did: string, uri: string, cid: string | null) {
+    if (!this.views) {
+      throw new Error('Viewer not configured')
+    }
+
     const recordData = await this.views.fetchRecords([
       { uri, cid: cid || undefined },
     ])
@@ -59,6 +67,7 @@ export class Snapshot {
     record: string,
     uri: string | null,
     cid: string | null,
+    createdAt?: string,
   ) {
     return this.db.db
       .insertInto('snapshot')
@@ -67,7 +76,7 @@ export class Snapshot {
         uri: uri || '',
         cid: cid || '',
         record,
-        createdAt: new Date(),
+        createdAt: createdAt || new Date().toISOString(),
       })
       .execute()
   }
@@ -88,5 +97,12 @@ export class Snapshot {
 
     const doesExist = await checkQb.executeTakeFirst()
     return !!doesExist
+  }
+
+  removeExpiredSnapshots(expiration: Date) {
+    return this.db.db
+      .deleteFrom('snapshot')
+      .where('createdAt', '<', expiration.toISOString())
+      .execute()
   }
 }

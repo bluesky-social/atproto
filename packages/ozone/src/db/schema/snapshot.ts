@@ -5,7 +5,7 @@ export interface Snapshot {
   uri: string | null
   cid: string | null
   record: string
-  createdAt: Date
+  createdAt: string
 }
 
 export type PartialDB = {

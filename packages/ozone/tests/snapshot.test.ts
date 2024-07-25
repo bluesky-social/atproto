@@ -11,7 +11,7 @@ import { forSnapshot } from './_util'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { RecordSubject, RepoSubject } from '../src/mod-service/subject'
 
-describe('moderation', () => {
+describe('record snapshot', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let agent: AtpAgent
@@ -33,6 +33,7 @@ describe('moderation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation',
       ozone: {
+        snapshotExpiration: 1000,
         snapshotEnabled: true,
       },
     })

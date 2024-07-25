@@ -846,7 +846,7 @@ export class ModerationService {
   }
 
   async getSnapshot(subjectInfo: SubjectInfo) {
-    const snapshot = new Snapshot(this.db, this.views)
+    const snapshot = new Snapshot(this.db)
     return snapshot.fetch(
       subjectInfo.subjectDid,
       subjectInfo.subjectUri,
@@ -855,7 +855,7 @@ export class ModerationService {
   }
 
   async attemptSnapshot(subjectInfo: SubjectInfo) {
-    if (!this.cfg.service.snapshotEnabled) return
+    if (!this.cfg.snapshot?.isEnabled) return
     const snapshot = new Snapshot(this.db, this.views)
     return snapshot.attempt(
       subjectInfo.subjectDid,
