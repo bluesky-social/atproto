@@ -19,9 +19,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
   return async (req, res, next) => {
     try {
-      const { url, aud } = await formatUrlAndAud(ctx, req)
+      const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req })
-      const headers = await formatHeaders(ctx, req, aud, auth.credentials.did)
+      const headers = await formatHeaders(ctx, req, aud, auth.credentials.did, [
+        nsid,
+      ])
       const body: webStream.ReadableStream<Uint8Array> =
         stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
@@ -38,10 +40,14 @@ export const pipethrough = async (
   ctx: AppContext,
   req: express.Request,
   requester: string | null,
+  additionalScopes: string[] = [],
   audOverride?: string,
 ): Promise<HandlerPipeThrough> => {
-  const { url, aud } = await formatUrlAndAud(ctx, req, audOverride)
-  const headers = await formatHeaders(ctx, req, aud, requester)
+  const { url, aud, nsid } = await formatUrlAndAud(ctx, req, audOverride)
+  const headers = await formatHeaders(ctx, req, aud, requester, [
+    nsid,
+    ...additionalScopes,
+  ])
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -53,8 +59,8 @@ export const pipethroughProcedure = async (
   requester: string | null,
   body?: LexValue,
 ): Promise<HandlerPipeThrough> => {
-  const { url, aud } = await formatUrlAndAud(ctx, req)
-  const headers = await formatHeaders(ctx, req, aud, requester)
+  const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
+  const headers = await formatHeaders(ctx, req, aud, requester, [nsid])
   const encodedBody = body
     ? new TextEncoder().encode(stringifyLex(body))
     : undefined
@@ -77,9 +83,10 @@ export const formatUrlAndAud = async (
   ctx: AppContext,
   req: express.Request,
   audOverride?: string,
-): Promise<{ url: URL; aud: string }> => {
+): Promise<{ url: URL; aud: string; nsid: string }> => {
   const proxyTo = await parseProxyHeader(ctx, req)
-  const defaultProxy = defaultService(ctx, req)
+  const nsid = parseReqNsid(req)
+  const defaultProxy = defaultService(ctx, nsid)
   const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
   const aud = audOverride ?? proxyTo?.did ?? defaultProxy?.did
   if (!serviceUrl || !aud) {
@@ -89,7 +96,7 @@ export const formatUrlAndAud = async (
   if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
     throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
   }
-  return { url, aud }
+  return { url, aud, nsid }
 }
 
 export const formatHeaders = async (
@@ -97,9 +104,10 @@ export const formatHeaders = async (
   req: express.Request,
   aud: string,
   requester: string | null,
+  scopes: string[],
 ): Promise<{ authorization?: string }> => {
   const headers = requester
-    ? (await ctx.serviceAuthHeaders(requester, aud)).headers
+    ? (await ctx.serviceAuthHeaders(requester, aud, scopes)).headers
     : {}
   // forward select headers to upstream services
   for (const header of REQ_HEADERS_TO_FORWARD) {
@@ -241,11 +249,14 @@ export const parseProxyRes = async (res: Response) => {
 // Utils
 // -------------------
 
+const parseReqNsid = (req: express.Request): string => {
+  return req.originalUrl.split('?')[0].replace('/xrpc/', '')
+}
+
 const defaultService = (
   ctx: AppContext,
-  req: express.Request,
+  nsid: string,
 ): { url: string; did: string } | null => {
-  const nsid = req.originalUrl.split('?')[0].replace('/xrpc/', '')
   switch (nsid) {
     case ids.ToolsOzoneTeamAddMember:
     case ids.ToolsOzoneTeamDeleteMember:
