@@ -5580,6 +5580,36 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedDetach: {
+    lexicon: 1,
+    id: 'app.bsky.feed.detach',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          'Record defining post URIs detached from a root post. The record key (rkey) of the detach record must match the record key of the root post in question, and that record must be in the same repository.',
+        record: {
+          type: 'object',
+          required: ['targets', 'updatedAt'],
+          properties: {
+            targets: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description: 'List of detached post URIs.',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGenerator: {
     lexicon: 1,
     id: 'app.bsky.feed.generator',
@@ -10028,6 +10058,7 @@ export const ids = {
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
+  AppBskyFeedDetach: 'app.bsky.feed.detach',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
