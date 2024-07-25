@@ -78,7 +78,9 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         { headers: params.headers },
       )
     return {
-      suggestedDids: res.data.actors.map((a) => a.did),
+      suggestedDids: res.data.actors
+        .map((a) => a.did)
+        .filter((did) => did !== relativeToDid),
       headers: res.headers,
     }
   } else {
