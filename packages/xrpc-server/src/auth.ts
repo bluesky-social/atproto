@@ -9,7 +9,7 @@ type ServiceJwtParams = {
   iss: string
   aud: string
   exp?: number
-  scope?: string[]
+  scope?: string | string[]
   keypair: crypto.Keypair
   excludeNonce?: boolean
 }
@@ -27,7 +27,7 @@ export const createServiceJwt = async (
 ): Promise<string> => {
   const { iss, aud, excludeNonce, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
-  const scope = params.scope !== undefined ? params.scope.join(' ') : undefined
+  const scope = formatScope(params.scope)
   const nonce = excludeNonce ? undefined : await crypto.randomStr(32, 'hex')
   const header = {
     typ: 'JWT',
@@ -60,6 +60,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
+  requiredScopes: string[],
   getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
@@ -77,6 +78,17 @@ export const verifyJwt = async (
       'jwt audience does not match service did',
       'BadJwtAudience',
     )
+  }
+  if (requiredScopes.length > 0) {
+    const jwtScopes = payload.scope ?? []
+    for (const scope of requiredScopes) {
+      if (!jwtScopes.includes(scope)) {
+        throw new AuthRequiredError(
+          `missing jwt scope: ${scope}`,
+          'MissingJwtScope',
+        )
+      }
+    }
   }
 
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
@@ -123,6 +135,11 @@ export const verifyJwt = async (
   }
 
   return payload
+}
+const formatScope = (scope?: string | string[]): string | undefined => {
+  if (scope === undefined) return undefined
+  if (typeof scope === 'string') return scope
+  return scope.join(' ')
 }
 
 const parseB64UrlToJson = (b64: string) => {

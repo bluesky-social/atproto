@@ -84,11 +84,12 @@ export class AppContext {
       didCache,
     })
 
-    const createAuthHeaders = (aud: string) =>
+    const createAuthHeaders = (aud: string, scope: string | string[]) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
+        scope,
       })
 
     const backgroundQueue = new BackgroundQueue(db)
@@ -225,31 +226,32 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  async serviceAuthHeaders(aud: string) {
+  async serviceAuthHeaders(aud: string, scope: string | string[]) {
     const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
       aud,
       keypair: this.signingKey,
+      scope,
     })
   }
 
-  async pdsAuth() {
+  async pdsAuth(scope: string | string[]) {
     if (!this.cfg.pds) {
       return undefined
     }
-    return this.serviceAuthHeaders(this.cfg.pds.did)
+    return this.serviceAuthHeaders(this.cfg.pds.did, scope)
   }
 
-  async appviewAuth() {
-    return this.serviceAuthHeaders(this.cfg.appview.did)
+  async appviewAuth(scope: string | string[]) {
+    return this.serviceAuthHeaders(this.cfg.appview.did, scope)
   }
 
-  async chatAuth() {
+  async chatAuth(scope: string | string[]) {
     if (!this.cfg.chat) {
       throw new Error('No chat service configured')
     }
-    return this.serviceAuthHeaders(this.cfg.chat.did)
+    return this.serviceAuthHeaders(this.cfg.chat.did, scope)
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {

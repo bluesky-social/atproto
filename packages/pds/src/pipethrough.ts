@@ -8,6 +8,7 @@ import {
   CatchallHandler,
   HandlerPipeThrough,
   InvalidRequestError,
+  parseReqNsid,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { ids, lexicons } from './lexicon/lexicons'
@@ -63,7 +64,7 @@ export const pipethroughProcedure = async (
   body?: LexValue,
 ): Promise<HandlerPipeThrough> => {
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
-  const headers = await formatHeaders(ctx, req, aud, requester, [nsid])
+  const headers = await formatHeaders(ctx, req, aud, requester, nsid)
   const encodedBody = body
     ? new TextEncoder().encode(stringifyLex(body))
     : undefined
@@ -107,7 +108,7 @@ export const formatHeaders = async (
   req: express.Request,
   aud: string,
   requester: string | null,
-  scopes: string[],
+  scopes: string | string[],
 ): Promise<{ authorization?: string }> => {
   const headers = requester
     ? (await ctx.serviceAuthHeaders(requester, aud, scopes)).headers
@@ -269,10 +270,6 @@ export const PRIVILEGED_METHODS = [
   ids.ChatBskyConvoUpdateRead,
   ids.ComAtprotoServerCreateAccount,
 ]
-
-const parseReqNsid = (req: express.Request): string => {
-  return req.originalUrl.split('?')[0].replace('/xrpc/', '')
-}
 
 const defaultService = (
   ctx: AppContext,

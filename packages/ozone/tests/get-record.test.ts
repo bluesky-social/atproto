@@ -12,6 +12,7 @@ import {
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('admin get record view', () => {
   let network: TestNetwork
@@ -72,7 +73,7 @@ describe('admin get record view', () => {
   it('gets a record by uri, even when taken down.', async () => {
     const result = await agent.api.tools.ozone.moderation.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -83,7 +84,7 @@ describe('admin get record view', () => {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -97,7 +98,7 @@ describe('admin get record view', () => {
           'badrkey',
         ).toString(),
       },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
     await expect(promise).rejects.toThrow('Record not found')
   })
@@ -108,7 +109,7 @@ describe('admin get record view', () => {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
         cid: sc.posts[sc.dids.alice][1].ref.cidStr, // Mismatching cid
       },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRecord) },
     )
     await expect(promise).rejects.toThrow('Record not found')
   })

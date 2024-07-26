@@ -248,7 +248,8 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    // @TODO use real service auth token scope
+    const payload = await verifyServiceJwt(jwtStr, opts.aud, [], getSigningKey)
     return { iss: payload.iss, aud: payload.aud }
   }
 

@@ -26,6 +26,7 @@ import {
   ROLEMODERATOR,
   ROLETRIAGE,
 } from '../lexicon/types/tools/ozone/team/defs'
+import { ids } from '../lexicon/lexicons'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,
@@ -33,7 +34,7 @@ export const getPdsAccountInfo = async (
 ): Promise<AccountView | null> => {
   const agent = ctx.pdsAgent
   if (!agent) return null
-  const auth = await ctx.pdsAuth()
+  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfo)
   if (!auth) return null
   try {
     const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
