@@ -795,7 +795,9 @@ describe(`hasMutedWord`, () => {
   describe(`facet with multiple features`, () => {
     it(`multiple tags`, () => {
       const match = hasMutedWord({
-        mutedWords: [{ value: 'bad', targets: ['content'] }],
+        mutedWords: [
+          { value: 'bad', targets: ['content'], actorTarget: 'all' },
+        ],
         text: 'tags',
         facets: [
           {
@@ -821,7 +823,9 @@ describe(`hasMutedWord`, () => {
 
     it(`other features`, () => {
       const match = hasMutedWord({
-        mutedWords: [{ value: 'bad', targets: ['content'] }],
+        mutedWords: [
+          { value: 'bad', targets: ['content'], actorTarget: 'all' },
+        ],
         text: 'test',
         facets: [
           {
