@@ -32,6 +32,7 @@ export interface ModEventView {
     | ModEventTag
     | AccountEventDelete
     | AccountEventDeactivate
+    | AccountEventHandleChange
     | RecordEventUpdate
     | RecordEventDelete
     | { $type: string; [k: string]: unknown }
@@ -515,6 +516,29 @@ export function isAccountEventDeactivate(
 export function validateAccountEventDeactivate(v: unknown): ValidationResult {
   return lexicons.validate(
     'tools.ozone.moderation.defs#accountEventDeactivate',
+    v,
+  )
+}
+
+/** Logs handle change of an account. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
+export interface AccountEventHandleChange {
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isAccountEventHandleChange(
+  v: unknown,
+): v is AccountEventHandleChange {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'tools.ozone.moderation.defs#accountEventHandleChange'
+  )
+}
+
+export function validateAccountEventHandleChange(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'tools.ozone.moderation.defs#accountEventHandleChange',
     v,
   )
 }

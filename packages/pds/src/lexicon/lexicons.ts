@@ -10155,6 +10155,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventTag',
               'lex:tools.ozone.moderation.defs#accountEventDelete',
               'lex:tools.ozone.moderation.defs#accountEventDeactivate',
+              'lex:tools.ozone.moderation.defs#accountEventHandleChange',
               'lex:tools.ozone.moderation.defs#recordEventUpdate',
               'lex:tools.ozone.moderation.defs#recordEventDelete',
             ],
@@ -10595,6 +10596,16 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs account deactivation event on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      accountEventHandleChange: {
+        type: 'object',
+        description:
+          'Logs handle change of an account. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
         properties: {
           comment: {
             type: 'string',
