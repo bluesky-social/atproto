@@ -376,7 +376,7 @@ export interface MutedWord {
   /** The intended targets of the muted word. */
   targets: MutedWordTarget[]
   /** Groups of users to apply the muted word to. If undefined, applies to all users. */
-  actorTarget?: 'all' | 'exclude-following' | (string & {})
+  actorTarget: 'all' | 'exclude-following' | (string & {})
   /** The date and time at which the muted word will expire and no longer be applied. */
   expiresAt?: string
   [k: string]: unknown

@@ -4363,6 +4363,7 @@ export const schemaDict = {
             description:
               'Groups of users to apply the muted word to. If undefined, applies to all users.',
             knownValues: ['all', 'exclude-following'],
+            default: 'all',
           },
           expiresAt: {
             type: 'string',
