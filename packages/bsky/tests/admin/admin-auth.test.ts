@@ -3,6 +3,7 @@ import AtpAgent from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { RepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('admin auth', () => {
   let network: TestNetwork
@@ -71,6 +72,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -96,6 +98,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: bskyDid,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -116,6 +119,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: sc.dids.alice,
       aud: bskyDid,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: aliceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -136,6 +140,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -158,6 +163,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

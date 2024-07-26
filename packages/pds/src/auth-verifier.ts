@@ -88,11 +88,11 @@ type RefreshOutput = {
   artifacts: string
 }
 
-type UserDidOutput = {
+type UserServiceAuthOutput = {
   credentials: {
-    type: 'user_did'
+    type: 'user_service_auth'
     aud: string
-    iss: string
+    did: string
   }
 }
 
@@ -223,29 +223,39 @@ export class AuthVerifier {
     }
   }
 
-  userDidAuth = async (ctx: ReqCtx): Promise<UserDidOutput> => {
+  userServiceAuth = async (ctx: ReqCtx): Promise<UserServiceAuthOutput> => {
     const payload = await this.verifyServiceJwt(ctx, {
       aud: this.dids.entryway ?? this.dids.pds,
       iss: null,
     })
     return {
       credentials: {
-        type: 'user_did',
+        type: 'user_service_auth',
         aud: payload.aud,
-        iss: payload.iss,
+        did: payload.iss,
       },
     }
   }
 
-  userDidAuthOptional = async (
+  userServiceAuthOptional = async (
     ctx: ReqCtx,
-  ): Promise<UserDidOutput | NullOutput> => {
+  ): Promise<UserServiceAuthOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
-      return await this.userDidAuth(ctx)
+      return await this.userServiceAuth(ctx)
     } else {
       return this.null(ctx)
     }
   }
+
+  accessOrUserServiceAuth =
+    (opts: Partial<AccessOpts> = {}) =>
+    async (ctx: ReqCtx): Promise<UserServiceAuthOutput | AccessOutput> => {
+      try {
+        return await this.accessStandard(opts)(ctx)
+      } catch {
+        return await this.userServiceAuth(ctx)
+      }
+    }
 
   modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
     if (!this.dids.modService) {

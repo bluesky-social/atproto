@@ -302,7 +302,9 @@ describe('pds views with blocking from block lists', () => {
   it('ignores self-blocks', async () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: dan }, // dan subscribes to list that contains himself
-      { headers: await network.serviceHeaders(dan, ids.AppBskyActorProfile) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+      },
     )
     expect(res.data.viewer?.blocking).toBeUndefined()
     expect(res.data.viewer?.blockingByList).toBeUndefined()
