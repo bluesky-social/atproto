@@ -72,7 +72,10 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      scope: [
+        ids.ComAtprotoAdminUpdateSubjectStatus,
+        ids.ComAtprotoAdminGetSubjectStatus,
+      ],
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
