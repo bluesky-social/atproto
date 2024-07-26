@@ -74,6 +74,49 @@ describe('Auth', () => {
     await closeServer(s)
   })
 
+  it('creates and validates service auth headers', async () => {
+    const keypair = await Secp256k1Keypair.create()
+    const iss = 'did:example:alice'
+    const aud = 'did:example:bob'
+    const token = await xrpcServer.createServiceJwt({
+      iss,
+      aud,
+      keypair,
+    })
+    const validated = await xrpcServer.verifyJwt(token, null, [], async () =>
+      keypair.did(),
+    )
+    expect(validated.iss).toEqual(iss)
+    expect(validated.aud).toEqual(aud)
+    // should expire within the minute when no exp is provided
+    expect(validated.exp).toBeGreaterThan(Date.now() / 1000)
+    expect(validated.exp).toBeLessThan(Date.now() / 1000 + 60)
+    expect(typeof validated.nonce).toBe('string')
+    expect(validated.scope).toBeUndefined()
+  })
+
+  it('creates and validates service auth headers with scopes', async () => {
+    const keypair = await Secp256k1Keypair.create()
+    const iss = 'did:example:alice'
+    const aud = 'did:example:bob'
+    const scope = [
+      'com.atproto.repo.createRecord',
+      'com.atproto.repo.putRecord',
+    ]
+    const token = await xrpcServer.createServiceJwt({
+      iss,
+      aud,
+      keypair,
+      scope,
+    })
+    const validated = await xrpcServer.verifyJwt(token, null, scope, async () =>
+      keypair.did(),
+    )
+    expect(validated.iss).toEqual(iss)
+    expect(validated.aud).toEqual(aud)
+    expect(validated.scope).toEqual(scope)
+  })
+
   it('fails on bad auth before invalid request payload.', async () => {
     try {
       await client.call(
@@ -151,6 +194,7 @@ describe('Auth', () => {
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
         'did:example:aud',
+        [],
         async () => {
           return keypair.did()
         },
@@ -168,6 +212,7 @@ describe('Auth', () => {
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
         'did:example:aud2',
+        [],
         async () => {
           return keypair.did()
         },
@@ -175,6 +220,25 @@ describe('Auth', () => {
       await expect(tryVerify).rejects.toThrow(
         'jwt audience does not match service did',
       )
+    })
+
+    it('fails on bad scopes.', async () => {
+      const keypair = await Secp256k1Keypair.create()
+      const jwt = await xrpcServer.createServiceJwt({
+        aud: 'did:example:aud1',
+        iss: 'did:example:iss',
+        keypair,
+        scope: 'com.atproto.repo.createRecord',
+      })
+      const tryVerify = xrpcServer.verifyJwt(
+        jwt,
+        'did:example:aud1',
+        ['com.atproto.repo.putRecord'],
+        async () => {
+          return keypair.did()
+        },
+      )
+      await expect(tryVerify).rejects.toThrow(/missing jwt scope/)
     })
 
     it('refreshes key on verification failure.', async () => {
@@ -190,6 +254,7 @@ describe('Auth', () => {
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
         'did:example:aud',
+        [],
         async (_did, forceRefresh) => {
           if (forceRefresh) {
             usedKeypair2 = true
@@ -222,6 +287,7 @@ describe('Auth', () => {
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
         'did:example:aud',
+        [],
         async () => {
           return keypair.did()
         },
