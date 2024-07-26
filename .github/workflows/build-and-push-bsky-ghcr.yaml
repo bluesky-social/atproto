@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - divy/appview-getrecord-nohost
+      - divy/mod-full-thread
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

@@ -326,6 +326,9 @@ importers:
       '@types/pg':
         specifier: ^8.6.6
         version: 8.6.6
+      get-port:
+        specifier: ^5.1.1
+        version: 5.1.1
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.24)(ts-node@10.8.2)
@@ -8560,7 +8563,6 @@ packages:
   /get-port@5.1.1:
     resolution: {integrity: sha512-g/Q1aTSDOxFpchXC4i8ZWvxA1lnPqx/JHqcpIw0/LX9T8x/GBbi6YnlN5nhaKIFkT8oFsscUKgDJYxfwfS6QsQ==}
     engines: {node: '>=8'}
-    dev: false
 
   /get-port@6.1.2:
     resolution: {integrity: sha512-BrGGraKm2uPqurfGVj/z97/zv8dPleC6x9JBNRTrDNtCkkRF4rPwrQXFgL7+I+q8QSdU4ntLQX2D7KIxSy8nGw==}

@@ -8357,6 +8357,9 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            priority: {
+              type: 'boolean',
+            },
             seenAt: {
               type: 'string',
               format: 'datetime',
@@ -8395,6 +8398,9 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
+            priority: {
+              type: 'boolean',
+            },
             cursor: {
               type: 'string',
             },
@@ -8419,6 +8425,9 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:app.bsky.notification.listNotifications#notification',
                 },
+              },
+              priority: {
+                type: 'boolean',
               },
               seenAt: {
                 type: 'string',
@@ -8485,6 +8494,29 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putPreferences',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Set notification-related preferences for an account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['priority'],
+            properties: {
+              priority: {
+                type: 'boolean',
+              },
             },
           },
         },
@@ -11785,6 +11817,7 @@ export const ids = {
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
