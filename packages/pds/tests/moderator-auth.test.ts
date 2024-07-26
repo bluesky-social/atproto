@@ -5,6 +5,7 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
 import usersSeed from './seeds/users'
 import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('moderator auth', () => {
   let network: TestNetworkNoAppView
@@ -76,6 +77,10 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
+      scope: [
+        ids.ComAtprotoAdminUpdateSubjectStatus,
+        ids.ComAtprotoAdminGetSubjectStatus,
+      ],
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -103,6 +108,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: pdsDid,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -123,6 +129,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -145,6 +152,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
