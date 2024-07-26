@@ -1788,7 +1788,11 @@ describe('agent', () => {
         })
 
         it('single-hash #, no insert', async () => {
-          await agent.addMutedWord({ value: '#', targets: [] })
+          await agent.addMutedWord({
+            value: '#',
+            targets: [],
+            actorTarget: 'all',
+          })
           const { moderationPrefs } = await agent.getPreferences()
 
           // sanitized to empty string, not inserted
@@ -1796,7 +1800,11 @@ describe('agent', () => {
         })
 
         it('multi-hash ##, inserts #', async () => {
-          await agent.addMutedWord({ value: '##', targets: [] })
+          await agent.addMutedWord({
+            value: '##',
+            targets: [],
+            actorTarget: 'all',
+          })
           const { moderationPrefs } = await agent.getPreferences()
           expect(
             moderationPrefs.mutedWords.find((m) => m.value === '#'),
@@ -1804,7 +1812,11 @@ describe('agent', () => {
         })
 
         it('multi-hash ##hashtag, inserts #hashtag', async () => {
-          await agent.addMutedWord({ value: '##hashtag', targets: [] })
+          await agent.addMutedWord({
+            value: '##hashtag',
+            targets: [],
+            actorTarget: 'all',
+          })
           const { moderationPrefs } = await agent.getPreferences()
           expect(
             moderationPrefs.mutedWords.find((w) => w.value === '#hashtag'),
@@ -1812,7 +1824,11 @@ describe('agent', () => {
         })
 
         it('hash emoji #️⃣, inserts #️⃣', async () => {
-          await agent.addMutedWord({ value: '#️⃣', targets: [] })
+          await agent.addMutedWord({
+            value: '#️⃣',
+            targets: [],
+            actorTarget: 'all',
+          })
           const { moderationPrefs } = await agent.getPreferences()
           expect(
             moderationPrefs.mutedWords.find((m) => m.value === '#️⃣'),
@@ -1820,7 +1836,11 @@ describe('agent', () => {
         })
 
         it('hash emoji w/leading hash ##️⃣, inserts #️⃣', async () => {
-          await agent.addMutedWord({ value: '##️⃣', targets: [] })
+          await agent.addMutedWord({
+            value: '##️⃣',
+            targets: [],
+            actorTarget: 'all',
+          })
           const { moderationPrefs } = await agent.getPreferences()
           expect(
             moderationPrefs.mutedWords.find((m) => m.value === '#️⃣'),
@@ -1828,7 +1848,11 @@ describe('agent', () => {
         })
 
         it('hash emoji with double leading hash ###️⃣, inserts ##️⃣', async () => {
-          await agent.addMutedWord({ value: '###️⃣', targets: [] })
+          await agent.addMutedWord({
+            value: '###️⃣',
+            targets: [],
+            actorTarget: 'all',
+          })
           const { moderationPrefs } = await agent.getPreferences()
           expect(
             moderationPrefs.mutedWords.find((m) => m.value === '##️⃣'),
@@ -1836,7 +1860,11 @@ describe('agent', () => {
         })
 
         it(`includes apostrophes e.g. Bluesky's`, async () => {
-          await agent.addMutedWord({ value: `Bluesky's`, targets: [] })
+          await agent.addMutedWord({
+            value: `Bluesky's`,
+            targets: [],
+            actorTarget: 'all',
+          })
           const { mutedWords } = (await agent.getPreferences()).moderationPrefs
 
           expect(mutedWords.find((m) => m.value === `Bluesky's`)).toBeTruthy()
@@ -1844,13 +1872,21 @@ describe('agent', () => {
 
         describe(`invalid characters`, () => {
           it('#<zws>, no insert', async () => {
-            await agent.addMutedWord({ value: '#​', targets: [] })
+            await agent.addMutedWord({
+              value: '#​',
+              targets: [],
+              actorTarget: 'all',
+            })
             const { moderationPrefs } = await agent.getPreferences()
             expect(moderationPrefs.mutedWords.length).toEqual(0)
           })
 
           it('#<zws>ab, inserts ab', async () => {
-            await agent.addMutedWord({ value: '#​ab', targets: [] })
+            await agent.addMutedWord({
+              value: '#​ab',
+              targets: [],
+              actorTarget: 'all',
+            })
             const { moderationPrefs } = await agent.getPreferences()
             expect(moderationPrefs.mutedWords.length).toEqual(1)
           })
@@ -1859,6 +1895,7 @@ describe('agent', () => {
             await agent.addMutedWord({
               value: 'test value\n with newline',
               targets: [],
+              actorTarget: 'all',
             })
             const { moderationPrefs } = await agent.getPreferences()
             expect(
@@ -1872,6 +1909,7 @@ describe('agent', () => {
             await agent.addMutedWord({
               value: 'test value\n\r with newline',
               targets: [],
+              actorTarget: 'all',
             })
             const { moderationPrefs } = await agent.getPreferences()
             expect(
@@ -1882,13 +1920,21 @@ describe('agent', () => {
           })
 
           it('empty space, no insert', async () => {
-            await agent.addMutedWord({ value: ' ', targets: [] })
+            await agent.addMutedWord({
+              value: ' ',
+              targets: [],
+              actorTarget: 'all',
+            })
             const { moderationPrefs } = await agent.getPreferences()
             expect(moderationPrefs.mutedWords.length).toEqual(0)
           })
 
           it(`' trim ', inserts 'trim'`, async () => {
-            await agent.addMutedWord({ value: ' trim ', targets: [] })
+            await agent.addMutedWord({
+              value: ' trim ',
+              targets: [],
+              actorTarget: 'all',
+            })
             const { moderationPrefs } = await agent.getPreferences()
             expect(
               moderationPrefs.mutedWords.find((m) => m.value === 'trim'),
@@ -1900,9 +1946,9 @@ describe('agent', () => {
       describe('addMutedWords', () => {
         it('inserts happen sequentially, no clobbering', async () => {
           await agent.addMutedWords([
-            { value: 'a', targets: ['content'] },
-            { value: 'b', targets: ['content'] },
-            { value: 'c', targets: ['content'] },
+            { value: 'a', targets: ['content'], actorTarget: 'all' },
+            { value: 'b', targets: ['content'], actorTarget: 'all' },
+            { value: 'c', targets: ['content'], actorTarget: 'all' },
           ])
 
           const { moderationPrefs } = await agent.getPreferences()
@@ -1914,9 +1960,11 @@ describe('agent', () => {
       describe('upsertMutedWords (deprecated)', () => {
         it('no longer upserts, calls addMutedWords', async () => {
           await agent.upsertMutedWords([
-            { value: 'both', targets: ['content'] },
+            { value: 'both', targets: ['content'], actorTarget: 'all' },
           ])
-          await agent.upsertMutedWords([{ value: 'both', targets: ['tag'] }])
+          await agent.upsertMutedWords([
+            { value: 'both', targets: ['tag'], actorTarget: 'all' },
+          ])
 
           const { moderationPrefs } = await agent.getPreferences()
 
@@ -1929,6 +1977,7 @@ describe('agent', () => {
           await agent.updateMutedWord({
             value: 'word',
             targets: ['tag', 'content'],
+            actorTarget: 'all',
           })
           const { moderationPrefs } = await agent.getPreferences()
           expect(moderationPrefs.mutedWords.length).toEqual(0)
@@ -1938,6 +1987,7 @@ describe('agent', () => {
           await agent.addMutedWord({
             value: 'value',
             targets: ['content'],
+            actorTarget: 'all',
           })
 
           const a = await agent.getPreferences()
@@ -1963,6 +2013,7 @@ describe('agent', () => {
           await agent.addMutedWord({
             value: 'word',
             targets: ['tag'],
+            actorTarget: 'all',
           })
 
           const a = await agent.getPreferences()
@@ -2013,6 +2064,7 @@ describe('agent', () => {
             value: 'value',
             targets: ['content'],
             expiresAt,
+            actorTarget: 'all',
           })
 
           const a = await agent.getPreferences()
@@ -2036,6 +2088,7 @@ describe('agent', () => {
           await agent.addMutedWord({
             value: 'rug',
             targets: ['content'],
+            actorTarget: 'all',
           })
 
           const a = await agent.getPreferences()
@@ -2058,7 +2111,11 @@ describe('agent', () => {
 
       describe('removeMutedWord', () => {
         it('removes word', async () => {
-          await agent.addMutedWord({ value: 'word', targets: ['tag'] })
+          await agent.addMutedWord({
+            value: 'word',
+            targets: ['tag'],
+            actorTarget: 'all',
+          })
           const a = await agent.getPreferences()
           const word = a.moderationPrefs.mutedWords.find(
             (m) => m.value === 'word',
@@ -2074,13 +2131,21 @@ describe('agent', () => {
         })
 
         it(`word doesn't exist, no action`, async () => {
-          await agent.addMutedWord({ value: 'word', targets: ['tag'] })
+          await agent.addMutedWord({
+            value: 'word',
+            targets: ['tag'],
+            actorTarget: 'all',
+          })
           const a = await agent.getPreferences()
           const word = a.moderationPrefs.mutedWords.find(
             (m) => m.value === 'word',
           )
 
-          await agent.removeMutedWord({ value: 'another', targets: [] })
+          await agent.removeMutedWord({
+            value: 'another',
+            targets: [],
+            actorTarget: 'all',
+          })
 
           const b = await agent.getPreferences()
 
@@ -2093,9 +2158,9 @@ describe('agent', () => {
       describe('removeMutedWords', () => {
         it(`removes sequentially, no clobbering`, async () => {
           await agent.addMutedWords([
-            { value: 'a', targets: ['content'] },
-            { value: 'b', targets: ['content'] },
-            { value: 'c', targets: ['content'] },
+            { value: 'a', targets: ['content'], actorTarget: 'all ' },
+            { value: 'b', targets: ['content'], actorTarget: 'all ' },
+            { value: 'c', targets: ['content'], actorTarget: 'all ' },
           ])
 
           const a = await agent.getPreferences()
@@ -2137,6 +2202,7 @@ describe('agent', () => {
           const newMutedWord: AppBskyActorDefs.MutedWord = {
             value: mutedWord.value,
             targets: mutedWord.targets,
+            actorTarget: 'all',
           }
 
           if (
@@ -2181,6 +2247,7 @@ describe('agent', () => {
           await addLegacyMutedWord({
             value: 'word',
             targets: ['content'],
+            actorTarget: 'all',
           })
 
           {
@@ -2192,7 +2259,9 @@ describe('agent', () => {
             expect(word!.id).toBeFalsy()
           }
 
-          await agent.upsertMutedWords([{ value: 'word2', targets: ['tag'] }])
+          await agent.upsertMutedWords([
+            { value: 'word2', targets: ['tag'], actorTarget: 'all' },
+          ])
 
           {
             const { moderationPrefs } = await agent.getPreferences()
@@ -2214,13 +2283,19 @@ describe('agent', () => {
           await addLegacyMutedWord({
             value: 'word',
             targets: ['content'],
+            actorTarget: 'all',
           })
           await addLegacyMutedWord({
             value: 'word2',
             targets: ['tag'],
+            actorTarget: 'all',
           })
 
-          await agent.updateMutedWord({ value: 'word', targets: ['tag'] })
+          await agent.updateMutedWord({
+            value: 'word',
+            targets: ['tag'],
+            actorTarget: 'all',
+          })
 
           {
             const { moderationPrefs } = await agent.getPreferences()
@@ -2244,13 +2319,19 @@ describe('agent', () => {
           await addLegacyMutedWord({
             value: 'word',
             targets: ['content'],
+            actorTarget: 'all',
           })
           await addLegacyMutedWord({
             value: 'word2',
             targets: ['tag'],
+            actorTarget: 'all',
           })
 
-          await agent.removeMutedWord({ value: 'word', targets: ['tag'] })
+          await agent.removeMutedWord({
+            value: 'word',
+            targets: ['tag'],
+            actorTarget: 'all',
+          })
 
           {
             const { moderationPrefs } = await agent.getPreferences()
