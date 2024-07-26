@@ -478,6 +478,14 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.moderationPrefs.mutedWords = v.items
+
+        if (prefs.moderationPrefs.mutedWords.length) {
+          prefs.moderationPrefs.mutedWords =
+            prefs.moderationPrefs.mutedWords.map((word) => {
+              word.actorTarget = word.actorTarget || 'all'
+              return word
+            })
+        }
       } else if (
         AppBskyActorDefs.isHiddenPostsPref(pref) &&
         AppBskyActorDefs.validateHiddenPostsPref(pref).success
