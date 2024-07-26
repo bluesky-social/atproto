@@ -1,5 +1,6 @@
 import {
   AuthRequiredError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import * as ui8 from 'uint8arrays'
@@ -249,7 +250,13 @@ export class AuthVerifier {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
     // @TODO use real service auth token scope
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, [], getSigningKey)
+    const nsid = parseReqNsid(reqCtx.req)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      [nsid],
+      getSigningKey,
+    )
     return { iss: payload.iss, aud: payload.aud }
   }
 

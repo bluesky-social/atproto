@@ -6,6 +6,7 @@ import {
   stripViewer,
   stripViewerFromPost,
 } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('list feed views', () => {
   let network: TestNetwork
@@ -42,7 +43,12 @@ describe('list feed views', () => {
   it('fetches list feed', async () => {
     const res = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
     expect(forSnapshot(res.data.feed)).toMatchSnapshot()
 
@@ -61,7 +67,12 @@ describe('list feed views', () => {
           cursor,
           limit: 2,
         },
-        { headers: await network.serviceHeaders(carol) },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetListFeed,
+          ),
+        },
       )
       return res.data
     }
@@ -73,7 +84,12 @@ describe('list feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
 
     expect(full.data.feed.length).toEqual(7)
@@ -83,7 +99,12 @@ describe('list feed views', () => {
   it('fetches results unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,

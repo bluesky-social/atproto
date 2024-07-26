@@ -3,6 +3,7 @@ import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
 import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
 import assert from 'assert'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('starter packs', () => {
   let network: TestNetwork
@@ -106,7 +107,12 @@ describe('starter packs', () => {
       data: { notifications },
     } = await agent.api.app.bsky.notification.listNotifications(
       { limit: 3 }, // three most recent
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(notifications).toHaveLength(3)
     notifications.forEach((notif) => {
