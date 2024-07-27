@@ -26,6 +26,7 @@ import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
 
 export * from './data-plane'
+export * from './lexicon';
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
