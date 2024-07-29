@@ -10,7 +10,6 @@ import {
   ForbiddenError,
   InvalidRequestError,
   XRPCError,
-  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
