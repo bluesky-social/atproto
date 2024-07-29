@@ -4762,6 +4762,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedDefs: {
+    lexicon: 1,
+    id: 'app.bsky.embed.defs',
+    defs: {
+      aspectRatio: {
+        type: 'object',
+        description:
+          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+            minimum: 1,
+          },
+          height: {
+            type: 'integer',
+            minimum: 1,
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedExternal: {
     lexicon: 1,
     id: 'app.bsky.embed.external',
@@ -4866,23 +4888,7 @@ export const schemaDict = {
           },
           aspectRatio: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.images#aspectRatio',
-          },
-        },
-      },
-      aspectRatio: {
-        type: 'object',
-        description:
-          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
-        required: ['width', 'height'],
-        properties: {
-          width: {
-            type: 'integer',
-            minimum: 1,
-          },
-          height: {
-            type: 'integer',
-            minimum: 1,
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -4923,7 +4929,7 @@ export const schemaDict = {
           },
           aspectRatio: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.images#aspectRatio',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -5005,6 +5011,7 @@ export const schemaDict = {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images#view',
+                'lex:app.bsky.embed.video#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
                 'lex:app.bsky.embed.recordWithMedia#view',
@@ -5067,7 +5074,11 @@ export const schemaDict = {
           },
           media: {
             type: 'union',
-            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
+            refs: [
+              'lex:app.bsky.embed.images',
+              'lex:app.bsky.embed.video',
+              'lex:app.bsky.embed.external',
+            ],
           },
         },
       },
@@ -5083,8 +5094,88 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.video#view',
               'lex:app.bsky.embed.external#view',
             ],
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedVideo: {
+    lexicon: 1,
+    id: 'app.bsky.embed.video',
+    description: 'A video embedded in a Bluesky record (eg, a post).',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['video'],
+        properties: {
+          video: {
+            type: 'blob',
+            accept: ['video/mp4'],
+            maxSize: 50000000,
+          },
+          captions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.video#caption',
+            },
+            maxLength: 20,
+          },
+          alt: {
+            type: 'string',
+            description:
+              'Alt text description of the video, for accessibility.',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+        },
+      },
+      caption: {
+        type: 'object',
+        required: ['lang', 'file'],
+        properties: {
+          lang: {
+            type: 'string',
+            format: 'language',
+          },
+          file: {
+            type: 'blob',
+            accept: ['text/vtt'],
+            maxSize: 20000,
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['cid', 'playlist'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          playlist: {
+            type: 'string',
+            format: 'uri',
+          },
+          thumbnail: {
+            type: 'string',
+            format: 'uri',
+          },
+          alt: {
+            type: 'string',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -5117,6 +5208,7 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.video#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
               'lex:app.bsky.embed.recordWithMedia#view',
@@ -6471,6 +6563,7 @@ export const schemaDict = {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.video',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
                 'lex:app.bsky.embed.recordWithMedia',
@@ -11740,10 +11833,12 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
+  AppBskyEmbedVideo: 'app.bsky.embed.video',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
