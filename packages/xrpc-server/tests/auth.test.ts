@@ -223,6 +223,44 @@ describe('Auth', () => {
       )
     })
 
+    it('fails on bad scopes.', async () => {
+      const keypair = await Secp256k1Keypair.create()
+      const jwt = await xrpcServer.createServiceJwt({
+        aud: 'did:example:aud1',
+        iss: 'did:example:iss',
+        keypair,
+        scope: 'com.atproto.repo.createRecord',
+      })
+      const tryVerify = xrpcServer.verifyJwt(
+        jwt,
+        'did:example:aud1',
+        'com.atproto.repo.putRecord',
+        async () => {
+          return keypair.did()
+        },
+      )
+      await expect(tryVerify).rejects.toThrow(/missing jwt scope/)
+    })
+
+    it('fails on null scopes when scope is required', async () => {
+      const keypair = await Secp256k1Keypair.create()
+      const jwt = await xrpcServer.createServiceJwt({
+        aud: 'did:example:aud1',
+        iss: 'did:example:iss',
+        keypair,
+        scope: null,
+      })
+      const tryVerify = xrpcServer.verifyJwt(
+        jwt,
+        'did:example:aud1',
+        'com.atproto.repo.putRecord',
+        async () => {
+          return keypair.did()
+        },
+      )
+      await expect(tryVerify).rejects.toThrow(/missing jwt scope/)
+    })
+
     it('refreshes key on verification failure.', async () => {
       const keypair1 = await Secp256k1Keypair.create()
       const keypair2 = await Secp256k1Keypair.create()
