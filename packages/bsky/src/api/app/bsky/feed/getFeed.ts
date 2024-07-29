@@ -40,7 +40,14 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.standardOptionalParameterized({
-      alternateScopes: [ids.AppBskyFeedGetFeedSkeleton],
+      scopeCheck: (scope) => {
+        return (
+          scope !== undefined &&
+          [ids.AppBskyFeedGetFeedSkeleton, ids.AppBskyFeedGetFeed].includes(
+            scope,
+          )
+        )
+      },
       skipAudCheck: true,
     }),
     handler: async ({ params, auth, req }) => {

@@ -20,7 +20,7 @@ type ReqCtx = {
 
 type StandardAuthOpts = {
   skipAudCheck?: boolean
-  alternateScopes?: string[]
+  scopeCheck?: (scope?: string) => boolean
 }
 
 export enum RoleStatus {
@@ -104,7 +104,7 @@ export class AuthVerifier {
         }
       } else if (isBearerToken(ctx.req)) {
         const { iss, aud } = await this.verifyServiceJwt(ctx, {
-          alternateScopes: opts.alternateScopes,
+          scopeCheck: opts.scopeCheck,
           iss: null,
           aud: null,
         })
@@ -218,7 +218,7 @@ export class AuthVerifier {
     opts: {
       iss: string[] | null
       aud: string | null
-      alternateScopes?: string[]
+      scopeCheck?: (scope?: string) => boolean
     },
   ) {
     const getSigningKey = async (
@@ -252,21 +252,18 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const nsid = parseReqNsid(reqCtx.req)
     // if validating additional scopes, skip scope check in initial validation & follow up afterwards
-    const scope = opts.alternateScopes ? null : nsid
+    const scope = opts.scopeCheck ? null : parseReqNsid(reqCtx.req)
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
       scope,
       getSigningKey,
     )
-    if (opts.alternateScopes) {
-      const scopes = [...opts.alternateScopes, nsid]
-      if (!payload.scope || !scopes.includes(payload.scope)) {
-        if (scope !== null && scope !== payload.scope) {
-          throw new AuthRequiredError(`missing jwt scope`, 'MissingJwtScope')
-        }
+    if (opts.scopeCheck) {
+      const validScope = opts.scopeCheck(payload.scope)
+      if (!validScope) {
+        throw new AuthRequiredError(`missing jwt scope`, 'MissingJwtScope')
       }
     }
     return { iss: payload.iss, aud: payload.aud }

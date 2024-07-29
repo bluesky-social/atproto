@@ -10,11 +10,20 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardOptionalParameterized({
+      scopeCheck: (scope) => {
+        if (!scope) return false
+        return (
+          scope === ids.AppBskyActorGetProfiles ||
+          scope.startsWith('chat.bsky.')
+        )
+      },
+    }),
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
