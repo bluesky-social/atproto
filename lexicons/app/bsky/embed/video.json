@@ -40,7 +40,7 @@
         "file": {
           "type": "blob",
           "accept": ["text/vtt"],
-          "maxSize": 100000
+          "maxSize": 20000
         }
       }
     },
