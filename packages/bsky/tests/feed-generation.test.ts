@@ -551,8 +551,8 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            gen.did,
             ids.AppBskyFeedGetFeed,
+            gen.did,
           ),
         },
       )
@@ -582,8 +582,8 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               alice,
-              gen.did,
               ids.AppBskyFeedGetFeed,
+              gen.did,
             ),
           },
         )
@@ -609,8 +609,8 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            gen.did,
             ids.AppBskyFeedGetFeed,
+            gen.did,
           ),
         },
       )
@@ -630,8 +630,8 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            gen.did,
             ids.AppBskyFeedGetFeed,
+            gen.did,
           ),
         },
       )
@@ -684,8 +684,8 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            gen.did,
             ids.AppBskyFeedGetFeed,
+            gen.did,
           ),
         },
       )
@@ -701,8 +701,8 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            gen.did,
             ids.AppBskyFeedGetFeed,
+            gen.did,
           ),
         },
       )
