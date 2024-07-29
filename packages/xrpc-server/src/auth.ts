@@ -144,8 +144,7 @@ const parsePayload = (b64: string): ServiceJwtPayload => {
   if (!check.is(payload, jwtPayloadSchema)) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
-  const { iss, aud, exp, scope, nonce } = payload
-  return { iss, aud, exp, nonce, scope }
+  return payload
 }
 
 const jwtPayloadSchema = z.object({
