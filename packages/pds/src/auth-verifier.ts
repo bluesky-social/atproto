@@ -552,11 +552,10 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const nsid = parseReqNsid(ctx.req)
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
-      nsid,
+      null,
       getSigningKey,
     )
     return { iss: payload.iss, aud: payload.aud }
