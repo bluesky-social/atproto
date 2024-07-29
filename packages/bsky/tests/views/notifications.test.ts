@@ -396,7 +396,7 @@ describe('notification views', () => {
         encoding: 'application/json',
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorPutPreferences,
+          ids.AppBskyNotificationPutPreferences,
         ),
       },
     )

@@ -2,6 +2,7 @@ import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('auth', () => {
   let network: TestNetwork
@@ -30,6 +31,7 @@ describe('auth', () => {
         iss: issuer,
         aud: network.bsky.ctx.cfg.serverDid,
         keypair,
+        scope: ids.AppBskyActorGetProfile,
       })
       return agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.carol },

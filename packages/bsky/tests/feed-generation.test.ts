@@ -450,7 +450,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetFeedGenerator,
+            ids.AppBskyFeedGetFeedGenerators,
           ),
         },
       )
@@ -656,28 +656,16 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
+            ids.AppBskyFeedGetFeedSkeleton,
             gen.did,
-            ids.AppBskyFeedGetFeed,
           ),
         },
       )
       expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
-    })
-
-    it('receives proper auth details.', async () => {
-      const feed = await agent.api.app.bsky.feed.getFeed(
-        { feed: feedUriEven },
-        {
-          headers: await network.serviceHeaders(
-            alice,
-            gen.did,
-            ids.AppBskyFeedGetFeed,
-          ),
-        },
+      expect(feed.data['$auth']?.['scope']).toEqual(
+        ids.AppBskyFeedGetFeedSkeleton,
       )
-      expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
-      expect(feed.data['$auth']?.['iss']).toEqual(alice)
     })
 
     it('passes through auth error from feed.', async () => {

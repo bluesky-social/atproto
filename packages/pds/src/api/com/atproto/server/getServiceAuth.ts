@@ -31,21 +31,21 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
       }
-      if (!auth.credentials.isPrivileged && scope) {
-        for (const nsid of scope) {
-          if (PRIVILEGED_METHODS.includes(nsid)) {
-            throw new InvalidRequestError(
-              `cannot request a service auth token with the following scope with an app password: ${nsid}`,
-            )
-          }
-        }
+      if (
+        !auth.credentials.isPrivileged &&
+        scope &&
+        PRIVILEGED_METHODS.includes(scope)
+      ) {
+        throw new InvalidRequestError(
+          `cannot request a service auth token with the following scope with an app password: ${scope}`,
+        )
       }
       const keypair = await ctx.actorStore.keypair(did)
       const token = await createServiceJwt({
         iss: did,
         aud,
         exp,
-        scope,
+        scope: scope ?? null,
         keypair,
       })
       return {

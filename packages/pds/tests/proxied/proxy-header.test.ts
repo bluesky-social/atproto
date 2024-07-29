@@ -66,7 +66,7 @@ describe('proxy header', () => {
     const verified = await verifyJwt(
       req.auth.replace('Bearer ', ''),
       proxyServer.did,
-      ['app.bsky.actor.getProfile'],
+      'app.bsky.actor.getProfile',
       (iss) => network.pds.ctx.idResolver.did.resolveAtprotoKey(iss, true),
     )
     expect(verified.aud).toBe(proxyServer.did)

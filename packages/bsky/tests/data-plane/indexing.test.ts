@@ -179,7 +179,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorProfile,
+          ids.AppBskyActorGetProfile,
         ),
       },
     )
@@ -193,7 +193,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorProfile,
+          ids.AppBskyActorGetProfile,
         ),
       },
     )
@@ -207,7 +207,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorProfile,
+          ids.AppBskyActorGetProfile,
         ),
       },
     )
@@ -441,7 +441,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -476,7 +476,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -535,7 +535,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -632,7 +632,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -716,7 +716,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -727,7 +727,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -741,7 +741,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )
@@ -764,7 +764,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorProfile,
+            ids.AppBskyActorGetProfile,
           ),
         },
       )

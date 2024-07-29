@@ -25,9 +25,13 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.includes(nsid)) {
         throw new InvalidRequestError('Bad token scope', 'InvalidToken')
       }
-      const headers = await formatHeaders(ctx, req, aud, auth.credentials.did, [
+      const headers = await formatHeaders(
+        ctx,
+        req,
+        aud,
+        auth.credentials.did,
         nsid,
-      ])
+      )
       const body: webStream.ReadableStream<Uint8Array> =
         stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
@@ -44,14 +48,12 @@ export const pipethrough = async (
   ctx: AppContext,
   req: express.Request,
   requester: string | null,
-  additionalScopes: string[] = [],
   audOverride?: string,
+  scopeOverride?: string,
 ): Promise<HandlerPipeThrough> => {
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req, audOverride)
-  const headers = await formatHeaders(ctx, req, aud, requester, [
-    nsid,
-    ...additionalScopes,
-  ])
+  const scope = scopeOverride ?? nsid
+  const headers = await formatHeaders(ctx, req, aud, requester, scope)
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -108,7 +110,7 @@ export const formatHeaders = async (
   req: express.Request,
   aud: string,
   requester: string | null,
-  scopes: string | string[],
+  scopes: string,
 ): Promise<{ authorization?: string }> => {
   const headers = requester
     ? (await ctx.serviceAuthHeaders(requester, aud, scopes)).headers

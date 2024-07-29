@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
             ...(await ctx.serviceAuthHeaders(
               recipientDid,
               ctx.cfg.entryway.did,
-              [ids.ComAtprotoAdminSendEmail],
+              ids.ComAtprotoAdminSendEmail,
             )),
           }),
         )

@@ -39,11 +39,12 @@ export class DaemonContext {
     })
 
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
-    const createAuthHeaders = (aud: string) =>
+    const createAuthHeaders = (aud: string, scope: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
         keypair: signingKey,
+        scope,
       })
 
     const eventPusher = new EventPusher(db, createAuthHeaders, {

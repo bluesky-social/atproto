@@ -114,7 +114,7 @@ export class AuthVerifier {
     const payload = await verifyJwt(
       jwtStr,
       this.serviceDid,
-      [nsid],
+      nsid,
       getSigningKey,
     )
     const iss = payload.iss

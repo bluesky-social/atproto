@@ -142,7 +142,7 @@ export class TestOzone {
   }
 
   async modHeaders(
-    scope: string | string[],
+    scope: string,
     role: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) {
     const account =

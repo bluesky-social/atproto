@@ -3,7 +3,6 @@ import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { createServiceJwt } from '@atproto/xrpc-server'
 import { ServerConfig } from './config'
 import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
@@ -87,15 +86,6 @@ export class AppContext {
 
   get featureGates(): FeatureGates {
     return this.opts.featureGates
-  }
-
-  async serviceAuthJwt(aud: string) {
-    const iss = this.cfg.serverDid
-    return createServiceJwt({
-      iss,
-      aud,
-      keypair: this.signingKey,
-    })
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {

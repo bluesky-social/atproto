@@ -115,7 +115,7 @@ describe('app_passwords', () => {
   it('restricts service auth token scopes for non-privileged access tokens', async () => {
     const attempt = appAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
-      scope: ['com.atproto.server.createAccount'],
+      scope: 'com.atproto.server.createAccount',
     })
     await expect(attempt).rejects.toThrow(
       /cannot request a service auth token with the following scope with an app password/,
@@ -125,7 +125,7 @@ describe('app_passwords', () => {
   it('allows privileged service auth token scopes for privileged access tokens', async () => {
     await priviAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
-      scope: ['com.atproto.server.createAccount'],
+      scope: 'com.atproto.server.createAccount',
     })
   })
 
@@ -156,7 +156,7 @@ describe('app_passwords', () => {
     // allows privileged app passwords or higher
     const priviAttempt = appAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
-      scope: ['com.atproto.server.createAccount'],
+      scope: 'com.atproto.server.createAccount',
     })
     await expect(priviAttempt).rejects.toThrow(
       /cannot request a service auth token with the following scope with an app password/,

@@ -566,7 +566,7 @@ export class AuthVerifier {
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
-      [nsid],
+      nsid,
       getSigningKey,
     )
     return { iss: payload.iss, aud: payload.aud }

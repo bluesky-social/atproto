@@ -157,7 +157,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.bsky.sub.background.processAll()
   }
 
-  async serviceHeaders(did: string, scope: string | string[], aud?: string) {
+  async serviceHeaders(did: string, scope: string, aud?: string) {
     const keypair = await this.pds.ctx.actorStore.keypair(did)
     const jwt = await createServiceJwt({
       iss: did,

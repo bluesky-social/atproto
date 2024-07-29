@@ -12,8 +12,8 @@ export interface QueryParams {
   aud: string
   /** The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope. */
   exp?: number
-  /** An array of scopes to include in the requested token. Each scope should take the form of an XRPC method name (NSID). */
-  scope?: string[]
+  /** A scope to include in the requested token in the form of an XRPC method name (NSID). */
+  scope?: string
 }
 
 export type InputSchema = undefined

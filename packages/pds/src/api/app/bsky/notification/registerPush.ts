@@ -20,9 +20,11 @@ export default function (server: Server, ctx: AppContext) {
         credentials: { did },
       } = auth
 
-      const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid, [
+      const authHeaders = await ctx.serviceAuthHeaders(
+        did,
+        serviceDid,
         ids.AppBskyNotificationRegisterPush,
-      ])
+      )
 
       if (ctx.cfg.bskyAppView?.did === serviceDid) {
         await appViewAgent.api.app.bsky.notification.registerPush(input.body, {

@@ -9,7 +9,7 @@ type ServiceJwtParams = {
   iss: string
   aud: string
   exp?: number
-  scope?: string | string[]
+  scope: string | null
   keypair: crypto.Keypair
   excludeNonce?: boolean
 }
@@ -18,7 +18,7 @@ type ServiceJwtPayload = {
   iss: string
   aud: string
   exp: number
-  scope?: string[]
+  scope?: string
   nonce?: string
 }
 
@@ -27,7 +27,7 @@ export const createServiceJwt = async (
 ): Promise<string> => {
   const { iss, aud, excludeNonce, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
-  const scope = formatScope(params.scope)
+  const scope = params.scope ?? undefined
   const nonce = excludeNonce ? undefined : await crypto.randomStr(32, 'hex')
   const header = {
     typ: 'JWT',
@@ -60,7 +60,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
-  requiredScopes: string[],
+  scope: string | null, // null indicates to skip the scope check
   getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
@@ -79,16 +79,11 @@ export const verifyJwt = async (
       'BadJwtAudience',
     )
   }
-  if (requiredScopes.length > 0) {
-    const jwtScopes = payload.scope ?? []
-    for (const scope of requiredScopes) {
-      if (!jwtScopes.includes(scope)) {
-        throw new AuthRequiredError(
-          `missing jwt scope: ${scope}`,
-          'MissingJwtScope',
-        )
-      }
-    }
+  if (scope !== null && scope !== payload.scope) {
+    throw new AuthRequiredError(
+      `missing jwt scope: ${scope}`,
+      'MissingJwtScope',
+    )
   }
 
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
@@ -136,11 +131,6 @@ export const verifyJwt = async (
 
   return payload
 }
-const formatScope = (scope?: string | string[]): string | undefined => {
-  if (scope === undefined) return undefined
-  if (typeof scope === 'string') return scope
-  return scope.join(' ')
-}
 
 const parseB64UrlToJson = (b64: string) => {
   return JSON.parse(common.b64UrlToUtf8(b64))
@@ -155,7 +145,7 @@ const parsePayload = (b64: string): ServiceJwtPayload => {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   const { iss, aud, exp, scope, nonce } = payload
-  return { iss, aud, exp, nonce, scope: scope ? scope.split(' ') : undefined }
+  return { iss, aud, exp, nonce, scope }
 }
 
 const jwtPayloadSchema = z.object({

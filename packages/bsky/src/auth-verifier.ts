@@ -18,6 +18,11 @@ type ReqCtx = {
   req: express.Request
 }
 
+type StandardAuthOpts = {
+  skipAudCheck?: boolean
+  alternateScopes?: string[]
+}
+
 export enum RoleStatus {
   Valid,
   Invalid,
@@ -81,61 +86,55 @@ export class AuthVerifier {
   }
 
   // verifiers (arrow fns to preserve scope)
+  standardOptionalParameterized =
+    (opts: StandardAuthOpts) =>
+    async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
+      // @TODO remove! basic auth + did supported just for testing.
+      if (isBasicToken(ctx.req)) {
+        const aud = this.ownDid
+        const iss = ctx.req.headers['appview-as-did']
+        if (typeof iss !== 'string' || !iss.startsWith('did:')) {
+          throw new AuthRequiredError('bad issuer')
+        }
+        if (!this.parseRoleCreds(ctx.req).admin) {
+          throw new AuthRequiredError('bad credentials')
+        }
+        return {
+          credentials: { type: 'standard', iss, aud },
+        }
+      } else if (isBearerToken(ctx.req)) {
+        const { iss, aud } = await this.verifyServiceJwt(ctx, {
+          alternateScopes: opts.alternateScopes,
+          iss: null,
+          aud: null,
+        })
+        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
+          throw new AuthRequiredError(
+            'jwt audience does not match service did',
+            'BadJwtAudience',
+          )
+        }
+        return {
+          credentials: {
+            type: 'standard',
+            iss,
+            aud,
+          },
+        }
+      } else {
+        return this.nullCreds()
+      }
+    }
+
+  standardOptional: (ctx: ReqCtx) => Promise<StandardOutput | NullOutput> =
+    this.standardOptionalParameterized({})
 
   standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
-    // @TODO remove! basic auth + did supported just for testing.
-    if (isBasicToken(ctx.req)) {
-      const aud = this.ownDid
-      const iss = ctx.req.headers['appview-as-did']
-      if (typeof iss !== 'string' || !iss.startsWith('did:')) {
-        throw new AuthRequiredError('bad issuer')
-      }
-      if (!this.parseRoleCreds(ctx.req).admin) {
-        throw new AuthRequiredError('bad credentials')
-      }
-      return {
-        credentials: { type: 'standard', iss, aud },
-      }
+    const output = await this.standardOptionalParameterized({})(ctx)
+    if (output.credentials.type === 'none') {
+      throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: null,
-      iss: null,
-    })
-    if (!this.standardAudienceDids.has(aud)) {
-      throw new AuthRequiredError(
-        'jwt audience does not match service did',
-        'BadJwtAudience',
-      )
-    }
-    return {
-      credentials: {
-        type: 'standard',
-        iss,
-        aud,
-      },
-    }
-  }
-
-  standardOptional = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | NullOutput> => {
-    if (isBearerToken(ctx.req) || isBasicToken(ctx.req)) {
-      return this.standard(ctx)
-    }
-    return this.nullCreds()
-  }
-
-  standardOptionalAnyAud = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | NullOutput> => {
-    if (!isBearerToken(ctx.req)) {
-      return this.nullCreds()
-    }
-    const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: null,
-      iss: null,
-    })
-    return { credentials: { type: 'standard', iss, aud } }
+    return output as StandardOutput
   }
 
   role = (ctx: ReqCtx): RoleOutput => {
@@ -216,7 +215,11 @@ export class AuthVerifier {
 
   async verifyServiceJwt(
     reqCtx: ReqCtx,
-    opts: { aud: string | null; iss: string[] | null },
+    opts: {
+      iss: string[] | null
+      aud: string | null
+      alternateScopes?: string[]
+    },
   ) {
     const getSigningKey = async (
       iss: string,
@@ -249,14 +252,23 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    // @TODO use real service auth token scope
     const nsid = parseReqNsid(reqCtx.req)
+    // if validating additional scopes, skip scope check in initial validation & follow up afterwards
+    const scope = opts.alternateScopes ? null : nsid
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
-      [nsid],
+      scope,
       getSigningKey,
     )
+    if (opts.alternateScopes) {
+      const scopes = [...opts.alternateScopes, nsid]
+      if (!payload.scope || !scopes.includes(payload.scope)) {
+        if (scope !== null && scope !== payload.scope) {
+          throw new AuthRequiredError(`missing jwt scope`, 'MissingJwtScope')
+        }
+      }
+    }
     return { iss: payload.iss, aud: payload.aud }
   }
 

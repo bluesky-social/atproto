@@ -69,13 +69,10 @@ describe('admin auth', () => {
   })
 
   it('allows service auth requests from the configured appview did', async () => {
-    const headers = await createServiceAuthHeaders({
+    const updateHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      scope: [
-        ids.ComAtprotoAdminUpdateSubjectStatus,
-        ids.ComAtprotoAdminGetSubjectStatus,
-      ],
+      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -84,14 +81,20 @@ describe('admin auth', () => {
         takedown: { applied: true, ref: 'test-repo' },
       },
       {
-        ...headers,
+        ...updateHeaders,
         encoding: 'application/json',
       },
     )
 
+    const getHeaders = await createServiceAuthHeaders({
+      iss: modServiceDid,
+      aud: bskyDid,
+      scope: ids.ComAtprotoAdminGetSubjectStatus,
+      keypair: modServiceKey,
+    })
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       { did: repoSubject.did },
-      headers,
+      getHeaders,
     )
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)

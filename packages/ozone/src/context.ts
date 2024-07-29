@@ -84,7 +84,7 @@ export class AppContext {
       didCache,
     })
 
-    const createAuthHeaders = (aud: string, scope: string | string[]) =>
+    const createAuthHeaders = (aud: string, scope: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
@@ -226,7 +226,7 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  async serviceAuthHeaders(aud: string, scope: string | string[]) {
+  async serviceAuthHeaders(aud: string, scope: string) {
     const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
@@ -236,18 +236,18 @@ export class AppContext {
     })
   }
 
-  async pdsAuth(scope: string | string[]) {
+  async pdsAuth(scope: string) {
     if (!this.cfg.pds) {
       return undefined
     }
     return this.serviceAuthHeaders(this.cfg.pds.did, scope)
   }
 
-  async appviewAuth(scope: string | string[]) {
+  async appviewAuth(scope: string) {
     return this.serviceAuthHeaders(this.cfg.appview.did, scope)
   }
 
-  async chatAuth(scope: string | string[]) {
+  async chatAuth(scope: string) {
     if (!this.cfg.chat) {
       throw new Error('No chat service configured')
     }

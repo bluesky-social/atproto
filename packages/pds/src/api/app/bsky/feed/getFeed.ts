@@ -15,16 +15,17 @@ export default function (server: Server, ctx: AppContext) {
       const { data: feed } =
         await appViewAgent.api.app.bsky.feed.getFeedGenerator(
           { feed: params.feed },
-          await ctx.appviewAuthHeaders(requester, [
+          await ctx.appviewAuthHeaders(
+            requester,
             ids.AppBskyFeedGetFeedGenerator,
-          ]),
+          ),
         )
       return pipethrough(
         ctx,
         req,
         requester,
-        [ids.AppBskyFeedGetFeedSkeleton],
         feed.view.did,
+        ids.AppBskyFeedGetFeedSkeleton,
       )
     },
   })
