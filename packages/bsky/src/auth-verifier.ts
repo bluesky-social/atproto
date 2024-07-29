@@ -248,7 +248,12 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      null,
+      getSigningKey,
+    )
     return { iss: payload.iss, aud: payload.aud }
   }
 

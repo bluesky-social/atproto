@@ -306,3 +306,7 @@ export interface ServerTiming {
   duration?: number
   description?: string
 }
+
+export const parseReqNsid = (req: express.Request): string => {
+  return req.originalUrl.split('?')[0].replace('/xrpc/', '')
+}

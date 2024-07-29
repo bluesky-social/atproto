@@ -14,14 +14,24 @@ import { ids, lexicons } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
+import { parseReqNsid } from '@atproto/xrpc-server/dist/util'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
   return async (req, res, next) => {
     try {
-      const { url, aud } = await formatUrlAndAud(ctx, req)
+      const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req })
-      const headers = await formatHeaders(ctx, req, aud, auth.credentials.did)
+      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.includes(nsid)) {
+        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+      }
+      const headers = await formatHeaders(
+        ctx,
+        req,
+        aud,
+        nsid,
+        auth.credentials.did,
+      )
       const body: webStream.ReadableStream<Uint8Array> =
         stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
@@ -39,9 +49,11 @@ export const pipethrough = async (
   req: express.Request,
   requester: string | null,
   audOverride?: string,
+  scopeOverride?: string,
 ): Promise<HandlerPipeThrough> => {
-  const { url, aud } = await formatUrlAndAud(ctx, req, audOverride)
-  const headers = await formatHeaders(ctx, req, aud, requester)
+  const { url, aud, nsid } = await formatUrlAndAud(ctx, req, audOverride)
+  const scope = scopeOverride ?? nsid
+  const headers = await formatHeaders(ctx, req, aud, scope, requester)
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -53,8 +65,8 @@ export const pipethroughProcedure = async (
   requester: string | null,
   body?: LexValue,
 ): Promise<HandlerPipeThrough> => {
-  const { url, aud } = await formatUrlAndAud(ctx, req)
-  const headers = await formatHeaders(ctx, req, aud, requester)
+  const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
+  const headers = await formatHeaders(ctx, req, aud, nsid, requester)
   const encodedBody = body
     ? new TextEncoder().encode(stringifyLex(body))
     : undefined
@@ -77,9 +89,10 @@ export const formatUrlAndAud = async (
   ctx: AppContext,
   req: express.Request,
   audOverride?: string,
-): Promise<{ url: URL; aud: string }> => {
+): Promise<{ url: URL; aud: string; nsid: string }> => {
   const proxyTo = await parseProxyHeader(ctx, req)
-  const defaultProxy = defaultService(ctx, req)
+  const nsid = parseReqNsid(req)
+  const defaultProxy = defaultService(ctx, nsid)
   const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
   const aud = audOverride ?? proxyTo?.did ?? defaultProxy?.did
   if (!serviceUrl || !aud) {
@@ -89,17 +102,18 @@ export const formatUrlAndAud = async (
   if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
     throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
   }
-  return { url, aud }
+  return { url, aud, nsid }
 }
 
 export const formatHeaders = async (
   ctx: AppContext,
   req: express.Request,
   aud: string,
+  scope: string,
   requester: string | null,
 ): Promise<{ authorization?: string }> => {
   const headers = requester
-    ? (await ctx.serviceAuthHeaders(requester, aud)).headers
+    ? (await ctx.serviceAuthHeaders(requester, aud, scope)).headers
     : {}
   // forward select headers to upstream services
   for (const header of REQ_HEADERS_TO_FORWARD) {
@@ -241,11 +255,28 @@ export const parseProxyRes = async (res: Response) => {
 // Utils
 // -------------------
 
+export const PRIVILEGED_METHODS = [
+  ids.ChatBskyActorDeleteAccount,
+  ids.ChatBskyActorExportAccountData,
+  ids.ChatBskyConvoDeleteMessageForSelf,
+  ids.ChatBskyConvoGetConvo,
+  ids.ChatBskyConvoGetConvoForMembers,
+  ids.ChatBskyConvoGetLog,
+  ids.ChatBskyConvoGetMessages,
+  ids.ChatBskyConvoLeaveConvo,
+  ids.ChatBskyConvoListConvos,
+  ids.ChatBskyConvoMuteConvo,
+  ids.ChatBskyConvoSendMessage,
+  ids.ChatBskyConvoSendMessageBatch,
+  ids.ChatBskyConvoUnmuteConvo,
+  ids.ChatBskyConvoUpdateRead,
+  ids.ComAtprotoServerCreateAccount,
+]
+
 const defaultService = (
   ctx: AppContext,
-  req: express.Request,
+  nsid: string,
 ): { url: string; did: string } | null => {
-  const nsid = req.originalUrl.split('?')[0].replace('/xrpc/', '')
   switch (nsid) {
     case ids.ToolsOzoneTeamAddMember:
     case ids.ToolsOzoneTeamDeleteMember:
