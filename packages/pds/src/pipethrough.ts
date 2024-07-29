@@ -14,7 +14,7 @@ import { ids, lexicons } from './lexicon/lexicons'
 import { httpLogger } from './logger'
 import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
-import { parseReqNsid } from '@atproto/xrpc-server/dist/util'
+import { parseReqNsid } from '@atproto/xrpc-server'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
