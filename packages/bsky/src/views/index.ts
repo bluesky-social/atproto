@@ -52,6 +52,7 @@ import {
   isImagesEmbed,
   isRecordEmbed,
   isRecordWithMedia,
+  isVideoEmbed,
 } from './types'
 import { Label } from '../hydration/label'
 import { FeedItem, Post, Repost } from '../hydration/feed'
@@ -825,6 +826,8 @@ export class Views {
   ): EmbedView | undefined {
     if (isImagesEmbed(embed)) {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
+    } else if (isVideoEmbed(embed)) {
+      return undefined // @TODO handle video embed
     } else if (isExternalEmbed(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed)
     } else if (isRecordEmbed(embed)) {
