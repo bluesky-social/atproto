@@ -30,8 +30,8 @@ describe('auth', () => {
       const jwt = await createServiceJwt({
         iss: issuer,
         aud: network.bsky.ctx.cfg.serverDid,
-        keypair,
         scope: ids.AppBskyActorGetProfile,
+        keypair,
       })
       return agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.carol },

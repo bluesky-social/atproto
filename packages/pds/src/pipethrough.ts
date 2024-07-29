@@ -29,8 +29,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         ctx,
         req,
         aud,
-        auth.credentials.did,
         nsid,
+        auth.credentials.did,
       )
       const body: webStream.ReadableStream<Uint8Array> =
         stream.Readable.toWeb(req)
@@ -53,7 +53,7 @@ export const pipethrough = async (
 ): Promise<HandlerPipeThrough> => {
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req, audOverride)
   const scope = scopeOverride ?? nsid
-  const headers = await formatHeaders(ctx, req, aud, requester, scope)
+  const headers = await formatHeaders(ctx, req, aud, scope, requester)
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -66,7 +66,7 @@ export const pipethroughProcedure = async (
   body?: LexValue,
 ): Promise<HandlerPipeThrough> => {
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
-  const headers = await formatHeaders(ctx, req, aud, requester, nsid)
+  const headers = await formatHeaders(ctx, req, aud, nsid, requester)
   const encodedBody = body
     ? new TextEncoder().encode(stringifyLex(body))
     : undefined
@@ -109,11 +109,11 @@ export const formatHeaders = async (
   ctx: AppContext,
   req: express.Request,
   aud: string,
+  scope: string,
   requester: string | null,
-  scopes: string,
 ): Promise<{ authorization?: string }> => {
   const headers = requester
-    ? (await ctx.serviceAuthHeaders(requester, aud, scopes)).headers
+    ? (await ctx.serviceAuthHeaders(requester, aud, scope)).headers
     : {}
   // forward select headers to upstream services
   for (const header of REQ_HEADERS_TO_FORWARD) {

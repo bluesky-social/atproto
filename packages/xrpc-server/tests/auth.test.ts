@@ -70,6 +70,7 @@ describe('Auth', () => {
     s = await createServer(port, server)
     client = xrpc.service(`http://localhost:${port}`)
   })
+
   afterAll(async () => {
     await closeServer(s)
   })

@@ -43,8 +43,8 @@ export class DaemonContext {
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
-        keypair: signingKey,
         scope,
+        keypair: signingKey,
       })
 
     const eventPusher = new EventPusher(db, createAuthHeaders, {

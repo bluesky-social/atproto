@@ -1,8 +1,7 @@
-import { createServiceJwt } from '@atproto/xrpc-server'
+import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
+import { HOUR, MINUTE } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { InvalidRequestError } from '@atproto/oauth-provider'
-import { HOUR, MINUTE } from '@atproto/common'
 import { PRIVILEGED_METHODS } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
@@ -10,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessStandard(),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
-      const { aud, scope } = params
+      const { aud, scope = null } = params
       const exp = params.exp ? params.exp * 1000 : undefined
       if (exp) {
         const diff = exp - Date.now()
@@ -41,11 +40,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       const keypair = await ctx.actorStore.keypair(did)
+
       const token = await createServiceJwt({
         iss: did,
         aud,
         exp,
-        scope: scope ?? null,
+        scope,
         keypair,
       })
       return {

@@ -88,8 +88,8 @@ export class AppContext {
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
-        keypair: signingKey,
         scope,
+        keypair: signingKey,
       })
 
     const backgroundQueue = new BackgroundQueue(db)
@@ -231,8 +231,8 @@ export class AppContext {
     return createServiceAuthHeaders({
       iss,
       aud,
-      keypair: this.signingKey,
       scope,
+      keypair: this.signingKey,
     })
   }
 
