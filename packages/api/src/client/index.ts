@@ -151,6 +151,7 @@ import * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices
 import * as AppBskyLabelerService from './types/app/bsky/labeler/service'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+import * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
@@ -347,6 +348,7 @@ export * as AppBskyLabelerGetServices from './types/app/bsky/labeler/getServices
 export * as AppBskyLabelerService from './types/app/bsky/labeler/service'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+export * as AppBskyNotificationPutPreferences from './types/app/bsky/notification/putPreferences'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
@@ -2831,6 +2833,17 @@ export class AppBskyNotificationNS {
       undefined,
       opts,
     )
+  }
+
+  putPreferences(
+    data?: AppBskyNotificationPutPreferences.InputSchema,
+    opts?: AppBskyNotificationPutPreferences.CallOptions,
+  ): Promise<AppBskyNotificationPutPreferences.Response> {
+    return this._service.xrpc
+      .call('app.bsky.notification.putPreferences', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyNotificationPutPreferences.toKnownErr(e)
+      })
   }
 
   registerPush(

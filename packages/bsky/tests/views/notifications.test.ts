@@ -267,12 +267,53 @@ describe('notification views', () => {
     )
   })
 
+  it('fetches notifications with explicit priority', async () => {
+    const priority = await agent.api.app.bsky.notification.listNotifications(
+      { priority: true },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+    // only notifs from follow (alice)
+    expect(
+      priority.data.notifications.every(
+        (notif) => ![sc.dids.bob, sc.dids.dan].includes(notif.author.did),
+      ),
+    ).toBe(true)
+    expect(forSnapshot(priority.data)).toMatchSnapshot()
+    const noPriority = await agent.api.app.bsky.notification.listNotifications(
+      { priority: false },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+    expect(forSnapshot(noPriority.data)).toMatchSnapshot()
+  })
+
+  it('fetches notifications with default priority', async () => {
+    await agent.api.app.bsky.notification.putPreferences(
+      { priority: true },
+      {
+        encoding: 'application/json',
+        headers: await network.serviceHeaders(sc.dids.carol),
+      },
+    )
+    await network.processAll()
+    const notifs = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+    // only notifs from follow (alice)
+    expect(
+      notifs.data.notifications.every(
+        (notif) => ![sc.dids.bob, sc.dids.dan].includes(notif.author.did),
+      ),
+    ).toBe(true)
+    expect(forSnapshot(notifs.data)).toMatchSnapshot()
+  })
+
   it('fails open on clearly bad cursor.', async () => {
     const { data: notifs } =
       await agent.api.app.bsky.notification.listNotifications(
         { cursor: '90210::bafycid' },
         { headers: await network.serviceHeaders(alice) },
       )
-    expect(notifs).toEqual({ notifications: [] })
+    expect(notifs).toMatchObject({ notifications: [] })
   })
 })

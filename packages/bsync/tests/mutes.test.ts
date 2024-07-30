@@ -1,4 +1,5 @@
 import { wait } from '@atproto/common'
+import getPort from 'get-port'
 import { Code, ConnectError } from '@connectrpc/connect'
 import {
   BsyncClient,
@@ -17,6 +18,7 @@ describe('mutes', () => {
   beforeAll(async () => {
     bsync = await BsyncService.create(
       envToCfg({
+        port: await getPort(),
         dbUrl: process.env.DB_POSTGRES_URL,
         dbSchema: 'bsync_mutes',
         apiKeys: ['key-1'],

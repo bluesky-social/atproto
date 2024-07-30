@@ -9,8 +9,12 @@ import { AuthProvider } from './auth/auth-provider'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider
-      handleResolver="http://localhost:2584" // dev-env
-      plcDirectoryUrl="http://localhost:2582" // dev-env
+      // dev-env
+      // plcDirectoryUrl="http://localhost:2582"
+      // handleResolver="http://localhost:2584"
+      // production
+      plcDirectoryUrl={undefined}
+      handleResolver="https://bsky.app"
     >
       <App />
     </AuthProvider>

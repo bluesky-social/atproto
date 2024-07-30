@@ -2,6 +2,7 @@ import TypedEventEmitter from 'typed-emitter'
 import { ServerConfig } from './config'
 import Database from './db'
 import { createMuteOpChannel } from './db/schema/mute_op'
+import { createNotifOpChannel } from './db/schema/notif_op'
 import { EventEmitter } from 'stream'
 
 export type AppContextOptions = {
@@ -43,4 +44,5 @@ export default AppContext
 
 export type AppEvents = {
   [createMuteOpChannel]: () => void
+  [createNotifOpChannel]: () => void
 }

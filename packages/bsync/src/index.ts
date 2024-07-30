@@ -7,6 +7,7 @@ import AppContext, { AppContextOptions } from './context'
 import { ServerConfig } from './config'
 import routes from './routes'
 import { createMuteOpChannel } from './db/schema/mute_op'
+import { createNotifOpChannel } from './db/schema/notif_op'
 
 export * from './config'
 export * from './client'
@@ -88,10 +89,15 @@ export class BsyncService {
     this.ac.signal.addEventListener('abort', () => conn.release(), {
       once: true,
     })
-    conn.query(`listen ${createMuteOpChannel}`) // if this errors, unhandled rejection should cause process to exit
+    // if these error, unhandled rejection should cause process to exit
+    conn.query(`listen ${createMuteOpChannel}`)
+    conn.query(`listen ${createNotifOpChannel}`)
     conn.on('notification', (notif) => {
       if (notif.channel === createMuteOpChannel) {
-        this.ctx.events.emit('mute_op_create')
+        this.ctx.events.emit(createMuteOpChannel)
+      }
+      if (notif.channel === createNotifOpChannel) {
+        this.ctx.events.emit(createNotifOpChannel)
       }
     })
   }
