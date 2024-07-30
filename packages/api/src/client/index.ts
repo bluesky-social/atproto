@@ -2839,11 +2839,12 @@ export class AppBskyNotificationNS {
     data?: AppBskyNotificationPutPreferences.InputSchema,
     opts?: AppBskyNotificationPutPreferences.CallOptions,
   ): Promise<AppBskyNotificationPutPreferences.Response> {
-    return this._service.xrpc
-      .call('app.bsky.notification.putPreferences', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyNotificationPutPreferences.toKnownErr(e)
-      })
+    return this._client.call(
+      'app.bsky.notification.putPreferences',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   registerPush(
