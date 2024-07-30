@@ -16,11 +16,11 @@ export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.standardOptionalParameterized({
-      scopeCheck: (scope) => {
-        if (!scope) return false
+      lxmCheck: (method) => {
+        if (!method) return false
         return (
-          scope === ids.AppBskyActorGetProfiles ||
-          scope.startsWith('chat.bsky.')
+          method === ids.AppBskyActorGetProfiles ||
+          method.startsWith('chat.bsky.')
         )
       },
     }),

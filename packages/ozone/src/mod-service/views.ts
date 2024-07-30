@@ -44,7 +44,7 @@ export class ModerationViews {
     private signingKey: Keypair,
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
-    private appviewAuth: (scope: string) => Promise<AuthHeaders>,
+    private appviewAuth: (method: string) => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {

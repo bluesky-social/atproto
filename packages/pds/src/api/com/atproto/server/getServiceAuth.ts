@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         PRIVILEGED_METHODS.includes(lxm)
       ) {
         throw new InvalidRequestError(
-          `cannot request a service auth token with the following lxm with an app password: ${lxm}`,
+          `cannot request a service auth token for the following method with an app password: ${lxm}`,
         )
       }
       const keypair = await ctx.actorStore.keypair(did)

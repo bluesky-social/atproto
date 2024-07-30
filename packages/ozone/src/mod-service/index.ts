@@ -65,7 +65,7 @@ export class ModerationService {
     public appviewAgent: AtpAgent,
     private createAuthHeaders: (
       aud: string,
-      scope: string,
+      method: string,
     ) => Promise<AuthHeaders>,
     public imgInvalidator?: ImageInvalidator,
   ) {}
@@ -78,7 +78,7 @@ export class ModerationService {
     idResolver: IdResolver,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
-    createAuthHeaders: (aud: string, scope: string) => Promise<AuthHeaders>,
+    createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     imgInvalidator?: ImageInvalidator,
   ) {
     return (db: Database) =>
@@ -101,10 +101,10 @@ export class ModerationService {
     this.signingKey,
     this.signingKeyId,
     this.appviewAgent,
-    async (scope: string, labelers?: ParsedLabelers) => {
+    async (method: string, labelers?: ParsedLabelers) => {
       const authHeaders = await this.createAuthHeaders(
         this.cfg.appview.did,
-        scope,
+        method,
       )
       if (labelers?.dids?.length) {
         authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')

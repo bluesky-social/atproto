@@ -48,7 +48,7 @@ export class EventPusher {
     public db: Database,
     public createAuthHeaders: (
       aud: string,
-      scope: string,
+      method: string,
     ) => Promise<AuthHeaders>,
     services: {
       appview?: {

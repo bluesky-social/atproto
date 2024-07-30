@@ -40,11 +40,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.standardOptionalParameterized({
-      scopeCheck: (scope) => {
+      lxmCheck: (method) => {
         return (
-          scope !== undefined &&
+          method !== undefined &&
           [ids.AppBskyFeedGetFeedSkeleton, ids.AppBskyFeedGetFeed].includes(
-            scope,
+            method,
           )
         )
       },

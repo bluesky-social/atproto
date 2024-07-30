@@ -81,7 +81,7 @@ describe('account migration', () => {
 
     const serviceJwtRes = await oldAgent.com.atproto.server.getServiceAuth({
       aud: newServerDid,
-      scope: ids.ComAtprotoServerCreateAccount,
+      lxm: ids.ComAtprotoServerCreateAccount,
     })
     const serviceJwt = serviceJwtRes.data.token
 

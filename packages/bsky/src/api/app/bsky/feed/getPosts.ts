@@ -17,10 +17,10 @@ export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
     auth: ctx.authVerifier.standardOptionalParameterized({
-      scopeCheck: (scope) => {
-        if (!scope) return false
+      lxmCheck: (method) => {
+        if (!method) return false
         return (
-          scope === ids.AppBskyFeedGetPosts || scope.startsWith('chat.bsky.')
+          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
         )
       },
     }),

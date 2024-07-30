@@ -663,7 +663,7 @@ describe('feed generation', () => {
       )
       expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
-      expect(feed.data['$auth']?.['scope']).toEqual(
+      expect(feed.data['$auth']?.['lxm']).toEqual(
         ids.AppBskyFeedGetFeedSkeleton,
       )
     })
