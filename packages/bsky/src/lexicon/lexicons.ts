@@ -2616,7 +2616,7 @@ export const schemaDict = {
               type: 'string',
               format: 'nsid',
               description:
-                'Lexicon (XRPC) method to mind the requested token to',
+                'Lexicon (XRPC) method to bind the requested token to',
             },
           },
         },

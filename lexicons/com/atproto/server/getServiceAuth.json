@@ -21,7 +21,7 @@
           "lxm": {
             "type": "string",
             "format": "nsid",
-            "description": "Lexicon (XRPC) method to mind the requested token to"
+            "description": "Lexicon (XRPC) method to bind the requested token to"
           }
         }
       },

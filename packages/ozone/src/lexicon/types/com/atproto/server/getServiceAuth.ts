@@ -13,7 +13,7 @@ export interface QueryParams {
   aud: string
   /** The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope. */
   exp?: number
-  /** Lexicon (XRPC) method to mind the requested token to */
+  /** Lexicon (XRPC) method to bind the requested token to */
   lxm?: string
 }
 
