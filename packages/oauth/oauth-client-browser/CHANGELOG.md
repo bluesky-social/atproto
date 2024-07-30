@@ -1,5 +1,12 @@
 # @atproto/oauth-client-browser
 
+## 0.1.2-rc.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.1.2-rc.0
+
 ## 0.1.1
 
 ### Patch Changes
