@@ -8,11 +8,16 @@
       "description": "Record defining post URIs detached from a root post. The record key (rkey) of the detach record must match the record key of the root post in question, and that record must be in the same repository.",
       "record": {
         "type": "object",
-        "required": ["targets", "updatedAt"],
+        "required": ["post", "targets", "updatedAt"],
         "properties": {
+          "post": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Reference (AT-URI) to the post record."
+          },
           "targets": {
             "type": "array",
-            "maxLength": 1000,
+            "maxLength": 50,
             "items": {
               "type": "string",
               "format": "at-uri"

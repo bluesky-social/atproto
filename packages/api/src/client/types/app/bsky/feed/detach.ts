@@ -7,6 +7,8 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface Record {
+  /** Reference (AT-URI) to the post record. */
+  post: string
   /** List of detached post URIs. */
   targets: string[]
   updatedAt: string
