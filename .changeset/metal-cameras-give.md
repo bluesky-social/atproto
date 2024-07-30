@@ -2,4 +2,4 @@
 "@atproto/api": patch
 ---
 
-Add scope and exp parameters to com.atproto.server.getServiceAuth
+Add lxm and exp parameters to com.atproto.server.getServiceAuth

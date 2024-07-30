@@ -83,7 +83,7 @@ describe('Auth', () => {
       iss,
       aud,
       keypair,
-      scope: null,
+      lxm: null,
     })
     const validated = await xrpcServer.verifyJwt(token, null, null, async () =>
       keypair.did(),
@@ -94,26 +94,26 @@ describe('Auth', () => {
     expect(validated.exp).toBeGreaterThan(Date.now() / 1000)
     expect(validated.exp).toBeLessThan(Date.now() / 1000 + 60)
     expect(typeof validated.nonce).toBe('string')
-    expect(validated.scope).toBeUndefined()
+    expect(validated.lxm).toBeUndefined()
   })
 
-  it('creates and validates service auth headers with scopes', async () => {
+  it('creates and validates service auth headers bound to a particular method', async () => {
     const keypair = await Secp256k1Keypair.create()
     const iss = 'did:example:alice'
     const aud = 'did:example:bob'
-    const scope = 'com.atproto.repo.createRecord'
+    const lxm = 'com.atproto.repo.createRecord'
     const token = await xrpcServer.createServiceJwt({
       iss,
       aud,
       keypair,
-      scope,
+      lxm,
     })
-    const validated = await xrpcServer.verifyJwt(token, null, scope, async () =>
+    const validated = await xrpcServer.verifyJwt(token, null, lxm, async () =>
       keypair.did(),
     )
     expect(validated.iss).toEqual(iss)
     expect(validated.aud).toEqual(aud)
-    expect(validated.scope).toEqual(scope)
+    expect(validated.lxm).toEqual(lxm)
   })
 
   it('fails on bad auth before invalid request payload.', async () => {
@@ -189,7 +189,7 @@ describe('Auth', () => {
         iss: 'did:example:iss',
         keypair,
         exp: Math.floor((Date.now() - MINUTE) / 1000),
-        scope: null,
+        lxm: null,
       })
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
@@ -208,7 +208,7 @@ describe('Auth', () => {
         aud: 'did:example:aud1',
         iss: 'did:example:iss',
         keypair,
-        scope: null,
+        lxm: null,
       })
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
@@ -223,13 +223,13 @@ describe('Auth', () => {
       )
     })
 
-    it('fails on bad scopes.', async () => {
+    it('fails on bad lxm', async () => {
       const keypair = await Secp256k1Keypair.create()
       const jwt = await xrpcServer.createServiceJwt({
         aud: 'did:example:aud1',
         iss: 'did:example:iss',
         keypair,
-        scope: 'com.atproto.repo.createRecord',
+        lxm: 'com.atproto.repo.createRecord',
       })
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
@@ -239,16 +239,16 @@ describe('Auth', () => {
           return keypair.did()
         },
       )
-      await expect(tryVerify).rejects.toThrow(/missing jwt scope/)
+      await expect(tryVerify).rejects.toThrow(/missing jwt lexicon method/)
     })
 
-    it('fails on null scopes when scope is required', async () => {
+    it('fails on null lxm when lxm is required', async () => {
       const keypair = await Secp256k1Keypair.create()
       const jwt = await xrpcServer.createServiceJwt({
         aud: 'did:example:aud1',
         iss: 'did:example:iss',
         keypair,
-        scope: null,
+        lxm: null,
       })
       const tryVerify = xrpcServer.verifyJwt(
         jwt,
@@ -258,7 +258,7 @@ describe('Auth', () => {
           return keypair.did()
         },
       )
-      await expect(tryVerify).rejects.toThrow(/missing jwt scope/)
+      await expect(tryVerify).rejects.toThrow(/missing jwt lexicon method/)
     })
 
     it('refreshes key on verification failure.', async () => {
@@ -268,7 +268,7 @@ describe('Auth', () => {
         aud: 'did:example:aud',
         iss: 'did:example:iss',
         keypair: keypair2,
-        scope: null,
+        lxm: null,
       })
       let usedKeypair1 = false
       let usedKeypair2 = false

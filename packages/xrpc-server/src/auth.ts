@@ -9,7 +9,7 @@ type ServiceJwtParams = {
   iss: string
   aud: string
   exp?: number
-  scope: string | null
+  lxm: string | null
   keypair: crypto.Keypair
   excludeNonce?: boolean
 }
@@ -18,7 +18,7 @@ type ServiceJwtPayload = {
   iss: string
   aud: string
   exp: number
-  scope?: string
+  lxm?: string
   nonce?: string
 }
 
@@ -27,7 +27,7 @@ export const createServiceJwt = async (
 ): Promise<string> => {
   const { iss, aud, excludeNonce, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
-  const scope = params.scope ?? undefined
+  const lxm = params.lxm ?? undefined
   const nonce = excludeNonce ? undefined : await crypto.randomStr(32, 'hex')
   const header = {
     typ: 'JWT',
@@ -37,7 +37,7 @@ export const createServiceJwt = async (
     iss,
     aud,
     exp,
-    scope,
+    lxm,
     nonce,
   })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
@@ -60,7 +60,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
-  scope: string | null, // null indicates to skip the scope check
+  lxm: string | null, // null indicates to skip the lxm check
   getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
@@ -79,10 +79,10 @@ export const verifyJwt = async (
       'BadJwtAudience',
     )
   }
-  if (scope !== null && scope !== payload.scope) {
+  if (lxm !== null && lxm !== payload.lxm) {
     throw new AuthRequiredError(
-      `missing jwt scope: ${scope}`,
-      'MissingJwtScope',
+      `missing jwt lexicon method: ${lxm}`,
+      'MissingJwtMethod',
     )
   }
 
@@ -151,6 +151,6 @@ const jwtPayloadSchema = z.object({
   iss: z.string(),
   aud: z.string(),
   exp: z.number(),
-  scope: z.string().optional(),
+  lxm: z.string().optional(),
   nonce: z.string().optional(),
 })

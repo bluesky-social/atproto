@@ -3,4 +3,4 @@
 "@atproto/pds": patch
 ---
 
-Add scopes and nonces to signed service auth tokens.
+Add lxm and nonce to signed service auth tokens.

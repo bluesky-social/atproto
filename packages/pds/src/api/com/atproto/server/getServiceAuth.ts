@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const token = await createServiceJwt({
         iss: did,
         aud: params.aud,
-        scope: params.scope ?? null,
+        lxm: params.lxm ?? null,
         keypair,
       })
       return {

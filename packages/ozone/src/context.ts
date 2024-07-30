@@ -88,7 +88,7 @@ export class AppContext {
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
-        scope: null,
+        lxm: null,
         keypair: signingKey,
       })
 
@@ -231,7 +231,7 @@ export class AppContext {
     return createServiceAuthHeaders({
       iss,
       aud,
-      scope: null,
+      lxm: null,
       keypair: this.signingKey,
     })
   }

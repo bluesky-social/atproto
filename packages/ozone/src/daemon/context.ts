@@ -43,7 +43,7 @@ export class DaemonContext {
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
-        scope: null,
+        lxm: null,
         keypair: signingKey,
       })
 
