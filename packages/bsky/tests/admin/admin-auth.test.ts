@@ -72,7 +72,7 @@ describe('admin auth', () => {
     const updateHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -89,7 +89,7 @@ describe('admin auth', () => {
     const getHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      scope: ids.ComAtprotoAdminGetSubjectStatus,
+      lxm: ids.ComAtprotoAdminGetSubjectStatus,
       keypair: modServiceKey,
     })
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
@@ -104,7 +104,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: bskyDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -125,7 +125,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: sc.dids.alice,
       aud: bskyDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: aliceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -146,7 +146,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -169,7 +169,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

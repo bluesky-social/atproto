@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessStandard(),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
-      const { aud, scope = null } = params
+      const { aud, lxm = null } = params
       const exp = params.exp ? params.exp * 1000 : undefined
       if (exp) {
         const diff = exp - Date.now()
@@ -23,20 +23,20 @@ export default function (server: Server, ctx: AppContext) {
             'cannot request a token with an expiration more than an hour in the future',
             'BadExpiration',
           )
-        } else if (!scope && diff > MINUTE) {
+        } else if (!lxm && diff > MINUTE) {
           throw new InvalidRequestError(
-            'cannot request a scope-less token with an expiration more than a minute in the future',
+            'cannot request a method-less token with an expiration more than a minute in the future',
             'BadExpiration',
           )
         }
       }
       if (
         !auth.credentials.isPrivileged &&
-        scope &&
-        PRIVILEGED_METHODS.includes(scope)
+        lxm &&
+        PRIVILEGED_METHODS.includes(lxm)
       ) {
         throw new InvalidRequestError(
-          `cannot request a service auth token with the following scope with an app password: ${scope}`,
+          `cannot request a service auth token with the following lxm with an app password: ${lxm}`,
         )
       }
       const keypair = await ctx.actorStore.keypair(did)
@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
         iss: did,
         aud,
         exp,
-        scope,
+        lxm,
         keypair,
       })
       return {

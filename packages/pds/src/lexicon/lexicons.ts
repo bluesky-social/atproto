@@ -2612,11 +2612,11 @@ export const schemaDict = {
               description:
                 'The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope.',
             },
-            scope: {
+            lxm: {
               type: 'string',
               format: 'nsid',
               description:
-                'A scope to include in the requested token in the form of an XRPC method name (NSID).',
+                'Lexicon (XRPC) method to bind the requested token to',
             },
           },
         },

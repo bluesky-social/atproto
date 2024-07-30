@@ -142,7 +142,7 @@ export class TestOzone {
   }
 
   async modHeaders(
-    scope: string,
+    lxm: string,
     role: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) {
     const account =
@@ -154,7 +154,7 @@ export class TestOzone {
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,
-      scope,
+      lxm,
       keypair: account.key,
     })
     return { authorization: `Bearer ${jwt}` }

@@ -77,7 +77,7 @@ describe('moderator auth', () => {
     const updateHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -94,7 +94,7 @@ describe('moderator auth', () => {
     const getHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
-      scope: ids.ComAtprotoAdminGetSubjectStatus,
+      lxm: ids.ComAtprotoAdminGetSubjectStatus,
       keypair: modServiceKey,
     })
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
@@ -111,7 +111,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: pdsDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -132,7 +132,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -155,7 +155,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
-      scope: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

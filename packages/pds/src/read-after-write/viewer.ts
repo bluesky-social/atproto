@@ -89,7 +89,7 @@ export class LocalViewer {
     return util.format(this.appviewCdnUrlPattern, pattern, this.did, cid)
   }
 
-  async serviceAuthHeaders(did: string, scope: string) {
+  async serviceAuthHeaders(did: string, lxm: string) {
     if (!this.appviewDid) {
       throw new Error('Could not find bsky appview did')
     }
@@ -98,7 +98,7 @@ export class LocalViewer {
     return createServiceAuthHeaders({
       iss: did,
       aud: this.appviewDid,
-      scope,
+      lxm,
       keypair,
     })
   }

@@ -23,7 +23,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req })
       if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.includes(nsid)) {
-        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+        throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
       const headers = await formatHeaders(
         ctx,
@@ -49,11 +49,11 @@ export const pipethrough = async (
   req: express.Request,
   requester: string | null,
   audOverride?: string,
-  scopeOverride?: string,
+  lxmOverride?: string,
 ): Promise<HandlerPipeThrough> => {
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req, audOverride)
-  const scope = scopeOverride ?? nsid
-  const headers = await formatHeaders(ctx, req, aud, scope, requester)
+  const lxm = lxmOverride ?? nsid
+  const headers = await formatHeaders(ctx, req, aud, lxm, requester)
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -109,11 +109,11 @@ export const formatHeaders = async (
   ctx: AppContext,
   req: express.Request,
   aud: string,
-  scope: string,
+  lxm: string,
   requester: string | null,
 ): Promise<{ authorization?: string }> => {
   const headers = requester
-    ? (await ctx.serviceAuthHeaders(requester, aud, scope)).headers
+    ? (await ctx.serviceAuthHeaders(requester, aud, lxm)).headers
     : {}
   // forward select headers to upstream services
   for (const header of REQ_HEADERS_TO_FORWARD) {
