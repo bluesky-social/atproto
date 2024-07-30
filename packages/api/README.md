@@ -180,9 +180,6 @@ if (AppBskyFeedPost.isRecord(post)) {
 }
 ```
 
-Note that the agent class will validate records for you, so you don't need to do
-this before calling the API.
-
 ### Rich text
 
 Some records (ie posts) use the `app.bsky.richtext` lexicon. At the moment richtext is only used for links and mentions, but it will be extended over time to include bold, italic, and so on.

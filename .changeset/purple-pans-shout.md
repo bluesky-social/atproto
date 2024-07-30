@@ -2,7 +2,6 @@
 "@atproto/lex-cli": minor
 "@atproto/xrpc": minor
 "@atproto/api": minor
-"@atproto/xrpc-server": patch
 "@atproto/dev-env": patch
 "@atproto/lexicon": patch
 "@atproto/ozone": patch
