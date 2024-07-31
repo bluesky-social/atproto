@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.32
+
+### Patch Changes
+
+- [#2276](https://github.com/bluesky-social/atproto/pull/2276) [`77c5306d2`](https://github.com/bluesky-social/atproto/commit/77c5306d2a40d7edd20def73163b8f93f3a30ee7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Updates muted words lexicons to include new attributes `id`, `actorTarget`, and `expiresAt`. Adds and updates methods in API SDK for better management of muted words.
+
+- Updated dependencies [[`77c5306d2`](https://github.com/bluesky-social/atproto/commit/77c5306d2a40d7edd20def73163b8f93f3a30ee7)]:
+  - @atproto/api@0.12.26
+
 ## 0.1.31
 
 ### Patch Changes
