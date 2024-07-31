@@ -122,6 +122,14 @@ message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetDetachRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetDetachRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetLabelerRecordsRequest {
   repeated string uris = 1;
 }
@@ -1068,6 +1076,7 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetDetachRecords(GetDetachRecordsRequest) returns (GetDetachRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
 
