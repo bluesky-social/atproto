@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.44
+
+### Patch Changes
+
+- [#2664](https://github.com/bluesky-social/atproto/pull/2664) [`ff803fd2b`](https://github.com/bluesky-social/atproto/commit/ff803fd2bfad92eec5f88ee9b347c174731ef4ec) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `app.bsky.feed.detach` record lexicons.
+
+- Updated dependencies [[`ff803fd2b`](https://github.com/bluesky-social/atproto/commit/ff803fd2bfad92eec5f88ee9b347c174731ef4ec)]:
+  - @atproto/api@0.12.27
+
 ## 0.4.43
 
 ### Patch Changes
