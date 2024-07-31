@@ -4341,6 +4341,9 @@ export const schemaDict = {
         description: 'A word that the account owner has muted.',
         required: ['value', 'targets'],
         properties: {
+          id: {
+            type: 'string',
+          },
           value: {
             type: 'string',
             description: 'The muted word itself.',
@@ -4354,6 +4357,19 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.actor.defs#mutedWordTarget',
             },
+          },
+          actorTarget: {
+            type: 'string',
+            description:
+              'Groups of users to apply the muted word to. If undefined, applies to all users.',
+            knownValues: ['all', 'exclude-following'],
+            default: 'all',
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'The date and time at which the muted word will expire and no longer be applied.',
           },
         },
       },

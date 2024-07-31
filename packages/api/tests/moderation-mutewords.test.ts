@@ -11,7 +11,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'outlineTag', targets: ['tag'] }],
+        mutedWords: [
+          { value: 'outlineTag', targets: ['tag'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: ['outlineTag'],
@@ -27,7 +29,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'inlineTag', targets: ['tag'] }],
+        mutedWords: [
+          { value: 'inlineTag', targets: ['tag'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: ['outlineTag'],
@@ -43,7 +47,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'inlineTag', targets: ['content'] }],
+        mutedWords: [
+          { value: 'inlineTag', targets: ['content'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: ['outlineTag'],
@@ -59,7 +65,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'inlineTag', targets: ['tag'] }],
+        mutedWords: [
+          { value: 'inlineTag', targets: ['tag'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -80,7 +88,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: '希', targets: ['content'] }],
+        mutedWords: [{ value: '希', targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -96,7 +104,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: '☠︎', targets: ['content'] }],
+        mutedWords: [
+          { value: '☠︎', targets: ['content'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -112,7 +122,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'politics', targets: ['content'] }],
+        mutedWords: [
+          { value: 'politics', targets: ['content'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -128,7 +140,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'javascript', targets: ['content'] }],
+        mutedWords: [
+          { value: 'javascript', targets: ['content'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -146,7 +160,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'javascript', targets: ['content'] }],
+        mutedWords: [
+          { value: 'javascript', targets: ['content'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -162,7 +178,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'ai', targets: ['content'] }],
+        mutedWords: [{ value: 'ai', targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -178,7 +194,9 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: 'brain', targets: ['content'] }],
+        mutedWords: [
+          { value: 'brain', targets: ['content'], actorTarget: 'all' },
+        ],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -194,7 +212,7 @@ describe(`hasMutedWord`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = hasMutedWord({
-        mutedWords: [{ value: `:)`, targets: ['content'] }],
+        mutedWords: [{ value: `:)`, targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],
@@ -213,7 +231,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: yay!`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'yay!', targets: ['content'] }],
+          mutedWords: [
+            { value: 'yay!', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -224,7 +244,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: yay`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'yay', targets: ['content'] }],
+          mutedWords: [
+            { value: 'yay', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -242,7 +264,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: y!ppee`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'y!ppee', targets: ['content'] }],
+          mutedWords: [
+            { value: 'y!ppee', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -254,7 +278,9 @@ describe(`hasMutedWord`, () => {
       // single exclamation point, source has double
       it(`no match: y!ppee!`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'y!ppee!', targets: ['content'] }],
+          mutedWords: [
+            { value: 'y!ppee!', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -272,7 +298,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: Bluesky's`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `Bluesky's`, targets: ['content'] }],
+          mutedWords: [
+            { value: `Bluesky's`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -283,7 +311,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: Bluesky`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'Bluesky', targets: ['content'] }],
+          mutedWords: [
+            { value: 'Bluesky', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -294,7 +324,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: bluesky`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'bluesky', targets: ['content'] }],
+          mutedWords: [
+            { value: 'bluesky', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -305,7 +337,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: blueskys`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'blueskys', targets: ['content'] }],
+          mutedWords: [
+            { value: 'blueskys', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -323,7 +357,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: S@assy`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'S@assy', targets: ['content'] }],
+          mutedWords: [
+            { value: 'S@assy', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -334,7 +370,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: s@assy`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 's@assy', targets: ['content'] }],
+          mutedWords: [
+            { value: 's@assy', targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -353,7 +391,13 @@ describe(`hasMutedWord`, () => {
       // case insensitive
       it(`match: new york times`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'new york times', targets: ['content'] }],
+          mutedWords: [
+            {
+              value: 'new york times',
+              targets: ['content'],
+              actorTarget: 'all',
+            },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -371,7 +415,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: !command`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `!command`, targets: ['content'] }],
+          mutedWords: [
+            { value: `!command`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -382,7 +428,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: command`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `command`, targets: ['content'] }],
+          mutedWords: [
+            { value: `command`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -398,7 +446,9 @@ describe(`hasMutedWord`, () => {
         rt.detectFacetsWithoutResolution()
 
         const match = hasMutedWord({
-          mutedWords: [{ value: `!command`, targets: ['content'] }],
+          mutedWords: [
+            { value: `!command`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -416,7 +466,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: e/acc`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `e/acc`, targets: ['content'] }],
+          mutedWords: [
+            { value: `e/acc`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -427,7 +479,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: acc`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `acc`, targets: ['content'] }],
+          mutedWords: [
+            { value: `acc`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -445,7 +499,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: super-bad`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `super-bad`, targets: ['content'] }],
+          mutedWords: [
+            { value: `super-bad`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -456,7 +512,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: super`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `super`, targets: ['content'] }],
+          mutedWords: [
+            { value: `super`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -467,7 +525,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: bad`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `bad`, targets: ['content'] }],
+          mutedWords: [
+            { value: `bad`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -478,7 +538,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: super bad`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `super bad`, targets: ['content'] }],
+          mutedWords: [
+            { value: `super bad`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -489,7 +551,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: superbad`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `superbad`, targets: ['content'] }],
+          mutedWords: [
+            { value: `superbad`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -508,7 +572,11 @@ describe(`hasMutedWord`, () => {
       it(`match: idk what this would be`, () => {
         const match = hasMutedWord({
           mutedWords: [
-            { value: `idk what this would be`, targets: ['content'] },
+            {
+              value: `idk what this would be`,
+              targets: ['content'],
+              actorTarget: 'all',
+            },
           ],
           text: rt.text,
           facets: rt.facets,
@@ -522,7 +590,11 @@ describe(`hasMutedWord`, () => {
         // extra word
         const match = hasMutedWord({
           mutedWords: [
-            { value: `idk what this would be for`, targets: ['content'] },
+            {
+              value: `idk what this would be for`,
+              targets: ['content'],
+              actorTarget: 'all',
+            },
           ],
           text: rt.text,
           facets: rt.facets,
@@ -535,7 +607,9 @@ describe(`hasMutedWord`, () => {
       it(`match: idk`, () => {
         // extra word
         const match = hasMutedWord({
-          mutedWords: [{ value: `idk`, targets: ['content'] }],
+          mutedWords: [
+            { value: `idk`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -546,7 +620,13 @@ describe(`hasMutedWord`, () => {
 
       it(`match: idkwhatthiswouldbe`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `idkwhatthiswouldbe`, targets: ['content'] }],
+          mutedWords: [
+            {
+              value: `idkwhatthiswouldbe`,
+              targets: ['content'],
+              actorTarget: 'all',
+            },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -564,7 +644,13 @@ describe(`hasMutedWord`, () => {
 
       it(`match: context(iykyk)`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `context(iykyk)`, targets: ['content'] }],
+          mutedWords: [
+            {
+              value: `context(iykyk)`,
+              targets: ['content'],
+              actorTarget: 'all',
+            },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -575,7 +661,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: context`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `context`, targets: ['content'] }],
+          mutedWords: [
+            { value: `context`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -586,7 +674,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: iykyk`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `iykyk`, targets: ['content'] }],
+          mutedWords: [
+            { value: `iykyk`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -597,7 +687,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: (iykyk)`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `(iykyk)`, targets: ['content'] }],
+          mutedWords: [
+            { value: `(iykyk)`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -615,7 +707,9 @@ describe(`hasMutedWord`, () => {
 
       it(`match: 🦋`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: `🦋`, targets: ['content'] }],
+          mutedWords: [
+            { value: `🦋`, targets: ['content'], actorTarget: 'all' },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -635,7 +729,13 @@ describe(`hasMutedWord`, () => {
 
       it(`match: stop worrying`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'stop worrying', targets: ['content'] }],
+          mutedWords: [
+            {
+              value: 'stop worrying',
+              targets: ['content'],
+              actorTarget: 'all',
+            },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -646,7 +746,13 @@ describe(`hasMutedWord`, () => {
 
       it(`match: turtles, or how`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'turtles, or how', targets: ['content'] }],
+          mutedWords: [
+            {
+              value: 'turtles, or how',
+              targets: ['content'],
+              actorTarget: 'all',
+            },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -668,7 +774,13 @@ describe(`hasMutedWord`, () => {
       // internet
       it(`match: インターネット`, () => {
         const match = hasMutedWord({
-          mutedWords: [{ value: 'インターネット', targets: ['content'] }],
+          mutedWords: [
+            {
+              value: 'インターネット',
+              targets: ['content'],
+              actorTarget: 'all',
+            },
+          ],
           text: rt.text,
           facets: rt.facets,
           outlineTags: [],
@@ -683,7 +795,9 @@ describe(`hasMutedWord`, () => {
   describe(`facet with multiple features`, () => {
     it(`multiple tags`, () => {
       const match = hasMutedWord({
-        mutedWords: [{ value: 'bad', targets: ['content'] }],
+        mutedWords: [
+          { value: 'bad', targets: ['content'], actorTarget: 'all' },
+        ],
         text: 'tags',
         facets: [
           {
@@ -709,7 +823,9 @@ describe(`hasMutedWord`, () => {
 
     it(`other features`, () => {
       const match = hasMutedWord({
-        mutedWords: [{ value: 'bad', targets: ['content'] }],
+        mutedWords: [
+          { value: 'bad', targets: ['content'], actorTarget: 'all' },
+        ],
         text: 'test',
         facets: [
           {
@@ -753,7 +869,9 @@ describe(`hasMutedWord`, () => {
             adultContentEnabled: false,
             labels: {},
             labelers: [],
-            mutedWords: [{ value: 'words', targets: ['content'] }],
+            mutedWords: [
+              { value: 'words', targets: ['content'], actorTarget: 'all' },
+            ],
             hiddenPosts: [],
           },
           labelDefs: {},
@@ -780,7 +898,9 @@ describe(`hasMutedWord`, () => {
             adultContentEnabled: false,
             labels: {},
             labelers: [],
-            mutedWords: [{ value: 'words', targets: ['content'] }],
+            mutedWords: [
+              { value: 'words', targets: ['content'], actorTarget: 'all' },
+            ],
             hiddenPosts: [],
           },
           labelDefs: {},
@@ -811,13 +931,151 @@ describe(`hasMutedWord`, () => {
             adultContentEnabled: false,
             labels: {},
             labelers: [],
-            mutedWords: [{ value: 'words', targets: ['tags'] }],
+            mutedWords: [
+              { value: 'words', targets: ['tags'], actorTarget: 'all' },
+            ],
             hiddenPosts: [],
           },
           labelDefs: {},
         },
       )
       expect(res.causes.length).toBe(0)
+    })
+  })
+
+  describe(`timed mute words`, () => {
+    it(`non-expired word`, () => {
+      const now = Date.now()
+
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:alice.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [
+              {
+                value: 'words',
+                targets: ['content'],
+                expiresAt: new Date(now + 1e3).toISOString(),
+                actorTarget: 'all',
+              },
+            ],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+
+      expect(res.causes[0].type).toBe('mute-word')
+    })
+
+    it(`expired word`, () => {
+      const now = Date.now()
+
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+          }),
+          labels: [],
+        }),
+        {
+          userDid: 'did:web:alice.test',
+          prefs: {
+            adultContentEnabled: false,
+            labels: {},
+            labelers: [],
+            mutedWords: [
+              {
+                value: 'words',
+                targets: ['content'],
+                expiresAt: new Date(now - 1e3).toISOString(),
+                actorTarget: 'all',
+              },
+            ],
+            hiddenPosts: [],
+          },
+          labelDefs: {},
+        },
+      )
+
+      expect(res.causes.length).toBe(0)
+    })
+  })
+
+  describe(`actor-based mute words`, () => {
+    const viewer = {
+      userDid: 'did:web:alice.test',
+      prefs: {
+        adultContentEnabled: false,
+        labels: {},
+        labelers: [],
+        mutedWords: [
+          {
+            value: 'words',
+            targets: ['content'],
+            actorTarget: 'exclude-following',
+          },
+        ],
+        hiddenPosts: [],
+      },
+      labelDefs: {},
+    }
+
+    it(`followed actor`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'bob.test',
+            displayName: 'Bob',
+            viewer: {
+              following: 'true',
+            },
+          }),
+          labels: [],
+        }),
+        viewer,
+      )
+      expect(res.causes.length).toBe(0)
+    })
+
+    it(`non-followed actor`, () => {
+      const res = moderatePost(
+        mock.postView({
+          record: mock.post({
+            text: 'Mute words!',
+          }),
+          author: mock.profileViewBasic({
+            handle: 'carla.test',
+            displayName: 'Carla',
+            viewer: {
+              following: undefined,
+            },
+          }),
+          labels: [],
+        }),
+        viewer,
+      )
+      expect(res.causes[0].type).toBe('mute-word')
     })
   })
 })
