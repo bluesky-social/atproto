@@ -4,6 +4,7 @@ import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
+import { Record as DetachRecord } from '../lexicon/types/app/bsky/feed/detach'
 import {
   HydrationMap,
   ItemRef,
@@ -58,6 +59,9 @@ export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 
 export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
+
+export type Detach = RecordInfo<DetachRecord>
+export type Detaches = HydrationMap<Detach>
 
 export type ThreadRef = ItemRef & { threadRoot: string }
 
@@ -219,5 +223,17 @@ export class FeedHydrator {
       const record = parseRecord<RepostRecord>(res.records[i], includeTakedowns)
       return acc.set(uri, record ?? null)
     }, new HydrationMap<Repost>())
+  }
+
+  async getDetachRecords(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<Detaches> {
+    if (!uris.length) return new HydrationMap<Detach>()
+    const res = await this.dataplane.getDetachRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<DetachRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Detach>())
   }
 }
