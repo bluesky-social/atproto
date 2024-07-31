@@ -28,7 +28,7 @@ export const createServiceJwt = async (
   const { iss, aud, excludeNonce, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
   const lxm = params.lxm ?? undefined
-  const nonce = excludeNonce ? undefined : await crypto.randomStr(32, 'hex')
+  const nonce = excludeNonce ? undefined : await crypto.randomStr(16, 'hex')
   const header = {
     typ: 'JWT',
     alg: keypair.jwtAlg,
