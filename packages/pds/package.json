@@ -25,7 +25,7 @@
     "test:sqlite": "jest",
     "test:sqlite-only": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "jest --updateSnapshot",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
