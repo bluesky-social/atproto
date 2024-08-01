@@ -16,6 +16,16 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         .notNull(),
     )
     .execute()
+  await db.schema
+    .createIndex('quote_subject_idx')
+    .on('quote')
+    .column('subject')
+    .execute()
+  await db.schema
+    .createIndex('quote_order_by_idx')
+    .on('quote')
+    .columns(['sortAt', 'cid'])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
