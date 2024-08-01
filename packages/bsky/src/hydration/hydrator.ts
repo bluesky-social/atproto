@@ -92,7 +92,7 @@ export type HydrationState = {
   follows?: Follows
   followBlocks?: FollowBlocks
   threadgates?: Threadgates
-  postGates?: PostGates,
+  postGates?: PostGates
   lists?: Lists
   listAggs?: ListAggs
   listViewers?: ListViewerStates
@@ -399,6 +399,7 @@ export class Hydrator {
       feedGenState,
       labelerState,
       starterPackState,
+      postGates,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
@@ -411,6 +412,8 @@ export class Hydrator {
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
+      // only gates for quoted posts
+      this.feed.getPostGatesForPosts(postUrisLayer1),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -429,6 +432,7 @@ export class Hydrator {
         postBlocks,
         labels,
         threadgates,
+        postGates,
         ctx,
       },
     )
@@ -1071,6 +1075,7 @@ export const mergeStates = (
     follows: mergeMaps(stateA.follows, stateB.follows),
     followBlocks: mergeMaps(stateA.followBlocks, stateB.followBlocks),
     threadgates: mergeMaps(stateA.threadgates, stateB.threadgates),
+    postGates: mergeMaps(stateA.postGates, stateB.postGates),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listAggs: mergeMaps(stateA.listAggs, stateB.listAggs),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
