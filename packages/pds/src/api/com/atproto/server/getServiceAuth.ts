@@ -1,7 +1,7 @@
 import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         } else if (diff > MINUTE) {
           throw new InvalidRequestError(
-            'cannot request a token with an expiration more than an hour in the future',
+            'cannot request a token with an expiration more than a minute in the future',
             'BadExpiration',
           )
         }
@@ -29,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         iss: did,
         aud: params.aud,
         lxm: params.lxm ?? null,
+        exp,
         keypair,
       })
       return {

@@ -1,6 +1,5 @@
-import z from 'zod'
 import * as common from '@atproto/common'
-import { MINUTE, check } from '@atproto/common'
+import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import * as ui8 from 'uint8arrays'
 import { AuthRequiredError } from './types'
@@ -81,7 +80,7 @@ export const verifyJwt = async (
   }
   if (lxm !== null && lxm !== payload.lxm) {
     throw new AuthRequiredError(
-      `missing jwt lexicon method: ${lxm}`,
+      `missing jwt lexicon method ("lxm"): ${lxm}`,
       'MissingJwtMethod',
     )
   }
@@ -138,19 +137,16 @@ const parseB64UrlToJson = (b64: string) => {
 
 const parsePayload = (b64: string): ServiceJwtPayload => {
   const payload = parseB64UrlToJson(b64)
-  if (!payload || typeof payload !== 'object') {
-    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
-  }
-  if (!check.is(payload, jwtPayloadSchema)) {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    typeof payload.iss !== 'string' ||
+    typeof payload.aud !== 'string' ||
+    typeof payload.exp !== 'number' ||
+    (payload.lxm && typeof payload.lxm !== 'string') ||
+    (payload.nonce && typeof payload.nonce !== 'string')
+  ) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   return payload
 }
-
-const jwtPayloadSchema = z.object({
-  iss: z.string(),
-  aud: z.string(),
-  exp: z.number(),
-  lxm: z.string().optional(),
-  nonce: z.string().optional(),
-})
