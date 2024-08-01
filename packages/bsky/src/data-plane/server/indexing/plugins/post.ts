@@ -339,6 +339,7 @@ const deleteFn = async (
       .executeTakeFirst(),
     db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
   ])
+  await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -379,7 +380,7 @@ const deleteFn = async (
           uri: deletedPosts.embedUri,
           quoteCount: db
             .selectFrom('quote')
-            .where('quote.subjectCid', '=', deletedPosts.embedCid)
+            .where('quote.subjectCid', '=', deletedPosts.embedCid.toString())
             .select(countAll.as('count')),
         })
         .onConflict((oc) =>

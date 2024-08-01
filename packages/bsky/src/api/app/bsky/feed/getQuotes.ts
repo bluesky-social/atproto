@@ -10,7 +10,7 @@ import {
 import { Views } from '../../../../views'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
-import { ItemRef } from '../../../../hydration/util'
+import { ItemRef, parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -42,16 +42,14 @@ const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { refs: [] }
   }
-
   const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubject({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
   })
-
   return {
     refs: quotesRes.refs,
-    cursor: params.cursor,
+    cursor: parseString(quotesRes.cursor),
   }
 }
 
