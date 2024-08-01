@@ -57,6 +57,7 @@ import {
   PostViewerStates,
   Threadgates,
   FeedItem,
+  Detaches,
 } from './feed'
 import { ParsedLabelers } from '../util'
 
@@ -107,6 +108,7 @@ export type HydrationState = {
   labelerAggs?: LabelerAggs
   knownFollowers?: KnownFollowers
   bidirectionalBlocks?: BidirectionalBlocks
+  detachRecords?: Detaches
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
