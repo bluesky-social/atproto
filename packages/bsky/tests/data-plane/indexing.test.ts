@@ -10,6 +10,7 @@ import AtpAgent, {
   AppBskyFeedLike,
   AppBskyFeedRepost,
   AppBskyGraphFollow,
+  AppBskyFeedDetach,
 } from '@atproto/api'
 import { TestNetwork, SeedClient, usersSeed, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
@@ -654,6 +655,34 @@ describe('indexing', () => {
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       await expect(getProfileAfter).rejects.toThrow('Profile not found')
+    })
+  })
+
+  describe('detach records', () => {
+    it(`indexes`, async () => {
+      const updatedAt = new Date().toISOString()
+      const rkey = TID.nextStr()
+      const detach = await prepareCreate({
+        did: sc.dids.bob,
+        collection: ids.AppBskyFeedDetach,
+        rkey,
+        record: {
+          $type: ids.AppBskyFeedDetach,
+          post: AtUri.make(sc.dids.bob, ids.AppBskyFeedPost, rkey).toString(),
+          targets: [],
+          updatedAt,
+        } as AppBskyFeedDetach.Record,
+      })
+      const [uri] = detach
+
+      // Create
+      await network.bsky.sub.indexingSvc.indexRecord(...detach)
+
+      const getAfterCreate = await agent.api.app.bsky.feed.detach.get({
+        repo: sc.dids.bob,
+        rkey,
+      })
+      expect(getAfterCreate.uri).toEqual(uri.toString())
     })
   })
 

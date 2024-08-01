@@ -27,6 +27,7 @@ import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
 import * as StarterPack from './plugins/starter-pack'
+import * as Detach from './plugins/detach'
 import * as Labeler from './plugins/labeler'
 import * as ChatDeclaration from './plugins/chat-declaration'
 import RecordProcessor from './processor'
@@ -50,6 +51,7 @@ export class IndexingService {
     starterPack: StarterPack.PluginType
     labeler: Labeler.PluginType
     chatDeclaration: ChatDeclaration.PluginType
+    detach: Detach.PluginType
   }
 
   constructor(
@@ -72,6 +74,7 @@ export class IndexingService {
       starterPack: StarterPack.makePlugin(this.db, this.background),
       labeler: Labeler.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
+      detach: Detach.makePlugin(this.db, this.background),
     }
   }
 
