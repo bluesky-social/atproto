@@ -51,6 +51,7 @@ const skeleton = async (inputs: {
 
   return {
     refs: quotesRes.refs,
+    cursor: params.cursor,
   }
 }
 
