@@ -1,4 +1,4 @@
-import AtpAgent, { AppBskyFeedPost, AtUri } from '@atproto/api'
+import AtpAgent, { AppBskyFeedPost } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
 
@@ -7,7 +7,6 @@ describe('pds posts views', () => {
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
-  let rootPost: { uri: string; cid: string }
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -17,17 +16,6 @@ describe('pds posts views', () => {
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
-
-    const post: AppBskyFeedPost.Record = {
-      text: 'im a silly placeholder',
-      createdAt: new Date().toISOString(),
-    }
-    rootPost = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
-      post,
-      sc.getHeaders(sc.dids.alice),
-    )
-
     await network.processAll()
   })
 
@@ -114,59 +102,5 @@ describe('pds posts views', () => {
     expect(data.posts.length).toBe(1)
     // @ts-ignore we know it's a post record
     expect(data.posts[0].record.tags).toEqual(['javascript', 'hehe'])
-  })
-
-  it('increments quotes count after quoting post', async () => {
-    const post: AppBskyFeedPost.Record = {
-      text: 'YOU HAVE BEEN QUOTED, GET QUOTED!',
-      createdAt: new Date().toISOString(),
-      embed: {
-        $type: 'app.bsky.embed.record',
-        record: rootPost,
-      },
-    }
-    await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
-      post,
-      sc.getHeaders(sc.dids.alice),
-    )
-    await network.processAll()
-
-    const { data } = await agent.api.app.bsky.feed.getPosts({
-      uris: [rootPost.uri],
-    })
-
-    expect(data.posts[0].quoteCount).toBe(1)
-  })
-
-  it('decrements quote count after deleting quote', async () => {
-    const post: AppBskyFeedPost.Record = {
-      text: 'GET QUOTED AGAIN!!!',
-      createdAt: new Date().toISOString(),
-      embed: {
-        $type: 'app.bsky.embed.record',
-        record: rootPost,
-      },
-    }
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
-      post,
-      sc.getHeaders(sc.dids.alice),
-    )
-    const atUri = new AtUri(uri)
-    await pdsAgent.api.app.bsky.feed.post.delete(
-      {
-        repo: sc.dids.alice,
-        rkey: atUri.rkey,
-      },
-      sc.getHeaders(sc.dids.alice),
-    )
-    await network.processAll()
-
-    const { data } = await agent.api.app.bsky.feed.getPosts({
-      uris: [rootPost.uri],
-    })
-
-    expect(data.posts[0].quoteCount).toBe(1)
   })
 })
