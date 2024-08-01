@@ -17,14 +17,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .execute()
   await db.schema
-    .createIndex('quote_subject_idx')
+    .createIndex('quote_subject_cursor_idx')
     .on('quote')
-    .column('subject')
-    .execute()
-  await db.schema
-    .createIndex('quote_order_by_idx')
-    .on('quote')
-    .columns(['sortAt', 'cid'])
+    .columns(['subject', 'sortAt', 'cid'])
     .execute()
 }
 
