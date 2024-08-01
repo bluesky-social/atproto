@@ -8,7 +8,7 @@ import { Database } from '../../db'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
 
-const lexId = lex.ids.AppBskyFeedThreadgate
+const lexId = lex.ids.AppBskyFeedPostgate
 type IndexedGate = DatabaseSchemaType['post_gate']
 
 const insertFn = async (
