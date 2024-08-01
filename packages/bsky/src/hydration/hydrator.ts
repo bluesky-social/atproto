@@ -56,6 +56,7 @@ import {
   PostAggs,
   PostViewerStates,
   Threadgates,
+  PostGates,
   FeedItem,
 } from './feed'
 import { ParsedLabelers } from '../util'
@@ -91,6 +92,7 @@ export type HydrationState = {
   follows?: Follows
   followBlocks?: FollowBlocks
   threadgates?: Threadgates
+  postGates?: PostGates,
   lists?: Lists
   listAggs?: ListAggs
   listViewers?: ListViewerStates
