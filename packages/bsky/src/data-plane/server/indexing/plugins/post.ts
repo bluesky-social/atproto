@@ -260,7 +260,6 @@ const notifsForInsert = (obj: IndexedPost) => {
     }
   }
 
-  // TODO remove this, flagging for reference
   for (const embed of obj.embeds ?? []) {
     if ('embedUri' in embed) {
       const embedUri = new AtUri(embed.embedUri)
