@@ -944,6 +944,17 @@ export class Views {
       return this.embedBlocked(uri, state)
     }
 
+    const urip = new AtUri(embed.record.uri)
+    const postGateRecordUri = AtUri.make(
+      urip.host,
+      ids.AppBskyFeedPostgate,
+      urip.rkey,
+    ).toString()
+    const postGate = state.postGates?.get(postGateRecordUri)
+    if (Boolean(postGate?.record?.detachedQuotes?.includes(postUri))) {
+      return this.embedNotFound(uri)
+    }
+
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
