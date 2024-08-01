@@ -128,6 +128,8 @@ import {
   GetNotificationSeenResponse,
   GetNotificationsRequest,
   GetNotificationsResponse,
+  GetPostGateRecordsRequest,
+  GetPostGateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
   GetPostReplyCountsRequest,
@@ -307,6 +309,15 @@ export const Service = {
       name: 'GetThreadGateRecords',
       I: GetThreadGateRecordsRequest,
       O: GetThreadGateRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetPostgateRecords
+     */
+    getPostgateRecords: {
+      name: 'GetPostgateRecords',
+      I: GetPostGateRecordsRequest,
+      O: GetPostGateRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
