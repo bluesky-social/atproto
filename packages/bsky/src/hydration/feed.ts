@@ -206,6 +206,20 @@ export class FeedHydrator {
     }, new HydrationMap<Threadgate>())
   }
 
+  async getThreadGateRecords(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<Threadgates> {
+    const res = await this.dataplane.getThreadGateRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<ThreadgateRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Threadgate>())
+  }
+
   async getPostGatesForPosts(
     postUris: string[],
     includeTakedowns = false,
@@ -219,6 +233,20 @@ export class FeedHydrator {
         parsed.rkey,
       ).toString()
     })
+    const res = await this.dataplane.getPostgateRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<PostGateRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<PostGate>())
+  }
+
+  async getPostGateRecords(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<PostGates> {
     const res = await this.dataplane.getPostgateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<PostGateRecord>(

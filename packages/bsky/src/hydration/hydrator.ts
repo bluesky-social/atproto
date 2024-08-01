@@ -865,6 +865,18 @@ export class Hydrator {
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
         undefined
       )
+    } else if (collection === ids.AppBskyFeedThreadgate) {
+      return (
+        (await this.feed.getThreadGateRecords([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
+    } else if (collection === ids.AppBskyFeedPostgate) {
+      return (
+        (await this.feed.getPostGateRecords([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
     } else if (collection === ids.AppBskyLabelerService) {
       if (parsed.rkey !== 'self') return
       const did = parsed.hostname
