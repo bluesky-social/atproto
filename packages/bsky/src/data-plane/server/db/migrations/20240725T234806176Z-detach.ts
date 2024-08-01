@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('detach')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('post', 'varchar', (col) => col.notNull())
-    .addColumn('targets', 'text', (col) => col.notNull())
+    .addColumn('targets', 'jsonb', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .execute()
 }
