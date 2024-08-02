@@ -523,18 +523,21 @@ export class Hydrator {
     })
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
-    const [postState, repostProfileState, reposts] = await Promise.all([
-      this.hydratePosts(postAndReplyRefs, ctx, {
-        posts: posts.merge(replies), // avoids refetches of posts
-      }),
-      this.hydrateProfiles(
-        [...repostUris.map(didFromUri), ...replyParentAuthors],
-        ctx,
-      ),
-      this.feed.getReposts(repostUris, ctx.includeTakedowns),
-    ])
+    const [postState, repostProfileState, reposts, rootThreadgates] =
+      await Promise.all([
+        this.hydratePosts(postAndReplyRefs, ctx, {
+          posts: posts.merge(replies), // avoids refetches of posts
+        }),
+        this.hydrateProfiles(
+          [...repostUris.map(didFromUri), ...replyParentAuthors],
+          ctx,
+        ),
+        this.feed.getReposts(repostUris, ctx.includeTakedowns),
+        this.feed.getThreadgatesForPosts(rootUris),
+      ])
     return mergeManyStates(postState, repostProfileState, {
       reposts,
+      threadgates: rootThreadgates,
       ctx,
     })
   }

@@ -609,13 +609,28 @@ export class Views {
     }
     const post = this.post(item.post.uri, state)
     if (!post) return
-    return {
+    const view = {
       post,
       reason,
       reply: !postInfo?.violatesThreadGate
         ? this.replyRef(item.post.uri, state)
         : undefined,
     }
+
+    if (view.reply && isPostView(view.reply.root)) {
+      const urip = new AtUri(view.reply.root.uri)
+      const threadgateUri = AtUri.make(
+        urip.host,
+        ids.AppBskyFeedThreadgate,
+        urip.rkey,
+      ).toString()
+      const threadgate = state.threadgates?.get(threadgateUri)
+      if (threadgate?.record?.hiddenReplies?.includes(view.post.uri)) {
+        return
+      }
+    }
+
+    return view
   }
 
   replyRef(uri: string, state: HydrationState): ReplyRef | undefined {

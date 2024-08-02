@@ -643,6 +643,56 @@ describe('feed generation', () => {
       })
     })
 
+    describe('threadages', () => {
+      it(`filters out hidden replies from feeds`, async () => {
+        const rootUri = sc.posts[sc.dids.alice][1].ref.uri
+        const replyUri = sc.replies[sc.dids.carol][0].ref.uri
+
+        await pdsAgent.api.app.bsky.feed.threadgate.create(
+          {
+            repo: sc.dids.alice,
+            rkey: rootUri.rkey,
+          },
+          {
+            post: rootUri.toString(),
+            createdAt: new Date().toISOString(),
+            hiddenReplies: [replyUri.toString()],
+          },
+          sc.getHeaders(sc.dids.alice),
+        )
+
+        await network.processAll()
+
+        const results = (results) => results.flatMap((res) => res.feed)
+        const paginator = async (cursor?: string) => {
+          const res = await agent.api.app.bsky.feed.getFeed(
+            { feed: feedUriAll, cursor, limit: 2 },
+            { headers: await network.serviceHeaders(alice, gen.did) },
+          )
+          return res.data
+        }
+
+        const paginatedAll: FeedViewPost[] = results(
+          await paginateAll(paginator),
+        )
+        const hiddenReply = paginatedAll.find((item) => {
+          return item.post.uri === replyUri.toString()
+        })
+
+        expect(hiddenReply).toBe(undefined)
+
+        // cleanup
+        await pdsAgent.api.app.bsky.feed.threadgate.delete(
+          {
+            repo: sc.dids.alice,
+            rkey: rootUri.rkey,
+          },
+          sc.getHeaders(sc.dids.alice),
+        )
+        await network.processAll()
+      })
+    })
+
     it('returns an upstream failure error when the feed is down.', async () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
