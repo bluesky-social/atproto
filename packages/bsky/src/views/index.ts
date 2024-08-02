@@ -35,6 +35,7 @@ import {
   Embed,
   EmbedBlocked,
   EmbedNotFound,
+  EmbedRemoved,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -887,6 +888,17 @@ export class Views {
     }
   }
 
+  embedRemoved(uri: string): { $type: string; record: EmbedRemoved } {
+    return {
+      $type: 'app.bsky.embed.record#view',
+      record: {
+        $type: 'app.bsky.embed.record#viewRemoved',
+        uri,
+        removed: true,
+      },
+    }
+  }
+
   embedBlocked(
     uri: string,
     state: HydrationState,
@@ -952,7 +964,7 @@ export class Views {
     ).toString()
     const postGate = state.postGates?.get(postGateRecordUri)
     if (Boolean(postGate?.record?.detachedQuotes?.includes(postUri))) {
-      return this.embedNotFound(uri)
+      return this.embedRemoved(uri)
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {

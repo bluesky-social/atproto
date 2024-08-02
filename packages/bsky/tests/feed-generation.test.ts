@@ -3,7 +3,7 @@ import { XRPCError } from '@atproto/xrpc'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
-import { isViewNotFound } from '@atproto/api/dist/client/types/app/bsky/embed/record'
+import { isViewRemoved } from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import {
   TestNetwork,
   TestFeedGen,
@@ -628,7 +628,7 @@ describe('feed generation', () => {
 
         expect(
           // @ts-ignore
-          isViewNotFound(detachedQP.post.embed.record),
+          isViewRemoved(detachedQP.post.embed.record),
         ).toBeTruthy()
 
         // cleanup

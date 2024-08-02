@@ -1,5 +1,5 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { isViewNotFound } from '@atproto/api/dist/client/types/app/bsky/embed/record'
+import { isViewRemoved } from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import {
   assertIsThreadViewPost,
@@ -399,7 +399,7 @@ describe('pds thread views', () => {
 
       expect(
         // @ts-ignore
-        isViewNotFound(root.data.thread.post.embed.record.record),
+        isViewRemoved(root.data.thread.post.embed.record.record),
       ).toBeTruthy()
 
       // cleanup
@@ -439,7 +439,7 @@ describe('pds thread views', () => {
 
       expect(
         // @ts-ignore
-        isViewNotFound(root.data.thread.post.embed.record.record),
+        isViewRemoved(root.data.thread.post.embed.record.record),
       ).toBeFalsy()
 
       // cleanup
