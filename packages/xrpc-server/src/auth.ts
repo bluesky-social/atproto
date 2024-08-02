@@ -10,7 +10,6 @@ type ServiceJwtParams = {
   exp?: number
   lxm: string | null
   keypair: crypto.Keypair
-  excludeNonce?: boolean
 }
 
 type ServiceJwtPayload = {
@@ -18,16 +17,16 @@ type ServiceJwtPayload = {
   aud: string
   exp: number
   lxm?: string
-  nonce?: string
+  jti?: string
 }
 
 export const createServiceJwt = async (
   params: ServiceJwtParams,
 ): Promise<string> => {
-  const { iss, aud, excludeNonce, keypair } = params
+  const { iss, aud, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
   const lxm = params.lxm ?? undefined
-  const nonce = excludeNonce ? undefined : await crypto.randomStr(16, 'hex')
+  const jti = await crypto.randomStr(16, 'hex')
   const header = {
     typ: 'JWT',
     alg: keypair.jwtAlg,
@@ -37,7 +36,7 @@ export const createServiceJwt = async (
     aud,
     exp,
     lxm,
-    nonce,
+    jti,
   })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
   const toSign = ui8.fromString(toSignStr, 'utf8')
