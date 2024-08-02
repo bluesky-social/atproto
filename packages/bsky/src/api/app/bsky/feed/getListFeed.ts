@@ -1,7 +1,11 @@
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import AppContext from '../../../../context'
-import { clearlyBadCursor, resHeaders } from '../../../util'
+import {
+  clearlyBadCursor,
+  resHeaders,
+  isFeedPostHiddenReply,
+} from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrateCtx,
@@ -99,9 +103,14 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration),
-  )
+  const feed = mapDefined(skeleton.items, (item) => {
+    const post = ctx.views.feedViewPost(item, hydration)
+    if (!post) return
+    if (isFeedPostHiddenReply({ post, hydration })) {
+      return
+    }
+    return post
+  })
   return { feed, cursor: skeleton.cursor }
 }
 
