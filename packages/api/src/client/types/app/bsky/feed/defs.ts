@@ -12,6 +12,7 @@ import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
+import * as AppBskyFeedThreadgate from './threadgate'
 import * as AppBskyGraphDefs from '../graph/defs'
 
 export interface PostView {
@@ -299,7 +300,7 @@ export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
 export interface ThreadgateView {
   uri?: string
   cid?: string
-  record?: {}
+  record?: AppBskyFeedThreadgate.Record
   lists?: AppBskyGraphDefs.ListViewBasic[]
   [k: string]: unknown
 }
