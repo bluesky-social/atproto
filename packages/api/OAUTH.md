@@ -1,9 +1,8 @@
-# Oauth based authentication in a PWA
+# OAuth Client Quickstart
 
-## Introduction
-
-This document describes how to implement OAuth based authentication in a PWA, to
-communicate with Bluesky's [[ATPROTO]] API.
+This document describes how to implement OAuth based authentication in a
+browser-based Progressive Web App (PWA), to communicate with
+[atproto](https://atproto.com) API services.
 
 ## Prerequisites
 
@@ -25,7 +24,7 @@ communicate with Bluesky's [[ATPROTO]] API.
 ## Step 1: Create your client metadata
 
 Based on your hosting server endpoint, you will first need to choose a
-`client_id`. That `client_id` will be used to identify your client to Bluesky's
+`client_id`. That `client_id` will be used to identify your client to
 Authorization Servers. A `client_id` must be a URL that points to a JSON file
 that contains your client metadata. The client metadata **must** contain a
 `client_id` that is the URL used to access the metadata.
@@ -152,7 +151,7 @@ ngrok as the `client_id`:
 ```json
 {
   "client_id": "https://<RANDOM_VALUE>.ngrok.app/client-metadata.json",
-  "client_name": "My First ATPROTO OAuth App",
+  "client_name": "My First atproto OAuth App",
   "client_uri": "https://<RANDOM_VALUE>.ngrok.app",
   "redirect_uris": ["https://<RANDOM_VALUE>.ngrok.app/"],
   "grant_types": ["authorization_code"],
@@ -212,7 +211,7 @@ the `// TO BE CONTINUED` comment with the following code:
 
 ```typescript
 if (!agent) {
-  const handle = prompt('Enter your Bluesky handle to authenticate')
+  const handle = prompt('Enter your atproto handle to authenticate')
   if (!handle) throw new Error('Authentication process canceled by the user')
 
   const url = await oauthClient.authorize(handle)

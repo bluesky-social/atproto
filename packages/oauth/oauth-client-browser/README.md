@@ -1,4 +1,4 @@
-# ATPROTO OAuth Client for the Browser
+# atproto OAuth Client for the Browser
 
 This package provides an OAuth bases `@atproto/api` agent interface for the
 browser. It implements all the OAuth features required by [ATPROTO] (PKCE, DPoP,
@@ -146,7 +146,7 @@ following optional configuration options:
   response is returned to the client. Defaults to `fragment`.
 
 - `plcDirectoryUrl`: The URL of the PLC directory. This will typically not be
-  needed unless you run an entire ATPROTO stack locally. Defaults to
+  needed unless you run an entire atproto stack locally. Defaults to
   `https://plc.directory`.
 
 ## Usage
@@ -183,8 +183,8 @@ In order to initiate an OAuth flow, we must fist determine which PDS the
 authentication flow will be initiated from. This means that the user must
 provide one of the following information:
 
-- The user's ATPROTO handle
-- The user's ATPROTO DID
+- The user's handle
+- The user's DID
 - A PDS/Entryway URL
 
 Using that information, the OAuthClient will resolve all the needed information
@@ -282,7 +282,7 @@ The `client_id` will then be something like
 There is however a special case for loopback clients. A loopback client is a
 client that runs on `localhost`. In this case, the OAuth server will not be able
 to fetch the `client_metadata` object because `localhost` is not accessible from
-the outside. To work around this, ATPROTO OAuth server are required to support
+the outside. To work around this, atproto OAuth servers are required to support
 this case by providing an hard coded `client_metadata` object for the client.
 
 This has several restrictions:
