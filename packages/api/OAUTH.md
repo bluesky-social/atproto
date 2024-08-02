@@ -184,18 +184,19 @@ document.addEventListener('DOMContentLoaded', main)
 
 > [!CAUTION]
 >
-> By using `https://bsky.app/` as the `handleResolver`, you are using Bluesky's
-> servers as handle resolver. This has the advantage of not requiring you to
-> host your own handle resolver, but it also means that Bluesky will be able to
-> see the IP addresses of your users (and their associated handle). If you want
-> to avoid this, you will need to host your own handle resolver. If you are a
-> PDS self-hoster, you can use your PDS's URL here. If you rely on Bluesky's
-> handle resolver, you are required to inform your users that their IP addresses
-> will be shared with Bluesky in your app's privacy policy.
+> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifier to Bluesky,
+> a third party. While Bluesky has a declared privacy policy, both developers
+> and users of applications need to be informed of and aware of the privacy
+> implications of this arrangement. Application developers are encouraged to
+> improve user privacy by operating their own handle resolution service when
+> possible. If you are a PDS self-hoster, you can use your PDS's URL for
+> `handleResolver`.
 
-The `oauthClient` is now configured to communicate with Bluesky's Authorization.
-We can now initialize it in order to detect if the user is already
-authenticated. Replace the `// TO BE CONTINUED` comment with the following code:
+The `oauthClient` is now configured to communicate with the user's
+Authorization Service. We can now initialize it in order to detect if the user
+is already authenticated. Replace the `// TO BE CONTINUED` comment with the
+following code:
 
 ```typescript
 const result = await oauthClient.init()

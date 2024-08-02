@@ -93,11 +93,14 @@ backend service must be provided.
 
 > [!CAUTION]
 >
-> Not using a handle resolver service hosted by you will leak the user's IP
-> address (and associated ATPROTO handle) to any service you rely on to perform
-> the resolution. This is a privacy concern, that you should be aware of, and
-> that you **must** warn your users about. Bluesky declines any responsibility
-> in case of misusage of the handle resolver service.
+> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifier to Bluesky,
+> a third party. While Bluesky has a declared privacy policy, both developers
+> and users of applications need to be informed of and aware of the privacy
+> implications of this arrangement. Application developers are encouraged to
+> improve user privacy by operating their own handle resolution service when
+> possible. If you are a PDS self-hoster, you can use your PDS's URL for
+> `handleResolver`.
 
 If a `string` or `URL` object is used as `handleResolver`, the library will
 expect this value to be the URL of a service running the
