@@ -233,7 +233,7 @@ export class FeedHydrator {
         parsed.rkey,
       ).toString()
     })
-    const res = await this.dataplane.getPostgateRecords({ uris })
+    const res = await this.dataplane.getPostGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<PostGateRecord>(
         res.records[i],
@@ -247,7 +247,7 @@ export class FeedHydrator {
     uris: string[],
     includeTakedowns = false,
   ): Promise<PostGates> {
-    const res = await this.dataplane.getPostgateRecords({ uris })
+    const res = await this.dataplane.getPostGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<PostGateRecord>(
         res.records[i],

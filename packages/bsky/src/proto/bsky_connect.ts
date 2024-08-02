@@ -312,10 +312,10 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetPostgateRecords
+     * @generated from rpc bsky.Service.GetPostGateRecords
      */
-    getPostgateRecords: {
-      name: 'GetPostgateRecords',
+    getPostGateRecords: {
+      name: 'GetPostGateRecords',
       I: GetPostGateRecordsRequest,
       O: GetPostGateRecordsResponse,
       kind: MethodKind.Unary,
