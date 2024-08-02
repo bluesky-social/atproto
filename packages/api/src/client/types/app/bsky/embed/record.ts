@@ -38,6 +38,7 @@ export interface View {
     | ViewRecord
     | ViewNotFound
     | ViewBlocked
+    | ViewRemoved
     | AppBskyFeedDefs.GeneratorView
     | AppBskyGraphDefs.ListView
     | AppBskyLabelerDefs.LabelerView
@@ -124,4 +125,22 @@ export function isViewBlocked(v: unknown): v is ViewBlocked {
 
 export function validateViewBlocked(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.record#viewBlocked', v)
+}
+
+export interface ViewRemoved {
+  uri: string
+  removed: true
+  [k: string]: unknown
+}
+
+export function isViewRemoved(v: unknown): v is ViewRemoved {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.record#viewRemoved'
+  )
+}
+
+export function validateViewRemoved(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.record#viewRemoved', v)
 }

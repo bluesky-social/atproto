@@ -4971,6 +4971,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
+              'lex:app.bsky.embed.record#viewRemoved',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
               'lex:app.bsky.labeler.defs#labelerView',
@@ -5062,6 +5063,20 @@ export const schemaDict = {
           author: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      viewRemoved: {
+        type: 'object',
+        required: ['uri', 'removed'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          removed: {
+            type: 'boolean',
+            const: true,
           },
         },
       },
