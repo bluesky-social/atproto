@@ -79,8 +79,9 @@ Here is an example client metadata.
 > [!NOTE]
 >
 > To mitigate phishing attacks, the Authentication Server will typically _not_
-> display the `client_uri`, `logo_uri` to the user. If you don't see your logo
+> display the `client_uri` or `logo_uri` to the user. If you don't see your logo
 > or client name during the authentication process, don't worry, this is normal.
+> The `client_name` _is_ generally displayed for all clients.
 
 Upload this JSON file so that it is accessible at the URL you chose for your
 `client_id`.
