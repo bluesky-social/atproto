@@ -6,13 +6,11 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton, AtUri } from '@atproto/api'
+import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
 import AppContext from '../../../../context'
 import {
   HydrationFnInput,

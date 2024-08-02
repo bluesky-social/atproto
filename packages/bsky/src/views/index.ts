@@ -964,7 +964,7 @@ export class Views {
       urip.rkey,
     ).toString()
     const postGate = state.postGates?.get(postGateRecordUri)
-    if (Boolean(postGate?.record?.detachedQuotes?.includes(postUri))) {
+    if (postGate?.record?.detachedQuotes?.includes(postUri)) {
       return this.embedRemoved(uri)
     }
 
