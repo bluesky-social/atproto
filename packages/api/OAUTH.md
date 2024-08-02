@@ -1,12 +1,12 @@
 # OAuth Client Quickstart
 
 This document describes how to implement OAuth based authentication in a
-browser-based Progressive Web App (PWA), to communicate with
+browser-based Single Page App (SPA), to communicate with
 [atproto](https://atproto.com) API services.
 
 ## Prerequisites
 
-- You need a web server, or at very least a static file server, to host your PWA.
+- You need a web server, or at very least a static file server, to host your SPA.
 
 > [!TIP]
 >
@@ -17,9 +17,9 @@ browser-based Progressive Web App (PWA), to communicate with
 > [!TIP]
 >
 > You can use a service like [GitHub Pages](https://pages.github.com/) to host
-> your client metadata and PWA for free.
+> your client metadata and SPA for free.
 
-- You must be able to build and deploy a PWA to your server.
+- You must be able to build and deploy a SPA to your server.
 
 ## Step 1: Create your client metadata
 
@@ -34,7 +34,7 @@ Here is an example client metadata.
 ```json
 {
   "client_id": "https://example.com/client-metadata.json",
-  "client_name": "Example PWA",
+  "client_name": "Example atproto Browser App",
   "client_uri": "https://example.com",
   "logo_uri": "https://example.com/logo.png",
   "tos_uri": "https://example.com/tos",
@@ -51,7 +51,7 @@ Here is an example client metadata.
 
 - `redirect_uris`: An array of URLs that will be used as the redirect URIs for
   the OAuth flow. This should typically contain a single URL that points to a
-  page on your PWA that will handle the OAuth response. This URL must be HTTPS.
+  page on your SPA that will handle the OAuth response. This URL must be HTTPS.
 
 - `client_id`: The URL where the client metadata is hosted. This field must be
   the exact same as the URL used to access the metadata.
@@ -86,9 +86,9 @@ Here is an example client metadata.
 Upload this JSON file so that it is accessible at the URL you chose for your
 `client_id`.
 
-## Step 2: Setup you PWA
+## Step 2: Setup you SPA 
 
-Start by setting up your PWA. You can use any framework you like, or none at
+Start by setting up your SPA. You can use any framework you like, or none at
 all. In this example, we will use TypeScript and Parcel, with plain JavaScript.
 
 ```bash
@@ -130,7 +130,7 @@ Create an `src/index.html` file with the following content:
 And an `src/app.ts` file, with the following content:
 
 ```typescript
-console.log('Hello from PWA!')
+console.log('Hello from atproto OAuth example app!')
 ```
 
 Start the app in development mode:
