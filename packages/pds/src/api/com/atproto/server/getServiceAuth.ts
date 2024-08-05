@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
       if (
         !auth.credentials.isPrivileged &&
         lxm &&
-        PRIVILEGED_METHODS.includes(lxm)
+        PRIVILEGED_METHODS.has(lxm)
       ) {
         throw new InvalidRequestError(
           `cannot request a service auth token for the following method with an app password: ${lxm}`,

@@ -1,6 +1,5 @@
-import z from 'zod'
 import * as common from '@atproto/common'
-import { MINUTE, check } from '@atproto/common'
+import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import * as ui8 from 'uint8arrays'
 import { AuthRequiredError } from './types'
@@ -11,7 +10,6 @@ type ServiceJwtParams = {
   exp?: number
   lxm: string | null
   keypair: crypto.Keypair
-  excludeNonce?: boolean
 }
 
 type ServiceJwtPayload = {
@@ -19,16 +17,16 @@ type ServiceJwtPayload = {
   aud: string
   exp: number
   lxm?: string
-  nonce?: string
+  jti?: string
 }
 
 export const createServiceJwt = async (
   params: ServiceJwtParams,
 ): Promise<string> => {
-  const { iss, aud, excludeNonce, keypair } = params
+  const { iss, aud, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
   const lxm = params.lxm ?? undefined
-  const nonce = excludeNonce ? undefined : await crypto.randomStr(16, 'hex')
+  const jti = await crypto.randomStr(16, 'hex')
   const header = {
     typ: 'JWT',
     alg: keypair.jwtAlg,
@@ -38,7 +36,7 @@ export const createServiceJwt = async (
     aud,
     exp,
     lxm,
-    nonce,
+    jti,
   })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
   const toSign = ui8.fromString(toSignStr, 'utf8')
@@ -81,7 +79,7 @@ export const verifyJwt = async (
   }
   if (lxm !== null && lxm !== payload.lxm) {
     throw new AuthRequiredError(
-      `missing jwt lexicon method: ${lxm}`,
+      `missing jwt lexicon method ("lxm"): ${lxm}`,
       'MissingJwtMethod',
     )
   }
@@ -138,19 +136,16 @@ const parseB64UrlToJson = (b64: string) => {
 
 const parsePayload = (b64: string): ServiceJwtPayload => {
   const payload = parseB64UrlToJson(b64)
-  if (!payload || typeof payload !== 'object') {
-    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
-  }
-  if (!check.is(payload, jwtPayloadSchema)) {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    typeof payload.iss !== 'string' ||
+    typeof payload.aud !== 'string' ||
+    typeof payload.exp !== 'number' ||
+    (payload.lxm && typeof payload.lxm !== 'string') ||
+    (payload.nonce && typeof payload.nonce !== 'string')
+  ) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   return payload
 }
-
-const jwtPayloadSchema = z.object({
-  iss: z.string(),
-  aud: z.string(),
-  exp: z.number(),
-  lxm: z.string().optional(),
-  nonce: z.string().optional(),
-})

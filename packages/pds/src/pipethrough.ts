@@ -22,16 +22,14 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
     try {
       const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req })
-      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.includes(nsid)) {
+      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(nsid)) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
-      const headers = await formatHeaders(
-        ctx,
-        req,
+      const headers = await formatHeaders(ctx, req, {
         aud,
-        nsid,
-        auth.credentials.did,
-      )
+        lxm: nsid,
+        requester: auth.credentials.did,
+      })
       const body: webStream.ReadableStream<Uint8Array> =
         stream.Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
@@ -48,12 +46,14 @@ export const pipethrough = async (
   ctx: AppContext,
   req: express.Request,
   requester: string | null,
-  audOverride?: string,
-  lxmOverride?: string,
+  override: {
+    aud?: string
+    lxm?: string
+  } = {},
 ): Promise<HandlerPipeThrough> => {
-  const { url, aud, nsid } = await formatUrlAndAud(ctx, req, audOverride)
-  const lxm = lxmOverride ?? nsid
-  const headers = await formatHeaders(ctx, req, aud, lxm, requester)
+  const { url, aud, nsid } = await formatUrlAndAud(ctx, req, override.aud)
+  const lxm = override.lxm ?? nsid
+  const headers = await formatHeaders(ctx, req, { aud, lxm, requester })
   const reqInit = formatReqInit(req, headers)
   const res = await makeRequest(url, reqInit)
   return parseProxyRes(res)
@@ -65,8 +65,8 @@ export const pipethroughProcedure = async (
   requester: string | null,
   body?: LexValue,
 ): Promise<HandlerPipeThrough> => {
-  const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
-  const headers = await formatHeaders(ctx, req, aud, nsid, requester)
+  const { url, aud, nsid: lxm } = await formatUrlAndAud(ctx, req)
+  const headers = await formatHeaders(ctx, req, { aud, lxm, requester })
   const encodedBody = body
     ? new TextEncoder().encode(stringifyLex(body))
     : undefined
@@ -108,10 +108,13 @@ export const formatUrlAndAud = async (
 export const formatHeaders = async (
   ctx: AppContext,
   req: express.Request,
-  aud: string,
-  lxm: string,
-  requester: string | null,
+  opts: {
+    aud: string
+    lxm: string
+    requester: string | null
+  },
 ): Promise<{ authorization?: string }> => {
+  const { aud, lxm, requester } = opts
   const headers = requester
     ? (await ctx.serviceAuthHeaders(requester, aud, lxm)).headers
     : {}
@@ -255,7 +258,7 @@ export const parseProxyRes = async (res: Response) => {
 // Utils
 // -------------------
 
-export const PRIVILEGED_METHODS = [
+export const PRIVILEGED_METHODS = new Set([
   ids.ChatBskyActorDeleteAccount,
   ids.ChatBskyActorExportAccountData,
   ids.ChatBskyConvoDeleteMessageForSelf,
@@ -271,7 +274,7 @@ export const PRIVILEGED_METHODS = [
   ids.ChatBskyConvoUnmuteConvo,
   ids.ChatBskyConvoUpdateRead,
   ids.ComAtprotoServerCreateAccount,
-]
+])
 
 const defaultService = (
   ctx: AppContext,

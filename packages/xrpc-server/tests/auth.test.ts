@@ -93,7 +93,7 @@ describe('Auth', () => {
     // should expire within the minute when no exp is provided
     expect(validated.exp).toBeGreaterThan(Date.now() / 1000)
     expect(validated.exp).toBeLessThan(Date.now() / 1000 + 60)
-    expect(typeof validated.nonce).toBe('string')
+    expect(typeof validated.jti).toBe('string')
     expect(validated.lxm).toBeUndefined()
   })
 
