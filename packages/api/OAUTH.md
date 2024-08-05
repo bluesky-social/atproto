@@ -6,7 +6,7 @@ browser-based Single Page App (SPA), to communicate with
 
 ## Prerequisites
 
-- You need a web server, or at very least a static file server, to host your SPA.
+- You need a web server - or at the very least a static file server - to host your SPA.
 
 > [!TIP]
 >
