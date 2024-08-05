@@ -1,5 +1,23 @@
 # @atproto/api
 
+## 0.12.28
+
+### Patch Changes
+
+- [#2676](https://github.com/bluesky-social/atproto/pull/2676) [`951a3df15`](https://github.com/bluesky-social/atproto/commit/951a3df15aa9c1f5b0a2b66cfb0e2eaf6198fe41) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove `app.bsky.feed.detach` record, to be replaced by `app.bsky.feed.postgate` record in a future release.
+
+## 0.12.27
+
+### Patch Changes
+
+- [#2664](https://github.com/bluesky-social/atproto/pull/2664) [`ff803fd2b`](https://github.com/bluesky-social/atproto/commit/ff803fd2bfad92eec5f88ee9b347c174731ef4ec) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `app.bsky.feed.detach` record lexicons.
+
+## 0.12.26
+
+### Patch Changes
+
+- [#2276](https://github.com/bluesky-social/atproto/pull/2276) [`77c5306d2`](https://github.com/bluesky-social/atproto/commit/77c5306d2a40d7edd20def73163b8f93f3a30ee7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Updates muted words lexicons to include new attributes `id`, `actorTarget`, and `expiresAt`. Adds and updates methods in API SDK for better management of muted words.
+
 ## 0.12.25
 
 ### Patch Changes

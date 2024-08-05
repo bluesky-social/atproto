@@ -45,7 +45,7 @@ export interface TokenStore {
 
   /**
    * Find a token by its refresh token. Note that previous refresh tokens
-   * should also return the token. The data model is reponsible for storing
+   * should also return the token. The data model is responsible for storing
    * old refresh tokens when a new one is issued.
    */
   findTokenByRefreshToken(

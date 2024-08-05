@@ -332,7 +332,7 @@ export interface Interaction {
     | 'app.bsky.feed.defs#interactionQuote'
     | 'app.bsky.feed.defs#interactionShare'
     | (string & {})
-  /** Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton. */
+  /** Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton. */
   feedContext?: string
   [k: string]: unknown
 }

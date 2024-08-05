@@ -141,6 +141,8 @@ function checkMutedWords(
     return false
   }
 
+  const postAuthor = subject.author
+
   if (AppBskyFeedPost.isRecord(subject.record)) {
     // post text
     if (
@@ -150,6 +152,7 @@ function checkMutedWords(
         facets: subject.record.facets,
         outlineTags: subject.record.tags,
         languages: subject.record.langs,
+        actor: postAuthor,
       })
     ) {
       return true
@@ -166,6 +169,7 @@ function checkMutedWords(
             mutedWords,
             text: image.alt,
             languages: subject.record.langs,
+            actor: postAuthor,
           })
         ) {
           return true
@@ -179,6 +183,7 @@ function checkMutedWords(
     if (AppBskyEmbedRecord.isViewRecord(subject.embed.record)) {
       if (AppBskyFeedPost.isRecord(subject.embed.record.value)) {
         const embeddedPost = subject.embed.record.value
+        const embedAuthor = subject.embed.record.author
 
         // quoted post text
         if (
@@ -188,6 +193,7 @@ function checkMutedWords(
             facets: embeddedPost.facets,
             outlineTags: embeddedPost.tags,
             languages: embeddedPost.langs,
+            actor: embedAuthor,
           })
         ) {
           return true
@@ -201,6 +207,7 @@ function checkMutedWords(
                 mutedWords,
                 text: image.alt,
                 languages: embeddedPost.langs,
+                actor: embedAuthor,
               })
             ) {
               return true
@@ -216,6 +223,7 @@ function checkMutedWords(
               mutedWords,
               text: external.title + ' ' + external.description,
               languages: [],
+              actor: embedAuthor,
             })
           ) {
             return true
@@ -231,6 +239,7 @@ function checkMutedWords(
                 mutedWords,
                 text: external.title + ' ' + external.description,
                 languages: [],
+                actor: embedAuthor,
               })
             ) {
               return true
@@ -247,6 +256,7 @@ function checkMutedWords(
                   languages: AppBskyFeedPost.isRecord(embeddedPost.record)
                     ? embeddedPost.langs
                     : [],
+                  actor: embedAuthor,
                 })
               ) {
                 return true
@@ -264,6 +274,7 @@ function checkMutedWords(
           mutedWords,
           text: external.title + ' ' + external.description,
           languages: [],
+          actor: postAuthor,
         })
       ) {
         return true
@@ -274,6 +285,8 @@ function checkMutedWords(
       AppBskyEmbedRecordWithMedia.isView(subject.embed) &&
       AppBskyEmbedRecord.isViewRecord(subject.embed.record.record)
     ) {
+      const embedAuthor = subject.embed.record.record.author
+
       // quoted post text
       if (AppBskyFeedPost.isRecord(subject.embed.record.record.value)) {
         const post = subject.embed.record.record.value
@@ -284,6 +297,7 @@ function checkMutedWords(
             facets: post.facets,
             outlineTags: post.tags,
             languages: post.langs,
+            actor: embedAuthor,
           })
         ) {
           return true
@@ -300,6 +314,7 @@ function checkMutedWords(
               languages: AppBskyFeedPost.isRecord(subject.record)
                 ? subject.record.langs
                 : [],
+              actor: embedAuthor,
             })
           ) {
             return true
