@@ -246,6 +246,16 @@ export class AuthVerifier {
     }
   }
 
+  accessOrUserServiceAuth =
+    (opts: Partial<AccessOpts> = {}) =>
+    async (ctx: ReqCtx): Promise<UserServiceAuthOutput | AccessOutput> => {
+      try {
+        return await this.accessStandard(opts)(ctx)
+      } catch {
+        return await this.userServiceAuth(ctx)
+      }
+    }
+
   modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
     if (!this.dids.modService) {
       throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
