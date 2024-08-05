@@ -343,85 +343,16 @@ function iterableToReadableStream(
     return ReadableStream.from(iterable)
   }
 
-  // Note, in environments where ReadableStream is not available either, we
-  // *could* load the iterable into memory and create an Arraybuffer from it.
-  // However, this would be a bad idea for large iterables. In order to keep
-  // things simple, we'll just allow the anonymous ReadableStream constructor
-  // to throw an error in those environments, hinting the user of the lib to find
-  // an alternate solution in that case (e.g. use a Blob if available).
+  // If you see this error, consider using a polyfill for ReadableStream. For
+  // example, the "web-streams-polyfill" package:
+  // https://github.com/MattiasBuelens/web-streams-polyfill
 
-  let generator: AsyncGenerator<unknown, void, undefined>
-  return new ReadableStream<Uint8Array>({
-    type: 'bytes',
-    start() {
-      // Wrap the iterable in an async generator to handle both sync and async
-      // iterables, and make sure that the return() method exists.
-      generator = (async function* () {
-        yield* iterable
-      })()
-    },
-    async pull(controller: ReadableStreamDefaultController) {
-      const { done, value } = await generator.next()
-      if (done) {
-        controller.close()
-      } else {
-        try {
-          const buf = toUint8Array(value)
-          if (buf) controller.enqueue(buf)
-        } catch (cause) {
-          // ReadableStream won't call cancel() if the stream is errored.
-          await generator.return()
-
-          controller.error(
-            new TypeError(
-              'Converting iterable body to ReadableStream requires Buffer, ArrayBuffer or string values',
-              { cause },
-            ),
-          )
-        }
-      }
-    },
-    async cancel() {
-      await generator.return()
-    },
-  })
+  throw new TypeError(
+    'ReadableStream.from() is not supported in this environment. ' +
+      'It is required to support using iterables as the request body. ' +
+      'Consider using a polyfill or re-write your code to use a different body type.',
+  )
 }
-
-// Browsers don't have Buffer. This syntax is to avoid bundlers from including
-// a Buffer polyfill in the bundle if it's not used elsewhere.
-const globalName = `${{ toString: () => 'Buf' }}fer` as 'Buffer'
-const Buffer =
-  typeof globalThis[globalName] === 'function'
-    ? globalThis[globalName]
-    : undefined
-
-const toUint8Array: (value: unknown) => Uint8Array | undefined = Buffer
-  ? (value) => {
-      // @ts-expect-error Buffer.from will throw if value is not a valid input
-      const buf = Buffer.isBuffer(value) ? value : Buffer.from(value)
-      return buf.byteLength ? new Uint8Array(buf) : undefined
-    }
-  : (value) => {
-      if (value instanceof ArrayBuffer) {
-        const buf = new Uint8Array(value)
-        return buf.byteLength ? buf : undefined
-      }
-
-      // Simulate Buffer.from() behavior for strings and and coercion
-      if (typeof value === 'string') {
-        return value.length ? new TextEncoder().encode(value) : undefined
-      } else if (typeof value?.valueOf === 'function') {
-        const coerced = value.valueOf()
-        if (coerced instanceof ArrayBuffer) {
-          const buf = new Uint8Array(coerced)
-          return buf.byteLength ? buf : undefined
-        } else if (typeof coerced === 'string') {
-          return coerced.length ? new TextEncoder().encode(coerced) : undefined
-        }
-      }
-
-      throw new TypeError(`Unable to convert "${typeof value}" to Uint8Array`)
-    }
 
 export function httpResponseBodyParse(
   mimeType: string | null,
