@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.4.47
+
+### Patch Changes
+
+- [#2688](https://github.com/bluesky-social/atproto/pull/2688) [`269cbc87c`](https://github.com/bluesky-social/atproto/commit/269cbc87c5ec9d65d1d479269ac5e91dffbb186c) Thanks [@dholms](https://github.com/dholms)! - Inspect bearer auth token on uploadBlob
+
 ## 0.4.46
 
 ### Patch Changes
