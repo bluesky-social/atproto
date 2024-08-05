@@ -10,6 +10,10 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The DID of the service that the token will be used to authenticate with */
   aud: string
+  /** The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope. */
+  exp?: number
+  /** Lexicon (XRPC) method to bind the requested token to */
+  lxm?: string
 }
 
 export type InputSchema = undefined
@@ -29,8 +33,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class BadExpirationError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'BadExpiration') return new BadExpirationError(e)
   }
   return e
 }

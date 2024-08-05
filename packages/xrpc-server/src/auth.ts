@@ -4,14 +4,20 @@ import * as crypto from '@atproto/crypto'
 import * as ui8 from 'uint8arrays'
 import { AuthRequiredError } from './types'
 
-type ServiceJwtPayload = {
+type ServiceJwtParams = {
   iss: string
   aud: string
   exp?: number
+  lxm: string | null
+  keypair: crypto.Keypair
 }
 
-type ServiceJwtParams = ServiceJwtPayload & {
-  keypair: crypto.Keypair
+type ServiceJwtPayload = {
+  iss: string
+  aud: string
+  exp: number
+  lxm?: string
+  jti?: string
 }
 
 export const createServiceJwt = async (
@@ -19,15 +25,19 @@ export const createServiceJwt = async (
 ): Promise<string> => {
   const { iss, aud, keypair } = params
   const exp = params.exp ?? Math.floor((Date.now() + MINUTE) / 1000)
+  const lxm = params.lxm ?? undefined
+  const jti = await crypto.randomStr(16, 'hex')
   const header = {
     typ: 'JWT',
     alg: keypair.jwtAlg,
   }
-  const payload = {
+  const payload = common.noUndefinedVals({
     iss,
     aud,
     exp,
-  }
+    lxm,
+    jti,
+  })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
   const toSign = ui8.fromString(toSignStr, 'utf8')
   const sig = await keypair.sign(toSign)
@@ -48,6 +58,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
+  lxm: string | null, // null indicates to skip the lxm check
   getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
@@ -64,6 +75,12 @@ export const verifyJwt = async (
     throw new AuthRequiredError(
       'jwt audience does not match service did',
       'BadJwtAudience',
+    )
+  }
+  if (lxm !== null && lxm !== payload.lxm) {
+    throw new AuthRequiredError(
+      `missing jwt lexicon method ("lxm"): ${lxm}`,
+      'MissingJwtMethod',
     )
   }
 
@@ -117,20 +134,18 @@ const parseB64UrlToJson = (b64: string) => {
   return JSON.parse(common.b64UrlToUtf8(b64))
 }
 
-const parsePayload = (b64: string): JwtPayload => {
+const parsePayload = (b64: string): ServiceJwtPayload => {
   const payload = parseB64UrlToJson(b64)
-  if (!payload || typeof payload !== 'object') {
-    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
-  } else if (typeof payload.exp !== 'number') {
-    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
-  } else if (typeof payload.iss !== 'string') {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    typeof payload.iss !== 'string' ||
+    typeof payload.aud !== 'string' ||
+    typeof payload.exp !== 'number' ||
+    (payload.lxm && typeof payload.lxm !== 'string') ||
+    (payload.nonce && typeof payload.nonce !== 'string')
+  ) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   return payload
-}
-
-type JwtPayload = {
-  iss: string
-  aud: string
-  exp: number
 }
