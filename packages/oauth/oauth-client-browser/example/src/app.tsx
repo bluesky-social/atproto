@@ -5,8 +5,17 @@ import LoginForm from './login-form'
 import { useOAuth } from './oauth'
 
 const client = new BrowserOAuthClient({
-  plcDirectoryUrl: 'http://localhost:2582', // dev-env
-  handleResolver: 'http://localhost:2584', // dev-env
+  // dev-env
+  // plcDirectoryUrl: 'http://localhost:2582',
+  // handleResolver: 'http://localhost:2584',
+
+  // staging
+  // plcDirectoryUrl: 'https://plc.staging.bsky.dev',
+  // handleResolver: 'https://staging.bsky.dev',
+
+  // production
+  plcDirectoryUrl: undefined,
+  handleResolver: 'https://bsky.app',
 })
 
 function App() {

@@ -43,6 +43,7 @@ import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
+import putPreferences from './app/bsky/notification/putPreferences'
 import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
@@ -105,6 +106,7 @@ export default function (server: Server, ctx: AppContext) {
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
   updateSeen(server, ctx)
+  putPreferences(server, ctx)
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)

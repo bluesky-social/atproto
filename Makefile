@@ -24,7 +24,7 @@ run-dev-env: ## Run a "development environment" shell
 
 .PHONY: run-dev-env-logged
 run-dev-env-logged: ## Run a "development environment" shell (with logging)
-	LOG_ENABLED=true cd packages/dev-env; NODE_ENV=development pnpm run start | pnpm exec pino-pretty
+	cd packages/dev-env; LOG_ENABLED=true NODE_ENV=development pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files

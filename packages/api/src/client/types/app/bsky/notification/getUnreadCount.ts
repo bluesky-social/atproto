@@ -8,6 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
+  priority?: boolean
   seenAt?: string
 }
 

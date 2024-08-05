@@ -151,6 +151,7 @@ export class TestOzone {
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,
+      lxm: null,
       keypair: account.key,
     })
     return { authorization: `Bearer ${jwt}` }

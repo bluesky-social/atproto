@@ -50,17 +50,20 @@ const skeleton = async (
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
   const viewer = params.hydrateCtx.viewer
+  const priority = params.priority ?? (await getPriority(ctx, viewer))
   if (clearlyBadCursor(params.cursor)) {
-    return { notifs: [] }
+    return { notifs: [], priority }
   }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({
       actorDid: viewer,
+      priority,
       cursor: params.cursor,
       limit: params.limit,
     }),
     ctx.hydrator.dataplane.getNotificationSeen({
       actorDid: viewer,
+      priority,
     }),
   ])
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
@@ -72,6 +75,7 @@ const skeleton = async (
   return {
     notifs: res.notifications,
     cursor: res.cursor || undefined,
+    priority,
     lastSeenNotifs: lastSeenDate?.toISOString(),
   }
 }
@@ -105,7 +109,12 @@ const presentation = (
   const notifications = mapDefined(notifs, (notif) =>
     ctx.views.notification(notif, lastSeenNotifs, hydration),
   )
-  return { notifications, cursor, seenAt: skeleton.lastSeenNotifs }
+  return {
+    notifications,
+    cursor,
+    priority: skeleton.priority,
+    seenAt: skeleton.lastSeenNotifs,
+  }
 }
 
 type Context = {
@@ -119,6 +128,12 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   notifs: Notification[]
+  priority: boolean
   lastSeenNotifs?: string
   cursor?: string
+}
+
+const getPriority = async (ctx: Context, did: string) => {
+  const actors = await ctx.hydrator.actor.getActors([did])
+  return !!actors.get(did)?.priorityNotifications
 }
