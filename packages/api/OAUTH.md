@@ -25,8 +25,8 @@ browser-based Single Page App (SPA), to communicate with
 
 Based on your hosting server endpoint, you will first need to choose a
 `client_id`. That `client_id` will be used to identify your client to
-Authorization Servers. A `client_id` must be a URL that points to a JSON file
-that contains your client metadata. The client metadata **must** contain a
+Authorization Servers. A `client_id` must be a URL pointing to a JSON file
+which contains your client metadata. The client metadata **must** contain a
 `client_id` that is the URL used to access the metadata.
 
 Here is an example client metadata.
