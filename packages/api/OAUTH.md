@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', main)
 > `handleResolver`.
 
 The `oauthClient` is now configured to communicate with the user's
-Authorization Service. We can now initialize it in order to detect if the user
+Authorization Service. You can now initialize it in order to detect if the user
 is already authenticated. Replace the `// TO BE CONTINUED` comment with the
 following code:
 
