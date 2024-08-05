@@ -1,9 +1,8 @@
 # atproto OAuth Client for NodeJS
 
 This package implements all the OAuth features required by [ATPROTO] (PKCE,
-etc.) to run in a NodeJS based environment. This could include desktop apps
-built with Electron, or traditional web app backends built with frameworks like
-Express.
+etc.) to run in a NodeJS based environment such as desktop apps built with
+Electron or traditional web app backends built with frameworks like Express.
 
 ## Setup
 
