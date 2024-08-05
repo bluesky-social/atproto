@@ -249,11 +249,14 @@ export class AuthVerifier {
   accessOrUserServiceAuth =
     (opts: Partial<AccessOpts> = {}) =>
     async (ctx: ReqCtx): Promise<UserServiceAuthOutput | AccessOutput> => {
-      try {
-        return await this.accessStandard(opts)(ctx)
-      } catch {
-        return await this.userServiceAuth(ctx)
+      const token = bearerTokenFromReq(ctx.req)
+      if (token) {
+        const payload = jose.decodeJwt(token)
+        if (payload['lxm']) {
+          return this.userServiceAuth(ctx)
+        }
       }
+      return this.accessStandard(opts)(ctx)
     }
 
   modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
