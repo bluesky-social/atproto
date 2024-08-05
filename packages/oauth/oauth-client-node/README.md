@@ -39,7 +39,7 @@ const client = new NodeOAuthClientOptions({
     grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
     application_type: 'web',
-    token_endpoint_auth_method: 'client_secret_jwt',
+    token_endpoint_auth_method: 'private_key_jwt',
     dpop_bound_access_tokens: true,
     jwks_uri: 'https://my-app.com/jwks.json',
   },
