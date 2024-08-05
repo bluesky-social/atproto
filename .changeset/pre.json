@@ -40,6 +40,7 @@
     "@atproto/xrpc-server": "0.5.3"
   },
   "changesets": [
+    "brown-dryers-fail",
     "honest-hornets-approve",
     "purple-pans-shout",
     "rare-feet-happen"

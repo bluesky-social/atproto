@@ -1,5 +1,12 @@
 # @atproto/jwk-webcrypto
 
+## 0.1.2-rc.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/jwk-jose@0.1.2-rc.0
+
 ## 0.1.1
 
 ### Patch Changes

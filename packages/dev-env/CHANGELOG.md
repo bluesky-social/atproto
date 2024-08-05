@@ -1,5 +1,14 @@
 # @atproto/dev-env
 
+## 0.3.34-rc.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.43-rc.1
+  - @atproto/bsky@0.0.70-rc.0
+  - @atproto/ozone@0.1.32-rc.0
+
 ## 0.3.34-rc.0
 
 ### Patch Changes

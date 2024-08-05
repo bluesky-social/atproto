@@ -1,5 +1,14 @@
 # @atproto/oauth-client-node
 
+## 0.0.2-rc.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.1.2-rc.1
+  - @atproto/jwk-jose@0.1.2-rc.0
+  - @atproto/jwk-webcrypto@0.1.2-rc.0
+
 ## 0.0.2-rc.0
 
 ### Patch Changes

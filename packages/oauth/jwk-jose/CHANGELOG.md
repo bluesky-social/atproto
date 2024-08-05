@@ -1,5 +1,11 @@
 # @atproto/jwk-jose
 
+## 0.1.2-rc.0
+
+### Patch Changes
+
+- Misc fixes for confidential client usage
+
 ## 0.1.1
 
 ### Patch Changes

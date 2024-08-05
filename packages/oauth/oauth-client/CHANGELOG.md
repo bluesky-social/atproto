@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.1.2-rc.1
+
+### Patch Changes
+
+- Misc fixes for confidential client usage
+
 ## 0.1.2-rc.0
 
 ### Patch Changes
