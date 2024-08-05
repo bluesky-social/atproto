@@ -94,7 +94,7 @@ backend service must be provided.
 > [!CAUTION]
 >
 > Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
-> endpoint) will leak both user IP addresses and handle identifier to Bluesky,
+> endpoint) will leak both user IP addresses and handle identifiers to Bluesky,
 > a third party. While Bluesky has a declared privacy policy, both developers
 > and users of applications need to be informed of and aware of the privacy
 > implications of this arrangement. Application developers are encouraged to
