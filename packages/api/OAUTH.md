@@ -1,13 +1,12 @@
-# Oauth based authentication in a PWA
+# OAuth Client Quickstart
 
-## Introduction
-
-This document describes how to implement OAuth based authentication in a PWA, to
-communicate with Bluesky's [[ATPROTO]] API.
+This document describes how to implement OAuth based authentication in a
+browser-based Single Page App (SPA), to communicate with
+[atproto](https://atproto.com) API services.
 
 ## Prerequisites
 
-- You need a web server, or at very least a static file server, to host your PWA.
+- You need a web server - or at the very least a static file server - to host your SPA.
 
 > [!TIP]
 >
@@ -18,16 +17,16 @@ communicate with Bluesky's [[ATPROTO]] API.
 > [!TIP]
 >
 > You can use a service like [GitHub Pages](https://pages.github.com/) to host
-> your client metadata and PWA for free.
+> your client metadata and SPA for free.
 
-- You must be able to build and deploy a PWA to your server.
+- You must be able to build and deploy a SPA to your server.
 
 ## Step 1: Create your client metadata
 
 Based on your hosting server endpoint, you will first need to choose a
-`client_id`. That `client_id` will be used to identify your client to Bluesky's
-Authorization Servers. A `client_id` must be a URL that points to a JSON file
-that contains your client metadata. The client metadata **must** contain a
+`client_id`. That `client_id` will be used to identify your client to
+Authorization Servers. A `client_id` must be a URL pointing to a JSON file
+which contains your client metadata. The client metadata **must** contain a
 `client_id` that is the URL used to access the metadata.
 
 Here is an example client metadata.
@@ -35,7 +34,7 @@ Here is an example client metadata.
 ```json
 {
   "client_id": "https://example.com/client-metadata.json",
-  "client_name": "Example PWA",
+  "client_name": "Example atproto Browser App",
   "client_uri": "https://example.com",
   "logo_uri": "https://example.com/logo.png",
   "tos_uri": "https://example.com/tos",
@@ -52,7 +51,7 @@ Here is an example client metadata.
 
 - `redirect_uris`: An array of URLs that will be used as the redirect URIs for
   the OAuth flow. This should typically contain a single URL that points to a
-  page on your PWA that will handle the OAuth response. This URL must be HTTPS.
+  page on your SPA that will handle the OAuth response. This URL must be HTTPS.
 
 - `client_id`: The URL where the client metadata is hosted. This field must be
   the exact same as the URL used to access the metadata.
@@ -80,15 +79,16 @@ Here is an example client metadata.
 > [!NOTE]
 >
 > To mitigate phishing attacks, the Authentication Server will typically _not_
-> display the `client_uri`, `logo_uri` to the user. If you don't see your logo
-> or client name during the authentication process, don't worry, this is normal.
+> display the `client_uri` or `logo_uri` to the user. If you don't see your logo
+> or client name during the authentication process, don't worry. This is normal.
+> The `client_name` _is_ generally displayed for all clients.
 
 Upload this JSON file so that it is accessible at the URL you chose for your
 `client_id`.
 
-## Step 2: Setup you PWA
+## Step 2: Setup your SPA 
 
-Start by setting up your PWA. You can use any framework you like, or none at
+Start by setting up your SPA. You can use any framework you like, or none at
 all. In this example, we will use TypeScript and Parcel, with plain JavaScript.
 
 ```bash
@@ -130,7 +130,7 @@ Create an `src/index.html` file with the following content:
 And an `src/app.ts` file, with the following content:
 
 ```typescript
-console.log('Hello from PWA!')
+console.log('Hello from atproto OAuth example app!')
 ```
 
 Start the app in development mode:
@@ -152,7 +152,7 @@ ngrok as the `client_id`:
 ```json
 {
   "client_id": "https://<RANDOM_VALUE>.ngrok.app/client-metadata.json",
-  "client_name": "My First ATPROTO OAuth App",
+  "client_name": "My First atproto OAuth App",
   "client_uri": "https://<RANDOM_VALUE>.ngrok.app",
   "redirect_uris": ["https://<RANDOM_VALUE>.ngrok.app/"],
   "grant_types": ["authorization_code"],
@@ -184,18 +184,19 @@ document.addEventListener('DOMContentLoaded', main)
 
 > [!CAUTION]
 >
-> By using `https://bsky.app/` as the `handleResolver`, you are using Bluesky's
-> servers as handle resolver. This has the advantage of not requiring you to
-> host your own handle resolver, but it also means that Bluesky will be able to
-> see the IP addresses of your users (and their associated handle). If you want
-> to avoid this, you will need to host your own handle resolver. If you are a
-> PDS self-hoster, you can use your PDS's URL here. If you rely on Bluesky's
-> handle resolver, you are required to inform your users that their IP addresses
-> will be shared with Bluesky in your app's privacy policy.
+> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifier to Bluesky,
+> a third party. While Bluesky has a declared privacy policy, both developers
+> and users of applications need to be informed of and aware of the privacy
+> implications of this arrangement. Application developers are encouraged to
+> improve user privacy by operating their own handle resolution service when
+> possible. If you are a PDS self-hoster, you can use your PDS's URL for
+> `handleResolver`.
 
-The `oauthClient` is now configured to communicate with Bluesky's Authorization.
-We can now initialize it in order to detect if the user is already
-authenticated. Replace the `// TO BE CONTINUED` comment with the following code:
+The `oauthClient` is now configured to communicate with the user's
+Authorization Service. You can now initialize it in order to detect if the user
+is already authenticated. Replace the `// TO BE CONTINUED` comment with the
+following code:
 
 ```typescript
 const result = await oauthClient.init()
@@ -212,7 +213,7 @@ the `// TO BE CONTINUED` comment with the following code:
 
 ```typescript
 if (!agent) {
-  const handle = prompt('Enter your Bluesky handle to authenticate')
+  const handle = prompt('Enter your atproto handle to authenticate')
   if (!handle) throw new Error('Authentication process canceled by the user')
 
   const url = await oauthClient.authorize(handle)
