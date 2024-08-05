@@ -145,7 +145,7 @@ export class BskyAgent extends AtpAgent {
       detailed: true,
     })
 
-    // assemble a map of labeler dids to the interpretted label value definitions
+    // assemble a map of labeler dids to the interpreted label value definitions
     const labelDefs = {}
     if (labelers.data) {
       for (const labeler of labelers.data
