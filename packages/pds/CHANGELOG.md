@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.4.46
+
+### Patch Changes
+
+- [#2668](https://github.com/bluesky-social/atproto/pull/2668) [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c) Thanks [@dholms](https://github.com/dholms)! - Add lxm and nonce to signed service auth tokens.
+
+- Updated dependencies [[`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c), [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c)]:
+  - @atproto/api@0.12.29
+  - @atproto/xrpc-server@0.6.0
+
 ## 0.4.45
 
 ### Patch Changes
