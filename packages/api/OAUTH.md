@@ -86,7 +86,7 @@ Here is an example client metadata.
 Upload this JSON file so that it is accessible at the URL you chose for your
 `client_id`.
 
-## Step 2: Setup you SPA 
+## Step 2: Setup your SPA 
 
 Start by setting up your SPA. You can use any framework you like, or none at
 all. In this example, we will use TypeScript and Parcel, with plain JavaScript.
