@@ -8,7 +8,9 @@ const DID_PLC_LENGTH = 32
 export { DID_PLC_PREFIX }
 
 export function isDidPlc(input: unknown): input is Did<'plc'> {
+  // Optimization: make cheap checks first
   if (typeof input !== 'string') return false
+
   try {
     checkDidPlc(input)
     return true
@@ -17,7 +19,16 @@ export function isDidPlc(input: unknown): input is Did<'plc'> {
   }
 }
 
-export function checkDidPlc(input: string): asserts input is Did<'plc'> {
+export function asDidPlc(input: unknown): Did<'plc'> {
+  checkDidPlc(input)
+  return input
+}
+
+export function checkDidPlc(input: unknown): asserts input is Did<'plc'> {
+  if (typeof input !== 'string') {
+    throw new InvalidDidError(typeof input, `DID must be a string`)
+  }
+
   if (input.length !== DID_PLC_LENGTH) {
     throw new InvalidDidError(
       input,
