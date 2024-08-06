@@ -38,9 +38,9 @@ export class AtpClient extends AtpBaseClient {
     super((url, init) => {
       const headers = new Headers(init?.headers)
 
-      // Force the "atproto-proxy" header
-      if (this.proxy) headers.set('atproto-proxy', this.proxy)
-      else headers.delete('atproto-proxy')
+      if (this.proxy && !headers.has('atproto-proxy')) {
+        headers.set('atproto-proxy', this.proxy)
+      }
 
       // Merge the labelers header of this particular request with the app &
       // instance labelers.
