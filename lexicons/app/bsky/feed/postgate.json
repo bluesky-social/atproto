@@ -25,12 +25,17 @@
             },
             "description": "List of detached quote post URIs."
           },
-          "quotePostRules": {
+          "quotepostRules": {
             "type": "array",
             "maxLength": 5,
             "items": {
               "type": "union",
-              "refs": ["#disableRule", "#mentionRule", "#followingRule", "#listRule"]
+              "refs": [
+                "#disableRule",
+                "#mentionRule",
+                "#followingRule",
+                "#listRule"
+              ]
             }
           }
         }
