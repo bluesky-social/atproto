@@ -84,4 +84,12 @@ export type Did = `did:${string}`
 
 // @TODO use tools from @atproto/did
 export const isDid = (str: unknown): str is Did =>
-  typeof str === 'string' && str.startsWith('did:')
+  typeof str === 'string' &&
+  (str.startsWith('did:plc:') || str.startsWith('did:web:')) &&
+  str.length > 8 &&
+  str.length <= 2048
+
+export const asDid = (value: string): Did => {
+  if (isDid(value)) return value
+  throw new TypeError(`Invalid DID: ${value}`)
+}

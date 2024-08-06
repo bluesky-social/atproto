@@ -2,7 +2,7 @@ import { FetchHandler } from '@atproto/xrpc'
 import { AtpBaseClient } from './client/index'
 import { BSKY_LABELER_DID } from './const'
 import { AtpAgentGlobalOpts, AtprotoServiceType } from './types'
-import { Did, isDid } from './util'
+import { asDid, Did, isDid } from './util'
 
 export type { FetchHandler }
 
@@ -20,14 +20,14 @@ export class AtpClient extends AtpBaseClient {
   /**
    * The labelers to be used across all requests with the takedown capability
    */
-  static appLabelers: readonly Did[] = [BSKY_LABELER_DID]
+  static appLabelers: readonly string[] = [BSKY_LABELER_DID]
 
   /**
    * Configures the Agent (or its sub classes) globally.
    */
   static configure(opts: AtpAgentGlobalOpts) {
     if (opts.appLabelers) {
-      this.appLabelers = opts.appLabelers.filter(isDid)
+      this.appLabelers = opts.appLabelers.map(asDid) // Validate & copy
     }
   }
 
@@ -75,8 +75,8 @@ export class AtpClient extends AtpBaseClient {
   }
 
   copyInto<T extends AtpClient>(inst: T): T {
-    inst.configureLabelers([...this.labelers])
-    inst.configureProxy(this.proxy)
+    inst.configureLabelers(this.labelers)
+    inst.configureProxy(this.proxy ?? null)
     return inst
   }
 
@@ -92,22 +92,22 @@ export class AtpClient extends AtpBaseClient {
   //#region ATPROTO labelers configuration utilities
 
   /**
-   * Get the static labelers configured on the class of the current instance.
+   * The labelers statically configured on the class of the current instance.
    */
   get appLabelers() {
     const Klass = this.constructor as typeof AtpClient
     return Klass.appLabelers
   }
 
-  labelers: readonly Did[] = []
+  labelers: readonly string[] = []
 
   configureLabelers(labelerDids: readonly string[]) {
-    if (!labelerDids.every(isDid)) throw new TypeError('Invalid labeler DID')
-    this.labelers = labelerDids
+    this.labelers = labelerDids.map(asDid) // Validate & copy
   }
 
   /** @deprecated use {@link configureLabelers} instead */
   configureLabelersHeader(labelerDids: readonly string[]) {
+    // Filtering non-did values for backwards compatibility
     this.configureLabelers(labelerDids.filter(isDid))
   }
 
@@ -117,14 +117,15 @@ export class AtpClient extends AtpBaseClient {
 
   proxy?: `${Did}#${AtprotoServiceType}`
 
-  configureProxy(value: `${Did}#${AtprotoServiceType}` | null | undefined) {
-    if (value == null) this.proxy = undefined
+  configureProxy(value: `${Did}#${AtprotoServiceType}` | null) {
+    if (value === null) this.proxy = undefined
     else if (isDid(value)) this.proxy = value
     else throw new TypeError('Invalid proxy DID')
   }
 
   /** @deprecated use {@link configureProxy} instead */
   configureProxyHeader(serviceType: AtprotoServiceType, did: string) {
+    // Ignoring non-did values for backwards compatibility
     if (isDid(did)) this.configureProxy(`${did}#${serviceType}`)
   }
 
