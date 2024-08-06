@@ -85,7 +85,8 @@ export type Did = `did:${string}`
 // @TODO use tools from @atproto/did
 export const isDid = (str: unknown): str is Did =>
   typeof str === 'string' &&
-  (str.startsWith('did:plc:') || str.startsWith('did:web:')) &&
+  str.startsWith('did:') &&
+  str.includes(':', 4) &&
   str.length > 8 &&
   str.length <= 2048
 
