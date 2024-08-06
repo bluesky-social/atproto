@@ -6,6 +6,14 @@
 
 - [#2668](https://github.com/bluesky-social/atproto/pull/2668) [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c) Thanks [@dholms](https://github.com/dholms)! - Add lxm and nonce to signed service auth tokens.
 
+## 0.5.4-rc.0
+
+### Patch Changes
+
+- Updated dependencies [[`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b), [`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b), [`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b)]:
+  - @atproto/lexicon@0.4.1-rc.0
+  - @atproto/xrpc@0.6.0-rc.0
+
 ## 0.5.3
 
 ### Patch Changes
