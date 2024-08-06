@@ -1,7 +1,7 @@
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
-import * as PostGate from '../../../../lexicon/types/app/bsky/feed/postgate'
+import * as Postgate from '../../../../lexicon/types/app/bsky/feed/postgate'
 import * as lex from '../../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Database } from '../../db'
@@ -15,7 +15,7 @@ const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: PostGate.Record,
+  obj: Postgate.Record,
   timestamp: string,
 ): Promise<IndexedGate | null> => {
   const postUri = new AtUri(obj.post)
@@ -43,7 +43,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: PostGate.Record,
+  obj: Postgate.Record,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('post_gate')
@@ -73,7 +73,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<PostGate.Record, IndexedGate>
+export type PluginType = RecordProcessor<Postgate.Record, IndexedGate>
 
 export const makePlugin = (
   db: Database,

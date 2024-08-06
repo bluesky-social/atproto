@@ -56,7 +56,7 @@ import {
   PostAggs,
   PostViewerStates,
   Threadgates,
-  PostGates,
+  Postgates,
   FeedItem,
 } from './feed'
 import { ParsedLabelers } from '../util'
@@ -92,7 +92,7 @@ export type HydrationState = {
   follows?: Follows
   followBlocks?: FollowBlocks
   threadgates?: Threadgates
-  postGates?: PostGates
+  postgates?: Postgates
   lists?: Lists
   listAggs?: ListAggs
   listViewers?: ListViewerStates
@@ -399,7 +399,7 @@ export class Hydrator {
       feedGenState,
       labelerState,
       starterPackState,
-      postGates,
+      postgates,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
@@ -413,7 +413,7 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       // only gates for quoted posts
-      this.feed.getPostGatesForPosts(postUrisLayer1),
+      this.feed.getPostgatesForPosts(postUrisLayer1),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -432,7 +432,7 @@ export class Hydrator {
         postBlocks,
         labels,
         threadgates,
-        postGates,
+        postgates,
         ctx,
       },
     )
@@ -876,13 +876,13 @@ export class Hydrator {
       )
     } else if (collection === ids.AppBskyFeedThreadgate) {
       return (
-        (await this.feed.getThreadGateRecords([uri], includeTakedowns)).get(
+        (await this.feed.getThreadgateRecords([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )
     } else if (collection === ids.AppBskyFeedPostgate) {
       return (
-        (await this.feed.getPostGateRecords([uri], includeTakedowns)).get(
+        (await this.feed.getPostgateRecords([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )
@@ -1078,7 +1078,7 @@ export const mergeStates = (
     follows: mergeMaps(stateA.follows, stateB.follows),
     followBlocks: mergeMaps(stateA.followBlocks, stateB.followBlocks),
     threadgates: mergeMaps(stateA.threadgates, stateB.threadgates),
-    postGates: mergeMaps(stateA.postGates, stateB.postGates),
+    postgates: mergeMaps(stateA.postgates, stateB.postgates),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listAggs: mergeMaps(stateA.listAggs, stateB.listAggs),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),

@@ -4,7 +4,7 @@ import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
-import { Record as PostGateRecord } from '../lexicon/types/app/bsky/feed/postgate'
+import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgate'
 import {
   HydrationMap,
   ItemRef,
@@ -59,8 +59,8 @@ export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 
 export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
-export type PostGate = RecordInfo<PostGateRecord>
-export type PostGates = HydrationMap<PostGate>
+export type Postgate = RecordInfo<PostgateRecord>
+export type Postgates = HydrationMap<Postgate>
 
 export type ThreadRef = ItemRef & { threadRoot: string }
 
@@ -196,10 +196,10 @@ export class FeedHydrator {
         parsed.rkey,
       ).toString()
     })
-    return this.getThreadGateRecords(uris, includeTakedowns)
+    return this.getThreadgateRecords(uris, includeTakedowns)
   }
 
-  async getThreadGateRecords(
+  async getThreadgateRecords(
     uris: string[],
     includeTakedowns = false,
   ): Promise<Threadgates> {
@@ -213,11 +213,11 @@ export class FeedHydrator {
     }, new HydrationMap<Threadgate>())
   }
 
-  async getPostGatesForPosts(
+  async getPostgatesForPosts(
     postUris: string[],
     includeTakedowns = false,
-  ): Promise<PostGates> {
-    if (!postUris.length) return new HydrationMap<PostGate>()
+  ): Promise<Postgates> {
+    if (!postUris.length) return new HydrationMap<Postgate>()
     const uris = postUris.map((uri) => {
       const parsed = new AtUri(uri)
       return AtUri.make(
@@ -226,21 +226,21 @@ export class FeedHydrator {
         parsed.rkey,
       ).toString()
     })
-    return this.getPostGateRecords(uris, includeTakedowns)
+    return this.getPostgateRecords(uris, includeTakedowns)
   }
 
-  async getPostGateRecords(
+  async getPostgateRecords(
     uris: string[],
     includeTakedowns = false,
-  ): Promise<PostGates> {
+  ): Promise<Postgates> {
     const res = await this.dataplane.getPostGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<PostGateRecord>(
+      const record = parseRecord<PostgateRecord>(
         res.records[i],
         includeTakedowns,
       )
       return acc.set(uri, record ?? null)
-    }, new HydrationMap<PostGate>())
+    }, new HydrationMap<Postgate>())
   }
 
   async getLikes(uris: string[], includeTakedowns = false): Promise<Likes> {

@@ -1,6 +1,6 @@
 const tableName = 'post_gate'
 
-export interface PostGate {
+export interface Postgate {
   uri: string
   cid: string
   creator: string
@@ -9,4 +9,4 @@ export interface PostGate {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: PostGate }
+export type PartialDB = { [tableName]: Postgate }

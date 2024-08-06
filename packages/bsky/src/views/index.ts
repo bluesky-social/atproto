@@ -544,7 +544,7 @@ export class Views {
     }
   }
 
-  threadGate(uri: string, state: HydrationState): ThreadgateView | undefined {
+  threadgate(uri: string, state: HydrationState): ThreadgateView | undefined {
     const gate = state.threadgates?.get(uri)
     if (!gate) return
     return {
@@ -603,7 +603,7 @@ export class Views {
         : undefined,
       labels,
       threadgate: !post.record.reply // only hydrate gate on root post
-        ? this.threadGate(gateUri, state)
+        ? this.threadgate(gateUri, state)
         : undefined,
     }
   }
@@ -979,13 +979,13 @@ export class Views {
     }
 
     const urip = new AtUri(embed.record.uri)
-    const postGateRecordUri = AtUri.make(
+    const postgateRecordUri = AtUri.make(
       urip.host,
       ids.AppBskyFeedPostgate,
       urip.rkey,
     ).toString()
-    const postGate = state.postGates?.get(postGateRecordUri)
-    if (postGate?.record?.detachedQuotes?.includes(postUri)) {
+    const postgate = state.postgates?.get(postgateRecordUri)
+    if (postgate?.record?.detachedQuotes?.includes(postUri)) {
       return this.embedRemoved(uri)
     }
 
