@@ -71,6 +71,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
+      lxm: null,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -96,6 +97,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: bskyDid,
+      lxm: null,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -116,6 +118,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: sc.dids.alice,
       aud: bskyDid,
+      lxm: null,
       keypair: aliceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -136,6 +139,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
+      lxm: null,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -158,6 +162,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
+      lxm: null,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

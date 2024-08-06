@@ -29,6 +29,7 @@ import {
   savedFeedsToUriArrays,
   validateSavedFeed,
 } from './util'
+import { MutedWord } from './client/types/app/bsky/actor/defs'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -175,7 +176,7 @@ export abstract class Agent extends AtpClient {
       detailed: true,
     })
 
-    // assemble a map of labeler dids to the interpretted label value definitions
+    // assemble a map of labeler dids to the interpreted label value definitions
     const labelDefs = {}
     if (labelers.data) {
       for (const labeler of labelers.data
@@ -483,6 +484,14 @@ export abstract class Agent extends AtpClient {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.moderationPrefs.mutedWords = v.items
+
+        if (prefs.moderationPrefs.mutedWords.length) {
+          prefs.moderationPrefs.mutedWords =
+            prefs.moderationPrefs.mutedWords.map((word) => {
+              word.actorTarget = word.actorTarget || 'all'
+              return word
+            })
+        }
       } else if (
         AppBskyActorDefs.isHiddenPostsPref(pref) &&
         AppBskyActorDefs.validateHiddenPostsPref(pref).success
@@ -941,7 +950,19 @@ export abstract class Agent extends AtpClient {
     })
   }
 
-  async upsertMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
+  /**
+   * Add a muted word to user preferences.
+   */
+  async addMutedWord(
+    mutedWord: Pick<
+      MutedWord,
+      'value' | 'targets' | 'actorTarget' | 'expiresAt'
+    >,
+  ) {
+    const sanitizedValue = sanitizeMutedWordValue(mutedWord.value)
+
+    if (!sanitizedValue) return
+
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
       let mutedWordsPref = prefs.findLast(
         (pref) =>
@@ -949,40 +970,27 @@ export abstract class Agent extends AtpClient {
           AppBskyActorDefs.validateMutedWordsPref(pref).success,
       )
 
+      const newMutedWord: AppBskyActorDefs.MutedWord = {
+        id: TID.nextStr(),
+        value: sanitizedValue,
+        targets: mutedWord.targets || [],
+        actorTarget: mutedWord.actorTarget || 'all',
+        expiresAt: mutedWord.expiresAt || undefined,
+      }
+
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        for (const updatedWord of newMutedWords) {
-          let foundMatch = false
-          const sanitizedUpdatedValue = sanitizeMutedWordValue(
-            updatedWord.value,
-          )
+        mutedWordsPref.items.push(newMutedWord)
 
-          // was trimmed down to an empty string e.g. single `#`
-          if (!sanitizedUpdatedValue) continue
-
-          for (const existingItem of mutedWordsPref.items) {
-            if (existingItem.value === sanitizedUpdatedValue) {
-              existingItem.targets = Array.from(
-                new Set([...existingItem.targets, ...updatedWord.targets]),
-              )
-              foundMatch = true
-              break
-            }
-          }
-
-          if (!foundMatch) {
-            mutedWordsPref.items.push({
-              ...updatedWord,
-              value: sanitizedUpdatedValue,
-            })
-          }
-        }
+        /**
+         * Migrate any old muted words that don't have an id
+         */
+        mutedWordsPref.items = migrateLegacyMutedWordsItems(
+          mutedWordsPref.items,
+        )
       } else {
         // if the pref doesn't exist, create it
         mutedWordsPref = {
-          items: newMutedWords.map((w) => ({
-            ...w,
-            value: sanitizeMutedWordValue(w.value),
-          })),
+          items: [newMutedWord],
         }
       }
 
@@ -994,6 +1002,28 @@ export abstract class Agent extends AtpClient {
     })
   }
 
+  /**
+   * Convenience method to add muted words to user preferences
+   */
+  async addMutedWords(newMutedWords: AppBskyActorDefs.MutedWord[]) {
+    await Promise.all(newMutedWords.map((word) => this.addMutedWord(word)))
+  }
+
+  /**
+   * @deprecated use `addMutedWords` or `addMutedWord` instead
+   */
+  async upsertMutedWords(
+    mutedWords: Pick<
+      MutedWord,
+      'value' | 'targets' | 'actorTarget' | 'expiresAt'
+    >[],
+  ) {
+    await this.addMutedWords(mutedWords)
+  }
+
+  /**
+   * Update a muted word in user preferences.
+   */
   async updateMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
       const mutedWordsPref = prefs.findLast(
@@ -1003,22 +1033,48 @@ export abstract class Agent extends AtpClient {
       )
 
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
-        for (const existingItem of mutedWordsPref.items) {
-          if (existingItem.value === mutedWord.value) {
-            existingItem.targets = mutedWord.targets
-            break
+        mutedWordsPref.items = mutedWordsPref.items.map((existingItem) => {
+          const match = matchMutedWord(existingItem, mutedWord)
+
+          if (match) {
+            const updated = {
+              ...existingItem,
+              ...mutedWord,
+            }
+            return {
+              id: existingItem.id || TID.nextStr(),
+              value:
+                sanitizeMutedWordValue(updated.value) || existingItem.value,
+              targets: updated.targets || [],
+              actorTarget: updated.actorTarget || 'all',
+              expiresAt: updated.expiresAt || undefined,
+            }
+          } else {
+            return existingItem
           }
-        }
+        })
+
+        /**
+         * Migrate any old muted words that don't have an id
+         */
+        mutedWordsPref.items = migrateLegacyMutedWordsItems(
+          mutedWordsPref.items,
+        )
+
+        return prefs
+          .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+          .concat([
+            { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+          ])
       }
 
       return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
     })
   }
 
+  /**
+   * Remove a muted word from user preferences.
+   */
   async removeMutedWord(mutedWord: AppBskyActorDefs.MutedWord) {
     await this.updatePreferences((prefs: AppBskyActorDefs.Preferences) => {
       const mutedWordsPref = prefs.findLast(
@@ -1029,20 +1085,37 @@ export abstract class Agent extends AtpClient {
 
       if (mutedWordsPref && AppBskyActorDefs.isMutedWordsPref(mutedWordsPref)) {
         for (let i = 0; i < mutedWordsPref.items.length; i++) {
-          const existing = mutedWordsPref.items[i]
-          if (existing.value === mutedWord.value) {
+          const match = matchMutedWord(mutedWordsPref.items[i], mutedWord)
+
+          if (match) {
             mutedWordsPref.items.splice(i, 1)
             break
           }
         }
+
+        /**
+         * Migrate any old muted words that don't have an id
+         */
+        mutedWordsPref.items = migrateLegacyMutedWordsItems(
+          mutedWordsPref.items,
+        )
+
+        return prefs
+          .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
+          .concat([
+            { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
+          ])
       }
 
       return prefs
-        .filter((p) => !AppBskyActorDefs.isMutedWordsPref(p))
-        .concat([
-          { ...mutedWordsPref, $type: 'app.bsky.actor.defs#mutedWordsPref' },
-        ])
     })
+  }
+
+  /**
+   * Convenience method to remove muted words from user preferences
+   */
+  async removeMutedWords(mutedWords: AppBskyActorDefs.MutedWord[]) {
+    await Promise.all(mutedWords.map((word) => this.removeMutedWord(word)))
   }
 
   async hidePost(postUri: string) {
@@ -1371,4 +1444,25 @@ function isBskyPrefs(v: any): v is BskyPreferences {
 
 function isModPrefs(v: any): v is ModerationPrefs {
   return v && typeof v === 'object' && 'labelers' in v
+}
+
+function migrateLegacyMutedWordsItems(items: AppBskyActorDefs.MutedWord[]) {
+  return items.map((item) => ({
+    ...item,
+    id: item.id || TID.nextStr(),
+  }))
+}
+
+function matchMutedWord(
+  existingWord: AppBskyActorDefs.MutedWord,
+  newWord: AppBskyActorDefs.MutedWord,
+): boolean {
+  // id is undefined in legacy implementation
+  const existingId = existingWord.id
+  // prefer matching based on id
+  const matchById = existingId && existingId === newWord.id
+  // handle legacy case where id is not set
+  const legacyMatchByValue = !existingId && existingWord.value === newWord.value
+
+  return matchById || legacyMatchByValue
 }

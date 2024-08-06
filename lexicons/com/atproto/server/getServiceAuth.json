@@ -13,6 +13,15 @@
             "type": "string",
             "format": "did",
             "description": "The DID of the service that the token will be used to authenticate with"
+          },
+          "exp": {
+            "type": "integer",
+            "description": "The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope."
+          },
+          "lxm": {
+            "type": "string",
+            "format": "nsid",
+            "description": "Lexicon (XRPC) method to bind the requested token to"
           }
         }
       },
@@ -27,7 +36,13 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "BadExpiration",
+          "description": "Indicates that the requested expiration date is not a valid. May be in the past or may be reliant on the requested scopes."
+        }
+      ]
     }
   }
 }

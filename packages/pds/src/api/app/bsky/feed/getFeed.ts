@@ -1,6 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { pipethrough } from '../../../../pipethrough'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const { appViewAgent } = ctx
@@ -14,9 +15,15 @@ export default function (server: Server, ctx: AppContext) {
       const { data: feed } =
         await appViewAgent.api.app.bsky.feed.getFeedGenerator(
           { feed: params.feed },
-          await ctx.appviewAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(
+            requester,
+            ids.AppBskyFeedGetFeedGenerator,
+          ),
         )
-      return pipethrough(ctx, req, requester, feed.view.did)
+      return pipethrough(ctx, req, requester, {
+        aud: feed.view.did,
+        lxm: ids.AppBskyFeedGetFeedSkeleton,
+      })
     },
   })
 }

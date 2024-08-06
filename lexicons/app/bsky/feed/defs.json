@@ -218,7 +218,7 @@
         },
         "feedContext": {
           "type": "string",
-          "description": "Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton.",
+          "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
           "maxLength": 2000
         }
       }

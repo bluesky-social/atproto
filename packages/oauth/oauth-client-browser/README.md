@@ -4,14 +4,14 @@ This package provides an OAuth bases `@atproto/api` agent interface for the
 browser. It implements all the OAuth features required by [ATPROTO] (PKCE, DPoP,
 etc.).
 
-`@atproto/oauth-client-browser` is destined to front-end applications that do
-not have a back-end server to manage OAuth sessions.
+`@atproto/oauth-client-browser` is designed for front-end applications that do
+not have a backend server to manage OAuth sessions.
 
 > [!IMPORTANT]
 >
 > When a backend server is available, it is recommended to use
 > [`@atproto/oauth-client-node`](https://www.npmjs.com/package/@atproto/oauth-client-node)
-> to manage OAuth sessions from the server side, and use a session cookie to map
+> to manage OAuth sessions from the server side and use a session cookie to map
 > the OAuth session to the front-end. Because this mechanism allows the backend
 > to invalidate OAuth credentials at scale, this method is more secure than
 > managing OAuth sessions from the front-end directly. Thanks to the added
@@ -23,7 +23,7 @@ not have a back-end server to manage OAuth sessions.
 ### Client ID
 
 The `client_id` is what identifies your application to the OAuth server. It is
-used to fetch the client metadata, and to initiate the OAuth flow. The
+used to fetch the client metadata and to initiate the OAuth flow. The
 `client_id` must be a URL that points to the [client
 metadata](#client-metadata).
 
@@ -32,7 +32,7 @@ metadata](#client-metadata).
 Your OAuth client metadata should be hosted at a URL that corresponds to the
 `client_id` of your application. This URL should return a JSON object with the
 client metadata. The client metadata should be configured according to the
-needs of your application, and must respect the [ATPROTO] spec.
+needs of your application and must respect the [ATPROTO] spec.
 
 ```json
 {
@@ -86,9 +86,9 @@ metadata into the script at runtime.
 
 ### Handle Resolver
 
-Whenever you application will initiate an OAuth flow, it will start to resolve
+Whenever your application initiates an OAuth flow, it will start to resolve
 the (user provider) APTROTO handle of the user. This is typically done though a
-DNS request. However, since DNS resolution is not available in the browser, a
+DNS request. However, because DNS resolution is not available in the browser, a
 backend service must be provided.
 
 > [!CAUTION]
@@ -108,7 +108,7 @@ expect this value to be the URL of a service running the
 
 > [!TIP]
 >
-> If you host your own PDS, you can use it's URL as a handle resolver.
+> If you host your own PDS, you can use its URL as a handle resolver.
 
 ```typescript
 import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
@@ -154,7 +154,7 @@ following optional configuration options:
 
 ## Usage
 
-Once the `client` is setup, it can be used to initiate & manage OAuth sessions.
+Once the `client` is set up, it can be used to initiate & manage OAuth sessions.
 
 ### Initializing the client
 
