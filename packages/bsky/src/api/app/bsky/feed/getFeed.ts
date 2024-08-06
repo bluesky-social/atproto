@@ -28,7 +28,7 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane'
-import { resHeaders, isFeedPostHiddenReply } from '../../../util'
+import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -128,9 +128,6 @@ const presentation = (
   const feed = mapDefined(skeleton.items, (item) => {
     const post = ctx.views.feedViewPost(item, hydration)
     if (!post) return
-    if (isFeedPostHiddenReply({ post, hydration })) {
-      return
-    }
     return {
       ...post,
       feedContext: item.feedContext,

@@ -105,6 +105,20 @@ export class Views {
     return actor.muted || !!actor.mutedByList
   }
 
+  replyIsHidden(replyUri: string, rootPostUri: string, state: HydrationState) {
+    const urip = new AtUri(rootPostUri)
+    const threadgateUri = AtUri.make(
+      urip.host,
+      ids.AppBskyFeedThreadgate,
+      urip.rkey,
+    ).toString()
+    const threadgate = state.threadgates?.get(threadgateUri)
+    if (threadgate?.record?.hiddenReplies?.includes(replyUri)) {
+      return true
+    }
+    return false
+  }
+
   profileDetailed(
     did: string,
     state: HydrationState,
@@ -609,14 +623,21 @@ export class Views {
     }
     const post = this.post(item.post.uri, state)
     if (!post) return
-    const view = {
+    const reply = !postInfo?.violatesThreadGate
+      ? this.replyRef(item.post.uri, state)
+      : undefined
+    if (
+      reply &&
+      isPostView(reply.root) &&
+      this.replyIsHidden(post.uri, reply.root.uri, state)
+    ) {
+      return undefined
+    }
+    return {
       post,
       reason,
-      reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(item.post.uri, state)
-        : undefined,
+      reply,
     }
-    return view
   }
 
   replyRef(uri: string, state: HydrationState): ReplyRef | undefined {
