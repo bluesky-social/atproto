@@ -1,37 +1,10 @@
 # @atproto/lex-cli
 
-## 0.5.0-rc.0
-
-### Minor Changes
-
-- [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **New Features**:
-
-  1. Improved Separation of Concerns: We've restructured the XRPC HTTP call
-     dispatcher into a distinct class. This means cleaner code organization and
-     better clarity on responsibilities.
-  2. Enhanced Evolutivity: With this refactor, the XRPC client is now more
-     adaptable to various use cases. You can easily extend and customize the
-     dispatcher perform session management, retries, and more.
-
-  **Compatibility**:
-
-  Most of the changes introduced in this version are backward-compatible. However,
-  there are a couple of breaking changes you should be aware of:
-
-  - Customizing `fetchHandler`: The ability to customize the fetchHandler on the
-    XRPC Client and AtpAgent classes has been modified. Please review your code if
-    you rely on custom fetch handlers.
-  - Managing Sessions: Previously, you had the ability to manage sessions directly
-    through AtpAgent instances. Now, session management must be handled through a
-    dedicated `SessionManager` instance. If you were making authenticated
-    requests, you'll need to update your code to use explicit session management.
-  - The `fetch()` method, as well as WhatWG compliant `Request` and `Headers`
-    constructors, must be globally available in your environment.
+## 0.4.1
 
 ### Patch Changes
 
-- Updated dependencies [[`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b), [`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b)]:
-  - @atproto/lexicon@0.4.1-rc.0
+- [#2691](https://github.com/bluesky-social/atproto/pull/2691) [`08ef309c9`](https://github.com/bluesky-social/atproto/commit/08ef309c9c1f35f0e7093cb845321e876133d23e) Thanks [@dholms](https://github.com/dholms)! - Fix use of prettier.format for codegen
 
 ## 0.4.0
 
