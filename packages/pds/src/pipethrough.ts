@@ -11,11 +11,10 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
+import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import { ids, lexicons } from './lexicon/lexicons'
 import { httpLogger } from './logger'
-import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
 import AppContext from './context'
-import { parseReqNsid } from '@atproto/xrpc-server'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
