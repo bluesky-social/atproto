@@ -1,26 +1,21 @@
-import { Did, isAtprotoDidWeb, isDidPlc } from '@atproto/did'
+import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+export type { AtprotoDid, AtprotoIdentityDidMethods } from '@atproto/did'
 
 export type ResolveHandleOptions = {
   signal?: AbortSignal
   noCache?: boolean
 }
 
-export type AtprotoIdentityDidMethods = 'plc' | 'web'
+/**
+ * @see {@link https://atproto.com/specs/did#blessed-did-methods}
+ */
+export type ResolvedHandle = null | AtprotoDid
 
 /**
  * @see {@link https://atproto.com/specs/did#blessed-did-methods}
  */
-export type ResolvedHandle = null | Did<AtprotoIdentityDidMethods>
-
-export { type Did }
-
-/**
- * @see {@link https://atproto.com/specs/did#blessed-did-methods}
- */
-export function isResolvedHandle<T = unknown>(
-  value: T,
-): value is T & ResolvedHandle {
-  return value === null || isDidPlc(value) || isAtprotoDidWeb(value)
+export function isResolvedHandle<T>(value: T): value is T & ResolvedHandle {
+  return value === null || isAtprotoDid(value)
 }
 
 export interface HandleResolver {
