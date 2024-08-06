@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.4.1
+
+### Patch Changes
+
+- [#2691](https://github.com/bluesky-social/atproto/pull/2691) [`08ef309c9`](https://github.com/bluesky-social/atproto/commit/08ef309c9c1f35f0e7093cb845321e876133d23e) Thanks [@dholms](https://github.com/dholms)! - Fix use of prettier.format for codegen
+
 ## 0.4.0
 
 ### Minor Changes
