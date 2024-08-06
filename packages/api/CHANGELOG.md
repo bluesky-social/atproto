@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.12.29
+
+### Patch Changes
+
+- [#2668](https://github.com/bluesky-social/atproto/pull/2668) [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c) Thanks [@dholms](https://github.com/dholms)! - Add lxm and exp parameters to com.atproto.server.getServiceAuth
+
 ## 0.12.28
 
 ### Patch Changes
