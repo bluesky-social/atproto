@@ -339,15 +339,15 @@ export class Hydrator {
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
-    const postUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const embedPostUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
     const postsLayer1 = await this.feed.getPosts(
-      [...postUrisLayer1, ...additionalRootUris],
+      [...embedPostUrisLayer1, ...additionalRootUris],
       ctx.includeTakedowns,
     )
     // second level embeds, ignoring any additional root uris we mixed-in to the previous layer
-    const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1, postUrisLayer1)
+    const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1, embedPostUrisLayer1)
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
-    const postUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const embedPostUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
     const threadRootUris = new Set<string>()
     for (const [uri, post] of postsLayer0) {
       if (post) {
@@ -355,7 +355,7 @@ export class Hydrator {
       }
     }
     const [postsLayer2, threadgates] = await Promise.all([
-      this.feed.getPosts(postUrisLayer2, ctx.includeTakedowns),
+      this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
       this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
     ])
     // collect list/feedgen embeds, lists in threadgates, post record hydration
@@ -381,8 +381,8 @@ export class Hydrator {
     const allPostUris = [...posts.keys()]
     const allRefs = [
       ...refs,
-      ...postUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
-      ...postUrisLayer2.map(uriToRef),
+      ...embedPostUrisLayer1.map(uriToRef), // supports aggregates on embed #viewRecords
+      ...embedPostUrisLayer2.map(uriToRef),
     ]
     const threadRefs = allRefs.map((ref) => ({
       ...ref,
@@ -413,7 +413,7 @@ export class Hydrator {
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
       // only gates for quoted posts
-      this.feed.getPostgatesForPosts(postUrisLayer1),
+      this.feed.getPostgatesForPosts(embedPostUrisLayer1),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
