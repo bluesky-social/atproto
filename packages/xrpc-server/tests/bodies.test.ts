@@ -4,7 +4,7 @@ import { gzipSync } from 'zlib'
 import getPort from 'get-port'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
-import { bytesToStream, cidForCbor } from '@atproto/common'
+import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
@@ -402,7 +402,7 @@ describe('Bodies', () => {
     await client.call(
       'io.example.blobTest',
       {},
-      bytesToStream(bytes.slice(0, BLOB_LIMIT)),
+      bytesToReadableStream(bytes.slice(0, BLOB_LIMIT)),
       {
         encoding: 'application/octet-stream',
       },
@@ -412,7 +412,7 @@ describe('Bodies', () => {
     const promise = client.call(
       'io.example.blobTest',
       {},
-      bytesToStream(bytes),
+      bytesToReadableStream(bytes),
       {
         encoding: 'application/octet-stream',
       },
@@ -448,3 +448,13 @@ describe('Bodies', () => {
     })
   })
 })
+
+const bytesToReadableStream = (bytes: Uint8Array): ReadableStream => {
+  // not using ReadableStream.from(), which lacks support in some contexts including nodejs v18.
+  return new ReadableStream({
+    pull(ctrl) {
+      ctrl.enqueue(bytes)
+      ctrl.close()
+    },
+  })
+}

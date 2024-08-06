@@ -51,7 +51,7 @@ export class XrpcClient {
       )
     }
 
-    //@TODO: should we validate the params and data here?
+    // @TODO: should we validate the params and data here?
     // this.lex.assertValidXrpcParams(methodNsid, params)
     // if (data !== undefined) {
     //   this.lex.assertValidXrpcInput(methodNsid, data)
