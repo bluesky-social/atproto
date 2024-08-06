@@ -162,6 +162,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     const jwt = await createServiceJwt({
       iss: did,
       aud: aud ?? this.bsky.ctx.cfg.serverDid,
+      lxm: null,
       keypair,
     })
     return { authorization: `Bearer ${jwt}` }

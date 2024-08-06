@@ -47,6 +47,7 @@ export class OzoneServiceProfile {
     const serviceJwtRes =
       await this.thirdPartyPdsClient.com.atproto.server.getServiceAuth({
         aud: newServerDid,
+        lxm: 'com.atproto.server.createAccount',
       })
     const serviceJwt = serviceJwtRes.data.token
 

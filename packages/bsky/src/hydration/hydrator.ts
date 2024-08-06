@@ -738,7 +738,7 @@ export class Hydrator {
     })
   }
 
-  // provides partial hydration state withing getFollows / getFollowers, mainly for applying rules
+  // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
   async hydrateFollows(uris: string[]): Promise<HydrationState> {
     const follows = await this.graph.getFollows(uris)
     const pairs: RelationshipPair[] = []

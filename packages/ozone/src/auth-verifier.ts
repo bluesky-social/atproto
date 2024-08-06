@@ -106,7 +106,12 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyJwt(jwtStr, this.serviceDid, getSigningKey)
+    const payload = await verifyJwt(
+      jwtStr,
+      this.serviceDid,
+      null,
+      getSigningKey,
+    )
     const iss = payload.iss
 
     const member = await this.teamService.getMember(iss)

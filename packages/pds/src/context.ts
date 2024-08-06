@@ -342,16 +342,17 @@ export class AppContext {
     })
   }
 
-  async appviewAuthHeaders(did: string) {
+  async appviewAuthHeaders(did: string, lxm: string) {
     assert(this.cfg.bskyAppView)
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, lxm)
   }
 
-  async serviceAuthHeaders(did: string, aud: string) {
+  async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
       iss: did,
       aud,
+      lxm,
       keypair,
     })
   }

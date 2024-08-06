@@ -20,9 +20,9 @@ export default function (server: Server, ctx: AppContext) {
       durationMs: 5 * MINUTE,
       points: 100,
     },
-    auth: ctx.authVerifier.userDidAuthOptional,
+    auth: ctx.authVerifier.userServiceAuthOptional,
     handler: async ({ input, auth, req }) => {
-      const requester = auth.credentials?.iss ?? null
+      const requester = auth.credentials?.did ?? null
       const {
         did,
         handle,
