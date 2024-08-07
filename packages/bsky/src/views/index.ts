@@ -611,6 +611,9 @@ export class Views {
   feedViewPost(
     item: FeedItem,
     state: HydrationState,
+    opts?: {
+      includeHiddenReplies?: boolean
+    },
   ): FeedViewPost | undefined {
     const postInfo = state.posts?.get(item.post.uri)
     let reason: ReasonRepost | undefined
@@ -629,7 +632,8 @@ export class Views {
     if (
       reply &&
       isPostView(reply.root) &&
-      this.replyIsHidden(post.uri, reply.root.uri, state)
+      this.replyIsHidden(post.uri, reply.root.uri, state) &&
+      !opts?.includeHiddenReplies
     ) {
       return undefined
     }
