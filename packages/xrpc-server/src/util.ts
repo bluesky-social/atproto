@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { Readable, Transform } from 'stream'
-import { createDeflate, createGunzip } from 'zlib'
+import { createBrotliDecompress, createInflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
@@ -10,7 +10,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
+import { compose, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
   Params,
@@ -22,6 +22,7 @@ import {
   XRPCError,
   RouteOpts,
 } from './types'
+import { ResponseType } from '@atproto/xrpc'
 
 export function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
@@ -236,28 +237,45 @@ function decodeBodyStream(
   req: express.Request,
   maxSize: number | undefined,
 ): Readable {
-  let stream: Readable = req
-  const contentEncoding = req.headers['content-encoding']
+  const transforms: Transform[] = []
+
+  const contentEncoding = req.headers['content-encoding']?.trim()
   const contentLength = req.headers['content-length']
+
+  const contentLengthParsed = contentLength
+    ? parseInt(contentLength, 10)
+    : undefined
+
+  if (Number.isNaN(contentLengthParsed)) {
+    throw new XRPCError(400, 'invalid content-length')
+  }
 
   if (
     maxSize !== undefined &&
-    contentLength &&
-    parseInt(contentLength, 10) > maxSize
+    contentLengthParsed !== undefined &&
+    contentLengthParsed > maxSize
   ) {
     throw new XRPCError(413, 'request entity too large')
   }
 
-  let decoder: Transform | undefined
-  if (contentEncoding === 'gzip') {
-    decoder = createGunzip()
-  } else if (contentEncoding === 'deflate') {
-    decoder = createDeflate()
-  }
+  if (contentEncoding) {
+    for (const enc of contentEncoding.split(',').reverse()) {
+      const currentEncoding = enc.trim()
+      if (currentEncoding === 'identity') continue
 
-  if (decoder) {
-    forwardStreamErrors(stream, decoder)
-    stream = stream.pipe(decoder)
+      if (currentEncoding === 'gzip') {
+        transforms.push(createGunzip())
+      } else if (currentEncoding === 'deflate') {
+        transforms.push(createInflate())
+      } else if (currentEncoding === 'br') {
+        transforms.push(createBrotliDecompress())
+      } else {
+        throw new XRPCError(
+          ResponseType.UnsupportedMediaType,
+          'unsupported content-encoding',
+        )
+      }
+    }
   }
 
   if (maxSize !== undefined) {
@@ -265,11 +283,10 @@ function decodeBodyStream(
       maxSize,
       () => new XRPCError(413, 'request entity too large'),
     )
-    forwardStreamErrors(stream, maxSizeChecker)
-    stream = stream.pipe(maxSizeChecker)
+    transforms.push(maxSizeChecker)
   }
 
-  return stream
+  return compose(req, ...transforms)
 }
 
 export function serverTimingHeader(timings: ServerTiming[]) {
