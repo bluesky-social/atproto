@@ -20,6 +20,7 @@ import {
   ThreadViewPost,
   ThreadgateView,
   isPostView,
+  isReasonRepost,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
@@ -633,6 +634,7 @@ export class Views {
       reply &&
       isPostView(reply.root) &&
       this.replyIsHidden(post.uri, reply.root.uri, state) &&
+      !isReasonRepost(reason) &&
       !opts?.includeHiddenReplies
     ) {
       return undefined
