@@ -224,9 +224,18 @@ export class AuthVerifier {
 
   userServiceAuth = async (ctx: ReqCtx): Promise<UserServiceAuthOutput> => {
     const payload = await this.verifyServiceJwt(ctx, {
-      aud: this.dids.entryway ?? this.dids.pds,
+      aud: null,
       iss: null,
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
         type: 'user_service_auth',
