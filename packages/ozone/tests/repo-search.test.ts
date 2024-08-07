@@ -43,7 +43,7 @@ describe('admin repo search view', () => {
 
   it('gives relevant results', async () => {
     const result = await agent.api.tools.ozone.moderation.searchRepos(
-      { term: 'car' },
+      { q: 'car' },
       { headers },
     )
 
@@ -71,21 +71,21 @@ describe('admin repo search view', () => {
   })
 
   it('finds repo by did', async () => {
-    const term = sc.dids['cara-wiegand69.test']
+    const q = sc.dids['cara-wiegand69.test']
     const res = await agent.api.tools.ozone.moderation.searchRepos(
-      { term },
+      { q },
       { headers },
     )
 
     expect(res.data.repos.length).toEqual(1)
-    expect(res.data.repos[0].did).toEqual(term)
+    expect(res.data.repos[0].did).toEqual(q)
   })
 
-  it('paginates with term', async () => {
+  it('paginates with q', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(
-        { term: 'p', cursor, limit: 3 },
+        { q: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -97,7 +97,7 @@ describe('admin repo search view', () => {
     )
 
     const full = await agent.api.tools.ozone.moderation.searchRepos(
-      { term: 'p' },
+      { q: 'p' },
       { headers },
     )
 
@@ -105,7 +105,7 @@ describe('admin repo search view', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
-  it('paginates without term', async () => {
+  it('paginates without q', async () => {
     const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(

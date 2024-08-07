@@ -7,9 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       const modService = ctx.modService(ctx.db)
-
-      // prefer new 'q' query param over deprecated 'term'
-      const query = params.q ?? params.term
+      const query = params.q ?? ''
 
       // special case for did searches - do exact match
       if (query?.startsWith('did:')) {

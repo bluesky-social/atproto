@@ -9,8 +9,6 @@ import { CID } from 'multiformats/cid'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead */
-  term?: string
   q?: string
   limit?: number
   cursor?: string

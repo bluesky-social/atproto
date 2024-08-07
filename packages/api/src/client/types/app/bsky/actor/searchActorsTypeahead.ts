@@ -9,8 +9,6 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead. */
-  term?: string
   /** Search query prefix; not a full query string. */
   q?: string
   limit?: number

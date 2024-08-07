@@ -8,10 +8,6 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "term": {
-            "type": "string",
-            "description": "DEPRECATED: use 'q' instead."
-          },
           "q": {
             "type": "string",
             "description": "Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended."

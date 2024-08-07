@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const term = params.q ?? params.term ?? ''
+  const term = params.q ?? ''
 
   // @TODO
   // add hits total
