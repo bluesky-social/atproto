@@ -51,4 +51,4 @@ deps: ## Installs dependent libs using 'pnpm install'
 nvm-setup: ## Use NVM to install and activate node+pnpm
 	nvm install 18
 	nvm use 18
-	npm install --global pnpm
+	corepack enable
