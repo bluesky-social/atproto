@@ -50,7 +50,7 @@
       "required": ["collection", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "maxLength": 15 },
+        "rkey": { "type": "string", "maxLength": 15, "format": "record-key" },
         "value": { "type": "unknown" }
       }
     },
@@ -60,7 +60,7 @@
       "required": ["collection", "rkey", "value"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string" },
+        "rkey": { "type": "string", "format": "record-key" },
         "value": { "type": "unknown" }
       }
     },
@@ -70,7 +70,7 @@
       "required": ["collection", "rkey"],
       "properties": {
         "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string" }
+        "rkey": { "type": "string", "format": "record-key" }
       }
     }
   }
