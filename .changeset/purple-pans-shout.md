@@ -7,6 +7,7 @@
 "@atproto/ozone": patch
 "@atproto/bsky": patch
 "@atproto/pds": patch
+"@atproto/xrpc-server": patch
 ---
 
 **New Features**:
