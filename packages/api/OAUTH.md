@@ -235,9 +235,10 @@ if (!agent) {
 ```
 
 At this point in the script, the user **will** be authenticated. API calls can
-be made using an `ApiClient` instance. Let's make a simple call to the API to
-retrieve the user's profile. Replace the `// TO BE CONTINUED` comment with the
-following code:
+be made using the `agent`. The `agent` is an instance of a sub-class of the
+`Agent` from `@atproto/api`. Let's make a simple call to the API to retrieve the
+user's profile. Replace the `// TO BE CONTINUED` comment with the following
+code:
 
 ```typescript
 if (agent) {
