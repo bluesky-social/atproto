@@ -26,12 +26,14 @@ import {
   ParsedLabelers,
   parseLabelerHeader,
 } from './util'
+import { SetService, SetServiceCreator } from './set/service'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
+  setService: SetServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
@@ -117,6 +119,7 @@ export class AppContext {
 
     const communicationTemplateService = CommunicationTemplateService.creator()
     const teamService = TeamService.creator()
+    const setService = SetService.creator()
 
     const sequencer = new Sequencer(modService(db))
 
@@ -133,6 +136,7 @@ export class AppContext {
         modService,
         communicationTemplateService,
         teamService,
+        setService,
         appviewAgent,
         pdsAgent,
         chatAgent,
@@ -180,6 +184,10 @@ export class AppContext {
 
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
+  }
+
+  get setService(): SetServiceCreator {
+    return this.opts.setService
   }
 
   get appviewAgent(): AtpAgent {
