@@ -1,5 +1,6 @@
 import {
   AuthRequiredError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import * as ui8 from 'uint8arrays'
@@ -15,6 +16,11 @@ import { GetIdentityByDidResponse } from './proto/bsky_pb'
 
 type ReqCtx = {
   req: express.Request
+}
+
+type StandardAuthOpts = {
+  skipAudCheck?: boolean
+  lxmCheck?: (method?: string) => boolean
 }
 
 export enum RoleStatus {
@@ -80,61 +86,55 @@ export class AuthVerifier {
   }
 
   // verifiers (arrow fns to preserve scope)
+  standardOptionalParameterized =
+    (opts: StandardAuthOpts) =>
+    async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
+      // @TODO remove! basic auth + did supported just for testing.
+      if (isBasicToken(ctx.req)) {
+        const aud = this.ownDid
+        const iss = ctx.req.headers['appview-as-did']
+        if (typeof iss !== 'string' || !iss.startsWith('did:')) {
+          throw new AuthRequiredError('bad issuer')
+        }
+        if (!this.parseRoleCreds(ctx.req).admin) {
+          throw new AuthRequiredError('bad credentials')
+        }
+        return {
+          credentials: { type: 'standard', iss, aud },
+        }
+      } else if (isBearerToken(ctx.req)) {
+        const { iss, aud } = await this.verifyServiceJwt(ctx, {
+          lxmCheck: opts.lxmCheck,
+          iss: null,
+          aud: null,
+        })
+        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
+          throw new AuthRequiredError(
+            'jwt audience does not match service did',
+            'BadJwtAudience',
+          )
+        }
+        return {
+          credentials: {
+            type: 'standard',
+            iss,
+            aud,
+          },
+        }
+      } else {
+        return this.nullCreds()
+      }
+    }
+
+  standardOptional: (ctx: ReqCtx) => Promise<StandardOutput | NullOutput> =
+    this.standardOptionalParameterized({})
 
   standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
-    // @TODO remove! basic auth + did supported just for testing.
-    if (isBasicToken(ctx.req)) {
-      const aud = this.ownDid
-      const iss = ctx.req.headers['appview-as-did']
-      if (typeof iss !== 'string' || !iss.startsWith('did:')) {
-        throw new AuthRequiredError('bad issuer')
-      }
-      if (!this.parseRoleCreds(ctx.req).admin) {
-        throw new AuthRequiredError('bad credentials')
-      }
-      return {
-        credentials: { type: 'standard', iss, aud },
-      }
+    const output = await this.standardOptionalParameterized({})(ctx)
+    if (output.credentials.type === 'none') {
+      throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: null,
-      iss: null,
-    })
-    if (!this.standardAudienceDids.has(aud)) {
-      throw new AuthRequiredError(
-        'jwt audience does not match service did',
-        'BadJwtAudience',
-      )
-    }
-    return {
-      credentials: {
-        type: 'standard',
-        iss,
-        aud,
-      },
-    }
-  }
-
-  standardOptional = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | NullOutput> => {
-    if (isBearerToken(ctx.req) || isBasicToken(ctx.req)) {
-      return this.standard(ctx)
-    }
-    return this.nullCreds()
-  }
-
-  standardOptionalAnyAud = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | NullOutput> => {
-    if (!isBearerToken(ctx.req)) {
-      return this.nullCreds()
-    }
-    const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: null,
-      iss: null,
-    })
-    return { credentials: { type: 'standard', iss, aud } }
+    return output as StandardOutput
   }
 
   role = (ctx: ReqCtx): RoleOutput => {
@@ -215,7 +215,11 @@ export class AuthVerifier {
 
   async verifyServiceJwt(
     reqCtx: ReqCtx,
-    opts: { aud: string | null; iss: string[] | null },
+    opts: {
+      iss: string[] | null
+      aud: string | null
+      lxmCheck?: (method?: string) => boolean
+    },
   ) {
     const getSigningKey = async (
       iss: string,
@@ -248,12 +252,18 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(
-      jwtStr,
-      opts.aud,
-      null,
-      getSigningKey,
-    )
+    // if validating additional scopes, skip scope check in initial validation & follow up afterwards
+    const lxm = opts.lxmCheck ? null : parseReqNsid(reqCtx.req)
+    const payload = await verifyServiceJwt(jwtStr, opts.aud, lxm, getSigningKey)
+    if (opts.lxmCheck) {
+      const validLxm = opts.lxmCheck(payload.lxm)
+      if (!validLxm) {
+        throw new AuthRequiredError(
+          `missing jwt lexicon method`,
+          'MissingJwtLexiconMethod',
+        )
+      }
+    }
     return { iss: payload.iss, aud: payload.aud }
   }
 

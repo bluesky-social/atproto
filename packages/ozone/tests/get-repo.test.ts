@@ -11,6 +11,7 @@ import {
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('admin get repo view', () => {
   let network: TestNetwork
@@ -78,7 +79,7 @@ describe('admin get repo view', () => {
   it('gets a repo by did, even when taken down.', async () => {
     const result = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.alice },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo) },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -86,15 +87,25 @@ describe('admin get repo view', () => {
   it('does not include account emails for triage mods.', async () => {
     const { data: admin } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.bob },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo) },
     )
     const { data: moderator } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.bob },
-      { headers: await ozone.modHeaders('moderator') },
+      {
+        headers: await ozone.modHeaders(
+          ids.ToolsOzoneModerationGetRepo,
+          'moderator',
+        ),
+      },
     )
     const { data: triage } = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.bob },
-      { headers: await ozone.modHeaders('triage') },
+      {
+        headers: await ozone.modHeaders(
+          ids.ToolsOzoneModerationGetRepo,
+          'triage',
+        ),
+      },
     )
     expect(admin.email).toEqual('bob@test.com')
     expect(moderator.email).toEqual('bob@test.com')
@@ -106,7 +117,7 @@ describe('admin get repo view', () => {
     const { data: beforeEmailVerification } =
       await agent.api.tools.ozone.moderation.getRepo(
         { did: sc.dids.bob },
-        { headers: await ozone.modHeaders() },
+        { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo) },
       )
 
     expect(beforeEmailVerification.emailConfirmedAt).toBeUndefined()
@@ -128,7 +139,7 @@ describe('admin get repo view', () => {
     const { data: afterEmailVerification } =
       await agent.api.tools.ozone.moderation.getRepo(
         { did: sc.dids.bob },
-        { headers: await ozone.modHeaders() },
+        { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo) },
       )
 
     expect(afterEmailVerification.emailConfirmedAt).toBeTruthy()
@@ -140,7 +151,7 @@ describe('admin get repo view', () => {
   it('returns deactivation state', async () => {
     const res = await agent.api.tools.ozone.moderation.getRepo(
       { did: sc.dids.dan },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo) },
     )
 
     expect(res.data.deactivatedAt).toBeDefined()
@@ -149,7 +160,7 @@ describe('admin get repo view', () => {
   it('fails when repo does not exist.', async () => {
     const promise = agent.api.tools.ozone.moderation.getRepo(
       { did: 'did:plc:doesnotexist' },
-      { headers: await ozone.modHeaders() },
+      { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetRepo) },
     )
     await expect(promise).rejects.toThrow('Repo not found')
   })

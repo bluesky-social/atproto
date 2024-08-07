@@ -1,6 +1,7 @@
 import { DAY } from '@atproto/common'
 import { TestNetwork, SeedClient, usersSeed } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('handle invalidation', () => {
   let network: TestNetwork
@@ -62,7 +63,12 @@ describe('handle invalidation', () => {
 
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: eveAccnt.did },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(res.data.handle).toEqual('handle.invalid')
   })
@@ -77,7 +83,12 @@ describe('handle invalidation', () => {
     await network.processAll()
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(res.data.handle).toEqual('handle.invalid')
   })
@@ -92,7 +103,12 @@ describe('handle invalidation', () => {
     await network.processAll()
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(res.data.handle).toEqual(sc.accounts[alice].handle)
   })
@@ -112,13 +128,23 @@ describe('handle invalidation', () => {
 
     const aliceRes = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(aliceRes.data.handle).toEqual('handle.invalid')
 
     const bobRes = await agent.api.app.bsky.actor.getProfile(
       { actor: bob },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(bobRes.data.handle).toEqual(sc.accounts[alice].handle)
   })

@@ -1,7 +1,11 @@
 import express from 'express'
 import * as ui8 from 'uint8arrays'
 import { IdResolver } from '@atproto/identity'
-import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  parseReqNsid,
+  verifyJwt,
+} from '@atproto/xrpc-server'
 import { TeamService } from './team'
 
 type ReqCtx = {
@@ -106,10 +110,11 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+    const nsid = parseReqNsid(reqCtx.req)
     const payload = await verifyJwt(
       jwtStr,
       this.serviceDid,
-      null,
+      nsid,
       getSigningKey,
     )
     const iss = payload.iss

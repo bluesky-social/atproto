@@ -84,11 +84,11 @@ export class AppContext {
       didCache,
     })
 
-    const createAuthHeaders = (aud: string) =>
+    const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
-        lxm: null,
+        lxm,
         keypair: signingKey,
       })
 
@@ -226,32 +226,32 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  async serviceAuthHeaders(aud: string) {
+  async serviceAuthHeaders(aud: string, lxm: string) {
     const iss = `${this.cfg.service.did}#atproto_labeler`
     return createServiceAuthHeaders({
       iss,
       aud,
-      lxm: null,
+      lxm,
       keypair: this.signingKey,
     })
   }
 
-  async pdsAuth() {
+  async pdsAuth(lxm: string) {
     if (!this.cfg.pds) {
       return undefined
     }
-    return this.serviceAuthHeaders(this.cfg.pds.did)
+    return this.serviceAuthHeaders(this.cfg.pds.did, lxm)
   }
 
-  async appviewAuth() {
-    return this.serviceAuthHeaders(this.cfg.appview.did)
+  async appviewAuth(lxm: string) {
+    return this.serviceAuthHeaders(this.cfg.appview.did, lxm)
   }
 
-  async chatAuth() {
+  async chatAuth(lxm: string) {
     if (!this.cfg.chat) {
       throw new Error('No chat service configured')
     }
-    return this.serviceAuthHeaders(this.cfg.chat.did)
+    return this.serviceAuthHeaders(this.cfg.chat.did, lxm)
   }
 
   devOverride(overrides: Partial<AppContextOptions>) {

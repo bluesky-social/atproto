@@ -29,6 +29,7 @@ import {
   unpackIdentityServices,
 } from '../../../../data-plane'
 import { resHeaders } from '../../../util'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -38,7 +39,17 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getFeed({
-    auth: ctx.authVerifier.standardOptionalAnyAud,
+    auth: ctx.authVerifier.standardOptionalParameterized({
+      lxmCheck: (method) => {
+        return (
+          method !== undefined &&
+          [ids.AppBskyFeedGetFeedSkeleton, ids.AppBskyFeedGetFeed].includes(
+            method,
+          )
+        )
+      },
+      skipAudCheck: true,
+    }),
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)

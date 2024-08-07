@@ -10,6 +10,7 @@ import {
   ForbiddenError,
   InvalidRequestError,
   XRPCError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
@@ -573,10 +574,11 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+    const nsid = parseReqNsid(ctx.req)
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
-      null,
+      nsid,
       getSigningKey,
     )
     return { iss: payload.iss, aud: payload.aud }

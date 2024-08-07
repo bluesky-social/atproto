@@ -10,6 +10,7 @@ import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -48,28 +49,48 @@ describe('pds author feed views', () => {
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[carol].handle },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[dan].handle },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
@@ -78,7 +99,12 @@ describe('pds author feed views', () => {
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     aliceForCarol.data.feed.forEach((postView) => {
@@ -99,7 +125,12 @@ describe('pds author feed views', () => {
           cursor,
           limit: 2,
         },
-        { headers: await network.serviceHeaders(dan) },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
       )
       return res.data
     }
@@ -111,7 +142,12 @@ describe('pds author feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(full.data.feed.length).toEqual(4)
@@ -121,7 +157,12 @@ describe('pds author feed views', () => {
   it('fetches results unauthed.', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: sc.accounts[alice].handle,
@@ -150,7 +191,12 @@ describe('pds author feed views', () => {
   it('non-admins blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
@@ -161,7 +207,12 @@ describe('pds author feed views', () => {
 
     const attemptAsUser = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
     await expect(attemptAsUser).rejects.toThrow('Profile not found')
 
@@ -180,7 +231,12 @@ describe('pds author feed views', () => {
   it('blocked by record takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
@@ -195,7 +251,12 @@ describe('pds author feed views', () => {
       await Promise.all([
         agent.api.app.bsky.feed.getAuthorFeed(
           { actor: alice },
-          { headers: await network.serviceHeaders(carol) },
+          {
+            headers: await network.serviceHeaders(
+              carol,
+              ids.AppBskyFeedGetAuthorFeed,
+            ),
+          },
         ),
         agent.api.app.bsky.feed.getAuthorFeed(
           { actor: alice },

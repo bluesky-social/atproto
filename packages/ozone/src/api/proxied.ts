@@ -1,5 +1,6 @@
 import { Server } from '../lexicon'
 import AppContext from '../context'
+import { ids } from '../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -7,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyActorGetProfile),
       )
       return {
         encoding: 'application/json',
@@ -21,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyActorGetProfiles),
       )
       return {
         encoding: 'application/json',
@@ -35,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyFeedGetAuthorFeed),
       )
       return {
         encoding: 'application/json',
@@ -49,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.searchPosts(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyFeedSearchPosts),
       )
       return {
         encoding: 'application/json',
@@ -63,7 +64,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyFeedGetPostThread),
       )
       return {
         encoding: 'application/json',
@@ -77,7 +78,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyFeedGetFeedGenerator),
       )
       return {
         encoding: 'application/json',
@@ -91,7 +92,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getFollows(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyGraphGetFollows),
       )
       return {
         encoding: 'application/json',
@@ -105,7 +106,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getFollowers(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyGraphGetFollowers),
       )
       return {
         encoding: 'application/json',
@@ -119,7 +120,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyGraphGetList),
       )
       return {
         encoding: 'application/json',
@@ -133,7 +134,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getLists(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyGraphGetLists),
       )
       return {
         encoding: 'application/json',
@@ -150,7 +151,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const res = await ctx.pdsAgent.api.com.atproto.admin.searchAccounts(
         request.params,
-        await ctx.pdsAuth(),
+        await ctx.pdsAuth(ids.ComAtprotoAdminSearchAccounts),
       )
       return {
         encoding: 'application/json',
@@ -164,7 +165,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getStarterPack(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyGraphGetStarterPack),
       )
       return {
         encoding: 'application/json',
@@ -178,7 +179,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.graph.getStarterPacks(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyGraphGetStarterPacks),
       )
       return {
         encoding: 'application/json',
@@ -193,7 +194,7 @@ export default function (server: Server, ctx: AppContext) {
       const res =
         await ctx.appviewAgent.api.app.bsky.graph.getActorStarterPacks(
           request.params,
-          await ctx.appviewAuth(),
+          await ctx.appviewAuth(ids.AppBskyGraphGetActorStarterPacks),
         )
       return {
         encoding: 'application/json',
@@ -207,7 +208,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.getLikes(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyFeedGetLikes),
       )
       return {
         encoding: 'application/json',
@@ -221,7 +222,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async (request) => {
       const res = await ctx.appviewAgent.api.app.bsky.feed.getRepostedBy(
         request.params,
-        await ctx.appviewAuth(),
+        await ctx.appviewAuth(ids.AppBskyFeedGetRepostedBy),
       )
       return {
         encoding: 'application/json',
@@ -236,7 +237,7 @@ export default function (server: Server, ctx: AppContext) {
       const res =
         await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
           request.params,
-          await ctx.appviewAuth(),
+          await ctx.appviewAuth(ids.AppBskyActorSearchActorsTypeahead),
         )
       return {
         encoding: 'application/json',

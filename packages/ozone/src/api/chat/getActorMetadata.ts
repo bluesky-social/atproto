@@ -1,6 +1,7 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ids } from '../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.chat.bsky.moderation.getActorMetadata({
@@ -11,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const res = await ctx.chatAgent.api.chat.bsky.moderation.getActorMetadata(
         params,
-        await ctx.chatAuth(),
+        await ctx.chatAuth(ids.ChatBskyModerationGetActorMetadata),
       )
       return {
         encoding: 'application/json',

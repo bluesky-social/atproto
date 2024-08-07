@@ -23,6 +23,7 @@ import {
 import { EventReverser } from '../src'
 import { ImageInvalidator } from '../src/image-invalidator'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -741,7 +742,11 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.tools.ozone.moderation.getRecord(
         { uri },
-        { headers: await network.ozone.modHeaders() },
+        {
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneModerationGetRecord,
+          ),
+        },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -750,7 +755,11 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.tools.ozone.moderation.getRepo(
         { did },
-        { headers: await network.ozone.modHeaders() },
+        {
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneModerationGetRepo,
+          ),
+        },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)

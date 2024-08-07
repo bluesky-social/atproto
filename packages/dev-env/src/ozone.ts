@@ -141,7 +141,10 @@ export class TestOzone {
     this.ctx.cfg.access.triage.push(did)
   }
 
-  async modHeaders(role: 'admin' | 'moderator' | 'triage' = 'moderator') {
+  async modHeaders(
+    lxm: string,
+    role: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) {
     const account =
       role === 'admin'
         ? this.adminAccnt
@@ -151,7 +154,7 @@ export class TestOzone {
     const jwt = await createServiceJwt({
       iss: account.did,
       aud: this.ctx.cfg.service.did,
-      lxm: null,
+      lxm,
       keypair: account.key,
     })
     return { authorization: `Bearer ${jwt}` }

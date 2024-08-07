@@ -9,6 +9,7 @@ import {
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { Database } from '../../src'
+import { ids } from '../../src/lexicon/lexicons'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
@@ -68,7 +69,10 @@ describe('timeline views', () => {
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
       },
     )
 
@@ -78,7 +82,7 @@ describe('timeline views', () => {
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
       {
-        headers: await network.serviceHeaders(bob),
+        headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetTimeline),
       },
     )
 
@@ -88,7 +92,10 @@ describe('timeline views', () => {
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
       {
-        headers: await network.serviceHeaders(carol),
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetTimeline,
+        ),
       },
     )
 
@@ -98,7 +105,7 @@ describe('timeline views', () => {
     const danTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
       {
-        headers: await network.serviceHeaders(dan),
+        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
       },
     )
 
@@ -110,13 +117,19 @@ describe('timeline views', () => {
     const defaultTL = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
       },
     )
     const reverseChronologicalTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
       },
     )
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
@@ -131,7 +144,12 @@ describe('timeline views', () => {
           cursor,
           limit: 4,
         },
-        { headers: await network.serviceHeaders(carol) },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetTimeline,
+          ),
+        },
       )
       return res.data
     }
@@ -145,7 +163,12 @@ describe('timeline views', () => {
       {
         algorithm: REVERSE_CHRON,
       },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
 
     expect(full.data.feed.length).toEqual(7)
@@ -155,11 +178,21 @@ describe('timeline views', () => {
   it('agrees what the first item is for limit=1 and other limits', async () => {
     const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
       { limit: 10 },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
     const { data: timelineLimit1 } = await agent.api.app.bsky.feed.getTimeline(
       { limit: 1 },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
     expect(timeline.feed.length).toBeGreaterThan(1)
     expect(timelineLimit1.feed.length).toEqual(1)
@@ -169,7 +202,12 @@ describe('timeline views', () => {
   it('reflects self-labels', async () => {
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
       {},
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
 
     const alicePost = carolTL.data.feed.find(
@@ -201,7 +239,12 @@ describe('timeline views', () => {
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
@@ -227,7 +270,12 @@ describe('timeline views', () => {
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
@@ -245,7 +293,12 @@ describe('timeline views', () => {
   it('fails open on clearly bad cursor.', async () => {
     const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
       { cursor: '90210::bafycid' },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
     expect(timeline).toEqual({ feed: [] })
   })
