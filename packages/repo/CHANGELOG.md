@@ -1,12 +1,5 @@
 # @atproto/repo
 
-## 0.4.2-rc.0
-
-### Patch Changes
-
-- Updated dependencies [[`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b), [`2ded0156b`](https://github.com/bluesky-social/atproto/commit/2ded0156b9adf33b9cce66583a375bff922d383b)]:
-  - @atproto/lexicon@0.4.1-rc.0
-
 ## 0.4.1
 
 ### Patch Changes
