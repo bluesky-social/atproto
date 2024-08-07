@@ -4186,6 +4186,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#hiddenPostsPref',
             'lex:app.bsky.actor.defs#bskyAppStatePref',
             'lex:app.bsky.actor.defs#labelersPref',
+            'lex:app.bsky.actor.defs#autoplayPref',
           ],
         },
       },
@@ -4473,6 +4474,16 @@ export const schemaDict = {
           guide: {
             type: 'string',
             maxLength: 100,
+          },
+        },
+      },
+      autoplayPref: {
+        type: 'object',
+        required: ['enabled'],
+        properties: {
+          enabled: {
+            type: 'boolean',
+            default: true,
           },
         },
       },

@@ -186,6 +186,7 @@ export type Preferences = (
   | HiddenPostsPref
   | BskyAppStatePref
   | LabelersPref
+  | AutoplayPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -500,4 +501,21 @@ export function isBskyAppProgressGuide(v: unknown): v is BskyAppProgressGuide {
 
 export function validateBskyAppProgressGuide(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#bskyAppProgressGuide', v)
+}
+
+export interface AutoplayPref {
+  enabled: boolean
+  [k: string]: unknown
+}
+
+export function isAutoplayPref(v: unknown): v is AutoplayPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#autoplayPref'
+  )
+}
+
+export function validateAutoplayPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#autoplayPref', v)
 }

@@ -170,7 +170,8 @@
           "#mutedWordsPref",
           "#hiddenPostsPref",
           "#bskyAppStatePref",
-          "#labelersPref"
+          "#labelersPref",
+          "#autoplayPref"
         ]
       }
     },
@@ -428,6 +429,13 @@
       "required": ["guide"],
       "properties": {
         "guide": { "type": "string", "maxLength": 100 }
+      }
+    },
+    "autoplayPref": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean", "default": true }
       }
     }
   }
