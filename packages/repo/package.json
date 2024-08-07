@@ -33,5 +33,8 @@
   },
   "devDependencies": {
     "jest": "^28.1.2"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
