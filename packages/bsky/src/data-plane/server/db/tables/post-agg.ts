@@ -7,6 +7,7 @@ export interface PostAgg {
   likeCount: Generated<number>
   replyCount: Generated<number>
   repostCount: Generated<number>
+  quoteCount: Generated<number>
 }
 
 export type PartialDB = {

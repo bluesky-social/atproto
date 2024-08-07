@@ -28,6 +28,7 @@ export interface PostView {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  quoteCount?: number
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
