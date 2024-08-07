@@ -9,8 +9,6 @@ import getRepo from './getRepo'
 import subscribeRepos from './subscribeRepos'
 import listBlobs from './listBlobs'
 import listRepos from './listRepos'
-import getCheckout from './deprecated/getCheckout'
-import getHead from './deprecated/getHead'
 
 export default function (server: Server, ctx: AppContext) {
   getBlob(server, ctx)
@@ -22,6 +20,4 @@ export default function (server: Server, ctx: AppContext) {
   subscribeRepos(server, ctx)
   listBlobs(server, ctx)
   listRepos(server, ctx)
-  getCheckout(server, ctx)
-  getHead(server, ctx)
 }
