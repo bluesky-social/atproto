@@ -6632,12 +6632,7 @@ export const schemaDict = {
               maxLength: 5,
               items: {
                 type: 'union',
-                refs: [
-                  'lex:app.bsky.feed.postgate#disableRule',
-                  'lex:app.bsky.feed.postgate#mentionRule',
-                  'lex:app.bsky.feed.postgate#followingRule',
-                  'lex:app.bsky.feed.postgate#listRule',
-                ],
+                refs: ['lex:app.bsky.feed.postgate#disableRule'],
               },
             },
           },
@@ -6645,29 +6640,8 @@ export const schemaDict = {
       },
       disableRule: {
         type: 'object',
-        description: 'Disable quoteposts entirely.',
+        description: 'Disables quoteposts of this post.',
         properties: {},
-      },
-      mentionRule: {
-        type: 'object',
-        description: 'Allow quoteposts from actors mentioned in your post.',
-        properties: {},
-      },
-      followingRule: {
-        type: 'object',
-        description: 'Allow quoteposts from actors you follow.',
-        properties: {},
-      },
-      listRule: {
-        type: 'object',
-        description: 'Allow quoteposts from actors on a list.',
-        required: ['list'],
-        properties: {
-          list: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
       },
     },
   },
