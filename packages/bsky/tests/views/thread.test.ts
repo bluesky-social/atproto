@@ -452,5 +452,43 @@ describe('pds thread views', () => {
       )
       await network.processAll()
     })
+
+    it('disables quotes', async () => {
+      const postUri = sc.posts[bob][0].ref.uri
+
+      await pdsAgent.api.app.bsky.feed.postgate.create(
+        {
+          repo: sc.dids.bob,
+          rkey: postUri.rkey,
+        },
+        {
+          post: postUri.toString(),
+          createdAt: new Date().toISOString(),
+          quotepostRules: [{ $type: 'app.bsky.feed.postgate#disableRule' }],
+        },
+        sc.getHeaders(sc.dids.bob),
+      )
+
+      await network.processAll()
+
+      const root = await agent.api.app.bsky.feed.getPostThread(
+        { uri: postUri.toString() },
+        { headers: await network.serviceHeaders(sc.dids.alice) },
+      )
+
+      // console.log(JSON.stringify(root.data.thread, null, 2))
+      // @ts-ignore
+      expect(root.data.thread.post.viewer?.quotepostDisabled).toEqual(true)
+
+      // cleanup
+      await pdsAgent.api.app.bsky.feed.postgate.delete(
+        {
+          repo: sc.dids.bob,
+          rkey: postUri.rkey,
+        },
+        sc.getHeaders(sc.dids.bob),
+      )
+      await network.processAll()
+    })
   })
 })
