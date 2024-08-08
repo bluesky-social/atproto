@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
           version: 8
           run_install: false
@@ -42,6 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
           version: 8
           run_install: false
@@ -62,6 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
           version: 8
           run_install: false

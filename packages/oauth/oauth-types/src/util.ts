@@ -18,3 +18,11 @@ export function isLoopbackUrl(input: URL | string): boolean {
   const url = typeof input === 'string' ? new URL(input) : input
   return isLoopbackHost(url.hostname)
 }
+
+export function safeUrl(input: URL | string): URL | null {
+  try {
+    return new URL(input)
+  } catch {
+    return null
+  }
+}

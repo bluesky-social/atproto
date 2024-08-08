@@ -1,4 +1,4 @@
-import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
+import { AppBskyFeedGetPostThread, AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import {
   assertIsThreadViewPost,

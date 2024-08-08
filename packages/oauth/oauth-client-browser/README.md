@@ -1,4 +1,4 @@
-# ATPROTO OAuth Client for the Browser
+# atproto OAuth Client for the Browser
 
 This package provides an OAuth bases `@atproto/api` agent interface for the
 browser. It implements all the OAuth features required by [ATPROTO] (PKCE, DPoP,
@@ -93,11 +93,14 @@ backend service must be provided.
 
 > [!CAUTION]
 >
-> Not using a handle resolver service hosted by you will leak the user's IP
-> address (and associated ATPROTO handle) to any service you rely on to perform
-> the resolution. This is a privacy concern that you should be aware of and
-> that you **must** warn your users about. Bluesky declines any responsibility
-> in case of misusage of the handle resolver service.
+> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifiers to Bluesky,
+> a third party. While Bluesky has a declared privacy policy, both developers
+> and users of applications need to be informed and aware of the privacy
+> implications of this arrangement. Application developers are encouraged to
+> improve user privacy by operating their own handle resolution service when
+> possible. If you are a PDS self-hoster, you can use your PDS's URL for
+> `handleResolver`.
 
 If a `string` or `URL` object is used as `handleResolver`, the library will
 expect this value to be the URL of a service running the
@@ -146,7 +149,7 @@ following optional configuration options:
   response is returned to the client. Defaults to `fragment`.
 
 - `plcDirectoryUrl`: The URL of the PLC directory. This will typically not be
-  needed unless you run an entire ATPROTO stack locally. Defaults to
+  needed unless you run an entire atproto stack locally. Defaults to
   `https://plc.directory`.
 
 ## Usage
@@ -155,9 +158,9 @@ Once the `client` is set up, it can be used to initiate & manage OAuth sessions.
 
 ### Initializing the client
 
-The client will manage the sessions for you and must first initialize itself
-to do so. Note that this operation must be performed once (and **only once**)
-whenever the web app is loaded.
+The client will manage the sessions for you. In order to do so, it must first
+initialize itself. Note that this operation must be performed once (and **only
+once**) whenever the web app is loaded.
 
 ```typescript
 const result: undefined | { agent: OAuthAgent; state?: string } =
@@ -179,16 +182,16 @@ result of an authorization redirect (both `agent` and `state` are defined).
 
 ### Initiating an OAuth flow
 
-In order to initiate an OAuth flow, you must fist determine which PDS the
+In order to initiate an OAuth flow, we must fist determine which PDS the
 authentication flow will be initiated from. This means that the user must
-provide one of the following:
+provide one of the following information:
 
-- The user's ATPROTO handle
-- The user's ATPROTO DID
+- The user's handle
+- The user's DID
 - A PDS/Entryway URL
 
 Using that information, the OAuthClient will resolve all the needed information
-needed to initiate the OAuth flow and will redirect the user to the OAuth server.
+to initiate the OAuth flow, and redirect the user to the OAuth server.
 
 ```typescript
 try {
@@ -196,7 +199,7 @@ try {
     state: 'some value needed later',
     prompt: 'none', // Attempt to sign in without user interaction (SSO)
     ui_locales: 'fr-CA fr en', // Only supported by some OAuth servers (requires OpenID Connect support + i18n support)
-    signal: new AbortController().signal, // Optional, allows the user to cancel the sign in (and destroy the pending authorization, for better security)
+    signal: new AbortController().signal, // Optional, allows to cancel the sign in (and destroy the pending authorization, for better security)
   })
 
   console.log('Never executed')
@@ -233,7 +236,7 @@ in its store. The app will have to keep track of those itself.
 
 ### Watching for session invalidation
 
-The client will emit events whenever a session becomes unavailable, allowing it to
+The client will emit events whenever a session becomes unavailable, allowing to
 trigger global behaviors (e.g. show the login page).
 
 ```ts
@@ -254,16 +257,18 @@ client.addEventListener(
 ## Usage with `@atproto/api`
 
 The `@atproto/api` package provides a way to interact with the `com.atproto` and
-`app.bsky` XRPC lexicons through the `ApiAgent` interface. The `agent` returned
-by the `BrowserOAuthClient` extends the `ApiAgent` class, allowing it to use the
-`BrowserOAuthClient` as a regular `ApiAgent` (akin to `AtpAgent` class
+`app.bsky` XRPC lexicons through the `Agent` interface. The `agent` returned
+by the `BrowserOAuthClient` extend the `Agent` class, allowing to use the
+`BrowserOAuthClient` as a regular `Agent` (akin to `AtpAgent` class
 instances).
 
 ```typescript
 const aliceAgent = await client.restore('did:plc:alice')
+
+await aliceAgent.getProfile({ actor: aliceAgent.did })
 ```
 
-Any refresh of the credentials will occur under the hood, and the new tokens
+Any refresh of the credentials will happen under the hood, and the new tokens
 will be saved in the session store (in the browser's indexed DB).
 
 ## Advances use-cases
@@ -271,7 +276,7 @@ will be saved in the session store (in the browser's indexed DB).
 ### Using in development (localhost)
 
 The OAuth server must be able to fetch the `client_metadata` object. The best
-way to do this if you have not already deployed your app is to use a tunneling
+way to do this if you didn't already deployed your app is to use a tunneling
 service like [ngrok](https://ngrok.com/).
 
 The `client_id` will then be something like
@@ -280,7 +285,7 @@ The `client_id` will then be something like
 There is however a special case for loopback clients. A loopback client is a
 client that runs on `localhost`. In this case, the OAuth server will not be able
 to fetch the `client_metadata` object because `localhost` is not accessible from
-the outside. To work around this, ATPROTO OAuth server are required to support
+the outside. To work around this, atproto OAuth servers are required to support
 this case by providing an hard coded `client_metadata` object for the client.
 
 This has several restrictions:

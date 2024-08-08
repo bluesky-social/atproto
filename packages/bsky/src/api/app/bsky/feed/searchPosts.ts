@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import {

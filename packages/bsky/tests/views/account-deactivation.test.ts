@@ -1,5 +1,5 @@
-import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { AtpAgent } from '@atproto/api'
+import { basicSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
 
 describe('bsky account deactivation', () => {
   let network: TestNetwork

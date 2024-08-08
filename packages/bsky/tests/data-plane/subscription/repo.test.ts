@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { DatabaseSchemaType } from '../../../src/data-plane/server/db/database-schema'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'

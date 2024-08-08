@@ -1,5 +1,5 @@
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { forSnapshot } from './_util'
 
 describe('team management', () => {

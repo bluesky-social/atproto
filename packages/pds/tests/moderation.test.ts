@@ -1,5 +1,5 @@
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, ImageRef, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { BlobNotFoundError } from '@atproto/repo'
 import basicSeed from './seeds/basic'
 import {

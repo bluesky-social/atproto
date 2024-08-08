@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import * as plc from '@did-plc/lib'

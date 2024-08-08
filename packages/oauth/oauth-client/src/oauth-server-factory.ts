@@ -19,7 +19,10 @@ export class OAuthServerFactory {
   ) {}
 
   async fromIssuer(issuer: string, dpopKey: Key, options?: GetCachedOptions) {
-    const serverMetadata = await this.resolver.resolveMetadata(issuer, options)
+    const serverMetadata = await this.resolver.getAuthorizationServerMetadata(
+      issuer,
+      options,
+    )
     return this.fromMetadata(serverMetadata, dpopKey)
   }
 

@@ -7,7 +7,7 @@ import * as ui8 from 'uint8arrays'
 import { MINUTE } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LexiconDoc } from '@atproto/lexicon'
-import xrpc, { ServiceClient, XRPCError } from '@atproto/xrpc'
+import { XrpcClient, XRPCError } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
 import {
   createServer,
@@ -62,13 +62,12 @@ describe('Auth', () => {
       }
     },
   })
-  xrpc.addLexicons(LEXICONS)
 
-  let client: ServiceClient
+  let client: XrpcClient
   beforeAll(async () => {
     const port = await getPort()
     s = await createServer(port, server)
-    client = xrpc.service(`http://localhost:${port}`)
+    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
   })
 
   afterAll(async () => {

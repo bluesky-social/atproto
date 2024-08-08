@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
 import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'

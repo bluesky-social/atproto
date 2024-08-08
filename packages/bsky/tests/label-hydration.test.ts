@@ -40,7 +40,7 @@ describe('label hydration', () => {
 
   it('hydrates labels based on a supplied labeler header', async () => {
     AtpAgent.configure({ appLabelers: [alice] })
-    pdsAgent.configureLabelersHeader([])
+    pdsAgent.configureLabelers([])
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
       {
@@ -55,12 +55,15 @@ describe('label hydration', () => {
 
   it('hydrates labels based on multiple a supplied labelers', async () => {
     AtpAgent.configure({ appLabelers: [bob] })
-    pdsAgent.configureLabelersHeader([alice, labelerDid])
+    pdsAgent.configureLabelers([alice])
 
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
       {
-        headers: sc.getHeaders(bob),
+        headers: {
+          'atproto-accept-labelers': labelerDid,
+          ...sc.getHeaders(bob),
+        },
       },
     )
     expect(res.data.labels?.length).toBe(3)
@@ -95,7 +98,7 @@ describe('label hydration', () => {
 
   it('hydrates labels without duplication', async () => {
     AtpAgent.configure({ appLabelers: [alice] })
-    pdsAgent.configureLabelersHeader([])
+    pdsAgent.configureLabelers([])
     const res = await pdsAgent.api.app.bsky.actor.getProfiles(
       { actors: [carol, carol] },
       { headers: sc.getHeaders(bob) },
@@ -108,7 +111,7 @@ describe('label hydration', () => {
 
   it('does not hydrate labels from takendown labeler', async () => {
     AtpAgent.configure({ appLabelers: [alice, sc.dids.dan] })
-    pdsAgent.configureLabelersHeader([])
+    pdsAgent.configureLabelers([])
     await network.bsky.ctx.dataplane.takedownActor({ did: alice })
     const res = await pdsAgent.api.app.bsky.actor.getProfile(
       { actor: carol },
@@ -124,7 +127,7 @@ describe('label hydration', () => {
 
   it('hydrates labels onto list views.', async () => {
     AtpAgent.configure({ appLabelers: [labelerDid] })
-    pdsAgent.configureLabelersHeader([])
+    pdsAgent.configureLabelers([])
 
     const list = await pdsAgent.api.app.bsky.graph.list.create(
       { repo: alice },

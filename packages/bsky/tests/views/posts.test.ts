@@ -1,4 +1,4 @@
-import AtpAgent, { AppBskyFeedPost } from '@atproto/api'
+import { AppBskyFeedPost, AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
 

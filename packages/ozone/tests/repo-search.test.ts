@@ -4,7 +4,7 @@ import {
   TestNetwork,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { paginateAll } from './_util'
 
 describe('admin repo search view', () => {

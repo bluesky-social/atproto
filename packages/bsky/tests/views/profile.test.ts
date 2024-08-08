@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'

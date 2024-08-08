@@ -1,5 +1,5 @@
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import usersSeed from './seeds/users'
 import { AuthScope } from '../dist/auth-verifier'
 

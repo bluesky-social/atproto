@@ -1,5 +1,5 @@
 import * as jose from 'jose'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 

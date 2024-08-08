@@ -1,12 +1,13 @@
 import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
-import AtpAgent, {
+import {
   ComAtprotoModerationCreateReport,
   AppBskyFeedPost,
   AppBskyRichtextFacet,
   AppBskyFeedLike,
   AppBskyGraphFollow,
   AppBskyGraphList,
+  AtpAgent,
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
@@ -133,7 +134,7 @@ export class SeedClient<
     },
   ) {
     const { data: account } =
-      await this.agent.api.com.atproto.server.createAccount(params)
+      await this.agent.com.atproto.server.createAccount(params)
     this.dids[shortName] = account.did
     this.accounts[account.did] = {
       ...account,
@@ -144,7 +145,7 @@ export class SeedClient<
   }
 
   async updateHandle(by: string, handle: string) {
-    await this.agent.api.com.atproto.identity.updateHandle(
+    await this.agent.com.atproto.identity.updateHandle(
       { handle },
       { encoding: 'application/json', headers: this.getHeaders(by) },
     )
@@ -156,14 +157,20 @@ export class SeedClient<
     description: string,
     selfLabels?: string[],
     joinedViaStarterPack?: RecordRef,
-  ) {
+  ): Promise<{
+    displayName: string
+    description: string
+    avatar: { cid: string; mimeType: string }
+    ref: RecordRef
+    joinedViaStarterPack?: RecordRef
+  }> {
     AVATAR_IMG ??= await fs.readFile(
       '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
 
     let avatarBlob
     {
-      const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
+      const res = await this.agent.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(by),
       } as any)
@@ -171,7 +178,7 @@ export class SeedClient<
     }
 
     {
-      const res = await this.agent.api.app.bsky.actor.profile.create(
+      const res = await this.agent.app.bsky.actor.profile.create(
         { repo: by },
         {
           displayName,
@@ -200,7 +207,7 @@ export class SeedClient<
   }
 
   async updateProfile(by: string, record: Record<string, unknown>) {
-    const res = await this.agent.api.com.atproto.repo.putRecord(
+    const res = await this.agent.com.atproto.repo.putRecord(
       {
         repo: by,
         collection: 'app.bsky.actor.profile',
@@ -222,7 +229,7 @@ export class SeedClient<
     to: string,
     overrides?: Partial<AppBskyGraphFollow.Record>,
   ) {
-    const res = await this.agent.api.app.bsky.graph.follow.create(
+    const res = await this.agent.app.bsky.graph.follow.create(
       { repo: from },
       {
         subject: to,
@@ -241,7 +248,7 @@ export class SeedClient<
     if (!follow) {
       throw new Error('follow does not exist')
     }
-    await this.agent.api.app.bsky.graph.follow.delete(
+    await this.agent.app.bsky.graph.follow.delete(
       { repo: from, rkey: follow.uri.rkey },
       this.getHeaders(from),
     )
@@ -253,7 +260,7 @@ export class SeedClient<
     to: string,
     overrides?: Partial<AppBskyGraphFollow.Record>,
   ) {
-    const res = await this.agent.api.app.bsky.graph.block.create(
+    const res = await this.agent.app.bsky.graph.block.create(
       { repo: from },
       {
         subject: to,
@@ -272,7 +279,7 @@ export class SeedClient<
     if (!block) {
       throw new Error('block does not exist')
     }
-    await this.agent.api.app.bsky.graph.block.delete(
+    await this.agent.app.bsky.graph.block.delete(
       { repo: from, rkey: block.uri.rkey },
       this.getHeaders(from),
     )
@@ -304,7 +311,7 @@ export class SeedClient<
         : recordEmbed
           ? { $type: 'app.bsky.embed.record', ...recordEmbed }
           : imageEmbed
-    const res = await this.agent.api.app.bsky.feed.post.create(
+    const res = await this.agent.app.bsky.feed.post.create(
       { repo: by },
       {
         text: text,
@@ -327,7 +334,7 @@ export class SeedClient<
   }
 
   async deletePost(by: string, uri: AtUri) {
-    await this.agent.api.app.bsky.feed.post.delete(
+    await this.agent.app.bsky.feed.post.delete(
       {
         repo: by,
         rkey: uri.rkey,
@@ -342,7 +349,7 @@ export class SeedClient<
     encoding: string,
   ): Promise<ImageRef> {
     const file = await fs.readFile(filePath)
-    const res = await this.agent.api.com.atproto.repo.uploadBlob(file, {
+    const res = await this.agent.com.atproto.repo.uploadBlob(file, {
       headers: this.getHeaders(by),
       encoding,
     } as any)
@@ -354,7 +361,7 @@ export class SeedClient<
     subject: RecordRef,
     overrides?: Partial<AppBskyFeedLike.Record>,
   ) {
-    const res = await this.agent.api.app.bsky.feed.like.create(
+    const res = await this.agent.app.bsky.feed.like.create(
       { repo: by },
       {
         subject: subject.raw,
@@ -382,7 +389,7 @@ export class SeedClient<
           images,
         }
       : undefined
-    const res = await this.agent.api.app.bsky.feed.post.create(
+    const res = await this.agent.app.bsky.feed.post.create(
       { repo: by },
       {
         text: text,
@@ -407,7 +414,7 @@ export class SeedClient<
   }
 
   async repost(by: string, subject: RecordRef) {
-    const res = await this.agent.api.app.bsky.feed.repost.create(
+    const res = await this.agent.app.bsky.feed.repost.create(
       { repo: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -424,7 +431,7 @@ export class SeedClient<
     purpose: 'mod' | 'curate' | 'reference',
     overrides?: Partial<AppBskyGraphList.Record>,
   ) {
-    const res = await this.agent.api.app.bsky.graph.list.create(
+    const res = await this.agent.app.bsky.graph.list.create(
       { repo: by },
       {
         name,
@@ -449,7 +456,7 @@ export class SeedClient<
   }
 
   async createFeedGen(by: string, feedDid: string, name: string) {
-    const res = await this.agent.api.app.bsky.feed.generator.create(
+    const res = await this.agent.app.bsky.feed.generator.create(
       { repo: by },
       {
         did: feedDid,
@@ -477,7 +484,7 @@ export class SeedClient<
     for (const did of actors) {
       await this.addToList(by, did, list)
     }
-    const res = await this.agent.api.app.bsky.graph.starterpack.create(
+    const res = await this.agent.app.bsky.graph.starterpack.create(
       { repo: by },
       {
         name,
@@ -499,7 +506,7 @@ export class SeedClient<
   }
 
   async addToList(by: string, subject: string, list: RecordRef) {
-    const res = await this.agent.api.app.bsky.graph.listitem.create(
+    const res = await this.agent.app.bsky.graph.listitem.create(
       { repo: by },
       { subject, list: list.uriStr, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -517,7 +524,7 @@ export class SeedClient<
     if (!foundList) return
     const foundItem = foundList.items[subject]
     if (!foundItem) return
-    await this.agent.api.app.bsky.graph.listitem.delete(
+    await this.agent.app.bsky.graph.listitem.delete(
       { repo: by, rkey: foundItem.uri.rkey },
       this.getHeaders(by),
     )
@@ -531,7 +538,7 @@ export class SeedClient<
     reportedBy: string
   }) {
     const { reasonType, subject, reason, reportedBy } = opts
-    const result = await this.agent.api.com.atproto.moderation.createReport(
+    const result = await this.agent.com.atproto.moderation.createReport(
       { reasonType, subject, reason },
       {
         encoding: 'application/json',

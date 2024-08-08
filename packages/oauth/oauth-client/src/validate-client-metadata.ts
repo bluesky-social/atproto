@@ -58,7 +58,7 @@ export function validateClientMetadata(
           )
         }
         break
-      case 'client_secret_jwt':
+      case 'private_key_jwt':
         if (!keyset) {
           throw new TypeError(`Keyset is required for ${method} method`)
         }

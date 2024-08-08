@@ -1,5 +1,5 @@
 import { ImageRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import {
   RepoBlobRef,
   RepoRef,

@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, { AtUri } from '@atproto/api'
+import { AtpAgent, AtUri } from '@atproto/api'
 import { assertIsThreadViewPost, forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {

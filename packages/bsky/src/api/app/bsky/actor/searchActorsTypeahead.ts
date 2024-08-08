@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
@@ -52,7 +52,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
 
   if (ctx.searchAgent) {
     const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+      await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
         typeahead: true,
         q: term,
         limit: params.limit,

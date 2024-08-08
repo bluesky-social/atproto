@@ -1,18 +1,21 @@
 import assert from 'assert'
 import getPort from 'get-port'
-import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpAgent,
-  AtpAgentFetchHandlerResponse,
   AtpSessionEvent,
   AtpSessionData,
   BSKY_LABELER_DID,
-} from '..'
+} from '../src'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 import { createHeaderEchoServer } from './util/echo-server'
 
-describe('agent', () => {
+const getPdsEndpointUrl = (...args: Parameters<typeof getPdsEndpoint>) => {
+  const endpoint = getPdsEndpoint(...args)
+  return endpoint ? new URL(endpoint) : endpoint
+}
+
+describe('AtpAgent', () => {
   let network: TestNetworkNoAppView
 
   beforeAll(async () => {
@@ -33,7 +36,7 @@ describe('agent', () => {
     const agent = new AtpAgent({ service: network.pds.url, persistSession })
     const agent2 = agent.clone()
     expect(agent2 instanceof AtpAgent).toBeTruthy()
-    expect(agent.service).toEqual(agent2.service)
+    expect(agent.serviceUrl).toEqual(agent2.serviceUrl)
   })
 
   it('creates a new session on account creation.', async () => {
@@ -60,11 +63,9 @@ describe('agent', () => {
     expect(agent.session?.email).toEqual('user1@test.com')
     expect(agent.session?.emailConfirmed).toEqual(false)
     assert(isValidDidDoc(res.data.didDoc))
-    expect(agent.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res.data.didDoc))
+    expect(agent.pdsUrl).toEqual(getPdsEndpointUrl(res.data.didDoc))
 
-    const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
-      {},
-    )
+    const { data: sessionInfo } = await agent.com.atproto.server.getSession({})
     expect(sessionInfo).toMatchObject({
       did: res.data.did,
       handle: res.data.handle,
@@ -110,10 +111,9 @@ describe('agent', () => {
     expect(agent2.session?.email).toEqual('user2@test.com')
     expect(agent2.session?.emailConfirmed).toEqual(false)
     assert(isValidDidDoc(res1.data.didDoc))
-    expect(agent2.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res1.data.didDoc))
+    expect(agent2.pdsUrl).toEqual(getPdsEndpointUrl(res1.data.didDoc))
 
-    const { data: sessionInfo } =
-      await agent2.api.com.atproto.server.getSession({})
+    const { data: sessionInfo } = await agent2.com.atproto.server.getSession({})
     expect(sessionInfo).toMatchObject({
       did: res1.data.did,
       handle: res1.data.handle,
@@ -156,10 +156,9 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
     assert(isValidDidDoc(res1.data.didDoc))
-    expect(agent2.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res1.data.didDoc))
+    expect(agent2.pdsUrl).toEqual(getPdsEndpointUrl(res1.data.didDoc))
 
-    const { data: sessionInfo } =
-      await agent2.api.com.atproto.server.getSession({})
+    const { data: sessionInfo } = await agent2.com.atproto.server.getSession({})
     expect(sessionInfo).toMatchObject({
       did: res1.data.did,
       handle: res1.data.handle,
@@ -192,7 +191,7 @@ describe('agent', () => {
       email: 'user4@test.com',
       password: 'password',
     })
-    if (!agent.session) {
+    if (!agent.session?.refreshJwt) {
       throw new Error('No session created')
     }
     const session1 = agent.session
@@ -203,26 +202,25 @@ describe('agent', () => {
     await new Promise((r) => setTimeout(r, 1000))
 
     // patch the fetch handler to fake an expired token error on the next request
-    const tokenExpiredFetchHandler = async function (
-      httpUri: string,
-      httpMethod: string,
-      httpHeaders: Record<string, string>,
-      httpReqBody: unknown,
-    ): Promise<AtpAgentFetchHandlerResponse> {
-      if (httpHeaders.authorization === `Bearer ${origAccessJwt}`) {
-        return {
-          status: 400,
-          headers: {},
-          body: { error: 'ExpiredToken' },
+    agent.sessionManager.setFetch(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const req = new Request(input, init)
+        if (
+          req.headers.get('authorization') === `Bearer ${origAccessJwt}` &&
+          !req.url.includes('com.atproto.server.refreshSession')
+        ) {
+          return new Response(JSON.stringify({ error: 'ExpiredToken' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
-      }
-      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
-    }
+
+        return globalThis.fetch(req)
+      },
+    )
 
     // put the agent through the auth flow
-    AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     const res1 = await createPost(agent)
-    AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(res1.success).toEqual(true)
     expect(agent.hasSession).toEqual(true)
@@ -270,34 +268,30 @@ describe('agent', () => {
     // patch the fetch handler to fake an expired token error on the next request
     let expiredCalls = 0
     let refreshCalls = 0
-    const tokenExpiredFetchHandler = async function (
-      httpUri: string,
-      httpMethod: string,
-      httpHeaders: Record<string, string>,
-      httpReqBody: unknown,
-    ): Promise<AtpAgentFetchHandlerResponse> {
-      if (httpHeaders.authorization === `Bearer ${origAccessJwt}`) {
-        expiredCalls++
-        return {
-          status: 400,
-          headers: {},
-          body: { error: 'ExpiredToken' },
+
+    agent.sessionManager.setFetch(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const req = new Request(input, init)
+        if (req.headers.get('authorization') === `Bearer ${origAccessJwt}`) {
+          expiredCalls++
+          return new Response(JSON.stringify({ error: 'ExpiredToken' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
-      }
-      if (httpUri.includes('com.atproto.server.refreshSession')) {
-        refreshCalls++
-      }
-      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
-    }
+        if (req.url.includes('com.atproto.server.refreshSession')) {
+          refreshCalls++
+        }
+        return globalThis.fetch(req)
+      },
+    )
 
     // put the agent through the auth flow
-    AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     const [res1, res2, res3] = await Promise.all([
       createPost(agent),
       createPost(agent),
       createPost(agent),
     ])
-    AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(expiredCalls).toEqual(3)
     expect(refreshCalls).toEqual(1)
@@ -384,40 +378,31 @@ describe('agent', () => {
     const origAccessJwt = session1.accessJwt
 
     // patch the fetch handler to fake an expired token error on the next request
-    const tokenExpiredFetchHandler = async function (
-      httpUri: string,
-      httpMethod: string,
-      httpHeaders: Record<string, string>,
-      httpReqBody: unknown,
-    ): Promise<AtpAgentFetchHandlerResponse> {
-      if (httpHeaders.authorization === `Bearer ${origAccessJwt}`) {
-        return {
-          status: 400,
-          headers: {},
-          body: { error: 'ExpiredToken' },
+    agent.sessionManager.setFetch(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const req = new Request(input, init)
+        if (req.headers.get('authorization') === `Bearer ${origAccessJwt}`) {
+          return new Response(JSON.stringify({ error: 'ExpiredToken' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
         }
-      }
-      if (httpUri.includes('com.atproto.server.refreshSession')) {
-        return {
-          status: 500,
-          headers: {},
-          body: undefined,
+        if (req.url.includes('com.atproto.server.refreshSession')) {
+          return new Response(undefined, { status: 500 })
         }
-      }
-      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
-    }
+        return globalThis.fetch(req)
+      },
+    )
 
     // put the agent through the auth flow
-    AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     try {
-      await agent.api.app.bsky.feed.getTimeline()
+      await agent.app.bsky.feed.getTimeline()
       throw new Error('Should have failed')
     } catch (e: any) {
       // the original error passes through
       expect(e.status).toEqual(400)
       expect(e.error).toEqual('ExpiredToken')
     }
-    AtpAgent.configure({ fetch: defaultFetchHandler })
 
     // still has session because it wasn't invalidated
     expect(agent.hasSession).toEqual(true)
@@ -426,42 +411,6 @@ describe('agent', () => {
     expect(events[0]).toEqual('create')
     expect(sessions.length).toEqual(1)
     expect(sessions[0]?.accessJwt).toEqual(origAccessJwt)
-  })
-
-  describe('setPersistSessionHandler', () => {
-    it('sets persist session handler', async () => {
-      let originalHandlerCallCount = 0
-      let newHandlerCallCount = 0
-
-      const persistSession = () => {
-        originalHandlerCallCount++
-      }
-      const newPersistSession = () => {
-        newHandlerCallCount++
-      }
-
-      const agent = new AtpAgent({ service: network.pds.url, persistSession })
-
-      await agent.createAccount({
-        handle: 'user7.test',
-        email: 'user7@test.com',
-        password: 'password',
-      })
-
-      expect(originalHandlerCallCount).toEqual(1)
-
-      agent.setPersistSessionHandler(newPersistSession)
-      agent.session = undefined
-
-      await agent.createAccount({
-        handle: 'user8.test',
-        email: 'user8@test.com',
-        password: 'password',
-      })
-
-      expect(originalHandlerCallCount).toEqual(1)
-      expect(newHandlerCallCount).toEqual(1)
-    })
   })
 
   describe('createAccount', () => {
@@ -519,19 +468,19 @@ describe('agent', () => {
     })
   })
 
-  describe('configureLabelersHeader', () => {
+  describe('configureLabelers', () => {
     it('adds the labelers header as expected', async () => {
       const port = await getPort()
       const server = await createHeaderEchoServer(port)
       const agent = new AtpAgent({ service: `http://localhost:${port}` })
 
-      agent.configureLabelersHeader(['did:plc:test1'])
+      agent.configureLabelers(['did:plc:test1'])
       const res1 = await agent.com.atproto.server.describeServer()
       expect(res1.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1`,
       )
 
-      agent.configureLabelersHeader(['did:plc:test1', 'did:plc:test2'])
+      agent.configureLabelers(['did:plc:test1', 'did:plc:test2'])
       const res2 = await agent.com.atproto.server.describeServer()
       expect(res2.data['atproto-accept-labelers']).toEqual(
         `${BSKY_LABELER_DID};redact, did:plc:test1, did:plc:test2`,
@@ -541,7 +490,7 @@ describe('agent', () => {
     })
   })
 
-  describe('configureProxyHeader', () => {
+  describe('configureProxy', () => {
     it('adds the proxy header as expected', async () => {
       const port = await getPort()
       const server = await createHeaderEchoServer(port)
@@ -550,7 +499,7 @@ describe('agent', () => {
       const res1 = await agent.com.atproto.server.describeServer()
       expect(res1.data['atproto-proxy']).toBeFalsy()
 
-      agent.configureProxyHeader('atproto_labeler', 'did:plc:test1')
+      agent.configureProxy('did:plc:test1#atproto_labeler')
       const res2 = await agent.com.atproto.server.describeServer()
       expect(res2.data['atproto-proxy']).toEqual(
         'did:plc:test1#atproto_labeler',
@@ -569,8 +518,8 @@ describe('agent', () => {
 })
 
 const createPost = async (agent: AtpAgent) => {
-  return agent.api.com.atproto.repo.createRecord({
-    repo: agent.session?.did ?? '',
+  return agent.com.atproto.repo.createRecord({
+    repo: agent.accountDid,
     collection: 'app.bsky.feed.post',
     record: {
       text: 'hello there',

@@ -2,25 +2,18 @@ import { z } from 'zod'
 import { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>
-export type Headers = Record<string, string>
+export type HeadersMap = Record<string, string>
+
+/** @deprecated not to be confused with the WHATWG Headers constructor */
+export type Headers = HeadersMap
+
+export type Gettable<T> = T | (() => T)
 
 export interface CallOptions {
   encoding?: string
-  headers?: Headers
+  signal?: AbortSignal
+  headers?: HeadersMap
 }
-
-export interface FetchHandlerResponse {
-  status: number
-  headers: Headers
-  body: ArrayBuffer | undefined
-}
-
-export type FetchHandler = (
-  httpUri: string,
-  httpMethod: string,
-  httpHeaders: Headers,
-  httpReqBody: any,
-) => Promise<FetchHandlerResponse>
 
 export const errorResponseBody = z.object({
   error: z.string().optional(),
@@ -45,7 +38,24 @@ export enum ResponseType {
   UpstreamTimeout = 504,
 }
 
+export function httpResponseCodeToEnum(status: number): ResponseType {
+  if (status in ResponseType) {
+    return status
+  } else if (status >= 100 && status < 200) {
+    return ResponseType.XRPCNotSupported
+  } else if (status >= 200 && status < 300) {
+    return ResponseType.Success
+  } else if (status >= 300 && status < 400) {
+    return ResponseType.XRPCNotSupported
+  } else if (status >= 400 && status < 500) {
+    return ResponseType.InvalidRequest
+  } else {
+    return ResponseType.InternalServerError
+  }
+}
+
 export const ResponseTypeNames = {
+  [ResponseType.Unknown]: 'Unknown',
   [ResponseType.InvalidResponse]: 'InvalidResponse',
   [ResponseType.Success]: 'Success',
   [ResponseType.InvalidRequest]: 'InvalidRequest',
@@ -61,7 +71,12 @@ export const ResponseTypeNames = {
   [ResponseType.UpstreamTimeout]: 'UpstreamTimeout',
 }
 
+export function httpResponseCodeToName(status: number): string {
+  return ResponseTypeNames[httpResponseCodeToEnum(status)]
+}
+
 export const ResponseTypeStrings = {
+  [ResponseType.Unknown]: 'Unknown',
   [ResponseType.InvalidResponse]: 'Invalid Response',
   [ResponseType.Success]: 'Success',
   [ResponseType.InvalidRequest]: 'Invalid Request',
@@ -77,6 +92,10 @@ export const ResponseTypeStrings = {
   [ResponseType.UpstreamTimeout]: 'Upstream Timeout',
 }
 
+export function httpResponseCodeToString(status: number): string {
+  return ResponseTypeStrings[httpResponseCodeToEnum(status)]
+}
+
 export class XRPCResponse {
   success = true
 
@@ -88,19 +107,48 @@ export class XRPCResponse {
 
 export class XRPCError extends Error {
   success = false
-  headers?: Headers
+
+  public status: ResponseType
 
   constructor(
-    public status: ResponseType,
-    public error?: string,
+    statusCode: number,
+    public error: string = httpResponseCodeToName(statusCode),
     message?: string,
-    headers?: Headers,
+    public headers?: Headers,
+    options?: ErrorOptions,
   ) {
-    super(message || error || ResponseTypeStrings[status])
-    if (!this.error) {
-      this.error = ResponseTypeNames[status]
+    super(message || error || httpResponseCodeToString(statusCode), options)
+
+    this.status = httpResponseCodeToEnum(statusCode)
+
+    // Pre 2022 runtimes won't handle the "options" constructor argument
+    const cause = options?.cause
+    if (this.cause === undefined && cause !== undefined) {
+      this.cause = cause
     }
-    this.headers = headers
+  }
+
+  static from(cause: unknown, fallbackStatus?: ResponseType): XRPCError {
+    if (cause instanceof XRPCError) {
+      return cause
+    }
+
+    // Extract status code from "http-errors" like errors
+    const statusCode: unknown =
+      cause instanceof Error
+        ? ('statusCode' in cause ? cause.statusCode : undefined) ??
+          ('status' in cause ? cause.status : undefined)
+        : undefined
+
+    const status: ResponseType =
+      typeof statusCode === 'number'
+        ? httpResponseCodeToEnum(statusCode)
+        : fallbackStatus ?? ResponseType.Unknown
+
+    const error = ResponseTypeNames[status]
+    const message = cause instanceof Error ? cause.message : String(cause)
+
+    return new XRPCError(status, error, message, undefined, { cause })
   }
 }
 
@@ -114,6 +162,8 @@ export class XRPCInvalidResponseError extends XRPCError {
       ResponseType.InvalidResponse,
       ResponseTypeStrings[ResponseType.InvalidResponse],
       `The server gave an invalid response and may be out of date.`,
+      undefined,
+      { cause: validationError },
     )
   }
 }

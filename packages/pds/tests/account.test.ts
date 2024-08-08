@@ -1,8 +1,8 @@
-import { once, EventEmitter } from 'events'
-import AtpAgent, { ComAtprotoServerResetPassword } from '@atproto/api'
-import { IdResolver } from '@atproto/identity'
+import { AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { IdResolver } from '@atproto/identity'
+import { EventEmitter, once } from 'events'
 import Mail from 'nodemailer/lib/mailer'
 import { AppContext } from '../src'
 import { ServerMailer } from '../src/mailer'
@@ -381,6 +381,7 @@ describe('account', () => {
   })
 
   it('can perform authenticated requests', async () => {
+    // @TODO each test should be able to run independently & concurrently
     agent.api.setHeader('authorization', `Bearer ${jwt}`)
     const res = await agent.api.com.atproto.server.getSession({})
     expect(res.data.did).toBe(did)

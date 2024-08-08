@@ -1,6 +1,6 @@
 import util from 'node:util'
 import assert from 'node:assert'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'

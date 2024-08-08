@@ -1,21 +1,22 @@
 import { Lexicons } from './lexicons'
 import {
   LexRecord,
+  LexRefVariant,
+  LexUserType,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexXrpcSubscription,
 } from './types'
-import { assertValidOneOf } from './util'
 
-import * as ComplexValidators from './validators/complex'
-import * as XrpcValidators from './validators/xrpc'
+import { object, validateOneOf } from './validators/complex'
+import { params } from './validators/xrpc'
 
 export function assertValidRecord(
   lexicons: Lexicons,
   def: LexRecord,
   value: unknown,
 ) {
-  const res = ComplexValidators.object(lexicons, 'Record', def.record, value)
+  const res = object(lexicons, 'Record', def.record, value)
   if (!res.success) throw res.error
   return res.value
 }
@@ -26,7 +27,7 @@ export function assertValidXrpcParams(
   value: unknown,
 ) {
   if (def.parameters) {
-    const res = XrpcValidators.params(lexicons, 'Params', def.parameters, value)
+    const res = params(lexicons, 'Params', def.parameters, value)
     if (!res.success) throw res.error
     return res.value
   }
@@ -69,4 +70,16 @@ export function assertValidXrpcMessage(
       true,
     )
   }
+}
+
+function assertValidOneOf(
+  lexicons: Lexicons,
+  path: string,
+  def: LexRefVariant | LexUserType,
+  value: unknown,
+  mustBeObj = false,
+) {
+  const res = validateOneOf(lexicons, path, def, value, mustBeObj)
+  if (!res.success) throw res.error
+  return res.value
 }

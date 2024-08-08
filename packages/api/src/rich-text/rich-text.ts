@@ -91,7 +91,7 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
    ^-------^               // target slice {start: 0, end: 5}
  */
 
-import { AtpAgent } from '../agent'
+import { AtpClient } from '../atp-client'
 import { AppBskyFeedPost, AppBskyRichtextFacet } from '../client'
 import { UnicodeString } from './unicode'
 import { sanitizeRichText } from './sanitization'
@@ -348,7 +348,7 @@ export class RichText {
    * Detects facets such as links and mentions
    * Note: Overwrites the existing facets with auto-detected facets
    */
-  async detectFacets(agent: AtpAgent) {
+  async detectFacets(agent: AtpClient) {
     this.facets = detectFacets(this.unicodeText)
     if (this.facets) {
       for (const facet of this.facets) {

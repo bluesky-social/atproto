@@ -10,6 +10,7 @@ import {
   SimpleStore,
 } from '@atproto-labs/simple-store'
 import {
+  ALLOW_UNSECURE_ORIGINS,
   OAuthProtectedResourceMetadata,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-types'
@@ -45,10 +46,14 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     options?: GetCachedOptions,
   ): Promise<OAuthProtectedResourceMetadata> {
     const { protocol, origin } = new URL(resource)
-    if (protocol !== 'https:' && protocol !== 'http:') {
-      throw new TypeError(`Invalid resource server ${protocol}`)
+    if (
+      protocol === 'https:' ||
+      (protocol === 'http:' && ALLOW_UNSECURE_ORIGINS)
+    ) {
+      return super.get(origin, options)
     }
-    return super.get(origin, options)
+
+    throw new TypeError(`Forbidden resource sercure protocol "${protocol}"`)
   }
 
   private async fetchMetadata(
@@ -62,7 +67,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     const request = new Request(url, {
       signal: options?.signal,
       headers,
-      redirect: 'error', // response must be 200 OK
+      redirect: 'manual', // response must be 200 OK
     })
 
     const response = await this.fetch(request)

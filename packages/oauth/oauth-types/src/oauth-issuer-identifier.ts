@@ -1,19 +1,9 @@
 import { z } from 'zod'
-
-// try/catch to support running in a browser, including when process.env is
-// shimmed (e.g. by webpack)
-const ALLOW_INSECURE = (() => {
-  try {
-    const env = process.env.NODE_ENV
-    return env === 'development' || env === 'test'
-  } catch {
-    return false
-  }
-})()
+import { ALLOW_UNSECURE_ORIGINS } from './constants.js'
+import { safeUrl } from './util.js'
 
 export const oauthIssuerIdentifierSchema = z
   .string()
-  .url()
   .superRefine((value, ctx) => {
     // Validate the issuer (MIX-UP attacks)
 
@@ -24,10 +14,16 @@ export const oauthIssuerIdentifierSchema = z
       })
     }
 
-    const url = new URL(value)
+    const url = safeUrl(value)
+    if (!url) {
+      return ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invalid url',
+      })
+    }
 
     if (url.protocol !== 'https:') {
-      if (ALLOW_INSECURE && url.protocol === 'http:') {
+      if (ALLOW_UNSECURE_ORIGINS && url.protocol === 'http:') {
         // We'll allow HTTP in development mode
       } else {
         ctx.addIssue({

@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { ids, lexicons } from '../src/lexicon/lexicons'

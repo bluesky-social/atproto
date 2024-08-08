@@ -1,17 +1,17 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TID } from '@atproto/common-web'
 import {
+  AppBskyActorDefs,
+  AppBskyActorProfile,
   BskyAgent,
   ComAtprotoRepoPutRecord,
-  AppBskyActorProfile,
   DEFAULT_LABEL_SETTINGS,
 } from '../src'
 import {
-  savedFeedsToUriArrays,
   getSavedFeedType,
+  savedFeedsToUriArrays,
   validateSavedFeed,
 } from '../src/util'
-import { AppBskyActorDefs } from '../dist'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -30,8 +30,8 @@ describe('agent', () => {
     agent: BskyAgent,
   ): Promise<string | undefined> => {
     try {
-      const res = await agent.api.app.bsky.actor.profile.get({
-        repo: agent.session?.did || '',
+      const res = await agent.app.bsky.actor.profile.get({
+        repo: agent.accountDid,
         rkey: 'self',
       })
       return res.value.displayName ?? ''
@@ -81,7 +81,6 @@ describe('agent', () => {
 
   it('upsertProfile correctly handles CAS failures.', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
-
     await agent.createAccount({
       handle: 'user2.test',
       email: 'user2@test.com',
@@ -96,7 +95,7 @@ describe('agent', () => {
     await agent.upsertProfile(async (_existing) => {
       if (!hasConflicted) {
         await agent.com.atproto.repo.putRecord({
-          repo: agent.session?.did || '',
+          repo: agent.accountDid,
           collection: 'app.bsky.actor.profile',
           rkey: 'self',
           record: {
@@ -120,7 +119,6 @@ describe('agent', () => {
 
   it('upsertProfile wont endlessly retry CAS failures.', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
-
     await agent.createAccount({
       handle: 'user3.test',
       email: 'user3@test.com',
@@ -132,7 +130,7 @@ describe('agent', () => {
 
     const p = agent.upsertProfile(async (_existing) => {
       await agent.com.atproto.repo.putRecord({
-        repo: agent.session?.did || '',
+        repo: agent.accountDid,
         collection: 'app.bsky.actor.profile',
         rkey: 'self',
         record: {
@@ -149,7 +147,6 @@ describe('agent', () => {
 
   it('upsertProfile validates the record.', async () => {
     const agent = new BskyAgent({ service: network.pds.url })
-
     await agent.createAccount({
       handle: 'user4.test',
       email: 'user4@test.com',
@@ -167,7 +164,8 @@ describe('agent', () => {
   describe('app', () => {
     it('should retrieve the api app', () => {
       const agent = new BskyAgent({ service: network.pds.url })
-      expect(agent.app).toBe(agent.api.app)
+      expect(agent.api).toBe(agent)
+      expect(agent.app).toBeDefined()
     })
   })
 
@@ -230,7 +228,6 @@ describe('agent', () => {
   describe('preferences methods', () => {
     it('gets and sets preferences correctly', async () => {
       const agent = new BskyAgent({ service: network.pds.url })
-
       await agent.createAccount({
         handle: 'user5.test',
         email: 'user5@test.com',
@@ -3181,18 +3178,13 @@ describe('agent', () => {
     })
 
     describe('queued nudges', () => {
-      let agent: BskyAgent
-
-      beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
+      it('queueNudges & dismissNudges', async () => {
+        const agent = new BskyAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user11.test',
           email: 'user11@test.com',
           password: 'password',
         })
-      })
-
-      it('queueNudges & dismissNudges', async () => {
         await agent.bskyAppQueueNudges('first')
         await expect(agent.getPreferences()).resolves.toHaveProperty(
           'bskyAppState.queuedNudges',
@@ -3217,18 +3209,15 @@ describe('agent', () => {
     })
 
     describe('guided tours', () => {
-      let agent: BskyAgent
+      it('setActiveProgressGuide', async () => {
+        const agent = new BskyAgent({ service: network.pds.url })
 
-      beforeAll(async () => {
-        agent = new BskyAgent({ service: network.pds.url })
         await agent.createAccount({
           handle: 'user12.test',
           email: 'user12@test.com',
           password: 'password',
         })
-      })
 
-      it('setActiveProgressGuide', async () => {
         await agent.bskyAppSetActiveProgressGuide({
           guide: 'test-guide',
           numThings: 0,

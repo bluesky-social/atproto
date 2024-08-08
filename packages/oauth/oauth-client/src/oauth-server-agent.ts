@@ -134,7 +134,9 @@ export class OAuthServerAgent {
     // @TODO (?) make timeout configurable
     using signal = timeoutSignal(10e3)
 
-    const resolved = await this.oauthResolver.resolve(sub, { signal })
+    const resolved = await this.oauthResolver.resolveFromIdentity(sub, {
+      signal,
+    })
 
     if (resolved.metadata.issuer !== this.serverMetadata.issuer) {
       // Best case scenario; the user switched PDS. Worst case scenario; a bad

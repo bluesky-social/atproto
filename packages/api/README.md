@@ -11,36 +11,53 @@ This API is a client for ATProtocol servers. It communicates using HTTP. It incl
 
 First install the package:
 
-```
+```sh
 yarn add @atproto/api
 ```
 
 Then in your application:
 
 ```typescript
-import { BskyAgent } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
-const agent = new BskyAgent({ service: 'https://example.com' })
+const agent = new AtpAgent({ service: 'https://example.com' })
 ```
 
 ## Usage
 
 ### Session management
 
-Log into a server or create accounts using these APIs. You'll need an active session for most methods.
+You'll need an authenticated session for most API calls. There are two ways to
+manage sessions:
+
+1. [App password based session management](#app-password-based-session-management)
+2. [OAuth based session management](#oauth-based-session-management)
+
+#### App password based session management
+
+Username / password based authentication van be performed using the `AtpAgent`
+class.
+
+> [!CAUTION]
+>
+> This method is deprecated in favor of OAuth based session management. It is
+> recommended to use OAuth based session management (through the
+> `@atproto/oauth-client-*` packages).
 
 ```typescript
-import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
+import { AtpAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
 
 // configure connection to the server, without account authentication
-const agent = new BskyAgent({
+const agent = new AtpAgent({
   service: 'https://example.com',
   persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
     // store the session-data for reuse
   },
 })
 
-// create a new account on the server
+// Change the agent state to an authenticated state either by:
+
+// 1) creating a new account on the server.
 await agent.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
@@ -48,11 +65,40 @@ await agent.createAccount({
   inviteCode: 'some-code-12345-abcde',
 })
 
-// if an existing session (accessed with 'agent.session') was securely stored previously, then reuse that
+// 2) if an existing session was securely stored previously, then reuse that to resume the session.
 await agent.resumeSession(savedSessionData)
 
-// if no old session was available, create a new one by logging in with password (App Password)
-await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
+// 3) if no old session was available, create a new one by logging in with password (App Password)
+await agent.login({
+  identifier: 'alice@mail.com',
+  password: 'hunter2',
+})
+```
+
+#### OAuth based session management
+
+Depending on the environment used by your application, different OAuth clients
+are available:
+
+- [@atproto/oauth-client-browser](https://www.npmjs.com/package/@atproto/oauth-client-browser):
+  for the browser.
+- [@atproto/oauth-client-node](https://www.npmjs.com/package/@atproto/oauth-client-node): for
+  Node.js.
+- [@atproto/oauth-client](https://www.npmjs.com/package/@atproto/oauth-client):
+  Lower lever; compatible with most JS engines.
+
+Every `@atproto/oauth-client-*` implementation has a different way to obtain an
+OAuth based API agent instance. Here is an example restoring a previously
+saved session:
+
+```typescript
+import { OAuthClient } from '@atproto/oauth-client'
+
+const oauthClient = new OAuthClient({
+  // ...
+})
+
+const agent = await oauthClient.restore('did:plc:123')
 ```
 
 ### API calls
@@ -105,10 +151,12 @@ await agent.updateSeenNotifications()
 await agent.resolveHandle(params, opts)
 await agent.updateHandle(params, opts)
 
-// Session management
-await agent.createAccount(params)
-await agent.login(params)
-await agent.resumeSession(session)
+// Session management (OAuth based agent instances have a different set of methods)
+if (agent instanceof AtpAgent) {
+  await agent.createAccount(params)
+  await agent.login(params)
+  await agent.resumeSession(session)
+}
 ```
 
 ### Validation and types
@@ -279,40 +327,29 @@ const res3 = await agent.app.bsky.feed.post.create(
 const res4 = await agent.app.bsky.feed.post.list({ repo: alice.did })
 ```
 
-### Generic agent
+### Non-browser configuration
 
-If you want a generic AT Protocol agent without methods related to the Bluesky social lexicon, use the `AtpAgent` instead of the `BskyAgent`.
+If you environment doesn't have a built-in `fetch` implementation, you'll need
+to provide one. This will typically be done through a polyfill.
+
+### Bring your own fetch
+
+If you want to provide you own `fetch` implementation, you can do so by
+instantiating the sessionManager with a custom fetch implementation:
 
 ```typescript
 import { AtpAgent } from '@atproto/api'
 
-const agent = new AtpAgent({ service: 'https://example.com' })
-```
+const myFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  console.log('requesting', input)
+  const response = await globalThis.fetch(input, init)
+  console.log('got response', response)
+  return response
+}
 
-### Non-browser configuration
-
-In non-browser environments you'll need to specify a fetch polyfill. [See the example react-native polyfill here.](./docs/rn-fetch-handler.ts)
-
-```typescript
-import { BskyAgent } from '@atproto/api'
-
-const agent = new BskyAgent({ service: 'https://example.com' })
-
-// provide a custom fetch implementation (shouldn't be needed in node or the browser)
-import {
-  AtpAgentFetchHeaders,
-  AtpAgentFetchHandlerResponse,
-} from '@atproto/api'
-BskyAgent.configure({
-  async fetch(
-    httpUri: string,
-    httpMethod: string,
-    httpHeaders: AtpAgentFetchHeaders,
-    httpReqBody: any,
-  ): Promise<AtpAgentFetchHandlerResponse> {
-    // insert definition here...
-    return { status: 200 /*...*/ }
-  },
+const agent = new AtpAgent({
+  service: 'https://example.com',
+  fetch: myFetch,
 })
 ```
 

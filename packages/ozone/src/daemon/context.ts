@@ -1,7 +1,7 @@
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { IdResolver } from '@atproto/identity'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { EventPusher } from './event-pusher'

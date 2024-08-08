@@ -1,7 +1,7 @@
 import * as os from 'node:os'
 import * as path from 'node:path'
 import * as plcLib from '@did-plc/lib'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import * as pdsEntryway from '@atproto/pds-entryway'

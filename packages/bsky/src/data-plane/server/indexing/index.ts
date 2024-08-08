@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent, { ComAtprotoSyncGetLatestCommit } from '@atproto/api'
+import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import {
   readCarWithRoot,
   WriteOpAction,

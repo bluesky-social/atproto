@@ -5,7 +5,7 @@ import {
   TestOzone,
   RecordRef,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { forSnapshot } from './_util'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 

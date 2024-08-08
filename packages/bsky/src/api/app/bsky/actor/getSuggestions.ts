@@ -12,7 +12,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { resHeaders } from '../../../util'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(

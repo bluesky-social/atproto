@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { SECOND } from '@atproto/common'
 import Database from '../db'
 import { RepoPushEventType } from '../db/schema/repo_push_event'

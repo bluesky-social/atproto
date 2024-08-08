@@ -1,5 +1,5 @@
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import * as jose from 'jose'
 
 describe('app_passwords', () => {

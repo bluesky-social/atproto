@@ -1,5 +1,5 @@
 import { SeedClient, usersSeed, TestNetwork } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { RepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
