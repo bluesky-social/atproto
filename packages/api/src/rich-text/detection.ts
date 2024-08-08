@@ -2,16 +2,17 @@ import TLDs from 'tlds'
 import { AppBskyRichtextFacet } from '../client'
 import { UnicodeString } from './unicode'
 import {
-  URL_REGEX,
+  END_PUNCTUATION_REGEX,
   MENTION_REGEX,
   TAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
+  URL_REGEX,
 } from './util'
 
 export type Facet = AppBskyRichtextFacet.Main
 
 export function detectFacets(text: UnicodeString): Facet[] | undefined {
-  let match
+  let match: RegExpExecArray | null
   const facets: Facet[] = []
   {
     // mentions
@@ -41,34 +42,31 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     // links
     const re = URL_REGEX
     while ((match = re.exec(text.utf16))) {
-      let uri = match[2]
-      if (!uri.startsWith('http')) {
-        const domain = match.groups?.domain
+      let uri = match[1]
+
+      if (match[3]) {
+        const domain = match[3]
         if (!domain || !isValidDomain(domain)) {
           continue
         }
+
         uri = `https://${uri}`
       }
-      const start = text.utf16.indexOf(match[2], match.index)
-      const index = { start, end: start + match[2].length }
-      // strip ending puncuation
-      if (/[.,;:!?]$/.test(uri)) {
-        uri = uri.slice(0, -1)
-        index.end--
-      }
-      if (/[)]$/.test(uri) && !uri.includes('(')) {
-        uri = uri.slice(0, -1)
-        index.end--
-      }
+
+      const trimmed = uri.replace(END_PUNCTUATION_REGEX, '')
+
+      const start = text.utf16.indexOf(match[1], match.index)
+      const end = start + match[1].length - (uri.length - trimmed.length)
+
       facets.push({
         index: {
-          byteStart: text.utf16IndexToUtf8Index(index.start),
-          byteEnd: text.utf16IndexToUtf8Index(index.end),
+          byteStart: text.utf16IndexToUtf8Index(start),
+          byteEnd: text.utf16IndexToUtf8Index(end),
         },
         features: [
           {
             $type: 'app.bsky.richtext.facet#link',
-            uri,
+            uri: trimmed,
           },
         ],
       })
