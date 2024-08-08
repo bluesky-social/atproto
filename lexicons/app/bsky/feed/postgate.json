@@ -30,9 +30,7 @@
             "maxLength": 5,
             "items": {
               "type": "union",
-              "refs": [
-                "#disableRule"
-              ]
+              "refs": ["#disableRule"]
             }
           }
         }
