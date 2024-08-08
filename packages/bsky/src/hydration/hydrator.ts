@@ -362,8 +362,7 @@ export class Hydrator {
     const [postsLayer2, threadgates, postgates] = await Promise.all([
       this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
       this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
-      // only gates for quoted posts
-      this.feed.getPostgatesForPosts(embedPostUrisLayer1),
+      this.feed.getPostgatesForPosts(uris),
     ])
     // collect list/feedgen embeds, lists in threadgates, post record hydration
     const threadgateListUris = getListUrisFromThreadgates(threadgates)
