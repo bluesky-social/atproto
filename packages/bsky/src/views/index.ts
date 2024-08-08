@@ -1181,8 +1181,11 @@ const postToGateUri = (uri: string) => {
 }
 
 const postToPostgateUri = (uri: string) => {
-  const urip = new AtUri(uri)
-  return AtUri.make(urip.host, ids.AppBskyFeedPostgate, urip.rkey).toString()
+  const aturi = new AtUri(uri)
+  if (aturi.collection === ids.AppBskyFeedPost) {
+    aturi.collection = ids.AppBskyFeedPostgate
+  }
+  return aturi.toString()
 }
 
 const getRootUri = (uri: string, post: Post): string => {
