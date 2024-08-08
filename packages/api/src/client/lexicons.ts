@@ -5202,7 +5202,7 @@ export const schemaDict = {
           replyDisabled: {
             type: 'boolean',
           },
-          quoteDisabled: {
+          quotepostDisabled: {
             type: 'boolean',
           },
         },

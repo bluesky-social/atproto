@@ -1088,6 +1088,39 @@ export class Views {
     return true
   }
 
+  userQuotepostDisabled(uri: string, state: HydrationState): boolean | undefined {
+    const post = state.posts?.get(uri)
+    if (post?.violatesThreadGate) {
+      return true
+    }
+    const rootUriStr: string = post?.record.reply?.root.uri ?? uri
+    const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
+    const viewer = state.ctx?.viewer
+    if (!gate || !viewer) {
+      return undefined
+    }
+    const rootPost = state.posts?.get(rootUriStr)?.record
+    const ownerDid = new AtUri(rootUriStr).hostname
+    const {
+      canReply,
+      allowFollowing,
+      allowListUris = [],
+    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
+    if (canReply) {
+      return false
+    }
+    if (allowFollowing && state.profileViewers?.get(ownerDid)?.followedBy) {
+      return false
+    }
+    for (const listUri of allowListUris) {
+      const list = state.listViewers?.get(listUri)
+      if (list?.viewerInList) {
+        return false
+      }
+    }
+    return true
+  }
+
   notification(
     notif: Notification,
     lastSeenAt: string | undefined,
