@@ -10153,11 +10153,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
-              'lex:tools.ozone.moderation.defs#accountEventDelete',
-              'lex:tools.ozone.moderation.defs#accountEventDeactivate',
-              'lex:tools.ozone.moderation.defs#accountEventHandleChange',
-              'lex:tools.ozone.moderation.defs#recordEventUpdate',
-              'lex:tools.ozone.moderation.defs#recordEventDelete',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10222,10 +10220,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
-              'lex:tools.ozone.moderation.defs#accountEventDelete',
-              'lex:tools.ozone.moderation.defs#accountEventDeactivate',
-              'lex:tools.ozone.moderation.defs#recordEventUpdate',
-              'lex:tools.ozone.moderation.defs#recordEventDelete',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10582,53 +10579,65 @@ export const schemaDict = {
           },
         },
       },
-      accountEventDelete: {
+      accountEvent: {
         type: 'object',
         description:
-          'Logs account deletion event on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+          'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
         properties: {
           comment: {
             type: 'string',
           },
+          accountStatus: {
+            type: 'string',
+            knownValues: ['deactivated', 'activated', 'deleted'],
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
-      accountEventDeactivate: {
+      identityEvent: {
         type: 'object',
         description:
-          'Logs account deactivation event on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+          'Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
         properties: {
           comment: {
             type: 'string',
           },
+          handle: {
+            type: 'string',
+          },
+          pdsHost: {
+            type: 'string',
+            format: 'uri',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
-      accountEventHandleChange: {
+      recordEvent: {
         type: 'object',
         description:
-          'Logs handle change of an account. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+          'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
         properties: {
           comment: {
             type: 'string',
           },
-        },
-      },
-      recordEventUpdate: {
-        type: 'object',
-        description:
-          'Logs update event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        properties: {
-          comment: {
+          deleted: {
+            type: 'boolean',
+          },
+          updated: {
+            type: 'boolean',
+          },
+          cid: {
             type: 'string',
           },
-        },
-      },
-      recordEventDelete: {
-        type: 'object',
-        description:
-          'Logs deletion event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        properties: {
-          comment: {
+          timestamp: {
             type: 'string',
+            format: 'datetime',
           },
         },
       },
