@@ -28,6 +28,8 @@ export class XrpcClient {
 
   constructor(
     fetchHandler: FetchHandler | FetchHandlerOptions,
+    // "Lexicons" is redundant here (because that class implements
+    // "Iterable<LexiconDoc>") but we keep it for explicitness:
     lex: Lexicons | Iterable<LexiconDoc>,
   ) {
     this.fetchHandler =
