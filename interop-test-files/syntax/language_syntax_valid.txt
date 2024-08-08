@@ -1,0 +1,18 @@
+ja
+ban
+pt-BR
+hy-Latn-IT-arevela
+en-GB
+zh-Hant
+sgn-BE-NL
+es-419
+en-GB-boont-r-extended-sequence-x-private
+
+# grandfathered
+zh-hakka
+i-default
+i-navajo
+
+# https://github.com/sebinsua/ietf-language-tag-regex/blob/master/test.js
+de-CH-1901
+qaa-Qaaa-QM-x-southern

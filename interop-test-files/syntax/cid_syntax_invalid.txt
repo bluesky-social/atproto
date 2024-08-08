@@ -1,0 +1,16 @@
+example.com
+https://example.com
+cid:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi
+.
+12345
+
+# whitespace
+ bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi
+bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi 
+bafybe igdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi
+
+# old CIDv0 not supported
+QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR
+
+# https://github.com/ipfs-shipyard/is-ipfs/blob/master/test/test-cid.spec.ts
+noop
