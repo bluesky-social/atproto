@@ -59,24 +59,24 @@ export class Client {
 /** @deprecated Use {@link XrpcClient} instead */
 export class ServiceClient extends XrpcClient {
   uri: URL
-  protected headers = new Map<string, Gettable<null | string>>()
+  headers: Record<string, string> = {}
 
   constructor(
     public baseClient: Client,
     serviceUri: string | URL,
   ) {
     super(async (input, init) => {
-      const headers = combineHeaders(init.headers, this.headers)
+      const headers = combineHeaders(init.headers, Object.entries(this.headers))
       return fetch(new URL(input, this.uri), { ...init, headers })
     }, baseClient.lex)
     this.uri = typeof serviceUri === 'string' ? new URL(serviceUri) : serviceUri
   }
 
-  setHeader(key: string, value: Gettable<null | string>): void {
-    this.headers.set(key.toLowerCase(), value)
+  setHeader(key: string, value: string): void {
+    this.headers[key] = value
   }
 
   unsetHeader(key: string): void {
-    this.headers.delete(key.toLowerCase())
+    delete this.headers[key]
   }
 }
