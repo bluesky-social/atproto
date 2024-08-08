@@ -1,4 +1,4 @@
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import AtpAgent, { AppBskyEmbedRecord } from '@atproto/api'
 
 import { postgatesSeed, Users } from './seed/postgates'
@@ -123,6 +123,42 @@ describe('postgates', () => {
       expect(
         // @ts-ignore I know more than you
         root.data.thread.post.viewer.quotepostDisabled,
+      ).toBe(true)
+    })
+
+    it(`quotepost created after quotes disabled hides embed`, async () => {
+      const quoteePost = await sc.post(users.quotee.did, `post`)
+      await pdsAgent.api.app.bsky.feed.postgate.create(
+        {
+          repo: users.quotee.did,
+          rkey: quoteePost.ref.uri.rkey,
+        },
+        {
+          post: quoteePost.ref.uriStr,
+          createdAt: new Date().toISOString(),
+          quotepostRules: [{ $type: 'app.bsky.feed.postgate#disableRule' }],
+        },
+        sc.getHeaders(users.quotee.did),
+      )
+      await network.processAll()
+
+      const quoterPost = await sc.post(
+        users.quoter.did,
+        `quote post`,
+        undefined,
+        undefined,
+        quoteePost.ref,
+      )
+      await network.processAll()
+
+      const root = await agent.api.app.bsky.feed.getPostThread(
+        { uri: quoterPost.ref.uriStr },
+        { headers: await network.serviceHeaders(users.viewer.did) },
+      )
+
+      expect(
+        // @ts-ignore I know more than you
+        AppBskyEmbedRecord.isViewRemoved(root.data.thread.post.embed.record),
       ).toBe(true)
     })
   })
