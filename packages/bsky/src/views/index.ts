@@ -996,6 +996,11 @@ export class Views {
       return this.embedRemoved(uri)
     }
 
+    const post = state.posts?.get(postUri)
+    if (post?.violatesQuotegate) {
+      return this.embedRemoved(uri)
+    }
+
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
