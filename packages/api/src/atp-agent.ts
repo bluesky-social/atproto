@@ -30,6 +30,7 @@ export type AtpAgentOptions =
   | {
       service: string | URL
       persistSession?: AtpPersistSessionHandler
+      fetch?: typeof globalThis.fetch
       headers?: Iterable<[string, Gettable<null | string>]>
     }
 
@@ -117,6 +118,7 @@ export class AtpAgent extends Agent {
       this.headers = new Map(options.headers)
       this.sessionManager = new SessionManager(
         new URL(options.service),
+        options.fetch,
         options.persistSession,
       )
     }
@@ -181,6 +183,18 @@ export class AtpAgent extends Agent {
     return this.serviceUrl
   }
 
+  get persistSession() {
+    throw new Error(
+      'Cannot set persistSession directly. "persistSession" is defined through the constructor and will be invoked automatically when session data changes.',
+    )
+  }
+
+  set persistSession(v: unknown) {
+    throw new Error(
+      'Cannot set persistSession directly. "persistSession" must be defined in the constructor and can no longer be changed.',
+    )
+  }
+
   /** @deprecated This will be removed in OAuthAtpAgent */
   getServiceUrl() {
     return this.serviceUrl
@@ -218,7 +232,6 @@ export class AtpAgent extends Agent {
 class SessionManager {
   public pdsUrl?: URL // The PDS URL, driven by the did doc
   public session?: AtpSessionData
-  public fetch = globalThis.fetch
   public refreshSessionPromise: Promise<void> | undefined
 
   /**
@@ -232,6 +245,7 @@ class SessionManager {
 
   constructor(
     public readonly serviceUrl: URL,
+    public fetch = globalThis.fetch,
     protected readonly persistSession?: AtpPersistSessionHandler,
   ) {}
 
