@@ -6,7 +6,7 @@ import { Notification } from '../proto/bsky_pb'
 import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import { isListRule as isThreadgateRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
 import {
   ActorHydrator,
@@ -339,27 +339,34 @@ export class Hydrator {
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
-    const embedPostUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const embedPostUrisLayer1 =
+      urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
     const postsLayer1 = await this.feed.getPosts(
       [...embedPostUrisLayer1, ...additionalRootUris],
       ctx.includeTakedowns,
     )
     // second level embeds, ignoring any additional root uris we mixed-in to the previous layer
-    const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1, embedPostUrisLayer1)
+    const urisLayer2 = nestedRecordUrisFromPosts(
+      postsLayer1,
+      embedPostUrisLayer1,
+    )
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
-    const embedPostUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const embedPostUrisLayer2 =
+      urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
     const threadRootUris = new Set<string>()
     for (const [uri, post] of postsLayer0) {
       if (post) {
         threadRootUris.add(rootUriFromPost(post) ?? uri)
       }
     }
-    const [postsLayer2, threadgates] = await Promise.all([
+    const [postsLayer2, threadgates, postgates] = await Promise.all([
       this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
       this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
+      // only gates for quoted posts
+      this.feed.getPostgatesForPosts(embedPostUrisLayer1),
     ])
     // collect list/feedgen embeds, lists in threadgates, post record hydration
-    const gateListUris = getListUrisFromGates(threadgates)
+    const threadgateListUris = getListUrisFromThreadgates(threadgates)
     const nestedListUris = [
       ...(urisLayer1ByCollection.get(ids.AppBskyGraphList) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyGraphList) ?? []),
@@ -399,7 +406,6 @@ export class Hydrator {
       feedGenState,
       labelerState,
       starterPackState,
-      postgates,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
@@ -408,12 +414,10 @@ export class Hydrator {
       this.label.getLabelsForSubjects(allPostUris, ctx.labelers),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), ctx),
-      this.hydrateLists([...nestedListUris, ...gateListUris], ctx),
+      this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
-      // only gates for quoted posts
-      this.feed.getPostgatesForPosts(embedPostUrisLayer1),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
@@ -1044,10 +1048,10 @@ const nestedRecordUris = (post: Post['record']): string[] => {
   return uris
 }
 
-const getListUrisFromGates = (gates: Threadgates) => {
+const getListUrisFromThreadgates = (gates: Threadgates) => {
   const uris: string[] = []
   for (const gate of gates.values()) {
-    const listRules = gate?.record.allow?.filter(isListRule) ?? []
+    const listRules = gate?.record.allow?.filter(isThreadgateRule) ?? []
     for (const rule of listRules) {
       uris.push(rule.list)
     }

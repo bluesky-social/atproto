@@ -29,7 +29,12 @@ import {
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
-import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
+import {
+  creatorFromUri,
+  parseThreadGate,
+  parsePostgate,
+  cidFromBlobJson,
+} from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -600,6 +605,7 @@ export class Views {
             like: viewer.like,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
+            quotepostDisabled: this.userQuotepostDisabled(uri, state),
           }
         : undefined,
       labels,
@@ -984,12 +990,7 @@ export class Views {
       return this.embedBlocked(uri, state)
     }
 
-    const urip = new AtUri(embed.record.uri)
-    const postgateRecordUri = AtUri.make(
-      urip.host,
-      ids.AppBskyFeedPostgate,
-      urip.rkey,
-    ).toString()
+    const postgateRecordUri = postToPostgateUri(embed.record.uri)
     const postgate = state.postgates?.get(postgateRecordUri)
     if (postgate?.record?.detachedQuotes?.includes(postUri)) {
       return this.embedRemoved(uri)
@@ -1088,35 +1089,29 @@ export class Views {
     return true
   }
 
-  userQuotepostDisabled(uri: string, state: HydrationState): boolean | undefined {
+  userQuotepostDisabled(
+    uri: string,
+    state: HydrationState,
+  ): boolean | undefined {
     const post = state.posts?.get(uri)
-    if (post?.violatesThreadGate) {
+    if (!post || post?.violatesQuotegate) {
       return true
     }
-    const rootUriStr: string = post?.record.reply?.root.uri ?? uri
-    const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
-    const viewer = state.ctx?.viewer
-    if (!gate || !viewer) {
-      return undefined
+    const postgateRecordUri = postToPostgateUri(uri)
+    const gate = state.postgates?.get(postgateRecordUri)?.record
+    const viewerDid = state.ctx?.viewer
+    if (!gate || !viewerDid) {
+      return false
     }
-    const rootPost = state.posts?.get(rootUriStr)?.record
-    const ownerDid = new AtUri(rootUriStr).hostname
     const {
-      canReply,
-      allowFollowing,
-      allowListUris = [],
-    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate)
-    if (canReply) {
+      quotepostRules: { canQuotepost },
+    } = parsePostgate({
+      gate,
+      viewerDid,
+      authorDid: new AtUri(uri).hostname,
+    })
+    if (canQuotepost) {
       return false
-    }
-    if (allowFollowing && state.profileViewers?.get(ownerDid)?.followedBy) {
-      return false
-    }
-    for (const listUri of allowListUris) {
-      const list = state.listViewers?.get(listUri)
-      if (list?.viewerInList) {
-        return false
-      }
     }
     return true
   }
@@ -1183,6 +1178,11 @@ const postToGateUri = (uri: string) => {
     aturi.collection = ids.AppBskyFeedThreadgate
   }
   return aturi.toString()
+}
+
+const postToPostgateUri = (uri: string) => {
+  const urip = new AtUri(uri)
+  return AtUri.make(urip.host, ids.AppBskyFeedPostgate, urip.rkey).toString()
 }
 
 const getRootUri = (uri: string, post: Post): string => {

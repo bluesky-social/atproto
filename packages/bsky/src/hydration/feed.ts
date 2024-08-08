@@ -17,7 +17,10 @@ import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
 import { dedupeStrs } from '@atproto/common'
 
-export type Post = RecordInfo<PostRecord> & { violatesThreadGate: boolean }
+export type Post = RecordInfo<PostRecord> & {
+  violatesThreadGate: boolean
+  violatesQuotegate: boolean
+}
 export type Posts = HydrationMap<Post>
 
 export type PostViewerState = {
@@ -86,7 +89,11 @@ export class FeedHydrator {
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate
-      return acc.set(uri, record ? { ...record, violatesThreadGate } : null)
+      const violatesQuotegate = res.meta[i].violatesQuoteGate
+      return acc.set(
+        uri,
+        record ? { ...record, violatesThreadGate, violatesQuotegate } : null,
+      )
     }, base)
   }
 
