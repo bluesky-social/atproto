@@ -18,6 +18,9 @@ import {
   isModEventTakedown,
   isModEventEmail,
   isModEventTag,
+  isAccountEvent,
+  isIdentityEvent,
+  isRecordEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { RepoRef, RepoBlobRef } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -315,6 +318,24 @@ export class ModerationService {
       if (event.content) {
         meta.content = event.content
       }
+    }
+
+    if (isAccountEvent(event)) {
+      meta.timestamp = event.timestamp
+      meta.accountStatus = event.accountStatus
+    }
+
+    if (isIdentityEvent(event)) {
+      meta.timestamp = event.timestamp
+      if (event.handle) meta.handle = event.handle
+      if (event.pdsHost) meta.pdsHost = event.pdsHost
+    }
+
+    if (isRecordEvent(event)) {
+      meta.timestamp = event.timestamp
+      meta.deleted = !!event.deleted
+      meta.updated = !!event.updated
+      if (event.cid) meta.cid = event.cid
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated

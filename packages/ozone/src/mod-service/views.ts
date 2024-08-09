@@ -184,6 +184,24 @@ export class ModerationViews {
       eventView.event.remove = event.removedTags || []
     }
 
+    if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
+      eventView.event.timestamp = event.meta?.timestamp
+      eventView.event.accountStatus = event.meta?.accountStatus
+    }
+
+    if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
+      eventView.event.timestamp = event.meta?.timestamp
+      eventView.event.handle = event.meta?.handle
+      eventView.event.pdsHost = event.meta?.pdsHost
+    }
+
+    if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+      eventView.event.cid = event.meta?.cid
+      eventView.event.timestamp = event.meta?.timestamp
+      eventView.event.updated = !!event.meta?.updated
+      eventView.event.deleted = !!event.meta?.deleted
+    }
+
     return eventView
   }
 

@@ -10583,6 +10583,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'accountStatus'],
         properties: {
           comment: {
             type: 'string',
@@ -10601,6 +10602,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
         properties: {
           comment: {
             type: 'string',
@@ -10622,6 +10624,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
         properties: {
           comment: {
             type: 'string',

@@ -479,8 +479,8 @@ export function validateModEventTag(v: unknown): ValidationResult {
 /** Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface AccountEvent {
   comment?: string
-  accountStatus?: 'deactivated' | 'activated' | 'deleted' | (string & {})
-  timestamp?: string
+  accountStatus: 'deactivated' | 'activated' | 'deleted' | (string & {})
+  timestamp: string
   [k: string]: unknown
 }
 
@@ -501,7 +501,7 @@ export interface IdentityEvent {
   comment?: string
   handle?: string
   pdsHost?: string
-  timestamp?: string
+  timestamp: string
   [k: string]: unknown
 }
 
@@ -523,7 +523,7 @@ export interface RecordEvent {
   deleted?: boolean
   updated?: boolean
   cid?: string
-  timestamp?: string
+  timestamp: string
   [k: string]: unknown
 }
 
