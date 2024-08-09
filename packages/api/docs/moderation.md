@@ -144,9 +144,9 @@ The label value definition are custom labels which only apply to that labeler. Y
 Here is how to do this:
 
 ```typescript
-import { BskyAgent } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
-const agent = new BskyAgent({ service: 'https://example.com' })
+const agent = new AtpAgent({ service: 'https://example.com' })
 // assume `agent` is a signed in session
 const prefs = await agent.getPreferences()
 const labelDefs = await agent.getLabelDefinitions(prefs)
