@@ -522,6 +522,7 @@ export interface RecordEvent {
   comment?: string
   deleted?: boolean
   updated?: boolean
+  created?: boolean
   cid?: string
   timestamp: string
   [k: string]: unknown

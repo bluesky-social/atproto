@@ -430,6 +430,7 @@
         "comment": { "type": "string" },
         "deleted": { "type": "boolean" },
         "updated": { "type": "boolean" },
+        "created": { "type": "boolean" },
         "cid": { "type": "string" },
         "timestamp": { "type": "string", "format": "datetime" }
       }

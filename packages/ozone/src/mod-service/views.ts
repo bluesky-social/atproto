@@ -200,6 +200,7 @@ export class ModerationViews {
       eventView.event.timestamp = event.meta?.timestamp
       eventView.event.updated = !!event.meta?.updated
       eventView.event.deleted = !!event.meta?.deleted
+      eventView.event.created = !!event.meta?.created
     }
 
     return eventView

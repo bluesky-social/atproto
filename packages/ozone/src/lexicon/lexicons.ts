@@ -10635,6 +10635,9 @@ export const schemaDict = {
           updated: {
             type: 'boolean',
           },
+          created: {
+            type: 'boolean',
+          },
           cid: {
             type: 'string',
           },
