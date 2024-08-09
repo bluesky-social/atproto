@@ -1,5 +1,4 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { isViewRemoved } from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import {
   assertIsThreadViewPost,
@@ -10,7 +9,6 @@ import {
 describe('pds thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -23,7 +21,6 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -369,88 +366,6 @@ describe('pds thread views', () => {
           }),
         ),
       )
-    })
-  })
-
-  describe('postgates', () => {
-    it('handles detached quote posts correctly', async () => {
-      const qpUri = sc.posts[bob][0].ref.uri
-      const parentUri = sc.posts[sc.dids.carol][0].ref.uriStr
-
-      await pdsAgent.api.app.bsky.feed.postgate.create(
-        {
-          repo: sc.dids.bob,
-          rkey: qpUri.rkey,
-        },
-        {
-          post: qpUri.toString(),
-          createdAt: new Date().toISOString(),
-          detachedQuotes: [parentUri],
-        },
-        sc.getHeaders(sc.dids.bob),
-      )
-
-      await network.processAll()
-
-      const root = await agent.api.app.bsky.feed.getPostThread(
-        { uri: parentUri },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
-      )
-
-      expect(
-        // @ts-ignore
-        isViewRemoved(root.data.thread.post.embed.record.record),
-      ).toBeTruthy()
-
-      // cleanup
-      await pdsAgent.api.app.bsky.feed.postgate.delete(
-        {
-          repo: sc.dids.bob,
-          rkey: qpUri.rkey,
-        },
-        sc.getHeaders(sc.dids.bob),
-      )
-      await network.processAll()
-    })
-
-    it('ignores postgates created by others', async () => {
-      const qpUri = sc.posts[bob][0].ref.uri
-      const parentUri = sc.posts[sc.dids.carol][0].ref.uriStr
-
-      await pdsAgent.api.app.bsky.feed.postgate.create(
-        {
-          repo: sc.dids.alice,
-          rkey: qpUri.rkey,
-        },
-        {
-          post: qpUri.toString(),
-          createdAt: new Date().toISOString(),
-          detachedQuotes: [parentUri],
-        },
-        sc.getHeaders(sc.dids.alice),
-      )
-
-      await network.processAll()
-
-      const root = await agent.api.app.bsky.feed.getPostThread(
-        { uri: parentUri },
-        { headers: await network.serviceHeaders(sc.dids.carol) },
-      )
-
-      expect(
-        // @ts-ignore
-        isViewRemoved(root.data.thread.post.embed.record.record),
-      ).toBeFalsy()
-
-      // cleanup
-      await pdsAgent.api.app.bsky.feed.postgate.delete(
-        {
-          repo: sc.dids.alice,
-          rkey: qpUri.rkey,
-        },
-        sc.getHeaders(sc.dids.alice),
-      )
-      await network.processAll()
     })
   })
 })

@@ -960,6 +960,11 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
    */
   isReply = false
 
+  /**
+   * @generated from field: bool violates_quote_gate = 4;
+   */
+  violatesQuoteGate = false
+
   constructor(data?: PartialMessage<PostRecordMeta>) {
     super()
     proto3.util.initPartial(data, this)
@@ -976,6 +981,12 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
     },
     { no: 2, name: 'has_media', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
     { no: 3, name: 'is_reply', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    {
+      no: 4,
+      name: 'violates_quote_gate',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
   ])
 
   static fromBinary(

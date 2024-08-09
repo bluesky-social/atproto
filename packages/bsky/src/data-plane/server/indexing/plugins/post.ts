@@ -7,6 +7,7 @@ import {
   ReplyRef,
 } from '../../../../lexicon/types/app/bsky/feed/post'
 import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
+import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
@@ -27,8 +28,10 @@ import {
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
   postToThreadgateUri,
+  postToPostgateUri,
 } from '../../util'
 import { BackgroundQueue } from '../../background'
+import { parsePostgate } from '../../../../views/util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -175,6 +178,18 @@ const insertFn = async (
       }
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
+
+      const { violatesQuotegate } = await validatePostEmbed(
+        db,
+        record.uri,
+        uri.toString(),
+      )
+      Object.assign(insertedPost, { violatesQuoteGate: violatesQuotegate })
+      await db
+        .updateTable('post')
+        .where('uri', '=', insertedPost.uri)
+        .set({ violatesQuoteGate: violatesQuotegate })
+        .executeTakeFirst()
     }
   }
 
@@ -441,6 +456,40 @@ async function validateReply(
   return {
     invalidReplyRoot,
     violatesThreadGate,
+  }
+}
+
+async function validatePostEmbed(
+  db: DatabaseSchema,
+  embedUri: string,
+  parentUri: string,
+) {
+  const postgateRecordUri = postToPostgateUri(embedUri)
+  const results = await db
+    .selectFrom('record')
+    .where('record.uri', '=', postgateRecordUri)
+    .selectAll()
+    .execute()
+  const postgateRecord = results.find((ref) => ref.uri === postgateRecordUri)
+  if (!postgateRecord) {
+    return {
+      violatesQuotegate: false,
+    }
+  }
+  const {
+    quotepostRules: { canQuotepost },
+  } = parsePostgate({
+    gate: jsonStringToLex(postgateRecord.json) as PostgateRecord,
+    viewerDid: new AtUri(parentUri).host,
+    authorDid: new AtUri(embedUri).host,
+  })
+  if (canQuotepost) {
+    return {
+      violatesQuotegate: false,
+    }
+  }
+  return {
+    violatesQuotegate: true,
   }
 }
 

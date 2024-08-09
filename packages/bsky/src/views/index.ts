@@ -29,7 +29,12 @@ import {
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
-import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
+import {
+  creatorFromUri,
+  parseThreadGate,
+  parsePostgate,
+  cidFromBlobJson,
+} from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -600,6 +605,7 @@ export class Views {
             like: viewer.like,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
+            quotepostDisabled: this.userQuotepostDisabled(uri, state),
           }
         : undefined,
       labels,
@@ -984,14 +990,14 @@ export class Views {
       return this.embedBlocked(uri, state)
     }
 
-    const urip = new AtUri(embed.record.uri)
-    const postgateRecordUri = AtUri.make(
-      urip.host,
-      ids.AppBskyFeedPostgate,
-      urip.rkey,
-    ).toString()
+    const postgateRecordUri = postToPostgateUri(embed.record.uri)
     const postgate = state.postgates?.get(postgateRecordUri)
     if (postgate?.record?.detachedQuotes?.includes(postUri)) {
+      return this.embedRemoved(uri)
+    }
+
+    const post = state.posts?.get(postUri)
+    if (post?.violatesQuotegate) {
       return this.embedRemoved(uri)
     }
 
@@ -1088,6 +1094,33 @@ export class Views {
     return true
   }
 
+  userQuotepostDisabled(
+    uri: string,
+    state: HydrationState,
+  ): boolean | undefined {
+    const post = state.posts?.get(uri)
+    if (!post || post?.violatesQuotegate) {
+      return true
+    }
+    const postgateRecordUri = postToPostgateUri(uri)
+    const gate = state.postgates?.get(postgateRecordUri)?.record
+    const viewerDid = state.ctx?.viewer
+    if (!gate || !viewerDid) {
+      return false
+    }
+    const {
+      quotepostRules: { canQuotepost },
+    } = parsePostgate({
+      gate,
+      viewerDid,
+      authorDid: new AtUri(uri).hostname,
+    })
+    if (canQuotepost) {
+      return false
+    }
+    return true
+  }
+
   notification(
     notif: Notification,
     lastSeenAt: string | undefined,
@@ -1148,6 +1181,14 @@ const postToGateUri = (uri: string) => {
   const aturi = new AtUri(uri)
   if (aturi.collection === ids.AppBskyFeedPost) {
     aturi.collection = ids.AppBskyFeedThreadgate
+  }
+  return aturi.toString()
+}
+
+const postToPostgateUri = (uri: string) => {
+  const aturi = new AtUri(uri)
+  if (aturi.collection === ids.AppBskyFeedPost) {
+    aturi.collection = ids.AppBskyFeedPostgate
   }
   return aturi.toString()
 }

@@ -51,6 +51,7 @@ Object {
         "uri": "record(4)",
         "viewer": Object {
           "like": "record(7)",
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -132,6 +133,7 @@ Object {
       "repostCount": 0,
       "uri": "record(5)",
       "viewer": Object {
+        "quotepostDisabled": false,
         "threadMuted": false,
       },
     },
@@ -189,6 +191,7 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "quotepostDisabled": false,
       "repost": "record(6)",
       "threadMuted": false,
     },
@@ -244,6 +247,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -284,6 +288,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -368,6 +373,7 @@ Object {
         "repostCount": 0,
         "uri": "record(7)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -427,6 +433,7 @@ Object {
             "repostCount": 2,
             "uri": "record(8)",
             "viewer": Object {
+              "quotepostDisabled": false,
               "repost": "record(9)",
               "threadMuted": false,
             },
@@ -486,6 +493,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -526,6 +534,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -609,6 +618,7 @@ Object {
         "repostCount": 0,
         "uri": "record(7)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -664,6 +674,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -704,6 +715,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -787,6 +799,7 @@ Object {
         "repostCount": 0,
         "uri": "record(7)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -841,6 +854,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -883,6 +897,7 @@ Object {
         "repostCount": 0,
         "uri": "record(4)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -942,6 +957,7 @@ Object {
             "repostCount": 0,
             "uri": "record(5)",
             "viewer": Object {
+              "quotepostDisabled": false,
               "threadMuted": false,
             },
           },
@@ -999,6 +1015,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -1067,6 +1084,7 @@ Object {
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -1135,6 +1153,7 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "quotepostDisabled": false,
       "repost": "record(6)",
       "threadMuted": false,
     },
@@ -1204,6 +1223,7 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "quotepostDisabled": false,
       "repost": "record(6)",
       "threadMuted": false,
     },
@@ -1259,6 +1279,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -1342,6 +1363,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -1401,6 +1423,7 @@ Object {
             "repostCount": 2,
             "uri": "record(6)",
             "viewer": Object {
+              "quotepostDisabled": false,
               "repost": "record(7)",
               "threadMuted": false,
             },
@@ -1460,6 +1483,7 @@ Object {
     "uri": "record(0)",
     "viewer": Object {
       "like": "record(4)",
+      "quotepostDisabled": false,
       "threadMuted": false,
     },
   },
@@ -1543,6 +1567,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
