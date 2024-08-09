@@ -16,14 +16,14 @@
             "format": "at-uri",
             "description": "Reference (AT-URI) to the post record."
           },
-          "detachedEmbeds": {
+          "detachedEmbeddingUris": {
             "type": "array",
             "maxLength": 50,
             "items": {
               "type": "string",
               "format": "at-uri"
             },
-            "description": "List of detached embed URIs."
+            "description": "List of AT-URIs embedding this post that the author has detached from."
           },
           "embedRules": {
             "type": "array",
