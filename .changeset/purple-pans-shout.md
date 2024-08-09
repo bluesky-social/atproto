@@ -67,6 +67,10 @@ there are a couple of breaking changes you should be aware of:
   instance now passes the `instanceof XrpcClient` check. The `xrpc` property now
   returns the instance itself and has been deprecated.
 
+- `setSessionPersistHandler` is no longer available on the `AtpAgent` or
+  `BskyAgent` classes. The session handler can only be set though the
+  `persistSession` options of the `AtpAgent` constructor.
+
 - The new class hierarchy is as follows:
 
   - `BskyAgent` extends `AtpAgent`: but add no functionality (hence its
