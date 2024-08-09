@@ -20,6 +20,7 @@ import {
   ThreadViewPost,
   ThreadgateView,
   isPostView,
+  isReasonRepost,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
@@ -28,13 +29,19 @@ import {
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
-import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
+import {
+  creatorFromUri,
+  parseThreadGate,
+  parsePostgate,
+  cidFromBlobJson,
+} from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
   Embed,
   EmbedBlocked,
   EmbedNotFound,
+  EmbedRemoved,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -102,6 +109,20 @@ export class Views {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false
     return actor.muted || !!actor.mutedByList
+  }
+
+  replyIsHidden(replyUri: string, rootPostUri: string, state: HydrationState) {
+    const urip = new AtUri(rootPostUri)
+    const threadgateUri = AtUri.make(
+      urip.host,
+      ids.AppBskyFeedThreadgate,
+      urip.rkey,
+    ).toString()
+    const threadgate = state.threadgates?.get(threadgateUri)
+    if (threadgate?.record?.hiddenReplies?.includes(replyUri)) {
+      return true
+    }
+    return false
   }
 
   profileDetailed(
@@ -529,7 +550,7 @@ export class Views {
     }
   }
 
-  threadGate(uri: string, state: HydrationState): ThreadgateView | undefined {
+  threadgate(uri: string, state: HydrationState): ThreadgateView | undefined {
     const gate = state.threadgates?.get(uri)
     if (!gate) return
     return {
@@ -584,11 +605,12 @@ export class Views {
             like: viewer.like,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
+            quotepostDisabled: this.userQuotepostDisabled(uri, state),
           }
         : undefined,
       labels,
       threadgate: !post.record.reply // only hydrate gate on root post
-        ? this.threadGate(gateUri, state)
+        ? this.threadgate(gateUri, state)
         : undefined,
     }
   }
@@ -596,6 +618,9 @@ export class Views {
   feedViewPost(
     item: FeedItem,
     state: HydrationState,
+    opts?: {
+      includeHiddenReplies?: boolean
+    },
   ): FeedViewPost | undefined {
     const postInfo = state.posts?.get(item.post.uri)
     let reason: ReasonRepost | undefined
@@ -608,12 +633,22 @@ export class Views {
     }
     const post = this.post(item.post.uri, state)
     if (!post) return
+    const reply = !postInfo?.violatesThreadGate
+      ? this.replyRef(item.post.uri, state)
+      : undefined
+    if (
+      reply &&
+      isPostView(reply.root) &&
+      this.replyIsHidden(post.uri, reply.root.uri, state) &&
+      !isReasonRepost(reason) &&
+      !opts?.includeHiddenReplies
+    ) {
+      return undefined
+    }
     return {
       post,
       reason,
-      reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(item.post.uri, state)
-        : undefined,
+      reply,
     }
   }
 
@@ -887,6 +922,17 @@ export class Views {
     }
   }
 
+  embedRemoved(uri: string): { $type: string; record: EmbedRemoved } {
+    return {
+      $type: 'app.bsky.embed.record#view',
+      record: {
+        $type: 'app.bsky.embed.record#viewRemoved',
+        uri,
+        removed: true,
+      },
+    }
+  }
+
   embedBlocked(
     uri: string,
     state: HydrationState,
@@ -942,6 +988,17 @@ export class Views {
       (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
     ) {
       return this.embedBlocked(uri, state)
+    }
+
+    const postgateRecordUri = postToPostgateUri(embed.record.uri)
+    const postgate = state.postgates?.get(postgateRecordUri)
+    if (postgate?.record?.detachedQuotes?.includes(postUri)) {
+      return this.embedRemoved(uri)
+    }
+
+    const post = state.posts?.get(postUri)
+    if (post?.violatesQuotegate) {
+      return this.embedRemoved(uri)
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {
@@ -1037,6 +1094,33 @@ export class Views {
     return true
   }
 
+  userQuotepostDisabled(
+    uri: string,
+    state: HydrationState,
+  ): boolean | undefined {
+    const post = state.posts?.get(uri)
+    if (!post || post?.violatesQuotegate) {
+      return true
+    }
+    const postgateRecordUri = postToPostgateUri(uri)
+    const gate = state.postgates?.get(postgateRecordUri)?.record
+    const viewerDid = state.ctx?.viewer
+    if (!gate || !viewerDid) {
+      return false
+    }
+    const {
+      quotepostRules: { canQuotepost },
+    } = parsePostgate({
+      gate,
+      viewerDid,
+      authorDid: new AtUri(uri).hostname,
+    })
+    if (canQuotepost) {
+      return false
+    }
+    return true
+  }
+
   notification(
     notif: Notification,
     lastSeenAt: string | undefined,
@@ -1097,6 +1181,14 @@ const postToGateUri = (uri: string) => {
   const aturi = new AtUri(uri)
   if (aturi.collection === ids.AppBskyFeedPost) {
     aturi.collection = ids.AppBskyFeedThreadgate
+  }
+  return aturi.toString()
+}
+
+const postToPostgateUri = (uri: string) => {
+  const aturi = new AtUri(uri)
+  if (aturi.collection === ids.AppBskyFeedPost) {
+    aturi.collection = ids.AppBskyFeedPostgate
   }
   return aturi.toString()
 }

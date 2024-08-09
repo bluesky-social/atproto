@@ -61,6 +61,7 @@ Object {
         "repostCount": 0,
         "uri": "record(0)",
         "viewer": Object {
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -182,6 +183,7 @@ Object {
         "uri": "record(2)",
         "viewer": Object {
           "like": "record(8)",
+          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },

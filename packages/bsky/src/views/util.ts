@@ -7,6 +7,10 @@ import {
   isListRule,
   isMentionRule,
 } from '../lexicon/types/app/bsky/feed/threadgate'
+import {
+  Record as PostgateRecord,
+  isDisableRule as isPostgateDisableRule,
+} from '../lexicon/types/app/bsky/feed/postgate'
 import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
 
 export const creatorFromUri = (uri: string): string => {
@@ -61,4 +65,35 @@ export const cidFromBlobJson = (json: BlobRef) => {
     return (json['ref']?.['$link'] ?? '') as string
   }
   return (json['cid'] ?? '') as string
+}
+
+export const parsePostgate = ({
+  gate,
+  viewerDid,
+  authorDid,
+}: {
+  gate: PostgateRecord | null
+  viewerDid: string
+  authorDid: string
+}): ParsedPostgate => {
+  if (viewerDid === authorDid) {
+    return { quotepostRules: { canQuotepost: true } }
+  }
+  // default state is unset, allow everyone
+  if (!gate || !gate.quotepostRules) {
+    return { quotepostRules: { canQuotepost: true } }
+  }
+
+  const disabled = !!gate.quotepostRules.find(isPostgateDisableRule)
+  if (disabled) {
+    return { quotepostRules: { canQuotepost: false } }
+  }
+
+  return { quotepostRules: { canQuotepost: true } }
+}
+
+type ParsedPostgate = {
+  quotepostRules: {
+    canQuotepost?: boolean
+  }
 }

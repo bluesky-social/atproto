@@ -17,6 +17,7 @@ import { Database } from '../db'
 import { Actor } from '../db/tables/actor'
 import * as Post from './plugins/post'
 import * as Threadgate from './plugins/thread-gate'
+import * as Postgate from './plugins/post-gate'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
@@ -38,6 +39,7 @@ export class IndexingService {
   records: {
     post: Post.PluginType
     threadGate: Threadgate.PluginType
+    postGate: Postgate.PluginType
     like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
@@ -60,6 +62,7 @@ export class IndexingService {
     this.records = {
       post: Post.makePlugin(this.db, this.background),
       threadGate: Threadgate.makePlugin(this.db, this.background),
+      postGate: Postgate.makePlugin(this.db, this.background),
       like: Like.makePlugin(this.db, this.background),
       repost: Repost.makePlugin(this.db, this.background),
       follow: Follow.makePlugin(this.db, this.background),
@@ -363,6 +366,10 @@ export class IndexingService {
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
     await this.db.db
       .deleteFrom('thread_gate')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_gate')
       .where('creator', '=', did)
       .execute()
     // notifications

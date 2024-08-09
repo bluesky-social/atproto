@@ -15,6 +15,7 @@ export interface Post {
   tags: string[] | null
   invalidReplyRoot: boolean | null
   violatesThreadGate: boolean | null
+  violatesQuoteGate: boolean | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>

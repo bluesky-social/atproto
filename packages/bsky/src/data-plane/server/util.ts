@@ -150,3 +150,9 @@ export const postToThreadgateUri = (postUri: string) => {
   gateUri.collection = ids.AppBskyFeedThreadgate
   return gateUri.toString()
 }
+
+export const postToPostgateUri = (postUri: string) => {
+  const gateUri = new AtUri(postUri)
+  gateUri.collection = ids.AppBskyFeedPostgate
+  return gateUri.toString()
+}

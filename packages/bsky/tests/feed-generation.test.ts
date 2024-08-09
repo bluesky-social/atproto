@@ -3,6 +3,7 @@ import { XRPCError } from '@atproto/xrpc'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
+import { isViewRemoved } from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import {
   TestNetwork,
   TestFeedGen,
@@ -580,6 +581,116 @@ describe('feed generation', () => {
       expect(result.headers['server-timing']).toMatch(
         /^skele;dur=\d+, hydr;dur=\d+$/,
       )
+    })
+
+    describe('postgates', () => {
+      it(`handles detached quote posts correctly`, async () => {
+        const qpUri = sc.posts[sc.dids.carol][0].ref.uri
+        const parentUri = sc.posts[sc.dids.dan][1].ref.uriStr
+
+        await pdsAgent.api.app.bsky.feed.postgate.create(
+          {
+            repo: sc.dids.carol,
+            rkey: qpUri.rkey,
+          },
+          {
+            post: qpUri.toString(),
+            createdAt: new Date().toISOString(),
+            detachedQuotes: [parentUri],
+          },
+          sc.getHeaders(sc.dids.carol),
+        )
+
+        await network.processAll()
+
+        const results = (results) => results.flatMap((res) => res.feed)
+        const paginator = async (cursor?: string) => {
+          const res = await agent.api.app.bsky.feed.getFeed(
+            { feed: feedUriAll, cursor, limit: 2 },
+            { headers: await network.serviceHeaders(alice, gen.did) },
+          )
+          return res.data
+        }
+
+        const paginatedAll: FeedViewPost[] = results(
+          await paginateAll(paginator),
+        )
+
+        const detachedQP = paginatedAll.find((item) => {
+          return item.post.uri === parentUri
+        })
+
+        expect(detachedQP).toBeDefined()
+
+        if (!detachedQP) {
+          throw new Error('Detached quote post not found')
+        }
+
+        expect(
+          // @ts-ignore
+          isViewRemoved(detachedQP.post.embed.record),
+        ).toBeTruthy()
+
+        // cleanup
+        await pdsAgent.api.app.bsky.feed.postgate.delete(
+          {
+            repo: sc.dids.carol,
+            rkey: qpUri.rkey,
+          },
+          sc.getHeaders(sc.dids.carol),
+        )
+        await network.processAll()
+      })
+    })
+
+    describe('threadages', () => {
+      it(`filters out hidden replies from feeds`, async () => {
+        const rootUri = sc.posts[sc.dids.alice][1].ref.uri
+        const replyUri = sc.replies[sc.dids.carol][0].ref.uri
+
+        await pdsAgent.api.app.bsky.feed.threadgate.create(
+          {
+            repo: sc.dids.alice,
+            rkey: rootUri.rkey,
+          },
+          {
+            post: rootUri.toString(),
+            createdAt: new Date().toISOString(),
+            hiddenReplies: [replyUri.toString()],
+          },
+          sc.getHeaders(sc.dids.alice),
+        )
+
+        await network.processAll()
+
+        const results = (results) => results.flatMap((res) => res.feed)
+        const paginator = async (cursor?: string) => {
+          const res = await agent.api.app.bsky.feed.getFeed(
+            { feed: feedUriAll, cursor, limit: 2 },
+            { headers: await network.serviceHeaders(alice, gen.did) },
+          )
+          return res.data
+        }
+
+        const paginatedAll: FeedViewPost[] = results(
+          await paginateAll(paginator),
+        )
+        const hiddenReply = paginatedAll.find((item) => {
+          return item.post.uri === replyUri.toString()
+        })
+
+        expect(hiddenReply).toBe(undefined)
+
+        // cleanup
+        await pdsAgent.api.app.bsky.feed.threadgate.delete(
+          {
+            repo: sc.dids.alice,
+            rkey: rootUri.rkey,
+          },
+          sc.getHeaders(sc.dids.alice),
+        )
+        await network.processAll()
+      })
     })
 
     it('returns an upstream failure error when the feed is down.', async () => {
