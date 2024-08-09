@@ -25,7 +25,7 @@
             },
             "description": "List of AT-URIs embedding this post that the author has detached from."
           },
-          "embedRules": {
+          "embeddingRules": {
             "type": "array",
             "maxLength": 5,
             "items": {
@@ -38,7 +38,7 @@
     },
     "disableRule": {
       "type": "object",
-      "description": "Disables embeds of this post.",
+      "description": "Disables embedding of this post.",
       "properties": {}
     }
   }
