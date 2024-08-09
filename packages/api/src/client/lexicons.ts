@@ -10187,6 +10187,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10251,6 +10254,9 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
               'lex:tools.ozone.moderation.defs#modEventDivert',
               'lex:tools.ozone.moderation.defs#modEventTag',
+              'lex:tools.ozone.moderation.defs#accountEvent',
+              'lex:tools.ozone.moderation.defs#identityEvent',
+              'lex:tools.ozone.moderation.defs#recordEvent',
             ],
           },
           subject: {
@@ -10604,6 +10610,74 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about added/removed tags.',
+          },
+        },
+      },
+      accountEvent: {
+        type: 'object',
+        description:
+          'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp', 'accountStatus'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          accountStatus: {
+            type: 'string',
+            knownValues: ['deactivated', 'activated', 'deleted'],
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      identityEvent: {
+        type: 'object',
+        description:
+          'Logs identity related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+          pdsHost: {
+            type: 'string',
+            format: 'uri',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      recordEvent: {
+        type: 'object',
+        description:
+          'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
+        required: ['timestamp'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          deleted: {
+            type: 'boolean',
+          },
+          updated: {
+            type: 'boolean',
+          },
+          created: {
+            type: 'boolean',
+          },
+          cid: {
+            type: 'string',
+          },
+          timestamp: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
