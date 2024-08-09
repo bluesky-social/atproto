@@ -226,7 +226,7 @@ if (mod.ui('contentList').blur) {
   }
 }
 if (mod.ui('contentMedia').blur) {
-  // cover the post's embbedded images with the explanation from mod.ui('contentMedia').blurs[0]
+  // cover the post's embedded images with the explanation from mod.ui('contentMedia').blurs[0]
   if (mod.ui('contentMedia').noOverride) {
     // dont allow the cover to be removed
   }

@@ -71,6 +71,7 @@ type AccessOutput = {
     did: string
     scope: AuthScope
     audience: string | undefined
+    isPrivileged: boolean
   }
   artifacts: string
 }
@@ -86,11 +87,11 @@ type RefreshOutput = {
   artifacts: string
 }
 
-type UserDidOutput = {
+type UserServiceAuthOutput = {
   credentials: {
-    type: 'user_did'
+    type: 'user_service_auth'
     aud: string
-    iss: string
+    did: string
   }
 }
 
@@ -221,29 +222,51 @@ export class AuthVerifier {
     }
   }
 
-  userDidAuth = async (ctx: ReqCtx): Promise<UserDidOutput> => {
+  userServiceAuth = async (ctx: ReqCtx): Promise<UserServiceAuthOutput> => {
     const payload = await this.verifyServiceJwt(ctx, {
-      aud: this.dids.entryway ?? this.dids.pds,
+      aud: null,
       iss: null,
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
-        type: 'user_did',
+        type: 'user_service_auth',
         aud: payload.aud,
-        iss: payload.iss,
+        did: payload.iss,
       },
     }
   }
 
-  userDidAuthOptional = async (
+  userServiceAuthOptional = async (
     ctx: ReqCtx,
-  ): Promise<UserDidOutput | NullOutput> => {
+  ): Promise<UserServiceAuthOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
-      return await this.userDidAuth(ctx)
+      return await this.userServiceAuth(ctx)
     } else {
       return this.null(ctx)
     }
   }
+
+  accessOrUserServiceAuth =
+    (opts: Partial<AccessOpts> = {}) =>
+    async (ctx: ReqCtx): Promise<UserServiceAuthOutput | AccessOutput> => {
+      const token = bearerTokenFromReq(ctx.req)
+      if (token) {
+        const payload = jose.decodeJwt(token)
+        if (payload['lxm']) {
+          return this.userServiceAuth(ctx)
+        }
+      }
+      return this.accessStandard(opts)(ctx)
+    }
 
   modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
     if (!this.dids.modService) {
@@ -470,6 +493,7 @@ export class AuthVerifier {
           did: result.claims.sub,
           scope: AuthScope.Access,
           audience: this.dids.pds,
+          isPrivileged: true,
         },
         artifacts: result.token,
       }
@@ -498,12 +522,17 @@ export class AuthVerifier {
       scopes,
       { audience: this.dids.pds },
     )
+    const isPrivileged = [
+      AuthScope.Access,
+      AuthScope.AppPassPrivileged,
+    ].includes(scope)
     return {
       credentials: {
         type: 'access',
         did,
         scope,
         audience,
+        isPrivileged,
       },
       artifacts: token,
     }
@@ -544,7 +573,12 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      null,
+      getSigningKey,
+    )
     return { iss: payload.iss, aud: payload.aud }
   }
 
