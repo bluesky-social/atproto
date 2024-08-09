@@ -16,16 +16,16 @@
             "format": "at-uri",
             "description": "Reference (AT-URI) to the post record."
           },
-          "detachedQuotes": {
+          "detachedEmbeds": {
             "type": "array",
             "maxLength": 50,
             "items": {
               "type": "string",
               "format": "at-uri"
             },
-            "description": "List of detached quote post URIs."
+            "description": "List of detached embed URIs."
           },
-          "quotepostRules": {
+          "embedRules": {
             "type": "array",
             "maxLength": 5,
             "items": {
@@ -38,7 +38,7 @@
     },
     "disableRule": {
       "type": "object",
-      "description": "Disables quoteposts of this post.",
+      "description": "Disables embeds of this post.",
       "properties": {}
     }
   }
