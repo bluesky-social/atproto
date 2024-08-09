@@ -11023,6 +11023,9 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#accountEvent',
+                  'lex:tools.ozone.moderation.defs#identityEvent',
+                  'lex:tools.ozone.moderation.defs#recordEvent',
                 ],
               },
               subject: {

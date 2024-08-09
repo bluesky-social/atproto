@@ -27,6 +27,9 @@ export interface InputSchema {
     | ToolsOzoneModerationDefs.ModEventReverseTakedown
     | ToolsOzoneModerationDefs.ModEventEmail
     | ToolsOzoneModerationDefs.ModEventTag
+    | ToolsOzoneModerationDefs.AccountEvent
+    | ToolsOzoneModerationDefs.IdentityEvent
+    | ToolsOzoneModerationDefs.RecordEvent
     | { $type: string; [k: string]: unknown }
   subject:
     | ComAtprotoAdminDefs.RepoRef
