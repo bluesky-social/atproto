@@ -95,6 +95,38 @@ export abstract class Agent extends AtpClient {
 
   //#endregion
 
+  //#region "com.atproto" lexicon short hand methods
+
+  /**
+   * Upload a binary blob to the server
+   */
+  uploadBlob: typeof this.com.atproto.repo.uploadBlob = (data, opts) =>
+    this.com.atproto.repo.uploadBlob(data, opts)
+
+  /**
+   * Resolve a handle to a DID
+   */
+  resolveHandle: typeof this.com.atproto.identity.resolveHandle = (
+    params,
+    opts,
+  ) => this.com.atproto.identity.resolveHandle(params, opts)
+
+  /**
+   * Change the user's handle
+   */
+  updateHandle: typeof this.com.atproto.identity.updateHandle = (data, opts) =>
+    this.com.atproto.identity.updateHandle(data, opts)
+
+  /**
+   * Create a moderation report
+   */
+  createModerationReport: typeof this.com.atproto.moderation.createReport = (
+    data,
+    opts,
+  ) => this.com.atproto.moderation.createReport(data, opts)
+
+  //#endregion
+
   //#region "app.bsky" lexicon short hand methods
 
   getTimeline: typeof this.app.bsky.feed.getTimeline = (params, opts) =>

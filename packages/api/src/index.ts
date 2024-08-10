@@ -21,7 +21,6 @@ export * from './moderation/types'
 export * from './mocker'
 export { LABELS, DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 export { Agent } from './agent'
-export { AtpClient } from './atp-client'
 
 export { AtpAgent } from './atp-agent'
 export { BskyAgent } from './bsky-agent'

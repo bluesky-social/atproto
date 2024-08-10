@@ -22,7 +22,7 @@
 3) A new abstract class named `Agent`, has been added to `@atproto/api`. This
    class is the base class for all Bluesky agents classes in the `@atproto`
    ecosystem. It is meant to be extended by implementation that provide
-   session management and fetch handling for the `AtpClient` instances.
+   session management and fetch handling.
 
 ## Motivation
 
@@ -77,10 +77,10 @@ there are a couple of breaking changes you should be aware of:
     deprecation).
   - `AtpAgent` extends `Agent`: adds password based session management.
   - `Agent` extends `AtpClient`: this abstract class that adds syntactic sugar
-    methods `app.bsky` lexicons. It also adds abstract session management
-    methods.
-  - `AtpClient` extends `AtpBaseClient`: adds atproto specific utilities
-    (`labelers` & `proxy` headers, cloning capability)
+    methods for the `com.atproto` and `app.bsky` lexicons. It also adds abstract
+    session management methods.
+  - `AtpClient` extends `AtpBaseClient` by adding atproto specific utilities
+    (`labelers` & `proxy` headers, instance cloning)
   - `AtpBaseClient` extends `XrpcClient`: automatically code that adds fully
     typed lexicon defined namespaces (`instance.app.bsky.feed.getPosts()`) to
     the `XrpcClient`.

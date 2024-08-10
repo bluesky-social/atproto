@@ -10,9 +10,8 @@ export type { FetchHandler }
  * An {@link AtpClient} is an {@link AtpBaseClient} with the following
  * additional features:
  * - Cloning utilities
- * - ATPROTO labelers configuration utilities
- * - ATPROTO proxy configuration utilities
- * - "com.atproto" lexicon short hand methods
+ * - AT Protocol labelers configuration utilities
+ * - AT Protocol proxy configuration utilities
  */
 export class AtpClient extends AtpBaseClient {
   //#region Static configuration
@@ -128,38 +127,6 @@ export class AtpClient extends AtpBaseClient {
     // Ignoring non-did values for backwards compatibility
     if (isDid(did)) this.configureProxy(`${did}#${serviceType}`)
   }
-
-  //#endregion
-
-  //#region "com.atproto" lexicon short hand methods
-
-  /**
-   * Upload a binary blob to the server
-   */
-  uploadBlob: typeof this.com.atproto.repo.uploadBlob = (data, opts) =>
-    this.com.atproto.repo.uploadBlob(data, opts)
-
-  /**
-   * Resolve a handle to a DID
-   */
-  resolveHandle: typeof this.com.atproto.identity.resolveHandle = (
-    params,
-    opts,
-  ) => this.com.atproto.identity.resolveHandle(params, opts)
-
-  /**
-   * Change the user's handle
-   */
-  updateHandle: typeof this.com.atproto.identity.updateHandle = (data, opts) =>
-    this.com.atproto.identity.updateHandle(data, opts)
-
-  /**
-   * Create a moderation report
-   */
-  createModerationReport: typeof this.com.atproto.moderation.createReport = (
-    data,
-    opts,
-  ) => this.com.atproto.moderation.createReport(data, opts)
 
   //#endregion
 }
