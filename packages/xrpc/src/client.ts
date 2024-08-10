@@ -1,5 +1,5 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
-import { CallOptions, Gettable, QueryParams } from './types'
+import { CallOptions, QueryParams } from './types'
 import { XrpcClient } from './xrpc-client'
 import { combineHeaders } from './util'
 
