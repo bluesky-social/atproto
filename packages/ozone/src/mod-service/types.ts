@@ -31,3 +31,6 @@ export type ModEventType =
   | ToolsOzoneModerationDefs.ModEventMute
   | ToolsOzoneModerationDefs.ModEventReverseTakedown
   | ToolsOzoneModerationDefs.ModEventTag
+  | ToolsOzoneModerationDefs.AccountEvent
+  | ToolsOzoneModerationDefs.IdentityEvent
+  | ToolsOzoneModerationDefs.RecordEvent

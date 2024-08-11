@@ -10648,6 +10648,9 @@ export const schemaDict = {
             type: 'string',
             format: 'uri',
           },
+          tombstone: {
+            type: 'boolean',
+          },
           timestamp: {
             type: 'string',
             format: 'datetime',
@@ -10658,19 +10661,14 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        required: ['timestamp'],
+        required: ['timestamp', 'op'],
         properties: {
           comment: {
             type: 'string',
           },
-          deleted: {
-            type: 'boolean',
-          },
-          updated: {
-            type: 'boolean',
-          },
-          created: {
-            type: 'boolean',
+          op: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
           },
           cid: {
             type: 'string',

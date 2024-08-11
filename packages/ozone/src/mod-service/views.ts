@@ -193,14 +193,13 @@ export class ModerationViews {
       eventView.event.timestamp = event.meta?.timestamp
       eventView.event.handle = event.meta?.handle
       eventView.event.pdsHost = event.meta?.pdsHost
+      eventView.event.tombstone = !!event.meta?.tombstone
     }
 
     if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+      eventView.event.op = event.meta?.op
       eventView.event.cid = event.meta?.cid
       eventView.event.timestamp = event.meta?.timestamp
-      eventView.event.updated = !!event.meta?.updated
-      eventView.event.deleted = !!event.meta?.deleted
-      eventView.event.created = !!event.meta?.created
     }
 
     return eventView

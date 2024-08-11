@@ -501,6 +501,7 @@ export interface IdentityEvent {
   comment?: string
   handle?: string
   pdsHost?: string
+  tombstone?: boolean
   timestamp: string
   [k: string]: unknown
 }
@@ -520,9 +521,7 @@ export function validateIdentityEvent(v: unknown): ValidationResult {
 /** Logs lifecycle event on a record subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface RecordEvent {
   comment?: string
-  deleted?: boolean
-  updated?: boolean
-  created?: boolean
+  op: 'create' | 'update' | 'delete' | (string & {})
   cid?: string
   timestamp: string
   [k: string]: unknown
