@@ -1099,7 +1099,7 @@ export class Views {
     state: HydrationState,
   ): boolean | undefined {
     const post = state.posts?.get(uri)
-    if (!post || post?.violatesQuotegate) {
+    if (!post) {
       return true
     }
     const postgateRecordUri = postToPostgateUri(uri)
