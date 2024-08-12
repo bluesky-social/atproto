@@ -5068,13 +5068,13 @@ export const schemaDict = {
       },
       viewDetached: {
         type: 'object',
-        required: ['uri', 'removed'],
+        required: ['uri', 'detached'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
           },
-          removed: {
+          detached: {
             type: 'boolean',
             const: true,
           },

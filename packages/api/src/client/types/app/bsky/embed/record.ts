@@ -129,7 +129,7 @@ export function validateViewBlocked(v: unknown): ValidationResult {
 
 export interface ViewDetached {
   uri: string
-  removed: true
+  detached: true
   [k: string]: unknown
 }
 

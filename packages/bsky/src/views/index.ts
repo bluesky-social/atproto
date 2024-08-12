@@ -928,7 +928,7 @@ export class Views {
       record: {
         $type: 'app.bsky.embed.record#viewDetached',
         uri,
-        removed: true,
+        detached: true,
       },
     }
   }
