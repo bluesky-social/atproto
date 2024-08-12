@@ -95,7 +95,7 @@ Object {
   "repostCount": 0,
   "uri": "record(0)",
   "viewer": Object {
-    "quotepostDisabled": false,
+    "embeddingDisabled": false,
     "threadMuted": false,
   },
 }
@@ -146,8 +146,8 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "like": "record(4)",
-      "quotepostDisabled": false,
       "repost": "record(3)",
       "threadMuted": false,
     },
@@ -203,7 +203,7 @@ Object {
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
-          "quotepostDisabled": false,
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -301,7 +301,7 @@ Object {
         "repostCount": 0,
         "uri": "record(9)",
         "viewer": Object {
-          "quotepostDisabled": false,
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },

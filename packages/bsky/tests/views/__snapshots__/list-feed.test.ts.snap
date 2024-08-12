@@ -56,7 +56,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
-        "quotepostDisabled": false,
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -169,7 +169,7 @@ Array [
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
-          "quotepostDisabled": false,
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -217,8 +217,8 @@ Array [
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(6)",
-          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -303,7 +303,7 @@ Array [
       "repostCount": 0,
       "uri": "record(5)",
       "viewer": Object {
-        "quotepostDisabled": false,
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -352,8 +352,8 @@ Array [
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(6)",
-          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -401,8 +401,8 @@ Array [
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(6)",
-          "quotepostDisabled": false,
           "threadMuted": false,
         },
       },
@@ -585,8 +585,8 @@ Array [
       "repostCount": 0,
       "uri": "record(8)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(12)",
-        "quotepostDisabled": false,
         "threadMuted": false,
       },
     },
@@ -619,7 +619,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
-        "quotepostDisabled": false,
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -668,8 +668,8 @@ Array [
       "repostCount": 1,
       "uri": "record(4)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(6)",
-        "quotepostDisabled": false,
         "threadMuted": false,
       },
     },
@@ -706,7 +706,7 @@ Array [
       "repostCount": 0,
       "uri": "record(11)",
       "viewer": Object {
-        "quotepostDisabled": false,
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -771,7 +771,7 @@ Array [
       "repostCount": 0,
       "uri": "record(14)",
       "viewer": Object {
-        "quotepostDisabled": false,
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
