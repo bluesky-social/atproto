@@ -122,7 +122,7 @@ describe('postgates', () => {
 
       expect(
         // @ts-ignore I know more than you
-        root.data.thread.post.viewer.quotepostDisabled,
+        root.data.thread.post.viewer.embeddingDisabled,
       ).toBe(true)
     })
 

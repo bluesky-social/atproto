@@ -605,7 +605,7 @@ export class Views {
             like: viewer.like,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
-            quotepostDisabled: this.userQuotepostDisabled(uri, state),
+            embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
           }
         : undefined,
       labels,
@@ -1094,7 +1094,7 @@ export class Views {
     return true
   }
 
-  userQuotepostDisabled(
+  userPostEmbeddingDisabled(
     uri: string,
     state: HydrationState,
   ): boolean | undefined {
