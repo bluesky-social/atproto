@@ -79,7 +79,7 @@ message PostRecordMeta {
   bool violates_thread_gate = 1;
   bool has_media = 2;
   bool is_reply = 3;
-  bool violates_quote_gate = 4;
+  bool violates_embedding_rules = 4;
 }
 
 message GetPostRecordsRequest {
