@@ -27,15 +27,12 @@ export class XrpcClient {
   readonly lex: Lexicons
 
   constructor(
-    fetchHandler: FetchHandler | FetchHandlerOptions,
+    fetchHandlerOpts: FetchHandler | FetchHandlerOptions,
     // "Lexicons" is redundant here (because that class implements
     // "Iterable<LexiconDoc>") but we keep it for explicitness:
     lex: Lexicons | Iterable<LexiconDoc>,
   ) {
-    this.fetchHandler =
-      typeof fetchHandler === 'function'
-        ? fetchHandler
-        : buildFetchHandler(fetchHandler)
+    this.fetchHandler = buildFetchHandler(fetchHandlerOpts)
 
     this.lex = lex instanceof Lexicons ? lex : new Lexicons(lex)
   }

@@ -1,6 +1,10 @@
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import { FetchHandler } from '@atproto/xrpc'
+import {
+  buildFetchHandler,
+  FetchHandler,
+  FetchHandlerOptions,
+} from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
 import {
   AppBskyActorDefs,
@@ -90,7 +94,9 @@ export abstract class Agent extends AtpBaseClient {
 
   //#endregion
 
-  constructor(fetchHandler: FetchHandler) {
+  constructor(fetchHandlerOpts: FetchHandler | FetchHandlerOptions) {
+    const fetchHandler = buildFetchHandler(fetchHandlerOpts)
+
     super((url, init) => {
       const headers = new Headers(init?.headers)
 
@@ -180,12 +186,6 @@ export abstract class Agent extends AtpBaseClient {
    * Get the authenticated user's DID, if any.
    */
   abstract readonly did?: string
-
-  /**
-   * Sign the current user out. This might make the agent un-useable (depending
-   * on whether the sub-class implementation supports signing back in).
-   */
-  abstract signOut(): Promise<void>
 
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.

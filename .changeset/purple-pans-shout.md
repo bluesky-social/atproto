@@ -177,7 +177,7 @@ baseClient.xrpc.lex.assertValidXrpcMessage('io.example.doStuff', {
 <td>
 
 ```ts
-import { schemas } from '@atproto/xrpc'
+import { schemas } from '@atproto/api'
 import { Lexicons } from '@atproto/lexicon'
 
 const lexicons = new Lexicons(schemas)
@@ -215,7 +215,7 @@ class MyAgent extends BskyAgent {
   async doStuff() {
     return this.call('io.example.doStuff', {
       headers: {
-        Authorization: this.accessToken && `Bearer ${this.accessToken}`
+        'Authorization': this.accessToken && `Bearer ${this.accessToken}`
       }
     })
   }
@@ -230,23 +230,21 @@ import { Agent } from '@atproto/api'
 
 class MyAgent extends Agent {
   private accessToken?: string
+  readonly did?: string
 
   constructor(service: string | URL) {
-    super((url, init) => {
-      const headers = new Headers(init.headers)
-
-      // Add the Authorization header on every request
-      if (this.accessToken) {
-        headers.set('Authorization', `Bearer ${this.accessToken}`)
+    super({
+      service,
+      headers: {
+        'Authorization': () => this.accessToken && `Bearer ${this.accessToken}`
       }
-
-      return fetch(new URL(url, service), { ...init, headers })
     })
   }
 
-  async createOrRefleshSession(identifier: string, password: string) {
+  async createOrRefreshSession(identifier: string, password: string) {
     // custom logic here
 
+    this.did = 'did:example:123'
     this.accessToken = 'my-access-jwt'
   }
 }
@@ -293,7 +291,7 @@ import { RateLimitThreshold } from "rate-limit-threshold"
 
 class LimitedAtpAgent extends AtpAgent {
   constructor(options: AtpAgentOptions) {
-    const fetch = options.fetch ?? globalThis.fetch
+    const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch
     const limiter = new RateLimitThreshold(
       3000,
       300_000

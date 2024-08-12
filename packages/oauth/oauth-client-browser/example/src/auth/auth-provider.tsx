@@ -9,6 +9,7 @@ import { useOAuth, UseOAuthOptions } from './oauth/use-oauth'
 
 export type AuthContext = {
   pdsAgent: Agent
+  signOut: () => void
 }
 
 const AuthContext = createContext<AuthContext | null>(null)
@@ -32,9 +33,9 @@ export const AuthProvider = ({
   const value = useMemo<AuthContext | null>(
     () =>
       oauthAgent
-        ? { pdsAgent: oauthAgent }
+        ? { pdsAgent: oauthAgent, signOut: () => oauthAgent.signOut() }
         : atpAgent
-          ? { pdsAgent: atpAgent }
+          ? { pdsAgent: atpAgent, signOut: () => atpAgent.logout() }
           : null,
     [atpAgent, oauthAgent],
   )

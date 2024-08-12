@@ -39,7 +39,12 @@ export type BuildFetchHandlerOptions = {
   fetch?: typeof globalThis.fetch
 }
 
-export function buildFetchHandler(options: FetchHandlerOptions): FetchHandler {
+export function buildFetchHandler(
+  options: FetchHandler | FetchHandlerOptions,
+): FetchHandler {
+  // Already a fetch handler (allowed for convenience)
+  if (typeof options === 'function') return options
+
   const {
     service,
     headers: defaultHeaders = undefined,

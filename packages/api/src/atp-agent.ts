@@ -24,14 +24,12 @@ const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
-export type AtpAgentOptions =
-  | SessionManager
-  | {
-      service: string | URL
-      persistSession?: AtpPersistSessionHandler
-      fetch?: typeof globalThis.fetch
-      headers?: Iterable<[string, Gettable<null | string>]>
-    }
+export type AtpAgentOptions = {
+  service: string | URL
+  persistSession?: AtpPersistSessionHandler
+  fetch?: typeof globalThis.fetch
+  headers?: Iterable<[string, Gettable<null | string>]>
+}
 
 /**
  * An {@link AtpAgent} extends the {@link Agent} abstract class by
@@ -41,7 +39,7 @@ export class AtpAgent extends Agent {
   public readonly headers: Map<string, Gettable<null | string>>
   public readonly sessionManager: SessionManager
 
-  constructor(options: AtpAgentOptions) {
+  constructor(options: AtpAgentOptions | SessionManager) {
     super(async (url: string, init?: RequestInit): Promise<Response> => {
       // wait for any active session-refreshes to finish
       await this.sessionManager.refreshSessionPromise
@@ -212,7 +210,7 @@ export class AtpAgent extends Agent {
     return this.sessionManager.login(opts)
   }
 
-  async signOut(): Promise<void> {
+  async logout(): Promise<void> {
     return this.sessionManager.logout()
   }
 }

@@ -155,8 +155,10 @@ await agent.post({
   text: 'Hello, world!',
 })
 
-// revoke credentials on the server (causing sessionStore.del() to be called)
-await agent.signOut()
+if (agent instanceof AtpAgent) {
+  // revoke credentials on the server (causing sessionStore.del() to be called)
+  await agent.logout()
+}
 ```
 
 ## Advances use-cases

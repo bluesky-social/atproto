@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useAuthContext } from './auth/auth-provider'
 
 function App() {
-  const { pdsAgent } = useAuthContext()
+  const { pdsAgent, signOut } = useAuthContext()
 
   // A call that requires to be authenticated
   const [serviceAuth, setServiceAuth] = useState<unknown>(undefined)
@@ -46,7 +46,7 @@ function App() {
         </pre>
       </code>
 
-      <button onClick={() => pdsAgent.signOut()}>Logout</button>
+      <button onClick={signOut}>Sign-out</button>
     </div>
   )
 }
