@@ -170,10 +170,7 @@ baseClient.xrpc.lex.assertValidXrpcMessage('io.example.doStuff', {
 <td>
 
 ```ts
-import { schemas } from '@atproto/api'
-import { Lexicons } from '@atproto/lexicon'
-
-const lexicons = new Lexicons(schemas)
+import { lexicons } from '@atproto/api'
 
 lexicons.assertValidXrpcMessage('io.example.doStuff', {
   // ...
