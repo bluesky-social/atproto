@@ -20,7 +20,7 @@
             "#viewRecord",
             "#viewNotFound",
             "#viewBlocked",
-            "#viewRemoved",
+            "#viewDetached",
             "app.bsky.feed.defs#generatorView",
             "app.bsky.graph.defs#listView",
             "app.bsky.labeler.defs#labelerView",
@@ -82,7 +82,7 @@
         "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
       }
     },
-    "viewRemoved": {
+    "viewDetached": {
       "type": "object",
       "required": ["uri", "removed"],
       "properties": {
