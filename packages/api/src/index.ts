@@ -30,6 +30,6 @@ export { BskyAgent } from './bsky-agent'
 /** @deprecated */
 export { AtpAgent as default } from './atp-agent'
 
-// Expose a copy tp prevent alteration of the Lexicon instance used by the
-// internal AtpBaseClient class.
+// Expose a copy to prevent alteration of the internal Lexicon instance used by
+// the AtpBaseClient class.
 export const lexicons = new Lexicons(internalLexicons)
