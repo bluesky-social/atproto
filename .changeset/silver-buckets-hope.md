@@ -1,6 +1,5 @@
 ---
 "@atproto/lex-cli": minor
-"@atproto/xrpc-server": patch
 ---
 
-Updated to use refactored version of `@atproto/xrpc`.
+The generated client implementation uses the new `XrpcClient` class from `@atproto/xrpc`, instead of the deprecated `Client` and `ServiceClient` class.
