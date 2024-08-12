@@ -10622,9 +10622,14 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
           accountStatus: {
             type: 'string',
-            knownValues: ['deactivated', 'activated', 'deleted'],
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
           },
           timestamp: {
             type: 'string',

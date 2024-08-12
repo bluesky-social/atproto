@@ -479,7 +479,14 @@ export function validateModEventTag(v: unknown): ValidationResult {
 /** Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking. */
 export interface AccountEvent {
   comment?: string
-  accountStatus: 'deactivated' | 'activated' | 'deleted' | (string & {})
+  /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
+  active?: boolean
+  accountStatus:
+    | 'takendown'
+    | 'suspended'
+    | 'deleted'
+    | 'deactivated'
+    | (string & {})
   timestamp: string
   [k: string]: unknown
 }
