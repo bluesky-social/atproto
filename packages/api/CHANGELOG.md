@@ -4,7 +4,9 @@
 
 ### Minor Changes
 
-- [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - ## Motivation
+- [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)!
+
+  #### Motivation
 
   The motivation for these changes is the need to make the `@atproto/api` package
   compatible with OAuth session management. We don't have OAuth client support
@@ -18,7 +20,7 @@
   cause the session data to become invalid when Agent clones are created (e.g.
   using `agent.withProxy()`).
 
-  ## New Features
+  #### New Features
 
   We've restructured the `XrpcClient` HTTP fetch handler to be specified during
   the instantiation of the XRPC client, through the constructor, instead of using
@@ -40,7 +42,7 @@
   `AtpAgent`.
 
   ```ts
-  import { Agent, AtpAgent } from "@atproto/api";
+  import { Agent, AtpAgent } from '@atproto/api'
 
   async function setupAgent(
     service: string,
@@ -52,35 +54,35 @@
       persistSession: (evt, session) => {
         // handle session update
       },
-    });
+    })
 
-    await agent.login(username, password);
+    await agent.login(username, password)
 
-    return agent;
+    return agent
   }
   ```
 
   ```ts
-  import { Agent } from "@atproto/api";
+  import { Agent } from '@atproto/api'
 
   async function doStuffWithAgent(agent: Agent, arg: string) {
-    return agent.resolveHandle(arg);
+    return agent.resolveHandle(arg)
   }
   ```
 
   ```ts
-  import { Agent, AtpAgent } from "@atproto/api";
+  import { Agent, AtpAgent } from '@atproto/api'
 
   class MyClass {
-    agent: Agent;
+    agent: Agent
 
     constructor() {
-      this.agent = new AtpAgent();
+      this.agent = new AtpAgent()
     }
   }
   ```
 
-  ## Breaking changes
+  #### Breaking changes
 
   Most of the changes introduced in this version are backward-compatible. However,
   there are a couple of breaking changes you should be aware of:
@@ -120,12 +122,12 @@
       the `XrpcClient`.
     - `XrpcClient` is the base class.
 
-  ## Non-breaking changes
+  #### Non-breaking changes
 
   - The `com.*` and `app.*` namespaces have been made directly available to every
     `Agent` instances.
 
-  ## Deprecations
+  #### Deprecations
 
   - The default export of the `@atproto/xrpc` package has been deprecated. Use
     named exports instead.
@@ -138,9 +140,9 @@
   - The `api` property of the `AtpAgent` and `BskyAgent` instances has been
     deprecated. Use the instance itself instead.
 
-  ## Migration
+  #### Migration
 
-  ### The `@atproto/api` package
+  ##### The `@atproto/api` package
 
   If you were relying on the `AtpBaseClient` solely to perform validation, use
   this:
@@ -153,24 +155,24 @@
   <td>
 
   ```ts
-  import { AtpBaseClient, ComAtprotoSyncSubscribeRepos } from "@atproto/api";
+  import { AtpBaseClient, ComAtprotoSyncSubscribeRepos } from '@atproto/api'
 
-  const baseClient = new AtpBaseClient();
+  const baseClient = new AtpBaseClient()
 
-  baseClient.xrpc.lex.assertValidXrpcMessage("io.example.doStuff", {
+  baseClient.xrpc.lex.assertValidXrpcMessage('io.example.doStuff', {
     // ...
-  });
+  })
   ```
 
   </td>
   <td>
 
   ```ts
-  import { lexicons } from "@atproto/api";
+  import { lexicons } from '@atproto/api'
 
-  lexicons.assertValidXrpcMessage("io.example.doStuff", {
+  lexicons.assertValidXrpcMessage('io.example.doStuff', {
     // ...
-  });
+  })
   ```
 
   </td>
@@ -187,23 +189,23 @@
   <td>
 
   ```ts
-  import { BskyAgent } from "@atproto/api";
+  import { BskyAgent } from '@atproto/api'
 
   class MyAgent extends BskyAgent {
-    private accessToken?: string;
+    private accessToken?: string
 
     async createOrRefreshSession(identifier: string, password: string) {
       // custom logic here
 
-      this.accessToken = "my-access-jwt";
+      this.accessToken = 'my-access-jwt'
     }
 
     async doStuff() {
-      return this.call("io.example.doStuff", {
+      return this.call('io.example.doStuff', {
         headers: {
           Authorization: this.accessToken && `Bearer ${this.accessToken}`,
         },
-      });
+      })
     }
   }
   ```
@@ -212,11 +214,11 @@
   <td>
 
   ```ts
-  import { Agent } from "@atproto/api";
+  import { Agent } from '@atproto/api'
 
   class MyAgent extends Agent {
-    private accessToken?: string;
-    public did?: string;
+    private accessToken?: string
+    public did?: string
 
     constructor(private readonly service: string | URL) {
       super({
@@ -225,21 +227,21 @@
           Authorization: () =>
             this.accessToken ? `Bearer ${this.accessToken}` : null,
         },
-      });
+      })
     }
 
     clone(): MyAgent {
-      const agent = new MyAgent(this.service);
-      agent.accessToken = this.accessToken;
-      agent.did = this.did;
-      return this.copyInto(agent);
+      const agent = new MyAgent(this.service)
+      agent.accessToken = this.accessToken
+      agent.did = this.did
+      return this.copyInto(agent)
     }
 
     async createOrRefreshSession(identifier: string, password: string) {
       // custom logic here
 
-      this.did = "did:example:123";
-      this.accessToken = "my-access-jwt";
+      this.did = 'did:example:123'
+      this.accessToken = 'my-access-jwt'
     }
   }
   ```
@@ -258,38 +260,38 @@
   <td>
 
   ```ts
-  import { BskyAgent } from "@atproto/api";
-  import { RateLimitThreshold } from "rate-limit-threshold";
+  import { BskyAgent } from '@atproto/api'
+  import { RateLimitThreshold } from 'rate-limit-threshold'
 
-  const agent = new BskyAgent();
-  const limiter = new RateLimitThreshold(3000, 300_000);
+  const agent = new BskyAgent()
+  const limiter = new RateLimitThreshold(3000, 300_000)
 
-  const origCall = agent.api.xrpc.call;
+  const origCall = agent.api.xrpc.call
   agent.api.xrpc.call = async function (...args) {
-    await limiter.wait();
-    return origCall.call(this, ...args);
-  };
+    await limiter.wait()
+    return origCall.call(this, ...args)
+  }
   ```
 
   </td>
   <td>
 
   ```ts
-  import { AtpAgent } from "@atproto/api";
-  import { RateLimitThreshold } from "rate-limit-threshold";
+  import { AtpAgent } from '@atproto/api'
+  import { RateLimitThreshold } from 'rate-limit-threshold'
 
   class LimitedAtpAgent extends AtpAgent {
     constructor(options: AtpAgentOptions) {
-      const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch;
-      const limiter = new RateLimitThreshold(3000, 300_000);
+      const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch
+      const limiter = new RateLimitThreshold(3000, 300_000)
 
       super({
         ...options,
         fetch: async (...args) => {
-          await limiter.wait();
-          return fetch(...args);
+          await limiter.wait()
+          return fetch(...args)
         },
-      });
+      })
     }
   }
   ```
@@ -310,40 +312,40 @@
   <td>
 
   ```ts
-  import { BskyAgent, defaultFetchHandler } from "@atproto/api";
+  import { BskyAgent, defaultFetchHandler } from '@atproto/api'
 
   BskyAgent.configure({
     fetch: async (httpUri, httpMethod, httpHeaders, httpReqBody) => {
-      const ua = httpHeaders["User-Agent"];
+      const ua = httpHeaders['User-Agent']
 
-      httpHeaders["User-Agent"] = ua ? `${ua} ${userAgent}` : userAgent;
+      httpHeaders['User-Agent'] = ua ? `${ua} ${userAgent}` : userAgent
 
-      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody);
+      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
     },
-  });
+  })
   ```
 
   </td>
   <td>
 
   ```ts
-  import { AtpAgent } from "@atproto/api";
+  import { AtpAgent } from '@atproto/api'
 
   class MyAtpAgent extends AtpAgent {
     constructor(options: AtpAgentOptions) {
-      const fetch = options.fetch ?? globalThis.fetch;
+      const fetch = options.fetch ?? globalThis.fetch
 
       super({
         ...options,
         fetch: async (url, init) => {
-          const headers = new Headers(init.headers);
+          const headers = new Headers(init.headers)
 
-          const ua = headersList.get("User-Agent");
-          headersList.set("User-Agent", ua ? `${ua} ${userAgent}` : userAgent);
+          const ua = headersList.get('User-Agent')
+          headersList.set('User-Agent', ua ? `${ua} ${userAgent}` : userAgent)
 
-          return fetch(url, { ...init, headers });
+          return fetch(url, { ...init, headers })
         },
-      });
+      })
     }
   }
   ```
@@ -374,7 +376,7 @@
   </tr>
   </table> -->
 
-  ### The `@atproto/xrpc` package
+  ##### The `@atproto/xrpc` package
 
   The `Client` and `ServiceClient` classes are now **deprecated**. If you need a
   lexicon based client, you should update the code to use the `XrpcClient` class
@@ -402,7 +404,7 @@
      */
     url: string,
     init: RequestInit,
-  ) => Promise<Response>;
+  ) => Promise<Response>
   ```
 
   A noticeable change that has been introduced is that the `uri` field of the
@@ -440,7 +442,7 @@
   <td>
 
   ```ts
-  import client, { defaultFetchHandler } from "@atproto/xrpc";
+  import client, { defaultFetchHandler } from '@atproto/xrpc'
 
   client.fetch = function (
     httpUri: string,
@@ -449,50 +451,50 @@
     httpReqBody: unknown,
   ) {
     // Custom logic here
-    return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody);
-  };
+    return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
+  }
 
   client.addLexicon({
     lexicon: 1,
-    id: "io.example.doStuff",
+    id: 'io.example.doStuff',
     defs: {},
-  });
+  })
 
-  const instance = client.service("http://my-service.com");
+  const instance = client.service('http://my-service.com')
 
-  instance.setHeader("my-header", "my-value");
+  instance.setHeader('my-header', 'my-value')
 
-  await instance.call("io.example.doStuff");
+  await instance.call('io.example.doStuff')
   ```
 
   </td>
   <td>
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     async (url, init) => {
-      const headers = new Headers(init.headers);
+      const headers = new Headers(init.headers)
 
-      headers.set("my-header", "my-value");
+      headers.set('my-header', 'my-value')
 
       // Custom logic here
 
-      const fullUrl = new URL(url, "http://my-service.com");
+      const fullUrl = new URL(url, 'http://my-service.com')
 
-      return fetch(fullUrl, { ...init, headers });
+      return fetch(fullUrl, { ...init, headers })
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
 
-  await instance.call("io.example.doStuff");
+  await instance.call('io.example.doStuff')
   ```
 
   </td>
@@ -504,62 +506,62 @@
   previous example can be simplified to:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
-  const instance = new XrpcClient("http://my-service.com", [
+  const instance = new XrpcClient('http://my-service.com', [
     {
       lexicon: 1,
-      id: "io.example.doStuff",
+      id: 'io.example.doStuff',
       defs: {},
     },
-  ]);
+  ])
   ```
 
   If you need to add static headers to all requests, you can instead instantiate
   the `XrpcClient` as follows:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     {
-      service: "http://my-service.com",
+      service: 'http://my-service.com',
       headers: {
-        "my-header": "my-value",
+        'my-header': 'my-value',
       },
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
   ```
 
   If you need the headers or service url to be dynamic, you can define them using
   functions:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     {
-      service: () => "http://my-service.com",
+      service: () => 'http://my-service.com',
       headers: {
-        "my-header": () => "my-value",
-        "my-ignored-header": () => null, // ignored
+        'my-header': () => 'my-value',
+        'my-ignored-header': () => null, // ignored
       },
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
   ```
 
 - [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the ability to use `fetch()` compatible `BodyInit` body when making XRPC calls.
