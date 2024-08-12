@@ -4971,7 +4971,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
-              'lex:app.bsky.embed.record#viewRemoved',
+              'lex:app.bsky.embed.record#viewDetached',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
               'lex:app.bsky.labeler.defs#labelerView',
@@ -5066,7 +5066,7 @@ export const schemaDict = {
           },
         },
       },
-      viewRemoved: {
+      viewDetached: {
         type: 'object',
         required: ['uri', 'removed'],
         properties: {
@@ -5202,7 +5202,7 @@ export const schemaDict = {
           replyDisabled: {
             type: 'boolean',
           },
-          quotepostDisabled: {
+          embeddingDisabled: {
             type: 'boolean',
           },
         },
@@ -6618,16 +6618,17 @@ export const schemaDict = {
               format: 'at-uri',
               description: 'Reference (AT-URI) to the post record.',
             },
-            detachedQuotes: {
+            detachedEmbeddingUris: {
               type: 'array',
               maxLength: 50,
               items: {
                 type: 'string',
                 format: 'at-uri',
               },
-              description: 'List of detached quote post URIs.',
+              description:
+                'List of AT-URIs embedding this post that the author has detached from.',
             },
-            quotepostRules: {
+            embeddingRules: {
               type: 'array',
               maxLength: 5,
               items: {
@@ -6640,7 +6641,7 @@ export const schemaDict = {
       },
       disableRule: {
         type: 'object',
-        description: 'Disables quoteposts of this post.',
+        description: 'Disables embedding of this post.',
         properties: {},
       },
     },

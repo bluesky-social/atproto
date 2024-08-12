@@ -10,9 +10,9 @@ export interface Record {
   createdAt: string
   /** Reference (AT-URI) to the post record. */
   post: string
-  /** List of detached quote post URIs. */
-  detachedQuotes?: string[]
-  quotepostRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
+  /** List of AT-URIs embedding this post that the author has detached from. */
+  detachedEmbeddingUris?: string[]
+  embeddingRules?: (DisableRule | { $type: string; [k: string]: unknown })[]
   [k: string]: unknown
 }
 
@@ -29,7 +29,7 @@ export function validateRecord(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.postgate#main', v)
 }
 
-/** Disables quoteposts of this post. */
+/** Disables embedding of this post. */
 export interface DisableRule {
   [k: string]: unknown
 }
