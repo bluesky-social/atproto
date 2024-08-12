@@ -1,5 +1,12 @@
 # @atproto/jwk-webcrypto
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd)]:
+  - @atproto/jwk-jose@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
