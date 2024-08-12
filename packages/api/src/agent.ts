@@ -2,14 +2,16 @@ import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
 import { FetchHandler } from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
-import { AtpClient } from './atp-client'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
   AppBskyFeedPost,
   AppBskyLabelerDefs,
+  AtpBaseClient,
   ComAtprotoRepoPutRecord,
 } from './client/index'
+import { MutedWord } from './client/types/app/bsky/actor/defs'
+import { BSKY_LABELER_DID } from './const'
 import { interpretLabelValueDefinitions } from './moderation'
 import { DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 import {
@@ -18,18 +20,22 @@ import {
   ModerationPrefs,
 } from './moderation/types'
 import {
+  AtpAgentGlobalOpts,
+  AtprotoServiceType,
   BskyFeedViewPreference,
   BskyInterestsPreference,
   BskyPreferences,
   BskyThreadViewPreference,
 } from './types'
 import {
+  asDid,
+  Did,
   getSavedFeedType,
+  isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateSavedFeed,
 } from './util'
-import { MutedWord } from './client/types/app/bsky/actor/defs'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -56,14 +62,117 @@ declare global {
 export type { FetchHandler }
 
 /**
- * {@link Agent} is an abstract class that extends {@link AtpClient} with
- * (abstract) session based utilities and bsky-specific methods.
+ * An {@link Agent} is an {@link AtpBaseClient} with the following
+ * additional features:
+ * - Abstract session management utilities
+ * - AT Protocol labelers configuration utilities
+ * - AT Protocol proxy configuration utilities
+ * - Cloning utilities
+ * - `app.bsky` syntactic sugar
+ * - `com.atproto` syntactic sugar
  */
-export abstract class Agent extends AtpClient {
-  /** @deprecated use "this" instead */
-  get api() {
-    return this
+export abstract class Agent extends AtpBaseClient {
+  //#region Static configuration
+
+  /**
+   * The labelers to be used across all requests with the takedown capability
+   */
+  static appLabelers: readonly string[] = [BSKY_LABELER_DID]
+
+  /**
+   * Configures the Agent (or its sub classes) globally.
+   */
+  static configure(opts: AtpAgentGlobalOpts) {
+    if (opts.appLabelers) {
+      this.appLabelers = opts.appLabelers.map(asDid) // Validate & copy
+    }
   }
+
+  //#endregion
+
+  constructor(fetchHandler: FetchHandler) {
+    super((url, init) => {
+      const headers = new Headers(init?.headers)
+
+      if (this.proxy && !headers.has('atproto-proxy')) {
+        headers.set('atproto-proxy', this.proxy)
+      }
+
+      // Merge the labelers header of this particular request with the app &
+      // instance labelers.
+      headers.set(
+        'atproto-accept-labelers',
+        [
+          ...this.appLabelers.map((l) => `${l};redact`),
+          ...this.labelers,
+          headers.get('atproto-accept-labelers')?.trim(),
+        ]
+          .filter(Boolean)
+          .join(', '),
+      )
+
+      return fetchHandler(url, { ...init, headers })
+    })
+  }
+
+  //#region Cloning utilities
+
+  abstract clone(): Agent
+
+  copyInto<T extends Agent>(inst: T): T {
+    inst.configureLabelers(this.labelers)
+    inst.configureProxy(this.proxy ?? null)
+    return inst
+  }
+
+  withProxy(serviceType: AtprotoServiceType, did: string) {
+    const inst = this.clone()
+    inst.configureProxy(`${asDid(did)}#${serviceType}`)
+    return inst as ReturnType<this['clone']>
+  }
+
+  //#endregion
+
+  //#region ATPROTO labelers configuration utilities
+
+  /**
+   * The labelers statically configured on the class of the current instance.
+   */
+  get appLabelers() {
+    return (this.constructor as typeof Agent).appLabelers
+  }
+
+  labelers: readonly string[] = []
+
+  configureLabelers(labelerDids: readonly string[]) {
+    this.labelers = labelerDids.map(asDid) // Validate & copy
+  }
+
+  /** @deprecated use {@link configureLabelers} instead */
+  configureLabelersHeader(labelerDids: readonly string[]) {
+    // Filtering non-did values for backwards compatibility
+    this.configureLabelers(labelerDids.filter(isDid))
+  }
+
+  //#endregion
+
+  //#region ATPROTO proxy configuration utilities
+
+  proxy?: `${Did}#${AtprotoServiceType}`
+
+  configureProxy(value: `${Did}#${AtprotoServiceType}` | null) {
+    if (value === null) this.proxy = undefined
+    else if (isDid(value)) this.proxy = value
+    else throw new TypeError('Invalid proxy DID')
+  }
+
+  /** @deprecated use {@link configureProxy} instead */
+  configureProxyHeader(serviceType: AtprotoServiceType, did: string) {
+    // Ignoring non-did values for backwards compatibility
+    if (isDid(did)) this.configureProxy(`${did}#${serviceType}`)
+  }
+
+  //#endregion
 
   //#region Session management
 
@@ -94,6 +203,11 @@ export abstract class Agent extends AtpClient {
   }
 
   //#endregion
+
+  /** @deprecated use "this" instead */
+  get api() {
+    return this
+  }
 
   //#region "com.atproto" lexicon short hand methods
 

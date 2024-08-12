@@ -8,7 +8,6 @@ import {
   errorResponseBody,
 } from '@atproto/xrpc'
 import { Agent } from './agent'
-import { AtpClient } from './atp-client'
 import {
   AtpBaseClient,
   ComAtprotoServerCreateAccount,
@@ -124,17 +123,11 @@ export class AtpAgent extends Agent {
     }
   }
 
-  clone(): this {
-    if (this.constructor === AtpAgent) {
-      const agent = new AtpAgent(this.sessionManager)
-      return this.copyInto(agent as this)
-    }
-
-    // sub-classes should override this method
-    throw new TypeError('Cannot clone a subclass of AtpAgent')
+  clone(): AtpAgent {
+    return this.copyInto(new AtpAgent(this.sessionManager))
   }
 
-  copyInto<T extends AtpClient>(inst: T): T {
+  copyInto<T extends Agent>(inst: T): T {
     if (inst instanceof AtpAgent) {
       for (const [key] of inst.headers) {
         inst.unsetHeader(key)

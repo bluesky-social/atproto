@@ -30,9 +30,8 @@ export class OAuthAtpAgent extends Agent {
     })
   }
 
-  clone(): this {
-    const agent = new OAuthAtpAgent(this.oauthAgent) as this
-    return this.copyInto(agent)
+  clone(): OAuthAtpAgent {
+    return this.copyInto(new OAuthAtpAgent(this.oauthAgent))
   }
 
   get did(): string {
