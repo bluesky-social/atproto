@@ -334,6 +334,8 @@ class SessionManager {
   async resumeSession(
     session: AtpSessionData,
   ): Promise<ComAtprotoServerGetSession.Response> {
+    this.session = session
+
     try {
       const res = await this.api.com.atproto.server
         .getSession(undefined, {
@@ -350,11 +352,10 @@ class SessionManager {
                 undefined,
                 { headers: { authorization: `Bearer ${session.refreshJwt}` } },
               )
-              session = {
-                ...session,
-                accessJwt: res.data.accessJwt,
-                refreshJwt: res.data.refreshJwt,
-              }
+
+              session.accessJwt = res.data.accessJwt
+              session.refreshJwt = res.data.refreshJwt
+
               return this.api.com.atproto.server.getSession(undefined, {
                 headers: { authorization: `Bearer ${session.accessJwt}` },
               })
@@ -373,25 +374,32 @@ class SessionManager {
         )
       }
 
-      this.session = session
-      this.session.email = res.data.email
-      this.session.handle = res.data.handle
-      this.session.emailConfirmed = res.data.emailConfirmed
-      this.session.emailAuthFactor = res.data.emailAuthFactor
-      this.session.active = res.data.active ?? true
-      this.session.status = res.data.status
-      this._updateApiEndpoint(res.data.didDoc)
-      this.persistSession?.('update', this.session)
+      session.email = res.data.email
+      session.handle = res.data.handle
+      session.emailConfirmed = res.data.emailConfirmed
+      session.emailAuthFactor = res.data.emailAuthFactor
+      session.active = res.data.active ?? true
+      session.status = res.data.status
+
+      // protect against concurrent session updates
+      if (this.session === session) {
+        this._updateApiEndpoint(res.data.didDoc)
+        this.persistSession?.('update', session)
+      }
+
       return res
     } catch (err) {
-      this.session = undefined
-      this.persistSession?.(
-        err instanceof XRPCError &&
-          ['ExpiredToken', 'InvalidToken'].includes(err.error)
-          ? 'expired'
-          : 'network-error',
-        undefined,
-      )
+      // protect against concurrent session updates
+      if (this.session === session) {
+        this.session = undefined
+        this.persistSession?.(
+          err instanceof XRPCError &&
+            ['ExpiredToken', 'InvalidToken'].includes(err.error)
+            ? 'expired'
+            : 'network-error',
+          undefined,
+        )
+      }
 
       throw err
     }
