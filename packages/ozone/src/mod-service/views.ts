@@ -187,7 +187,7 @@ export class ModerationViews {
     if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
       eventView.event.active = !!event.meta?.active
       eventView.event.timestamp = event.meta?.timestamp
-      eventView.event.accountStatus = event.meta?.accountStatus
+      eventView.event.status = event.meta?.status
     }
 
     if (event.action === 'tools.ozone.moderation.defs#identityEvent') {

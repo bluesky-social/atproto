@@ -10617,7 +10617,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        required: ['timestamp', 'accountStatus'],
+        required: ['timestamp', 'status'],
         properties: {
           comment: {
             type: 'string',
@@ -10627,7 +10627,7 @@ export const schemaDict = {
             description:
               'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
           },
-          accountStatus: {
+          status: {
             type: 'string',
             knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
           },

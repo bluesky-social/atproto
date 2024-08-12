@@ -481,12 +481,7 @@ export interface AccountEvent {
   comment?: string
   /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
   active?: boolean
-  accountStatus:
-    | 'takendown'
-    | 'suspended'
-    | 'deleted'
-    | 'deactivated'
-    | (string & {})
+  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
   timestamp: string
   [k: string]: unknown
 }
