@@ -196,7 +196,7 @@ import { BskyAgent } from '@atproto/api'
 class MyAgent extends BskyAgent {
   private accessToken?: string
 
-  async createOrRefleshSession(identifier: string, password: string) {
+  async createOrRefreshSession(identifier: string, password: string) {
     // custom logic here
 
     this.accessToken = 'my-access-jwt'
@@ -253,7 +253,7 @@ class MyAgent extends Agent {
 </table>
 
 
-If you are monkey patching the the `xrpc` service client to perform client-side rate limiting, you can now do this in the `FetchHandler` function:
+If you are monkey patching the `xrpc` service client to perform client-side rate limiting, you can now do this in the `FetchHandler` function:
 
 <table>
 <tr>
@@ -406,7 +406,7 @@ future version.
 Since its use has completely changed, the `FetchHandler` type has also
 completely changed. The new `FetchHandler` type is now a function that receives
 a `url` pathname and a `RequestInit` object and returns a `Promise<Response>`.
-This function is responsible from making the actual request to the server.
+This function is responsible for making the actual request to the server.
 
 ```ts
 export type FetchHandler = (
