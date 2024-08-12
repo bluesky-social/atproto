@@ -230,15 +230,23 @@ import { Agent } from '@atproto/api'
 
 class MyAgent extends Agent {
   private accessToken?: string
-  readonly did?: string
+  public did?: string
 
-  constructor(service: string | URL) {
+  constructor(private readonly service: string | URL) {
     super({
       service,
       headers: {
-        'Authorization': () => this.accessToken && `Bearer ${this.accessToken}`
+        Authorization: () =>
+          this.accessToken ? `Bearer ${this.accessToken}` : null,
       }
     })
+  }
+
+  clone(): MyAgent {
+    const agent = new MyAgent(this.service)
+    agent.accessToken = this.accessToken
+    agent.did = this.did
+    return this.copyInto(agent)
   }
 
   async createOrRefreshSession(identifier: string, password: string) {
