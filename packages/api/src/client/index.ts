@@ -1073,12 +1073,11 @@ export class ComAtprotoServerNS {
     params?: ComAtprotoServerGetServiceAuth.QueryParams,
     opts?: ComAtprotoServerGetServiceAuth.CallOptions,
   ): Promise<ComAtprotoServerGetServiceAuth.Response> {
-    return this._client.call(
-      'com.atproto.server.getServiceAuth',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.server.getServiceAuth', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetServiceAuth.toKnownErr(e)
+      })
   }
 
   getSession(
