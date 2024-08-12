@@ -31,9 +31,11 @@
     "@atproto-labs/identity-resolver": "workspace:*",
     "@atproto-labs/simple-store": "workspace:*",
     "@atproto-labs/simple-store-memory": "workspace:*",
+    "@atproto/api": "workspace:*",
     "@atproto/did": "workspace:*",
     "@atproto/jwk": "workspace:*",
     "@atproto/oauth-types": "workspace:*",
+    "@atproto/xrpc": "workspace:*",
     "multiformats": "^9.9.0",
     "zod": "^3.23.8"
   },

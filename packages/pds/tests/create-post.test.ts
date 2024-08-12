@@ -1,9 +1,10 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent, {
+import {
   AppBskyFeedPost,
   AtUri,
   RichText,
   AppBskyRichtextFacet,
+  AtpAgent,
 } from '@atproto/api'
 import basicSeed from './seeds/basic'
 

@@ -11673,7 +11673,9 @@ export const schemaDict = {
     },
   },
 }
-export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
+export const schemas = Object.freeze(
+  Object.values(schemaDict),
+) as readonly LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',

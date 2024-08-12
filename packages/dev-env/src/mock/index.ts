@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/syntax'
-import AtpAgent, { COM_ATPROTO_MODERATION } from '@atproto/api'
+import { COM_ATPROTO_MODERATION, AtpAgent } from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
@@ -30,90 +30,67 @@ export async function generateMockSetup(env: TestNetwork) {
     throw new Error('Not found')
   }
 
-  const clients = {
-    loggedout: env.pds.getClient(),
-    alice: env.pds.getClient(),
-    bob: env.pds.getClient(),
-    carla: env.pds.getClient(),
-  }
-  interface User {
-    email: string
-    did: string
-    handle: string
-    password: string
-    agent: AtpAgent
-  }
-  const users: User[] = [
+  const loggedOut = env.pds.getClient()
+
+  const users = [
     {
       email: 'alice@test.com',
-      did: '',
       handle: `alice.test`,
       password: 'hunter2',
-      agent: clients.alice,
     },
     {
       email: 'bob@test.com',
-      did: '',
       handle: `bob.test`,
       password: 'hunter2',
-      agent: clients.bob,
     },
     {
       email: 'carla@test.com',
-      did: '',
       handle: `carla.test`,
       password: 'hunter2',
-      agent: clients.carla,
     },
   ]
-  const alice = users[0]
-  const bob = users[1]
-  const carla = users[2]
 
-  let _i = 1
-  for (const user of users) {
-    const res = await clients.loggedout.api.com.atproto.server.createAccount({
-      email: user.email,
-      handle: user.handle,
-      password: user.password,
-    })
-    user.agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
-    user.did = res.data.did
-    await user.agent.api.app.bsky.actor.profile.create(
-      { repo: user.did },
-      {
-        displayName: ucfirst(user.handle).slice(0, -5),
-        description: `Test user ${_i++}`,
-      },
-    )
-  }
+  const userAgents = await Promise.all(
+    users.map(async (user, i) => {
+      const client: AtpAgent = env.pds.getClient()
+      await client.createAccount(user)
+      client.assertAuthenticated()
+      await client.app.bsky.actor.profile.create(
+        { repo: client.did },
+        {
+          displayName: ucfirst(user.handle).slice(0, -5),
+          description: `Test user ${i}`,
+        },
+      )
+      return client
+    }),
+  )
+
+  const [alice, bob, carla] = userAgents
 
   // Create moderator accounts
-  const triageRes =
-    await clients.loggedout.api.com.atproto.server.createAccount({
-      email: 'triage@test.com',
-      handle: 'triage.test',
-      password: 'triage-pass',
-    })
+  const triageRes = await loggedOut.com.atproto.server.createAccount({
+    email: 'triage@test.com',
+    handle: 'triage.test',
+    password: 'triage-pass',
+  })
   await env.ozone.addTriageDid(triageRes.data.did)
-  const modRes = await clients.loggedout.api.com.atproto.server.createAccount({
+  const modRes = await loggedOut.com.atproto.server.createAccount({
     email: 'mod@test.com',
     handle: 'mod.test',
     password: 'mod-pass',
   })
   await env.ozone.addModeratorDid(modRes.data.did)
-  const adminRes = await clients.loggedout.api.com.atproto.server.createAccount(
-    {
-      email: 'admin-mod@test.com',
-      handle: 'admin-mod.test',
-      password: 'admin-mod-pass',
-    },
-  )
+  const adminRes = await loggedOut.com.atproto.server.createAccount({
+    email: 'admin-mod@test.com',
+    handle: 'admin-mod.test',
+    password: 'admin-mod-pass',
+  })
   await env.ozone.addAdminDid(adminRes.data.did)
 
   // Report one user
-  const reporter = picka(users)
-  await reporter.agent.api.com.atproto.moderation.createReport({
+  const reporter = picka(userAgents)
+  await reporter.com.atproto.moderation.createReport({
     reasonType: picka([
       COM_ATPROTO_MODERATION.DefsReasonSpam,
       COM_ATPROTO_MODERATION.DefsReasonOther,
@@ -121,16 +98,16 @@ export async function generateMockSetup(env: TestNetwork) {
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
-      did: picka(users).did,
+      did: picka(userAgents).did,
     },
   })
 
   // everybody follows everybody
-  const follow = async (author: User, subject: User) => {
-    await author.agent.api.app.bsky.graph.follow.create(
-      { repo: author.did },
+  const follow = async (author: AtpAgent, subject: AtpAgent) => {
+    await author.app.bsky.graph.follow.create(
+      { repo: author.accountDid },
       {
-        subject: subject.did,
+        subject: subject.accountDid,
         createdAt: date.next().value,
       },
     )
@@ -145,8 +122,8 @@ export async function generateMockSetup(env: TestNetwork) {
   // a set of posts and reposts
   const posts: { uri: string; cid: string }[] = []
   for (let i = 0; i < postTexts.length; i++) {
-    const author = picka(users)
-    const post = await author.agent.api.app.bsky.feed.post.create(
+    const author = picka(userAgents)
+    const post = await author.app.bsky.feed.post.create(
       { repo: author.did },
       {
         text: postTexts[i],
@@ -155,8 +132,8 @@ export async function generateMockSetup(env: TestNetwork) {
     )
     posts.push(post)
     if (rand(10) === 0) {
-      const reposter = picka(users)
-      await reposter.agent.api.app.bsky.feed.repost.create(
+      const reposter = picka(userAgents)
+      await reposter.app.bsky.feed.repost.create(
         { repo: reposter.did },
         {
           subject: picka(posts),
@@ -165,8 +142,8 @@ export async function generateMockSetup(env: TestNetwork) {
       )
     }
     if (rand(6) === 0) {
-      const reporter = picka(users)
-      await reporter.agent.api.com.atproto.moderation.createReport({
+      const reporter = picka(userAgents)
+      await reporter.com.atproto.moderation.createReport({
         reasonType: picka([
           COM_ATPROTO_MODERATION.DefsReasonSpam,
           COM_ATPROTO_MODERATION.DefsReasonOther,
@@ -183,11 +160,11 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // make some naughty posts & label them
   const file = Buffer.from(labeledImgB64, 'base64')
-  const uploadedImg = await bob.agent.api.com.atproto.repo.uploadBlob(file, {
+  const uploadedImg = await bob.com.atproto.repo.uploadBlob(file, {
     encoding: 'image/png',
   })
-  const labeledPost = await bob.agent.api.app.bsky.feed.post.create(
-    { repo: bob.did },
+  const labeledPost = await bob.app.bsky.feed.post.create(
+    { repo: bob.accountDid },
     {
       text: 'naughty post',
       embed: {
@@ -203,8 +180,8 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  const filteredPost = await bob.agent.api.app.bsky.feed.post.create(
-    { repo: bob.did },
+  const filteredPost = await bob.app.bsky.feed.post.create(
+    { repo: bob.accountDid },
     {
       text: 'reallly bad post should be deleted',
       createdAt: date.next().value,
@@ -226,13 +203,13 @@ export async function generateMockSetup(env: TestNetwork) {
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
     const urip = new AtUri(targetUri)
-    const target = await alice.agent.api.app.bsky.feed.post.get({
+    const target = await alice.app.bsky.feed.post.get({
       repo: urip.host,
       rkey: urip.rkey,
     })
-    const author = picka(users)
+    const author = picka(userAgents)
     posts.push(
-      await author.agent.api.app.bsky.feed.post.create(
+      await author.app.bsky.feed.post.create(
         { repo: author.did },
         {
           text: picka(replyTexts),
@@ -248,9 +225,9 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // a set of likes
   for (const post of posts) {
-    for (const user of users) {
+    for (const user of userAgents) {
       if (rand(3) === 0) {
-        await user.agent.api.app.bsky.feed.like.create(
+        await user.app.bsky.feed.like.create(
           { repo: user.did },
           {
             subject: post,
@@ -262,7 +239,11 @@ export async function generateMockSetup(env: TestNetwork) {
   }
 
   // a couple feed generators that returns some posts
-  const fg1Uri = AtUri.make(alice.did, 'app.bsky.feed.generator', 'alice-favs')
+  const fg1Uri = AtUri.make(
+    alice.accountDid,
+    'app.bsky.feed.generator',
+    'alice-favs',
+  )
   const fg1 = await env.createFeedGen({
     [fg1Uri.toString()]: async () => {
       const feed = posts
@@ -277,14 +258,11 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   })
   const avatarImg = Buffer.from(blurHashB64, 'base64')
-  const avatarRes = await alice.agent.api.com.atproto.repo.uploadBlob(
-    avatarImg,
-    {
-      encoding: 'image/png',
-    },
-  )
-  const fgAliceRes = await alice.agent.api.app.bsky.feed.generator.create(
-    { repo: alice.did, rkey: fg1Uri.rkey },
+  const avatarRes = await alice.com.atproto.repo.uploadBlob(avatarImg, {
+    encoding: 'image/png',
+  })
+  const fgAliceRes = await alice.app.bsky.feed.generator.create(
+    { repo: alice.accountDid, rkey: fg1Uri.rkey },
     {
       did: fg1.did,
       displayName: 'alices feed',
@@ -294,8 +272,8 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  await alice.agent.api.app.bsky.feed.post.create(
-    { repo: alice.did },
+  await alice.app.bsky.feed.post.create(
+    { repo: alice.accountDid },
     {
       text: 'check out my algorithm!',
       embed: {
@@ -306,7 +284,7 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
   for (const user of [alice, bob, carla]) {
-    await user.agent.api.app.bsky.feed.like.create(
+    await user.app.bsky.feed.like.create(
       { repo: user.did },
       {
         subject: fgAliceRes,
@@ -315,7 +293,11 @@ export async function generateMockSetup(env: TestNetwork) {
     )
   }
 
-  const fg2Uri = AtUri.make(bob.did, 'app.bsky.feed.generator', 'bob-redux')
+  const fg2Uri = AtUri.make(
+    bob.accountDid,
+    'app.bsky.feed.generator',
+    'bob-redux',
+  )
   const fg2 = await env.createFeedGen({
     [fg2Uri.toString()]: async () => {
       const feed = posts
@@ -329,8 +311,8 @@ export async function generateMockSetup(env: TestNetwork) {
       }
     },
   })
-  const fgBobRes = await bob.agent.api.app.bsky.feed.generator.create(
-    { repo: bob.did, rkey: fg2Uri.rkey },
+  const fgBobRes = await bob.app.bsky.feed.generator.create(
+    { repo: bob.accountDid, rkey: fg2Uri.rkey },
     {
       did: fg2.did,
       displayName: 'Bobby boy hot new algo',
@@ -338,8 +320,8 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  await alice.agent.api.app.bsky.feed.post.create(
-    { repo: alice.did },
+  await alice.app.bsky.feed.post.create(
+    { repo: alice.accountDid },
     {
       text: `bobs feed is neat too`,
       embed: {
@@ -352,14 +334,13 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // create a labeler account
   {
-    const res = await clients.loggedout.api.com.atproto.server.createAccount({
+    const labeler = env.pds.getClient()
+    const res = await labeler.createAccount({
       email: 'labeler@test.com',
       handle: 'labeler.test',
       password: 'hunter2',
     })
-    const agent = env.pds.getClient()
-    agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
-    await agent.api.app.bsky.actor.profile.create(
+    await labeler.app.bsky.actor.profile.create(
       { repo: res.data.did },
       {
         displayName: 'Test Labeler',
@@ -367,7 +348,7 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
 
-    await agent.api.app.bsky.labeler.service.create(
+    await labeler.app.bsky.labeler.service.create(
       { repo: res.data.did, rkey: 'self' },
       {
         policies: {
@@ -455,25 +436,25 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
     await createLabel(env.bsky.db, {
-      uri: alice.did,
+      uri: alice.accountDid,
       cid: '',
       val: 'rude',
       src: res.data.did,
     })
     await createLabel(env.bsky.db, {
-      uri: `at://${alice.did}/app.bsky.feed.generator/alice-favs`,
+      uri: `at://${alice.accountDid}/app.bsky.feed.generator/alice-favs`,
       cid: '',
       val: 'cool',
       src: res.data.did,
     })
     await createLabel(env.bsky.db, {
-      uri: bob.did,
+      uri: bob.accountDid,
       cid: '',
       val: 'cool',
       src: res.data.did,
     })
     await createLabel(env.bsky.db, {
-      uri: carla.did,
+      uri: carla.accountDid,
       cid: '',
       val: 'spam',
       src: res.data.did,
@@ -482,8 +463,8 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // Create lists and add people to the lists
   {
-    const flowerLovers = await alice.agent.api.app.bsky.graph.list.create(
-      { repo: alice.did },
+    const flowerLovers = await alice.app.bsky.graph.list.create(
+      { repo: alice.accountDid },
       {
         name: 'Flower Lovers',
         purpose: 'app.bsky.graph.defs#curatelist',
@@ -491,8 +472,8 @@ export async function generateMockSetup(env: TestNetwork) {
         description: 'A list of posts about flowers',
       },
     )
-    const labelHaters = await bob.agent.api.app.bsky.graph.list.create(
-      { repo: bob.did },
+    const labelHaters = await bob.app.bsky.graph.list.create(
+      { repo: bob.accountDid },
       {
         name: 'Label Haters',
         purpose: 'app.bsky.graph.defs#modlist',
@@ -500,18 +481,18 @@ export async function generateMockSetup(env: TestNetwork) {
         description: 'A list of people who hate labels',
       },
     )
-    await alice.agent.api.app.bsky.graph.listitem.create(
-      { repo: alice.did },
+    await alice.app.bsky.graph.listitem.create(
+      { repo: alice.accountDid },
       {
-        subject: bob.did,
+        subject: bob.accountDid,
         createdAt: new Date().toISOString(),
         list: new RecordRef(flowerLovers.uri, flowerLovers.cid).uriStr,
       },
     )
-    await bob.agent.api.app.bsky.graph.listitem.create(
-      { repo: bob.did },
+    await bob.app.bsky.graph.listitem.create(
+      { repo: bob.accountDid },
       {
-        subject: alice.did,
+        subject: alice.accountDid,
         createdAt: new Date().toISOString(),
         list: new RecordRef(labelHaters.uri, labelHaters.cid).uriStr,
       },
