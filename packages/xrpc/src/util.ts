@@ -193,21 +193,21 @@ export function combineHeaders(
 
   let headers: Headers | undefined = undefined
 
-  for (const [key, getter] of defaultHeaders) {
+  for (const [name, definition] of defaultHeaders) {
     // Ignore undefined values (allowed for convenience when using
     // Object.entries).
-    if (getter === undefined) continue
+    if (definition === undefined) continue
 
     // Lazy initialization of the headers object
     headers ??= new Headers(headersInit)
 
-    if (headers.has(key)) continue
+    if (headers.has(name)) continue
 
-    const value = typeof getter === 'function' ? getter() : getter
+    const value = typeof definition === 'function' ? definition() : definition
 
-    if (typeof value === 'string') headers.set(key, value)
-    else if (value === null) headers.delete(key)
-    else throw new TypeError(`Invalid "${key}" header value: ${typeof value}`)
+    if (typeof value === 'string') headers.set(name, value)
+    else if (value === null) headers.delete(name)
+    else throw new TypeError(`Invalid "${name}" header value: ${typeof value}`)
   }
 
   return headers ?? headersInit
