@@ -3,7 +3,7 @@ import { XRPCError } from '@atproto/xrpc'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
-import { isViewRemoved } from '@atproto/api/dist/client/types/app/bsky/embed/record'
+import { isViewDetached } from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import {
   TestNetwork,
   TestFeedGen,
@@ -596,7 +596,7 @@ describe('feed generation', () => {
           {
             post: qpUri.toString(),
             createdAt: new Date().toISOString(),
-            detachedQuotes: [parentUri],
+            detachedEmbeddingUris: [parentUri],
           },
           sc.getHeaders(sc.dids.carol),
         )
@@ -628,7 +628,7 @@ describe('feed generation', () => {
 
         expect(
           // @ts-ignore
-          isViewRemoved(detachedQP.post.embed.record),
+          isViewDetached(detachedQP.post.embed.record),
         ).toBeTruthy()
 
         // cleanup

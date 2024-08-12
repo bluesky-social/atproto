@@ -477,7 +477,7 @@ async function validatePostEmbed(
     }
   }
   const {
-    quotepostRules: { canQuotepost },
+    embeddingRules: { canQuotepost },
   } = parsePostgate({
     gate: jsonStringToLex(postgateRecord.json) as PostgateRecord,
     viewerDid: new AtUri(parentUri).host,

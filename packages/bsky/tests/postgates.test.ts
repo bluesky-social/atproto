@@ -46,7 +46,7 @@ describe('postgates', () => {
         {
           post: quoteePost.ref.uriStr,
           createdAt: new Date().toISOString(),
-          detachedQuotes: [quoterPost.ref.uriStr],
+          detachedEmbeddingUris: [quoterPost.ref.uriStr],
         },
         sc.getHeaders(users.quotee.did),
       )
@@ -59,7 +59,7 @@ describe('postgates', () => {
 
       expect(
         // @ts-ignore I know more than you
-        AppBskyEmbedRecord.isViewRemoved(root.data.thread.post.embed.record),
+        AppBskyEmbedRecord.isViewDetached(root.data.thread.post.embed.record),
       ).toBe(true)
     })
 
@@ -80,7 +80,7 @@ describe('postgates', () => {
         {
           post: quoteePost.ref.uriStr,
           createdAt: new Date().toISOString(),
-          detachedQuotes: [quoterPost.ref.uriStr],
+          detachedEmbeddingUris: [quoterPost.ref.uriStr],
         },
         sc.getHeaders(users.viewer.did),
       )
@@ -93,12 +93,12 @@ describe('postgates', () => {
 
       expect(
         // @ts-ignore I know more than you
-        AppBskyEmbedRecord.isViewRemoved(root.data.thread.post.embed.record),
+        AppBskyEmbedRecord.isViewDetached(root.data.thread.post.embed.record),
       ).toBe(false)
     })
   })
 
-  describe(`quotepostRules`, () => {
+  describe(`embeddingRules`, () => {
     it(`disables quoteposts`, async () => {
       const quoteePost = await sc.post(users.quotee.did, `post`)
       await pdsAgent.api.app.bsky.feed.postgate.create(
@@ -109,7 +109,7 @@ describe('postgates', () => {
         {
           post: quoteePost.ref.uriStr,
           createdAt: new Date().toISOString(),
-          quotepostRules: [{ $type: 'app.bsky.feed.postgate#disableRule' }],
+          embeddingRules: [{ $type: 'app.bsky.feed.postgate#disableRule' }],
         },
         sc.getHeaders(users.quotee.did),
       )
@@ -136,7 +136,7 @@ describe('postgates', () => {
         {
           post: quoteePost.ref.uriStr,
           createdAt: new Date().toISOString(),
-          quotepostRules: [{ $type: 'app.bsky.feed.postgate#disableRule' }],
+          embeddingRules: [{ $type: 'app.bsky.feed.postgate#disableRule' }],
         },
         sc.getHeaders(users.quotee.did),
       )
@@ -158,7 +158,7 @@ describe('postgates', () => {
 
       expect(
         // @ts-ignore I know more than you
-        AppBskyEmbedRecord.isViewRemoved(root.data.thread.post.embed.record),
+        AppBskyEmbedRecord.isViewDetached(root.data.thread.post.embed.record),
       ).toBe(true)
     })
   })

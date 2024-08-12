@@ -41,7 +41,7 @@ import {
   Embed,
   EmbedBlocked,
   EmbedNotFound,
-  EmbedRemoved,
+  EmbedDetached,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -922,11 +922,11 @@ export class Views {
     }
   }
 
-  embedRemoved(uri: string): { $type: string; record: EmbedRemoved } {
+  embedDetached(uri: string): { $type: string; record: EmbedDetached } {
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
-        $type: 'app.bsky.embed.record#viewRemoved',
+        $type: 'app.bsky.embed.record#viewDetached',
         uri,
         removed: true,
       },
@@ -992,13 +992,13 @@ export class Views {
 
     const postgateRecordUri = postToPostgateUri(embed.record.uri)
     const postgate = state.postgates?.get(postgateRecordUri)
-    if (postgate?.record?.detachedQuotes?.includes(postUri)) {
-      return this.embedRemoved(uri)
+    if (postgate?.record?.detachedEmbeddingUris?.includes(postUri)) {
+      return this.embedDetached(uri)
     }
 
     const post = state.posts?.get(postUri)
     if (post?.violatesQuotegate) {
-      return this.embedRemoved(uri)
+      return this.embedDetached(uri)
     }
 
     if (parsedUri.collection === ids.AppBskyFeedPost) {
@@ -1109,7 +1109,7 @@ export class Views {
       return false
     }
     const {
-      quotepostRules: { canQuotepost },
+      embeddingRules: { canQuotepost },
     } = parsePostgate({
       gate,
       viewerDid,
