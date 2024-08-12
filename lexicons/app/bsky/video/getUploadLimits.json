@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.vidoe.getUploadLimits",
+  "id": "app.bsky.video.getUploadLimits",
   "defs": {
     "main": {
       "type": "query",

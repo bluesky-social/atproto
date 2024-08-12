@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.vidoe.getJobStatus",
+  "id": "app.bsky.video.getJobStatus",
   "defs": {
     "main": {
       "type": "query",
