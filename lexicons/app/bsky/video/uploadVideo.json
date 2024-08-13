@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Upload a video to be processed and stored on the PDS.",
+      "description": "Upload a video to be processed then stored on the PDS.",
       "input": {
         "encoding": "video/mp4"
       },

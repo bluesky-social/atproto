@@ -9,11 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [
-            "canUpload",
-            "remainingDailyVideos",
-            "remainingDailyBytes"
-          ],
+          "required": ["canUpload"],
           "properties": {
             "canUpload": { "type": "boolean" },
             "remainingDailyVideos": { "type": "integer" },

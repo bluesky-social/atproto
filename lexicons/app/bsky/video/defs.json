@@ -11,7 +11,7 @@
         "state": {
           "type": "string",
           "description": "The state of the video processing job. All values not listed as a known value indicate that the job is in process.",
-          "knownValues": ["failed", "completed"]
+          "knownValues": ["JOB_STATE_COMPLETED", "JOB_STATE_FAILED"]
         },
         "progress": {
           "type": "integer",
