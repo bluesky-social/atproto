@@ -9142,6 +9142,138 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyVideoDefs: {
+    lexicon: 1,
+    id: 'app.bsky.video.defs',
+    defs: {
+      jobStatus: {
+        type: 'object',
+        required: ['jobId', 'did', 'state'],
+        properties: {
+          jobId: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          state: {
+            type: 'string',
+            description:
+              'The state of the video processing job. All values not listed as a known value indicate that the job is in process.',
+            knownValues: ['JOB_STATE_COMPLETED', 'JOB_STATE_FAILED'],
+          },
+          progress: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+            description: 'Progress within the current processing state.',
+          },
+          blob: {
+            type: 'blob',
+          },
+          error: {
+            type: 'string',
+          },
+          message: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoGetJobStatus: {
+    lexicon: 1,
+    id: 'app.bsky.video.getJobStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get status details for a video processing job.',
+        parameters: {
+          type: 'params',
+          required: ['jobId'],
+          properties: {
+            jobId: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jobStatus'],
+            properties: {
+              jobStatus: {
+                type: 'ref',
+                ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoGetUploadLimits: {
+    lexicon: 1,
+    id: 'app.bsky.video.getUploadLimits',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get video upload limits for the authenticated user.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canUpload'],
+            properties: {
+              canUpload: {
+                type: 'boolean',
+              },
+              remainingDailyVideos: {
+                type: 'integer',
+              },
+              remainingDailyBytes: {
+                type: 'integer',
+              },
+              message: {
+                type: 'string',
+              },
+              error: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoUploadVideo: {
+    lexicon: 1,
+    id: 'app.bsky.video.uploadVideo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Upload a video to be processed then stored on the PDS.',
+        input: {
+          encoding: 'video/mp4',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jobStatus'],
+            properties: {
+              jobStatus: {
+                type: 'ref',
+                ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyActorDeclaration: {
     lexicon: 1,
     id: 'chat.bsky.actor.declaration',
@@ -10226,6 +10358,10 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  AppBskyVideoDefs: 'app.bsky.video.defs',
+  AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
+  AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
+  AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
