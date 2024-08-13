@@ -6,7 +6,7 @@ import {
   ModeratorClient,
   RecordRef,
 } from '@atproto/dev-env'
-import AtpAgent, { BSKY_LABELER_DID } from '@atproto/api'
+import { AtpAgent, BSKY_LABELER_DID } from '@atproto/api'
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 
 describe('admin get lists', () => {

@@ -73,7 +73,7 @@ export class TestPds {
 
   getClient(): AtpAgent {
     const agent = new AtpAgent({ service: this.url })
-    agent.configureLabelersHeader([EXAMPLE_LABELER])
+    agent.configureLabelers([EXAMPLE_LABELER])
     return agent
   }
 
