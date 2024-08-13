@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the browser (relies on WebCrypto & Indexed DB)",
   "keywords": [
