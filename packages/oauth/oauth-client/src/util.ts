@@ -50,6 +50,39 @@ export function contentMime(headers: Headers): string | undefined {
   return headers.get('content-type')?.split(';')[0]!.trim()
 }
 
+/**
+ * Ponyfill for `CustomEvent` constructor.
+ */
+export const CustomEvent: typeof globalThis.CustomEvent =
+  globalThis.CustomEvent ??
+  (() => {
+    class CustomEvent<T> extends Event {
+      #detail: T | null
+      constructor(type: string, options?: CustomEventInit<T>) {
+        if (!arguments.length) throw new TypeError('type argument is required')
+        super(type, options)
+        this.#detail = options?.detail ?? null
+      }
+      get detail() {
+        return this.#detail
+      }
+    }
+
+    Object.defineProperties(CustomEvent.prototype, {
+      [Symbol.toStringTag]: {
+        writable: false,
+        enumerable: false,
+        configurable: true,
+        value: 'CustomEvent',
+      },
+      detail: {
+        enumerable: true,
+      },
+    })
+
+    return CustomEvent
+  })()
+
 export class CustomEventTarget<EventDetailMap extends Record<string, unknown>> {
   readonly eventTarget = new EventTarget()
 
@@ -76,7 +109,10 @@ export class CustomEventTarget<EventDetailMap extends Record<string, unknown>> {
   dispatchCustomEvent<T extends Extract<keyof EventDetailMap, string>>(
     type: T,
     detail: EventDetailMap[T],
+    init?: EventInit,
   ): boolean {
-    return this.eventTarget.dispatchEvent(new CustomEvent(type, { detail }))
+    return this.eventTarget.dispatchEvent(
+      new CustomEvent(type, { ...init, detail }),
+    )
   }
 }
