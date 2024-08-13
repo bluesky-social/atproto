@@ -636,14 +636,27 @@ export class Views {
     const reply = !postInfo?.violatesThreadGate
       ? this.replyRef(item.post.uri, state)
       : undefined
-    if (
-      reply &&
-      isPostView(reply.root) &&
-      this.replyIsHidden(post.uri, reply.root.uri, state) &&
-      !isReasonRepost(reason) &&
-      !opts?.includeHiddenReplies
-    ) {
-      return undefined
+    const isRepost = isReasonRepost(reason)
+    if (reply && isPostView(reply.root)) {
+      if (!opts?.includeHiddenReplies && !isRepost) {
+        const postIsHiddenReply = this.replyIsHidden(
+          post.uri,
+          reply.root.uri,
+          state,
+        )
+        if (postIsHiddenReply) {
+          return undefined
+        } else if (isPostView(reply.parent)) {
+          const parentPostIsHiddenReply = this.replyIsHidden(
+            reply.parent.uri,
+            reply.root.uri,
+            state,
+          )
+          if (parentPostIsHiddenReply) {
+            reply.parent = this.notFoundPost(reply.parent.uri)
+          }
+        }
+      }
     }
     return {
       post,
