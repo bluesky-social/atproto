@@ -26,6 +26,7 @@ import {
   RelationshipPair,
   StarterPackAggs,
   StarterPacks,
+  Blocks,
 } from './graph'
 import {
   LabelHydrator,
@@ -650,6 +651,19 @@ export class Hydrator {
     const listMemberDids = listsMembers.flatMap((lm) =>
       lm.listitems.map((li) => li.did),
     )
+    const listBlocks: Map<string, Blocks> = new Map()
+    await Promise.all(
+      listUris.map(async (uri) => {
+        const creator = new AtUri(uri).hostname
+        if (creator === ctx.viewer) return
+        const blocks = await this.graph.getBidirectionalBlocks(
+          listMembersByList
+            .get(uri)
+            ?.listitems.map((li) => [creator, li.did]) ?? [],
+        )
+        listBlocks.set(uri, blocks)
+      }),
+    )
     // sample top list items per starter pack based on their follows
     const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
     const listItemUris: string[] = []
@@ -659,8 +673,14 @@ export class Hydrator {
       if (!sp?.record.list || !agg) return
       const members = listMembersByList.get(sp.record.list)
       if (!members) return
+      const blocks = listBlocks.get(sp.record.list)
+      const creator = new AtUri(sp.record.list).hostname
       // update aggregation with list items for top 12 most followed members
-      agg.listItemSampleUris = [...members.listitems]
+      agg.listItemSampleUris = [
+        ...members.listitems.filter(
+          (li) => !blocks?.isBlocked(creator, li.did),
+        ),
+      ]
         .sort((li1, li2) => {
           const score1 = listMemberAggs.get(li1.did)?.followers ?? 0
           const score2 = listMemberAggs.get(li2.did)?.followers ?? 0

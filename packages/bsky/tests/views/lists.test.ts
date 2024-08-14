@@ -20,7 +20,6 @@ describe('bsky actor likes feed views', () => {
     sc = network.getSeedClient()
     await listsSeed(sc)
     await network.processAll()
-    console.log(sc.lists[sc.dids.eve])
     referenceList = Object.values(sc.lists[sc.dids.eve])[0].ref.uriStr
     eve = sc.dids.eve
     frankie = sc.dids.frankie
@@ -41,7 +40,7 @@ describe('bsky actor likes feed views', () => {
     expect(forSnapshot(view.data.lists)).toMatchSnapshot()
   })
 
-  it('does not include users with owner block relationship in reference lists for non-owner, in-list viewers', async () => {
+  it('does not include users with creator block relationship in reference lists for non-creator, in-list viewers', async () => {
     const view = await agent.api.app.bsky.graph.getList(
       {
         list: referenceList,
@@ -52,7 +51,7 @@ describe('bsky actor likes feed views', () => {
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
   })
 
-  it('does not include users with owner block relationship in reference lists for non-owner, not-in-list viewers', async () => {
+  it('does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers', async () => {
     const view = await agent.api.app.bsky.graph.getList(
       {
         list: referenceList,
@@ -63,7 +62,7 @@ describe('bsky actor likes feed views', () => {
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
   })
 
-  it('does not include users with owner block relationship in reference lists for signed-out viewers', async () => {
+  it('does not include users with creator block relationship in reference lists for signed-out viewers', async () => {
     const view = await agent.api.app.bsky.graph.getList({
       list: referenceList,
     })
@@ -71,7 +70,7 @@ describe('bsky actor likes feed views', () => {
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
   })
 
-  it('does include users with owner block relationship in reference lists for owner', async () => {
+  it('does include users with creator block relationship in reference lists for creator', async () => {
     const view = await agent.api.app.bsky.graph.getList(
       {
         list: referenceList,

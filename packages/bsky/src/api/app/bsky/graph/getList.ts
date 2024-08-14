@@ -20,8 +20,6 @@ import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
 import { AtUri } from '@atproto/syntax'
-import { RelationshipPair } from '../../../../hydration/graph'
-import { ListPurpose } from '../../../../lexicon/types/app/bsky/graph/defs'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -78,7 +76,10 @@ const hydration = async (
     skeleton,
     listState,
   })
-  return mergeManyStates(listState, profileState, { bidirectionalBlocks })
+  return [listState, profileState, { bidirectionalBlocks }].reduce(
+    mergeStates,
+    {} as HydrationState,
+  )
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
@@ -86,12 +87,10 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   if (!hydration.bidirectionalBlocks) {
     return skeleton
   }
+  const creator = new AtUri(skeleton.listUri).hostname
+  const blocks = hydration.bidirectionalBlocks?.get(creator)
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
-    const blocks = hydration.bidirectionalBlocks?.get(did)?.values() || []
-    for (const block of blocks) {
-      if (block) return false
-    }
-    return true
+    return !blocks?.get(did)
   })
   return skeleton
 }
@@ -121,27 +120,21 @@ const maybeGetBlocksForReferenceList = async (input: {
 }) => {
   const { ctx, params, listState, skeleton } = input
   const { listitems } = skeleton
-  const { list, hydrateCtx } = params
+  const { list } = params
   const listRecord = listState.lists?.get(list)
-  const ownerDid = new AtUri(list).hostname
-
+  const creator = new AtUri(list).hostname
   if (
     listRecord?.record.purpose !== 'app.bsky.graph.defs#referencelist' ||
-    params.hydrateCtx.viewer === ownerDid
+    params.hydrateCtx.viewer === creator
   ) {
     return
   }
-
-  const pairs = new Map()
+  const pairs: Map<string, string[]> = new Map()
   pairs.set(
-    ownerDid,
+    creator,
     listitems.map(({ did }) => did),
   )
   return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
-}
-
-const mergeManyStates = (...states: HydrationState[]) => {
-  return states.reduce(mergeStates, {} as HydrationState)
 }
 
 type Context = {

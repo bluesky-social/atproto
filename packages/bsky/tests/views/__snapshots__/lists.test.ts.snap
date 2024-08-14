@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`bsky actor likes feed views does include users with owner block relationship in reference lists for owner 1`] = `
+exports[`bsky actor likes feed views does include users with creator block relationship in reference lists for creator 1`] = `
 Array [
   Object {
     "subject": Object {
@@ -65,7 +65,7 @@ Array [
 ]
 `;
 
-exports[`bsky actor likes feed views does not include users with owner block relationship in reference lists for non-owner, in-list viewers 1`] = `
+exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, in-list viewers 1`] = `
 Array [
   Object {
     "subject": Object {
@@ -100,7 +100,7 @@ Array [
 ]
 `;
 
-exports[`bsky actor likes feed views does not include users with owner block relationship in reference lists for non-owner, not-in-list viewers 1`] = `
+exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers 1`] = `
 Array [
   Object {
     "subject": Object {
@@ -134,7 +134,7 @@ Array [
 ]
 `;
 
-exports[`bsky actor likes feed views does not include users with owner block relationship in reference lists for signed-out viewers 1`] = `
+exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for signed-out viewers 1`] = `
 Array [
   Object {
     "subject": Object {
