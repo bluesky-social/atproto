@@ -6,8 +6,8 @@ import AppContext from '../../../../context'
 import {
   createPipeline,
   HydrationFnInput,
-  noRules,
   PresentationFnInput,
+  RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
 import {
@@ -18,9 +18,10 @@ import {
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
+import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
-  const getList = createPipeline(skeleton, hydration, noRules, presentation)
+  const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.graph.getList({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
@@ -68,7 +69,39 @@ const hydration = async (
       params.hydrateCtx,
     ),
   ])
+
+  const list = listState.lists?.get(listUri)
+  if (list?.record.purpose === 'app.bsky.graph.defs#referencelist') {
+    const ownerDid = new AtUri(listUri).hostname
+    const pairs = new Map()
+    for (const { did } of listitems) {
+      pairs.set(did, [did, ownerDid])
+    }
+    const bidirectionalBlocks =
+      await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
+    return mergeStates(listState, { ...profileState, bidirectionalBlocks })
+  }
+
   return mergeStates(listState, profileState)
+}
+
+const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
+  const { skeleton, hydration } = input
+
+  // Always show all members if this is the viewer's list
+  const ownerDid = new AtUri(skeleton.listUri).hostname
+  if (ownerDid === hydration.ctx?.viewer) {
+    return skeleton
+  }
+
+  skeleton.listitems = skeleton.listitems.filter(({ did }) => {
+    const blocks = hydration.bidirectionalBlocks?.get(did)?.values() ?? []
+    for (const block of blocks || []) {
+      if (block) return false
+    }
+    return true
+  })
+  return skeleton
 }
 
 const presentation = (
