@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { AtpSignIn, AtpSignInForm } from './atp/atp-sign-in-form'
 import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form'
@@ -10,10 +10,7 @@ export function AuthForm({
   atpSignIn?: AtpSignIn
   oauthSignIn?: OAuthSignIn
 }) {
-  const defaultMethod = useCallback(
-    () => (oauthSignIn ? 'oauth' : atpSignIn ? 'atp' : undefined),
-    [],
-  )
+  const defaultMethod = oauthSignIn ? 'oauth' : atpSignIn ? 'atp' : undefined
 
   const [method, setMethod] = useState<undefined | 'oauth' | 'atp'>(
     defaultMethod,
