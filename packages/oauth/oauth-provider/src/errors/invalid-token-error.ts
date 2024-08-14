@@ -1,9 +1,11 @@
 import { JwtVerifyError } from '@atproto/jwk'
-import { JOSEError } from 'jose/errors'
+import { errors } from 'jose'
 import { ZodError } from 'zod'
 
 import { OAuthError } from './oauth-error.js'
 import { WWWAuthenticateError } from './www-authenticate-error.js'
+
+const { JOSEError } = errors
 
 /**
  * @see

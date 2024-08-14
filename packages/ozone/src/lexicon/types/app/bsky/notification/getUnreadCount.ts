@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
+  priority?: boolean
   seenAt?: string
 }
 

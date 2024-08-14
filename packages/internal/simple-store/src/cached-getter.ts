@@ -104,8 +104,16 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
           .then(async () => (0, this.getter)(key, options, storedValue))
           .catch(async (err) => {
             if (storedValue !== undefined) {
-              if (await this.options?.deleteOnError?.(err, key, storedValue)) {
-                await this.delStored(key)
+              try {
+                const deleteOnError = this.options?.deleteOnError
+                if (await deleteOnError?.(err, key, storedValue)) {
+                  await this.delStored(key, err)
+                }
+              } catch (error) {
+                throw new AggregateError(
+                  [err, error],
+                  'Error while deleting stored value',
+                )
               }
             }
             throw err
@@ -150,11 +158,12 @@ export class CachedGetter<K extends Key = string, V extends Value = Value> {
     try {
       await this.store.set(key, value)
     } catch (err) {
-      await this.options?.onStoreError?.(err, key, value)
+      const onStoreError = this.options?.onStoreError
+      await onStoreError?.(err, key, value)
     }
   }
 
-  async delStored(key: K): Promise<void> {
+  async delStored(key: K, _cause?: unknown): Promise<void> {
     await this.store.del(key)
   }
 }

@@ -622,7 +622,11 @@ export class Views {
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
     let parent = this.maybePost(postRecord.reply.parent.uri, state)
-    if (state.postBlocks?.get(uri)?.reply && isPostView(parent)) {
+    if (
+      !state.ctx?.include3pBlocks &&
+      state.postBlocks?.get(uri)?.reply &&
+      isPostView(parent)
+    ) {
       parent = this.blockedPost(parent.uri, parent.author.did, state)
       // in a reply to the root of a thread, parent and root are the same post.
       if (root.uri === parent.uri) {
@@ -751,7 +755,7 @@ export class Views {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
-    if (state.postBlocks?.get(childUri)?.reply) {
+    if (!state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.reply) {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
@@ -782,7 +786,7 @@ export class Views {
       if (postInfo?.violatesThreadGate) {
         return undefined
       }
-      if (state.postBlocks?.get(uri)?.reply) {
+      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.reply) {
         return undefined
       }
       const post = this.post(uri, state)
@@ -935,7 +939,7 @@ export class Views {
     const parsedUri = new AtUri(uri)
     if (
       this.viewerBlockExists(parsedUri.hostname, state) ||
-      state.postBlocks?.get(postUri)?.embed
+      (!state.ctx?.include3pBlocks && state.postBlocks?.get(postUri)?.embed)
     ) {
       return this.embedBlocked(uri, state)
     }

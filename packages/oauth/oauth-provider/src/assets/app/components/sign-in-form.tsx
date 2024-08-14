@@ -1,13 +1,20 @@
-import {
-  FormHTMLAttributes,
-  ReactNode,
-  SyntheticEvent,
-  useCallback,
-  useState,
-} from 'react'
+import { ReactNode, SyntheticEvent, useCallback, useState } from 'react'
 
+import {
+  InvalidCredentialsError,
+  SecondAuthenticationFactorRequiredError,
+} from '../lib/api'
 import { clsx } from '../lib/clsx'
-import { ErrorCard } from './error-card'
+import { Override } from '../lib/util'
+import { Button } from './button'
+import { FormCard, FormCardProps } from './form-card'
+import { AtSymbolIcon } from './icons/at-symbol-icon'
+import { LockIcon } from './icons/lock-icon'
+import { InfoCard } from './info-card'
+import { InputCheckbox } from './input-checkbox'
+import { InputText } from './input-text'
+import { TokenIcon } from './icons/token-icon'
+import { Fieldset } from './fieldset'
 
 export type SignInFormOutput = {
   username: string
@@ -15,41 +22,51 @@ export type SignInFormOutput = {
   remember?: boolean
 }
 
-export type SignInFormProps = {
-  title?: ReactNode
+export type SignInFormProps = Override<
+  FormCardProps,
+  {
+    onSubmit: (credentials: SignInFormOutput) => void | PromiseLike<void>
+    submitLabel?: ReactNode
+    submitAria?: string
 
-  onSubmit: (credentials: SignInFormOutput) => void | PromiseLike<void>
-  submitLabel?: ReactNode
-  submitAria?: string
+    onCancel?: () => void
+    cancelLabel?: ReactNode
+    cancelAria?: string
 
-  onCancel?: () => void
-  cancelLabel?: ReactNode
-  cancelAria?: string
+    accountSection?: ReactNode
+    sessionSection?: ReactNode
+    secondFactorSection?: ReactNode
 
-  usernameDefault?: string
-  usernameReadonly?: boolean
-  usernameLabel?: string
-  usernamePlaceholder?: string
-  usernameAria?: string
-  usernamePattern?: string
-  usernameTitle?: string
+    usernameDefault?: string
+    usernameReadonly?: boolean
+    usernameLabel?: string
+    usernamePlaceholder?: string
+    usernameAria?: string
+    usernamePattern?: string
+    usernameFormat?: string
 
-  passwordLabel?: string
-  passwordPlaceholder?: string
-  passwordWarning?: ReactNode
-  passwordAria?: string
-  passwordPattern?: string
-  passwordTitle?: string
+    passwordLabel?: string
+    passwordPlaceholder?: string
+    passwordWarning?: ReactNode
+    passwordAria?: string
+    passwordPattern?: string
+    passwordFormat?: string
 
-  rememberVisible?: boolean
-  rememberDefault?: boolean
-  rememberLabel?: string
-  rememberAria?: string
-}
+    secondFactorLabel?: string
+    secondFactorPlaceholder?: string
+    secondFactorAria?: string
+    secondFactorPattern?: string
+    secondFactorFormat?: string
+    secondFactorHint?: string
+
+    rememberVisible?: boolean
+    rememberDefault?: boolean
+    rememberLabel?: string
+    rememberAria?: string
+  }
+>
 
 export function SignInForm({
-  title = 'Sign in',
-
   onSubmit,
   submitAria = 'Next',
   submitLabel = submitAria,
@@ -58,44 +75,62 @@ export function SignInForm({
   cancelAria = 'Cancel',
   cancelLabel = cancelAria,
 
+  accountSection = 'Account',
+  sessionSection = 'Session',
+  secondFactorSection = '2FA Confirmation',
+
   usernameDefault = '',
   usernameReadonly = false,
-  usernameLabel = 'Email address or handle',
+  usernameLabel = 'Username or email address',
   usernameAria = usernameLabel,
   usernamePlaceholder = usernameLabel,
-  usernamePattern,
-  usernameTitle = 'Username must not be empty',
+  usernamePattern = undefined,
+  usernameFormat = 'valid email address or username',
 
   passwordLabel = 'Password',
   passwordAria = passwordLabel,
   passwordPlaceholder = passwordLabel,
-  passwordPattern,
-  passwordTitle = 'Password must not be empty',
+  passwordPattern = undefined,
+  passwordFormat = 'non empty string',
   passwordWarning = (
     <>
-      <p className="font-bold">Warning</p>
-      <p className="text-sm">
+      <p className="font-bold text-brand leading-8">Warning</p>
+      <p>
         Please verify the domain name of the website before entering your
         password. Never enter your password on a domain you do not trust.
       </p>
     </>
   ),
 
+  secondFactorLabel = 'Confirmation code',
+  secondFactorAria = secondFactorLabel,
+  secondFactorPlaceholder = secondFactorLabel,
+  secondFactorPattern = '^[A-Z0-9]{5}-[A-Z0-9]{5}$',
+  secondFactorFormat = 'XXXXX-XXXXX',
+  secondFactorHint = 'Check your $1 email for a login code and enter it here.',
+
   rememberVisible = true,
   rememberDefault = false,
   rememberLabel = 'Remember this account on this device',
   rememberAria = rememberLabel,
 
-  className,
-  ...attrs
-}: SignInFormProps &
-  Omit<
-    FormHTMLAttributes<HTMLFormElement>,
-    keyof SignInFormProps | 'children'
-  >) {
+  ...props
+}: SignInFormProps) {
   const [focused, setFocused] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [secondFactor, setSecondFactor] = useState<null | {
+    type: 'emailOtp'
+    hint: string
+  }>(null)
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const resetState = useCallback(() => {
+    setSecondFactor(null)
+    setErrorMessage(null)
+  }, [])
+
+  const passwordReadonly = secondFactor != null
 
   const doSubmit = useCallback(
     async (
@@ -104,16 +139,23 @@ export function SignInForm({
           username: HTMLInputElement
           password: HTMLInputElement
           remember?: HTMLInputElement
+          secondFactor?: HTMLInputElement
         },
         SubmitEvent
       >,
     ) => {
       event.preventDefault()
 
-      const credentials = {
+      const credentials: SignInFormOutput = {
         username: event.currentTarget.username.value,
         password: event.currentTarget.password.value,
         remember: event.currentTarget.remember?.checked,
+      }
+
+      if (secondFactor) {
+        const element = event.currentTarget.secondFactor
+        if (!element) throw new Error('Second factor input not found')
+        credentials[secondFactor.type] = element.value
       }
 
       setLoading(true)
@@ -121,170 +163,146 @@ export function SignInForm({
       try {
         await onSubmit(credentials)
       } catch (err) {
-        setErrorMessage(parseErrorMessage(err))
+        if (err instanceof SecondAuthenticationFactorRequiredError) {
+          setSecondFactor({
+            type: err.type,
+            hint: err.hint,
+          })
+        } else {
+          setErrorMessage(parseErrorMessage(err))
+        }
       } finally {
         setLoading(false)
       }
     },
-    [onSubmit, setErrorMessage, setLoading],
+    [secondFactor, onSubmit],
   )
 
   return (
-    <form
-      {...attrs}
-      className={clsx('flex flex-col', className)}
+    <FormCard
       onSubmit={doSubmit}
-    >
-      <p className="font-medium p-4">{title}</p>
-      <fieldset
-        className="rounded-md border border-solid border-slate-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-100"
-        disabled={loading}
-      >
-        <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-          <span className="w-8 text-center text-base leading-[1.6]">@</span>
-          <input
-            name="username"
-            type="text"
-            onChange={() => setErrorMessage(null)}
-            className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100 disabled:text-gray-500"
-            placeholder={usernamePlaceholder}
-            aria-label={usernameAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="username"
-            spellCheck="false"
-            dir="auto"
-            enterKeyHint="next"
-            required
-            defaultValue={usernameDefault}
-            readOnly={usernameReadonly}
-            disabled={usernameReadonly}
-            pattern={usernamePattern}
-            title={usernameTitle}
-          />
-        </div>
-
-        <hr className="border-slate-200 dark:border-slate-700" />
-
-        <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-          <span className="w-8 text-center text-2xl leading-[1.6]">*</span>
-          <input
-            name="password"
-            type="password"
-            onChange={() => setErrorMessage(null)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setTimeout(setFocused, 100, false)}
-            className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6] bg-transparent bg-clip-padding text-base text-inherit outline-none dark:placeholder:text-neutral-100"
-            placeholder={passwordPlaceholder}
-            aria-label={passwordAria}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="current-password"
-            dir="auto"
-            enterKeyHint="done"
-            spellCheck="false"
-            required
-            pattern={passwordPattern}
-            title={passwordTitle}
-          />
-        </div>
-
-        {passwordWarning && (
-          <>
-            <hr
-              className="border-slate-200 dark:border-slate-700 transition-all"
-              style={{ borderTopWidth: focused ? '1px' : '0px' }}
-            />
-            <div
-              className="bg-slate-100 dark:bg-slate-800 overflow-hidden transition-all"
-              style={{
-                display: 'grid',
-                gridTemplateRows: focused ? '1fr' : '0fr',
-              }}
-            >
-              <div className="flex items-center justify-start overflow-hidden">
-                <div className="py-1 px-2">
-                  <svg
-                    className="fill-current h-4 w-4 text-error"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
-                  </svg>
-                </div>
-                <div className="py-2 px-4">{passwordWarning}</div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {rememberVisible && (
-          <>
-            <hr className="border-slate-200 dark:border-slate-700" />
-
-            <div className="relative p-1 flex flex-wrap items-center justify-stretch">
-              <span className="w-8 flex items-center justify-center">
-                <input
-                  className="text-primary"
-                  id="remember"
-                  name="remember"
-                  type="checkbox"
-                  defaultChecked={rememberDefault}
-                  aria-label={rememberAria}
-                  onChange={() => setErrorMessage(null)}
-                />
-              </span>
-
-              <label
-                htmlFor="remember"
-                className="relative m-0 block w-[1px] min-w-0 flex-auto px-3 py-[0.25rem] leading-[1.6]"
-              >
-                {rememberLabel}
-              </label>
-            </div>
-          </>
-        )}
-      </fieldset>
-
-      {errorMessage && <ErrorCard className="mt-4" message={errorMessage} />}
-
-      <div className="flex-auto" />
-
-      <div className="p-4 flex flex-wrap items-center justify-start">
-        <button
-          className="py-2 bg-transparent text-primary rounded-md font-semibold order-last"
+      error={errorMessage}
+      cancel={
+        onCancel && (
+          <Button aria-label={cancelAria} onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+        )
+      }
+      actions={
+        <Button
+          color="brand"
           type="submit"
-          role="Button"
           aria-label={submitAria}
-          disabled={loading}
+          loading={loading}
         >
           {submitLabel}
-        </button>
+        </Button>
+      }
+      {...props}
+    >
+      <Fieldset title={accountSection} disabled={loading}>
+        <InputText
+          icon={<AtSymbolIcon className="w-5" />}
+          name="username"
+          type="text"
+          onChange={resetState}
+          placeholder={usernamePlaceholder}
+          aria-label={usernameAria}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="username"
+          spellCheck="false"
+          dir="auto"
+          enterKeyHint="next"
+          required
+          defaultValue={usernameDefault}
+          readOnly={usernameReadonly}
+          disabled={usernameReadonly}
+          pattern={usernamePattern}
+          title={usernameFormat}
+        />
 
-        {onCancel && (
-          <button
-            className="py-2 bg-transparent text-primary rounded-md font-light"
-            type="button"
-            role="Button"
-            aria-label={cancelAria}
-            onClick={onCancel}
+        <InputText
+          icon={<LockIcon className="w-5" />}
+          name="password"
+          type="password"
+          onChange={resetState}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(setFocused, 100, false)}
+          placeholder={passwordPlaceholder}
+          aria-label={passwordAria}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="current-password"
+          dir="auto"
+          enterKeyHint="done"
+          spellCheck="false"
+          required
+          readOnly={passwordReadonly}
+          disabled={passwordReadonly}
+          pattern={passwordPattern}
+          title={passwordFormat}
+        />
+
+        {passwordWarning && (
+          <div
+            className={clsx(
+              'transition-all delay-300 duration-300 overflow-hidden',
+              focused ? 'max-h-80' : 'max-h-0 -z-10 !mt-0',
+            )}
           >
-            {cancelLabel}
-          </button>
+            <InfoCard role="status">{passwordWarning}</InfoCard>
+          </div>
         )}
+      </Fieldset>
 
-        <div className="flex-auto" />
-      </div>
-    </form>
+      {rememberVisible && (
+        <Fieldset key="remember" title={sessionSection} disabled={loading}>
+          <InputCheckbox
+            name="remember"
+            defaultChecked={rememberDefault}
+            aria-label={rememberAria}
+          >
+            {rememberLabel}
+          </InputCheckbox>
+        </Fieldset>
+      )}
+
+      {secondFactor && (
+        <Fieldset key="2fa" title={secondFactorSection} disabled={loading}>
+          <div>
+            <InputText
+              icon={<TokenIcon className="w-5" />}
+              name="secondFactor"
+              type="text"
+              placeholder={secondFactorPlaceholder}
+              aria-label={secondFactorAria}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck="false"
+              dir="auto"
+              enterKeyHint="done"
+              required
+              pattern={secondFactorPattern}
+              title={secondFactorFormat}
+              autoFocus={true}
+            />
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
+              {secondFactorHint.replaceAll('$1', secondFactor.hint)}
+            </p>
+          </div>
+        </Fieldset>
+      )}
+    </FormCard>
   )
 }
 
 function parseErrorMessage(err: unknown): string {
-  console.error('Sign-in failed:', err)
-  switch ((err as any)?.message) {
-    case 'Invalid credentials':
-      return 'Invalid username or password'
-    default:
-      return 'An unknown error occurred'
+  if (err instanceof InvalidCredentialsError) {
+    return 'Invalid username or password'
   }
+
+  return 'An unknown error occurred'
 }

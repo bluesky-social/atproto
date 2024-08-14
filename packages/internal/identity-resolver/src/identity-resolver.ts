@@ -1,15 +1,16 @@
 import {
   Did,
   DidDocument,
-  ResolveOptions as DidResolveOptions,
   DidResolver,
   DidService,
+  ResolveDidOptions,
 } from '@atproto-labs/did-resolver'
 import {
-  ResolveOptions as HandleResolveOptions,
+  AtprotoIdentityDidMethods,
   HandleResolver,
-  ResolvedHandle,
   isResolvedHandle,
+  ResolvedHandle,
+  ResolveHandleOptions,
 } from '@atproto-labs/handle-resolver'
 import { normalizeAndEnsureValidHandle } from '@atproto/syntax'
 
@@ -18,47 +19,73 @@ export type ResolvedIdentity = {
   pds: URL
 }
 
-export type ResolveOptions = DidResolveOptions & HandleResolveOptions
+export type ResolveIdentityOptions = ResolveDidOptions & ResolveHandleOptions
 
 export class IdentityResolver {
   constructor(
-    readonly didResolver: DidResolver<'plc' | 'web'>,
+    readonly didResolver: DidResolver<AtprotoIdentityDidMethods>,
     readonly handleResolver: HandleResolver,
   ) {}
 
   public async resolve(
     input: string,
-    options?: ResolveOptions,
+    options?: ResolveIdentityOptions,
   ): Promise<ResolvedIdentity> {
-    const did = isResolvedHandle(input)
-      ? input // Already a did
-      : await this.handleResolver.resolve(
-          normalizeAndEnsureValidHandle(input),
-          options,
-        )
-
-    options?.signal?.throwIfAborted()
-
-    if (!did) {
-      throw new TypeError(`Handle "${input}" does not resolve to a DID`)
-    }
-
-    const document = await this.didResolver.resolve(did, options)
+    const document = isResolvedHandle(input)
+      ? await this.getDocumentFromDid(input, options)
+      : await this.getDocumentFromHandle(input, options)
 
     const service = document.service?.find(
-      isAtprotoPersonalDataServerService<'plc' | 'web'>,
+      isAtprotoPersonalDataServerService<AtprotoIdentityDidMethods>,
       document,
     )
 
     if (!service) {
       throw new TypeError(
-        `No valid "AtprotoPersonalDataServer" service found in "${did}" DID document`,
+        `No valid "AtprotoPersonalDataServer" service found in "${document.id}" DID document`,
       )
     }
 
-    const pds = new URL(service.serviceEndpoint)
+    return {
+      did: document.id,
+      pds: new URL(service.serviceEndpoint),
+    }
+  }
 
-    return { did, pds }
+  public async getDocumentFromDid(
+    did: NonNullable<ResolvedHandle>,
+    options?: ResolveDidOptions,
+  ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
+    return this.didResolver.resolve(did, options)
+  }
+
+  public async getDocumentFromHandle(
+    input: string,
+    options?: ResolveHandleOptions,
+  ): Promise<DidDocument<AtprotoIdentityDidMethods>> {
+    const handle = normalizeAndEnsureValidHandle(input)
+
+    const did = await this.handleResolver.resolve(handle, options)
+
+    if (!did) {
+      throw new TypeError(`Handle "${handle}" does not resolve to a DID`)
+    }
+
+    options?.signal?.throwIfAborted()
+
+    // Note: Not using "return this.resolveDid(did, options)" to make the extra
+    // check for the handle in the DID document:
+
+    const document = await this.didResolver.resolve(did, options)
+
+    // Ensure that the handle is included in the document
+    if (!document.alsoKnownAs?.includes(`at://${handle}`)) {
+      throw new TypeError(
+        `Did document for "${did}" does not include the handle "${handle}"`,
+      )
+    }
+
+    return document
   }
 }
 
@@ -73,6 +100,8 @@ function isAtprotoPersonalDataServerService<M extends string>(
   return (
     typeof s.serviceEndpoint === 'string' &&
     s.type === 'AtprotoPersonalDataServer' &&
-    (s.id === '#atproto_pds' || s.id === `${this.id}#atproto_pds`)
+    (s.id.startsWith('#')
+      ? s.id === '#atproto_pds'
+      : s.id === `${this.id}#atproto_pds`)
   )
 }

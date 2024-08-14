@@ -4,12 +4,13 @@ import { cidForCbor, TID } from '@atproto/common'
 import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import AtpAgent, {
+import {
   AppBskyActorProfile,
   AppBskyFeedPost,
   AppBskyFeedLike,
   AppBskyFeedRepost,
   AppBskyGraphFollow,
+  AtpAgent,
 } from '@atproto/api'
 import { TestNetwork, SeedClient, usersSeed, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
@@ -561,7 +562,7 @@ describe('indexing', () => {
 
     it('reindexes handle for existing did when forced', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: network.pds.url })
+      const sessionAgent = network.pds.getClient()
       const {
         data: { did },
       } = await sessionAgent.createAccount({
@@ -582,14 +583,13 @@ describe('indexing', () => {
 
     it('handles profile aggregations out of order', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: network.pds.url })
-      const {
-        data: { did },
-      } = await sessionAgent.createAccount({
+      const agent = network.pds.getClient()
+      await agent.createAccount({
         email: 'did3@test.com',
         handle: 'did3.test',
         password: 'password',
       })
+      const did = agent.accountDid
       const follow = await prepareCreate({
         did: sc.dids.bob,
         collection: ids.AppBskyGraphFollow,

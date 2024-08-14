@@ -89,7 +89,7 @@ export class LocalViewer {
     return util.format(this.appviewCdnUrlPattern, pattern, this.did, cid)
   }
 
-  async serviceAuthHeaders(did: string) {
+  async serviceAuthHeaders(did: string, lxm: string) {
     if (!this.appviewDid) {
       throw new Error('Could not find bsky appview did')
     }
@@ -98,6 +98,7 @@ export class LocalViewer {
     return createServiceAuthHeaders({
       iss: did,
       aud: this.appviewDid,
+      lxm,
       keypair,
     })
   }
@@ -244,7 +245,7 @@ export class LocalViewer {
     if (collection === ids.AppBskyFeedPost) {
       const res = await this.appViewAgent.api.app.bsky.feed.getPosts(
         { uris: [embed.record.uri] },
-        await this.serviceAuthHeaders(this.did),
+        await this.serviceAuthHeaders(this.did, ids.AppBskyFeedGetPosts),
       )
       const post = res.data.posts[0]
       if (!post) return null
@@ -261,7 +262,10 @@ export class LocalViewer {
     } else if (collection === ids.AppBskyFeedGenerator) {
       const res = await this.appViewAgent.api.app.bsky.feed.getFeedGenerator(
         { feed: embed.record.uri },
-        await this.serviceAuthHeaders(this.did),
+        await this.serviceAuthHeaders(
+          this.did,
+          ids.AppBskyFeedGetFeedGenerator,
+        ),
       )
       return {
         $type: 'app.bsky.feed.defs#generatorView',
@@ -270,7 +274,7 @@ export class LocalViewer {
     } else if (collection === ids.AppBskyGraphList) {
       const res = await this.appViewAgent.api.app.bsky.graph.getList(
         { list: embed.record.uri },
-        await this.serviceAuthHeaders(this.did),
+        await this.serviceAuthHeaders(this.did, ids.AppBskyGraphGetList),
       )
       return {
         $type: 'app.bsky.graph.defs#listView',

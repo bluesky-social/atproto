@@ -58,9 +58,7 @@ export type Schema = {
   protectedResourceMetadataCache: Item<OAuthProtectedResourceMetadata>
 }
 
-export type DatabaseStore<V extends Value> = SimpleStore<string, V> & {
-  getKeys: () => Promise<string[]>
-}
+export type DatabaseStore<V extends Value> = SimpleStore<string, V>
 
 const STORES: TupleUnion<keyof Schema> = [
   'state',
@@ -141,13 +139,6 @@ export class BrowserOAuthDatabase {
 
         // Item found and valid. Decode
         return decode(item.value)
-      },
-
-      getKeys: async () => {
-        const keys = await this.run(name, 'readonly', (store) =>
-          store.getAllKeys(),
-        )
-        return keys.filter((key): key is string => typeof key === 'string')
       },
 
       set: async (key, value) => {
@@ -258,10 +249,16 @@ export class BrowserOAuthDatabase {
 
   async [Symbol.asyncDispose]() {
     clearInterval(this.#cleanupInterval)
+    this.#cleanupInterval = undefined
+
     const dbPromise = this.#dbPromise
     this.#dbPromise = Promise.reject(new Error('Database has been disposed'))
 
-    const db = await dbPromise
-    await (db[Symbol.asyncDispose] || db[Symbol.dispose]).call(db)
+    // Avoid "unhandled promise rejection"
+    this.#dbPromise.catch(() => null)
+
+    // Spec recommends not to throw errors in dispose
+    const db = await dbPromise.catch(() => null)
+    if (db) await (db[Symbol.asyncDispose] || db[Symbol.dispose]).call(db)
   }
 }

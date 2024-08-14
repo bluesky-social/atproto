@@ -1,5 +1,112 @@
 # @atproto/dev-env
 
+## 0.3.40
+
+### Patch Changes
+
+- Updated dependencies [[`22af354a5`](https://github.com/bluesky-social/atproto/commit/22af354a5db595d7cbc0e65f02601de3565337e1)]:
+  - @atproto/api@0.13.1
+  - @atproto/bsky@0.0.75
+  - @atproto/ozone@0.1.37
+  - @atproto/pds@0.4.49
+
+## 0.3.39
+
+### Patch Changes
+
+- Updated dependencies [[`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd)]:
+  - @atproto/lexicon@0.4.1
+  - @atproto/api@0.13.0
+  - @atproto/bsky@0.0.74
+  - @atproto/ozone@0.1.36
+  - @atproto/pds@0.4.48
+  - @atproto/xrpc-server@0.6.1
+
+## 0.3.38
+
+### Patch Changes
+
+- Updated dependencies [[`269cbc87c`](https://github.com/bluesky-social/atproto/commit/269cbc87c5ec9d65d1d479269ac5e91dffbb186c)]:
+  - @atproto/pds@0.4.47
+  - @atproto/bsky@0.0.73
+  - @atproto/ozone@0.1.35
+
+## 0.3.37
+
+### Patch Changes
+
+- Updated dependencies [[`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c), [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c)]:
+  - @atproto/api@0.12.29
+  - @atproto/xrpc-server@0.6.0
+  - @atproto/pds@0.4.46
+  - @atproto/bsky@0.0.73
+  - @atproto/ozone@0.1.35
+
+## 0.3.36
+
+### Patch Changes
+
+- Updated dependencies [[`951a3df15`](https://github.com/bluesky-social/atproto/commit/951a3df15aa9c1f5b0a2b66cfb0e2eaf6198fe41)]:
+  - @atproto/ozone@0.1.34
+  - @atproto/bsky@0.0.72
+  - @atproto/api@0.12.28
+  - @atproto/pds@0.4.45
+
+## 0.3.35
+
+### Patch Changes
+
+- Updated dependencies [[`ff803fd2b`](https://github.com/bluesky-social/atproto/commit/ff803fd2bfad92eec5f88ee9b347c174731ef4ec)]:
+  - @atproto/ozone@0.1.33
+  - @atproto/bsky@0.0.71
+  - @atproto/api@0.12.27
+  - @atproto/pds@0.4.44
+
+## 0.3.34
+
+### Patch Changes
+
+- Updated dependencies [[`77c5306d2`](https://github.com/bluesky-social/atproto/commit/77c5306d2a40d7edd20def73163b8f93f3a30ee7)]:
+  - @atproto/ozone@0.1.32
+  - @atproto/bsky@0.0.70
+  - @atproto/api@0.12.26
+  - @atproto/pds@0.4.43
+
+## 0.3.33
+
+### Patch Changes
+
+- Updated dependencies [[`12dcdb668`](https://github.com/bluesky-social/atproto/commit/12dcdb668c8ec0f8a89689c326ab3e9dbc6d2f3c), [`76c91f832`](https://github.com/bluesky-social/atproto/commit/76c91f8325363c95e25349e8e236aa2f70e63d5b)]:
+  - @atproto/api@0.12.25
+  - @atproto/bsync@0.0.5
+  - @atproto/bsky@0.0.69
+  - @atproto/ozone@0.1.31
+  - @atproto/pds@0.4.42
+
+## 0.3.32
+
+### Patch Changes
+
+- [#2633](https://github.com/bluesky-social/atproto/pull/2633) [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Adapt to changes from @atproto/oauth-provider
+
+- Updated dependencies [[`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10), [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10), [`acc9093d2`](https://github.com/bluesky-social/atproto/commit/acc9093d2845eba02b68fb2f9db33e4f1b59bb10)]:
+  - @atproto/pds@0.4.41
+  - @atproto/ozone@0.1.30
+  - @atproto/bsync@0.0.4
+  - @atproto/bsky@0.0.68
+  - @atproto/crypto@0.4.0
+  - @atproto/xrpc-server@0.5.3
+
+## 0.3.31
+
+### Patch Changes
+
+- Updated dependencies [[`ed5810179`](https://github.com/bluesky-social/atproto/commit/ed5810179006f254f2035fe1f0e3c4798080cfe0), [`0529bec99`](https://github.com/bluesky-social/atproto/commit/0529bec99183439829a3553f45ac7203763144c3), [`2f40203fb`](https://github.com/bluesky-social/atproto/commit/2f40203fb453934aaf5d353b680d89b8a1febd0f)]:
+  - @atproto/api@0.12.24
+  - @atproto/ozone@0.1.29
+  - @atproto/bsky@0.0.67
+  - @atproto/pds@0.4.40
+
 ## 0.3.30
 
 ### Patch Changes

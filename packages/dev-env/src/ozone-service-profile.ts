@@ -18,16 +18,9 @@ export class OzoneServiceProfile {
   }
 
   async createDidAndKey() {
-    const modUser =
-      await this.thirdPartyPdsClient.api.com.atproto.server.createAccount(
-        this.modUserDetails,
-      )
-    await this.thirdPartyPdsClient.login({
-      identifier: this.modUserDetails.handle,
-      password: this.modUserDetails.password,
-    })
+    await this.thirdPartyPdsClient.createAccount(this.modUserDetails)
 
-    this.did = modUser.data.did
+    this.did = this.thirdPartyPdsClient.accountDid
     this.key = await Secp256k1Keypair.create({ exportable: true })
     return { did: this.did, key: this.key }
   }
@@ -41,32 +34,32 @@ export class OzoneServiceProfile {
       throw new Error('No DID/key found!')
     }
     const pdsClient = pds.getClient()
-    const describeRes = await pdsClient.api.com.atproto.server.describeServer()
+    const describeRes = await pdsClient.com.atproto.server.describeServer()
     const newServerDid = describeRes.data.did
 
     const serviceJwtRes =
       await this.thirdPartyPdsClient.com.atproto.server.getServiceAuth({
         aud: newServerDid,
+        lxm: 'com.atproto.server.createAccount',
       })
     const serviceJwt = serviceJwtRes.data.token
 
-    const accountResponse =
-      await pdsClient.api.com.atproto.server.createAccount(
-        {
-          ...this.modUserDetails,
-          ...userDetails,
-          did: this.did,
-        },
-        {
-          headers: { authorization: `Bearer ${serviceJwt}` },
-          encoding: 'application/json',
-        },
-      )
-
-    pdsClient.api.setHeader(
-      'Authorization',
-      `Bearer ${accountResponse.data.accessJwt}`,
+    await pdsClient.createAccount(
+      {
+        ...this.modUserDetails,
+        ...userDetails,
+        did: this.did,
+      },
+      {
+        headers: { authorization: `Bearer ${serviceJwt}` },
+        encoding: 'application/json',
+      },
     )
+
+    // For some reason, the tests fail if the client uses the PDS URL to make
+    // its requests. This is a workaround to make the tests pass by simulating
+    // old behavior (that was not relying on the session management).
+    pdsClient.sessionManager.pdsUrl = undefined
 
     const getDidCredentials =
       await pdsClient.com.atproto.identity.getRecommendedDidCredentials()
@@ -103,9 +96,9 @@ export class OzoneServiceProfile {
       operation: plcOp.data.operation,
     })
 
-    await pdsClient.api.com.atproto.server.activateAccount()
+    await pdsClient.com.atproto.server.activateAccount()
 
-    await pdsClient.api.app.bsky.actor.profile.create(
+    await pdsClient.app.bsky.actor.profile.create(
       { repo: this.did },
       {
         displayName: 'Dev-env Moderation',
@@ -113,7 +106,7 @@ export class OzoneServiceProfile {
       },
     )
 
-    await pdsClient.api.app.bsky.labeler.service.create(
+    await pdsClient.app.bsky.labeler.service.create(
       { repo: this.did, rkey: 'self' },
       {
         policies: {

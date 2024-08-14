@@ -1,6 +1,6 @@
 import express from 'express'
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
@@ -41,6 +41,7 @@ export type AppContextOptions = {
   blobDiverter?: BlobDiverter
   signingKey: Keypair
   signingKeyId: number
+  didCache: DidCache
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
@@ -76,14 +77,20 @@ export class AppContext {
       ? new AtpAgent({ service: cfg.chat.url })
       : undefined
 
+    const didCache = new MemoryCache(
+      cfg.identity.cacheStaleTTL,
+      cfg.identity.cacheMaxTTL,
+    )
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
+      didCache,
     })
 
     const createAuthHeaders = (aud: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
         aud,
+        lxm: null,
         keypair: signingKey,
       })
 
@@ -135,6 +142,7 @@ export class AppContext {
         chatAgent,
         signingKey,
         signingKeyId,
+        didCache,
         idResolver,
         backgroundQueue,
         sequencer,
@@ -206,6 +214,10 @@ export class AppContext {
     return new plc.Client(this.cfg.identity.plcUrl)
   }
 
+  get didCache(): DidCache {
+    return this.opts.didCache
+  }
+
   get idResolver(): IdResolver {
     return this.opts.idResolver
   }
@@ -227,6 +239,7 @@ export class AppContext {
     return createServiceAuthHeaders({
       iss,
       aud,
+      lxm: null,
       keypair: this.signingKey,
     })
   }

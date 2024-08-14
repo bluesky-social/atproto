@@ -1,3 +1,5 @@
+import { RuntimeLock } from './runtime-implementation.js'
+
 const locks = new Map<unknown, Promise<void>>()
 
 function acquireLocalLock(name: unknown): Promise<() => void> {
@@ -20,10 +22,7 @@ function acquireLocalLock(name: unknown): Promise<() => void> {
   })
 }
 
-export function requestLocalLock<T>(
-  name: string,
-  fn: () => T | PromiseLike<T>,
-): Promise<T> {
+export const requestLocalLock: RuntimeLock = (name, fn) => {
   return acquireLocalLock(name).then(async (release) => {
     try {
       return await fn()

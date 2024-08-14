@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { OzoneEnvironment } from './env'
+import { DAY, HOUR } from '@atproto/common'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -60,6 +61,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   assert(env.didPlcUrl, 'didPlcUrl is required')
   const identityCfg: OzoneConfig['identity'] = {
     plcUrl: env.didPlcUrl,
+    cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
+    cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
   }
 
   const blobDivertServiceCfg =
@@ -143,6 +146,8 @@ export type CdnConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+  cacheStaleTTL: number
+  cacheMaxTTL: number
 }
 
 export type AccessConfig = {

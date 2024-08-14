@@ -6,7 +6,7 @@ import {
   ModeratorClient,
   createOzoneDid,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LABELER_HEADER_NAME } from '../src/util'
 

@@ -248,7 +248,12 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      null,
+      getSigningKey,
+    )
     return { iss: payload.iss, aud: payload.aud }
   }
 
@@ -273,7 +278,7 @@ export class AuthVerifier {
   ) {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
-    const includeTakedowns =
+    const includeTakedownsAnd3pBlocks =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'mod_service' ||
       (creds.credentials.type === 'standard' &&
@@ -284,7 +289,8 @@ export class AuthVerifier {
 
     return {
       viewer,
-      includeTakedowns,
+      includeTakedowns: includeTakedownsAnd3pBlocks,
+      include3pBlocks: includeTakedownsAnd3pBlocks,
       canPerformTakedown,
     }
   }

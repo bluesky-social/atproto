@@ -1,17 +1,25 @@
 import { Key } from '@atproto/jwk'
-
-export type DigestAlgorithm = {
-  name: 'sha256' | 'sha384' | 'sha512'
-}
+import { Awaitable } from './util.js'
 
 export type { Key }
+export type RuntimeKeyFactory = (algs: string[]) => Key | PromiseLike<Key>
+
+export type RuntimeRandomValues = (length: number) => Awaitable<Uint8Array>
+
+export type DigestAlgorithm = { name: 'sha256' | 'sha384' | 'sha512' }
+export type RuntimeDigest = (
+  data: Uint8Array,
+  alg: DigestAlgorithm,
+) => Awaitable<Uint8Array>
+
+export type RuntimeLock = <T>(
+  name: string,
+  fn: () => Awaitable<T>,
+) => Awaitable<T>
 
 export interface RuntimeImplementation {
-  createKey(algs: string[]): Key | PromiseLike<Key>
-  getRandomValues: (length: number) => Uint8Array | PromiseLike<Uint8Array>
-  digest: (
-    bytes: Uint8Array,
-    algorithm: DigestAlgorithm,
-  ) => Uint8Array | PromiseLike<Uint8Array>
-  requestLock?: <T>(name: string, fn: () => T | PromiseLike<T>) => Promise<T>
+  createKey: RuntimeKeyFactory
+  getRandomValues: RuntimeRandomValues
+  digest: RuntimeDigest
+  requestLock?: RuntimeLock
 }
