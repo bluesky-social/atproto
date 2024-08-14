@@ -30,23 +30,18 @@ export class SetService {
   }> {
     let qb = this.db.db
       .selectFrom('ozone_set as s')
-      .leftJoin(
-        (eb) =>
-          eb
-            .selectFrom('ozone_set_value')
-            .select(['setId'])
-            .select((eb) => eb.fn.count('id').as('count'))
-            .groupBy('setId')
-            .as('sv'),
-        (join) => join.onRef('sv.setId', '=', 's.id'),
-      )
       .select([
         's.id',
         's.name',
         's.description',
         's.createdAt',
         's.updatedAt',
-        sql<number>`coalesce(sv.count, 0)`.as('setSize'),
+        (eb) =>
+          eb
+            .selectFrom('ozone_set_value')
+            .select((e) => e.fn.count('setId').as('count'))
+            .whereRef('setId', '=', 's.id')
+            .as('setSize'),
       ])
       .limit(limit)
 
@@ -81,11 +76,8 @@ export class SetService {
     }
   }
 
-  async getByName(
-    name: string,
-    txn: Database,
-  ): Promise<Selectable<OzoneSet> | undefined> {
-    const query = txn.db
+  async getByName(name: string): Promise<Selectable<OzoneSet> | undefined> {
+    const query = this.db.db
       .selectFrom('ozone_set')
       .selectAll()
       .where('name', '=', name)
@@ -104,7 +96,7 @@ export class SetService {
   }): Promise<
     { set: Selectable<OzoneSet>; values: string[]; cursor?: string } | undefined
   > {
-    const set = await this.getByName(name, this.db)
+    const set = await this.getByName(name)
     if (!set) return undefined
 
     let qb = this.db.db
@@ -127,11 +119,11 @@ export class SetService {
       cursor: values.at(-1)?.value,
     }
   }
-  async upsert(
-    { name, description }: Pick<OzoneSet, 'name' | 'description'>,
-    txn: Database,
-  ): Promise<Selectable<OzoneSet>> {
-    const query = txn.db
+  async upsert({
+    name,
+    description,
+  }: Pick<OzoneSet, 'name' | 'description'>): Promise<Selectable<OzoneSet>> {
+    return this.db.db
       .insertInto('ozone_set')
       .values({
         name,
@@ -145,56 +137,56 @@ export class SetService {
         }),
       )
       .returningAll()
-
-    return await query.executeTakeFirstOrThrow()
+      .executeTakeFirstOrThrow()
   }
 
-  async addValues(
-    setId: number,
-    values: string[],
-    txn: Database,
-  ): Promise<void> {
-    const query = txn.db
-      .insertInto('ozone_set_value')
-      .values(values.map((value) => ({ setId, value })))
-      .onConflict((oc) => oc.columns(['setId', 'value']).doNothing())
+  async addValues(setId: number, values: string[]): Promise<void> {
+    await this.db.transaction(async (txn) => {
+      const query = txn.db
+        .insertInto('ozone_set_value')
+        .values(values.map((value) => ({ setId, value })))
+        .onConflict((oc) => oc.columns(['setId', 'value']).doNothing())
 
-    await query.execute()
+      await query.execute()
 
-    // Update the set's updatedAt timestamp
-    await txn.db
-      .updateTable('ozone_set')
-      .set({ updatedAt: new Date() })
-      .where('id', '=', setId)
-      .execute()
+      // Update the set's updatedAt timestamp
+      await txn.db
+        .updateTable('ozone_set')
+        .set({ updatedAt: new Date() })
+        .where('id', '=', setId)
+        .execute()
+    })
   }
 
-  async removeValues(
-    setId: number,
-    values: string[],
-    txn: Database,
-  ): Promise<void> {
-    const query = txn.db
-      .deleteFrom('ozone_set_value')
-      .where('setId', '=', setId)
-      .where('value', 'in', values)
+  async removeValues(setId: number, values: string[]): Promise<void> {
+    if (values.length < 1) {
+      return
+    }
+    await this.db.transaction(async (txn) => {
+      const query = txn.db
+        .deleteFrom('ozone_set_value')
+        .where('setId', '=', setId)
+        .where('value', 'in', values)
 
-    await query.execute()
+      await query.execute()
 
-    // Update the set's updatedAt timestamp
-    await txn.db
-      .updateTable('ozone_set')
-      .set({ updatedAt: new Date() })
-      .where('id', '=', setId)
-      .execute()
+      // Update the set's updatedAt timestamp
+      await txn.db
+        .updateTable('ozone_set')
+        .set({ updatedAt: new Date() })
+        .where('id', '=', setId)
+        .execute()
+    })
   }
 
-  async deleteSet(setId: number, txn: Database): Promise<void> {
-    await txn.db.deleteFrom('ozone_set').where('id', '=', setId).execute()
-    await txn.db
-      .deleteFrom('ozone_set_value')
-      .where('setId', '=', setId)
-      .execute()
+  async deleteSet(setId: number): Promise<void> {
+    await this.db.transaction(async (txn) => {
+      await txn.db.deleteFrom('ozone_set').where('id', '=', setId).execute()
+      await txn.db
+        .deleteFrom('ozone_set_value')
+        .where('setId', '=', setId)
+        .execute()
+    })
   }
 
   view(set: Selectable<OzoneSet> & { setSize: number }): SetView {

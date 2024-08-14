@@ -22,14 +22,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const setService = ctx.setService(db)
 
-      const upsertedSet = await db.transaction(async (txn) => {
-        return await setService.upsert(
-          {
-            name,
-            description,
-          },
-          txn,
-        )
+      const upsertedSet = await setService.upsert({
+        name,
+        description,
       })
 
       return {

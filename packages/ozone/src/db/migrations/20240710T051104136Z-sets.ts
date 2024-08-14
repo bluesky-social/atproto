@@ -5,8 +5,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('ozone_set')
     .addColumn('id', 'serial', (col) => col.primaryKey())
-    .addColumn('name', 'varchar(128)', (col) => col.notNull().unique())
-    .addColumn('description', 'varchar(1024)')
+    .addColumn('name', 'varchar', (col) => col.notNull().unique())
+    .addColumn('description', 'varchar')
     .addColumn('createdAt', 'timestamptz', (col) =>
       col.defaultTo(sql`now()`).notNull(),
     )
@@ -20,9 +20,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('ozone_set_value')
     .addColumn('id', 'bigserial', (col) => col.primaryKey())
     .addColumn('setId', 'integer', (col) =>
-      col.notNull().references('ozone_set.id').onDelete('cascade'),
+      col.notNull().references('ozone_set.id'),
     )
-    .addColumn('value', 'varchar(255)', (col) => col.notNull())
+    .addColumn('value', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'timestamptz', (col) =>
       col.defaultTo(sql`now()`).notNull(),
     )
@@ -33,18 +33,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createIndex('ozone_set_name_idx')
     .on('ozone_set')
     .column('name')
-    .execute()
-
-  await db.schema
-    .createIndex('ozone_set_value_setid_idx')
-    .on('ozone_set_value')
-    .column('setId')
-    .execute()
-
-  await db.schema
-    .createIndex('ozone_set_value_value_idx')
-    .on('ozone_set_value')
-    .column('value')
     .execute()
 
   // Create a unique constraint on setId and value

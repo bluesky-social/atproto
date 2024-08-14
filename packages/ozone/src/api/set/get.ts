@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { name, limit = 100, cursor } = params
+      const { name, limit, cursor } = params
 
       if (!access.isModerator) {
         throw new AuthRequiredError('Must be a moderator to get set details')

@@ -19,17 +19,12 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const setService = ctx.setService(db)
+      const set = await setService.getByName(name)
+      if (!set) {
+        throw new InvalidRequestError(`Set with name "${name}" does not exist`)
+      }
 
-      await db.transaction(async (txn) => {
-        const set = await setService.getByName(name, txn)
-        if (!set) {
-          throw new InvalidRequestError(
-            `Set with name "${name}" does not exist`,
-          )
-        }
-
-        await setService.deleteSet(set.id, txn)
-      })
+      await setService.deleteSet(set.id)
     },
   })
 }
