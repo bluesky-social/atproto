@@ -29,10 +29,8 @@ export class TagService {
       await Promise.all(
         this.taggers.map(async (tagger) => {
           try {
-            if (tagger.isApplicable()) {
-              const newTags = await tagger.getTags()
-              if (newTags.length) tags.push(...newTags)
-            }
+            const newTags = await tagger.getTags()
+            if (newTags.length) tags.push(...newTags)
           } catch (e) {
             // Don't let one tagger error stop the rest from running
             log.error(

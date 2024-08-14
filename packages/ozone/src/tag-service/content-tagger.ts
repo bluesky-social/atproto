@@ -9,6 +9,15 @@ export abstract class ContentTagger {
     protected moderationService: ModerationService,
   ) {}
 
-  abstract isApplicable(): boolean
+  protected abstract tagPrefix: string
+
+  protected abstract isApplicable(): boolean
   abstract getTags(): Promise<string[]>
+
+  protected tagAlreadyExists(): boolean {
+    return Boolean(
+      this.subjectStatus &&
+        this.subjectStatus.tags?.some((tag) => tag.startsWith(this.tagPrefix)),
+    )
+  }
 }

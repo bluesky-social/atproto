@@ -1,26 +1,34 @@
-import { AppBskyEmbedImages } from '@atproto/api'
+import { AppBskyEmbedImages, AppBskyEmbedRecordWithMedia } from '@atproto/api'
 import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
+import { ids } from '../lexicon/lexicons'
 
 export class EmbedContentTypeTagger extends ContentTagger {
   tagPrefix = 'embed-content-type:'
+
   isApplicable(): boolean {
-    return Boolean(
-      this.subjectStatus &&
-        this.subject.isRecord() &&
-        this.subject.uri.includes('app.bsky.feed.post') &&
-        !this.subjectStatus.tags?.find((tag) => tag.includes(this.tagPrefix)),
+    return (
+      !this.tagAlreadyExists() &&
+      this.subject.isRecord() &&
+      this.subject.parsedUri.collection === ids.AppBskyFeedPost
     )
   }
 
   async getTags(): Promise<string[]> {
     try {
+      if (!this.isApplicable()) {
+        return []
+      }
       const recordValue = await this.getRecordValue()
       if (!recordValue) {
         return []
       }
       const tags: string[] = []
-      if (AppBskyEmbedImages.isView(recordValue)) {
+      if (
+        AppBskyEmbedImages.isView(recordValue) &&
+        (AppBskyEmbedImages.isMain(recordValue.embed) ||
+          AppBskyEmbedRecordWithMedia.isMain(recordValue.embed))
+      ) {
         tags.push(`${this.tagPrefix}image`)
       }
       //     @TODO: check for video embed here
