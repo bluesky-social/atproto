@@ -1,5 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, listsSeed } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
 
 describe('bsky actor likes feed views', () => {
@@ -18,9 +18,33 @@ describe('bsky actor likes feed views', () => {
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
-    await listsSeed(sc)
+    await basicSeed(sc)
+    await sc.createAccount('eve', {
+      handle: 'eve.test',
+      email: 'eve@eve.com',
+      password: 'hunter2',
+    })
+    await sc.createAccount('frankie', {
+      handle: 'frankie.test',
+      email: 'frankie@frankie.com',
+      password: '2hunter2real',
+    })
+    await sc.createAccount('greta', {
+      handle: 'greta.test',
+      email: 'greta@greta.com',
+      password: 'hunter4real',
+    })
+    const newList = await sc.createList(
+      sc.dids.eve,
+      'blah starter pack list!',
+      'reference',
+    )
+    await sc.addToList(sc.dids.eve, sc.dids.eve, newList)
+    await sc.addToList(sc.dids.eve, sc.dids.bob, newList)
+    await sc.addToList(sc.dids.eve, sc.dids.frankie, newList)
+    await sc.block(sc.dids.frankie, sc.dids.eve)
     await network.processAll()
-    referenceList = Object.values(sc.lists[sc.dids.eve])[0].ref.uriStr
+    referenceList = newList.uriStr
     eve = sc.dids.eve
     frankie = sc.dids.frankie
     greta = sc.dids.greta
