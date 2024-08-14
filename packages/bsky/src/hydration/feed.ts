@@ -19,7 +19,7 @@ import { dedupeStrs } from '@atproto/common'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
-  violatesQuotegate: boolean
+  violatesEmbeddingRules: boolean
 }
 export type Posts = HydrationMap<Post>
 
@@ -89,10 +89,12 @@ export class FeedHydrator {
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate
-      const violatesQuotegate = res.meta[i].violatesQuoteGate
+      const violatesEmbeddingRules = res.meta[i].violatesEmbeddingRules
       return acc.set(
         uri,
-        record ? { ...record, violatesThreadGate, violatesQuotegate } : null,
+        record
+          ? { ...record, violatesThreadGate, violatesEmbeddingRules }
+          : null,
       )
     }, base)
   }

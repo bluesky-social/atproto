@@ -75,7 +75,7 @@ export const getPostRecords = (db: Database) => {
         ? await db.db
             .selectFrom('post')
             .where('uri', 'in', req.uris)
-            .select(['uri', 'violatesThreadGate', 'violatesQuoteGate'])
+            .select(['uri', 'violatesThreadGate', 'violatesEmbeddingRules'])
             .execute()
         : [],
     ])
@@ -83,7 +83,7 @@ export const getPostRecords = (db: Database) => {
     const meta = req.uris.map((uri) => {
       return new PostRecordMeta({
         violatesThreadGate: !!byKey[uri]?.violatesThreadGate,
-        violatesQuoteGate: !!byKey[uri]?.violatesQuoteGate,
+        violatesEmbeddingRules: !!byKey[uri]?.violatesEmbeddingRules,
       })
     })
     return { records, meta }

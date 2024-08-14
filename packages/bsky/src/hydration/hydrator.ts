@@ -727,11 +727,13 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const uris = notifs.map((notif) => notif.uri)
-    const replyRootPostUris = notifs.filter(notif => {
-      return notif.reason === 'reply'
-    }).map(notif => {
-      return notif.reasonSubject
-    })
+    const replyRootPostUris = notifs
+      .filter((notif) => {
+        return notif.reason === 'reply'
+      })
+      .map((notif) => {
+        return notif.reasonSubject
+      })
     const collections = urisByCollection(uris)
     const postUris = collections.get(ids.AppBskyFeedPost) ?? []
     const likeUris = collections.get(ids.AppBskyFeedLike) ?? []

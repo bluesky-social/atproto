@@ -961,9 +961,9 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
   isReply = false
 
   /**
-   * @generated from field: bool violates_quote_gate = 4;
+   * @generated from field: bool violates_embedding_rules = 4;
    */
-  violatesQuoteGate = false
+  violatesEmbeddingRules = false
 
   constructor(data?: PartialMessage<PostRecordMeta>) {
     super()
@@ -983,7 +983,7 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
     { no: 3, name: 'is_reply', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
     {
       no: 4,
-      name: 'violates_quote_gate',
+      name: 'violates_embedding_rules',
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
     },

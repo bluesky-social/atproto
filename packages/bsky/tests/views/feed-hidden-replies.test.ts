@@ -175,7 +175,7 @@ describe('postgates', () => {
         },
       )
 
-      const BNotification = notifications.find(item => {
+      const BNotification = notifications.find((item) => {
         return item.uri === B.ref.uriStr
       })
 

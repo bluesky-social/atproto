@@ -179,16 +179,18 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
 
-      const { violatesQuotegate } = await validatePostEmbed(
+      const { violatesEmbeddingRules } = await validatePostEmbed(
         db,
         record.uri,
         uri.toString(),
       )
-      Object.assign(insertedPost, { violatesQuoteGate: violatesQuotegate })
+      Object.assign(insertedPost, {
+        violatesEmbeddingRules: violatesEmbeddingRules,
+      })
       await db
         .updateTable('post')
         .where('uri', '=', insertedPost.uri)
-        .set({ violatesQuoteGate: violatesQuotegate })
+        .set({ violatesEmbeddingRules: violatesEmbeddingRules })
         .executeTakeFirst()
     }
   }
@@ -473,7 +475,7 @@ async function validatePostEmbed(
   const postgateRecord = results.find((ref) => ref.uri === postgateRecordUri)
   if (!postgateRecord) {
     return {
-      violatesQuotegate: false,
+      violatesEmbeddingRules: false,
     }
   }
   const {
@@ -485,11 +487,11 @@ async function validatePostEmbed(
   })
   if (canQuotepost) {
     return {
-      violatesQuotegate: false,
+      violatesEmbeddingRules: false,
     }
   }
   return {
-    violatesQuotegate: true,
+    violatesEmbeddingRules: true,
   }
 }
 

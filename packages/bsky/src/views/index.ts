@@ -1005,7 +1005,7 @@ export class Views {
     }
 
     const post = state.posts?.get(postUri)
-    if (post?.violatesQuotegate) {
+    if (post?.violatesEmbeddingRules) {
       return this.embedDetached(uri)
     }
 
