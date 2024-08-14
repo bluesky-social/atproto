@@ -4,7 +4,8 @@ import { ModerationPrefs } from './moderation/types'
 /**
  * Supported proxy targets
  */
-export type AtprotoServiceType = 'atproto_labeler'
+type UnknownServiceType = string & NonNullable<unknown>
+export type AtprotoServiceType = 'atproto_labeler' | UnknownServiceType
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
@@ -40,14 +41,6 @@ export type AtpPersistSessionHandler = (
 ) => void | Promise<void>
 
 /**
- * AtpAgent constructor() opts
- */
-export interface AtpAgentOpts {
-  service: string | URL
-  persistSession?: AtpPersistSessionHandler
-}
-
-/**
  * AtpAgent login() opts
  */
 export interface AtpAgentLoginOpts {
@@ -57,26 +50,9 @@ export interface AtpAgentLoginOpts {
 }
 
 /**
- * AtpAgent global fetch handler
- */
-type AtpAgentFetchHeaders = Record<string, string>
-export interface AtpAgentFetchHandlerResponse {
-  status: number
-  headers: Record<string, string>
-  body: any
-}
-export type AtpAgentFetchHandler = (
-  httpUri: string,
-  httpMethod: string,
-  httpHeaders: AtpAgentFetchHeaders,
-  httpReqBody: any,
-) => Promise<AtpAgentFetchHandlerResponse>
-
-/**
  * AtpAgent global config opts
  */
 export interface AtpAgentGlobalOpts {
-  fetch?: AtpAgentFetchHandler
   appLabelers?: string[]
 }
 

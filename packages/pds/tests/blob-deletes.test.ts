@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent, { BlobRef } from '@atproto/api'
+import { AtpAgent, BlobRef } from '@atproto/api'
 import { ids } from '../src/lexicon/lexicons'
 import { AppContext } from '../src'
 

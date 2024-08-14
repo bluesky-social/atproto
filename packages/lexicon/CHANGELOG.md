@@ -1,5 +1,13 @@
 # @atproto/lexicon
 
+## 0.4.1
+
+### Patch Changes
+
+- [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the ability to instantiate a Lexicon from an iterable, and to use a Lexicon as iterable.
+
+- [#2707](https://github.com/bluesky-social/atproto/pull/2707) [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove internal circular dependency.
+
 ## 0.4.0
 
 ### Minor Changes

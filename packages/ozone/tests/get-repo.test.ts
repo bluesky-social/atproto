@@ -5,7 +5,7 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import {
   REASONOTHER,
   REASONSPAM,

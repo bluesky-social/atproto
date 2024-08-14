@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TID } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'

@@ -142,17 +142,23 @@ Make user visit `url`. Then, once it was redirected to the callback URI, perform
 const params = new URLSearchParams('code=...&state=...')
 
 // Process the callback using the OAuth client
-const { agent, state } = await client.callback(params)
+const result = await client.callback(params)
 
 // Verify the state (e.g. to link to an internal user)
-state === '434321' // true
+result.state === '434321' // true
+
+const agent = result.agent
 
 // Make an authenticated request to the server. New credentials will be
 // automatically fetched if needed (causing sessionStore.set() to be called).
-await result.agent.request('/xrpc/foo.bar')
+await agent.post({
+  text: 'Hello, world!',
+})
 
-// revoke credentials on the server (causing sessionStore.del() to be called)
-await agent.signOut()
+if (agent instanceof AtpAgent) {
+  // revoke credentials on the server (causing sessionStore.del() to be called)
+  await agent.logout()
+}
 ```
 
 ## Advances use-cases

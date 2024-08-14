@@ -3,7 +3,7 @@ import {
   AuthorizeOptions,
   ClientMetadata,
   Fetch,
-  OAuthAgent,
+  OAuthAtpAgent,
   OAuthCallbackError,
   OAuthClient,
   SessionEventMap,
@@ -172,7 +172,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     const signInResult = await this.signInCallback()
     if (signInResult) {
-      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.agent.sub)
+      localStorage.setItem(`${NAMESPACE}(sub)`, signInResult.agent.did)
       return signInResult
     }
 
@@ -190,7 +190,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
   async restore(sub: string, refresh?: boolean) {
     const agent = await super.restore(sub, refresh)
-    localStorage.setItem(`${NAMESPACE}(sub)`, agent.sub)
+    localStorage.setItem(`${NAMESPACE}(sub)`, agent.did)
     return agent
   }
 
@@ -202,7 +202,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   signIn(
     input: string,
     options: AuthorizeOptions & { display: 'popup' },
-  ): Promise<OAuthAgent>
+  ): Promise<OAuthAtpAgent>
   signIn(input: string, options?: AuthorizeOptions): Promise<never>
   async signIn(input: string, options?: AuthorizeOptions) {
     if (options?.display === 'popup') {
@@ -239,7 +239,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
   async signInPopup(
     input: string,
     options?: Omit<AuthorizeOptions, 'state'>,
-  ): Promise<OAuthAgent> {
+  ): Promise<OAuthAtpAgent> {
     // Open new window asap to prevent popup busting by browsers
     const popupFeatures = 'width=600,height=600,menubar=no,toolbar=no'
     let popup: Window | null = window.open(
@@ -266,7 +266,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     popup?.focus()
 
-    return new Promise<OAuthAgent>((resolve, reject) => {
+    return new Promise<OAuthAtpAgent>((resolve, reject) => {
       const popupChannel = new BroadcastChannel(POPUP_CHANNEL_NAME)
 
       const cleanup = () => {
@@ -381,7 +381,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
             key: result.state.slice(POPUP_STATE_PREFIX.length),
             result: {
               status: 'fulfilled',
-              value: result.agent.sub,
+              value: result.agent.did,
             },
           })
 

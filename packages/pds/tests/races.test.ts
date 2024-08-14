@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot, verifyRepo } from '@atproto/repo'
@@ -25,7 +25,7 @@ describe('races', () => {
       handle: 'alice.test',
       password: 'alice-pass',
     })
-    did = agent.session?.did || ''
+    did = agent.accountDid
     signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 
