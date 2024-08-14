@@ -12,6 +12,7 @@ import {
 } from '../../../../pipeline'
 import {
   HydrateCtx,
+  HydrationState,
   Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator'
@@ -78,13 +79,15 @@ const hydration = async (
     // We show all users regardless of blocks if the viewer is the owner of the list, so no need to hydrate them
     params.hydrateCtx.viewer !== ownerDid
   ) {
-    const pairs: Map<string, RelationshipPair> = new Map()
-    for (const { did } of listitems) {
-      pairs.set(did, [did, ownerDid])
-    }
+    const pairs = new Map()
+    pairs.set(
+      ownerDid,
+      listitems.map(({ did }) => did),
+    )
     const bidirectionalBlocks =
       await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
-    return mergeStates(listState, { ...profileState, bidirectionalBlocks })
+
+    return mergeManyStates(listState, profileState, { bidirectionalBlocks })
   }
 
   return mergeStates(listState, profileState)
@@ -96,8 +99,8 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
     return skeleton
   }
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
-    const blocks = hydration.bidirectionalBlocks?.get(did)?.values() ?? []
-    for (const block of blocks || []) {
+    const blocks = hydration.bidirectionalBlocks?.get(did)?.values() || []
+    for (const block of blocks) {
       if (block) return false
     }
     return true
@@ -120,6 +123,10 @@ const presentation = (
     throw new InvalidRequestError('List not found')
   }
   return { list, items, cursor }
+}
+
+const mergeManyStates = (...states: HydrationState[]) => {
+  return states.reduce(mergeStates, {} as HydrationState)
 }
 
 type Context = {
