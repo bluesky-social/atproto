@@ -19,6 +19,7 @@ import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
 import { AtUri } from '@atproto/syntax'
+import { RelationshipPair } from '../../../../hydration/graph'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -77,7 +78,7 @@ const hydration = async (
     // We show all users regardless of blocks if the viewer is the owner of the list, so no need to hydrate them
     params.hydrateCtx.viewer !== ownerDid
   ) {
-    const pairs = new Map()
+    const pairs: Map<string, RelationshipPair> = new Map()
     for (const { did } of listitems) {
       pairs.set(did, [did, ownerDid])
     }
