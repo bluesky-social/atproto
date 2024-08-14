@@ -238,8 +238,15 @@ export function isDid(input: unknown): input is Did {
     if (err instanceof DidError) {
       return false
     }
+
+    // Unexpected TypeError (should never happen)
     throw err
   }
+}
+
+export function asDid(input: unknown): Did {
+  checkDid(input)
+  return input
 }
 
 export const didSchema = z

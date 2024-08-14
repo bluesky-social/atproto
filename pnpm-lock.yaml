@@ -771,6 +771,9 @@ importers:
       '@atproto-labs/simple-store-memory':
         specifier: workspace:*
         version: link:../../internal/simple-store-memory
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../../api
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did
@@ -780,6 +783,9 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
+      '@atproto/xrpc':
+        specifier: workspace:*
+        version: link:../../xrpc
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0

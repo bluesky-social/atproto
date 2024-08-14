@@ -1,73 +1,53 @@
-import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 import { useCallback, useState } from 'react'
-
-import LoginForm from './login-form'
-import { useOAuth } from './oauth'
-
-const client = new BrowserOAuthClient({
-  // dev-env
-  // plcDirectoryUrl: 'http://localhost:2582',
-  // handleResolver: 'http://localhost:2584',
-
-  // staging
-  // plcDirectoryUrl: 'https://plc.staging.bsky.dev',
-  // handleResolver: 'https://staging.bsky.dev',
-
-  // production
-  plcDirectoryUrl: undefined,
-  handleResolver: 'https://bsky.app',
-})
+import { useAuthContext } from './auth/auth-provider'
 
 function App() {
-  const { agent, signedIn, signOut, loading, signIn } = useOAuth(client)
-  const [profile, setProfile] = useState<{
-    value: { displayName?: string }
-  } | null>(null)
+  const { pdsAgent, signOut } = useAuthContext()
 
+  // A call that requires to be authenticated
+  const [serviceAuth, setServiceAuth] = useState<unknown>(undefined)
+  const loadServiceAuth = useCallback(async () => {
+    const serviceAuth = await pdsAgent.com.atproto.server.getServiceAuth({
+      aud: pdsAgent.accountDid,
+    })
+    console.log('serviceAuth', serviceAuth)
+    setServiceAuth(serviceAuth.data)
+  }, [pdsAgent])
+
+  // This call does not require authentication
+  const [profile, setProfile] = useState<unknown>(undefined)
   const loadProfile = useCallback(async () => {
-    if (!agent) return
-
-    const info = await agent.getInfo()
-    console.log('info', info)
-
-    // A call that requires to be authenticated
-    console.log(
-      await agent
-        .request(
-          '/xrpc/com.atproto.server.getServiceAuth?' +
-            new URLSearchParams({ aud: info.sub }).toString(),
-        )
-        .then((r) => r.json()),
-    )
-
-    // This call does not require authentication
-    const profile = await agent
-      .request(
-        '/xrpc/com.atproto.repo.getRecord?' +
-          new URLSearchParams({
-            repo: info.sub,
-            collection: 'app.bsky.actor.profile',
-            rkey: 'self',
-          }).toString(),
-      )
-      .then((r) => r.json())
+    const profile = await pdsAgent.com.atproto.repo.getRecord({
+      repo: pdsAgent.accountDid,
+      collection: 'app.bsky.actor.profile',
+      rkey: 'self',
+    })
     console.log(profile)
-
     setProfile(profile.data)
-  }, [agent])
+  }, [pdsAgent])
 
-  return signedIn ? (
+  return (
     <div>
       <p>Logged in!</p>
+
       <button onClick={loadProfile}>Load profile</button>
       <code>
-        <pre>{profile ? JSON.stringify(profile, undefined, 2) : null}</pre>
+        <pre>
+          {profile !== undefined ? JSON.stringify(profile, undefined, 2) : null}
+        </pre>
       </code>
 
-      <button onClick={signOut}>Logout</button>
+      <button onClick={loadServiceAuth}>Load service auth</button>
+      <code>
+        <pre>
+          {serviceAuth !== undefined
+            ? JSON.stringify(serviceAuth, undefined, 2)
+            : null}
+        </pre>
+      </code>
+
+      <button onClick={signOut}>Sign-out</button>
     </div>
-  ) : (
-    <LoginForm loading={loading} onLogin={signIn} />
   )
 }
 

@@ -2,7 +2,7 @@ import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { once, EventEmitter } from 'events'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import basicSeed from './seeds/basic'
 import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError } from '@atproto/repo'
@@ -39,7 +39,7 @@ describe('account deletion', () => {
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     mailer = ctx.mailer
-    agent = new AtpAgent({ service: network.pds.url })
+    agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]

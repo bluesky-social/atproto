@@ -1,6 +1,6 @@
 import { once, EventEmitter } from 'events'
 import Mail from 'nodemailer/lib/mailer'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
 import { ServerMailer } from '../src/mailer'
