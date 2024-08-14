@@ -85,7 +85,7 @@ export class OAuthAgent {
     }
   }
 
-  async request(pathname: string, init?: RequestInit): Promise<Response> {
+  async fetchHandler(pathname: string, init?: RequestInit): Promise<Response> {
     // This will try and refresh the token if it is known to be expired
     const tokenSet = await this.getTokenSet(undefined)
 

@@ -1,6 +1,6 @@
 # @atproto/oauth-client: atproto flavoured OAuth client
 
-Core library for implementing [ATPROTO] OAuth clients.
+Core library for implementing [atproto][ATPROTO] OAuth clients.
 
 For a browser specific implementation, see [@atproto/oauth-client-browser](https://www.npmjs.com/package/@atproto/oauth-client-browser).
 For a node specific implementation, see
@@ -147,7 +147,33 @@ const result = await client.callback(params)
 // Verify the state (e.g. to link to an internal user)
 result.state === '434321' // true
 
-const agent = result.agent
+const oauthAgent = result.agent
+```
+
+The sign-in process results in an `OAuthAgent` instance that can be used to make
+authenticated requests to the resource server. This instance will automatically
+refresh the credentials when needed.
+
+### Making authenticated requests
+
+The `OAuthAgent` instance obtained after singing in can be used to make
+authenticated requests to the user's PDS. There are two main use-cases:
+
+1. Making authenticated request to Bluesky's AppView in order to fetch and
+   manipulate data from the `app.bsky` lexicon.
+
+2. Making authenticated request to your own AppView, in order to fetch and
+   manipulate data from your own lexicon.
+
+#### Making authenticated requests to Bluesky's AppView
+
+The `@atproto/oauth-client` package provides a `OAuthAtpAgent` class that can be
+used to make authenticated requests to Bluesky's AppView. That class implements
+the `Agent` interface from the `@atproto/api` package. See the documentation of
+the `@atproto/api` package for more information on how to use the `Agent` class.
+
+```ts
+const agent = new OAuthAtpAgent(oauthAgent)
 
 // Make an authenticated request to the server. New credentials will be
 // automatically fetched if needed (causing sessionStore.set() to be called).
@@ -155,11 +181,100 @@ await agent.post({
   text: 'Hello, world!',
 })
 
-if (agent instanceof AtpAgent) {
-  // revoke credentials on the server (causing sessionStore.del() to be called)
-  await agent.logout()
-}
+// revoke credentials on the server (causing sessionStore.del() to be called)
+await agent.signOut()
 ```
+
+#### Making authenticated requests to your own AppView
+
+The `OAuthAgent` instance obtained after signing in can be used to instantiate
+the `XrpcClient` class from the `@atproto/xrpc` package.
+
+```ts
+import { Lexicons } from '@atproto/lexicon'
+import { OAuthAgent } from '@atproto/oauth-client'
+import { XrpcClient } from '@atproto/xrpc'
+
+// Define your lexicons
+const myLexicon = new Lexicons([
+  {
+    lexicon: 1,
+    id: 'com.example.query',
+    defs: {
+      main: {
+        // ...
+      },
+    },
+  },
+])
+
+// Authenticate the user
+const oauthAgent = await client.restore('did:plc:123')
+
+// Instantiate a client
+const client = new XrpcClient(oauthAgent, myLexicon)
+
+// Make authenticated calls
+const response = await client.call('com.example.query')
+```
+
+Note that the user's PDS might not know about your lexicon, or what to do with
+those calls (PDS' are only mandated to implement the `com.atproto` lexicon). In
+order to process your calls, you need to have a backend that will process those
+calls. You can then instruct your PDS to forward those calls to your backend.
+
+```ts
+const response = await client.call(
+  'com.example.query',
+  {
+    // Params
+  },
+  {
+    headers: {
+      // The PDS will proxy calls to the specified service in did:plc:xyz's did document.
+      // These calls will be authenticated using "service auth", a single use JWT Bearer token, signed with the logged-in user's private key.
+      'atproto-proxy': 'did:plc:xyz#serviceId',
+    },
+  },
+)
+```
+
+You can also instantiate the `XrpcClient` class with a custom `fetch` function
+that will provide the `atproto-proxy` header on all calls:
+
+```ts
+const boundClient = new XrpcClient((url, init) => {
+  const headers = new Headers(init?.headers)
+
+  // Add the atproto-proxy header if it is not already present
+  if (!headers.has('atproto-proxy')) {
+    headers.set('atproto-proxy', 'did:plc:xyz#serviceId')
+  }
+
+  return oauthAgent.fetchHandler(url, { ...init, headers })
+}, myLexicon)
+
+// No need to specify the atproto-proxy header anymore
+const response = await boundClient.call('com.example.query')
+```
+
+> [!NOTE]
+>
+> Proxying every call through the PDS is not recommended for performance
+> reasons, as it will increase the latency of readonly calls to your lexicon.
+> Doing so will also prevent your backend from being able to anticipate writes
+> on the network. Indeed, write calls will be sent to the PDS, which will then
+> propagate them on the network through a relay (a.k.a. "firehose"). This will
+> introduce a delay between the time the write is made and the time it is
+> processed by your backend.
+>
+> In order to avoid those issues, it is recommended that you implement your
+> backend using a backend-for-frontend pattern. This backend will be responsible
+> for processing the calls made by the client, and will be able to anticipate
+> writes on the network.
+>
+> Read more about the backend-for-frontend pattern in the [atproto][ATPROTO]
+> documentation website.
 
 ## Advances use-cases
 

@@ -178,12 +178,14 @@ export function useOAuth(options: UseOAuthOptions) {
 
           setClient(clientForInit)
           if (r) {
-            setAgent(r.agent)
+            const agent = new OAuthAtpAgent(r.agent)
+
+            setAgent(agent)
 
             if ('state' in r) {
-              await onSignedIn(r.agent, r.state)
+              await onSignedIn(agent, r.state)
             } else {
-              await onRestored(r.agent)
+              await onRestored(agent)
             }
           } else {
             await onRestored(null)
@@ -221,7 +223,7 @@ export function useOAuth(options: UseOAuthOptions) {
         if (!agent || agent.did !== sub) {
           setAgent(null)
           client.restore(sub, false).then((agent) => {
-            if (!signal.aborted) setAgent(agent)
+            if (!signal.aborted) setAgent(new OAuthAtpAgent(agent))
           })
         }
       },

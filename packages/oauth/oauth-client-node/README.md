@@ -290,7 +290,8 @@ list of examples below). Any refresh of the credentials will happen under the
 hood, and the new tokens will be saved in the session store.
 
 ```ts
-const agent = await client.restore('did:plc:123')
+const oauthAgent = await client.restore('did:plc:123')
+const agent = new OAuthAtpAgent(oauthAgent)
 
 // Feeds and content
 await agent.getTimeline(params, opts)
@@ -339,9 +340,8 @@ await agent.updateHandle(params, opts)
 
 // etc.
 
-if (agent instanceof OAuthAtpAgent) {
-  agent.signOut()
-}
+// Always remember to revoke the credentials when you are done
+await agent.signOut()
 ```
 
 ## Advances use-cases

@@ -168,7 +168,10 @@ ngrok as the `client_id`:
 Replace the content of the `src/app.ts` file, with the following content:
 
 ```typescript
-import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
+import {
+  BrowserOAuthClient,
+  OAuthAtpAgent,
+} from '@atproto/oauth-client-browser'
 
 async function main() {
   const oauthClient = await BrowserOAuthClient.load({
@@ -200,19 +203,19 @@ following code:
 
 ```typescript
 const result = await oauthClient.init()
-const agent = result?.agent
+const oauthAgent = result?.agent
 
 // TO BE CONTINUED
 ```
 
 At this point you can detect if the user is already authenticated or not (by
-checking if `agent` is `undefined`).
+checking if `oauthAgent` is `undefined`).
 
 Let's initiate an authentication flow if the user is not authenticated. Replace
 the `// TO BE CONTINUED` comment with the following code:
 
 ```typescript
-if (!agent) {
+if (!oauthAgent) {
   const handle = prompt('Enter your atproto handle to authenticate')
   if (!handle) throw new Error('Authentication process canceled by the user')
 
@@ -234,14 +237,16 @@ if (!agent) {
 // TO BE CONTINUED
 ```
 
-At this point in the script, the user **will** be authenticated. API calls can
-be made using the `agent`. The `agent` is an instance of a sub-class of the
-`Agent` from `@atproto/api`. Let's make a simple call to the API to retrieve the
-user's profile. Replace the `// TO BE CONTINUED` comment with the following
-code:
+At this point in the script, the user **will** be authenticated. Authenticated
+API calls can be made using the `oauthAgent`. The `oauthAgent` can be used to
+instantiate an `OAuthAtpAgent`, a sub-class of the `Agent` from `@atproto/api`.
+Let's make a simple call to the API to retrieve the user's profile. Replace the
+`// TO BE CONTINUED` comment with the following code:
 
 ```typescript
-if (agent) {
+if (oauthAgent) {
+  const agent = new OAuthAtpAgent(oauthAgent)
+
   const fetchProfile = async () => {
     const profile = await agent.getProfile({ actor: agent.did })
     return profile.data
