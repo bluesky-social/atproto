@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       // handleResolver="http://localhost:2584"
       // production
       plcDirectoryUrl={undefined}
-      handleResolver="https://bsky.app"
+      handleResolver="https://bsky.social"
     >
       <App />
     </AuthProvider>
