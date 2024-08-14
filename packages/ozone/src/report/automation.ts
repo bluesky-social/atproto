@@ -97,7 +97,7 @@ export class ReportAutomationService {
         tasks.push(this.escalate())
       }
 
-      if (flows.labels) {
+      if (flows.labels.length) {
         tasks.push(this.label(flows.labels))
       }
 
