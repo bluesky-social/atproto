@@ -727,12 +727,17 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const uris = notifs.map((notif) => notif.uri)
+    const replyRootPostUris = notifs.filter(notif => {
+      return notif.reason === 'reply'
+    }).map(notif => {
+      return notif.reasonSubject
+    })
     const collections = urisByCollection(uris)
     const postUris = collections.get(ids.AppBskyFeedPost) ?? []
     const likeUris = collections.get(ids.AppBskyFeedLike) ?? []
     const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
     const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
-    const [posts, likes, reposts, follows, labels, profileState] =
+    const [posts, likes, reposts, follows, labels, profileState, threadgates] =
       await Promise.all([
         this.feed.getPosts(postUris), // reason: mention, reply, quote
         this.feed.getLikes(likeUris), // reason: like
@@ -740,6 +745,7 @@ export class Hydrator {
         this.graph.getFollows(followUris), // reason: follow
         this.label.getLabelsForSubjects(uris, ctx.labelers),
         this.hydrateProfiles(uris.map(didFromUri), ctx),
+        this.feed.getThreadgatesForPosts(replyRootPostUris),
       ])
     actionTakedownLabels(postUris, posts, labels)
     return mergeStates(profileState, {
@@ -748,6 +754,7 @@ export class Hydrator {
       reposts,
       follows,
       labels,
+      threadgates,
       ctx,
     })
   }
