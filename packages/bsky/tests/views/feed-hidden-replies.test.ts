@@ -136,7 +136,11 @@ describe('postgates', () => {
   describe(`notifications`, () => {
     it(`[A] -> [B] : B is hidden`, async () => {
       const A = await sc.post(users.poster.did, `A`)
+
+      await network.processAll()
+
       const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
+      const C = await sc.reply(users.replier.did, A.ref, A.ref, `C`)
 
       await pdsAgent.api.app.bsky.feed.threadgate.create(
         {
@@ -153,19 +157,6 @@ describe('postgates', () => {
 
       await network.processAll()
 
-      // console.log({
-      //   A: A.ref.uriStr,
-      //   B: B.ref.uriStr,
-      // })
-
-      // const {
-      //   data: { feed: timeline },
-      // } = await agent.api.app.bsky.feed.getTimeline(
-      //   { algorithm: 'reverse-chronological' },
-      //   {
-      //     headers: await network.serviceHeaders(users.viewer.did),
-      //   },
-      // )
       const {
         data: { notifications },
       } = await agent.api.app.bsky.notification.listNotifications(
@@ -178,10 +169,12 @@ describe('postgates', () => {
       const BNotification = notifications.find((item) => {
         return item.uri === B.ref.uriStr
       })
+      const CNotification = notifications.find((item) => {
+        return item.uri === C.ref.uriStr
+      })
 
-      // console.log(JSON.stringify(timeline, null, 2))
-      // console.log(JSON.stringify(notifications, null, 2))
       expect(BNotification).toBeUndefined()
+      expect(CNotification).toBeDefined()
     })
   })
 })
