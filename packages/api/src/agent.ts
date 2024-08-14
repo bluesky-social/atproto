@@ -3,6 +3,7 @@ import { AtUri, ensureValidDid } from '@atproto/syntax'
 import {
   buildFetchHandler,
   FetchHandler,
+  FetchHandlerObject,
   FetchHandlerOptions,
 } from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
@@ -94,7 +95,9 @@ export abstract class Agent extends AtpBaseClient {
 
   //#endregion
 
-  constructor(fetchHandlerOpts: FetchHandler | FetchHandlerOptions) {
+  constructor(
+    fetchHandlerOpts: FetchHandler | FetchHandlerObject | FetchHandlerOptions,
+  ) {
     const fetchHandler = buildFetchHandler(fetchHandlerOpts)
 
     super((url, init) => {

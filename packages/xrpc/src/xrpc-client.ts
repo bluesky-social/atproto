@@ -1,6 +1,7 @@
 import { LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
 import {
   FetchHandler,
+  FetchHandlerObject,
   FetchHandlerOptions,
   buildFetchHandler,
 } from './fetch-handler'
@@ -27,7 +28,7 @@ export class XrpcClient {
   readonly lex: Lexicons
 
   constructor(
-    fetchHandlerOpts: FetchHandler | FetchHandlerOptions,
+    fetchHandlerOpts: FetchHandler | FetchHandlerObject | FetchHandlerOptions,
     // "Lexicons" is redundant here (because that class implements
     // "Iterable<LexiconDoc>") but we keep it for explicitness:
     lex: Lexicons | Iterable<LexiconDoc>,
