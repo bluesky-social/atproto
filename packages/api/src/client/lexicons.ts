@@ -10617,7 +10617,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        required: ['timestamp', 'status'],
+        required: ['timestamp', 'status', 'active'],
         properties: {
           comment: {
             type: 'string',
@@ -10648,6 +10648,7 @@ export const schemaDict = {
           },
           handle: {
             type: 'string',
+            format: 'handle',
           },
           pdsHost: {
             type: 'string',
@@ -10677,6 +10678,7 @@ export const schemaDict = {
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           timestamp: {
             type: 'string',

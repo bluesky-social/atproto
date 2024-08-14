@@ -395,7 +395,7 @@
     "accountEvent": {
       "type": "object",
       "description": "Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
-      "required": ["timestamp", "status"],
+      "required": ["timestamp", "status", "active"],
       "properties": {
         "comment": { "type": "string" },
         "active": {
@@ -418,7 +418,7 @@
       "required": ["timestamp"],
       "properties": {
         "comment": { "type": "string" },
-        "handle": { "type": "string" },
+        "handle": { "type": "string", "format": "handle" },
         "pdsHost": { "type": "string", "format": "uri" },
         "tombstone": { "type": "boolean" },
         "timestamp": {
@@ -437,7 +437,7 @@
           "type": "string",
           "knownValues": ["create", "update", "delete"]
         },
-        "cid": { "type": "string" },
+        "cid": { "type": "string", "format": "cid" },
         "timestamp": { "type": "string", "format": "datetime" }
       }
     },

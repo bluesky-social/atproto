@@ -321,7 +321,7 @@ export class ModerationService {
     }
 
     if (isAccountEvent(event)) {
-      meta.active = !!event.active
+      meta.active = event.active
       meta.timestamp = event.timestamp
       meta.status = event.status
     }
