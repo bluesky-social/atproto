@@ -71,8 +71,12 @@ const hydration = async (
   ])
 
   const list = listState.lists?.get(listUri)
-  if (list?.record.purpose === 'app.bsky.graph.defs#referencelist') {
-    const ownerDid = new AtUri(listUri).hostname
+  const ownerDid = new AtUri(listUri).hostname
+  if (
+    list?.record.purpose === 'app.bsky.graph.defs#referencelist' &&
+    // We show all users regardless of blocks if the viewer is the owner of the list, so no need to hydrate them
+    params.hydrateCtx.viewer !== ownerDid
+  ) {
     const pairs = new Map()
     for (const { did } of listitems) {
       pairs.set(did, [did, ownerDid])
@@ -87,13 +91,9 @@ const hydration = async (
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, hydration } = input
-
-  // Always show all members if this is the viewer's list
-  const ownerDid = new AtUri(skeleton.listUri).hostname
-  if (ownerDid === hydration.ctx?.viewer) {
+  if (!hydration.bidirectionalBlocks) {
     return skeleton
   }
-
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
     const blocks = hydration.bidirectionalBlocks?.get(did)?.values() ?? []
     for (const block of blocks || []) {
