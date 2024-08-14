@@ -77,6 +77,12 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     moderators: env.moderatorDids,
     triage: env.triageDids,
   }
+  const automationCfg: OzoneConfig['automation'] = {
+    escalators: env.autoEscalatorDids || [],
+    labelers: env.autoLabelerDids || [],
+    escalateKeywords: env.autoEscalateKeywords || [],
+    labelKeywords: env.autoLabelKeywords || [],
+  }
 
   return {
     service: serviceCfg,
@@ -88,6 +94,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     identity: identityCfg,
     blobDivert: blobDivertServiceCfg,
     access: accessCfg,
+    automation: automationCfg,
   }
 }
 
@@ -101,6 +108,7 @@ export type OzoneConfig = {
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
+  automation: AutomationConfig
 }
 
 export type ServiceConfig = {
@@ -154,4 +162,10 @@ export type AccessConfig = {
   admins: string[]
   moderators: string[]
   triage: string[]
+}
+export type AutomationConfig = {
+  escalators: string[]
+  escalateKeywords?: string[]
+  labelers: string[]
+  labelKeywords?: string[]
 }

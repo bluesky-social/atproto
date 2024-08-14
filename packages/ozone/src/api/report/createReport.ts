@@ -5,6 +5,7 @@ import { subjectFromInput } from '../../mod-service/subject'
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { ModerationLangService } from '../../mod-service/lang'
+import { ReportAutomationService } from '../../report/automation'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -30,6 +31,14 @@ export default function (server: Server, ctx: AppContext) {
             subject,
             reportedBy: requester || ctx.cfg.service.did,
           })
+
+        const reportAutomation = new ReportAutomationService(
+          ctx.cfg,
+          moderationTxn,
+          reportEvent,
+          subject,
+        )
+        await reportAutomation.invokeFlows()
 
         const moderationLangService = new ModerationLangService(moderationTxn)
         await moderationLangService.tagSubjectWithLang({

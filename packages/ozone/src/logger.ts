@@ -10,6 +10,8 @@ export const httpLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('ozone')
 export const langLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('ozone:lang')
+export const reportAutomationLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('ozone:report-automation')
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,

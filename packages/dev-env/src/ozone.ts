@@ -113,6 +113,25 @@ export class TestOzone {
     return new ModeratorClient(this)
   }
 
+  setAutomationConfig(
+    config: Partial<
+      Pick<
+        ozone.OzoneEnvironment,
+        | 'autoEscalatorDids'
+        | 'autoEscalateKeywords'
+        | 'autoLabelerDids'
+        | 'autoLabelKeywords'
+      >
+    >,
+  ) {
+    this.ctx.cfg.automation = {
+      escalators: config.autoEscalatorDids || [],
+      labelers: config.autoLabelerDids || [],
+      escalateKeywords: config.autoEscalateKeywords || [],
+      labelKeywords: config.autoLabelKeywords || [],
+    }
+  }
+
   async addAdminDid(did: string) {
     await this.ctx.teamService(this.ctx.db).create({
       did,

@@ -31,6 +31,10 @@ export const readEnv = (): OzoneEnvironment => {
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    autoEscalatorDids: envList('OZONE_AUTO_ESCALATOR_DIDS'),
+    autoEscalateKeywords: envList('OZONE_AUTO_ESCALATE_KEYWORDS'),
+    autoLabelerDids: envList('OZONE_AUTO_LABELER_DIDS'),
+    autoLabelKeywords: envList('OZONE_AUTO_LABEL_KEYWORDS'),
   }
 }
 
@@ -64,4 +68,8 @@ export type OzoneEnvironment = {
   signingKeyHex?: string
   blobDivertUrl?: string
   blobDivertAdminPassword?: string
+  autoEscalatorDids?: string[]
+  autoEscalateKeywords?: string[]
+  autoLabelerDids?: string[]
+  autoLabelKeywords?: string[]
 }

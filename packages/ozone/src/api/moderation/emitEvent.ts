@@ -17,6 +17,7 @@ import { subjectFromInput } from '../../mod-service/subject'
 import { ModerationLangService } from '../../mod-service/lang'
 import { retryHttp } from '../../util'
 import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
+import { ReportAutomationService } from '../../report/automation'
 
 const handleModerationEvent = async ({
   ctx,
@@ -136,6 +137,14 @@ const handleModerationEvent = async ({
       subject,
       createdBy,
     })
+
+    const reportAutomation = new ReportAutomationService(
+      ctx.cfg,
+      moderationTxn,
+      result.event,
+      subject,
+    )
+    await reportAutomation.invokeFlows()
 
     const moderationLangService = new ModerationLangService(moderationTxn)
     await moderationLangService.tagSubjectWithLang({
