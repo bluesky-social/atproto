@@ -8,6 +8,7 @@ export class EmbedContentTypeTagger extends ContentTagger {
 
   isApplicable(): boolean {
     return (
+      !!this.subjectStatus &&
       !this.tagAlreadyExists() &&
       this.subject.isRecord() &&
       this.subject.parsedUri.collection === ids.AppBskyFeedPost

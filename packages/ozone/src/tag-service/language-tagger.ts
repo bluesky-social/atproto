@@ -13,7 +13,7 @@ export class LanguageTagger extends ContentTagger {
   tagPrefix = 'lang:'
 
   isApplicable(): boolean {
-    return !this.tagAlreadyExists()
+    return !!this.subjectStatus && !this.tagAlreadyExists()
   }
 
   async getTags(): Promise<string[]> {

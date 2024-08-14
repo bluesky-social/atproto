@@ -16,8 +16,7 @@ export abstract class ContentTagger {
 
   protected tagAlreadyExists(): boolean {
     return Boolean(
-      this.subjectStatus &&
-        this.subjectStatus.tags?.some((tag) => tag.startsWith(this.tagPrefix)),
+      this.subjectStatus?.tags?.some((tag) => tag.startsWith(this.tagPrefix)),
     )
   }
 }
