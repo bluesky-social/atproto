@@ -11454,7 +11454,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Add values to a specific set',
+        description:
+          'Add values to a specific set. Attempting to add values to a set that does not exist will result in an error.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -11468,6 +11469,7 @@ export const schemaDict = {
               values: {
                 type: 'array',
                 minLength: 1,
+                maxLength: 1000,
                 items: {
                   type: 'string',
                 },
@@ -11495,7 +11497,8 @@ export const schemaDict = {
           description: {
             type: 'string',
             minLength: 1,
-            maxLength: 1024,
+            maxGraphemes: 1024,
+            maxLength: 10240,
           },
         },
       },
@@ -11511,7 +11514,8 @@ export const schemaDict = {
           description: {
             type: 'string',
             minLength: 1,
-            maxLength: 1024,
+            maxGraphemes: 1024,
+            maxLength: 10240,
           },
           setSize: {
             type: 'integer',
@@ -11605,6 +11609,12 @@ export const schemaDict = {
               enum: ['name', 'createdAt', 'updatedAt'],
               default: 'name',
             },
+            sortDirection: {
+              type: 'string',
+              default: 'asc',
+              enum: ['asc', 'desc'],
+              description: 'Defaults to ascending order of name field.',
+            },
           },
         },
         output: {
@@ -11635,7 +11645,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Remove values from a specific set',
+        description:
+          'Remove values from a specific set. Attempting to remove values that are not in the set will not result in an error',
         input: {
           encoding: 'application/json',
           schema: {

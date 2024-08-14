@@ -24,6 +24,12 @@
             "type": "string",
             "enum": ["name", "createdAt", "updatedAt"],
             "default": "name"
+          },
+          "sortDirection": {
+            "type": "string",
+            "default": "asc",
+            "enum": ["asc", "desc"],
+            "description": "Defaults to ascending order of name field."
           }
         }
       },

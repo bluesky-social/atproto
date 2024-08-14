@@ -13,6 +13,8 @@ export interface QueryParams {
   cursor?: string
   namePrefix?: string
   sortBy?: 'name' | 'createdAt' | 'updatedAt'
+  /** Defaults to ascending order of name field. */
+  sortDirection?: 'asc' | 'desc'
 }
 
 export type InputSchema = undefined

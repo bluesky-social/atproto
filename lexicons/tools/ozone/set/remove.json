@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove values from a specific set",
+      "description": "Remove values from a specific set. Attempting to remove values that are not in the set will not result in an error",
       "input": {
         "encoding": "application/json",
         "schema": {

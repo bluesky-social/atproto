@@ -14,7 +14,8 @@
         "description": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1024
+          "maxGraphemes": 1024,
+          "maxLength": 10240
         }
       }
     },
@@ -30,7 +31,8 @@
         "description": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1024
+          "maxGraphemes": 1024,
+          "maxLength": 10240
         },
         "setSize": {
           "type": "integer"

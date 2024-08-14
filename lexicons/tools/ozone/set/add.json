@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add values to a specific set",
+      "description": "Add values to a specific set. Attempting to add values to a set that does not exist will result in an error.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -18,6 +18,7 @@
             "values": {
               "type": "array",
               "minLength": 1,
+              "maxLength": 1000,
               "items": {
                 "type": "string"
               },

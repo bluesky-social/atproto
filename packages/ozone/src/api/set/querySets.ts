@@ -8,7 +8,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { limit = 50, cursor, namePrefix, sortBy = 'name' } = params
+      const {
+        limit = 50,
+        cursor,
+        namePrefix,
+        sortBy = 'name',
+        sortDirection = 'asc',
+      } = params
 
       if (!access.isModerator) {
         throw new AuthRequiredError('Must be a moderator to query sets')
@@ -21,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         namePrefix,
         sortBy,
+        sortDirection,
       })
 
       return {

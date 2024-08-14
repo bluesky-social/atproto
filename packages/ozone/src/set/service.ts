@@ -17,11 +17,13 @@ export class SetService {
     cursor,
     namePrefix,
     sortBy,
+    sortDirection,
   }: {
     limit: number
     cursor?: string
     namePrefix?: string
     sortBy: 'name' | 'createdAt' | 'updatedAt'
+    sortDirection: 'asc' | 'desc'
   }): Promise<{
     sets: Selectable<OzoneSet & { setSize: number }>[]
     cursor?: string
@@ -54,13 +56,17 @@ export class SetService {
 
     if (cursor) {
       if (sortBy === 'name') {
-        qb = qb.where('s.name', '>', cursor)
+        qb = qb.where('s.name', sortDirection === 'asc' ? '>' : '<', cursor)
       } else {
-        qb = qb.where(`s.${sortBy}`, '>', new Date(cursor))
+        qb = qb.where(
+          `s.${sortBy}`,
+          sortDirection === 'asc' ? '>' : '<',
+          new Date(cursor),
+        )
       }
     }
 
-    qb = qb.orderBy(`s.${sortBy}`, 'asc')
+    qb = qb.orderBy(`s.${sortBy}`, sortDirection)
 
     const sets = await qb.execute()
     const lastItem = sets.at(-1)
