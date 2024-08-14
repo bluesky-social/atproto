@@ -21,6 +21,7 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
 import { AtUri } from '@atproto/syntax'
 import { RelationshipPair } from '../../../../hydration/graph'
+import { ListPurpose } from '../../../../lexicon/types/app/bsky/graph/defs'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -71,26 +72,13 @@ const hydration = async (
       params.hydrateCtx,
     ),
   ])
-
-  const list = listState.lists?.get(listUri)
-  const ownerDid = new AtUri(listUri).hostname
-  if (
-    list?.record.purpose === 'app.bsky.graph.defs#referencelist' &&
-    // We show all users regardless of blocks if the viewer is the owner of the list, so no need to hydrate them
-    params.hydrateCtx.viewer !== ownerDid
-  ) {
-    const pairs = new Map()
-    pairs.set(
-      ownerDid,
-      listitems.map(({ did }) => did),
-    )
-    const bidirectionalBlocks =
-      await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
-
-    return mergeManyStates(listState, profileState, { bidirectionalBlocks })
-  }
-
-  return mergeStates(listState, profileState)
+  const bidirectionalBlocks = await maybeGetBlocksForReferenceList({
+    ctx,
+    params,
+    skeleton,
+    listState,
+  })
+  return mergeManyStates(listState, profileState, { bidirectionalBlocks })
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
@@ -123,6 +111,33 @@ const presentation = (
     throw new InvalidRequestError('List not found')
   }
   return { list, items, cursor }
+}
+
+const maybeGetBlocksForReferenceList = async (input: {
+  ctx: Context
+  listState: HydrationState
+  skeleton: SkeletonState
+  params: Params
+}) => {
+  const { ctx, params, listState, skeleton } = input
+  const { listitems } = skeleton
+  const { list, hydrateCtx } = params
+  const listRecord = listState.lists?.get(list)
+  const ownerDid = new AtUri(list).hostname
+
+  if (
+    listRecord?.record.purpose !== 'app.bsky.graph.defs#referencelist' ||
+    params.hydrateCtx.viewer === ownerDid
+  ) {
+    return
+  }
+
+  const pairs = new Map()
+  pairs.set(
+    ownerDid,
+    listitems.map(({ did }) => did),
+  )
+  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
 }
 
 const mergeManyStates = (...states: HydrationState[]) => {
