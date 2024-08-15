@@ -89,13 +89,13 @@ describe('postgates', () => {
         },
       )
 
-      const AView = timeline.find((post) => post.post.uri === A.ref.uriStr)
-      const BView = timeline.find((post) => post.post.uri === B.ref.uriStr)
-      const CView = timeline.find((post) => post.post.uri === C.ref.uriStr)
+      const viewA = timeline.find((post) => post.post.uri === A.ref.uriStr)
+      const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
+      const viewC = timeline.find((post) => post.post.uri === C.ref.uriStr)
 
-      expect(AView).toBeDefined()
-      expect(BView).toBeUndefined()
-      expect(AppBskyFeedDefs.isNotFoundPost(CView?.reply?.parent)).toBe(true)
+      expect(viewA).toBeDefined()
+      expect(viewB).toBeUndefined()
+      expect(AppBskyFeedDefs.isNotFoundPost(viewC?.reply?.parent)).toBe(true)
     })
 
     it(`[A] -> [B] : B is hidden but was reposted`, async () => {
@@ -127,9 +127,9 @@ describe('postgates', () => {
         },
       )
 
-      const BView = timeline.find((post) => post.post.uri === B.ref.uriStr)
+      const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
 
-      expect(BView).toBeDefined()
+      expect(viewB).toBeDefined()
     })
   })
 
@@ -166,15 +166,15 @@ describe('postgates', () => {
         },
       )
 
-      const BNotification = notifications.find((item) => {
+      const notificationB = notifications.find((item) => {
         return item.uri === B.ref.uriStr
       })
-      const CNotification = notifications.find((item) => {
+      const notificationC = notifications.find((item) => {
         return item.uri === C.ref.uriStr
       })
 
-      expect(BNotification).toBeUndefined()
-      expect(CNotification).toBeDefined()
+      expect(notificationB).toBeUndefined()
+      expect(notificationC).toBeDefined()
     })
   })
 })
