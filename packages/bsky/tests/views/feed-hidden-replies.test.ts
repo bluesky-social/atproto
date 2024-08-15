@@ -51,7 +51,7 @@ describe('postgates', () => {
       const {
         data: { feed: timeline },
       } = await agent.api.app.bsky.feed.getTimeline(
-        { algorithm: 'reverse-chronological' },
+        {},
         {
           headers: await network.serviceHeaders(users.viewer.did),
         },
@@ -83,7 +83,7 @@ describe('postgates', () => {
       const {
         data: { feed: timeline },
       } = await agent.api.app.bsky.feed.getTimeline(
-        { algorithm: 'reverse-chronological' },
+        {},
         {
           headers: await network.serviceHeaders(users.viewer.did),
         },
@@ -121,7 +121,7 @@ describe('postgates', () => {
       const {
         data: { feed: timeline },
       } = await agent.api.app.bsky.feed.getTimeline(
-        { algorithm: 'reverse-chronological' },
+        {},
         {
           headers: await network.serviceHeaders(users.viewer.did),
         },
