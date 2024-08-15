@@ -49,9 +49,9 @@ export async function feedHiddenRepliesSeed(
     u[user.id].did = sc.dids[user.id]
   })
 
-  sc.follow(u.viewer.did, u.poster.did)
-  sc.follow(u.viewer.did, u.replier.did)
-  sc.follow(u.viewer.did, u.reposter.did)
+  await sc.follow(u.viewer.did, u.poster.did)
+  await sc.follow(u.viewer.did, u.replier.did)
+  await sc.follow(u.viewer.did, u.reposter.did)
 
   await sc.network.processAll()
 
