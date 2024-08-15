@@ -43,7 +43,7 @@ import {
   mergeNestedMaps,
   mergeManyMaps,
 } from './util'
-import {uriToDid as didFromUri} from '../util/uris'
+import { uriToDid as didFromUri } from '../util/uris'
 import {
   FeedGenAggs,
   FeedGens,

@@ -328,8 +328,5 @@ describe('pds author feed views', () => {
 })
 
 function isReplyTo(reply: ReplyRef, did: string) {
-  return (
-    uriToDid(reply.root.uri) === did &&
-    uriToDid(reply.parent.uri) === did
-  )
+  return uriToDid(reply.root.uri) === did && uriToDid(reply.parent.uri) === did
 }
