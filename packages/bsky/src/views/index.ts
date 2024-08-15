@@ -68,6 +68,7 @@ import {
   LabelerViewDetailed,
 } from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
+import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -112,7 +113,7 @@ export class Views {
   }
 
   replyIsHidden(replyUri: string, rootPostUri: string, state: HydrationState) {
-    const threadgateUri = postToGateUri(rootPostUri)
+    const threadgateUri = postUriToThreadgateUri(rootPostUri)
     const threadgate = state.threadgates?.get(threadgateUri)
     if (threadgate?.record?.hiddenReplies?.includes(replyUri)) {
       return true
@@ -568,11 +569,7 @@ export class Views {
     if (!author) return
     const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
-    const gateUri = AtUri.make(
-      authorDid,
-      ids.AppBskyFeedThreadgate,
-      parsedUri.rkey,
-    ).toString()
+    const threadgateUri = postUriToThreadgateUri(uri)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
@@ -605,7 +602,7 @@ export class Views {
         : undefined,
       labels,
       threadgate: !post.record.reply // only hydrate gate on root post
-        ? this.threadgate(gateUri, state)
+        ? this.threadgate(threadgateUri, state)
         : undefined,
     }
   }
@@ -998,7 +995,7 @@ export class Views {
       return this.embedBlocked(uri, state)
     }
 
-    const postgateRecordUri = postToPostgateUri(embed.record.uri)
+    const postgateRecordUri = postUriToPostgateUri(embed.record.uri)
     const postgate = state.postgates?.get(postgateRecordUri)
     if (postgate?.record?.detachedEmbeddingUris?.includes(postUri)) {
       return this.embedDetached(uri)
@@ -1075,7 +1072,9 @@ export class Views {
       return true
     }
     const rootUriStr: string = post?.record.reply?.root.uri ?? uri
-    const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
+    const gate = state.threadgates?.get(
+      postUriToThreadgateUri(rootUriStr),
+    )?.record
     const viewer = state.ctx?.viewer
     if (!gate || !viewer) {
       return undefined
@@ -1110,7 +1109,7 @@ export class Views {
     if (!post) {
       return true
     }
-    const postgateRecordUri = postToPostgateUri(uri)
+    const postgateRecordUri = postUriToPostgateUri(uri)
     const gate = state.postgates?.get(postgateRecordUri)?.record
     const viewerDid = state.ctx?.viewer
     if (!gate || !viewerDid) {
@@ -1192,22 +1191,6 @@ export class Views {
       labels: [...labels, ...selfLabels],
     }
   }
-}
-
-const postToGateUri = (uri: string) => {
-  const aturi = new AtUri(uri)
-  if (aturi.collection === ids.AppBskyFeedPost) {
-    aturi.collection = ids.AppBskyFeedThreadgate
-  }
-  return aturi.toString()
-}
-
-const postToPostgateUri = (uri: string) => {
-  const aturi = new AtUri(uri)
-  if (aturi.collection === ids.AppBskyFeedPost) {
-    aturi.collection = ids.AppBskyFeedPostgate
-  }
-  return aturi.toString()
 }
 
 const getRootUri = (uri: string, post: Post): string => {

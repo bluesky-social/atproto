@@ -16,6 +16,7 @@ import {
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
 import { dedupeStrs } from '@atproto/common'
+import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
@@ -197,14 +198,7 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Threadgates> {
     if (!postUris.length) return new HydrationMap<Threadgate>()
-    const uris = postUris.map((uri) => {
-      const parsed = new AtUri(uri)
-      return AtUri.make(
-        parsed.hostname,
-        ids.AppBskyFeedThreadgate,
-        parsed.rkey,
-      ).toString()
-    })
+    const uris = postUris.map(postUriToThreadgateUri)
     return this.getThreadgateRecords(uris, includeTakedowns)
   }
 
@@ -227,14 +221,7 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Postgates> {
     if (!postUris.length) return new HydrationMap<Postgate>()
-    const uris = postUris.map((uri) => {
-      const parsed = new AtUri(uri)
-      return AtUri.make(
-        parsed.hostname,
-        ids.AppBskyFeedPostgate,
-        parsed.rkey,
-      ).toString()
-    })
+    const uris = postUris.map(postUriToPostgateUri)
     return this.getPostgateRecords(uris, includeTakedowns)
   }
 

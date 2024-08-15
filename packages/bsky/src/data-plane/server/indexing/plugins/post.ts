@@ -27,11 +27,13 @@ import {
   getDescendentsQb,
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
-  postToThreadgateUri,
-  postToPostgateUri,
 } from '../../util'
 import { BackgroundQueue } from '../../background'
 import { parsePostgate } from '../../../../views/util'
+import {
+  postUriToThreadgateUri,
+  postUriToPostgateUri,
+} from '../../../../util/uris'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -468,7 +470,7 @@ async function validatePostEmbed(
   embedUri: string,
   parentUri: string,
 ) {
-  const postgateRecordUri = postToPostgateUri(embedUri)
+  const postgateRecordUri = postUriToPostgateUri(embedUri)
   const results = await db
     .selectFrom('record')
     .where('record.uri', '=', postgateRecordUri)
@@ -500,7 +502,7 @@ async function validatePostEmbed(
 async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
-  const replyGate = postToThreadgateUri(replyRoot)
+  const replyGate = postUriToThreadgateUri(replyRoot)
   const results = await db
     .selectFrom('record')
     .where('record.uri', 'in', [replyRoot, replyGate, replyParent])
