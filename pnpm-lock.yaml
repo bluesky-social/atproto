@@ -918,9 +918,6 @@ importers:
         specifier: workspace:*
         version: link:../oauth-types
     devDependencies:
-      '@atproto/api':
-        specifier: workspace:*
-        version: link:../../api
       typescript:
         specifier: ^5.3.3
         version: 5.4.4
