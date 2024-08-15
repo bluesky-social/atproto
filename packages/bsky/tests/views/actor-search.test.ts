@@ -49,7 +49,7 @@ describe.skip('pds actor search views', () => {
 
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
-      { term: 'car' },
+      { q: 'car' },
       { headers },
     )
 
@@ -85,9 +85,9 @@ describe.skip('pds actor search views', () => {
     expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
-  it('typeahead gives empty result set when provided empty term', async () => {
+  it('typeahead gives empty result set when provided empty q', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
-      { term: '' },
+      { q: '' },
       { headers },
     )
 
@@ -96,14 +96,14 @@ describe.skip('pds actor search views', () => {
 
   it('typeahead applies limit', async () => {
     const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
-      { term: 'p' },
+      { q: 'p' },
       { headers },
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
 
     const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
-      { term: 'p', limit: 5 },
+      { q: 'p', limit: 5 },
       { headers },
     )
 
@@ -125,12 +125,12 @@ describe.skip('pds actor search views', () => {
   it('typeahead gives results unauthed', async () => {
     const { data: authed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead(
-        { term: 'car' },
+        { q: 'car' },
         { headers },
       )
     const { data: unauthed } =
       await agent.api.app.bsky.actor.searchActorsTypeahead({
-        term: 'car',
+        q: 'car',
       })
     expect(unauthed.actors.length).toBeGreaterThan(0)
     expect(unauthed.actors).toEqual(authed.actors.map(stripViewer))
@@ -138,7 +138,7 @@ describe.skip('pds actor search views', () => {
 
   it('search gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActors(
-      { term: 'car' },
+      { q: 'car' },
       { headers },
     )
 
@@ -174,9 +174,9 @@ describe.skip('pds actor search views', () => {
     expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
-  it('search gives empty result set when provided empty term', async () => {
+  it('search gives empty result set when provided empty q', async () => {
     const result = await agent.api.app.bsky.actor.searchActors(
-      { term: '' },
+      { q: '' },
       { headers },
     )
 
@@ -187,7 +187,7 @@ describe.skip('pds actor search views', () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.searchActors(
-        { term: 'p', cursor, limit: 3 },
+        { q: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -199,7 +199,7 @@ describe.skip('pds actor search views', () => {
     )
 
     const full = await agent.api.app.bsky.actor.searchActors(
-      { term: 'p' },
+      { q: 'p' },
       { headers },
     )
 
@@ -217,7 +217,7 @@ describe.skip('pds actor search views', () => {
     // Mostly for sqlite's benefit, since it uses LIKE and these are special characters that will
     // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
     const result = await agent.api.app.bsky.actor.searchActors(
-      { term: ' % _ ' },
+      { q: ' % _ ' },
       { headers },
     )
 
@@ -226,11 +226,11 @@ describe.skip('pds actor search views', () => {
 
   it('search gives results unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.searchActors(
-      { term: 'car' },
+      { q: 'car' },
       { headers },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.searchActors({
-      term: 'car',
+      q: 'car',
     })
     expect(unauthed.actors.length).toBeGreaterThan(0)
     expect(unauthed.actors).toEqual(authed.actors.map(stripViewer))
@@ -241,7 +241,7 @@ describe.skip('pds actor search views', () => {
       did: sc.dids['cara-wiegand69.test'],
     })
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
-      { term: 'car' },
+      { q: 'car' },
       { headers },
     )
     const handles = result.data.actors.map((u) => u.handle)

@@ -8,10 +8,6 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "term": {
-            "type": "string",
-            "description": "DEPRECATED: use 'q' instead"
-          },
           "q": { "type": "string" },
           "limit": {
             "type": "integer",
