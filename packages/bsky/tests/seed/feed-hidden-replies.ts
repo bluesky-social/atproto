@@ -38,23 +38,25 @@ export type Users = typeof users
 export async function feedHiddenRepliesSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  await sc.createAccount('poster', users.poster)
-  await sc.createAccount('replier', users.replier)
-  await sc.createAccount('viewer', users.viewer)
-  await sc.createAccount('reposter', users.reposter)
+  const u = Object.assign({}, users)
 
-  Object.values(users).forEach((user) => {
-    users[user.id].did = sc.dids[user.id]
+  await sc.createAccount('poster', u.poster)
+  await sc.createAccount('replier', u.replier)
+  await sc.createAccount('viewer', u.viewer)
+  await sc.createAccount('reposter', u.reposter)
+
+  Object.values(u).forEach((user) => {
+    u[user.id].did = sc.dids[user.id]
   })
 
-  sc.follow(users.viewer.did, users.poster.did)
-  sc.follow(users.viewer.did, users.replier.did)
-  sc.follow(users.viewer.did, users.reposter.did)
+  sc.follow(u.viewer.did, u.poster.did)
+  sc.follow(u.viewer.did, u.replier.did)
+  sc.follow(u.viewer.did, u.reposter.did)
 
   await sc.network.processAll()
 
   return {
-    users,
+    users: u,
     seedClient: sc,
   }
 }

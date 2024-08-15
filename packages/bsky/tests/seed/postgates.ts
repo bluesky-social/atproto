@@ -37,18 +37,20 @@ export type Users = typeof users
 export async function postgatesSeed(
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
 ) {
-  await sc.createAccount('quotee', users.quotee)
-  await sc.createAccount('quoter', users.quoter)
-  await sc.createAccount('viewer', users.viewer)
+  const u = Object.assign({}, users)
 
-  Object.values(users).forEach((user) => {
-    users[user.id].did = sc.dids[user.id]
+  await sc.createAccount('quotee', u.quotee)
+  await sc.createAccount('quoter', u.quoter)
+  await sc.createAccount('viewer', u.viewer)
+
+  Object.values(u).forEach((user) => {
+    u[user.id].did = sc.dids[user.id]
   })
 
   await sc.network.processAll()
 
   return {
-    users,
+    users: u,
     seedClient: sc,
   }
 }
