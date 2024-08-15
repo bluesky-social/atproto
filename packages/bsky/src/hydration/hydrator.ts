@@ -38,12 +38,12 @@ import {
   HydrationMap,
   RecordInfo,
   ItemRef,
-  didFromUri,
   urisByCollection,
   mergeMaps,
   mergeNestedMaps,
   mergeManyMaps,
 } from './util'
+import {uriToDid as didFromUri} from '../util/uris'
 import {
   FeedGenAggs,
   FeedGens,
@@ -379,7 +379,7 @@ export class Hydrator {
     const nestedLabelerDids = [
       ...(urisLayer1ByCollection.get(ids.AppBskyLabelerService) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyLabelerService) ?? []),
-    ].map((uri) => new AtUri(uri).hostname)
+    ].map(didFromUri)
     const nestedStarterPackUris = [
       ...(urisLayer1ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),

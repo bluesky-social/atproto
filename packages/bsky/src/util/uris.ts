@@ -15,3 +15,7 @@ export function postUriToPostgateUri(postUri: string) {
   urip.collection = ids.AppBskyFeedPostgate
   return urip.toString()
 }
+
+export function uriToDid(uri: string) {
+  return new AtUri(uri).hostname
+}

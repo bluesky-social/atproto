@@ -33,6 +33,7 @@ import { parsePostgate } from '../../../../views/util'
 import {
   postUriToThreadgateUri,
   postUriToPostgateUri,
+  uriToDid,
 } from '../../../../util/uris'
 
 type Notif = Insertable<Notification>
@@ -455,7 +456,7 @@ async function validateReply(
   const violatesThreadGate = await checkViolatesThreadGate(
     db,
     creator,
-    new AtUri(reply.root.uri).hostname,
+    uriToDid(reply.root.uri),
     replyRefs.root?.record ?? null,
     replyRefs.gate?.record ?? null,
   )

@@ -30,11 +30,11 @@ import {
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
 import {
-  creatorFromUri,
   parseThreadGate,
   parsePostgate,
   cidFromBlobJson,
 } from './util'
+import {uriToDid as creatorFromUri} from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -308,7 +308,7 @@ export class Views {
   // ------------
 
   list(uri: string, state: HydrationState): ListView | undefined {
-    const creatorDid = new AtUri(uri).hostname
+    const creatorDid = creatorFromUri(uri)
     const list = state.lists?.get(uri)
     if (!list) return
     const creator = this.profile(creatorDid, state)
@@ -333,7 +333,7 @@ export class Views {
     const listAgg = state.listAggs?.get(uri)
     const listViewer = state.listViewers?.get(uri)
     const labels = state.labels?.getBySubject(uri) ?? []
-    const creator = new AtUri(uri).hostname
+    const creator = creatorFromUri(uri)
     return {
       uri,
       cid: list.cid,
@@ -1080,7 +1080,7 @@ export class Views {
       return undefined
     }
     const rootPost = state.posts?.get(rootUriStr)?.record
-    const ownerDid = new AtUri(rootUriStr).hostname
+    const ownerDid = creatorFromUri(rootUriStr)
     const {
       canReply,
       allowFollowing,
@@ -1120,7 +1120,7 @@ export class Views {
     } = parsePostgate({
       gate,
       viewerDid,
-      authorDid: new AtUri(uri).hostname,
+      authorDid: creatorFromUri(uri),
     })
     if (canEmbed) {
       return false

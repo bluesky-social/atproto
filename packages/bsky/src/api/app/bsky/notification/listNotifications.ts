@@ -13,7 +13,7 @@ import {
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { Notification } from '../../../../proto/bsky_pb'
-import { didFromUri } from '../../../../hydration/util'
+import {uriToDid as didFromUri} from '../../../../util/uris'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

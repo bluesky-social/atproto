@@ -1,4 +1,3 @@
-import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
@@ -12,10 +11,6 @@ import {
   isDisableRule as isPostgateDisableRule,
 } from '../lexicon/types/app/bsky/feed/postgate'
 import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
-
-export const creatorFromUri = (uri: string): string => {
-  return new AtUri(uri).hostname
-}
 
 export const parseThreadGate = (
   replierDid: string,
