@@ -72,6 +72,14 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
           adminPassword: env.blobDivertAdminPassword,
         }
       : null
+
+  const snapshotCfg =
+    env.snapshotEnabled && env.snapshotExpiration
+      ? {
+          isEnabled: env.snapshotEnabled,
+          expiration: env.snapshotExpiration,
+        }
+      : null
   const accessCfg: OzoneConfig['access'] = {
     admins: env.adminDids,
     moderators: env.moderatorDids,
@@ -88,6 +96,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     identity: identityCfg,
     blobDivert: blobDivertServiceCfg,
     access: accessCfg,
+    snapshot: snapshotCfg,
   }
 }
 
@@ -101,6 +110,7 @@ export type OzoneConfig = {
   identity: IdentityConfig
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
+  snapshot: SnapshotConfig | null
 }
 
 export type ServiceConfig = {
@@ -154,4 +164,9 @@ export type AccessConfig = {
   admins: string[]
   moderators: string[]
   triage: string[]
+}
+
+export type SnapshotConfig = {
+  isEnabled: boolean
+  expiration: number
 }

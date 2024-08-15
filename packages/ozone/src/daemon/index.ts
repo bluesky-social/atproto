@@ -20,6 +20,7 @@ export class OzoneDaemon {
   async start() {
     this.ctx.eventPusher.start()
     this.ctx.eventReverser.start()
+    this.ctx.snapshotCleaner?.start()
   }
 
   async processAll() {
@@ -29,6 +30,7 @@ export class OzoneDaemon {
   async destroy() {
     await this.ctx.eventReverser.destroy()
     await this.ctx.eventPusher.destroy()
+    await this.ctx.snapshotCleaner?.destroy()
     await this.ctx.db.close()
   }
 }

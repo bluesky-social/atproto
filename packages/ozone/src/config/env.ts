@@ -31,6 +31,8 @@ export const readEnv = (): OzoneEnvironment => {
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
     blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
+    snapshotEnabled: envBool('OZONE_SNAPSHOT_ENABLED'),
+    snapshotExpiration: envInt('OZONE_SNAPSHOT_EXPIRATION'),
   }
 }
 
@@ -64,4 +66,6 @@ export type OzoneEnvironment = {
   signingKeyHex?: string
   blobDivertUrl?: string
   blobDivertAdminPassword?: string
+  snapshotEnabled?: boolean
+  snapshotExpiration?: number
 }
