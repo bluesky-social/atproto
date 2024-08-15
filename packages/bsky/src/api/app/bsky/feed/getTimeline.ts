@@ -102,10 +102,9 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.items, (item) => {
-    const post = ctx.views.feedViewPost(item, hydration)
-    return post
-  })
+  const feed = mapDefined(skeleton.items, (item) =>
+    ctx.views.feedViewPost(item, hydration),
+  )
   return { feed, cursor: skeleton.cursor }
 }
 
