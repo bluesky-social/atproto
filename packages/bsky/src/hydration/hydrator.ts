@@ -674,7 +674,7 @@ export class Hydrator {
       // update aggregation with list items for top 12 most followed members
       agg.listItemSampleUris = [
         ...members.listitems.filter(
-          (li) => !blocks?.isBlocked(creator, li.did),
+          (li) => ctx.viewer === creator || !blocks?.isBlocked(creator, li.did),
         ),
       ]
         .sort((li1, li2) => {
