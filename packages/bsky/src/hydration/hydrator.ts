@@ -6,7 +6,7 @@ import { Notification } from '../proto/bsky_pb'
 import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { isListRule as isThreadgateRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
 import {
   ActorHydrator,
@@ -1061,7 +1061,7 @@ const nestedRecordUris = (post: Post['record']): string[] => {
 const getListUrisFromThreadgates = (gates: Threadgates) => {
   const uris: string[] = []
   for (const gate of gates.values()) {
-    const listRules = gate?.record.allow?.filter(isThreadgateRule) ?? []
+    const listRules = gate?.record.allow?.filter(isThreadgateListRule) ?? []
     for (const rule of listRules) {
       uris.push(rule.list)
     }
