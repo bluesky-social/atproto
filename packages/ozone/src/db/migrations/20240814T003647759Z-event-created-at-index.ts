@@ -9,5 +9,5 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('moderation_event_created_at_index')
+  await db.schema.dropIndex('moderation_event_created_at_index').execute()
 }
