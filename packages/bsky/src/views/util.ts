@@ -31,8 +31,8 @@ export const parseThreadGate = (
     return { canReply: true }
   }
 
-  const allowMentions = !!gate.allow.find(isMentionRule)
-  const allowFollowing = !!gate.allow.find(isFollowingRule)
+  const allowMentions = gate.allow.some(isMentionRule)
+  const allowFollowing = gate.allow.some(isFollowingRule)
   const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
 
   // check mentions first since it's quick and synchronous
@@ -84,7 +84,7 @@ export const parsePostgate = ({
     return { embeddingRules: { canQuotepost: true } }
   }
 
-  const disabled = !!gate.embeddingRules.find(isPostgateDisableRule)
+  const disabled = gate.embeddingRules.some(isPostgateDisableRule)
   if (disabled) {
     return { embeddingRules: { canQuotepost: false } }
   }
