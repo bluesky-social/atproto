@@ -130,7 +130,7 @@ export class AuthVerifier {
     this.standardOptionalParameterized({})
 
   standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
-    const output = await this.standardOptionalParameterized({})(ctx)
+    const output = await this.standardOptional(ctx)
     if (output.credentials.type === 'none') {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
