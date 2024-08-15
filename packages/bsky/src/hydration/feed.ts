@@ -13,8 +13,6 @@ import {
   parseString,
   split,
 } from './util'
-import { AtUri } from '@atproto/syntax'
-import { ids } from '../lexicon/lexicons'
 import { dedupeStrs } from '@atproto/common'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 

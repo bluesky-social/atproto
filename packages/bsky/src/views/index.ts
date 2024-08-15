@@ -1143,11 +1143,12 @@ export class Views {
       recordInfo = state.posts?.get(notif.uri)
       // filter hidden replies
       if (recordInfo && notif.reason === 'reply') {
-        const isHiddenReply = this.replyIsHidden(
-          notif.uri,
-          notif.reasonSubject,
-          state,
-        )
+        const rootPostUri = isPostRecord(recordInfo.record)
+          ? recordInfo.record.reply?.root.uri
+          : undefined
+        const isHiddenReply = rootPostUri
+          ? this.replyIsHidden(notif.uri, rootPostUri, state)
+          : false
         if (isHiddenReply) return
       }
     } else if (uri.collection === ids.AppBskyFeedLike) {

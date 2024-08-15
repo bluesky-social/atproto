@@ -727,19 +727,12 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const uris = notifs.map((notif) => notif.uri)
-    const replyRootPostUris = notifs
-      .filter((notif) => {
-        return notif.reason === 'reply'
-      })
-      .map((notif) => {
-        return notif.reasonSubject
-      })
     const collections = urisByCollection(uris)
     const postUris = collections.get(ids.AppBskyFeedPost) ?? []
     const likeUris = collections.get(ids.AppBskyFeedLike) ?? []
     const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
     const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
-    const [posts, likes, reposts, follows, labels, profileState, threadgates] =
+    const [posts, likes, reposts, follows, labels, profileState] =
       await Promise.all([
         this.feed.getPosts(postUris), // reason: mention, reply, quote
         this.feed.getLikes(likeUris), // reason: like
@@ -747,8 +740,16 @@ export class Hydrator {
         this.graph.getFollows(followUris), // reason: follow
         this.label.getLabelsForSubjects(uris, ctx.labelers),
         this.hydrateProfiles(uris.map(didFromUri), ctx),
-        this.feed.getThreadgatesForPosts(replyRootPostUris),
       ])
+    const replyRootPostUris = notifs
+      .filter((notif) => notif.reason === 'reply')
+      .map((notif) => {
+        const post = posts.get(notif.uri)
+        return post ? post.record.reply?.root.uri : undefined
+      })
+      .filter(<T>(n?: T): n is T => Boolean(n))
+    const threadgates =
+      await this.feed.getThreadgatesForPosts(replyRootPostUris)
     actionTakedownLabels(postUris, posts, labels)
     return mergeStates(profileState, {
       posts,
