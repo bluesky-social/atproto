@@ -187,11 +187,13 @@ const insertFn = async (
       Object.assign(insertedPost, {
         violatesEmbeddingRules: violatesEmbeddingRules,
       })
-      await db
-        .updateTable('post')
-        .where('uri', '=', insertedPost.uri)
-        .set({ violatesEmbeddingRules: violatesEmbeddingRules })
-        .executeTakeFirst()
+      if (violatesEmbeddingRules) {
+        await db
+          .updateTable('post')
+          .where('uri', '=', insertedPost.uri)
+          .set({ violatesEmbeddingRules: violatesEmbeddingRules })
+          .executeTakeFirst()
+      }
     }
   }
 
