@@ -90,14 +90,22 @@ export type XRPCStreamHandler = (ctx: {
 
 export type AuthOutput = HandlerAuth | HandlerError
 
-export type AuthVerifier = (ctx: {
+export interface AuthVerifierContext {
   req: express.Request
   res: express.Response
-}) => Promise<AuthOutput> | AuthOutput
+}
 
-export type StreamAuthVerifier = (ctx: {
+export type AuthVerifier = (
+  ctx: AuthVerifierContext,
+) => Promise<AuthOutput> | AuthOutput
+
+export interface StreamAuthVerifierContext {
   req: IncomingMessage
-}) => Promise<AuthOutput> | AuthOutput
+}
+
+export type StreamAuthVerifier = (
+  ctx: StreamAuthVerifierContext,
+) => Promise<AuthOutput> | AuthOutput
 
 export type CalcKeyFn = (ctx: XRPCReqContext) => string | null
 export type CalcPointsFn = (ctx: XRPCReqContext) => number

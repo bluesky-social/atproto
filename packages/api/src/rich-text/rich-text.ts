@@ -91,8 +91,7 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
    ^-------^               // target slice {start: 0, end: 5}
  */
 
-import { AtpAgent } from '../agent'
-import { AppBskyFeedPost, AppBskyRichtextFacet } from '../client'
+import { AppBskyFeedPost, AppBskyRichtextFacet, AtpBaseClient } from '../client'
 import { UnicodeString } from './unicode'
 import { sanitizeRichText } from './sanitization'
 import { detectFacets } from './detection'
@@ -348,13 +347,13 @@ export class RichText {
    * Detects facets such as links and mentions
    * Note: Overwrites the existing facets with auto-detected facets
    */
-  async detectFacets(agent: AtpAgent) {
+  async detectFacets(agent: AtpBaseClient) {
     this.facets = detectFacets(this.unicodeText)
     if (this.facets) {
       for (const facet of this.facets) {
         for (const feature of facet.features) {
           if (AppBskyRichtextFacet.isMention(feature)) {
-            const did = await agent
+            const did = await agent.com.atproto.identity
               .resolveHandle({ handle: feature.did })
               .catch((_) => undefined)
               .then((res) => res?.data.did)

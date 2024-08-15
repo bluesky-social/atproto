@@ -271,7 +271,7 @@ export class ModerationDecision {
       return // skip labelers not configured by the user
     }
     if (isSelf && labelDef.flags.includes('no-self')) {
-      return // skip self-labels that arent supported
+      return // skip self-labels that aren't supported
     }
 
     // establish the label preference for interpretation

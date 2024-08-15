@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -29,6 +29,7 @@ describe('auth', () => {
       const jwt = await createServiceJwt({
         iss: issuer,
         aud: network.bsky.ctx.cfg.serverDid,
+        lxm: null,
         keypair,
       })
       return agent.api.app.bsky.actor.getProfile(

@@ -1,17 +1,17 @@
-# ATPROTO OAuth Client for the Browser
+# atproto OAuth Client for the Browser
 
 This package provides an OAuth bases `@atproto/api` agent interface for the
 browser. It implements all the OAuth features required by [ATPROTO] (PKCE, DPoP,
 etc.).
 
-`@atproto/oauth-client-browser` is destined to front-end applications that do
-not have a back-end server to manage OAuth sessions.
+`@atproto/oauth-client-browser` is designed for front-end applications that do
+not have a backend server to manage OAuth sessions.
 
 > [!IMPORTANT]
 >
 > When a backend server is available, it is recommended to use
 > [`@atproto/oauth-client-node`](https://www.npmjs.com/package/@atproto/oauth-client-node)
-> to manage OAuth sessions from the server side, and use a session cookie to map
+> to manage OAuth sessions from the server side and use a session cookie to map
 > the OAuth session to the front-end. Because this mechanism allows the backend
 > to invalidate OAuth credentials at scale, this method is more secure than
 > managing OAuth sessions from the front-end directly. Thanks to the added
@@ -23,7 +23,7 @@ not have a back-end server to manage OAuth sessions.
 ### Client ID
 
 The `client_id` is what identifies your application to the OAuth server. It is
-used to fetch the client metadata, and to initiate the OAuth flow. The
+used to fetch the client metadata and to initiate the OAuth flow. The
 `client_id` must be a URL that points to the [client
 metadata](#client-metadata).
 
@@ -32,7 +32,7 @@ metadata](#client-metadata).
 Your OAuth client metadata should be hosted at a URL that corresponds to the
 `client_id` of your application. This URL should return a JSON object with the
 client metadata. The client metadata should be configured according to the
-needs of your application, and must respect the [ATPROTO] spec.
+needs of your application and must respect the [ATPROTO] spec.
 
 ```json
 {
@@ -86,18 +86,21 @@ metadata into the script at runtime.
 
 ### Handle Resolver
 
-Whenever you application will initiate an OAuth flow, it will start to resolve
+Whenever your application initiates an OAuth flow, it will start to resolve
 the (user provider) APTROTO handle of the user. This is typically done though a
-DNS request. However, since DNS resolution is not available in the browser, a
+DNS request. However, because DNS resolution is not available in the browser, a
 backend service must be provided.
 
 > [!CAUTION]
 >
-> Not using a handle resolver service hosted by you will leak the user's IP
-> address (and associated ATPROTO handle) to any service you rely on to perform
-> the resolution. This is a privacy concern, that you should be aware of, and
-> that you **must** warn your users about. Bluesky declines any responsibility
-> in case of misusage of the handle resolver service.
+> Using Bluesky-hosted services for handle resolution (eg, the `bsky.social`
+> endpoint) will leak both user IP addresses and handle identifiers to Bluesky,
+> a third party. While Bluesky has a declared privacy policy, both developers
+> and users of applications need to be informed and aware of the privacy
+> implications of this arrangement. Application developers are encouraged to
+> improve user privacy by operating their own handle resolution service when
+> possible. If you are a PDS self-hoster, you can use your PDS's URL for
+> `handleResolver`.
 
 If a `string` or `URL` object is used as `handleResolver`, the library will
 expect this value to be the URL of a service running the
@@ -105,7 +108,7 @@ expect this value to be the URL of a service running the
 
 > [!TIP]
 >
-> If you host your own PDS, you can use it's URL as a handle resolver.
+> If you host your own PDS, you can use its URL as a handle resolver.
 
 ```typescript
 import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
@@ -146,12 +149,12 @@ following optional configuration options:
   response is returned to the client. Defaults to `fragment`.
 
 - `plcDirectoryUrl`: The URL of the PLC directory. This will typically not be
-  needed unless you run an entire ATPROTO stack locally. Defaults to
+  needed unless you run an entire atproto stack locally. Defaults to
   `https://plc.directory`.
 
 ## Usage
 
-Once the `client` is setup, it can be used to initiate & manage OAuth sessions.
+Once the `client` is set up, it can be used to initiate & manage OAuth sessions.
 
 ### Initializing the client
 
@@ -183,8 +186,8 @@ In order to initiate an OAuth flow, we must fist determine which PDS the
 authentication flow will be initiated from. This means that the user must
 provide one of the following information:
 
-- The user's ATPROTO handle
-- The user's ATPROTO DID
+- The user's handle
+- The user's DID
 - A PDS/Entryway URL
 
 Using that information, the OAuthClient will resolve all the needed information
@@ -254,13 +257,15 @@ client.addEventListener(
 ## Usage with `@atproto/api`
 
 The `@atproto/api` package provides a way to interact with the `com.atproto` and
-`app.bsky` XRPC lexicons through the `ApiAgent` interface. The `agent` returned
-by the `BrowserOAuthClient` extend the `ApiAgent` class, allowing to use the
-`BrowserOAuthClient` as a regular `ApiAgent` (akin to `AtpAgent` class
+`app.bsky` XRPC lexicons through the `Agent` interface. The `agent` returned
+by the `BrowserOAuthClient` extend the `Agent` class, allowing to use the
+`BrowserOAuthClient` as a regular `Agent` (akin to `AtpAgent` class
 instances).
 
 ```typescript
 const aliceAgent = await client.restore('did:plc:alice')
+
+await aliceAgent.getProfile({ actor: aliceAgent.did })
 ```
 
 Any refresh of the credentials will happen under the hood, and the new tokens
@@ -280,7 +285,7 @@ The `client_id` will then be something like
 There is however a special case for loopback clients. A loopback client is a
 client that runs on `localhost`. In this case, the OAuth server will not be able
 to fetch the `client_metadata` object because `localhost` is not accessible from
-the outside. To work around this, ATPROTO OAuth server are required to support
+the outside. To work around this, atproto OAuth servers are required to support
 this case by providing an hard coded `client_metadata` object for the client.
 
 This has several restrictions:

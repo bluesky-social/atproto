@@ -1,5 +1,50 @@
 # @atproto/pds
 
+## 0.4.49
+
+### Patch Changes
+
+- Updated dependencies [[`22af354a5`](https://github.com/bluesky-social/atproto/commit/22af354a5db595d7cbc0e65f02601de3565337e1)]:
+  - @atproto/api@0.13.1
+
+## 0.4.48
+
+### Patch Changes
+
+- Updated dependencies [[`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`2bdf75d7a`](https://github.com/bluesky-social/atproto/commit/2bdf75d7a63924c10e7a311f16cb447d595b933e), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd), [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd)]:
+  - @atproto/lexicon@0.4.1
+  - @atproto/xrpc@0.6.0
+  - @atproto/api@0.13.0
+  - @atproto/oauth-provider@0.1.2
+  - @atproto/repo@0.4.2
+  - @atproto/xrpc-server@0.6.1
+  - @atproto/aws@0.2.2
+
+## 0.4.47
+
+### Patch Changes
+
+- [#2688](https://github.com/bluesky-social/atproto/pull/2688) [`269cbc87c`](https://github.com/bluesky-social/atproto/commit/269cbc87c5ec9d65d1d479269ac5e91dffbb186c) Thanks [@dholms](https://github.com/dholms)! - Inspect bearer auth token on uploadBlob
+
+## 0.4.46
+
+### Patch Changes
+
+- [#2668](https://github.com/bluesky-social/atproto/pull/2668) [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c) Thanks [@dholms](https://github.com/dholms)! - Add lxm and nonce to signed service auth tokens.
+
+- Updated dependencies [[`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c), [`dc471da26`](https://github.com/bluesky-social/atproto/commit/dc471da267955d0962a8affaf983df60d962d97c)]:
+  - @atproto/api@0.12.29
+  - @atproto/xrpc-server@0.6.0
+
+## 0.4.45
+
+### Patch Changes
+
+- [#2676](https://github.com/bluesky-social/atproto/pull/2676) [`951a3df15`](https://github.com/bluesky-social/atproto/commit/951a3df15aa9c1f5b0a2b66cfb0e2eaf6198fe41) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove `app.bsky.feed.detach` record, to be replaced by `app.bsky.feed.postgate` record in a future release.
+
+- Updated dependencies [[`951a3df15`](https://github.com/bluesky-social/atproto/commit/951a3df15aa9c1f5b0a2b66cfb0e2eaf6198fe41)]:
+  - @atproto/api@0.12.28
+
 ## 0.4.44
 
 ### Patch Changes

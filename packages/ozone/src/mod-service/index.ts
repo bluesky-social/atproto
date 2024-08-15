@@ -6,7 +6,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Database } from '../db'
 import { AuthHeaders, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
@@ -921,14 +921,13 @@ export class ModerationService {
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
     const agent = new AtpAgent({ service: url })
-    const { data: serverInfo } =
-      await agent.api.com.atproto.server.describeServer()
+    const { data: serverInfo } = await agent.com.atproto.server.describeServer()
     if (serverInfo.did !== `did:web:${url.hostname}`) {
       // @TODO do bidirectional check once implemented. in the meantime,
       // matching did to hostname we're talking to is pretty good.
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: delivery } = await agent.api.com.atproto.admin.sendEmail(
+    const { data: delivery } = await agent.com.atproto.admin.sendEmail(
       {
         subject,
         content,

@@ -3,13 +3,13 @@ import { isTag } from '../src/client/types/app/bsky/richtext/facet'
 
 describe('detectFacets', () => {
   const agent = new AtpAgent({ service: 'http://localhost' })
-  agent.resolveHandle = ({ handle }: { handle: string }) => {
-    return Promise.resolve({
-      success: true,
-      headers: {},
-      data: { did: 'did:fake:' + handle },
-    })
-  }
+
+  // Mock handle resolution
+  agent.com.atproto.identity.resolveHandle = async (params) => ({
+    success: true,
+    headers: {},
+    data: { did: `did:fake:${params?.handle}` },
+  })
 
   const inputs = [
     'no mention',

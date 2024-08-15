@@ -1,4 +1,4 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import { AtpAgent, AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
 
 describe('suggested follows', () => {

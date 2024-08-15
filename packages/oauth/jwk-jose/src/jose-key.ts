@@ -146,7 +146,6 @@ export class JoseKey extends Key {
       }
 
       // KeyLike
-      if (!kid) throw new JwkError('Missing "kid" for KeyLike key')
       return this.fromKeyLike(input, kid)
     }
 
