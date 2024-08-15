@@ -412,7 +412,7 @@ export class Views {
     const { uri, cid, record } = details
     if (!uri || !cid || !record) return []
     if (!isSelfLabels(record.labels)) return []
-    const src = new AtUri(uri).host // record creator
+    const src = creatorFromUri(uri) // record creator
     const cts =
       typeof record.createdAt === 'string'
         ? normalizeDatetimeAlways(record.createdAt)
