@@ -38,7 +38,9 @@ export const parsers = [
   {
     name: 'urlencoded',
     test: (type: string): type is 'application/x-www-form-urlencoded' => {
-      return type === 'application/x-www-form-urlencoded'
+      return /^application\/x-www-form-urlencoded(?:;\s*charset=utf-8)?$/i.test(
+        type,
+      )
     },
     parse: (buffer: Buffer): Partial<Record<string, string>> => {
       try {
