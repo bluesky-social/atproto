@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneSetsDefs from './defs'
+import * as ToolsOzoneSetDefs from './defs'
 
 export interface QueryParams {
   limit?: number
@@ -20,7 +20,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  sets: ToolsOzoneSetsDefs.SetView[]
+  sets: ToolsOzoneSetDefs.SetView[]
   cursor?: string
   [k: string]: unknown
 }

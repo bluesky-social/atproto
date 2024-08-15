@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.sets.get",
+  "id": "tools.ozone.set.get",
   "defs": {
     "main": {
       "type": "query",
@@ -31,7 +31,7 @@
           "properties": {
             "set": {
               "type": "ref",
-              "ref": "tools.ozone.sets.defs#setView"
+              "ref": "tools.ozone.set.defs#setView"
             },
             "values": {
               "type": "array",
@@ -44,7 +44,13 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "SetNotFound",
+          "description": "set with the given name does not exist"
+        }
+      ]
     }
   }
 }

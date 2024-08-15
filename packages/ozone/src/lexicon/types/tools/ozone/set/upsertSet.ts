@@ -7,26 +7,17 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneSetsDefs from './defs'
+import * as ToolsOzoneSetDefs from './defs'
 
-export interface QueryParams {
-  limit: number
-  cursor?: string
-  namePrefix?: string
-  sortBy: 'name' | 'createdAt' | 'updatedAt'
-  /** Defaults to ascending order of name field. */
-  sortDirection: 'asc' | 'desc'
+export interface QueryParams {}
+
+export type InputSchema = ToolsOzoneSetDefs.Set
+export type OutputSchema = ToolsOzoneSetDefs.SetView
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
 }
-
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  sets: ToolsOzoneSetsDefs.SetView[]
-  cursor?: string
-  [k: string]: unknown
-}
-
-export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'

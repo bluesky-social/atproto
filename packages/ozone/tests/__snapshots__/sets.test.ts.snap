@@ -25,6 +25,22 @@ Array [
 ]
 `;
 
-exports[`ozone-sets upsertSet creates a new set 1`] = `undefined`;
+exports[`ozone-sets upsertSet creates a new set 1`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "description": "A new test set",
+  "name": "new-test-set",
+  "setSize": 0,
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+}
+`;
 
-exports[`ozone-sets upsertSet updates an existing set 1`] = `undefined`;
+exports[`ozone-sets upsertSet updates an existing set 1`] = `
+Object {
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "description": "Updated description",
+  "name": "new-test-set",
+  "setSize": 0,
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+}
+`;

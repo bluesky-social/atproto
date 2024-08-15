@@ -11448,9 +11448,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetsAdd: {
+  ToolsOzoneSetAdd: {
     lexicon: 1,
-    id: 'tools.ozone.sets.add',
+    id: 'tools.ozone.set.add',
     defs: {
       main: {
         type: 'procedure',
@@ -11481,9 +11481,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetsDefs: {
+  ToolsOzoneSetDefs: {
     lexicon: 1,
-    id: 'tools.ozone.sets.defs',
+    id: 'tools.ozone.set.defs',
     defs: {
       set: {
         type: 'object',
@@ -11496,7 +11496,6 @@ export const schemaDict = {
           },
           description: {
             type: 'string',
-            minLength: 1,
             maxGraphemes: 1024,
             maxLength: 10240,
           },
@@ -11513,7 +11512,6 @@ export const schemaDict = {
           },
           description: {
             type: 'string',
-            minLength: 1,
             maxGraphemes: 1024,
             maxLength: 10240,
           },
@@ -11532,9 +11530,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetsGet: {
+  ToolsOzoneSetGet: {
     lexicon: 1,
-    id: 'tools.ozone.sets.get',
+    id: 'tools.ozone.set.get',
     defs: {
       main: {
         type: 'query',
@@ -11565,7 +11563,7 @@ export const schemaDict = {
             properties: {
               set: {
                 type: 'ref',
-                ref: 'lex:tools.ozone.sets.defs#setView',
+                ref: 'lex:tools.ozone.set.defs#setView',
               },
               values: {
                 type: 'array',
@@ -11582,9 +11580,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetsQuerySets: {
+  ToolsOzoneSetQuerySets: {
     lexicon: 1,
-    id: 'tools.ozone.sets.querySets',
+    id: 'tools.ozone.set.querySets',
     defs: {
       main: {
         type: 'query',
@@ -11627,7 +11625,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:tools.ozone.sets.defs#setView',
+                  ref: 'lex:tools.ozone.set.defs#setView',
                 },
               },
               cursor: {
@@ -11639,9 +11637,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetsRemove: {
+  ToolsOzoneSetRemove: {
     lexicon: 1,
-    id: 'tools.ozone.sets.remove',
+    id: 'tools.ozone.set.remove',
     defs: {
       main: {
         type: 'procedure',
@@ -11667,16 +11665,23 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'SetNotFound',
+            description: 'set with the given name does not exist',
+          },
+        ],
       },
     },
   },
-  ToolsOzoneSetsRemoveSet: {
+  ToolsOzoneSetRemoveSet: {
     lexicon: 1,
-    id: 'tools.ozone.sets.removeSet',
+    id: 'tools.ozone.set.removeSet',
     defs: {
       main: {
         type: 'procedure',
-        description: 'Remove an entire set',
+        description:
+          'Remove an entire set. Attempting to remove a set that does not exist will result in an error.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -11690,12 +11695,25 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'SetNotFound',
+            description: 'set with the given name does not exist',
+          },
+        ],
       },
     },
   },
-  ToolsOzoneSetsUpsertSet: {
+  ToolsOzoneSetUpsertSet: {
     lexicon: 1,
-    id: 'tools.ozone.sets.upsertSet',
+    id: 'tools.ozone.set.upsertSet',
     defs: {
       main: {
         type: 'procedure',
@@ -11704,14 +11722,14 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:tools.ozone.sets.defs#set',
+            ref: 'lex:tools.ozone.set.defs#set',
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:tools.ozone.sets.defs#setView',
+            ref: 'lex:tools.ozone.set.defs#setView',
           },
         },
       },
@@ -12156,13 +12174,13 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
-  ToolsOzoneSetsAdd: 'tools.ozone.sets.add',
-  ToolsOzoneSetsDefs: 'tools.ozone.sets.defs',
-  ToolsOzoneSetsGet: 'tools.ozone.sets.get',
-  ToolsOzoneSetsQuerySets: 'tools.ozone.sets.querySets',
-  ToolsOzoneSetsRemove: 'tools.ozone.sets.remove',
-  ToolsOzoneSetsRemoveSet: 'tools.ozone.sets.removeSet',
-  ToolsOzoneSetsUpsertSet: 'tools.ozone.sets.upsertSet',
+  ToolsOzoneSetAdd: 'tools.ozone.set.add',
+  ToolsOzoneSetDefs: 'tools.ozone.set.defs',
+  ToolsOzoneSetGet: 'tools.ozone.set.get',
+  ToolsOzoneSetQuerySets: 'tools.ozone.set.querySets',
+  ToolsOzoneSetRemove: 'tools.ozone.set.remove',
+  ToolsOzoneSetRemoveSet: 'tools.ozone.set.removeSet',
+  ToolsOzoneSetUpsertSet: 'tools.ozone.set.upsertSet',
   ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
   ToolsOzoneTeamDefs: 'tools.ozone.team.defs',
   ToolsOzoneTeamDeleteMember: 'tools.ozone.team.deleteMember',

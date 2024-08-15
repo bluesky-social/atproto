@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.sets.querySets",
+  "id": "tools.ozone.set.querySets",
   "defs": {
     "main": {
       "type": "query",
@@ -43,7 +43,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "tools.ozone.sets.defs#setView"
+                "ref": "tools.ozone.set.defs#setView"
               }
             },
             "cursor": {

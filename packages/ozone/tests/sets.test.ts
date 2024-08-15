@@ -1,5 +1,8 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, { ToolsOzoneSetsDefs } from '@atproto/api'
+import AtpAgent, {
+  ToolsOzoneSetsDefs,
+  ToolsOzoneSetsQuerySets,
+} from '@atproto/api'
 import { forSnapshot } from './_util'
 
 describe('ozone-sets', () => {
@@ -22,14 +25,16 @@ describe('ozone-sets', () => {
   }
 
   const upsertSet = async (set: ToolsOzoneSetsDefs.Set) => {
-    await agent.tools.ozone.sets.upsertSet(set, {
+    const { data } = await agent.tools.ozone.set.upsertSet(set, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders('admin'),
     })
+
+    return data
   }
 
   const removeSet = async (name: string) => {
-    await agent.tools.ozone.sets.removeSet(
+    await agent.tools.ozone.set.removeSet(
       { name },
       {
         encoding: 'application/json',
@@ -39,7 +44,7 @@ describe('ozone-sets', () => {
   }
 
   const addToSet = async (name: string, values: string[]) => {
-    await agent.tools.ozone.sets.add(
+    await agent.tools.ozone.set.add(
       { name, values },
       {
         encoding: 'application/json',
@@ -49,7 +54,7 @@ describe('ozone-sets', () => {
   }
 
   const getSet = async (name: string) => {
-    const { data } = await agent.tools.ozone.sets.get(
+    const { data } = await agent.tools.ozone.set.get(
       { name },
       {
         headers: await network.ozone.modHeaders('moderator'),
@@ -58,13 +63,8 @@ describe('ozone-sets', () => {
     return data
   }
 
-  const querySets = async (params: {
-    limit?: number
-    cursor?: string
-    namePrefix?: string
-    sortBy?: 'name' | 'createdAt' | 'updatedAt'
-  }) => {
-    const { data } = await agent.tools.ozone.sets.querySets(params, {
+  const querySets = async (params: ToolsOzoneSetsQuerySets.QueryParams) => {
+    const { data } = await agent.tools.ozone.set.querySets(params, {
       headers: await network.ozone.modHeaders('moderator'),
     })
     return data
@@ -127,12 +127,21 @@ describe('ozone-sets', () => {
       ])
     })
 
-    it('sorts sets by name in ascending order', async () => {
-      const result = await querySets({ sortBy: 'name' })
-      expect(result.sets.map((s) => s.name)).toEqual([
+    it('sorts sets by given column and direction', async () => {
+      const sortedByName = await querySets({ sortBy: 'name' })
+      expect(sortedByName.sets.map((s) => s.name)).toEqual([
         'another-set',
         'test-set-1',
         'test-set-2',
+      ])
+      const reverseSortedByName = await querySets({
+        sortBy: 'name',
+        sortDirection: 'desc',
+      })
+      expect(reverseSortedByName.sets.map((s) => s.name)).toEqual([
+        'test-set-2',
+        'test-set-1',
+        'another-set',
       ])
     })
   })
@@ -142,21 +151,27 @@ describe('ozone-sets', () => {
       await removeSet('new-test-set')
     })
     it('creates a new set', async () => {
-      const newSet = {
+      const result = await upsertSet({
         name: 'new-test-set',
         description: 'A new test set',
-      }
-      const result = await upsertSet(newSet)
+      })
       expect(forSnapshot(result)).toMatchSnapshot()
     })
 
     it('updates an existing set', async () => {
-      const updatedSet = {
+      const result = await upsertSet({
         name: 'new-test-set',
         description: 'Updated description',
-      }
-      const result = await upsertSet(updatedSet)
+      })
       expect(forSnapshot(result)).toMatchSnapshot()
+    })
+
+    it('allows setting empty description', async () => {
+      const result = await upsertSet({
+        name: 'new-test-set',
+        description: '',
+      })
+      expect(result.description).toBeUndefined()
     })
   })
 

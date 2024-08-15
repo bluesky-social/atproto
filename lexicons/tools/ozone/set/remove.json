@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.sets.remove",
+  "id": "tools.ozone.set.remove",
   "defs": {
     "main": {
       "type": "procedure",
@@ -17,6 +17,7 @@
             },
             "values": {
               "type": "array",
+              "minLength": 1,
               "items": {
                 "type": "string"
               },
@@ -24,7 +25,13 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "SetNotFound",
+          "description": "set with the given name does not exist"
+        }
+      ]
     }
   }
 }

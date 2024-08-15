@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.sets.removeSet({
+  server.tools.ozone.set.removeSet({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -14,17 +14,21 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Must be a moderator to delete a set')
       }
 
-      if (!name) {
-        throw new InvalidRequestError('Name is required')
-      }
-
       const setService = ctx.setService(db)
       const set = await setService.getByName(name)
       if (!set) {
-        throw new InvalidRequestError(`Set with name "${name}" does not exist`)
+        throw new InvalidRequestError(
+          `Set with name "${name}" does not exist`,
+          'SetNotFound',
+        )
       }
 
       await setService.removeSet(set.id)
+
+      return {
+        encoding: 'application/json',
+        body: {},
+      }
     },
   })
 }

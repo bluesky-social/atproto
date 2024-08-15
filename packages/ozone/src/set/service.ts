@@ -1,7 +1,7 @@
 import Database from '../db'
 import { Selectable } from 'kysely'
 import { SetDetail } from '../db/schema/ozone_set'
-import { SetView } from '../lexicon/types/tools/ozone/sets/defs'
+import { SetView } from '../lexicon/types/tools/ozone/set/defs'
 
 export type SetServiceCreator = (db: Database) => SetService
 

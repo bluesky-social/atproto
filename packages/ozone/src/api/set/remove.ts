@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.sets.remove({
+  server.tools.ozone.set.remove({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -16,16 +16,13 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (!name || !values || values.length === 0) {
-        throw new InvalidRequestError(
-          'Name and non-empty values array are required',
-        )
-      }
-
       const setService = ctx.setService(db)
       const set = await setService.getByName(name)
       if (!set) {
-        throw new InvalidRequestError(`Set with name "${name}" does not exist`)
+        throw new InvalidRequestError(
+          `Set with name "${name}" does not exist`,
+          'SetNotFound',
+        )
       }
 
       await setService.removeValues(set.id, values)

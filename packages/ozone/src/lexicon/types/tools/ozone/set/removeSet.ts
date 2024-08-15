@@ -11,10 +11,12 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** Name of the set to remove values from */
+  /** Name of the set to remove */
   name: string
-  /** Array of string values to remove from the set */
-  values: string[]
+  [k: string]: unknown
+}
+
+export interface OutputSchema {
   [k: string]: unknown
 }
 
@@ -23,12 +25,19 @@ export interface HandlerInput {
   body: InputSchema
 }
 
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
+
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'SetNotFound'
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

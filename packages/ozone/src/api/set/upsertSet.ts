@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.sets.upsertSet({
+  server.tools.ozone.set.upsertSet({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -14,10 +14,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError(
           'Must be a moderator to create or update a set',
         )
-      }
-
-      if (!name) {
-        throw new InvalidRequestError('Name is required')
       }
 
       const setService = ctx.setService(db)

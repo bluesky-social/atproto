@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.sets.get({
+  server.tools.ozone.set.get({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth }) => {
       const access = auth.credentials
@@ -23,7 +23,10 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (!result) {
-        throw new InvalidRequestError(`Set with name "${name}" not found`)
+        throw new InvalidRequestError(
+          `Set with name "${name}" not found`,
+          'SetNotFound',
+        )
       }
 
       return {

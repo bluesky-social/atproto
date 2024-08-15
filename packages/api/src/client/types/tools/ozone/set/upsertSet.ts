@@ -6,16 +6,12 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ToolsOzoneSetDefs from './defs'
 
 export interface QueryParams {}
 
-export interface InputSchema {
-  /** Name of the set to remove values from */
-  name: string
-  /** Array of string values to remove from the set */
-  values: string[]
-  [k: string]: unknown
-}
+export type InputSchema = ToolsOzoneSetDefs.Set
+export type OutputSchema = ToolsOzoneSetDefs.SetView
 
 export interface CallOptions {
   signal?: AbortSignal
@@ -27,6 +23,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

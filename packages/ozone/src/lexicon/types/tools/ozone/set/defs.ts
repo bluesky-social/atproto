@@ -2,8 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 
 export interface Set {
@@ -14,12 +14,12 @@ export interface Set {
 
 export function isSet(v: unknown): v is Set {
   return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'tools.ozone.sets.defs#set'
+    isObj(v) && hasProp(v, '$type') && v.$type === 'tools.ozone.set.defs#set'
   )
 }
 
 export function validateSet(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.sets.defs#set', v)
+  return lexicons.validate('tools.ozone.set.defs#set', v)
 }
 
 export interface SetView {
@@ -35,10 +35,10 @@ export function isSetView(v: unknown): v is SetView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'tools.ozone.sets.defs#setView'
+    v.$type === 'tools.ozone.set.defs#setView'
   )
 }
 
 export function validateSetView(v: unknown): ValidationResult {
-  return lexicons.validate('tools.ozone.sets.defs#setView', v)
+  return lexicons.validate('tools.ozone.set.defs#setView', v)
 }
