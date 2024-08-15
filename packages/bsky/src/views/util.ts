@@ -67,8 +67,8 @@ export const parsePostgate = ({
   viewerDid,
   authorDid,
 }: {
-  gate: PostgateRecord | null
-  viewerDid: string
+  gate: PostgateRecord | undefined
+  viewerDid: string | undefined
   authorDid: string
 }): ParsedPostgate => {
   if (viewerDid === authorDid) {

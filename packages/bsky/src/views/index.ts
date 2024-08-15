@@ -29,12 +29,8 @@ import {
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
-import {
-  parseThreadGate,
-  parsePostgate,
-  cidFromBlobJson,
-} from './util'
-import {uriToDid as creatorFromUri} from '../util/uris'
+import { parseThreadGate, parsePostgate, cidFromBlobJson } from './util'
+import { uriToDid as creatorFromUri } from '../util/uris'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -1111,10 +1107,7 @@ export class Views {
     }
     const postgateRecordUri = postUriToPostgateUri(uri)
     const gate = state.postgates?.get(postgateRecordUri)?.record
-    const viewerDid = state.ctx?.viewer
-    if (!gate || !viewerDid) {
-      return false
-    }
+    const viewerDid = state.ctx?.viewer ?? undefined
     const {
       embeddingRules: { canEmbed },
     } = parsePostgate({
