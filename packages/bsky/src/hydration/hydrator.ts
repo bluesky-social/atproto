@@ -654,7 +654,7 @@ export class Hydrator {
     const listBlocks: Map<string, Blocks> = new Map()
     await Promise.all(
       listUris.map(async (uri) => {
-        const creator = new AtUri(uri).hostname
+        const creator = didFromUri(uri)
         if (creator === ctx.viewer) return
         const blocks = await this.graph.getBidirectionalBlocks(
           listMembersByList
@@ -674,7 +674,7 @@ export class Hydrator {
       const members = listMembersByList.get(sp.record.list)
       if (!members) return
       const blocks = listBlocks.get(sp.record.list)
-      const creator = new AtUri(sp.record.list).hostname
+      const creator = didFromUri(sp.record.list)
       // update aggregation with list items for top 12 most followed members
       agg.listItemSampleUris = [
         ...members.listitems.filter(
@@ -1099,7 +1099,7 @@ export const mergeStates = (
   }
 }
 
-const mergeManyStates = (...states: HydrationState[]) => {
+export const mergeManyStates = (...states: HydrationState[]) => {
   return states.reduce(mergeStates, {} as HydrationState)
 }
 

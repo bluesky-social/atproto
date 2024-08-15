@@ -14,12 +14,12 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
-  mergeStates,
+  mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
-import { AtUri } from '@atproto/syntax'
+import { didFromUri } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -76,18 +76,12 @@ const hydration = async (
     skeleton,
     listState,
   })
-  return [listState, profileState, { bidirectionalBlocks }].reduce(
-    mergeStates,
-    {} as HydrationState,
-  )
+  return mergeManyStates(listState, profileState, { bidirectionalBlocks })
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, hydration } = input
-  if (!hydration.bidirectionalBlocks) {
-    return skeleton
-  }
-  const creator = new AtUri(skeleton.listUri).hostname
+  const creator = didFromUri(skeleton.listUri)
   const blocks = hydration.bidirectionalBlocks?.get(creator)
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
     return !blocks?.get(did)
@@ -122,7 +116,7 @@ const maybeGetBlocksForReferenceList = async (input: {
   const { listitems } = skeleton
   const { list } = params
   const listRecord = listState.lists?.get(list)
-  const creator = new AtUri(list).hostname
+  const creator = didFromUri(list)
   if (
     listRecord?.record.purpose !== 'app.bsky.graph.defs#referencelist' ||
     params.hydrateCtx.viewer === creator
