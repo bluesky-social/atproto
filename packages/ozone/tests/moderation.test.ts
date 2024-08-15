@@ -7,7 +7,7 @@ import {
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import AtpAgent, { ToolsOzoneModerationEmitEvent } from '@atproto/api'
+import { AtpAgent, ToolsOzoneModerationEmitEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import {

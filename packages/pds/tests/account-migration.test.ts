@@ -1,9 +1,9 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import { AtpAgent, AtUri } from '@atproto/api'
 import {
+  mockNetworkUtilities,
   SeedClient,
   TestNetworkNoAppView,
   TestPds,
-  mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
 import assert from 'assert'

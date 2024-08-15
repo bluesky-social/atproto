@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import {
   forSnapshot,

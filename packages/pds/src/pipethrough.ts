@@ -21,7 +21,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   return async (req, res, next) => {
     try {
       const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
-      const auth = await accessStandard({ req })
+      const auth = await accessStandard({ req, res })
       if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(nsid)) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }

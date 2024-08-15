@@ -1,5 +1,5 @@
 import assert from 'assert'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import {
   TestNetwork,
   SeedClient,

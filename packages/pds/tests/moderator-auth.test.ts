@@ -1,5 +1,5 @@
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'

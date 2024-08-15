@@ -1,4 +1,4 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import { AtpAgent, AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 
