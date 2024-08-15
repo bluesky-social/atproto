@@ -1,5 +1,5 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { ToolsOzoneSetsDefs } from '@atproto/api'
 import { forSnapshot } from './_util'
 
 describe('ozone-sets', () => {
@@ -14,7 +14,6 @@ describe('ozone-sets', () => {
 
   const sampleSet2 = {
     name: 'test-set-2',
-    description: 'Test set 2',
   }
 
   const sampleSet3 = {
@@ -22,7 +21,7 @@ describe('ozone-sets', () => {
     description: 'Another test set',
   }
 
-  const upsertSet = async (set: typeof sampleSet1) => {
+  const upsertSet = async (set: ToolsOzoneSetsDefs.Set) => {
     await agent.tools.ozone.sets.upsertSet(set, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders('admin'),

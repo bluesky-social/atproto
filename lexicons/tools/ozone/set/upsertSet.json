@@ -16,7 +16,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "tools.ozone.sets.defs#set"
+          "ref": "tools.ozone.sets.defs#setView"
         }
       }
     }

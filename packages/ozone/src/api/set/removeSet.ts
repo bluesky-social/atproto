@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Set with name "${name}" does not exist`)
       }
 
-      await setService.deleteSet(set.id)
+      await setService.removeSet(set.id)
     },
   })
 }

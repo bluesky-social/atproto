@@ -1,6 +1,6 @@
 import Database from '../db'
-import { Selectable, sql } from 'kysely'
-import { OzoneSet } from '../db/schema/ozone_set'
+import { Selectable } from 'kysely'
+import { SetDetail } from '../db/schema/ozone_set'
 import { SetView } from '../lexicon/types/tools/ozone/sets/defs'
 
 export type SetServiceCreator = (db: Database) => SetService
@@ -10,6 +10,22 @@ export class SetService {
 
   static creator() {
     return (db: Database) => new SetService(db)
+  }
+
+  buildQueryForSetWithSize() {
+    return this.db.db.selectFrom('set_detail as s').select([
+      's.id',
+      's.name',
+      's.description',
+      's.createdAt',
+      's.updatedAt',
+      (eb) =>
+        eb
+          .selectFrom('set_value')
+          .select((e) => e.fn.count<number>('setId').as('count'))
+          .whereRef('setId', '=', 's.id')
+          .as('setSize'),
+    ])
   }
 
   async query({
@@ -25,25 +41,10 @@ export class SetService {
     sortBy: 'name' | 'createdAt' | 'updatedAt'
     sortDirection: 'asc' | 'desc'
   }): Promise<{
-    sets: Selectable<OzoneSet & { setSize: number }>[]
+    sets: Selectable<SetDetail & { setSize: number }>[]
     cursor?: string
   }> {
-    let qb = this.db.db
-      .selectFrom('ozone_set as s')
-      .select([
-        's.id',
-        's.name',
-        's.description',
-        's.createdAt',
-        's.updatedAt',
-        (eb) =>
-          eb
-            .selectFrom('ozone_set_value')
-            .select((e) => e.fn.count('setId').as('count'))
-            .whereRef('setId', '=', 's.id')
-            .as('setSize'),
-      ])
-      .limit(limit)
+    let qb = this.buildQueryForSetWithSize().limit(limit)
 
     if (namePrefix) {
       qb = qb.where('s.name', 'like', `${namePrefix}%`)
@@ -76,13 +77,21 @@ export class SetService {
     }
   }
 
-  async getByName(name: string): Promise<Selectable<OzoneSet> | undefined> {
+  async getByName(name: string): Promise<Selectable<SetDetail> | undefined> {
     const query = this.db.db
-      .selectFrom('ozone_set')
+      .selectFrom('set_detail')
       .selectAll()
       .where('name', '=', name)
 
     return await query.executeTakeFirst()
+  }
+
+  async getByNameWithSize(
+    name: string,
+  ): Promise<Selectable<SetDetail & { setSize: number }> | undefined> {
+    return await this.buildQueryForSetWithSize()
+      .where('s.name', '=', name)
+      .executeTakeFirst()
   }
 
   async getSetWithValues({
@@ -94,13 +103,18 @@ export class SetService {
     limit: number
     cursor?: string
   }): Promise<
-    { set: Selectable<OzoneSet>; values: string[]; cursor?: string } | undefined
+    | {
+        set: Selectable<SetDetail & { setSize: number }>
+        values: string[]
+        cursor?: string
+      }
+    | undefined
   > {
-    const set = await this.getByName(name)
+    const set = await this.getByNameWithSize(name)
     if (!set) return undefined
 
     let qb = this.db.db
-      .selectFrom('ozone_set_value')
+      .selectFrom('set_value')
       .select(['value'])
       .where('setId', '=', set.id)
       .limit(limit)
@@ -122,28 +136,33 @@ export class SetService {
   async upsert({
     name,
     description,
-  }: Pick<OzoneSet, 'name' | 'description'>): Promise<Selectable<OzoneSet>> {
-    return this.db.db
-      .insertInto('ozone_set')
+  }: Pick<SetDetail, 'name' | 'description'>): Promise<void> {
+    await this.db.db
+      .insertInto('set_detail')
       .values({
         name,
         description,
         updatedAt: new Date(),
       })
-      .onConflict((oc) =>
-        oc.column('name').doUpdateSet({
-          description,
-          updatedAt: new Date(),
-        }),
-      )
-      .returningAll()
-      .executeTakeFirstOrThrow()
+      .onConflict((oc) => {
+        // if description is provided as a string, even an empty one, update it
+        // otherwise, just update the updatedAt timestamp
+        return oc.column('name').doUpdateSet(
+          typeof description === 'string'
+            ? {
+                description,
+                updatedAt: new Date(),
+              }
+            : { updatedAt: new Date() },
+        )
+      })
+      .execute()
   }
 
   async addValues(setId: number, values: string[]): Promise<void> {
     await this.db.transaction(async (txn) => {
       const query = txn.db
-        .insertInto('ozone_set_value')
+        .insertInto('set_value')
         .values(values.map((value) => ({ setId, value })))
         .onConflict((oc) => oc.columns(['setId', 'value']).doNothing())
 
@@ -151,7 +170,7 @@ export class SetService {
 
       // Update the set's updatedAt timestamp
       await txn.db
-        .updateTable('ozone_set')
+        .updateTable('set_detail')
         .set({ updatedAt: new Date() })
         .where('id', '=', setId)
         .execute()
@@ -164,7 +183,7 @@ export class SetService {
     }
     await this.db.transaction(async (txn) => {
       const query = txn.db
-        .deleteFrom('ozone_set_value')
+        .deleteFrom('set_value')
         .where('setId', '=', setId)
         .where('value', 'in', values)
 
@@ -172,24 +191,21 @@ export class SetService {
 
       // Update the set's updatedAt timestamp
       await txn.db
-        .updateTable('ozone_set')
+        .updateTable('set_detail')
         .set({ updatedAt: new Date() })
         .where('id', '=', setId)
         .execute()
     })
   }
 
-  async deleteSet(setId: number): Promise<void> {
+  async removeSet(setId: number): Promise<void> {
     await this.db.transaction(async (txn) => {
-      await txn.db.deleteFrom('ozone_set').where('id', '=', setId).execute()
-      await txn.db
-        .deleteFrom('ozone_set_value')
-        .where('setId', '=', setId)
-        .execute()
+      await txn.db.deleteFrom('set_value').where('setId', '=', setId).execute()
+      await txn.db.deleteFrom('set_detail').where('id', '=', setId).execute()
     })
   }
 
-  view(set: Selectable<OzoneSet> & { setSize: number }): SetView {
+  view(set: Selectable<SetDetail> & { setSize: number }): SetView {
     return {
       name: set.name,
       description: set.description || undefined,

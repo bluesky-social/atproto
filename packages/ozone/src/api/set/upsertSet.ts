@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { name, description = '' } = input.body
+      const { name, description } = input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError(
@@ -22,17 +22,20 @@ export default function (server: Server, ctx: AppContext) {
 
       const setService = ctx.setService(db)
 
-      const upsertedSet = await setService.upsert({
+      await setService.upsert({
         name,
-        description,
+        description: description ?? null,
       })
+      const setWithSize = await setService.getByNameWithSize(name)
+
+      // Unlikely to happen since we just upserted the set
+      if (!setWithSize) {
+        throw new InvalidRequestError(`Set not found`)
+      }
 
       return {
         encoding: 'application/json',
-        body: {
-          name: upsertedSet.name,
-          description: upsertedSet.description ?? undefined,
-        },
+        body: setService.view(setWithSize),
       }
     },
   })

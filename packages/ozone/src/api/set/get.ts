@@ -29,10 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          set: {
-            name: result.set.name,
-            description: result.set.description ?? undefined,
-          },
+          set: setService.view(result.set),
           values: result.values,
           cursor: result.cursor,
         },

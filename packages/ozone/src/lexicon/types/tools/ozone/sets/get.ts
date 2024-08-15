@@ -18,7 +18,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  set: ToolsOzoneSetsDefs.Set
+  set: ToolsOzoneSetsDefs.SetView
   values: string[]
   cursor?: string
   [k: string]: unknown

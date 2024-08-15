@@ -1,9 +1,9 @@
 import { Generated, GeneratedAlways } from 'kysely'
 
-export const ozoneSetTableName = 'ozone_set'
-export const ozoneSetValueTableName = 'ozone_set_value'
+export const ozoneSetTableName = 'set_detail'
+export const ozoneSetValueTableName = 'set_value'
 
-export interface OzoneSet {
+export interface SetDetail {
   id: GeneratedAlways<number>
   name: string
   description: string | null
@@ -11,7 +11,7 @@ export interface OzoneSet {
   updatedAt: Generated<Date>
 }
 
-export interface OzoneSetValue {
+export interface SetValue {
   id: GeneratedAlways<number>
   setId: number
   value: string
@@ -19,6 +19,6 @@ export interface OzoneSetValue {
 }
 
 export type PartialDB = {
-  [ozoneSetTableName]: OzoneSet
-  [ozoneSetValueTableName]: OzoneSetValue
+  [ozoneSetTableName]: SetDetail
+  [ozoneSetValueTableName]: SetValue
 }

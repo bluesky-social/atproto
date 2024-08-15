@@ -11,7 +11,7 @@ import * as ToolsOzoneSetsDefs from './defs'
 export interface QueryParams {}
 
 export type InputSchema = ToolsOzoneSetsDefs.Set
-export type OutputSchema = ToolsOzoneSetsDefs.Set
+export type OutputSchema = ToolsOzoneSetsDefs.SetView
 
 export interface CallOptions {
   signal?: AbortSignal

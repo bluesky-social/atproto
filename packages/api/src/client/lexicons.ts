@@ -11565,7 +11565,7 @@ export const schemaDict = {
             properties: {
               set: {
                 type: 'ref',
-                ref: 'lex:tools.ozone.sets.defs#set',
+                ref: 'lex:tools.ozone.sets.defs#setView',
               },
               values: {
                 type: 'array',
@@ -11711,7 +11711,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:tools.ozone.sets.defs#set',
+            ref: 'lex:tools.ozone.sets.defs#setView',
           },
         },
       },
