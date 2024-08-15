@@ -483,13 +483,13 @@ async function validatePostEmbed(
     }
   }
   const {
-    embeddingRules: { canQuotepost },
+    embeddingRules: { canEmbed },
   } = parsePostgate({
     gate: jsonStringToLex(postgateRecord.json) as PostgateRecord,
     viewerDid: new AtUri(parentUri).host,
     authorDid: new AtUri(embedUri).host,
   })
-  if (canQuotepost) {
+  if (canEmbed) {
     return {
       violatesEmbeddingRules: false,
     }

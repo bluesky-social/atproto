@@ -1116,13 +1116,13 @@ export class Views {
       return false
     }
     const {
-      embeddingRules: { canQuotepost },
+      embeddingRules: { canEmbed },
     } = parsePostgate({
       gate,
       viewerDid,
       authorDid: new AtUri(uri).hostname,
     })
-    if (canQuotepost) {
+    if (canEmbed) {
       return false
     }
     return true

@@ -77,23 +77,23 @@ export const parsePostgate = ({
   authorDid: string
 }): ParsedPostgate => {
   if (viewerDid === authorDid) {
-    return { embeddingRules: { canQuotepost: true } }
+    return { embeddingRules: { canEmbed: true } }
   }
   // default state is unset, allow everyone
   if (!gate || !gate.embeddingRules) {
-    return { embeddingRules: { canQuotepost: true } }
+    return { embeddingRules: { canEmbed: true } }
   }
 
   const disabled = gate.embeddingRules.some(isPostgateDisableRule)
   if (disabled) {
-    return { embeddingRules: { canQuotepost: false } }
+    return { embeddingRules: { canEmbed: false } }
   }
 
-  return { embeddingRules: { canQuotepost: true } }
+  return { embeddingRules: { canEmbed: true } }
 }
 
 type ParsedPostgate = {
   embeddingRules: {
-    canQuotepost?: boolean
+    canEmbed: boolean
   }
 }
