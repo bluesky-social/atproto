@@ -28,7 +28,7 @@ describe('postgates', () => {
     await network.close()
   })
 
-  describe(`quoteee <-> quoter`, () => {
+  describe(`quotee <-> quoter`, () => {
     it(`quotee detaches own post from quoter`, async () => {
       const quoteePost = await sc.post(users.quotee.did, `post`)
       const quoterPost = await sc.post(
