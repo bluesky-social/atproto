@@ -59,6 +59,7 @@ type IndexedPost = {
   embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
   ancestors?: PostAncestor[]
   descendents?: PostDescendent[]
+  threadgate?: GateRecord
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -204,6 +205,7 @@ const insertFn = async (
     }
   }
 
+  const threadgate = await getThreadgateRecord(db, post.replyRoot || post.uri)
   const ancestors = await getAncestorsAndSelfQb(db, {
     uri: post.uri,
     parentHeight: REPLY_NOTIF_DEPTH,
@@ -226,6 +228,7 @@ const insertFn = async (
     embeds,
     ancestors,
     descendents,
+    threadgate,
   }
 }
 
@@ -276,12 +279,16 @@ const notifsForInsert = (obj: IndexedPost) => {
     return notifs
   }
 
+  const threadgateHiddenReplies = obj.threadgate?.hiddenReplies || []
+
   // reply notifications
 
   for (const ancestor of obj.ancestors ?? []) {
     if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
     if (ancestor.height < REPLY_NOTIF_DEPTH) {
       const ancestorUri = new AtUri(ancestor.uri)
+      // found hidden reply, don't notify for sub-replies
+      if (threadgateHiddenReplies.includes(ancestorUri.toString())) break
       maybeNotify({
         did: ancestorUri.host,
         reason: 'reply',
@@ -467,6 +474,21 @@ async function validateReply(
   return {
     invalidReplyRoot,
     violatesThreadGate,
+  }
+}
+
+async function getThreadgateRecord(db: DatabaseSchema, postUri: string) {
+  const threadgateRecordUri = postUriToThreadgateUri(postUri)
+  const results = await db
+    .selectFrom('record')
+    .where('record.uri', '=', threadgateRecordUri)
+    .selectAll()
+    .execute()
+  const threadgateRecord = results.find(
+    (ref) => ref.uri === threadgateRecordUri,
+  )
+  if (threadgateRecord) {
+    return jsonStringToLex(threadgateRecord.json) as GateRecord
   }
 }
 
