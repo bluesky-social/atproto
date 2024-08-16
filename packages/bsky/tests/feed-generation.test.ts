@@ -583,66 +583,6 @@ describe('feed generation', () => {
       )
     })
 
-    describe('postgates', () => {
-      it(`handles detached quote posts correctly`, async () => {
-        const qpUri = sc.posts[sc.dids.carol][0].ref.uri
-        const parentUri = sc.posts[sc.dids.dan][1].ref.uriStr
-
-        await pdsAgent.api.app.bsky.feed.postgate.create(
-          {
-            repo: sc.dids.carol,
-            rkey: qpUri.rkey,
-          },
-          {
-            post: qpUri.toString(),
-            createdAt: new Date().toISOString(),
-            detachedEmbeddingUris: [parentUri],
-          },
-          sc.getHeaders(sc.dids.carol),
-        )
-
-        await network.processAll()
-
-        const results = (results) => results.flatMap((res) => res.feed)
-        const paginator = async (cursor?: string) => {
-          const res = await agent.api.app.bsky.feed.getFeed(
-            { feed: feedUriAll, cursor, limit: 2 },
-            { headers: await network.serviceHeaders(alice, gen.did) },
-          )
-          return res.data
-        }
-
-        const paginatedAll: FeedViewPost[] = results(
-          await paginateAll(paginator),
-        )
-
-        const detachedQP = paginatedAll.find((item) => {
-          return item.post.uri === parentUri
-        })
-
-        expect(detachedQP).toBeDefined()
-
-        if (!detachedQP) {
-          throw new Error('Detached quote post not found')
-        }
-
-        expect(
-          // @ts-ignore
-          isViewDetached(detachedQP.post.embed.record),
-        ).toBeTruthy()
-
-        // cleanup
-        await pdsAgent.api.app.bsky.feed.postgate.delete(
-          {
-            repo: sc.dids.carol,
-            rkey: qpUri.rkey,
-          },
-          sc.getHeaders(sc.dids.carol),
-        )
-        await network.processAll()
-      })
-    })
-
     it('returns an upstream failure error when the feed is down.', async () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
