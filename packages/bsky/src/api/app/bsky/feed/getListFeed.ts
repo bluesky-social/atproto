@@ -74,7 +74,7 @@ const hydration = async (inputs: {
   const { ctx, params, skeleton } = inputs
   const [feedItemsState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
-    await getBlocks({ ctx, params, skeleton }),
+    getBlocks({ ctx, params, skeleton }),
   ])
   return mergeStates(feedItemsState, {
     bidirectionalBlocks,
