@@ -7,11 +7,12 @@ import {
   HydrateCtx,
   HydrationState,
   Hydrator,
+  mergeStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { mapDefined } from '@atproto/common'
-import { parseString } from '../../../../hydration/util'
+import { didFromUri, parseString } from '../../../../hydration/util'
 import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {
@@ -71,23 +72,34 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
+  const [feedItemsState, bidirectionalBlocks] = await Promise.all([
+    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
+    await getBlocks({ ctx, params, skeleton }),
+  ])
+  return mergeStates(feedItemsState, {
+    bidirectionalBlocks,
+  })
 }
 
 const noBlocksOrMutes = (inputs: {
   ctx: Context
+  params: Params
   skeleton: Skeleton
   hydration: HydrationState
 }): Skeleton => {
-  const { ctx, skeleton, hydration } = inputs
+  const { ctx, params, skeleton, hydration } = inputs
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
+    const creatorBlocks = hydration.bidirectionalBlocks?.get(
+      didFromUri(params.list),
+    )
     return (
       !bam.authorBlocked &&
       !bam.authorMuted &&
       !bam.originatorBlocked &&
       !bam.originatorMuted &&
-      !bam.ancestorAuthorBlocked
+      !bam.ancestorAuthorBlocked &&
+      !creatorBlocks?.get(didFromUri(item.post.uri))
     )
   })
   return skeleton
@@ -103,6 +115,20 @@ const presentation = (inputs: {
     ctx.views.feedViewPost(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
+}
+
+const getBlocks = async (input: {
+  ctx: Context
+  skeleton: Skeleton
+  params: Params
+}) => {
+  const { ctx, skeleton, params } = input
+  const pairs: Map<string, string[]> = new Map()
+  pairs.set(
+    didFromUri(params.list),
+    skeleton.items.map((item) => didFromUri(item.post.uri)),
+  )
+  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
 }
 
 type Context = {
