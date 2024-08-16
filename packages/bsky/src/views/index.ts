@@ -991,12 +991,6 @@ export class Views {
       return this.embedBlocked(uri, state)
     }
 
-    const postgateRecordUri = postUriToPostgateUri(embed.record.uri)
-    const postgate = state.postgates?.get(postgateRecordUri)
-    if (postgate?.record?.detachedEmbeddingUris?.includes(postUri)) {
-      return this.embedDetached(uri)
-    }
-
     const post = state.posts?.get(postUri)
     if (post?.violatesEmbeddingRules) {
       return this.embedDetached(uri)
@@ -1005,6 +999,11 @@ export class Views {
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
+      const postgateRecordUri = postUriToPostgateUri(uri)
+      const postgate = state.postgates?.get(postgateRecordUri)
+      if (postgate?.record?.detachedEmbeddingUris?.includes(postUri)) {
+        return this.embedDetached(uri)
+      }
       return this.recordEmbedWrapper(view, withTypeTag)
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
