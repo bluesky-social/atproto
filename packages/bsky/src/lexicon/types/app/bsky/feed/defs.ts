@@ -98,6 +98,11 @@ export interface ReplyRef {
     | NotFoundPost
     | BlockedPost
     | { $type: string; [k: string]: unknown }
+  grandparent?:
+    | PostView
+    | NotFoundPost
+    | BlockedPost
+    | { $type: string; [k: string]: unknown }
   grandparentAuthor?: AppBskyActorDefs.ProfileViewBasic
   [k: string]: unknown
 }
