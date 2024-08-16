@@ -627,14 +627,12 @@ export class Views {
     const isRepost = isReasonRepost(reason)
     if (reply && isPostView(reply.root)) {
       if (!opts?.includeHiddenReplies && !isRepost) {
-        const wasHiddenByViewer =
-          state.ctx?.viewer === creatorFromUri(reply.root.uri)
         const postIsHiddenReply = this.replyIsHidden(
           post.uri,
           reply.root.uri,
           state,
         )
-        if (postIsHiddenReply && wasHiddenByViewer) {
+        if (postIsHiddenReply) {
           return undefined
         } else if (isPostView(reply.parent)) {
           const parentPostIsHiddenReply = this.replyIsHidden(
@@ -642,7 +640,7 @@ export class Views {
             reply.root.uri,
             state,
           )
-          if (parentPostIsHiddenReply && wasHiddenByViewer) {
+          if (parentPostIsHiddenReply) {
             reply.parent = this.notFoundPost(reply.parent.uri)
           }
         }
