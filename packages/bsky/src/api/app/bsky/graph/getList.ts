@@ -118,8 +118,8 @@ const maybeGetBlocksForReferenceAndCurateList = async (input: {
   const listRecord = listState.lists?.get(list)
   const creator = didFromUri(list)
   if (
-    listRecord?.record.purpose === 'app.bsky.graph.defs#modlist' &&
-    params.hydrateCtx.viewer !== creator
+    params.hydrateCtx.viewer === creator ||
+    listRecord?.record.purpose === 'app.bsky.graph.defs#modlist'
   ) {
     return
   }
