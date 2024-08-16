@@ -5251,14 +5251,6 @@ export const schemaDict = {
               'lex:app.bsky.feed.defs#blockedPost',
             ],
           },
-          grandparent: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.defs#postView',
-              'lex:app.bsky.feed.defs#notFoundPost',
-              'lex:app.bsky.feed.defs#blockedPost',
-            ],
-          },
           grandparentAuthor: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewBasic',
