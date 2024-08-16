@@ -3,7 +3,6 @@ import { XRPCError } from '@atproto/xrpc'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
-import { isViewDetached } from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import {
   TestNetwork,
   TestFeedGen,
