@@ -1,5 +1,5 @@
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
@@ -76,6 +76,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
+      lxm: null,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -103,6 +104,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: pdsDid,
+      lxm: null,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -123,6 +125,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
+      lxm: null,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -145,6 +148,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
+      lxm: null,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

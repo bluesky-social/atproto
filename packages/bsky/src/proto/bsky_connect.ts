@@ -66,8 +66,6 @@ import {
   GetBlocksResponse,
   GetCountsForUsersRequest,
   GetCountsForUsersResponse,
-  GetDetachRecordsRequest,
-  GetDetachRecordsResponse,
   GetDidsByHandlesRequest,
   GetDidsByHandlesResponse,
   GetFeedGeneratorRecordsRequest,
@@ -311,15 +309,6 @@ export const Service = {
       name: 'GetThreadGateRecords',
       I: GetThreadGateRecordsRequest,
       O: GetThreadGateRecordsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.GetDetachRecords
-     */
-    getDetachRecords: {
-      name: 'GetDetachRecords',
-      I: GetDetachRecordsRequest,
-      O: GetDetachRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**

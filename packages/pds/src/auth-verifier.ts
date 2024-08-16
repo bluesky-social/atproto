@@ -1,5 +1,8 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
+import { IncomingMessage, ServerResponse } from 'node:http'
 
+import { getVerificationMaterial } from '@atproto/common'
+import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
 import {
   OAuthError,
   OAuthVerifier,
@@ -7,24 +10,19 @@ import {
 } from '@atproto/oauth-provider'
 import {
   AuthRequiredError,
+  AuthVerifierContext,
   ForbiddenError,
   InvalidRequestError,
+  StreamAuthVerifierContext,
   XRPCError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
-import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
 import { softDeleted } from './db'
-import { getVerificationMaterial } from '@atproto/common'
 
-type ReqCtx = {
-  req: express.Request
-  // StreamAuthVerifier does not have "res"
-  res?: express.Response
-}
+type ReqCtx = AuthVerifierContext | StreamAuthVerifierContext
 
 // @TODO sync-up with current method names, consider backwards compat.
 export enum AuthScope {
@@ -71,6 +69,7 @@ type AccessOutput = {
     did: string
     scope: AuthScope
     audience: string | undefined
+    isPrivileged: boolean
   }
   artifacts: string
 }
@@ -86,11 +85,11 @@ type RefreshOutput = {
   artifacts: string
 }
 
-type UserDidOutput = {
+type UserServiceAuthOutput = {
   credentials: {
-    type: 'user_did'
+    type: 'user_service_auth'
     aud: string
-    iss: string
+    did: string
   }
 }
 
@@ -221,29 +220,51 @@ export class AuthVerifier {
     }
   }
 
-  userDidAuth = async (ctx: ReqCtx): Promise<UserDidOutput> => {
+  userServiceAuth = async (ctx: ReqCtx): Promise<UserServiceAuthOutput> => {
     const payload = await this.verifyServiceJwt(ctx, {
-      aud: this.dids.entryway ?? this.dids.pds,
+      aud: null,
       iss: null,
     })
+    if (
+      payload.aud !== this.dids.pds &&
+      (!this.dids.entryway || payload.aud !== this.dids.entryway)
+    ) {
+      throw new AuthRequiredError(
+        'jwt audience does not match service did',
+        'BadJwtAudience',
+      )
+    }
     return {
       credentials: {
-        type: 'user_did',
+        type: 'user_service_auth',
         aud: payload.aud,
-        iss: payload.iss,
+        did: payload.iss,
       },
     }
   }
 
-  userDidAuthOptional = async (
+  userServiceAuthOptional = async (
     ctx: ReqCtx,
-  ): Promise<UserDidOutput | NullOutput> => {
+  ): Promise<UserServiceAuthOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
-      return await this.userDidAuth(ctx)
+      return await this.userServiceAuth(ctx)
     } else {
       return this.null(ctx)
     }
   }
+
+  accessOrUserServiceAuth =
+    (opts: Partial<AccessOpts> = {}) =>
+    async (ctx: ReqCtx): Promise<UserServiceAuthOutput | AccessOutput> => {
+      const token = bearerTokenFromReq(ctx.req)
+      if (token) {
+        const payload = jose.decodeJwt(token)
+        if (payload['lxm']) {
+          return this.userServiceAuth(ctx)
+        }
+      }
+      return this.accessStandard(opts)(ctx)
+    }
 
   modService = async (ctx: ReqCtx): Promise<ModServiceOutput> => {
     if (!this.dids.modService) {
@@ -439,7 +460,8 @@ export class AuthVerifier {
 
     this.setAuthHeaders(ctx)
 
-    const { req, res } = ctx
+    const { req } = ctx
+    const res = 'res' in ctx ? ctx.res : null
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-8.2
     if (res) {
@@ -451,9 +473,11 @@ export class AuthVerifier {
     }
 
     try {
-      const url = new URL(req.originalUrl || req.url, this._publicUrl)
+      const originalUrl =
+        ('originalUrl' in req && req.originalUrl) || req.url || '/'
+      const url = new URL(originalUrl, this._publicUrl)
       const result = await this.oauthVerifier.authenticateRequest(
-        req.method,
+        req.method || 'GET',
         url,
         req.headers,
         { audience: [this.dids.pds] },
@@ -470,6 +494,7 @@ export class AuthVerifier {
           did: result.claims.sub,
           scope: AuthScope.Access,
           audience: this.dids.pds,
+          isPrivileged: true,
         },
         artifacts: result.token,
       }
@@ -498,12 +523,17 @@ export class AuthVerifier {
       scopes,
       { audience: this.dids.pds },
     )
+    const isPrivileged = [
+      AuthScope.Access,
+      AuthScope.AppPassPrivileged,
+    ].includes(scope)
     return {
       credentials: {
         type: 'access',
         did,
         scope,
         audience,
+        isPrivileged,
       },
       artifacts: token,
     }
@@ -544,7 +574,12 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, getSigningKey)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      null,
+      getSigningKey,
+    )
     return { iss: payload.iss, aud: payload.aud }
   }
 
@@ -585,7 +620,8 @@ export class AuthVerifier {
     }
   }
 
-  protected setAuthHeaders({ res }: ReqCtx) {
+  protected setAuthHeaders(ctx: ReqCtx) {
+    const res = 'res' in ctx ? ctx.res : null
     if (res) {
       res.setHeader('Cache-Control', 'private')
       vary(res, 'Authorization')
@@ -627,22 +663,22 @@ export const parseAuthorizationHeader = (
   )
 }
 
-const isAccessToken = (req: express.Request): boolean => {
+const isAccessToken = (req: IncomingMessage): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BEARER || type === AuthType.DPOP
 }
 
-const isBearerToken = (req: express.Request): boolean => {
+const isBearerToken = (req: IncomingMessage): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BEARER
 }
 
-const isBasicToken = (req: express.Request): boolean => {
+const isBasicToken = (req: IncomingMessage): boolean => {
   const [type] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BASIC
 }
 
-const bearerTokenFromReq = (req: express.Request) => {
+const bearerTokenFromReq = (req: IncomingMessage) => {
   const [type, token] = parseAuthorizationHeader(req.headers.authorization)
   return type === AuthType.BEARER ? token : null
 }
@@ -681,7 +717,7 @@ export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
 
 const keyEncoder = new KeyEncoder('secp256k1')
 
-function vary(res: express.Response, value: string) {
+function vary(res: ServerResponse, value: string) {
   const current = res.getHeader('Vary')
   if (current == null || typeof current === 'number') {
     res.setHeader('Vary', value)

@@ -82,7 +82,7 @@ export class SessionGetter extends CachedGetter<string, Session> {
         // concurrency issues if multiple tabs/instances are trying to refresh
         // the same token. The chances of this happening when multiple instances
         // are started simultaneously is reduced by randomizing the expiry time
-        // (see isStale() bellow). Even so, There still exist chances that
+        // (see isStale() below). Even so, There still exist chances that
         // multiple tabs will try to refresh the token at the same time. The
         // best solution would be to use a mutex/lock to ensure that only one
         // instance is refreshing the token at a time. A simpler workaround is

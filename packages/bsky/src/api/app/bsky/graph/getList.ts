@@ -6,21 +6,23 @@ import AppContext from '../../../../context'
 import {
   createPipeline,
   HydrationFnInput,
-  noRules,
   PresentationFnInput,
+  RulesFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
 import {
   HydrateCtx,
+  HydrationState,
   Hydrator,
-  mergeStates,
+  mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
+import { didFromUri } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getList = createPipeline(skeleton, hydration, noRules, presentation)
+  const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.graph.getList({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
@@ -68,7 +70,23 @@ const hydration = async (
       params.hydrateCtx,
     ),
   ])
-  return mergeStates(listState, profileState)
+  const bidirectionalBlocks = await maybeGetBlocksForReferenceList({
+    ctx,
+    params,
+    skeleton,
+    listState,
+  })
+  return mergeManyStates(listState, profileState, { bidirectionalBlocks })
+}
+
+const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
+  const { skeleton, hydration } = input
+  const creator = didFromUri(skeleton.listUri)
+  const blocks = hydration.bidirectionalBlocks?.get(creator)
+  skeleton.listitems = skeleton.listitems.filter(({ did }) => {
+    return !blocks?.get(did)
+  })
+  return skeleton
 }
 
 const presentation = (
@@ -86,6 +104,31 @@ const presentation = (
     throw new InvalidRequestError('List not found')
   }
   return { list, items, cursor }
+}
+
+const maybeGetBlocksForReferenceList = async (input: {
+  ctx: Context
+  listState: HydrationState
+  skeleton: SkeletonState
+  params: Params
+}) => {
+  const { ctx, params, listState, skeleton } = input
+  const { listitems } = skeleton
+  const { list } = params
+  const listRecord = listState.lists?.get(list)
+  const creator = didFromUri(list)
+  if (
+    listRecord?.record.purpose !== 'app.bsky.graph.defs#referencelist' ||
+    params.hydrateCtx.viewer === creator
+  ) {
+    return
+  }
+  const pairs: Map<string, string[]> = new Map()
+  pairs.set(
+    creator,
+    listitems.map(({ did }) => did),
+  )
+  return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
 }
 
 type Context = {

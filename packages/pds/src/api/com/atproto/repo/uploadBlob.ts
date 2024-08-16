@@ -6,7 +6,7 @@ import { BlobMetadata } from '../../../../actor-store/blob/transactor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
-    auth: ctx.authVerifier.accessStandard({
+    auth: ctx.authVerifier.accessOrUserServiceAuth({
       checkTakedown: true,
     }),
     rateLimit: {

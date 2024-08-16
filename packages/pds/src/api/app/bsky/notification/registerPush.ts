@@ -5,6 +5,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtpAgent } from '@atproto/api'
 import { getDidDoc } from '../util/resolver'
 import { AuthScope } from '../../../../auth-verifier'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const { appViewAgent } = ctx
@@ -19,7 +20,11 @@ export default function (server: Server, ctx: AppContext) {
         credentials: { did },
       } = auth
 
-      const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
+      const authHeaders = await ctx.serviceAuthHeaders(
+        did,
+        serviceDid,
+        ids.AppBskyNotificationRegisterPush,
+      )
 
       if (ctx.cfg.bskyAppView?.did === serviceDid) {
         await appViewAgent.api.app.bsky.notification.registerPush(input.body, {

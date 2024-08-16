@@ -891,7 +891,7 @@ export const schemaDict = {
       labelValueDefinition: {
         type: 'object',
         description:
-          'Declares a label value and its expected interpertations and behaviors.',
+          'Declares a label value and its expected interpretations and behaviors.',
         required: ['identifier', 'severity', 'blurs', 'locales'],
         properties: {
           identifier: {
@@ -2607,6 +2607,17 @@ export const schemaDict = {
               description:
                 'The DID of the service that the token will be used to authenticate with',
             },
+            exp: {
+              type: 'integer',
+              description:
+                'The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope.',
+            },
+            lxm: {
+              type: 'string',
+              format: 'nsid',
+              description:
+                'Lexicon (XRPC) method to bind the requested token to',
+            },
           },
         },
         output: {
@@ -2621,6 +2632,13 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'BadExpiration',
+            description:
+              'Indicates that the requested expiration date is not a valid. May be in the past or may be reliant on the requested scopes.',
+          },
+        ],
       },
     },
   },
@@ -5485,7 +5503,7 @@ export const schemaDict = {
           feedContext: {
             type: 'string',
             description:
-              'Context on a feed item that was orginally supplied by the feed generator on getFeedSkeleton.',
+              'Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.',
             maxLength: 2000,
           },
         },
@@ -5594,42 +5612,6 @@ export const schemaDict = {
           },
           termsOfService: {
             type: 'string',
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedDetach: {
-    lexicon: 1,
-    id: 'app.bsky.feed.detach',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        description:
-          'Record defining post URIs detached from a root post. The record key (rkey) of the detach record must match the record key of the root post in question, and that record must be in the same repository.',
-        record: {
-          type: 'object',
-          required: ['post', 'targets', 'updatedAt'],
-          properties: {
-            post: {
-              type: 'string',
-              format: 'at-uri',
-              description: 'Reference (AT-URI) to the post record.',
-            },
-            targets: {
-              type: 'array',
-              maxLength: 50,
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              description: 'List of detached post URIs.',
-            },
-            updatedAt: {
-              type: 'string',
-              format: 'datetime',
-            },
           },
         },
       },
@@ -11864,7 +11846,6 @@ export const ids = {
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
-  AppBskyFeedDetach: 'app.bsky.feed.detach',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',

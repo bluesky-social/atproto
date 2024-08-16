@@ -650,6 +650,17 @@ export class Hydrator {
     const listMemberDids = listsMembers.flatMap((lm) =>
       lm.listitems.map((li) => li.did),
     )
+    const listCreatorMemberPairs = [...listMembersByList.entries()].flatMap(
+      ([listUri, members]) => {
+        const creator = didFromUri(listUri)
+        return members.listitems.map(
+          (li): RelationshipPair => [creator, li.did],
+        )
+      },
+    )
+    const blocks = await this.graph.getBidirectionalBlocks(
+      listCreatorMemberPairs,
+    )
     // sample top list items per starter pack based on their follows
     const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
     const listItemUris: string[] = []
@@ -659,8 +670,13 @@ export class Hydrator {
       if (!sp?.record.list || !agg) return
       const members = listMembersByList.get(sp.record.list)
       if (!members) return
+      const creator = didFromUri(sp.record.list)
       // update aggregation with list items for top 12 most followed members
-      agg.listItemSampleUris = [...members.listitems]
+      agg.listItemSampleUris = [
+        ...members.listitems.filter(
+          (li) => ctx.viewer === creator || !blocks?.isBlocked(creator, li.did),
+        ),
+      ]
         .sort((li1, li2) => {
           const score1 = listMemberAggs.get(li1.did)?.followers ?? 0
           const score2 = listMemberAggs.get(li2.did)?.followers ?? 0
@@ -738,7 +754,7 @@ export class Hydrator {
     })
   }
 
-  // provides partial hydration state withing getFollows / getFollowers, mainly for applying rules
+  // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
   async hydrateFollows(uris: string[]): Promise<HydrationState> {
     const follows = await this.graph.getFollows(uris)
     const pairs: RelationshipPair[] = []
@@ -1079,7 +1095,7 @@ export const mergeStates = (
   }
 }
 
-const mergeManyStates = (...states: HydrationState[]) => {
+export const mergeManyStates = (...states: HydrationState[]) => {
   return states.reduce(mergeStates, {} as HydrationState)
 }
 

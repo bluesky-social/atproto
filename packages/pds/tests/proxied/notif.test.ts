@@ -2,7 +2,7 @@ import { once } from 'events'
 import http from 'http'
 import { AddressInfo } from 'net'
 import express from 'express'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
 import usersSeed from '../seeds/users'
@@ -69,6 +69,7 @@ describe('notif service proxy', () => {
     const auth = await verifyJwt(
       spy.current?.['jwt'] as string,
       notifDid,
+      null,
       async (did) => {
         const keypair = await network.pds.ctx.actorStore.keypair(did)
         return keypair.did()

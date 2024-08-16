@@ -77,7 +77,7 @@
     },
     "labelValueDefinition": {
       "type": "object",
-      "description": "Declares a label value and its expected interpertations and behaviors.",
+      "description": "Declares a label value and its expected interpretations and behaviors.",
       "required": ["identifier", "severity", "blurs", "locales"],
       "properties": {
         "identifier": {
