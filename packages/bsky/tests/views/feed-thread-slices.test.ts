@@ -64,10 +64,8 @@ describe('pds thread views', () => {
 
     expect(sliceC.reply.parent.uri).toEqual(B.ref.uriStr)
     expect(sliceC.reply.root.uri).toEqual(A.ref.uriStr)
-    expect(sliceC.reply.grandparent?.uri).toEqual(A.ref.uriStr)
     expect(AppBskyFeedDefs.isPostView(sliceC.reply.parent)).toBe(true)
     expect(AppBskyFeedDefs.isBlockedPost(sliceC.reply.root)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceC.reply.grandparent)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
