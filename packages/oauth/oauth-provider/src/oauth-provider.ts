@@ -1215,15 +1215,12 @@ export class OAuthProvider extends OAuthVerifier {
           csrfCookie(input.request_uri),
         )
 
-        const { deviceId } = await deviceManager.load(req, res)
+        const { deviceId } = await deviceManager.load(req, res, true)
 
         const { account, info } = await server.signIn(
           deviceId,
           input.credentials,
         )
-
-        // Prevent fixation attacks
-        await deviceManager.rotate(req, res, deviceId)
 
         return {
           account,

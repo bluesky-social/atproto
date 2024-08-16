@@ -100,10 +100,16 @@ export class DeviceManager {
   public async load(
     req: IncomingMessage,
     res: ServerResponse,
+    forceRotate = false,
   ): Promise<{ deviceId: DeviceId }> {
     const cookie = await this.getCookie(req)
     if (cookie) {
-      return this.refresh(req, res, cookie.value, cookie.mustRotate)
+      return this.refresh(
+        req,
+        res,
+        cookie.value,
+        forceRotate || cookie.mustRotate,
+      )
     } else {
       return this.create(req, res)
     }
