@@ -633,16 +633,36 @@ export class Views {
         root = parent
       }
     }
+    let grandparent: MaybePostView | undefined
     let grandparentAuthor: ProfileViewBasic | undefined
     if (isPostRecord(parent.record) && parent.record.reply) {
+      const grandparentUri = parent.record.reply.parent.uri
       grandparentAuthor = this.profileBasic(
-        creatorFromUri(parent.record.reply.parent.uri),
+        creatorFromUri(grandparentUri),
         state,
       )
+      grandparent = this.maybePost(grandparentUri, state)
+
+      if (
+        !state.ctx?.include3pBlocks &&
+        state.postBlocks?.get(parent.uri)?.reply &&
+        isPostView(grandparent)
+      ) {
+        grandparent = this.blockedPost(
+          grandparentUri,
+          creatorFromUri(grandparentUri),
+          state,
+        )
+
+        if (root.uri === grandparent.uri) {
+          root = grandparent
+        }
+      }
     }
     return {
       root,
       parent,
+      grandparent,
       grandparentAuthor,
     }
   }

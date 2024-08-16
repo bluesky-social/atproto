@@ -514,6 +514,7 @@ export class Hydrator {
       const parent = replies.get(uri)
       if (!parent?.record.reply) return
       replyParentAuthors.push(didFromUri(parent.record.reply.parent.uri))
+      postAndReplyRefs.push(parent.record.reply.parent)
     })
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
