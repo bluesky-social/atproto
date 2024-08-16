@@ -256,10 +256,15 @@ export class RequestManager {
       )
     }
 
-    // ATPROTO extension: if the client is not trusted, force users to consent
-    // to authorization requests. We do this to avoid unauthenticated clients
-    // from being able to silently re-authenticate users.
-    if (clientAuth.method === 'none' && !client.info.isFirstParty) {
+    // ATPROTO extension: if the client is not trusted, and not authenticated,
+    // force users to consent to authorization requests. We do this to avoid
+    // unauthenticated clients from being able to silently re-authenticate
+    // users.
+    if (
+      !client.info.isTrusted &&
+      !client.info.isFirstParty &&
+      clientAuth.method === 'none'
+    ) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
           parameters,
