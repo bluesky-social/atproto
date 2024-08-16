@@ -19,7 +19,7 @@ import {
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 import { ListItemInfo } from '../../../../proto/bsky_pb'
-import { didFromUri } from '../../../../hydration/util'
+import { uriToDid as didFromUri } from '../../../../util/uris'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
