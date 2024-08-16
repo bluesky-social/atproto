@@ -81,7 +81,7 @@ export class RequestManager {
     })
 
     const uri = encodeRequestUri(id)
-    return { id, uri, expiresAt, parameters, clientAuth }
+    return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
   }
 
   async validate(
@@ -333,6 +333,7 @@ export class RequestManager {
       uri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
+      clientId: data.clientId,
       clientAuth: data.clientAuth,
     }
   }

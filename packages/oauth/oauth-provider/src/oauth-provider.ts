@@ -20,7 +20,6 @@ import z, { ZodError } from 'zod'
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
 import {
-  AccountInfo,
   AccountStore,
   DeviceAccountInfo,
   SignInCredentials,
@@ -639,6 +638,9 @@ export class OAuthProvider extends OAuthVerifier {
         this.loginRequired(client, parameters, info),
       consentRequired:
         parameters.prompt === 'consent' ||
+        // @TODO the "authorizedClients" should also include the scopes that
+        // were already authorized for the client. Otherwise a client could
+        // use silent authentication to get additional scopes without consent.
         !info.authorizedClients.includes(client.id),
 
       matchesHint: hint == null || matchesHint(account),
@@ -647,9 +649,33 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected async signIn(
     deviceId: DeviceId,
+    uri: RequestUri,
+    clientId: ClientId,
     credentials: SignInCredentials,
-  ): Promise<AccountInfo> {
-    return this.accountManager.signIn(credentials, deviceId)
+  ): Promise<{
+    account: Account
+    consentRequired: boolean
+  }> {
+    const client = await this.clientManager.getClient(clientId)
+
+    // Ensure the request is still valid (and update the request expiration)
+    // @TODO use the returned scopes to determine if consent is required
+    await this.requestManager.get(uri, clientId, deviceId)
+
+    const { account, info } = await this.accountManager.signIn(
+      credentials,
+      deviceId,
+    )
+
+    return {
+      account,
+      consentRequired: client.info.isFirstParty
+        ? false
+        : // @TODO: the "authorizedClients" should also include the scopes that
+          // were already authorized for the client. Otherwise a client could
+          // use silent authentication to get additional scopes without consent.
+          !info.authorizedClients.includes(client.id),
+    }
   }
 
   protected async acceptRequest(
@@ -1217,15 +1243,12 @@ export class OAuthProvider extends OAuthVerifier {
 
         const { deviceId } = await deviceManager.load(req, res, true)
 
-        const { account, info } = await server.signIn(
+        return server.signIn(
           deviceId,
+          input.request_uri,
+          input.client_id,
           input.credentials,
         )
-
-        return {
-          account,
-          consentRequired: !info.authorizedClients.includes(input.client_id),
-        }
       }),
     )
 
