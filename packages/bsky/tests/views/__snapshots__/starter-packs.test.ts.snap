@@ -1,5 +1,208 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`starter packs does include users with creator block relationship in list sample for creator 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
+          "val": "self-label-b",
+        },
+      ],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "greta.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(2)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(3)",
+      "handle": "frankie.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": true,
+        "muted": false,
+      },
+    },
+    "uri": "record(3)",
+  },
+]
+`;
+
+exports[`starter packs does not include users with creator block relationship in list sample for non-creator, in-list viewers 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+      "viewer": Object {
+        "blockedBy": false,
+        "blocking": "record(1)",
+        "muted": false,
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "greta.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(3)",
+  },
+]
+`;
+
+exports[`starter packs does not include users with creator block relationship in list sample for non-creator, not-in-list viewers 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(3)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(3)",
+          "val": "self-label-b",
+        },
+      ],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "greta.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(4)",
+  },
+]
+`;
+
+exports[`starter packs does not include users with creator block relationship in list sample for signed-out viewers 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "its me!",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(1)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "greta.test",
+      "labels": Array [],
+    },
+    "uri": "record(2)",
+  },
+]
+`;
+
 exports[`starter packs generates notifications 1`] = `
 Array [
   Object {
@@ -176,12 +379,50 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "feeds": Array [],
       "list": "record(1)",
-      "name": "alice's empty starter pack",
+      "name": "alice's about to get blocked starter pack",
     },
     "uri": "record(0)",
   },
   Object {
     "cid": "cids(3)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "did": "user(0)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-a",
+        },
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "src": "user(0)",
+          "uri": "record(2)",
+          "val": "self-label-b",
+        },
+      ],
+    },
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "joinedAllTimeCount": 0,
+    "joinedWeekCount": 0,
+    "labels": Array [],
+    "record": Object {
+      "$type": "app.bsky.graph.starterpack",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "feeds": Array [],
+      "list": "record(4)",
+      "name": "alice's empty starter pack",
+    },
+    "uri": "record(3)",
+  },
+  Object {
+    "cid": "cids(4)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -214,13 +455,13 @@ Array [
       "createdAt": "1970-01-01T00:00:00.000Z",
       "feeds": Array [
         Object {
-          "uri": "record(5)",
+          "uri": "record(7)",
         },
       ],
-      "list": "record(4)",
+      "list": "record(6)",
       "name": "alice's starter pack",
     },
-    "uri": "record(3)",
+    "uri": "record(5)",
   },
 ]
 `;

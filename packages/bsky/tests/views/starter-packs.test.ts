@@ -1,5 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { isRecord as isProfile } from '../../src/lexicon/types/app/bsky/actor/profile'
 import { forSnapshot } from '../_util'
 import assert from 'assert'
@@ -10,6 +10,7 @@ describe('starter packs', () => {
   let sc: SeedClient
   let sp1: RecordRef
   let sp2: RecordRef
+  let sp3: RecordRef
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -47,6 +48,25 @@ describe('starter packs', () => {
       })
       await sc.createProfile(did, `Newskie ${n}`, 'New here', [], sp1)
     }
+
+    await sc.createAccount('frankie', {
+      handle: 'frankie.test',
+      email: 'frankie@frankie.com',
+      password: 'password',
+    })
+    await sc.createAccount('greta', {
+      handle: 'greta.test',
+      email: 'greta@greta.com',
+      password: 'password',
+    })
+    sp3 = await sc.createStarterPack(
+      sc.dids.alice,
+      "alice's about to get blocked starter pack",
+      [sc.dids.alice, sc.dids.frankie, sc.dids.greta],
+      [],
+    )
+    await sc.block(sc.dids.frankie, sc.dids.alice)
+
     await network.processAll()
   })
 
@@ -58,7 +78,7 @@ describe('starter packs', () => {
     const { data } = await agent.api.app.bsky.graph.getActorStarterPacks({
       actor: sc.dids.alice,
     })
-    expect(data.starterPacks).toHaveLength(2)
+    expect(data.starterPacks).toHaveLength(3)
     expect(forSnapshot(data.starterPacks)).toMatchSnapshot()
   })
 
@@ -117,5 +137,46 @@ describe('starter packs', () => {
       expect(notif.record.joinedViaStarterPack?.uri).toBe(sp1.uriStr)
     })
     expect(forSnapshot(notifications)).toMatchSnapshot()
+  })
+
+  it('does not include users with creator block relationship in list sample for non-creator, in-list viewers', async () => {
+    const view = await agent.api.app.bsky.graph.getStarterPack(
+      {
+        starterPack: sp3.uriStr,
+      },
+      { headers: await network.serviceHeaders(sc.dids.frankie) },
+    )
+    expect(view.data.starterPack.listItemsSample?.length).toBe(2)
+    expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
+  })
+
+  it('does not include users with creator block relationship in list sample for non-creator, not-in-list viewers', async () => {
+    const view = await agent.api.app.bsky.graph.getStarterPack(
+      {
+        starterPack: sp3.uriStr,
+      },
+      { headers: await network.serviceHeaders(sc.dids.bob) },
+    )
+    expect(view.data.starterPack.listItemsSample?.length).toBe(2)
+    expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
+  })
+
+  it('does not include users with creator block relationship in list sample for signed-out viewers', async () => {
+    const view = await agent.api.app.bsky.graph.getStarterPack({
+      starterPack: sp3.uriStr,
+    })
+    expect(view.data.starterPack.listItemsSample?.length).toBe(2)
+    expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
+  })
+
+  it('does include users with creator block relationship in list sample for creator', async () => {
+    const view = await agent.api.app.bsky.graph.getStarterPack(
+      {
+        starterPack: sp3.uriStr,
+      },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    expect(view.data.starterPack.listItemsSample?.length).toBe(3)
+    expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
   })
 })
