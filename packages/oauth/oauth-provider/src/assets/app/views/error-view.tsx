@@ -1,27 +1,36 @@
 import { CustomizationData, ErrorData } from '../backend-data'
-import { ErrorCard } from '../components/error-card'
-import { LayoutWelcome } from '../components/layout-welcome'
+import { InfoCard } from '../components/info-card'
+import { LayoutWelcome, LayoutWelcomeProps } from '../components/layout-welcome'
+import { Override } from '../lib/util'
 
-export type ErrorViewProps = {
-  customizationData?: CustomizationData
-  errorData?: ErrorData
-}
+export type ErrorViewProps = Override<
+  Omit<LayoutWelcomeProps, keyof CustomizationData>,
+  {
+    customizationData?: CustomizationData
+    errorData?: ErrorData
+  }
+>
 
-export function ErrorView({ errorData, customizationData }: ErrorViewProps) {
+export function ErrorView({
+  errorData,
+  customizationData,
+  ...props
+}: ErrorViewProps) {
   return (
-    <LayoutWelcome {...customizationData}>
-      <ErrorCard message={getUserFriendlyMessage(errorData)} />
+    <LayoutWelcome {...customizationData} {...props}>
+      <InfoCard role="alert">{getUserFriendlyMessage(errorData)}</InfoCard>
     </LayoutWelcome>
   )
 }
 
 function getUserFriendlyMessage(errorData?: ErrorData) {
   const desc = errorData?.error_description
-  switch (desc) {
-    case 'Unknown request_uri': // Request was removed from database
-    case 'This request has expired':
-      return 'This sign-in session has expired'
-    default:
-      return desc || 'An unknown error occurred'
+  if (
+    desc === 'This request has expired' ||
+    desc?.startsWith('Unknown request_uri') // Request was removed from database
+  ) {
+    return 'This sign-in session has expired'
+  } else {
+    return desc || 'An unknown error occurred'
   }
 }

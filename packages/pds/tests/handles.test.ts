@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import basicSeed from './seeds/basic'
 import { AppContext } from '../src'

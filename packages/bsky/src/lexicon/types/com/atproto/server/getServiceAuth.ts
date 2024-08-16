@@ -11,6 +11,10 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {
   /** The DID of the service that the token will be used to authenticate with */
   aud: string
+  /** The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope. */
+  exp?: number
+  /** Lexicon (XRPC) method to bind the requested token to */
+  lxm?: string
 }
 
 export type InputSchema = undefined
@@ -31,6 +35,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'BadExpiration'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

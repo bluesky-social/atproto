@@ -31,3 +31,41 @@ export function buildLoopbackClientId(
     location.pathname === '/' ? '' : location.pathname
   }?redirect_uri=${encodeURIComponent(redirectUri)}`
 }
+
+interface TypedBroadcastChannelEventMap<T> {
+  message: MessageEvent<T>
+  messageerror: MessageEvent<T>
+}
+
+export interface TypedBroadcastChannel<T> extends EventTarget {
+  readonly name: string
+
+  close(): void
+  postMessage(message: T): void
+  addEventListener<K extends keyof TypedBroadcastChannelEventMap<T>>(
+    type: K,
+    listener: (
+      this: BroadcastChannel,
+      ev: TypedBroadcastChannelEventMap<T>[K],
+    ) => any,
+    options?: boolean | AddEventListenerOptions,
+  ): void
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void
+  removeEventListener<K extends keyof TypedBroadcastChannelEventMap<T>>(
+    type: K,
+    listener: (
+      this: BroadcastChannel,
+      ev: TypedBroadcastChannelEventMap<T>[K],
+    ) => any,
+    options?: boolean | EventListenerOptions,
+  ): void
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions,
+  ): void
+}

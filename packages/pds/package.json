@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.39",
+  "version": "0.4.49",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -17,7 +17,7 @@
   "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
-    "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
+    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",
     "postbuild": "node ./build.templates.js",
     "dev": "node ./build.templates.js --watch",
@@ -25,7 +25,7 @@
     "test:sqlite": "jest",
     "test:sqlite-only": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "jest --updateSnapshot",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {

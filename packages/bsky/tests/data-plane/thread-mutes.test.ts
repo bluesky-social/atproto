@@ -1,5 +1,5 @@
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 
 describe('thread mutes', () => {
   let network: TestNetwork

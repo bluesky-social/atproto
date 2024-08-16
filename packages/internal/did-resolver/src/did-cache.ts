@@ -2,10 +2,10 @@ import { CachedGetter, SimpleStore } from '@atproto-labs/simple-store'
 import { Did, DidDocument } from '@atproto/did'
 
 import { DidCacheMemory } from './did-cache-memory.js'
-import { DidMethod, ResolveOptions } from './did-method.js'
+import { DidMethod, ResolveDidOptions } from './did-method.js'
 import { DidResolver, ResolvedDocument } from './did-resolver.js'
 
-export type { DidMethod, ResolveOptions, ResolvedDocument }
+export type { DidMethod, ResolvedDocument, ResolveDidOptions }
 
 export type DidCache = SimpleStore<Did, DidDocument>
 
@@ -25,7 +25,7 @@ export class DidResolverCached<M extends string = string>
     )
   }
 
-  public async resolve<D extends Did>(did: D, options?: ResolveOptions) {
+  public async resolve<D extends Did>(did: D, options?: ResolveDidOptions) {
     return this.getter.get(did, options) as Promise<ResolvedDocument<D, M>>
   }
 }

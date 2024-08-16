@@ -1,42 +1,161 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`bsky actor likes feed views does include users with creator block relationship in reference lists for creator 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "did": "user(0)",
+      "handle": "frankie.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": true,
+        "muted": false,
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "hi im bob label_me",
+      "did": "user(1)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(1)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(3)",
+      "handle": "eve.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(2)",
+  },
+]
+`;
+
 exports[`bsky actor likes feed views does not include reference lists in getActorLists 1`] = `
 Array [
   Object {
     "cid": "cids(0)",
     "creator": Object {
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "description": "its me!",
       "did": "user(0)",
-      "displayName": "ali",
-      "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [
-        Object {
-          "cid": "cids(2)",
-          "cts": "1970-01-01T00:00:00.000Z",
-          "src": "user(0)",
-          "uri": "record(1)",
-          "val": "self-label-a",
-        },
-        Object {
-          "cid": "cids(2)",
-          "cts": "1970-01-01T00:00:00.000Z",
-          "src": "user(0)",
-          "uri": "record(1)",
-          "val": "self-label-b",
-        },
-      ],
+      "handle": "eve.test",
+      "labels": Array [],
     },
-    "description": "",
-    "descriptionFacets": Array [],
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "listItemCount": 0,
-    "name": "cool curate list!",
+    "name": "cool curate list",
     "purpose": "app.bsky.graph.defs#curatelist",
     "uri": "record(0)",
+  },
+]
+`;
+
+exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, in-list viewers 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "hi im bob label_me",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "eve.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "blocking": "record(2)",
+        "muted": false,
+      },
+    },
+    "uri": "record(1)",
+  },
+]
+`;
+
+exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "hi im bob label_me",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "eve.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "uri": "record(1)",
+  },
+]
+`;
+
+exports[`bsky actor likes feed views does not include users with creator block relationship in reference lists for signed-out viewers 1`] = `
+Array [
+  Object {
+    "subject": Object {
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "hi im bob label_me",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "subject": Object {
+      "did": "user(2)",
+      "handle": "eve.test",
+      "labels": Array [],
+    },
+    "uri": "record(1)",
   },
 ]
 `;

@@ -1,10 +1,11 @@
 import { once } from 'node:events'
-import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
+import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../proto/bsync_connect'
 import { ScanMuteOperationsResponse } from '../proto/bsync_pb'
 import AppContext from '../context'
 import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
+import { combineSignals, validCursor } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async scanMuteOperations(req, handlerCtx) {
@@ -62,27 +63,3 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     })
   },
 })
-
-const validCursor = (cursor: string): number | null => {
-  if (cursor === '') return null
-  const int = parseInt(cursor, 10)
-  if (isNaN(int) || int < 0) {
-    throw new ConnectError('invalid cursor', Code.InvalidArgument)
-  }
-  return int
-}
-
-const combineSignals = (a: AbortSignal, b: AbortSignal) => {
-  const controller = new AbortController()
-  for (const signal of [a, b]) {
-    if (signal.aborted) {
-      controller.abort()
-      return signal
-    }
-    signal.addEventListener('abort', () => controller.abort(signal.reason), {
-      // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
-      signal: controller.signal,
-    })
-  }
-  return controller.signal
-}

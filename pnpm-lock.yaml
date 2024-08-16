@@ -225,6 +225,9 @@ importers:
       sharp:
         specifier: ^0.32.6
         version: 0.32.6
+      statsig-node:
+        specifier: ^5.23.1
+        version: 5.23.1
       structured-headers:
         specifier: ^1.0.1
         version: 1.0.1
@@ -326,6 +329,9 @@ importers:
       '@types/pg':
         specifier: ^8.6.6
         version: 8.6.6
+      get-port:
+        specifier: ^5.1.1
+        version: 5.1.1
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.24)(ts-node@10.8.2)
@@ -768,6 +774,9 @@ importers:
       '@atproto-labs/simple-store-memory':
         specifier: workspace:*
         version: link:../../internal/simple-store-memory
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../../api
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did
@@ -777,6 +786,9 @@ importers:
       '@atproto/oauth-types':
         specifier: workspace:*
         version: link:../oauth-types
+      '@atproto/xrpc':
+        specifier: workspace:*
+        version: link:../../xrpc
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -875,6 +887,43 @@ importers:
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.3
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.4
+
+  packages/oauth/oauth-client-node:
+    dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:*
+        version: link:../../internal/did-resolver
+      '@atproto-labs/handle-resolver-node':
+        specifier: workspace:*
+        version: link:../../internal/handle-resolver-node
+      '@atproto-labs/simple-store':
+        specifier: workspace:*
+        version: link:../../internal/simple-store
+      '@atproto/did':
+        specifier: workspace:*
+        version: link:../../did
+      '@atproto/jwk':
+        specifier: workspace:*
+        version: link:../jwk
+      '@atproto/jwk-jose':
+        specifier: workspace:*
+        version: link:../jwk-jose
+      '@atproto/jwk-webcrypto':
+        specifier: workspace:*
+        version: link:../jwk-webcrypto
+      '@atproto/oauth-client':
+        specifier: workspace:*
+        version: link:../oauth-client
+      '@atproto/oauth-types':
+        specifier: workspace:*
+        version: link:../oauth-types
+    devDependencies:
+      '@atproto/api':
+        specifier: workspace:*
+        version: link:../../api
       typescript:
         specifier: ^5.3.3
         version: 5.4.4
@@ -8523,7 +8572,6 @@ packages:
   /get-port@5.1.1:
     resolution: {integrity: sha512-g/Q1aTSDOxFpchXC4i8ZWvxA1lnPqx/JHqcpIw0/LX9T8x/GBbi6YnlN5nhaKIFkT8oFsscUKgDJYxfwfS6QsQ==}
     engines: {node: '>=8'}
-    dev: false
 
   /get-port@6.1.2:
     resolution: {integrity: sha512-BrGGraKm2uPqurfGVj/z97/zv8dPleC6x9JBNRTrDNtCkkRF4rPwrQXFgL7+I+q8QSdU4ntLQX2D7KIxSy8nGw==}
@@ -8963,6 +9011,10 @@ packages:
       standard-as-callback: 2.1.0
     transitivePeerDependencies:
       - supports-color
+
+  /ip3country@5.0.0:
+    resolution: {integrity: sha512-lcFLMFU4eO1Z7tIpbVFZkaZ5ltqpeaRx7L9NsAbA9uA7/O/rj3RF8+evE5gDitooaTTIqjdzZrenFO/OOxQ2ew==}
+    dev: false
 
   /ip@2.0.0:
     resolution: {integrity: sha512-WKa+XuLG1A1R0UWhl2+1XQSi+fZWMsYKffMZTTYsiZaUD8k2yDAj5atimTUD2TZkyCkNEeYE5NhFZmupOGtjYQ==}
@@ -10306,7 +10358,6 @@ packages:
         optional: true
     dependencies:
       whatwg-url: 5.0.0
-    dev: true
 
   /node-gyp-build-optional-packages@5.1.1:
     resolution: {integrity: sha512-+P72GAjVAbTxjjwUmwjVrqrdZROD4nf8KgpBoDxqXXTiYZZt/ud60dE5yvCSr9lRO8e8yv6kgJIC0K0PfZFVQw==}
@@ -12130,6 +12181,17 @@ packages:
   /standard-as-callback@2.1.0:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
 
+  /statsig-node@5.23.1:
+    resolution: {integrity: sha512-rawn+KsPibyngB6NNFgnOfxz8DZHKaAMRv60COsSvNktIJP/MFeYqvFqaUGaengImXQ3JX91jo7lOvIQ8keb/A==}
+    dependencies:
+      ip3country: 5.0.0
+      node-fetch: 2.7.0
+      ua-parser-js: 1.0.38
+      uuid: 8.3.2
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
   /statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
@@ -12531,7 +12593,6 @@ packages:
 
   /tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
-    dev: true
 
   /trim-newlines@3.0.1:
     resolution: {integrity: sha512-c1PTsA3tYrIsLGkJkzHF+w9F2EyxfXGo4UyJc4pFL++FMjnq0HJS69T3M7d//gKrFKwy429bouPescbjecU+Zw==}
@@ -12750,6 +12811,10 @@ packages:
     hasBin: true
     dev: true
 
+  /ua-parser-js@1.0.38:
+    resolution: {integrity: sha512-Aq5ppTOfvrCMgAPneW1HfWj66Xi7XL+/mIy996R1/CLS/rcyJQm6QZdsKrUeivDFQ+Oc9Wyuwor8Ze8peEoUoQ==}
+    dev: false
+
   /uglify-js@3.17.4:
     resolution: {integrity: sha512-T9q82TJI9e/C1TAxYvfb16xO120tMVFZrGA3f9/P4424DNu6ypK103y0GPFVa17yotwSyZW5iYXgjYHkGrJW/g==}
     engines: {node: '>=0.8.0'}
@@ -12896,14 +12961,12 @@ packages:
 
   /webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
-    dev: true
 
   /whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
-    dev: true
 
   /which-boxed-primitive@1.0.2:
     resolution: {integrity: sha512-bwZdv0AKLpplFY2KZRX6TvyuN7ojjr7lwkg6ml0roIy9YeuSr7JS372qlNW18UQYzgYK9ziGcerWqZOmEn9VNg==}

@@ -1,15 +1,20 @@
-import { PropsWithChildren } from 'react'
+import { HTMLAttributes } from 'react'
+import { Override } from '../lib/util'
+import { clsx } from '../lib/clsx'
 
-export type LayoutWelcomeProps = {
-  name?: string
-  logo?: string
-  links?: Array<{
-    title: string
-    href: string
-    rel?: string
-  }>
-  logoAlt?: string
-}
+export type LayoutWelcomeProps = Override<
+  HTMLAttributes<HTMLDivElement>,
+  {
+    name?: string
+    logo?: string
+    links?: Array<{
+      title: string
+      href: string
+      rel?: string
+    }>
+    logoAlt?: string
+  }
+>
 
 export function LayoutWelcome({
   name,
@@ -17,9 +22,20 @@ export function LayoutWelcome({
   logoAlt = name || 'Logo',
   links,
   children,
-}: PropsWithChildren<LayoutWelcomeProps>) {
+  className,
+  ...props
+}: LayoutWelcomeProps) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center flex-col bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div
+      className={clsx(
+        'min-h-screen w-full',
+        'flex items-center justify-center flex-col',
+        'bg-white text-slate-900',
+        'dark:bg-slate-900 dark:text-slate-100',
+        className,
+      )}
+      {...props}
+    >
       <div className="w-full max-w-screen-sm overflow-hidden flex-grow flex flex-col items-center justify-center">
         {logo && (
           <img
@@ -46,7 +62,7 @@ export function LayoutWelcome({
               href={link.href}
               rel={link.rel}
               target="_blank"
-              className="m-2 md:m-4 text-xs md:text-sm text-primary hover:underline"
+              className="m-2 md:m-4 text-xs md:text-sm text-brand hover:underline"
             >
               {link.title}
             </a>

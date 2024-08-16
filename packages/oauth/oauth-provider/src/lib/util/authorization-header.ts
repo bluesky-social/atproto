@@ -18,7 +18,7 @@ export const parseAuthorizationHeader = (header?: string) => {
     )
   }
 
-  const parsed = authorizationHeaderSchema.safeParse(header.split(' ', 2))
+  const parsed = authorizationHeaderSchema.safeParse(header.split(' '))
   if (!parsed.success) {
     throw new InvalidRequestError('Invalid authorization header')
   }

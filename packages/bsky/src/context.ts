@@ -1,9 +1,8 @@
 import express from 'express'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import AtpAgent from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { createServiceJwt } from '@atproto/xrpc-server'
 import { ServerConfig } from './config'
 import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
@@ -11,6 +10,7 @@ import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { CourierClient } from './courier'
+import { FeatureGates } from './feature-gates'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
@@ -32,6 +32,7 @@ export class AppContext {
       bsyncClient: BsyncClient
       courierClient: CourierClient
       authVerifier: AuthVerifier
+      featureGates: FeatureGates
     },
   ) {}
 
@@ -83,13 +84,8 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  async serviceAuthJwt(aud: string) {
-    const iss = this.cfg.serverDid
-    return createServiceJwt({
-      iss,
-      aud,
-      keypair: this.signingKey,
-    })
+  get featureGates(): FeatureGates {
+    return this.opts.featureGates
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {
