@@ -286,8 +286,6 @@ const notifsForInsert = (obj: IndexedPost) => {
     if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
     if (ancestor.height < REPLY_NOTIF_DEPTH) {
       const ancestorUri = new AtUri(ancestor.uri)
-      // found hidden reply, don't notify for sub-replies
-      if (threadgateHiddenReplies.includes(ancestorUri.toString())) break
       maybeNotify({
         did: ancestorUri.host,
         reason: 'reply',
@@ -297,6 +295,8 @@ const notifsForInsert = (obj: IndexedPost) => {
         recordCid: obj.post.cid,
         sortAt: obj.post.sortAt,
       })
+      // found hidden reply, don't notify any higher ancestors
+      if (threadgateHiddenReplies.includes(ancestorUri.toString())) break
     }
   }
 

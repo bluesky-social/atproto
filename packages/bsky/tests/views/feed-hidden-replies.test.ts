@@ -177,7 +177,7 @@ describe('postgates', () => {
       expect(notificationC).toBeDefined()
     })
 
-    it(`[A] -> [B] -> [C] : B is hidden, C results in no notification`, async () => {
+    it(`[A] -> [B] -> [C] : B is hidden, C results in no notification for A, notification for B`, async () => {
       const A = await sc.post(users.poster.did, `A`)
       await network.processAll()
       const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
@@ -197,12 +197,12 @@ describe('postgates', () => {
 
       await network.processAll()
 
-      const C = await sc.reply(users.replier.did, A.ref, B.ref, `C`)
+      const C = await sc.reply(users.viewer.did, A.ref, B.ref, `C`)
 
       await network.processAll()
 
       const {
-        data: { notifications },
+        data: { notifications: posterNotifications },
       } = await agent.api.app.bsky.notification.listNotifications(
         {},
         {
@@ -210,15 +210,30 @@ describe('postgates', () => {
         },
       )
 
-      const notificationB = notifications.find((item) => {
+      const posterNotificationB = posterNotifications.find((item) => {
         return item.uri === B.ref.uriStr
       })
-      const notificationC = notifications.find((item) => {
+      const posterNotificationC = posterNotifications.find((item) => {
         return item.uri === C.ref.uriStr
       })
 
-      expect(notificationB).toBeUndefined()
-      expect(notificationC).toBeUndefined()
+      expect(posterNotificationB).toBeUndefined()
+      expect(posterNotificationC).toBeUndefined()
+
+      const {
+        data: { notifications: replierNotifications },
+      } = await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(users.replier.did),
+        },
+      )
+
+      const replierNotificationC = replierNotifications.find((item) => {
+        return item.uri === C.ref.uriStr
+      })
+
+      expect(replierNotificationC).toBeDefined()
     })
   })
 })
