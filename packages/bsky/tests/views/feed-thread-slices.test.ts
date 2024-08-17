@@ -216,8 +216,7 @@ describe('pds thread views', () => {
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
     expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
     expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
-    // We don't walk further up than the last post's parent
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
+    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },

@@ -646,6 +646,13 @@ export class Views {
         creatorFromUri(parent.record.reply.parent.uri),
         state,
       )
+      if (
+        !state.ctx?.include3pBlocks &&
+        state.postBlocks?.get(parent.record.reply.parent.uri)?.reply &&
+        isPostView(root)
+      ) {
+        root = this.blockedPost(root.uri, creatorFromUri(root.uri), state)
+      }
     }
     return {
       root,
