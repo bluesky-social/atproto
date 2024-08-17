@@ -1,6 +1,17 @@
 import { AtpAgent, AppBskyFeedDefs, AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 
+/**
+ * To ensure consistency, we only test based on the data returend from a single
+ * `FeedViewPost`, since the frontend constructs feed slices based on a single
+ * `FeedViewPost`.
+ *
+ * With more results in the first page of data, other computations are
+ * feasible, but since they rely on when they were created, results are
+ * inconsistent.
+ */
+const LIMIT = 1
+
 describe('pds thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -50,7 +61,7 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -91,7 +102,7 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -122,7 +133,7 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -155,7 +166,7 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -198,7 +209,7 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -216,7 +227,10 @@ describe('pds thread views', () => {
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
     expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
     expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root)).toBe(true)
+    /*
+     * We don't walk the reply ancestors past whats available in the ReplyRef
+     */
+    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },

@@ -619,9 +619,16 @@ export class Views {
 
   replyRef(uri: string, state: HydrationState): ReplyRef | undefined {
     const postRecord = state.posts?.get(uri.toString())?.record
+
     if (!postRecord?.reply) return
+
     let root = this.maybePost(postRecord.reply.root.uri, state)
     let parent = this.maybePost(postRecord.reply.parent.uri, state)
+
+    /*
+     * First check if there is a block between child and parent, block parent
+     * if true
+     */
     if (
       !state.ctx?.include3pBlocks &&
       state.postBlocks?.get(uri)?.reply &&
@@ -633,6 +640,10 @@ export class Views {
         root = parent
       }
     }
+
+    /*
+     * Check if there is a block between parent and root, block root if true
+     */
     if (
       !state.ctx?.include3pBlocks &&
       state.postBlocks?.get(parent.uri)?.reply &&
@@ -640,20 +651,15 @@ export class Views {
     ) {
       root = this.blockedPost(root.uri, creatorFromUri(root.uri), state)
     }
+
     let grandparentAuthor: ProfileViewBasic | undefined
     if (isPostRecord(parent.record) && parent.record.reply) {
       grandparentAuthor = this.profileBasic(
         creatorFromUri(parent.record.reply.parent.uri),
         state,
       )
-      if (
-        !state.ctx?.include3pBlocks &&
-        state.postBlocks?.get(parent.record.reply.parent.uri)?.reply &&
-        isPostView(root)
-      ) {
-        root = this.blockedPost(root.uri, creatorFromUri(root.uri), state)
-      }
     }
+
     return {
       root,
       parent,
