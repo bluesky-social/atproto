@@ -37,9 +37,12 @@ describe('pds thread views', () => {
     carol = sc.dids.carol
     dan = sc.dids.dan
 
-    sc.follow(carol, alice)
-    sc.follow(carol, bob)
-    sc.follow(carol, dan)
+    await sc.follow(carol, alice)
+    await sc.follow(carol, bob)
+    await sc.follow(carol, dan)
+    await sc.follow(dan, alice)
+    await sc.follow(dan, bob)
+    await sc.follow(dan, carol)
   })
 
   afterAll(async () => {
@@ -102,14 +105,16 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: LIMIT },
+      { limit: 3 },
       {
         headers: await network.serviceHeaders(carol),
       },
     )
 
+    const sliceB = timeline.data.feed.find((f) => f.post.uri === B.ref.uriStr)
     const sliceC = timeline.data.feed.find((f) => f.post.uri === C.ref.uriStr)
 
+    expect(sliceB).toBeUndefined()
     expect(sliceC).toBeUndefined()
 
     await pdsAgent.api.app.bsky.graph.block.delete(
@@ -133,14 +138,16 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: LIMIT },
+      { limit: 3 },
       {
         headers: await network.serviceHeaders(carol),
       },
     )
 
+    const sliceA = timeline.data.feed.find((f) => f.post.uri === A.ref.uriStr)
     const sliceC = timeline.data.feed.find((f) => f.post.uri === C.ref.uriStr)
 
+    expect(sliceA).toBeDefined()
     expect(sliceC).toBeUndefined()
 
     await pdsAgent.api.app.bsky.graph.block.delete(
@@ -235,6 +242,52 @@ describe('pds thread views', () => {
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
       sc.getHeaders(alice),
+    )
+  })
+
+  it(`[A] -> [B] -> [C] -> [D], B blocks C, viewed as D`, async () => {
+    const A = await sc.post(alice, `A`)
+    await network.processAll()
+    const B = await sc.reply(bob, A.ref, A.ref, `B`)
+    await network.processAll()
+    const C = await sc.reply(carol, A.ref, B.ref, `C`)
+    await network.processAll()
+    const D = await sc.reply(dan, A.ref, C.ref, `D`)
+    const block = await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: bob },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(bob),
+    )
+
+    await network.processAll()
+
+    const timeline = await agent.api.app.bsky.feed.getTimeline(
+      { limit: LIMIT },
+      {
+        headers: await network.serviceHeaders(dan),
+      },
+    )
+
+    const sliceD = timeline.data.feed.find((f) => f.post.uri === D.ref.uriStr)
+
+    expect(sliceD).toBeDefined()
+    expect(sliceD?.reply).toBeDefined()
+
+    if (!sliceD || !sliceD.reply) {
+      throw new Error('sliceD is undefined')
+    }
+
+    expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
+    expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
+    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
+    /*
+     * We don't walk the reply ancestors past whats available in the ReplyRef
+     */
+    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
+
+    await pdsAgent.api.app.bsky.graph.block.delete(
+      { repo: bob, rkey: new AtUri(block.uri).rkey },
+      sc.getHeaders(bob),
     )
   })
 })
