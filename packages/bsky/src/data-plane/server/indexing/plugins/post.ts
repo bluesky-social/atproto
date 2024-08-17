@@ -5,7 +5,6 @@ import { jsonStringToLex } from '@atproto/lexicon'
 import {
   Record as PostRecord,
   ReplyRef,
-  isRecord as isPostRecord,
 } from '../../../../lexicon/types/app/bsky/feed/post'
 import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
@@ -184,8 +183,8 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
 
-      const urip = new AtUri(record.uri)
-      if (urip.collection === lex.ids.AppBskyFeedPost) {
+      const embedUri = new AtUri(record.uri)
+      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
         const { violatesEmbeddingRules } = await validatePostEmbed(
           db,
           record.uri,
