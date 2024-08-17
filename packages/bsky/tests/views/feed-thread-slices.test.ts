@@ -199,6 +199,49 @@ describe('pds thread views', () => {
     )
   })
 
+  it(`[A] -> [B] -> [C] -> [D], A blocks C, viewed as D`, async () => {
+    const A = await sc.post(alice, `A`)
+    await network.processAll()
+    const B = await sc.reply(bob, A.ref, A.ref, `B`)
+    await network.processAll()
+    const C = await sc.reply(carol, A.ref, B.ref, `C`)
+    await network.processAll()
+    const D = await sc.reply(dan, A.ref, C.ref, `D`)
+    const block = await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: alice },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(alice),
+    )
+
+    await network.processAll()
+
+    const timeline = await agent.api.app.bsky.feed.getTimeline(
+      { limit: LIMIT },
+      {
+        headers: await network.serviceHeaders(dan),
+      },
+    )
+
+    const sliceD = timeline.data.feed.find((f) => f.post.uri === D.ref.uriStr)
+
+    expect(sliceD).toBeDefined()
+    expect(sliceD?.reply).toBeDefined()
+
+    if (!sliceD || !sliceD.reply) {
+      throw new Error('sliceD is undefined')
+    }
+
+    expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
+    expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
+    expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
+    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
+
+    await pdsAgent.api.app.bsky.graph.block.delete(
+      { repo: alice, rkey: new AtUri(block.uri).rkey },
+      sc.getHeaders(alice),
+    )
+  })
+
   it(`[A] -> [B] -> [C] -> [D], A blocks B, viewed as C`, async () => {
     const A = await sc.post(alice, `A`)
     await network.processAll()
