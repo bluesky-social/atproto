@@ -111,10 +111,7 @@ export class Views {
   replyIsHidden(replyUri: string, rootPostUri: string, state: HydrationState) {
     const threadgateUri = postUriToThreadgateUri(rootPostUri)
     const threadgate = state.threadgates?.get(threadgateUri)
-    if (threadgate?.record?.hiddenReplies?.includes(replyUri)) {
-      return true
-    }
-    return false
+    return !!threadgate?.record?.hiddenReplies?.includes(replyUri)
   }
 
   profileDetailed(
