@@ -247,22 +247,39 @@ export class AuthVerifier {
       }
       return didKey
     }
+    const assertLxmCheck = () => {
+      const lxm = parseReqNsid(reqCtx.req)
+      if (
+        (opts.lxmCheck && !opts.lxmCheck(payload.lxm)) ||
+        (!opts.lxmCheck && payload.lxm !== lxm)
+      ) {
+        throw new AuthRequiredError(
+          payload.lxm !== undefined
+            ? `bad jwt lexicon method ("lxm"). must match: ${lxm}`
+            : `missing jwt lexicon method ("lxm"). must match: ${lxm}`,
+          'BadJwtLexiconMethod',
+        )
+      }
+    }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
     // if validating additional scopes, skip scope check in initial validation & follow up afterwards
-    const lxm = opts.lxmCheck ? null : parseReqNsid(reqCtx.req)
-    const payload = await verifyServiceJwt(jwtStr, opts.aud, lxm, getSigningKey)
-    if (opts.lxmCheck) {
-      const validLxm = opts.lxmCheck(payload.lxm)
-      if (!validLxm) {
-        throw new AuthRequiredError(
-          `missing jwt lexicon method`,
-          'MissingJwtLexiconMethod',
-        )
-      }
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      opts.aud,
+      null,
+      getSigningKey,
+    )
+    if (
+      !payload.iss.endsWith('#atproto_labeler') ||
+      payload.lxm !== undefined
+    ) {
+      // @TODO currently permissive of labelers who dont set lxm yet.
+      // we'll allow ozone self-hosters to upgrade before removing this condition.
+      assertLxmCheck()
     }
     return { iss: payload.iss, aud: payload.aud }
   }
