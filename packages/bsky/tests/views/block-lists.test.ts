@@ -374,7 +374,7 @@ describe('pds views with blocking from block lists', () => {
   it('does not return blocked accounts in actor search typeahead', async () => {
     const resCarol = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: 'dan.test',
+        term: 'dan.tes',
       },
       {
         headers: await network.serviceHeaders(
@@ -387,7 +387,7 @@ describe('pds views with blocking from block lists', () => {
 
     const resDan = await agent.api.app.bsky.actor.searchActorsTypeahead(
       {
-        term: 'carol.test',
+        term: 'carol.tes',
       },
       {
         headers: await network.serviceHeaders(
@@ -397,6 +397,24 @@ describe('pds views with blocking from block lists', () => {
       },
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
+  })
+
+  it('does return blocked accounts in actor search typeahead when term is exact handle', async () => {
+    const resCarol = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      {
+        term: 'dan.test',
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeTruthy()
+
+    const resDan = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      {
+        term: 'carol.test',
+      },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeTruthy()
   })
 
   it('does not return blocked accounts in get suggestions', async () => {
