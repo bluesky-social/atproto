@@ -238,7 +238,7 @@ describe('Auth', () => {
           return keypair.did()
         },
       )
-      await expect(tryVerify).rejects.toThrow(/missing jwt lexicon method/)
+      await expect(tryVerify).rejects.toThrow(/bad jwt lexicon method/)
     })
 
     it('fails on null lxm when lxm is required', async () => {
