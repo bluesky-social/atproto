@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - divy/starter-packs
+      - service-auth-scopes
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

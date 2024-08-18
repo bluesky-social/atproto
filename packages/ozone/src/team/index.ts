@@ -7,6 +7,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chunkArray } from '@atproto/common'
 import AppContext from '../context'
 import { httpLogger } from '../logger'
+import { ids } from '../lexicon/lexicons'
 
 export type TeamServiceCreator = (db: Database) => TeamService
 
@@ -168,7 +169,7 @@ export class TeamService {
     const profiles = new Map<string, ProfileViewDetailed>()
 
     try {
-      const headers = await ctx.appviewAuth()
+      const headers = await ctx.appviewAuth(ids.AppBskyActorGetProfiles)
 
       for (const actors of chunkArray(dids, 25)) {
         const { data } = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(

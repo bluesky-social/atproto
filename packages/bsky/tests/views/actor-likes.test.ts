@@ -1,5 +1,6 @@
-import { AtpAgent, AtUri } from '@atproto/api'
-import { basicSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
+import { AtUri, AtpAgent } from '@atproto/api'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork
@@ -35,7 +36,12 @@ describe('bsky actor likes feed views', () => {
       data: { feed: bobLikes },
     } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetActorLikes,
+        ),
+      },
     )
 
     expect(bobLikes).toHaveLength(3)
@@ -43,7 +49,12 @@ describe('bsky actor likes feed views', () => {
     await expect(
       agent.api.app.bsky.feed.getActorLikes(
         { actor: sc.accounts[bob].handle },
-        { headers: await network.serviceHeaders(carol) },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedGetActorLikes,
+          ),
+        },
       ),
     ).rejects.toThrow('Profile not found')
   })
@@ -66,7 +77,12 @@ describe('bsky actor likes feed views', () => {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetActorLikes,
+        ),
+      },
     )
 
     expect(
@@ -100,7 +116,12 @@ describe('bsky actor likes feed views', () => {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetActorLikes,
+        ),
+      },
     )
 
     expect(

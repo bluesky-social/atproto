@@ -2,6 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { TestNetwork, SeedClient, usersBulkSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface
@@ -40,7 +41,10 @@ describe.skip('pds actor search views', () => {
     // Process remaining profiles
     network.bsky.sub.run()
     await network.processAll(50000)
-    headers = await network.serviceHeaders(Object.values(sc.dids)[0])
+    headers = await network.serviceHeaders(
+      Object.values(sc.dids)[0],
+      ids.AppBskyActorSearchActorsTypeahead,
+    )
   })
 
   afterAll(async () => {

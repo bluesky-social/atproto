@@ -77,10 +77,12 @@ export const verifyJwt = async (
       'BadJwtAudience',
     )
   }
-  if (lxm !== null && lxm !== payload.lxm) {
+  if (lxm !== null && payload.lxm !== lxm) {
     throw new AuthRequiredError(
-      `missing jwt lexicon method ("lxm"): ${lxm}`,
-      'MissingJwtMethod',
+      payload.lxm !== undefined
+        ? `bad jwt lexicon method ("lxm"). must match: ${lxm}`
+        : `missing jwt lexicon method ("lxm"). must match: ${lxm}`,
+      'BadJwtLexiconMethod',
     )
   }
 
