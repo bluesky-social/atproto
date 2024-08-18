@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.activateAccount(
           undefined,
-          authPassthru(req, true),
+          authPassthru(req),
         )
         return
       }
