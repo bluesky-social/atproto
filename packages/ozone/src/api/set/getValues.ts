@@ -3,7 +3,7 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.set.get({
+  server.tools.ozone.set.getValues({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth }) => {
       const access = auth.credentials

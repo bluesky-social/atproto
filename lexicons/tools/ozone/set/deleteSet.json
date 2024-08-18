@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.set.removeSet",
+  "id": "tools.ozone.set.deleteSet",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove an entire set. Attempting to remove a set that does not exist will result in an error.",
+      "description": "Delete an entire set. Attempting to delete a set that does not exist will result in an error.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,7 +13,7 @@
           "properties": {
             "name": {
               "type": "string",
-              "description": "Name of the set to remove"
+              "description": "Name of the set to delete"
             }
           }
         }

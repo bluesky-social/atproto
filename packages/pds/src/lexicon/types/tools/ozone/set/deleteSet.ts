@@ -7,24 +7,23 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
-import * as ToolsOzoneSetDefs from './defs'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
+  /** Name of the set to delete */
   name: string
-  limit: number
-  cursor?: string
-}
-
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  set: ToolsOzoneSetDefs.SetView
-  values: string[]
-  cursor?: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -35,6 +34,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'SetNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough

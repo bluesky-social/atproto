@@ -10,9 +10,9 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** Name of the set to remove values from */
+  /** Name of the set to delete values from */
   name: string
-  /** Array of string values to remove from the set */
+  /** Array of string values to delete from the set */
   values: string[]
   [k: string]: unknown
 }

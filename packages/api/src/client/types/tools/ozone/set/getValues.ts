@@ -6,24 +6,26 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ToolsOzoneSetDefs from './defs'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  /** Name of the set to remove */
+export interface QueryParams {
   name: string
-  [k: string]: unknown
+  limit?: number
+  cursor?: string
 }
 
+export type InputSchema = undefined
+
 export interface OutputSchema {
+  set: ToolsOzoneSetDefs.SetView
+  values: string[]
+  cursor?: string
   [k: string]: unknown
 }
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
-  qp?: QueryParams
-  encoding?: 'application/json'
 }
 
 export interface Response {

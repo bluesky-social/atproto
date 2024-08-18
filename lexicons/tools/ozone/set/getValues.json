@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.set.get",
+  "id": "tools.ozone.set.getValues",
   "defs": {
     "main": {
       "type": "query",

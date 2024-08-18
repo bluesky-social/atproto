@@ -1,7 +1,7 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
-  ToolsOzoneSetsDefs,
-  ToolsOzoneSetsQuerySets,
+  ToolsOzoneSetDefs,
+  ToolsOzoneSetQuerySets,
 } from '@atproto/api'
 import { forSnapshot } from './_util'
 
@@ -24,7 +24,7 @@ describe('ozone-sets', () => {
     description: 'Another test set',
   }
 
-  const upsertSet = async (set: ToolsOzoneSetsDefs.Set) => {
+  const upsertSet = async (set: ToolsOzoneSetDefs.Set) => {
     const { data } = await agent.tools.ozone.set.upsertSet(set, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders('admin'),
@@ -34,7 +34,7 @@ describe('ozone-sets', () => {
   }
 
   const removeSet = async (name: string) => {
-    await agent.tools.ozone.set.removeSet(
+    await agent.tools.ozone.set.deleteSet(
       { name },
       {
         encoding: 'application/json',
@@ -44,7 +44,7 @@ describe('ozone-sets', () => {
   }
 
   const addToSet = async (name: string, values: string[]) => {
-    await agent.tools.ozone.set.add(
+    await agent.tools.ozone.set.addValues(
       { name, values },
       {
         encoding: 'application/json',
@@ -54,7 +54,7 @@ describe('ozone-sets', () => {
   }
 
   const getSet = async (name: string) => {
-    const { data } = await agent.tools.ozone.set.get(
+    const { data } = await agent.tools.ozone.set.getValues(
       { name },
       {
         headers: await network.ozone.modHeaders('moderator'),
@@ -63,7 +63,7 @@ describe('ozone-sets', () => {
     return data
   }
 
-  const querySets = async (params: ToolsOzoneSetsQuerySets.QueryParams) => {
+  const querySets = async (params: ToolsOzoneSetQuerySets.QueryParams) => {
     const { data } = await agent.tools.ozone.set.querySets(params, {
       headers: await network.ozone.modHeaders('moderator'),
     })

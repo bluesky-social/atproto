@@ -6,26 +6,24 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as ToolsOzoneSetDefs from './defs'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
+  /** Name of the set to delete */
   name: string
-  limit?: number
-  cursor?: string
+  [k: string]: unknown
 }
 
-export type InputSchema = undefined
-
 export interface OutputSchema {
-  set: ToolsOzoneSetDefs.SetView
-  values: string[]
-  cursor?: string
   [k: string]: unknown
 }
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
 }
 
 export interface Response {
@@ -34,6 +32,16 @@ export interface Response {
   data: OutputSchema
 }
 
+export class SetNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'SetNotFound') return new SetNotFoundError(e)
+  }
+
   return e
 }

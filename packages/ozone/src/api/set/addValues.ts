@@ -3,29 +3,26 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.set.remove({
+  server.tools.ozone.set.addValues({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
       const { name, values } = input.body
 
-      if (!access.isAdmin) {
+      if (!access.isModerator) {
         throw new AuthRequiredError(
-          'Must be a moderator to remove values from a set',
+          'Must be a moderator to add values to a set',
         )
       }
 
       const setService = ctx.setService(db)
       const set = await setService.getByName(name)
       if (!set) {
-        throw new InvalidRequestError(
-          `Set with name "${name}" does not exist`,
-          'SetNotFound',
-        )
+        throw new InvalidRequestError(`Set with name "${name}" does not exist`)
       }
 
-      await setService.removeValues(set.id, values)
+      await setService.addValues(set.id, values)
     },
   })
 }

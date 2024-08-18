@@ -11448,9 +11448,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetAdd: {
+  ToolsOzoneSetAddValues: {
     lexicon: 1,
-    id: 'tools.ozone.set.add',
+    id: 'tools.ozone.set.addValues',
     defs: {
       main: {
         type: 'procedure',
@@ -11530,9 +11530,84 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneSetGet: {
+  ToolsOzoneSetDeleteSet: {
     lexicon: 1,
-    id: 'tools.ozone.set.get',
+    id: 'tools.ozone.set.deleteSet',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Remove an entire set. Attempting to delete a set that does not exist will result in an error.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the set to delete',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'SetNotFound',
+            description: 'set with the given name does not exist',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSetDeleteValues: {
+    lexicon: 1,
+    id: 'tools.ozone.set.deleteValues',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Remove values from a specific set. Attempting to delete values that are not in the set will not result in an error',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name', 'values'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the set to delete values from',
+              },
+              values: {
+                type: 'array',
+                minLength: 1,
+                items: {
+                  type: 'string',
+                },
+                description: 'Array of string values to delete from the set',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SetNotFound',
+            description: 'set with the given name does not exist',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSetGetValues: {
+    lexicon: 1,
+    id: 'tools.ozone.set.getValues',
     defs: {
       main: {
         type: 'query',
@@ -11577,6 +11652,12 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'SetNotFound',
+            description: 'set with the given name does not exist',
+          },
+        ],
       },
     },
   },
@@ -11634,80 +11715,6 @@ export const schemaDict = {
             },
           },
         },
-      },
-    },
-  },
-  ToolsOzoneSetRemove: {
-    lexicon: 1,
-    id: 'tools.ozone.set.remove',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Remove values from a specific set. Attempting to remove values that are not in the set will not result in an error',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['name', 'values'],
-            properties: {
-              name: {
-                type: 'string',
-                description: 'Name of the set to remove values from',
-              },
-              values: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-                description: 'Array of string values to remove from the set',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'SetNotFound',
-            description: 'set with the given name does not exist',
-          },
-        ],
-      },
-    },
-  },
-  ToolsOzoneSetRemoveSet: {
-    lexicon: 1,
-    id: 'tools.ozone.set.removeSet',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Remove an entire set. Attempting to remove a set that does not exist will result in an error.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['name'],
-            properties: {
-              name: {
-                type: 'string',
-                description: 'Name of the set to remove',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-        errors: [
-          {
-            name: 'SetNotFound',
-            description: 'set with the given name does not exist',
-          },
-        ],
       },
     },
   },
@@ -12174,12 +12181,12 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
-  ToolsOzoneSetAdd: 'tools.ozone.set.add',
+  ToolsOzoneSetAddValues: 'tools.ozone.set.addValues',
   ToolsOzoneSetDefs: 'tools.ozone.set.defs',
-  ToolsOzoneSetGet: 'tools.ozone.set.get',
+  ToolsOzoneSetDeleteSet: 'tools.ozone.set.deleteSet',
+  ToolsOzoneSetDeleteValues: 'tools.ozone.set.deleteValues',
+  ToolsOzoneSetGetValues: 'tools.ozone.set.getValues',
   ToolsOzoneSetQuerySets: 'tools.ozone.set.querySets',
-  ToolsOzoneSetRemove: 'tools.ozone.set.remove',
-  ToolsOzoneSetRemoveSet: 'tools.ozone.set.removeSet',
   ToolsOzoneSetUpsertSet: 'tools.ozone.set.upsertSet',
   ToolsOzoneTeamAddMember: 'tools.ozone.team.addMember',
   ToolsOzoneTeamDefs: 'tools.ozone.team.defs',

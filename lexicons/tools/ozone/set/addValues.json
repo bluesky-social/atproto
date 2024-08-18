@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.set.remove",
+  "id": "tools.ozone.set.addValues",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove values from a specific set. Attempting to remove values that are not in the set will not result in an error",
+      "description": "Add values to a specific set. Attempting to add values to a set that does not exist will result in an error.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,25 +13,20 @@
           "properties": {
             "name": {
               "type": "string",
-              "description": "Name of the set to remove values from"
+              "description": "Name of the set to add values to"
             },
             "values": {
               "type": "array",
               "minLength": 1,
+              "maxLength": 1000,
               "items": {
                 "type": "string"
               },
-              "description": "Array of string values to remove from the set"
+              "description": "Array of string values to add to the set"
             }
           }
         }
-      },
-      "errors": [
-        {
-          "name": "SetNotFound",
-          "description": "set with the given name does not exist"
-        }
-      ]
+      }
     }
   }
 }
