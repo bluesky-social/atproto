@@ -3,7 +3,7 @@ import { ModSubject } from '../mod-service/subject'
 import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
 import { LanguageTagger } from './language-tagger'
-import { EmbedContentTypeTagger } from './embed-content-type-tagger'
+import { EmbedTagger } from './embed-tagger'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
 
 export class TagService {
@@ -17,7 +17,7 @@ export class TagService {
   ) {
     this.taggers = [
       new LanguageTagger(subject, subjectStatus, moderationService),
-      new EmbedContentTypeTagger(subject, subjectStatus, moderationService),
+      new EmbedTagger(subject, subjectStatus, moderationService),
       // Add more taggers as needed
     ]
   }

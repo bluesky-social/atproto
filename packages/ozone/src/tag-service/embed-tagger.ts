@@ -1,10 +1,14 @@
-import { AppBskyEmbedImages, AppBskyEmbedRecordWithMedia } from '@atproto/api'
+import {
+  AppBskyEmbedImages,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyFeedPost,
+} from '@atproto/api'
 import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
 import { ids } from '../lexicon/lexicons'
 
-export class EmbedContentTypeTagger extends ContentTagger {
-  tagPrefix = 'embed-content-type:'
+export class EmbedTagger extends ContentTagger {
+  tagPrefix = 'embed:'
 
   isApplicable(): boolean {
     return (
@@ -15,24 +19,22 @@ export class EmbedContentTypeTagger extends ContentTagger {
     )
   }
 
-  async getTags(): Promise<string[]> {
+  async buildTags(): Promise<string[]> {
     try {
-      if (!this.isApplicable()) {
-        return []
-      }
       const recordValue = await this.getRecordValue()
       if (!recordValue) {
         return []
       }
       const tags: string[] = []
       if (
-        AppBskyEmbedImages.isView(recordValue) &&
-        (AppBskyEmbedImages.isMain(recordValue.embed) ||
-          AppBskyEmbedRecordWithMedia.isMain(recordValue.embed))
+        AppBskyFeedPost.isRecord(recordValue) &&
+        AppBskyEmbedRecordWithMedia.isMain(recordValue.embed)
       ) {
-        tags.push(`${this.tagPrefix}image`)
+        if (AppBskyEmbedImages.isMain(recordValue.embed.media)) {
+          tags.push(`${this.tagPrefix}image`)
+        }
+        //     @TODO: check for video embed here
       }
-      //     @TODO: check for video embed here
       return tags
     } catch (err) {
       log.error({ subject: this.subject, err }, 'Error getting record langs')

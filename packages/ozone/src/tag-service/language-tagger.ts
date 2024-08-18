@@ -16,11 +16,8 @@ export class LanguageTagger extends ContentTagger {
     return !!this.subjectStatus && !this.tagAlreadyExists()
   }
 
-  async getTags(): Promise<string[]> {
+  async buildTags(): Promise<string[]> {
     try {
-      if (!this.isApplicable()) {
-        return []
-      }
       const recordLangs = await this.getRecordLang()
       return recordLangs
         ? recordLangs.map((lang) => `${this.tagPrefix}${lang}`)

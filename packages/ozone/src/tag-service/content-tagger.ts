@@ -12,7 +12,16 @@ export abstract class ContentTagger {
   protected abstract tagPrefix: string
 
   protected abstract isApplicable(): boolean
-  abstract getTags(): Promise<string[]>
+  protected abstract buildTags(): Promise<string[]>
+
+  async getTags(): Promise<string[]> {
+    console.log(this.isApplicable(), 'isApplicable')
+    if (!this.isApplicable()) {
+      return []
+    }
+
+    return this.buildTags()
+  }
 
   protected tagAlreadyExists(): boolean {
     return Boolean(
