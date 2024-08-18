@@ -404,7 +404,12 @@ describe('pds views with blocking from block lists', () => {
       {
         term: 'dan.test',
       },
-      { headers: await network.serviceHeaders(carol) },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyActorSearchActorsTypeahead,
+        ),
+      },
     )
     expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeTruthy()
 
@@ -412,7 +417,12 @@ describe('pds views with blocking from block lists', () => {
       {
         term: 'carol.test',
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyActorSearchActorsTypeahead,
+        ),
+      },
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeTruthy()
   })

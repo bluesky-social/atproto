@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork
@@ -66,10 +67,10 @@ describe('bsky actor likes feed views', () => {
 
   it('does not include users with creator block relationship in reference lists for non-creator, in-list viewers', async () => {
     const view = await agent.api.app.bsky.graph.getList(
+      { list: referenceList },
       {
-        list: referenceList,
+        headers: await network.serviceHeaders(frankie, ids.AppBskyGraphGetList),
       },
-      { headers: await network.serviceHeaders(frankie) },
     )
     expect(view.data.items.length).toBe(2)
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
@@ -77,10 +78,8 @@ describe('bsky actor likes feed views', () => {
 
   it('does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers', async () => {
     const view = await agent.api.app.bsky.graph.getList(
-      {
-        list: referenceList,
-      },
-      { headers: await network.serviceHeaders(greta) },
+      { list: referenceList },
+      { headers: await network.serviceHeaders(greta, ids.AppBskyGraphGetList) },
     )
     expect(view.data.items.length).toBe(2)
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
@@ -96,10 +95,8 @@ describe('bsky actor likes feed views', () => {
 
   it('does include users with creator block relationship in reference lists for creator', async () => {
     const view = await agent.api.app.bsky.graph.getList(
-      {
-        list: referenceList,
-      },
-      { headers: await network.serviceHeaders(eve) },
+      { list: referenceList },
+      { headers: await network.serviceHeaders(eve, ids.AppBskyGraphGetList) },
     )
     expect(view.data.items.length).toBe(3)
     expect(forSnapshot(view.data.items)).toMatchSnapshot()

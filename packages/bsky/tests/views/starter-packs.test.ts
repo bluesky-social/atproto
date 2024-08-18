@@ -150,7 +150,12 @@ describe('starter packs', () => {
       {
         starterPack: sp3.uriStr,
       },
-      { headers: await network.serviceHeaders(sc.dids.frankie) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.frankie,
+          ids.AppBskyGraphGetStarterPack,
+        ),
+      },
     )
     expect(view.data.starterPack.listItemsSample?.length).toBe(2)
     expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
@@ -161,7 +166,12 @@ describe('starter packs', () => {
       {
         starterPack: sp3.uriStr,
       },
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyGraphGetStarterPack,
+        ),
+      },
     )
     expect(view.data.starterPack.listItemsSample?.length).toBe(2)
     expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
@@ -177,10 +187,13 @@ describe('starter packs', () => {
 
   it('does include users with creator block relationship in list sample for creator', async () => {
     const view = await agent.api.app.bsky.graph.getStarterPack(
+      { starterPack: sp3.uriStr },
       {
-        starterPack: sp3.uriStr,
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyGraphGetStarterPack,
+        ),
       },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     expect(view.data.starterPack.listItemsSample?.length).toBe(3)
     expect(forSnapshot(view.data.starterPack.listItemsSample)).toMatchSnapshot()
