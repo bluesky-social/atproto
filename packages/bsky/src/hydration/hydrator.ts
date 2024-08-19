@@ -109,11 +109,11 @@ export type HydrationState = {
   bidirectionalBlocks?: BidirectionalBlocks
 }
 
-export type PostBlock = { embed: boolean; reply: boolean; root: boolean }
+export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
 export type PostBlocks = HydrationMap<PostBlock>
 type PostBlockPairs = {
   embed?: RelationshipPair
-  reply?: RelationshipPair
+  parent?: RelationshipPair
   root?: RelationshipPair
 }
 
@@ -452,7 +452,7 @@ export class Hydrator {
       if (parentDid) {
         const pair: RelationshipPair = [creator, parentDid]
         relationships.push(pair)
-        postBlockPairs.reply = pair
+        postBlockPairs.parent = pair
       }
       const rootUri = post.reply?.root.uri
       const rootDid = rootUri && didFromUri(rootUri)
@@ -468,12 +468,12 @@ export class Hydrator {
         postBlockPairs.embed = pair
       }
     }
-    // replace embed/reply pairs with block state
+    // replace embed/parent/root pairs with block state
     const blocks = await this.graph.getBidirectionalBlocks(relationships)
-    for (const [uri, { embed, reply, root }] of postBlocksPairs) {
+    for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
         embed: !!embed && blocks.isBlocked(...embed),
-        reply: !!reply && blocks.isBlocked(...reply),
+        parent: !!parent && blocks.isBlocked(...parent),
         root: !!root && blocks.isBlocked(...root),
       })
     }

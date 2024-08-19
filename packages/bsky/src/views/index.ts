@@ -626,7 +626,7 @@ export class Views {
       const childBlocks = state.postBlocks?.get(uri)
       const parentBlocks = state.postBlocks?.get(parent.uri)
       // if child blocks parent, block parent
-      if (isPostView(parent) && childBlocks?.reply) {
+      if (isPostView(parent) && childBlocks?.parent) {
         parent = this.blockedPost(parent.uri, parent.author.did, state)
       }
       // if child or parent blocks root, block root
@@ -760,7 +760,7 @@ export class Views {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
-    if (!state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.reply) {
+    if (!state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.parent) {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
@@ -791,7 +791,7 @@ export class Views {
       if (postInfo?.violatesThreadGate) {
         return undefined
       }
-      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.reply) {
+      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
         return undefined
       }
       const post = this.post(uri, state)
