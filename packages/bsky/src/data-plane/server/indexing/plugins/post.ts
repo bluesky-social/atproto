@@ -256,19 +256,22 @@ const notifsForInsert = (obj: IndexedPost) => {
       })
     }
   }
-  for (const embed of obj.embeds ?? []) {
-    if ('embedUri' in embed) {
-      const embedUri = new AtUri(embed.embedUri)
-      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
-        maybeNotify({
-          did: embedUri.host,
-          reason: 'quote',
-          reasonSubject: embedUri.toString(),
-          author: obj.post.creator,
-          recordUri: obj.post.uri,
-          recordCid: obj.post.cid,
-          sortAt: obj.post.sortAt,
-        })
+
+  if (!obj.post.violatesEmbeddingRules) {
+    for (const embed of obj.embeds ?? []) {
+      if ('embedUri' in embed) {
+        const embedUri = new AtUri(embed.embedUri)
+        if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+          maybeNotify({
+            did: embedUri.host,
+            reason: 'quote',
+            reasonSubject: embedUri.toString(),
+            author: obj.post.creator,
+            recordUri: obj.post.uri,
+            recordCid: obj.post.cid,
+            sortAt: obj.post.sortAt,
+          })
+        }
       }
     }
   }
