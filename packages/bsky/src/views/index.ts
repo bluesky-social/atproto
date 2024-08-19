@@ -756,7 +756,10 @@ export class Views {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
-    if (!state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.parent) {
+    if (
+      !state.ctx?.include3pBlocks &&
+      state.postBlocks?.get(childUri)?.parent
+    ) {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
