@@ -5,7 +5,19 @@ import createHttpError from 'http-errors'
 export type JsonScalar = string | number | boolean | null
 export type Json = JsonScalar | Json[] | { [_ in string]?: Json }
 
-export const parseContentType = hapiContentType as (type: string) => ContentType
+export const parseContentType = (type: string): ContentType => {
+  try {
+    return hapiContentType(type)
+  } catch (err) {
+    // De-boomify the error
+    if (err?.['isBoom']) {
+      throw createHttpError(err['output']['statusCode'], err['message'])
+    }
+
+    throw err
+  }
+}
+
 export type ContentType = {
   mime: string
   charset?: string
