@@ -88,17 +88,21 @@ are available:
   Lower lever; compatible with most JS engines.
 
 Every `@atproto/oauth-client-*` implementation has a different way to obtain an
-OAuth based API agent instance. Here is an example restoring a previously
-saved session:
+`OAuthAgent` instance that can be used to instantiate an `OAuthAtpAgent` (from
+`@atproto/api`). Here is an example restoring a previously saved session:
 
 ```typescript
+import { OAuthAtpAgent } from '@atproto/api'
 import { OAuthClient } from '@atproto/oauth-client'
 
 const oauthClient = new OAuthClient({
   // ...
 })
 
-const agent = await oauthClient.restore('did:plc:123')
+const oauthAgent = await oauthClient.restore('did:plc:123')
+
+// Instantiate the api Agent using an OAuthAgent
+const agent = new OAuthAtpAgent(oauthAgent)
 ```
 
 ### API calls
@@ -106,6 +110,9 @@ const agent = await oauthClient.restore('did:plc:123')
 The agent includes methods for many common operations, including:
 
 ```typescript
+// The DID of the user currently authenticated
+agent.did
+
 // Feeds and content
 await agent.getTimeline(params, opts)
 await agent.getAuthorFeed(params, opts)
@@ -151,11 +158,20 @@ await agent.updateSeenNotifications()
 await agent.resolveHandle(params, opts)
 await agent.updateHandle(params, opts)
 
-// Session management (OAuth based agent instances have a different set of methods)
+// Session management
 if (agent instanceof AtpAgent) {
-  await agent.createAccount(params)
-  await agent.login(params)
-  await agent.resumeSession(session)
+  // AtpAgent instances support using different sessions during their lifetime
+  await agent.createAccount({ ... }) // session a
+  await agent.login({ ... }) // session b
+  await agent.resumeSession(saveSession) // session c
+}
+
+if (agent instanceof OAuthAtpAgent) {
+  // Ensure the tokens are still valid by forcing a refresh
+  await agent.getTokenInfo(true) // { sub: string, expiresAt?: Date, scope: string, ... }
+
+  // Once signed out, the agent can no longer be used
+  await agent.signOut()
 }
 ```
 

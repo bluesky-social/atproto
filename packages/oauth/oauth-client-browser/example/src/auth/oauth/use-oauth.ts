@@ -1,12 +1,12 @@
 'use client'
 
+import { OAuthAtpAgent } from '@atproto/api'
 import {
   AuthorizeOptions,
   BrowserOAuthClient,
   BrowserOAuthClientLoadOptions,
   BrowserOAuthClientOptions,
   LoginContinuedInParentWindowError,
-  OAuthAtpAgent,
 } from '@atproto/oauth-client-browser'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 

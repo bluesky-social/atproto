@@ -74,6 +74,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/oauth-client':
+        specifier: workspace:^
+        version: link:../oauth/oauth-client
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -771,9 +774,6 @@ importers:
       '@atproto-labs/simple-store-memory':
         specifier: workspace:*
         version: link:../../internal/simple-store-memory
-      '@atproto/api':
-        specifier: workspace:*
-        version: link:../../api
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did

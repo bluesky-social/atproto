@@ -10,7 +10,6 @@ export * from '@atproto/did'
 export * from '@atproto/oauth-types'
 
 export * from './oauth-agent.js'
-export * from './oauth-atp-agent.js'
 export * from './oauth-authorization-server-metadata-resolver.js'
 export * from './oauth-callback-error.js'
 export * from './oauth-client.js'

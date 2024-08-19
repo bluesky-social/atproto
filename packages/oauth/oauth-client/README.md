@@ -167,12 +167,14 @@ authenticated requests to the user's PDS. There are two main use-cases:
 
 #### Making authenticated requests to Bluesky's AppView
 
-The `@atproto/oauth-client` package provides a `OAuthAtpAgent` class that can be
-used to make authenticated requests to Bluesky's AppView. That class implements
-the `Agent` interface from the `@atproto/api` package. See the documentation of
-the `@atproto/api` package for more information on how to use the `Agent` class.
+The `@atproto/oauth-client` package provides a `OAuthAgent` class that can be
+used to make authenticated requests to Bluesky's AppView. This can be achieved
+by constructing an `OAuthAtpAgent` (from `@atproto/api`) instance using the
+`OAuthAgent` instance.
 
 ```ts
+import { OAuthAtpAgent } from '@atproto/api'
+
 const agent = new OAuthAtpAgent(oauthAgent)
 
 // Make an authenticated request to the server. New credentials will be

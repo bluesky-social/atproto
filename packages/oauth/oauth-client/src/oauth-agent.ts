@@ -1,5 +1,5 @@
 import { Fetch, bindFetch } from '@atproto-labs/fetch'
-import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
+import { JwtHeader, JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { TokenInvalidError } from './errors/token-invalid-error.js'
@@ -11,6 +11,19 @@ import { SessionGetter } from './session-getter.js'
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
+
+export type TokenInfo = {
+  idToken?: {
+    header?: JwtHeader
+    payload: JwtPayload
+  }
+  expiresAt?: Date
+  expired?: boolean
+  scope?: string
+  iss: string
+  aud: string
+  sub: string
+}
 
 export class OAuthAgent {
   protected dpopFetch: Fetch<unknown>
@@ -36,36 +49,26 @@ export class OAuthAgent {
     return this.server.serverMetadata
   }
 
-  public async refreshIfNeeded(): Promise<void> {
-    await this.getTokenSet(undefined)
-  }
-
   /**
    * @param refresh See {@link SessionGetter.getSession}
    */
-  protected async getTokenSet(refresh?: boolean): Promise<TokenSet> {
+  public async getTokenSet(refresh?: boolean): Promise<TokenSet> {
     const { tokenSet } = await this.sessionGetter.getSession(this.sub, refresh)
     return tokenSet
   }
 
-  async getInfo(): Promise<{
-    userinfo?: JwtPayload
-    expired?: boolean
-    scope?: string
-    iss: string
-    aud: string
-    sub: string
-  }> {
-    const tokenSet = await this.getTokenSet()
+  async getTokenInfo(refresh?: boolean): Promise<TokenInfo> {
+    const tokenSet = await this.getTokenSet(refresh)
+    const expiresAt =
+      tokenSet.expires_at == null ? undefined : new Date(tokenSet.expires_at)
 
     return {
-      userinfo: tokenSet.id_token
-        ? unsafeDecodeJwt(tokenSet.id_token).payload
+      idToken: tokenSet.id_token
+        ? unsafeDecodeJwt(tokenSet.id_token)
         : undefined,
+      expiresAt,
       expired:
-        tokenSet.expires_at == null
-          ? undefined
-          : new Date(tokenSet.expires_at).getTime() < Date.now() - 5e3,
+        expiresAt == null ? undefined : expiresAt.getTime() < Date.now() - 5e3,
       scope: tokenSet.scope,
       iss: tokenSet.iss,
       aud: tokenSet.aud,

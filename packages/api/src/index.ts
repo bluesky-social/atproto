@@ -26,6 +26,7 @@ export { Agent } from './agent'
 
 export { AtpAgent, type AtpAgentOptions } from './atp-agent'
 export { BskyAgent } from './bsky-agent'
+export { OAuthAtpAgent } from './oauth-atp-agent'
 
 /** @deprecated */
 export { AtpAgent as default } from './atp-agent'

@@ -1,6 +1,7 @@
-import { Agent } from '@atproto/api'
+// Type only import allowing this dependency to no impact the bundle size
+import type { OAuthAgent, TokenInfo } from '@atproto/oauth-client'
 
-import { OAuthAgent } from './oauth-agent.js'
+import { Agent } from './agent'
 
 export class OAuthAtpAgent extends Agent {
   constructor(readonly oauthAgent: OAuthAgent) {
@@ -19,7 +20,7 @@ export class OAuthAtpAgent extends Agent {
     await this.oauthAgent.signOut()
   }
 
-  public async refreshIfNeeded(): Promise<void> {
-    await this.oauthAgent.refreshIfNeeded()
+  public async getTokenInfo(refresh?: boolean): Promise<TokenInfo> {
+    return this.oauthAgent.getTokenInfo(refresh)
   }
 }
