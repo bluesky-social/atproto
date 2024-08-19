@@ -168,10 +168,8 @@ ngrok as the `client_id`:
 Replace the content of the `src/app.ts` file, with the following content:
 
 ```typescript
-import {
-  BrowserOAuthClient,
-  OAuthAtpAgent,
-} from '@atproto/oauth-client-browser'
+import { OAuthAtpAgent } from '@atproto/api'
+import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 
 async function main() {
   const oauthClient = await BrowserOAuthClient.load({
