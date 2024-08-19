@@ -1,6 +1,7 @@
 import { AtpAgent, AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky views with mutes from mute lists', () => {
   let network: TestNetwork
@@ -98,7 +99,10 @@ describe('bsky views with mutes from mute lists', () => {
       },
       {
         encoding: 'application/json',
-        headers: await network.serviceHeaders(dan),
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphMuteActorList,
+        ),
       },
     )
   })
@@ -106,7 +110,12 @@ describe('bsky views with mutes from mute lists', () => {
   it('flags mutes in threads', async () => {
     const res = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(res.data.thread)).toMatchSnapshot()
   })
@@ -117,7 +126,12 @@ describe('bsky views with mutes from mute lists', () => {
 
     const res = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
     )
     expect(
       res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
@@ -127,7 +141,9 @@ describe('bsky views with mutes from mute lists', () => {
   it('removes content from muted users on getTimeline', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+      },
     )
     expect(
       res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
@@ -141,7 +157,12 @@ describe('bsky views with mutes from mute lists', () => {
     await sc.addToList(alice, dan, listRef)
     const res = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
     )
     expect(
       res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
@@ -151,7 +172,9 @@ describe('bsky views with mutes from mute lists', () => {
   it('returns mute status on getProfile', async () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+      },
     )
     expect(res.data.viewer?.muted).toBe(true)
     expect(res.data.viewer?.mutedByList?.uri).toBe(listUri)
@@ -160,7 +183,9 @@ describe('bsky views with mutes from mute lists', () => {
   it('returns mute status on getProfiles', async () => {
     const res = await agent.api.app.bsky.actor.getProfiles(
       { actors: [alice, carol] },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfiles),
+      },
     )
     expect(res.data.profiles[0].viewer?.muted).toBe(false)
     expect(res.data.profiles[0].viewer?.mutedByList).toBeUndefined()
@@ -171,7 +196,9 @@ describe('bsky views with mutes from mute lists', () => {
   it('ignores self-mutes', async () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: dan }, // dan subscribes to list that contains himself
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+      },
     )
     expect(res.data.viewer?.muted).toBe(false)
     expect(res.data.viewer?.mutedByList).toBeUndefined()
@@ -182,7 +209,12 @@ describe('bsky views with mutes from mute lists', () => {
       {
         limit: 100,
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(
       res.data.notifications.some((notif) =>
@@ -200,7 +232,12 @@ describe('bsky views with mutes from mute lists', () => {
       {
         limit: 100,
       },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
     )
     for (const actor of res.data.actors) {
       if ([bob, carol].includes(actor.did)) {
@@ -216,7 +253,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('returns the contents of a list', async () => {
     const res = await agent.api.app.bsky.graph.getList(
       { list: listUri },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
@@ -224,15 +261,15 @@ describe('bsky views with mutes from mute lists', () => {
   it('paginates getList', async () => {
     const full = await agent.api.app.bsky.graph.getList(
       { list: listUri },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
     )
     const first = await agent.api.app.bsky.graph.getList(
       { list: listUri, limit: 1 },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
     )
     const second = await agent.api.app.bsky.graph.getList(
       { list: listUri, cursor: first.data.cursor },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
     )
     const combined = [...first.data.items, ...second.data.items]
     expect(combined).toEqual(full.data.items)
@@ -257,7 +294,7 @@ describe('bsky views with mutes from mute lists', () => {
 
     const res = await agent.api.app.bsky.graph.getLists(
       { actor: alice },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
@@ -265,15 +302,15 @@ describe('bsky views with mutes from mute lists', () => {
   it('paginates getLists', async () => {
     const full = await agent.api.app.bsky.graph.getLists(
       { actor: alice },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
     )
     const first = await agent.api.app.bsky.graph.getLists(
       { actor: alice, limit: 1 },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
     )
     const second = await agent.api.app.bsky.graph.getLists(
       { actor: alice, cursor: first.data.cursor },
-      { headers: await network.serviceHeaders(dan) },
+      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
     )
     const combined = [...first.data.lists, ...second.data.lists]
     expect(combined).toEqual(full.data.lists)
@@ -286,13 +323,21 @@ describe('bsky views with mutes from mute lists', () => {
       },
       {
         encoding: 'application/json',
-        headers: await network.serviceHeaders(dan),
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphMuteActorList,
+        ),
       },
     )
 
     const res = await agent.api.app.bsky.graph.getListMutes(
       {},
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphGetListMutes,
+        ),
+      },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
@@ -300,15 +345,30 @@ describe('bsky views with mutes from mute lists', () => {
   it('paginates getListMutes', async () => {
     const full = await agent.api.app.bsky.graph.getListMutes(
       {},
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphGetListMutes,
+        ),
+      },
     )
     const first = await agent.api.app.bsky.graph.getListMutes(
       { limit: 1 },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphGetListMutes,
+        ),
+      },
     )
     const second = await agent.api.app.bsky.graph.getListMutes(
       { cursor: first.data.cursor },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphGetListMutes,
+        ),
+      },
     )
     const combined = [...first.data.lists, ...second.data.lists]
     expect(combined).toEqual(full.data.lists)
@@ -321,13 +381,21 @@ describe('bsky views with mutes from mute lists', () => {
       },
       {
         encoding: 'application/json',
-        headers: await network.serviceHeaders(dan),
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphUnmuteActorList,
+        ),
       },
     )
 
     const res = await agent.api.app.bsky.graph.getListMutes(
       {},
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyGraphGetListMutes,
+        ),
+      },
     )
     expect(res.data.lists.length).toBe(1)
   })
@@ -353,7 +421,7 @@ describe('bsky views with mutes from mute lists', () => {
 
     const got = await agent.api.app.bsky.graph.getList(
       { list: listUri },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetList) },
     )
     expect(got.data.list.name).toBe('updated alice mutes')
     expect(got.data.list.description).toBe('new descript')
@@ -372,7 +440,7 @@ describe('bsky views with mutes from mute lists', () => {
     await network.processAll()
     const res = await agent.api.app.bsky.feed.getPosts(
       { uris: [postRef.ref.uriStr] },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetPosts) },
     )
     expect(res.data.posts.length).toBe(1)
     expect(forSnapshot(res.data.posts[0])).toMatchSnapshot()
@@ -397,7 +465,9 @@ describe('bsky views with mutes from mute lists', () => {
 
     const res = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+      },
     )
     expect(
       res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
@@ -417,7 +487,9 @@ describe('bsky views with mutes from mute lists', () => {
 
     const res = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: await network.serviceHeaders(dan) },
+      {
+        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+      },
     )
     expect(
       res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),

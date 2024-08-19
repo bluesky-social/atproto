@@ -1,5 +1,11 @@
 # @atproto/oauth-client
 
+## 0.1.4
+
+### Patch Changes
+
+- [#2710](https://github.com/bluesky-social/atproto/pull/2710) [`04112783d`](https://github.com/bluesky-social/atproto/commit/04112783db17f865c9e2b673190f77dd0b7461e3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add CustomEvent ponyfill for enviroments that don't provide it
+
 ## 0.1.3
 
 ### Patch Changes
