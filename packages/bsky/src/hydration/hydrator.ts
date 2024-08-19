@@ -359,12 +359,9 @@ export class Hydrator {
         threadRootUris.add(rootUriFromPost(post) ?? uri)
       }
     }
-    const [postsLayer2, threadgates, postgates] = await Promise.all([
+    const [postsLayer2, threadgates] = await Promise.all([
       this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
       this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
-      this.feed.getPostgatesForPosts(
-        Array.from(new Set([...uris, ...embedPostUrisLayer1])),
-      ),
     ])
     // collect list/feedgen embeds, lists in threadgates, post record hydration
     const threadgateListUris = getListUrisFromThreadgates(threadgates)
@@ -396,6 +393,12 @@ export class Hydrator {
       ...ref,
       threadRoot: posts.get(ref.uri)?.record.reply?.root.uri ?? ref.uri,
     }))
+    const postUrisWithPostgates = new Set<string>()
+    for (const [uri, post] of posts) {
+      if (post && post.hasPostGate) {
+        postUrisWithPostgates.add(uri)
+      }
+    }
 
     const [
       postAggs,
@@ -407,6 +410,7 @@ export class Hydrator {
       feedGenState,
       labelerState,
       starterPackState,
+      postgates,
     ] = await Promise.all([
       this.feed.getPostAggregates(allRefs),
       ctx.viewer
@@ -419,6 +423,7 @@ export class Hydrator {
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
       this.hydrateLabelers(nestedLabelerDids, ctx),
       this.hydrateStarterPacksBasic(nestedStarterPackUris, ctx),
+      this.feed.getPostgatesForPosts([...postUrisWithPostgates.values()]),
     ])
     if (!ctx.includeTakedowns) {
       actionTakedownLabels(allPostUris, posts, labels)
