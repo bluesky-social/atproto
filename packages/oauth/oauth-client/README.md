@@ -194,7 +194,7 @@ the `XrpcClient` class from the `@atproto/xrpc` package.
 
 ```ts
 import { Lexicons } from '@atproto/lexicon'
-import { OAuthAgent } from '@atproto/oauth-client'
+import { OAuthClient } from '@atproto/oauth-client' // or "@atproto/oauth-client-browser" or "@atproto/oauth-client-node"
 import { XrpcClient } from '@atproto/xrpc'
 
 // Define your lexicons
@@ -210,10 +210,15 @@ const myLexicon = new Lexicons([
   },
 ])
 
-// Authenticate the user
-const oauthAgent = await client.restore('did:plc:123')
+// Describe your app's oauth client
+const oauthClient = new OAuthClient({
+  // ...
+})
 
-// Instantiate a client
+// Authenticate the user
+const oauthAgent = await oauthClient.restore('did:plc:123')
+
+// Instantiate a client using the `oauthAgent` as fetch handler object
 const client = new XrpcClient(oauthAgent, myLexicon)
 
 // Make authenticated calls
