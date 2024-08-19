@@ -37,6 +37,11 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  await db
+    .updateTable('post')
+    .where('uri', '=', postUri.toString())
+    .set({ hasPostGate: true })
+    .executeTakeFirst()
   return inserted || null
 }
 
@@ -66,6 +71,13 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
+  if (deleted) {
+    await db
+      .updateTable('post')
+      .where('uri', '=', deleted.postUri)
+      .set({ hasPostGate: false })
+      .executeTakeFirst()
+  }
   return deleted || null
 }
 

@@ -16,6 +16,8 @@ export interface Post {
   invalidReplyRoot: boolean | null
   violatesThreadGate: boolean | null
   violatesEmbeddingRules: boolean | null
+  hasThreadGate: boolean | null
+  hasPostGate: boolean | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>

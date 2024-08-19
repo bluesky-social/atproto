@@ -965,6 +965,16 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
    */
   violatesEmbeddingRules = false
 
+  /**
+   * @generated from field: bool has_thread_gate = 5;
+   */
+  hasThreadGate = false
+
+  /**
+   * @generated from field: bool has_post_gate = 6;
+   */
+  hasPostGate = false
+
   constructor(data?: PartialMessage<PostRecordMeta>) {
     super()
     proto3.util.initPartial(data, this)
@@ -984,6 +994,18 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
     {
       no: 4,
       name: 'violates_embedding_rules',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+    {
+      no: 5,
+      name: 'has_thread_gate',
+      kind: 'scalar',
+      T: 8 /* ScalarType.BOOL */,
+    },
+    {
+      no: 6,
+      name: 'has_post_gate',
       kind: 'scalar',
       T: 8 /* ScalarType.BOOL */,
     },

@@ -80,6 +80,8 @@ message PostRecordMeta {
   bool has_media = 2;
   bool is_reply = 3;
   bool violates_embedding_rules = 4;
+  bool has_thread_gate = 5;
+  bool has_post_gate = 6;
 }
 
 message GetPostRecordsRequest {

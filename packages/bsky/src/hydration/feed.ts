@@ -19,6 +19,8 @@ import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
 export type Post = RecordInfo<PostRecord> & {
   violatesThreadGate: boolean
   violatesEmbeddingRules: boolean
+  hasThreadGate: boolean
+  hasPostGate: boolean
 }
 export type Posts = HydrationMap<Post>
 
@@ -89,10 +91,18 @@ export class FeedHydrator {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate
       const violatesEmbeddingRules = res.meta[i].violatesEmbeddingRules
+      const hasThreadGate = res.meta[i].hasThreadGate
+      const hasPostGate = res.meta[i].hasPostGate
       return acc.set(
         uri,
         record
-          ? { ...record, violatesThreadGate, violatesEmbeddingRules }
+          ? {
+              ...record,
+              violatesThreadGate,
+              violatesEmbeddingRules,
+              hasThreadGate,
+              hasPostGate,
+            }
           : null,
       )
     }, base)
