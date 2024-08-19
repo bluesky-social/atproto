@@ -1,6 +1,7 @@
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { AppBskyFeedDefs } from '@atproto/api'
 
+import { ids } from '../../src/lexicon/lexicons'
 import { feedHiddenRepliesSeed, Users } from '../seed/feed-hidden-replies'
 
 describe('postgates', () => {
@@ -53,7 +54,10 @@ describe('postgates', () => {
       } = await agent.api.app.bsky.feed.getTimeline(
         {},
         {
-          headers: await network.serviceHeaders(users.viewer.did),
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetTimeline,
+          ),
         },
       )
 
@@ -85,7 +89,10 @@ describe('postgates', () => {
       } = await agent.api.app.bsky.feed.getTimeline(
         {},
         {
-          headers: await network.serviceHeaders(users.viewer.did),
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetTimeline,
+          ),
         },
       )
 
@@ -123,7 +130,10 @@ describe('postgates', () => {
       } = await agent.api.app.bsky.feed.getTimeline(
         {},
         {
-          headers: await network.serviceHeaders(users.viewer.did),
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetTimeline,
+          ),
         },
       )
 
@@ -162,7 +172,10 @@ describe('postgates', () => {
       } = await agent.api.app.bsky.notification.listNotifications(
         {},
         {
-          headers: await network.serviceHeaders(users.poster.did),
+          headers: await network.serviceHeaders(
+            users.poster.did,
+            ids.AppBskyNotificationListNotifications,
+          ),
         },
       )
 
@@ -206,7 +219,10 @@ describe('postgates', () => {
       } = await agent.api.app.bsky.notification.listNotifications(
         {},
         {
-          headers: await network.serviceHeaders(users.poster.did),
+          headers: await network.serviceHeaders(
+            users.poster.did,
+            ids.AppBskyNotificationListNotifications,
+          ),
         },
       )
 
@@ -225,7 +241,10 @@ describe('postgates', () => {
       } = await agent.api.app.bsky.notification.listNotifications(
         {},
         {
-          headers: await network.serviceHeaders(users.replier.did),
+          headers: await network.serviceHeaders(
+            users.replier.did,
+            ids.AppBskyNotificationListNotifications,
+          ),
         },
       )
 

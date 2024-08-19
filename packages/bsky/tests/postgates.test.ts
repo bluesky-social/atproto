@@ -1,6 +1,7 @@
 import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import AtpAgent, { AppBskyEmbedRecord } from '@atproto/api'
 
+import { ids } from '../src/lexicon/lexicons'
 import { postgatesSeed, Users } from './seed/postgates'
 
 describe('postgates', () => {
@@ -54,7 +55,12 @@ describe('postgates', () => {
 
       const root = await agent.api.app.bsky.feed.getPostThread(
         { uri: quoterPost.ref.uriStr },
-        { headers: await network.serviceHeaders(users.viewer.did) },
+        {
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(
@@ -88,7 +94,12 @@ describe('postgates', () => {
 
       const root = await agent.api.app.bsky.feed.getPostThread(
         { uri: quoterPost.ref.uriStr },
-        { headers: await network.serviceHeaders(users.viewer.did) },
+        {
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(
@@ -117,7 +128,12 @@ describe('postgates', () => {
 
       const root = await agent.api.app.bsky.feed.getPostThread(
         { uri: quoteePost.ref.uriStr },
-        { headers: await network.serviceHeaders(users.viewer.did) },
+        {
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(
@@ -153,7 +169,12 @@ describe('postgates', () => {
 
       const root = await agent.api.app.bsky.feed.getPostThread(
         { uri: quoterPost.ref.uriStr },
-        { headers: await network.serviceHeaders(users.viewer.did) },
+        {
+          headers: await network.serviceHeaders(
+            users.viewer.did,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(
