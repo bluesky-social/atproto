@@ -61,7 +61,12 @@ describe('postgates', () => {
         },
       )
 
-      expect(timeline.length).toBe(1)
+      const viewA = timeline.find((post) => post.post.uri === A.ref.uriStr)
+      const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
+
+      expect(viewA).toBeDefined()
+      expect(viewB).toBeDefined()
+      expect(AppBskyFeedDefs.isNotFoundPost(viewB?.reply?.parent)).toBe(true)
     })
 
     it(`[A] -> [B] -> [C] : B is hidden, C has tombstone on parent`, async () => {
@@ -101,8 +106,11 @@ describe('postgates', () => {
       const viewC = timeline.find((post) => post.post.uri === C.ref.uriStr)
 
       expect(viewA).toBeDefined()
-      expect(viewB).toBeUndefined()
-      expect(AppBskyFeedDefs.isNotFoundPost(viewC?.reply?.parent)).toBe(true)
+      expect(viewB).toBeDefined()
+      expect(viewC).toBeDefined()
+      expect(AppBskyFeedDefs.isNotFoundPost(viewB?.reply?.parent)).toBe(true)
+      expect(AppBskyFeedDefs.isPostView(viewC?.reply?.parent)).toBe(true)
+      expect(AppBskyFeedDefs.isNotFoundPost(viewC?.reply?.root)).toBe(true)
     })
 
     it(`[A] -> [B] : B is hidden but was reposted`, async () => {
@@ -140,6 +148,7 @@ describe('postgates', () => {
       const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
 
       expect(viewB).toBeDefined()
+      expect(AppBskyFeedDefs.isReasonRepost(viewB?.reason)).toBe(true)
     })
   })
 

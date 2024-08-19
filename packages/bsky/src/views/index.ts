@@ -621,25 +621,29 @@ export class Views {
     const reply = !postInfo?.violatesThreadGate
       ? this.replyRef(item.post.uri, state)
       : undefined
-    const isRepost = isReasonRepost(reason)
-    if (reply && isPostView(reply.root)) {
-      if (!opts?.includeHiddenReplies && !isRepost) {
-        const postIsHiddenReply = this.replyIsHidden(
-          post.uri,
-          reply.root.uri,
-          state,
-        )
-        if (postIsHiddenReply) {
-          return undefined
-        } else if (isPostView(reply.parent)) {
-          const parentPostIsHiddenReply = this.replyIsHidden(
-            reply.parent.uri,
-            reply.root.uri,
-            state,
-          )
-          if (parentPostIsHiddenReply) {
-            reply.parent = this.notFoundPost(reply.parent.uri)
-          }
+    if (
+      isPostRecord(post.record) &&
+      post.record.reply &&
+      !isReasonRepost(reason) &&
+      !opts?.includeHiddenReplies
+    ) {
+      // We use the raw reply record as a reference in case the root post was deleted
+      const childIsHiddenReply = this.replyIsHidden(
+        post.uri,
+        post.record.reply.root.uri,
+        state,
+      )
+      const parentIsHiddenReply = this.replyIsHidden(
+        post.record.reply.parent.uri,
+        post.record.reply.root.uri,
+        state,
+      )
+      if (reply) {
+        if (childIsHiddenReply && isPostView(reply.parent)) {
+          reply.parent = this.notFoundPost(reply.parent.uri)
+        }
+        if (parentIsHiddenReply && isPostView(reply.root)) {
+          reply.root = this.notFoundPost(reply.root.uri)
         }
       }
     }
