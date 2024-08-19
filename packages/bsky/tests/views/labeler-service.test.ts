@@ -68,7 +68,12 @@ describe('labeler service views', () => {
   it('fetches labelers', async () => {
     const view = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob, 'did:example:missing'] },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyLabelerGetServices,
+        ),
+      },
     )
 
     expect(forSnapshot(view.data)).toMatchSnapshot()
@@ -77,7 +82,12 @@ describe('labeler service views', () => {
   it('fetches labelers detailed', async () => {
     const view = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob, 'did:example:missing'], detailed: true },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyLabelerGetServices,
+        ),
+      },
     )
 
     expect(forSnapshot(view.data)).toMatchSnapshot()
@@ -86,7 +96,12 @@ describe('labeler service views', () => {
   it('fetches labelers unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice] },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyLabelerGetServices,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.labeler.getServices({
       dids: [alice],
@@ -99,7 +114,12 @@ describe('labeler service views', () => {
       {
         dids: [alice, bob, 'did:example:missing'],
       },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyLabelerGetServices,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.labeler.getServices({
       dids: [alice, bob, 'did:example:missing'],
@@ -138,7 +158,12 @@ describe('labeler service views', () => {
   it('renders profile as labeler in non-detailed profile views', async () => {
     const { data: res } = await agent.api.app.bsky.actor.searchActors(
       { q: sc.accounts[alice].handle },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyActorSearchActors,
+        ),
+      },
     )
     expect(res.actors.length).toBe(1)
     expect(res.actors[0].associated?.labeler).toBe(true)
@@ -148,7 +173,12 @@ describe('labeler service views', () => {
     await network.bsky.ctx.dataplane.takedownActor({ did: alice })
     const res = await agent.api.app.bsky.labeler.getServices(
       { dids: [alice, bob] },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyLabelerGetServices,
+        ),
+      },
     )
     expect(res.data.views.length).toBe(1)
     // @ts-ignore

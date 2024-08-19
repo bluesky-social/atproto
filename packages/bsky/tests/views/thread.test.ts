@@ -5,6 +5,7 @@ import {
   forSnapshot,
   stripViewerFromThread,
 } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -41,7 +42,12 @@ describe('pds thread views', () => {
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -50,7 +56,12 @@ describe('pds thread views', () => {
   it('fetches shallow post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -65,7 +76,12 @@ describe('pds thread views', () => {
           `at://${sc.accounts[alice].handle}`,
         ),
       },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -74,7 +90,12 @@ describe('pds thread views', () => {
   it('fetches ancestors', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -83,7 +104,12 @@ describe('pds thread views', () => {
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
       { uri: 'at://did:example:fake/does.not.exist/self' },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     await expect(promise).rejects.toThrow(
@@ -94,7 +120,12 @@ describe('pds thread views', () => {
   it('fetches post thread unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getPostThread({
       uri: sc.posts[alice][1].ref.uriStr,
@@ -133,7 +164,12 @@ describe('pds thread views', () => {
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
@@ -142,13 +178,23 @@ describe('pds thread views', () => {
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread2.data.thread)).toMatchSnapshot()
 
     const thread3 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.replies[alice][indexes.aliceReplyReply].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
   })
@@ -179,7 +225,12 @@ describe('pds thread views', () => {
     const { data: goodReply1Thread } =
       await agent.api.app.bsky.feed.getPostThread(
         { uri: goodReply1.ref.uriStr },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
     assertIsThreadViewPost(goodReply1Thread.thread)
     assertIsThreadViewPost(goodReply1Thread.thread.parent)
@@ -197,7 +248,12 @@ describe('pds thread views', () => {
     const { data: badReplyThread } =
       await agent.api.app.bsky.feed.getPostThread(
         { uri: badReply.ref.uriStr },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
     assertIsThreadViewPost(badReplyThread.thread)
     expect(badReplyThread.thread.parent).toBeUndefined() // is not goodReply1
@@ -206,7 +262,12 @@ describe('pds thread views', () => {
   it('reflects self-labels', async () => {
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][0].ref.uriStr },
-      { headers: await network.serviceHeaders(bob) },
+      {
+        headers: await network.serviceHeaders(
+          bob,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
 
     assertIsThreadViewPost(thread.thread)
@@ -236,7 +297,12 @@ describe('pds thread views', () => {
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       await expect(promise).rejects.toThrow(
@@ -257,7 +323,12 @@ describe('pds thread views', () => {
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -276,7 +347,12 @@ describe('pds thread views', () => {
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -295,7 +371,12 @@ describe('pds thread views', () => {
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       await expect(promise).rejects.toThrow(
@@ -311,7 +392,12 @@ describe('pds thread views', () => {
     it('blocks ancestors by record', async () => {
       const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
@@ -323,7 +409,12 @@ describe('pds thread views', () => {
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -337,7 +428,12 @@ describe('pds thread views', () => {
     it('blocks replies by record', async () => {
       const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
       const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
@@ -353,7 +449,12 @@ describe('pds thread views', () => {
       // Same as deep post thread test, minus some replies
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: await network.serviceHeaders(bob) },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
