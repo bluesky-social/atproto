@@ -767,15 +767,6 @@ export class Hydrator {
         this.label.getLabelsForSubjects(uris, ctx.labelers),
         this.hydrateProfiles(uris.map(didFromUri), ctx),
       ])
-    const replyRootPostUris = notifs
-      .filter((notif) => notif.reason === 'reply')
-      .map((notif) => {
-        const post = posts.get(notif.uri)
-        return post ? post.record.reply?.root.uri : undefined
-      })
-      .filter(<T>(n?: T): n is T => Boolean(n))
-    const threadgates =
-      await this.feed.getThreadgatesForPosts(replyRootPostUris)
     actionTakedownLabels(postUris, posts, labels)
     return mergeStates(profileState, {
       posts,
@@ -783,7 +774,6 @@ export class Hydrator {
       reposts,
       follows,
       labels,
-      threadgates,
       ctx,
     })
   }
