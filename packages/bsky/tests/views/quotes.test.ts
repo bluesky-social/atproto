@@ -1,6 +1,7 @@
 import { quotesSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
-import AtpAgent, { AtUri } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { forSnapshot } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds quote views', () => {
   let network: TestNetwork
@@ -32,7 +33,7 @@ describe('pds quote views', () => {
   it('fetches post quotes', async () => {
     const alicePostQuotes = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
-      { headers: await network.serviceHeaders(eve) },
+      { headers: await network.serviceHeaders(eve, ids.AppBskyFeedGetQuotes) },
     )
 
     expect(alicePostQuotes.data.posts.length).toBe(2)
@@ -42,7 +43,7 @@ describe('pds quote views', () => {
   it('utilizes limit parameter and cursor', async () => {
     const alicePostQuotes1 = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][1].ref.uriStr, limit: 30 },
-      { headers: await network.serviceHeaders(eve) },
+      { headers: await network.serviceHeaders(eve, ids.AppBskyFeedGetQuotes) },
     )
 
     expect(alicePostQuotes1.data.posts.length).toBe(30)
@@ -54,7 +55,7 @@ describe('pds quote views', () => {
         limit: 30,
         cursor: alicePostQuotes1.data.cursor,
       },
-      { headers: await network.serviceHeaders(eve) },
+      { headers: await network.serviceHeaders(eve, ids.AppBskyFeedGetQuotes) },
     )
 
     expect(alicePostQuotes2.data.posts.length).toBe(20)
@@ -66,7 +67,9 @@ describe('pds quote views', () => {
 
     const alicePostQuotes = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetQuotes),
+      },
     )
 
     expect(alicePostQuotes.data.posts.length).toBe(1)
@@ -79,7 +82,9 @@ describe('pds quote views', () => {
 
     const alicePostQuotesAfter = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetQuotes),
+      },
     )
 
     expect(alicePostQuotesAfter.data.posts.length).toBe(0)
@@ -91,7 +96,7 @@ describe('pds quote views', () => {
 
     const bobPost = await agent.api.app.bsky.feed.getPosts(
       { uris: [sc.replies[bob][0].ref.uriStr] },
-      { headers: await network.serviceHeaders(bob) },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetPosts) },
     )
 
     expect(bobPost.data.posts[0].quoteCount).toEqual(0)
