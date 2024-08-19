@@ -571,7 +571,20 @@ export class OAuthProvider extends OAuthVerifier {
           issuer,
           client,
           parameters,
-          authorize: { uri, sessions },
+          authorize: {
+            uri,
+            sessions,
+            scopeDetails: parameters.scope
+              ?.split(/\s+/)
+              .filter(Boolean)
+              .sort((a, b) => a.localeCompare(b))
+              .map((scope) => ({
+                scope,
+                // @TODO Allow to customize the scope descriptions (e.g.
+                // using a hook)
+                description: undefined,
+              })),
+          },
         }
       } catch (err) {
         await this.deleteRequest(uri, parameters)

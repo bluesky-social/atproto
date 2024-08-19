@@ -1,7 +1,7 @@
 import { OAuthClientMetadata } from '@atproto/oauth-types'
 import { FormEvent } from 'react'
 
-import { Account } from '../backend-data'
+import { Account, ScopeDetail } from '../backend-data'
 import { Override } from '../lib/util'
 import { AccountIdentifier } from './account-identifier'
 import { Button } from './button'
@@ -11,10 +11,13 @@ import { FormCard, FormCardProps } from './form-card'
 export type AcceptFormProps = Override<
   FormCardProps,
   {
-    account: Account
     clientId: string
     clientMetadata: OAuthClientMetadata
     clientTrusted: boolean
+
+    account: Account
+    scopeDetails?: ScopeDetail[]
+
     onAccept: () => void
     acceptLabel?: string
 
@@ -27,10 +30,13 @@ export type AcceptFormProps = Override<
 >
 
 export function AcceptForm({
-  account,
   clientId,
   clientMetadata,
   clientTrusted,
+
+  account,
+  scopeDetails,
+
   onAccept,
   acceptLabel = 'Accept',
   onReject,
@@ -70,7 +76,6 @@ export function AcceptForm({
           />
         </div>
       )}
-
       <p>
         <ClientName clientId={clientId} clientMetadata={clientMetadata} /> is
         asking for permission to access your account (
@@ -79,8 +84,8 @@ export function AcceptForm({
       </p>
 
       <p>
-        By clicking <b>{acceptLabel}</b>, you allow this application to access
-        your information in accordance to their{' '}
+        By clicking <b>{acceptLabel}</b>, you allow this application to perform
+        the following actions in accordance to their{' '}
         <a
           href={clientMetadata.tos_uri}
           rel="nofollow noopener"
@@ -98,8 +103,27 @@ export function AcceptForm({
         >
           privacy policy
         </a>
-        .
+        :
       </p>
+
+      {scopeDetails?.length ? (
+        <ul className="list-disc list-inside">
+          {scopeDetails.map(
+            ({ scope, description = getScopeDescription(scope) }) => (
+              <li>{description}</li>
+            ),
+          )}
+        </ul>
+      ) : null}
     </FormCard>
   )
+}
+
+function getScopeDescription(scope: string): string {
+  switch (scope) {
+    case 'atproto':
+      return 'Uniquely identify you'
+    default:
+      return scope
+  }
 }
