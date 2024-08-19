@@ -1,5 +1,6 @@
 import { AtpAgent, AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('suggested follows', () => {
   let network: TestNetwork
@@ -40,7 +41,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
@@ -56,7 +62,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.fred) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.fred,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
@@ -76,7 +87,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(
@@ -101,7 +117,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(
@@ -126,7 +147,12 @@ describe('suggested follows', () => {
       {
         actor: sc.dids.alice,
       },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyGraphGetSuggestedFollowsByActor,
+        ),
+      },
     )
 
     expect(

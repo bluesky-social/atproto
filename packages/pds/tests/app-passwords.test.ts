@@ -103,15 +103,29 @@ describe('app_passwords', () => {
   })
 
   it('restricts privileged app password actions', async () => {
-    const attempt = appAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
-    })
-    await expect(attempt).rejects.toThrow('Bad token scope')
+    const attempt = appAgent.api.chat.bsky.convo.listConvos({})
+    await expect(attempt).rejects.toThrow('Bad token method')
   })
 
-  it('allows privileged actions with a privileged app password', async () => {
+  it('restricts privileged app password actions', async () => {
+    const attempt = appAgent.api.chat.bsky.convo.listConvos()
+    await expect(attempt).rejects.toThrow('Bad token method')
+  })
+
+  it('restricts service auth token methods for non-privileged access tokens', async () => {
+    const attempt = appAgent.api.com.atproto.server.getServiceAuth({
+      aud: 'did:example:test',
+      lxm: 'com.atproto.server.createAccount',
+    })
+    await expect(attempt).rejects.toThrow(
+      /cannot request a service auth token for the following method with an app password/,
+    )
+  })
+
+  it('allows privileged service auth token scopes for privileged access tokens', async () => {
     await priviAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
+      lxm: 'com.atproto.server.createAccount',
     })
   })
 
@@ -142,8 +156,11 @@ describe('app_passwords', () => {
     // allows privileged app passwords or higher
     const priviAttempt = appAgent.api.com.atproto.server.getServiceAuth({
       aud: 'did:example:test',
+      lxm: 'com.atproto.server.createAccount',
     })
-    await expect(priviAttempt).rejects.toThrow('Bad token scope')
+    await expect(priviAttempt).rejects.toThrow(
+      /cannot request a service auth token for the following method with an app password/,
+    )
 
     // allows only full access auth
     const fullAttempt = appAgent.api.com.atproto.server.createAppPassword(

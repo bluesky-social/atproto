@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
-import { basicSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky account deactivation', () => {
   let network: TestNetwork
@@ -69,7 +70,12 @@ describe('bsky account deactivation', () => {
   it('does not return posts from deactivated in timelines', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
     )
     expect(res.data.feed.some((p) => p.post.author.did === alice)).toBe(false)
   })
