@@ -633,10 +633,6 @@ export class Views {
       if (isPostView(root) && (childBlocks?.root || parentBlocks?.root)) {
         root = this.blockedPost(root.uri, root.author.did, state)
       }
-      // in a reply to the root of a thread, parent and root are the same post.
-      if (root.uri === parent.uri) {
-        root = parent
-      }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
     if (isPostRecord(parent.record) && parent.record.reply) {
