@@ -38,6 +38,7 @@
     "@atproto/oauth-types": "workspace:*",
     "@hapi/accept": "^6.0.3",
     "@hapi/bourne": "^3.0.0",
+    "@hapi/content": "^6.0.0",
     "cookie": "^0.6.0",
     "http-errors": "^2.0.0",
     "ioredis": "^5.3.2",
