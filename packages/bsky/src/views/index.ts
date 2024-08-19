@@ -1130,16 +1130,6 @@ export class Views {
     let recordInfo: RecordInfo<Record<string, unknown>> | null | undefined
     if (uri.collection === ids.AppBskyFeedPost) {
       recordInfo = state.posts?.get(notif.uri)
-      // filter hidden replies
-      if (recordInfo && notif.reason === 'reply') {
-        const rootPostUri = isPostRecord(recordInfo.record)
-          ? recordInfo.record.reply?.root.uri
-          : undefined
-        const isHiddenReply = rootPostUri
-          ? this.replyIsHidden(notif.uri, rootPostUri, state)
-          : false
-        if (isHiddenReply) return
-      }
     } else if (uri.collection === ids.AppBskyFeedLike) {
       recordInfo = state.likes?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyFeedRepost) {

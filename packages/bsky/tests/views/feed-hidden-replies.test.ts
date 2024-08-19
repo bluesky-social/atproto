@@ -144,52 +144,6 @@ describe('postgates', () => {
   })
 
   describe(`notifications`, () => {
-    it(`[A] -> [B] : B is hidden`, async () => {
-      const A = await sc.post(users.poster.did, `A`)
-
-      await network.processAll()
-
-      const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
-      const C = await sc.reply(users.replier.did, A.ref, A.ref, `C`)
-
-      await pdsAgent.api.app.bsky.feed.threadgate.create(
-        {
-          repo: A.ref.uri.host,
-          rkey: A.ref.uri.rkey,
-        },
-        {
-          post: A.ref.uriStr,
-          createdAt: new Date().toISOString(),
-          hiddenReplies: [B.ref.uriStr],
-        },
-        sc.getHeaders(A.ref.uri.host),
-      )
-
-      await network.processAll()
-
-      const {
-        data: { notifications },
-      } = await agent.api.app.bsky.notification.listNotifications(
-        {},
-        {
-          headers: await network.serviceHeaders(
-            users.poster.did,
-            ids.AppBskyNotificationListNotifications,
-          ),
-        },
-      )
-
-      const notificationB = notifications.find((item) => {
-        return item.uri === B.ref.uriStr
-      })
-      const notificationC = notifications.find((item) => {
-        return item.uri === C.ref.uriStr
-      })
-
-      expect(notificationB).toBeUndefined()
-      expect(notificationC).toBeDefined()
-    })
-
     it(`[A] -> [B] -> [C] : B is hidden, C results in no notification for A, notification for B`, async () => {
       const A = await sc.post(users.poster.did, `A`)
       await network.processAll()
@@ -233,7 +187,7 @@ describe('postgates', () => {
         return item.uri === C.ref.uriStr
       })
 
-      expect(posterNotificationB).toBeUndefined()
+      expect(posterNotificationB).toBeDefined()
       expect(posterNotificationC).toBeUndefined()
 
       const {
