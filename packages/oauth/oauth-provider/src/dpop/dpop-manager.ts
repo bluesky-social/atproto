@@ -70,13 +70,6 @@ export class DpopManager {
       throw new InvalidDpopProofError('Invalid or missing jti property')
     }
 
-    if (
-      payload.exp == null ||
-      payload.exp - payload.iat > DPOP_NONCE_MAX_AGE / 3 / 1e3
-    ) {
-      throw new InvalidDpopProofError('DPoP proof validity too long')
-    }
-
     // Note rfc9110#section-9.1 states that the method name is case-sensitive
     if (!htm || htm !== payload['htm']) {
       throw new InvalidDpopProofError('DPoP htm mismatch')
