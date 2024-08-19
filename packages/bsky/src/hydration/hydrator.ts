@@ -359,9 +359,17 @@ export class Hydrator {
         threadRootUris.add(rootUriFromPost(post) ?? uri)
       }
     }
+    const postUrisWithThreadgates = new Set<string>()
+    for (const uri of threadRootUris) {
+      const post = postsLayer0.get(uri)
+      // post could be deleted, still want to check for existing threadgate
+      if (!post || (post && post.hasThreadGate)) {
+        postUrisWithThreadgates.add(uri)
+      }
+    }
     const [postsLayer2, threadgates] = await Promise.all([
       this.feed.getPosts(embedPostUrisLayer2, ctx.includeTakedowns),
-      this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
+      this.feed.getThreadgatesForPosts([...postUrisWithThreadgates.values()]),
     ])
     // collect list/feedgen embeds, lists in threadgates, post record hydration
     const threadgateListUris = getListUrisFromThreadgates(threadgates)
