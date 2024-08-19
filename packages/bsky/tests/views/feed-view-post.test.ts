@@ -2,15 +2,17 @@ import { AtpAgent, AppBskyFeedDefs, AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 
 /**
- * To ensure consistency, we only test based on the data returend from a single
- * `FeedViewPost`, since the frontend constructs feed slices based on a single
- * `FeedViewPost`.
+ * The frontend computes feed slices for display using at-most one
+ * `FeedViewPost` slice. If that slice results in an "orphaned" thread e.g.
+ * parent or root is blocked, that slice is tossed out and the next
+ * `FeedViewPost` slice is considered. That process continues until a
+ * contiguous `root -> child` slice can be found.
  *
- * With more results in the first page of data, other computations are
- * feasible, but since they rely on when they were created, results are
- * inconsistent.
+ * For the tests below, we test with up to 4 slices: one root and up to 3
+ * replies. Some tests focus on the first slice, and others ensure that at
+ * least one contiguous slice is returned.
  */
-const LIMIT = 1
+const LIMIT = 4
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -26,7 +28,7 @@ describe('pds thread views', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_feed_thread_slices',
+      dbPostgresSchema: 'bsky_views_feed_view_post',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
@@ -43,10 +45,51 @@ describe('pds thread views', () => {
     await sc.follow(dan, alice)
     await sc.follow(dan, bob)
     await sc.follow(dan, carol)
+
+    await network.processAll()
   })
 
   afterAll(async () => {
     await network.close()
+  })
+
+  it(`[A] -> [B], A blocks B, viewed as C`, async () => {
+    const A = await sc.post(alice, `A`)
+    await network.processAll()
+    const B = await sc.reply(bob, A.ref, A.ref, `B`)
+    await network.processAll()
+    const block = await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: alice },
+      { createdAt: new Date().toISOString(), subject: bob },
+      sc.getHeaders(alice),
+    )
+
+    await network.processAll()
+
+    const timeline = await agent.api.app.bsky.feed.getTimeline(
+      { limit: LIMIT },
+      {
+        headers: await network.serviceHeaders(carol),
+      },
+    )
+
+    const sliceA = timeline.data.feed.find((f) => f.post.uri === A.ref.uriStr)
+    const sliceB = timeline.data.feed.find((f) => f.post.uri === B.ref.uriStr)
+
+    expect(sliceA).toBeDefined()
+    expect(sliceB).toBeDefined()
+
+    if (!sliceA || !sliceB) {
+      throw new Error('sliceA or sliceB is undefined')
+    }
+
+    expect(AppBskyFeedDefs.isBlockedPost(sliceB.reply?.parent)).toBe(true)
+    expect(AppBskyFeedDefs.isBlockedPost(sliceB.reply?.root)).toBe(true)
+
+    await pdsAgent.api.app.bsky.graph.block.delete(
+      { repo: alice, rkey: new AtUri(block.uri).rkey },
+      sc.getHeaders(alice),
+    )
   })
 
   it(`[A] -> [B] -> [C], A blocks B, viewed as C`, async () => {
@@ -105,7 +148,8 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      // make sure we process all slices in this test
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -138,7 +182,8 @@ describe('pds thread views', () => {
     await network.processAll()
 
     const timeline = await agent.api.app.bsky.feed.getTimeline(
-      { limit: 3 },
+      // make sure we process all slices in this test
+      { limit: LIMIT },
       {
         headers: await network.serviceHeaders(carol),
       },
@@ -234,7 +279,7 @@ describe('pds thread views', () => {
     expect(sliceD.reply.parent.uri).toEqual(C.ref.uriStr)
     expect(sliceD.reply.root.uri).toEqual(A.ref.uriStr)
     expect(AppBskyFeedDefs.isPostView(sliceD.reply.parent)).toBe(true)
-    expect(AppBskyFeedDefs.isPostView(sliceD.reply.root)).toBe(true)
+    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply.root)).toBe(true)
 
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: alice, rkey: new AtUri(block.uri).rkey },
@@ -331,6 +376,49 @@ describe('pds thread views', () => {
     await pdsAgent.api.app.bsky.graph.block.delete(
       { repo: bob, rkey: new AtUri(block.uri).rkey },
       sc.getHeaders(bob),
+    )
+  })
+
+  it(`[A] -> [B] -> [C] -> [D], A blocks D, viewed as C`, async () => {
+    const A = await sc.post(alice, `A`)
+    await network.processAll()
+    const B = await sc.reply(bob, A.ref, A.ref, `B`)
+    await network.processAll()
+    const C = await sc.reply(carol, A.ref, B.ref, `C`)
+    await network.processAll()
+    const D = await sc.reply(dan, A.ref, C.ref, `D`)
+    const block = await pdsAgent.api.app.bsky.graph.block.create(
+      { repo: alice },
+      { createdAt: new Date().toISOString(), subject: dan },
+      sc.getHeaders(alice),
+    )
+
+    await network.processAll()
+
+    const timeline = await agent.api.app.bsky.feed.getTimeline(
+      { limit: LIMIT },
+      {
+        headers: await network.serviceHeaders(carol),
+      },
+    )
+
+    const sliceD = timeline.data.feed.find((f) => f.post.uri === D.ref.uriStr)
+    const sliceC = timeline.data.feed.find((f) => f.post.uri === C.ref.uriStr)
+
+    expect(sliceD).toBeDefined()
+    expect(sliceC).toBeDefined()
+
+    if (!sliceD || !sliceC) {
+      throw new Error('sliceD or sliceC is undefined')
+    }
+
+    expect(AppBskyFeedDefs.isBlockedPost(sliceD.reply?.root)).toBe(true)
+    expect(AppBskyFeedDefs.isPostView(sliceC.reply?.parent)).toBe(true)
+    expect(AppBskyFeedDefs.isPostView(sliceC.reply?.root)).toBe(true)
+
+    await pdsAgent.api.app.bsky.graph.block.delete(
+      { repo: alice, rkey: new AtUri(block.uri).rkey },
+      sc.getHeaders(alice),
     )
   })
 })

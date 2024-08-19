@@ -622,16 +622,17 @@ export class Views {
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
     let parent = this.maybePost(postRecord.reply.parent.uri, state)
-    /*
-     * First check if there is a block between child and parent, block parent
-     * if true
-     */
-    if (
-      !state.ctx?.include3pBlocks &&
-      state.postBlocks?.get(uri)?.reply &&
-      isPostView(parent)
-    ) {
-      parent = this.blockedPost(parent.uri, parent.author.did, state)
+    if (!state.ctx?.include3pBlocks) {
+      const childBlocks = state.postBlocks?.get(uri)
+      const parentBlocks = state.postBlocks?.get(parent.uri)
+      // if child blocks parent, block parent
+      if (isPostView(parent) && childBlocks?.reply) {
+        parent = this.blockedPost(parent.uri, parent.author.did, state)
+      }
+      // if child or parent blocks root, block root
+      if (isPostView(root) && (childBlocks?.root || parentBlocks?.root)) {
+        root = this.blockedPost(root.uri, root.author.did, state)
+      }
       // in a reply to the root of a thread, parent and root are the same post.
       if (root.uri === parent.uri) {
         root = parent
@@ -639,23 +640,10 @@ export class Views {
     }
     let grandparentAuthor: ProfileViewBasic | undefined
     if (isPostRecord(parent.record) && parent.record.reply) {
-      const grandparentUri = parent.record.reply.parent.uri
-      const grandparentIsAlsoRoot = root.uri === grandparentUri
       grandparentAuthor = this.profileBasic(
         creatorFromUri(parent.record.reply.parent.uri),
         state,
       )
-      /*
-       * Check if there is a block between parent and its parent, block root if true
-       */
-      if (
-        grandparentIsAlsoRoot &&
-        !state.ctx?.include3pBlocks &&
-        state.postBlocks?.get(parent.uri)?.reply &&
-        isPostView(root)
-      ) {
-        root = this.blockedPost(root.uri, creatorFromUri(root.uri), state)
-      }
     }
     return {
       root,
