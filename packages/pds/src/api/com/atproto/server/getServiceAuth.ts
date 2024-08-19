@@ -1,14 +1,15 @@
 import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
-import { MINUTE } from '@atproto/common'
+import { HOUR, MINUTE } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { PRIVILEGED_METHODS } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
-    auth: ctx.authVerifier.accessPrivileged(),
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ params, auth }) => {
       const did = auth.credentials.did
-      const keypair = await ctx.actorStore.keypair(did)
+      const { aud, lxm = null } = params
       const exp = params.exp ? params.exp * 1000 : undefined
       if (exp) {
         const diff = exp - Date.now()
@@ -17,19 +18,34 @@ export default function (server: Server, ctx: AppContext) {
             'expiration is in past',
             'BadExpiration',
           )
-        } else if (diff > MINUTE) {
+        } else if (diff > HOUR) {
           throw new InvalidRequestError(
-            'cannot request a token with an expiration more than a minute in the future',
+            'cannot request a token with an expiration more than an hour in the future',
+            'BadExpiration',
+          )
+        } else if (!lxm && diff > MINUTE) {
+          throw new InvalidRequestError(
+            'cannot request a method-less token with an expiration more than a minute in the future',
             'BadExpiration',
           )
         }
       }
+      if (
+        !auth.credentials.isPrivileged &&
+        lxm &&
+        PRIVILEGED_METHODS.has(lxm)
+      ) {
+        throw new InvalidRequestError(
+          `cannot request a service auth token for the following method with an app password: ${lxm}`,
+        )
+      }
+      const keypair = await ctx.actorStore.keypair(did)
 
       const token = await createServiceJwt({
         iss: did,
-        aud: params.aud,
-        lxm: params.lxm ?? null,
+        aud,
         exp,
+        lxm,
         keypair,
       })
       return {

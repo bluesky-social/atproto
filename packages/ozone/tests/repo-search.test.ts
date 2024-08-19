@@ -6,6 +6,7 @@ import {
 } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { paginateAll } from './_util'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('admin repo search view', () => {
   let network: TestNetwork
@@ -22,7 +23,9 @@ describe('admin repo search view', () => {
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await usersBulkSeed(sc)
-    headers = await network.ozone.modHeaders()
+    headers = await network.ozone.modHeaders(
+      ids.ToolsOzoneModerationSearchRepos,
+    )
     await network.processAll()
   })
 
