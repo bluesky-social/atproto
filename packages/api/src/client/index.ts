@@ -186,6 +186,10 @@ import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
+import * as ToolsOzoneHistoryDefs from './types/tools/ozone/history/defs'
+import * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions'
+import * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects'
+import * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
@@ -383,6 +387,10 @@ export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
+export * as ToolsOzoneHistoryDefs from './types/tools/ozone/history/defs'
+export * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions'
+export * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects'
+export * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
@@ -3262,6 +3270,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _client: XrpcClient
   communication: ToolsOzoneCommunicationNS
+  history: ToolsOzoneHistoryNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   team: ToolsOzoneTeamNS
@@ -3269,6 +3278,7 @@ export class ToolsOzoneNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.communication = new ToolsOzoneCommunicationNS(client)
+    this.history = new ToolsOzoneHistoryNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.team = new ToolsOzoneTeamNS(client)
@@ -3326,6 +3336,50 @@ export class ToolsOzoneCommunicationNS {
       'tools.ozone.communication.updateTemplate',
       opts?.qp,
       data,
+      opts,
+    )
+  }
+}
+
+export class ToolsOzoneHistoryNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getAccountActions(
+    params?: ToolsOzoneHistoryGetAccountActions.QueryParams,
+    opts?: ToolsOzoneHistoryGetAccountActions.CallOptions,
+  ): Promise<ToolsOzoneHistoryGetAccountActions.Response> {
+    return this._client.call(
+      'tools.ozone.history.getAccountActions',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getReportedSubjects(
+    params?: ToolsOzoneHistoryGetReportedSubjects.QueryParams,
+    opts?: ToolsOzoneHistoryGetReportedSubjects.CallOptions,
+  ): Promise<ToolsOzoneHistoryGetReportedSubjects.Response> {
+    return this._client.call(
+      'tools.ozone.history.getReportedSubjects',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSubjectHistory(
+    params?: ToolsOzoneHistoryGetSubjectHistory.QueryParams,
+    opts?: ToolsOzoneHistoryGetSubjectHistory.CallOptions,
+  ): Promise<ToolsOzoneHistoryGetSubjectHistory.Response> {
+    return this._client.call(
+      'tools.ozone.history.getSubjectHistory',
+      params,
+      undefined,
       opts,
     )
   }

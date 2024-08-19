@@ -5728,7 +5728,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a list of posts liked by an actor. Does not require auth.',
+          'Get a list of posts liked by an actor. Requires auth, actor must be the requesting account.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -10151,6 +10151,279 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneHistoryDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.history.defs',
+    defs: {
+      subjectBasicView: {
+        type: 'object',
+        required: ['subject', 'status', 'reviewState', 'subjectProfile'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'uri',
+          },
+          status: {
+            type: 'string',
+          },
+          reviewState: {
+            type: 'string',
+          },
+          subjectProfile: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      eventView: {
+        type: 'object',
+        required: ['subject', 'uri', 'createdAt', 'event'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'uri',
+          },
+          uri: {
+            type: 'string',
+            format: 'uri',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          event: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.history.defs#eventTakedown',
+              'lex:tools.ozone.history.defs#eventLabel',
+              'lex:tools.ozone.history.defs#eventReport',
+              'lex:tools.ozone.history.defs#eventEmail',
+              'lex:tools.ozone.history.defs#eventResolve',
+            ],
+          },
+        },
+      },
+      eventTakedown: {
+        type: 'object',
+        description: 'Take down a subject permanently or temporarily',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+        },
+      },
+      eventLabel: {
+        type: 'object',
+        description: 'Apply/Negate labels on a subject',
+        required: ['createLabelVals', 'negateLabelVals'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      eventReport: {
+        type: 'object',
+        description: 'Report a subject',
+        required: ['reportType'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+          },
+        },
+      },
+      eventEmail: {
+        type: 'object',
+        description: 'Keep a log of outgoing email to a user',
+        required: ['subjectLine'],
+        properties: {
+          subjectLine: {
+            type: 'string',
+            description: 'The subject line of the email sent to the user.',
+          },
+          content: {
+            type: 'string',
+            description: 'The content of the email sent to the user.',
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about the outgoing comm.',
+          },
+        },
+      },
+      eventResolve: {
+        type: 'object',
+        description: 'Resolve or acknowledge an event on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe the resolution or acknowledgment.',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneHistoryGetAccountActions: {
+    lexicon: 1,
+    id: 'tools.ozone.history.getAccountActions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Fetch all subjects from a single account with mod subjects.',
+        parameters: {
+          type: 'params',
+          required: ['account'],
+          properties: {
+            account: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              subjects: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.history.defs#subjectBasicView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneHistoryGetReportedSubjects: {
+    lexicon: 1,
+    id: 'tools.ozone.history.getReportedSubjects',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch all subjects reported by the account.',
+        parameters: {
+          type: 'params',
+          required: ['account'],
+          properties: {
+            account: {
+              type: 'string',
+              format: 'did',
+            },
+            limit: {
+              type: 'integer',
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              subjects: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.history.defs#subjectBasicView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneHistoryGetSubjectHistory: {
+    lexicon: 1,
+    id: 'tools.ozone.history.getSubjectHistory',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch the history of events for a specific subject.',
+        parameters: {
+          type: 'params',
+          required: ['subject'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            limit: {
+              type: 'integer',
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.history.defs#eventView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationDefs: {
     lexicon: 1,
     id: 'tools.ozone.moderation.defs',
@@ -11878,6 +12151,11 @@ export const ids = {
     'tools.ozone.communication.listTemplates',
   ToolsOzoneCommunicationUpdateTemplate:
     'tools.ozone.communication.updateTemplate',
+  ToolsOzoneHistoryDefs: 'tools.ozone.history.defs',
+  ToolsOzoneHistoryGetAccountActions: 'tools.ozone.history.getAccountActions',
+  ToolsOzoneHistoryGetReportedSubjects:
+    'tools.ozone.history.getReportedSubjects',
+  ToolsOzoneHistoryGetSubjectHistory: 'tools.ozone.history.getSubjectHistory',
   ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
   ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',

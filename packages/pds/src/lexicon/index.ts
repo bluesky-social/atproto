@@ -159,6 +159,9 @@ import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate'
+import * as ToolsOzoneHistoryGetAccountActions from './types/tools/ozone/history/getAccountActions'
+import * as ToolsOzoneHistoryGetReportedSubjects from './types/tools/ozone/history/getReportedSubjects'
+import * as ToolsOzoneHistoryGetSubjectHistory from './types/tools/ozone/history/getSubjectHistory'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord'
@@ -2099,6 +2102,7 @@ export class ToolsNS {
 export class ToolsOzoneNS {
   _server: Server
   communication: ToolsOzoneCommunicationNS
+  history: ToolsOzoneHistoryNS
   moderation: ToolsOzoneModerationNS
   server: ToolsOzoneServerNS
   team: ToolsOzoneTeamNS
@@ -2106,6 +2110,7 @@ export class ToolsOzoneNS {
   constructor(server: Server) {
     this._server = server
     this.communication = new ToolsOzoneCommunicationNS(server)
+    this.history = new ToolsOzoneHistoryNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.team = new ToolsOzoneTeamNS(server)
@@ -2160,6 +2165,47 @@ export class ToolsOzoneCommunicationNS {
     >,
   ) {
     const nsid = 'tools.ozone.communication.updateTemplate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneHistoryNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getAccountActions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHistoryGetAccountActions.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHistoryGetAccountActions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getAccountActions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getReportedSubjects<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHistoryGetReportedSubjects.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHistoryGetReportedSubjects.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getReportedSubjects' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubjectHistory<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ToolsOzoneHistoryGetSubjectHistory.Handler<ExtractAuth<AV>>,
+      ToolsOzoneHistoryGetSubjectHistory.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'tools.ozone.history.getSubjectHistory' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
