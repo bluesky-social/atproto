@@ -1109,9 +1109,10 @@ export class Views {
         const rootPostUri = isPostRecord(recordInfo.record)
           ? recordInfo.record.reply?.root.uri
           : undefined
-        const isHiddenReply = rootPostUri
-          ? this.replyIsHidden(notif.uri, rootPostUri, state)
-          : false
+        const isHiddenReply =
+          rootPostUri && creatorFromUri(rootPostUri) === state.ctx?.viewer
+            ? this.replyIsHidden(notif.uri, rootPostUri, state)
+            : false
         if (isHiddenReply) return
       }
     } else if (uri.collection === ids.AppBskyFeedLike) {

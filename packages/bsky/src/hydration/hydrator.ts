@@ -767,15 +767,21 @@ export class Hydrator {
         this.label.getLabelsForSubjects(uris, ctx.labelers),
         this.hydrateProfiles(uris.map(didFromUri), ctx),
       ])
-    const replyRootPostUris = notifs
-      .filter((notif) => notif.reason === 'reply')
-      .map((notif) => {
+    const viewerRootPostUris = new Set<string>()
+    for (const notif of notifs) {
+      if (notif.reason === 'reply') {
         const post = posts.get(notif.uri)
-        return post ? post.record.reply?.root.uri : undefined
-      })
-      .filter(<T>(n?: T): n is T => Boolean(n))
-    const threadgates =
-      await this.feed.getThreadgatesForPosts(replyRootPostUris)
+        if (post) {
+          const rootUri = post.record.reply?.root.uri
+          if (rootUri && didFromUri(rootUri) === ctx.viewer) {
+            viewerRootPostUris.add(rootUri)
+          }
+        }
+      }
+    }
+    const threadgates = await this.feed.getThreadgatesForPosts([
+      ...viewerRootPostUris.values(),
+    ])
     actionTakedownLabels(postUris, posts, labels)
     return mergeStates(profileState, {
       posts,

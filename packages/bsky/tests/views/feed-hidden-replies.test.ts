@@ -140,5 +140,77 @@ describe('feed hidden replies', () => {
 
       expect(replierNotificationC).toBeDefined()
     })
+
+    it(`[A] -> [B] -> [C] -> [D] : C is hidden, D results in no notification for A or B, notification for C, C exists in B's notifications`, async () => {
+      const A = await sc.post(users.poster.did, `A`)
+      await network.processAll()
+      const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
+      await network.processAll()
+      const C = await sc.reply(users.viewer.did, A.ref, B.ref, `C`)
+      await network.processAll()
+      await pdsAgent.api.app.bsky.feed.threadgate.create(
+        {
+          repo: A.ref.uri.host,
+          rkey: A.ref.uri.rkey,
+        },
+        {
+          post: A.ref.uriStr,
+          createdAt: new Date().toISOString(),
+          hiddenReplies: [C.ref.uriStr],
+        },
+        sc.getHeaders(A.ref.uri.host),
+      )
+      await network.processAll()
+      const D = await sc.reply(users.viewer.did, A.ref, C.ref, `D`)
+      await network.processAll()
+
+      const {
+        data: { notifications: posterNotifications },
+      } = await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            users.poster.did,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+
+      const posterNotificationB = posterNotifications.find((item) => {
+        return item.uri === B.ref.uriStr
+      })
+      const posterNotificationC = posterNotifications.find((item) => {
+        return item.uri === C.ref.uriStr
+      })
+      const posterNotificationD = posterNotifications.find((item) => {
+        return item.uri === D.ref.uriStr
+      })
+
+      expect(posterNotificationB).toBeDefined()
+      expect(posterNotificationC).toBeUndefined() // hidden bc OP
+      expect(posterNotificationD).toBeUndefined() // hidden bc no propogation
+
+      const {
+        data: { notifications: replierNotifications },
+      } = await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            users.replier.did,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+
+      const replierNotificationC = replierNotifications.find((item) => {
+        return item.uri === C.ref.uriStr
+      })
+      const replierNotificationD = replierNotifications.find((item) => {
+        return item.uri === D.ref.uriStr
+      })
+
+      expect(replierNotificationC).toBeDefined() // not hidden bc not OP
+      expect(replierNotificationD).toBeUndefined() // hidden bc no propogation
+    })
   })
 })
