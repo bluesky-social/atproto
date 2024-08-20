@@ -148,6 +148,27 @@ describe('feed hidden replies', () => {
       await network.processAll()
       const C = await sc.reply(users.viewer.did, A.ref, B.ref, `C`)
       await network.processAll()
+
+      const {
+        data: { notifications: posterNotificationsBefore },
+      } = await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            users.poster.did,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+
+      const posterNotificationCBefore = posterNotificationsBefore.find(
+        (item) => {
+          return item.uri === C.ref.uriStr
+        },
+      )
+
+      expect(posterNotificationCBefore).toBeDefined()
+
       await pdsAgent.api.app.bsky.feed.threadgate.create(
         {
           repo: A.ref.uri.host,
@@ -211,6 +232,15 @@ describe('feed hidden replies', () => {
 
       expect(replierNotificationC).toBeDefined() // not hidden bc not OP
       expect(replierNotificationD).toBeUndefined() // hidden bc no propogation
+
+      await pdsAgent.api.app.bsky.feed.threadgate.delete(
+        {
+          repo: A.ref.uri.host,
+          rkey: A.ref.uri.rkey,
+        },
+        sc.getHeaders(A.ref.uri.host),
+      )
+      await network.processAll()
     })
   })
 })
