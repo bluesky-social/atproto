@@ -27,13 +27,6 @@ export const oauthClientMetadataSchema = z.object({
     .default('none')
     .optional(),
   token_endpoint_auth_signing_alg: z.string().optional(),
-  introspection_endpoint_auth_method: oauthEndpointAuthMethod.optional(),
-  introspection_endpoint_auth_signing_alg: z.string().optional(),
-  revocation_endpoint_auth_method: oauthEndpointAuthMethod.optional(),
-  revocation_endpoint_auth_signing_alg: z.string().optional(),
-  pushed_authorization_request_endpoint_auth_method:
-    oauthEndpointAuthMethod.optional(),
-  pushed_authorization_request_endpoint_auth_signing_alg: z.string().optional(),
   userinfo_signed_response_alg: z.string().optional(),
   userinfo_encrypted_response_alg: z.string().optional(),
   jwks_uri: z.string().url().optional(),

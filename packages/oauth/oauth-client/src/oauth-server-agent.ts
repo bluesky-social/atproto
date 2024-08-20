@@ -206,12 +206,9 @@ export class OAuthServerAgent {
     payload: OAuthClientIdentification
   }> {
     const methodSupported =
-      this.serverMetadata[`${endpoint}_endpoint_auth_methods_supported`] ||
       this.serverMetadata[`token_endpoint_auth_methods_supported`]
 
-    const method =
-      this.clientMetadata[`${endpoint}_endpoint_auth_method`] ||
-      this.clientMetadata[`token_endpoint_auth_method`]
+    const method = this.clientMetadata[`token_endpoint_auth_method`]
 
     if (
       method === 'private_key_jwt' ||
@@ -224,12 +221,8 @@ export class OAuthServerAgent {
       try {
         const alg =
           this.serverMetadata[
-            `${endpoint}_endpoint_auth_signing_alg_values_supported`
-          ] ??
-          this.serverMetadata[
             `token_endpoint_auth_signing_alg_values_supported`
-          ] ??
-          FALLBACK_ALG
+          ] ?? FALLBACK_ALG
 
         // If jwks is defined, make sure to only sign using a key that exists in
         // the jwks. If jwks_uri is defined, we can't be sure that the key we're
