@@ -42,23 +42,23 @@ describe('pds quote views', () => {
 
   it('utilizes limit parameter and cursor', async () => {
     const alicePostQuotes1 = await agent.api.app.bsky.feed.getQuotes(
-      { uri: sc.posts[alice][1].ref.uriStr, limit: 30 },
+      { uri: sc.posts[alice][1].ref.uriStr, limit: 3 },
       { headers: await network.serviceHeaders(eve, ids.AppBskyFeedGetQuotes) },
     )
 
-    expect(alicePostQuotes1.data.posts.length).toBe(30)
+    expect(alicePostQuotes1.data.posts.length).toBe(3)
     expect(alicePostQuotes1.data.cursor).toBeDefined()
 
     const alicePostQuotes2 = await agent.api.app.bsky.feed.getQuotes(
       {
         uri: sc.posts[alice][1].ref.uriStr,
-        limit: 30,
+        limit: 3,
         cursor: alicePostQuotes1.data.cursor,
       },
       { headers: await network.serviceHeaders(eve, ids.AppBskyFeedGetQuotes) },
     )
 
-    expect(alicePostQuotes2.data.posts.length).toBe(20)
+    expect(alicePostQuotes2.data.posts.length).toBe(2)
   })
 
   it('does not return post when quote is deleted', async () => {

@@ -33,7 +33,7 @@ export default async (sc: SeedClient) => {
   )
 
   const spamPosts: Promise<any>[] = []
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 5; i++) {
     spamPosts.push(
       sc.post(
         sc.dids.eve,
