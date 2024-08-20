@@ -3,7 +3,6 @@ import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthClientIdentification,
   OAuthClientMetadata,
-  OAuthEndpointName,
 } from '@atproto/oauth-types'
 import {
   UnsecuredJWT,
@@ -101,13 +100,6 @@ export class Client {
     })
   }
 
-  protected getAuthMethod(endpoint: OAuthEndpointName) {
-    return (
-      this.metadata[`${endpoint}_endpoint_auth_method`] ||
-      this.metadata[`token_endpoint_auth_method`]
-    )
-  }
-
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc6749#section-2.3.1}
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwt-bearer-11#section-3}
@@ -115,7 +107,6 @@ export class Client {
    */
   public async verifyCredentials(
     input: OAuthClientIdentification,
-    endpoint: OAuthEndpointName,
     checks: {
       audience: string
     },
@@ -124,7 +115,7 @@ export class Client {
     // for replay protection
     nonce?: string
   }> {
-    const method = this.getAuthMethod(endpoint)
+    const method = this.metadata[`token_endpoint_auth_method`]
 
     if (method === 'none') {
       const clientAuth: ClientAuth = { method: 'none' }
@@ -192,7 +183,7 @@ export class Client {
     }
 
     throw new InvalidClientMetadataError(
-      `Unsupported ${endpoint}_endpoint_auth_method "${method}"`,
+      `Unsupported token_endpoint_auth_method "${method}"`,
     )
   }
 
@@ -204,11 +195,11 @@ export class Client {
    */
   public async validateClientAuth(clientAuth: ClientAuth): Promise<boolean> {
     if (clientAuth.method === 'none') {
-      return this.getAuthMethod('token') === 'none'
+      return this.metadata[`token_endpoint_auth_method`] === 'none'
     }
 
     if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-      if (this.getAuthMethod('token') !== 'private_key_jwt') {
+      if (this.metadata[`token_endpoint_auth_method`] !== 'private_key_jwt') {
         return false
       }
       try {
