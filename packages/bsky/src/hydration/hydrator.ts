@@ -366,7 +366,14 @@ export class Hydrator {
     const postUrisWithThreadgates = new Set<string>()
     for (const uri of threadRootUris) {
       const post = postsLayer0.get(uri)
-      // post could be deleted, still want to check for existing threadgate
+      /*
+       * Checking `post.hasThreadGate` is an optimization, which tells us that
+       * this post has a threadgate record associated with it. `hydratePosts`
+       * always hydrates root posts via `additionalRootUris`, so we try to
+       * check the optimization flag were possible. If the post is unavailable
+       * for whatever reason, we fall back to requesting threadgate records
+       * that may not exist.
+       */
       if (!post || post.hasThreadGate) {
         postUrisWithThreadgates.add(uri)
       }
