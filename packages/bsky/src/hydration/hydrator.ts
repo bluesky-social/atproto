@@ -109,9 +109,13 @@ export type HydrationState = {
   bidirectionalBlocks?: BidirectionalBlocks
 }
 
-export type PostBlock = { embed: boolean; reply: boolean }
+export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
 export type PostBlocks = HydrationMap<PostBlock>
-type PostBlockPairs = { embed?: RelationshipPair; reply?: RelationshipPair }
+type PostBlockPairs = {
+  embed?: RelationshipPair
+  parent?: RelationshipPair
+  root?: RelationshipPair
+}
 
 export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
@@ -445,10 +449,17 @@ export class Hydrator {
       // 3p block for replies
       const parentUri = post.reply?.parent.uri
       const parentDid = parentUri && didFromUri(parentUri)
-      if (parentDid) {
+      if (parentDid && parentDid !== creator) {
         const pair: RelationshipPair = [creator, parentDid]
         relationships.push(pair)
-        postBlockPairs.reply = pair
+        postBlockPairs.parent = pair
+      }
+      const rootUri = post.reply?.root.uri
+      const rootDid = rootUri && didFromUri(rootUri)
+      if (rootDid && rootDid !== creator) {
+        const pair: RelationshipPair = [creator, rootDid]
+        relationships.push(pair)
+        postBlockPairs.root = pair
       }
       // 3p block for record embeds
       for (const embedUri of nestedRecordUris(post)) {
@@ -457,12 +468,13 @@ export class Hydrator {
         postBlockPairs.embed = pair
       }
     }
-    // replace embed/reply pairs with block state
+    // replace embed/parent/root pairs with block state
     const blocks = await this.graph.getBidirectionalBlocks(relationships)
-    for (const [uri, { embed, reply }] of postBlocksPairs) {
+    for (const [uri, { embed, parent, root }] of postBlocksPairs) {
       postBlocks.set(uri, {
         embed: !!embed && blocks.isBlocked(...embed),
-        reply: !!reply && blocks.isBlocked(...reply),
+        parent: !!parent && blocks.isBlocked(...parent),
+        root: !!root && blocks.isBlocked(...root),
       })
     }
     return postBlocks

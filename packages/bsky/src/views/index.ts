@@ -622,15 +622,16 @@ export class Views {
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
     let parent = this.maybePost(postRecord.reply.parent.uri, state)
-    if (
-      !state.ctx?.include3pBlocks &&
-      state.postBlocks?.get(uri)?.reply &&
-      isPostView(parent)
-    ) {
-      parent = this.blockedPost(parent.uri, parent.author.did, state)
-      // in a reply to the root of a thread, parent and root are the same post.
-      if (root.uri === parent.uri) {
-        root = parent
+    if (!state.ctx?.include3pBlocks) {
+      const childBlocks = state.postBlocks?.get(uri)
+      const parentBlocks = state.postBlocks?.get(parent.uri)
+      // if child blocks parent, block parent
+      if (isPostView(parent) && childBlocks?.parent) {
+        parent = this.blockedPost(parent.uri, parent.author.did, state)
+      }
+      // if child or parent blocks root, block root
+      if (isPostView(root) && (childBlocks?.root || parentBlocks?.root)) {
+        root = this.blockedPost(root.uri, root.author.did, state)
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
@@ -755,7 +756,10 @@ export class Views {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
-    if (!state.ctx?.include3pBlocks && state.postBlocks?.get(childUri)?.reply) {
+    if (
+      !state.ctx?.include3pBlocks &&
+      state.postBlocks?.get(childUri)?.parent
+    ) {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
@@ -786,7 +790,7 @@ export class Views {
       if (postInfo?.violatesThreadGate) {
         return undefined
       }
-      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.reply) {
+      if (!state.ctx?.include3pBlocks && state.postBlocks?.get(uri)?.parent) {
         return undefined
       }
       const post = this.post(uri, state)
