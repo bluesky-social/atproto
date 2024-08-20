@@ -164,7 +164,7 @@ const presentation = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   const feed = mapDefined(skeleton.items, (item) =>
-    ctx.views.feedViewPost(item, hydration, { includeHiddenReplies: true }),
+    ctx.views.feedViewPost(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }

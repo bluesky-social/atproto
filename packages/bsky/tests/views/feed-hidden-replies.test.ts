@@ -1,10 +1,10 @@
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import AtpAgent, { AppBskyFeedDefs } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 
 import { ids } from '../../src/lexicon/lexicons'
 import { feedHiddenRepliesSeed, Users } from '../seed/feed-hidden-replies'
 
-describe('postgates', () => {
+describe('feed hidden replies', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
@@ -13,7 +13,7 @@ describe('postgates', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_tests_hidden_replies',
+      dbPostgresSchema: 'bsky_tests_feed_hidden_replies',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
@@ -27,129 +27,6 @@ describe('postgates', () => {
 
   afterAll(async () => {
     await network.close()
-  })
-
-  describe(`timeline`, () => {
-    it(`[A] -> [B] : B is hidden`, async () => {
-      const A = await sc.post(users.poster.did, `A`)
-      const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
-
-      await pdsAgent.api.app.bsky.feed.threadgate.create(
-        {
-          repo: A.ref.uri.host,
-          rkey: A.ref.uri.rkey,
-        },
-        {
-          post: A.ref.uriStr,
-          createdAt: new Date().toISOString(),
-          hiddenReplies: [B.ref.uriStr],
-        },
-        sc.getHeaders(users.poster.did),
-      )
-
-      await network.processAll()
-
-      const {
-        data: { feed: timeline },
-      } = await agent.api.app.bsky.feed.getTimeline(
-        {},
-        {
-          headers: await network.serviceHeaders(
-            users.viewer.did,
-            ids.AppBskyFeedGetTimeline,
-          ),
-        },
-      )
-
-      const viewA = timeline.find((post) => post.post.uri === A.ref.uriStr)
-      const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
-
-      expect(viewA).toBeDefined()
-      expect(viewB).toBeDefined()
-      expect(AppBskyFeedDefs.isNotFoundPost(viewB?.reply?.parent)).toBe(true)
-    })
-
-    it(`[A] -> [B] -> [C] : B is hidden, C has tombstone on parent`, async () => {
-      const A = await sc.post(users.poster.did, `A`)
-      const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
-      const C = await sc.reply(users.replier.did, A.ref, B.ref, `C`)
-
-      await pdsAgent.api.app.bsky.feed.threadgate.create(
-        {
-          repo: A.ref.uri.host,
-          rkey: A.ref.uri.rkey,
-        },
-        {
-          post: A.ref.uriStr,
-          createdAt: new Date().toISOString(),
-          hiddenReplies: [B.ref.uriStr],
-        },
-        sc.getHeaders(users.poster.did),
-      )
-
-      await network.processAll()
-
-      const {
-        data: { feed: timeline },
-      } = await agent.api.app.bsky.feed.getTimeline(
-        {},
-        {
-          headers: await network.serviceHeaders(
-            users.viewer.did,
-            ids.AppBskyFeedGetTimeline,
-          ),
-        },
-      )
-
-      const viewA = timeline.find((post) => post.post.uri === A.ref.uriStr)
-      const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
-      const viewC = timeline.find((post) => post.post.uri === C.ref.uriStr)
-
-      expect(viewA).toBeDefined()
-      expect(viewB).toBeDefined()
-      expect(viewC).toBeDefined()
-      expect(AppBskyFeedDefs.isNotFoundPost(viewB?.reply?.parent)).toBe(true)
-      expect(AppBskyFeedDefs.isPostView(viewC?.reply?.parent)).toBe(true)
-      expect(AppBskyFeedDefs.isNotFoundPost(viewC?.reply?.root)).toBe(true)
-    })
-
-    it(`[A] -> [B] : B is hidden but was reposted`, async () => {
-      const A = await sc.post(users.poster.did, `A`)
-      const B = await sc.reply(users.replier.did, A.ref, A.ref, `B`)
-      await sc.repost(users.reposter.did, B.ref)
-
-      await pdsAgent.api.app.bsky.feed.threadgate.create(
-        {
-          repo: A.ref.uri.host,
-          rkey: A.ref.uri.rkey,
-        },
-        {
-          post: A.ref.uriStr,
-          createdAt: new Date().toISOString(),
-          hiddenReplies: [B.ref.uriStr],
-        },
-        sc.getHeaders(users.poster.did),
-      )
-
-      await network.processAll()
-
-      const {
-        data: { feed: timeline },
-      } = await agent.api.app.bsky.feed.getTimeline(
-        {},
-        {
-          headers: await network.serviceHeaders(
-            users.viewer.did,
-            ids.AppBskyFeedGetTimeline,
-          ),
-        },
-      )
-
-      const viewB = timeline.find((post) => post.post.uri === B.ref.uriStr)
-
-      expect(viewB).toBeDefined()
-      expect(AppBskyFeedDefs.isReasonRepost(viewB?.reason)).toBe(true)
-    })
   })
 
   describe(`notifications`, () => {
