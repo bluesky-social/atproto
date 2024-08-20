@@ -107,7 +107,11 @@ export class Views {
     return actor.muted || !!actor.mutedByList
   }
 
-  replyIsHidden(replyUri: string, rootPostUri: string, state: HydrationState) {
+  replyIsHiddenByThreadgate(
+    replyUri: string,
+    rootPostUri: string,
+    state: HydrationState,
+  ) {
     const threadgateUri = postUriToThreadgateUri(rootPostUri)
     const threadgate = state.threadgates?.get(threadgateUri)
     return !!threadgate?.record?.hiddenReplies?.includes(replyUri)
@@ -1108,17 +1112,6 @@ export class Views {
     let recordInfo: RecordInfo<Record<string, unknown>> | null | undefined
     if (uri.collection === ids.AppBskyFeedPost) {
       recordInfo = state.posts?.get(notif.uri)
-      // filter hidden replies
-      if (recordInfo && notif.reason === 'reply') {
-        const rootPostUri = isPostRecord(recordInfo.record)
-          ? recordInfo.record.reply?.root.uri
-          : undefined
-        const isHiddenReply =
-          rootPostUri && creatorFromUri(rootPostUri) === state.ctx?.viewer
-            ? this.replyIsHidden(notif.uri, rootPostUri, state)
-            : false
-        if (isHiddenReply) return
-      }
     } else if (uri.collection === ids.AppBskyFeedLike) {
       recordInfo = state.likes?.get(notif.uri)
     } else if (uri.collection === ids.AppBskyFeedRepost) {
