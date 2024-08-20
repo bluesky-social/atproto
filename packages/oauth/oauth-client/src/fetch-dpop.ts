@@ -158,6 +158,7 @@ async function buildProof(
   const now = Math.floor(Date.now() / 1e3)
 
   return key.createJwt(
+    // https://datatracker.ietf.org/doc/html/rfc9449#section-4.2
     {
       alg,
       typ: 'dpop+jwt',
@@ -166,7 +167,6 @@ async function buildProof(
     {
       iss,
       iat: now,
-      exp: now + 10,
       // Any collision will cause the request to be rejected by the server. no biggie.
       jti: Math.random().toString(36).slice(2),
       htm,
