@@ -449,14 +449,14 @@ export class Hydrator {
       // 3p block for replies
       const parentUri = post.reply?.parent.uri
       const parentDid = parentUri && didFromUri(parentUri)
-      if (parentDid) {
+      if (parentDid && parentDid !== creator) {
         const pair: RelationshipPair = [creator, parentDid]
         relationships.push(pair)
         postBlockPairs.parent = pair
       }
       const rootUri = post.reply?.root.uri
       const rootDid = rootUri && didFromUri(rootUri)
-      if (rootDid) {
+      if (rootDid && rootDid !== creator) {
         const pair: RelationshipPair = [creator, rootDid]
         relationships.push(pair)
         postBlockPairs.root = pair
