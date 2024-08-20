@@ -367,7 +367,7 @@ export class Hydrator {
     for (const uri of threadRootUris) {
       const post = postsLayer0.get(uri)
       // post could be deleted, still want to check for existing threadgate
-      if (!post || (post && post.hasThreadGate)) {
+      if (!post || post.hasThreadGate) {
         postUrisWithThreadgates.add(uri)
       }
     }
