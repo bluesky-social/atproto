@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.51
+
+### Patch Changes
+
+- [#2725](https://github.com/bluesky-social/atproto/pull/2725) [`f9a2f3ed1`](https://github.com/bluesky-social/atproto/commit/f9a2f3ed172ae1a8dc1cca0e893e13eac2e4955d) Thanks [@devinivy](https://github.com/devinivy)! - Fix calls from pds containing content-type but no body
+
+- Updated dependencies [[`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb), [`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb), [`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb), [`5131b027f`](https://github.com/bluesky-social/atproto/commit/5131b027f019cf9f8ec47605648063ae1857f1e3), [`3ebcd4e61`](https://github.com/bluesky-social/atproto/commit/3ebcd4e6161291d3649d7f8a9c5ee4ac26d590a2)]:
+  - @atproto/oauth-provider@0.1.3
+
 ## 0.4.50
 
 ### Patch Changes

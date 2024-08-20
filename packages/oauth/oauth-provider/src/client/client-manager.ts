@@ -17,7 +17,6 @@ import {
   isLoopbackUrl,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
-  OAUTH_AUTHENTICATED_ENDPOINT_NAMES,
   OAuthClientIdDiscoverable,
   OAuthClientIdLoopback,
   OAuthClientMetadata,
@@ -271,49 +270,43 @@ export class ClientManager {
       )
     }
 
-    if (!metadata[`token_endpoint_auth_method`]) {
-      throw new InvalidClientMetadataError(
-        'Missing token_endpoint_auth_method client metadata',
-      )
-    }
+    const method = metadata[`token_endpoint_auth_method`]
+    switch (method) {
+      case undefined:
+        throw new InvalidClientMetadataError(
+          'Missing token_endpoint_auth_method client metadata',
+        )
 
-    for (const endpoint of OAUTH_AUTHENTICATED_ENDPOINT_NAMES) {
-      const method =
-        metadata[`${endpoint}_endpoint_auth_method`] ||
-        metadata[`token_endpoint_auth_method`]
-
-      switch (method) {
-        case 'none':
-          if (metadata.token_endpoint_auth_signing_alg) {
-            throw new InvalidClientMetadataError(
-              `${endpoint}_endpoint_auth_method "none" must not have ${endpoint}_endpoint_auth_signing_alg`,
-            )
-          }
-          break
-
-        case 'private_key_jwt':
-          if (!metadata.jwks && !metadata.jwks_uri) {
-            throw new InvalidClientMetadataError(
-              `private_key_jwt auth method requires jwks or jwks_uri`,
-            )
-          }
-          if (metadata.jwks?.keys.length === 0) {
-            throw new InvalidClientMetadataError(
-              `private_key_jwt auth method requires at least one key in jwks`,
-            )
-          }
-          if (!metadata.token_endpoint_auth_signing_alg) {
-            throw new InvalidClientMetadataError(
-              `Missing token_endpoint_auth_signing_alg client metadata`,
-            )
-          }
-          break
-
-        default:
+      case 'none':
+        if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
-            `${method} is not a supported "${endpoint}_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+            `token_endpoint_auth_method "none" must not have token_endpoint_auth_signing_alg`,
           )
-      }
+        }
+        break
+
+      case 'private_key_jwt':
+        if (!metadata.jwks && !metadata.jwks_uri) {
+          throw new InvalidClientMetadataError(
+            `private_key_jwt auth method requires jwks or jwks_uri`,
+          )
+        }
+        if (metadata.jwks?.keys.length === 0) {
+          throw new InvalidClientMetadataError(
+            `private_key_jwt auth method requires at least one key in jwks`,
+          )
+        }
+        if (!metadata.token_endpoint_auth_signing_alg) {
+          throw new InvalidClientMetadataError(
+            `Missing token_endpoint_auth_signing_alg client metadata`,
+          )
+        }
+        break
+
+      default:
+        throw new InvalidClientMetadataError(
+          `${method} is not a supported "token_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+        )
     }
 
     if (metadata.authorization_encrypted_response_enc) {
@@ -693,16 +686,11 @@ export class ClientManager {
       )
     }
 
-    for (const endpoint of OAUTH_AUTHENTICATED_ENDPOINT_NAMES) {
-      const method =
-        metadata[`${endpoint}_endpoint_auth_method`] ||
-        metadata[`token_endpoint_auth_method`]
-
-      if (method !== 'none') {
-        throw new InvalidClientMetadataError(
-          `Loopback clients are not allowed to use "${endpoint}_endpoint_auth_method" ${method}`,
-        )
-      }
+    const method = metadata[`token_endpoint_auth_method`]
+    if (method !== 'none') {
+      throw new InvalidClientMetadataError(
+        `Loopback clients are not allowed to use "token_endpoint_auth_method" ${method}`,
+      )
     }
 
     for (const redirectUri of metadata.redirect_uris) {
@@ -766,16 +754,14 @@ export class ClientManager {
       }
     }
 
-    for (const endpoint of OAUTH_AUTHENTICATED_ENDPOINT_NAMES) {
-      const method = metadata[`${endpoint}_endpoint_auth_method`]
-      switch (method) {
-        case 'client_secret_post':
-        case 'client_secret_basic':
-        case 'client_secret_jwt':
-          throw new InvalidClientMetadataError(
-            `Client authentication method "${method}" is not allowed for discoverable clients`,
-          )
-      }
+    const method = metadata[`token_endpoint_auth_method`]
+    switch (method) {
+      case 'client_secret_post':
+      case 'client_secret_basic':
+      case 'client_secret_jwt':
+        throw new InvalidClientMetadataError(
+          `Client authentication method "${method}" is not allowed for discoverable clients`,
+        )
     }
 
     for (const redirectUri of metadata.redirect_uris) {

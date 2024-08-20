@@ -7,6 +7,7 @@ import {
   KnownNames,
   KnownParser,
   KnownTypes,
+  parseContentType,
   ParserForType,
   ParserResult,
   parsers,
@@ -64,9 +65,11 @@ export async function parseStream(
     throw createHttpError(400, 'Invalid content-type')
   }
 
+  const type = parseContentType(contentType)
+
   const parser = parsers.find(
     (parser) =>
-      allow?.includes(parser.name) !== false && parser.test(contentType),
+      allow?.includes(parser.name) !== false && parser.test(type.mime),
   )
 
   if (!parser) {
@@ -74,5 +77,5 @@ export async function parseStream(
   }
 
   const buffer = await readStream(req)
-  return parser.parse(buffer)
+  return parser.parse(buffer, type)
 }

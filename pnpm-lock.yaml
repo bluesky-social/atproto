@@ -957,6 +957,9 @@ importers:
       '@hapi/bourne':
         specifier: ^3.0.0
         version: 3.0.0
+      '@hapi/content':
+        specifier: ^6.0.0
+        version: 6.0.0
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
@@ -4853,6 +4856,12 @@ packages:
 
   /@hapi/bourne@3.0.0:
     resolution: {integrity: sha512-Waj1cwPXJDucOib4a3bAISsKJVb15MKi9IvmTI/7ssVEm6sywXGjVJDhl6/umt1pK1ZS7PacXU3A1PmFKHEZ2w==}
+    dev: false
+
+  /@hapi/content@6.0.0:
+    resolution: {integrity: sha512-CEhs7j+H0iQffKfe5Htdak5LBOz/Qc8TRh51cF+BFv0qnuph3Em4pjGVzJMkI2gfTDdlJKWJISGWS1rK34POGA==}
+    dependencies:
+      '@hapi/boom': 10.0.1
     dev: false
 
   /@hapi/hoek@11.0.4:
