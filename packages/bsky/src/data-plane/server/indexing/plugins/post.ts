@@ -339,6 +339,7 @@ const deleteFn = async (
       .executeTakeFirst(),
     db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
   ])
+  await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
