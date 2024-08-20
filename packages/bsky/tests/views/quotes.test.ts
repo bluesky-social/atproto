@@ -63,7 +63,7 @@ describe('pds quote views', () => {
 
   it('does not return post when quote is deleted', async () => {
     await sc.deletePost(eve, sc.posts[eve][0].ref.uri)
-    await network.processAll(1000)
+    await network.processAll()
 
     const alicePostQuotes = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
@@ -78,7 +78,7 @@ describe('pds quote views', () => {
 
   it('does not return any quotes when the quoted post is deleted', async () => {
     await sc.deletePost(alice, sc.posts[alice][0].ref.uri)
-    await network.processAll(1000)
+    await network.processAll()
 
     const alicePostQuotesAfter = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
@@ -92,7 +92,7 @@ describe('pds quote views', () => {
 
   it('decrements quote count when a quote is deleted', async () => {
     await sc.deletePost(eve, sc.posts[eve][2].ref.uri)
-    await network.processAll(1000)
+    await network.processAll()
 
     const bobPost = await agent.api.app.bsky.feed.getPosts(
       { uris: [sc.replies[bob][0].ref.uriStr] },
