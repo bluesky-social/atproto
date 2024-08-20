@@ -243,7 +243,8 @@ export function useOAuth(options: UseOAuthOptions) {
       )
     }
 
-    void agent?.refreshIfNeeded()
+    // Force fetching the token info in order to trigger a token refresh
+    void agent?.getTokenInfo(true)
 
     return () => {
       controller.abort()
