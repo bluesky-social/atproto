@@ -17,6 +17,7 @@ import {
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
+import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
 import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
@@ -141,17 +142,27 @@ export class RequestManager {
     if (parameters.authorization_details) {
       const clientAuthDetailsTypes = client.metadata.authorization_details_types
       if (!clientAuthDetailsTypes) {
-        throw new InvalidParametersError(
+        throw new InvalidAuthorizationDetailsError(
           parameters,
           'Client Metadata does not declare any "authorization_details"',
         )
       }
 
       for (const detail of parameters.authorization_details) {
-        if (!clientAuthDetailsTypes?.includes(detail.type)) {
-          throw new InvalidParametersError(
+        if (
+          !this.metadata.authorization_details_types_supported?.includes(
+            detail.type,
+          )
+        ) {
+          throw new InvalidAuthorizationDetailsError(
             parameters,
             `Unsupported "authorization_details" type "${detail.type}"`,
+          )
+        }
+        if (!clientAuthDetailsTypes?.includes(detail.type)) {
+          throw new InvalidAuthorizationDetailsError(
+            parameters,
+            `Client Metadata does not declare any "authorization_details" of type "${detail.type}"`,
           )
         }
       }
