@@ -577,6 +577,7 @@ export class Views {
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
+      quoteCount: aggs?.quotes ?? 0,
       indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {

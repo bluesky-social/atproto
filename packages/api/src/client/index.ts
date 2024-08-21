@@ -110,6 +110,7 @@ import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -307,6 +308,7 @@ export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
@@ -1737,6 +1739,17 @@ export class AppBskyFeedNS {
     opts?: AppBskyFeedGetPosts.CallOptions,
   ): Promise<AppBskyFeedGetPosts.Response> {
     return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
+  }
+
+  getQuotes(
+    params?: AppBskyFeedGetQuotes.QueryParams,
+    opts?: AppBskyFeedGetQuotes.CallOptions,
+  ): Promise<AppBskyFeedGetQuotes.Response> {
+    return this._client
+      .call('app.bsky.feed.getQuotes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetQuotes.toKnownErr(e)
+      })
   }
 
   getRepostedBy(

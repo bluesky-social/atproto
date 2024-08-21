@@ -168,6 +168,7 @@ const insertFn = async (
       await db.insertInto('post_embed_external').values(externalEmbed).execute()
     } else if (isEmbedRecord(postEmbed)) {
       const { record } = postEmbed
+      const embedUri = new AtUri(record.uri)
       const recordEmbed = {
         postUri: uri.toString(),
         embedUri: record.uri,
@@ -175,6 +176,39 @@ const insertFn = async (
       }
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
+
+      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        const quote = {
+          uri: uri.toString(),
+          cid: cid.toString(),
+          subject: record.uri,
+          subjectCid: record.cid,
+          createdAt: normalizeDatetimeAlways(obj.createdAt),
+          indexedAt: timestamp,
+        }
+        await db
+          .insertInto('quote')
+          .values(quote)
+          .onConflict((oc) => oc.doNothing())
+          .returningAll()
+          .executeTakeFirst()
+
+        const quoteCountQb = db
+          .insertInto('post_agg')
+          .values({
+            uri: record.uri.toString(),
+            quoteCount: db
+              .selectFrom('quote')
+              .where('quote.subjectCid', '=', record.cid.toString())
+              .select(countAll.as('count')),
+          })
+          .onConflict((oc) =>
+            oc
+              .column('uri')
+              .doUpdateSet({ quoteCount: excluded(db, 'quoteCount') }),
+          )
+        await quoteCountQb.execute()
+      }
     }
   }
 
@@ -228,6 +262,7 @@ const notifsForInsert = (obj: IndexedPost) => {
       })
     }
   }
+
   for (const embed of obj.embeds ?? []) {
     if ('embedUri' in embed) {
       const embedUri = new AtUri(embed.embedUri)
@@ -304,6 +339,7 @@ const deleteFn = async (
       .executeTakeFirst(),
     db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
   ])
+  await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -333,7 +369,27 @@ const deleteFn = async (
     deletedEmbeds.push(deletedExternals)
   }
   if (deletedPosts) {
+    const embedUri = new AtUri(deletedPosts.embedUri)
     deletedEmbeds.push(deletedPosts)
+
+    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+      await db.deleteFrom('quote').where('uri', '=', uriStr).execute()
+      await db
+        .insertInto('post_agg')
+        .values({
+          uri: deletedPosts.embedUri,
+          quoteCount: db
+            .selectFrom('quote')
+            .where('quote.subjectCid', '=', deletedPosts.embedCid.toString())
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('uri')
+            .doUpdateSet({ quoteCount: excluded(db, 'quoteCount') }),
+        )
+        .execute()
+    }
   }
   return deleted
     ? {

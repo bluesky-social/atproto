@@ -41,6 +41,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 3,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -97,6 +98,7 @@ Object {
         },
       ],
       "likeCount": 0,
+      "quoteCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -170,6 +172,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -234,6 +237,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 3,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -265,6 +269,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -333,6 +338,7 @@ Object {
           },
         ],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -408,6 +414,7 @@ Object {
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 0,
+            "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -476,6 +483,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 3,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -507,6 +515,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -574,6 +583,7 @@ Object {
           },
         ],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -654,6 +664,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 3,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -685,6 +696,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -752,6 +764,7 @@ Object {
           },
         ],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -832,6 +845,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -864,6 +878,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -923,6 +938,7 @@ Object {
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 0,
+            "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -990,6 +1006,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1048,6 +1065,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1116,6 +1134,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1185,6 +1204,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 0,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1249,6 +1269,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 3,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -1307,6 +1328,7 @@ Object {
           },
         ],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1382,6 +1404,7 @@ Object {
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 0,
+            "quoteCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1450,6 +1473,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "likeCount": 3,
+    "quoteCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000000Z",
@@ -1508,6 +1532,7 @@ Object {
           },
         ],
         "likeCount": 0,
+        "quoteCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",

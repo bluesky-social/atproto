@@ -134,6 +134,8 @@ import {
   GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
+  GetQuotesBySubjectRequest,
+  GetQuotesBySubjectResponse,
   GetRecordTakedownRequest,
   GetRecordTakedownResponse,
   GetRelationshipsRequest,
@@ -421,6 +423,17 @@ export const Service = {
       name: 'GetActorReposts',
       I: GetActorRepostsRequest,
       O: GetActorRepostsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Quotes
+     *
+     * @generated from rpc bsky.Service.GetQuotesBySubject
+     */
+    getQuotesBySubject: {
+      name: 'GetQuotesBySubject',
+      I: GetQuotesBySubjectRequest,
+      O: GetQuotesBySubjectResponse,
       kind: MethodKind.Unary,
     },
     /**

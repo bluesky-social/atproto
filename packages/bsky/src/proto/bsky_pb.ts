@@ -2985,6 +2985,134 @@ export class GetActorLikesResponse extends Message<GetActorLikesResponse> {
 }
 
 /**
+ * @generated from message bsky.GetQuotesBySubjectRequest
+ */
+export class GetQuotesBySubjectRequest extends Message<GetQuotesBySubjectRequest> {
+  /**
+   * @generated from field: bsky.RecordRef subject = 1;
+   */
+  subject?: RecordRef
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetQuotesBySubjectRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetQuotesBySubjectRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'subject', kind: 'message', T: RecordRef },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetQuotesBySubjectRequest {
+    return new GetQuotesBySubjectRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetQuotesBySubjectRequest {
+    return new GetQuotesBySubjectRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetQuotesBySubjectRequest {
+    return new GetQuotesBySubjectRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetQuotesBySubjectRequest
+      | PlainMessage<GetQuotesBySubjectRequest>
+      | undefined,
+    b:
+      | GetQuotesBySubjectRequest
+      | PlainMessage<GetQuotesBySubjectRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetQuotesBySubjectRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetQuotesBySubjectResponse
+ */
+export class GetQuotesBySubjectResponse extends Message<GetQuotesBySubjectResponse> {
+  /**
+   * @generated from field: repeated bsky.RecordRef refs = 1;
+   */
+  refs: RecordRef[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetQuotesBySubjectResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetQuotesBySubjectResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'refs', kind: 'message', T: RecordRef, repeated: true },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetQuotesBySubjectResponse {
+    return new GetQuotesBySubjectResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetQuotesBySubjectResponse {
+    return new GetQuotesBySubjectResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetQuotesBySubjectResponse {
+    return new GetQuotesBySubjectResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetQuotesBySubjectResponse
+      | PlainMessage<GetQuotesBySubjectResponse>
+      | undefined,
+    b:
+      | GetQuotesBySubjectResponse
+      | PlainMessage<GetQuotesBySubjectResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetQuotesBySubjectResponse, a, b)
+  }
+}
+
+/**
  *
  * Interactions
  *
@@ -3062,6 +3190,11 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
    */
   replies: number[] = []
 
+  /**
+   * @generated from field: repeated int32 quotes = 4;
+   */
+  quotes: number[] = []
+
   constructor(data?: PartialMessage<GetInteractionCountsResponse>) {
     super()
     proto3.util.initPartial(data, this)
@@ -3087,6 +3220,13 @@ export class GetInteractionCountsResponse extends Message<GetInteractionCountsRe
     {
       no: 3,
       name: 'replies',
+      kind: 'scalar',
+      T: 5 /* ScalarType.INT32 */,
+      repeated: true,
+    },
+    {
+      no: 4,
+      name: 'quotes',
       kind: 'scalar',
       T: 5 /* ScalarType.INT32 */,
       repeated: true,
