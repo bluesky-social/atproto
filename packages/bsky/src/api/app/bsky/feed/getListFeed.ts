@@ -14,7 +14,7 @@ import { DataPlaneClient } from '../../../../data-plane'
 import { mapDefined } from '@atproto/common'
 import { parseString } from '../../../../hydration/util'
 import { FeedItem } from '../../../../hydration/feed'
-import { didFromUri } from '../../../../../dist/hydration/util'
+import { uriToDid } from '../../../../util/uris'
 
 export default function (server: Server, ctx: AppContext) {
   const getListFeed = createPipeline(
@@ -92,7 +92,7 @@ const noBlocksOrMutes = (inputs: {
   skeleton.items = skeleton.items.filter((item) => {
     const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     const creatorBlocks = hydration.bidirectionalBlocks?.get(
-      didFromUri(params.list),
+      uriToDid(params.list),
     )
     return (
       !bam.authorBlocked &&
@@ -100,7 +100,7 @@ const noBlocksOrMutes = (inputs: {
       !bam.originatorBlocked &&
       !bam.originatorMuted &&
       !bam.ancestorAuthorBlocked &&
-      !creatorBlocks?.get(didFromUri(item.post.uri))
+      !creatorBlocks?.get(uriToDid(item.post.uri))
     )
   })
   return skeleton
@@ -126,8 +126,8 @@ const getBlocks = async (input: {
   const { ctx, skeleton, params } = input
   const pairs: Map<string, string[]> = new Map()
   pairs.set(
-    didFromUri(params.list),
-    skeleton.items.map((item) => didFromUri(item.post.uri)),
+    uriToDid(params.list),
+    skeleton.items.map((item) => uriToDid(item.post.uri)),
   )
   return await ctx.hydrator.hydrateBidirectionalBlocks(pairs)
 }
