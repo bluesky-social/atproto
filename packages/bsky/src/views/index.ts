@@ -979,7 +979,7 @@ export class Views {
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
-      const postgateRecordUri = postUriToPostgateUri(uri)
+      const postgateRecordUri = postUriToPostgateUri(parsedUri.toString())
       const postgate = state.postgates?.get(postgateRecordUri)
       if (postgate?.record?.detachedEmbeddingUris?.includes(postUri)) {
         return this.embedDetached(uri)

@@ -218,7 +218,7 @@ const insertFn = async (
 
         const { violatesEmbeddingRules } = await validatePostEmbed(
           db,
-          record.uri,
+          embedUri.toString(),
           uri.toString(),
         )
         Object.assign(insertedPost, {
