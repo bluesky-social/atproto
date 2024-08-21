@@ -500,12 +500,11 @@ async function validatePostEmbed(
   parentUri: string,
 ) {
   const postgateRecordUri = postUriToPostgateUri(embedUri)
-  const results = await db
+  const postgateRecord = await db
     .selectFrom('record')
     .where('record.uri', '=', postgateRecordUri)
     .selectAll()
-    .execute()
-  const postgateRecord = results.find((ref) => ref.uri === postgateRecordUri)
+    .executeTakeFirst()
   if (!postgateRecord) {
     return {
       violatesEmbeddingRules: false,
