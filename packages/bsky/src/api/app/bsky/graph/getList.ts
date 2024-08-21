@@ -70,7 +70,7 @@ const hydration = async (
       params.hydrateCtx,
     ),
   ])
-  const bidirectionalBlocks = await maybeGetBlocksForReferenceList({
+  const bidirectionalBlocks = await maybeGetBlocksForReferenceAndCurateList({
     ctx,
     params,
     skeleton,
@@ -106,7 +106,7 @@ const presentation = (
   return { list, items, cursor }
 }
 
-const maybeGetBlocksForReferenceList = async (input: {
+const maybeGetBlocksForReferenceAndCurateList = async (input: {
   ctx: Context
   listState: HydrationState
   skeleton: SkeletonState
@@ -118,8 +118,8 @@ const maybeGetBlocksForReferenceList = async (input: {
   const listRecord = listState.lists?.get(list)
   const creator = didFromUri(list)
   if (
-    listRecord?.record.purpose !== 'app.bsky.graph.defs#referencelist' ||
-    params.hydrateCtx.viewer === creator
+    params.hydrateCtx.viewer === creator ||
+    listRecord?.record.purpose === 'app.bsky.graph.defs#modlist'
   ) {
     return
   }
