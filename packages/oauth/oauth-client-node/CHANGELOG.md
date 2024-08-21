@@ -1,5 +1,12 @@
 # @atproto/oauth-client-node
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.1.6
+
 ## 0.0.5
 
 ### Patch Changes

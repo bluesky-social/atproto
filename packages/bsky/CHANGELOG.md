@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.77
+
+### Patch Changes
+
+- [#2658](https://github.com/bluesky-social/atproto/pull/2658) [`2a0c088cc`](https://github.com/bluesky-social/atproto/commit/2a0c088cc5d502ca70da9612a261186aa2f2e1fb) Thanks [@haileyok](https://github.com/haileyok)! - Adds `app.bsky.feed.getQuotes` lexicon and handlers
+
+- [#2675](https://github.com/bluesky-social/atproto/pull/2675) [`aba664fbd`](https://github.com/bluesky-social/atproto/commit/aba664fbdfbaddba321e96db2478e0bc8fc72d27) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `postgate` records to power quote gating and detached quote posts, plus `hiddenReplies` to the `threadgate` record.
+
+- Updated dependencies [[`2a0c088cc`](https://github.com/bluesky-social/atproto/commit/2a0c088cc5d502ca70da9612a261186aa2f2e1fb), [`aba664fbd`](https://github.com/bluesky-social/atproto/commit/aba664fbdfbaddba321e96db2478e0bc8fc72d27)]:
+  - @atproto/api@0.13.2
+
 ## 0.0.76
 
 ### Patch Changes
