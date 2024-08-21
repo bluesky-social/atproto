@@ -277,6 +277,7 @@ describe('indexing', () => {
       replyCount: 1,
       repostCount: 1,
       likeCount: 1,
+      quoteCount: 0,
     })
     // Cleanup
     const del = (uri: AtUri) => {
