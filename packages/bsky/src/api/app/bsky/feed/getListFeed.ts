@@ -12,8 +12,9 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { mapDefined } from '@atproto/common'
-import { didFromUri, parseString } from '../../../../hydration/util'
+import { parseString } from '../../../../hydration/util'
 import { FeedItem } from '../../../../hydration/feed'
+import { didFromUri } from '../../../../../dist/hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getListFeed = createPipeline(
