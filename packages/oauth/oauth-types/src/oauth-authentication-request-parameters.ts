@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
+import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
 import { oidcClaimsPropertiesSchema } from './oidc-claims-properties.js'
 import { oidcEntityTypeSchema } from './oidc-entity-type.js'
@@ -17,19 +18,7 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
   nonce: z.string().optional(),
   dpop_jkt: z.string().optional(),
 
-  response_type: z.enum([
-    // OAuth2 (https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-4.1.1)
-    'code',
-    'token',
-
-    // OIDC (https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
-    'id_token',
-    'none',
-    'code token',
-    'code id_token',
-    'id_token token',
-    'code id_token token',
-  ]),
+  response_type: oauthResponseTypeSchema,
 
   // Default depend on response_type
   response_mode: z.enum(['query', 'fragment', 'form_post']).optional(),
