@@ -52,6 +52,7 @@ export interface ViewerState {
   like?: string
   threadMuted?: boolean
   replyDisabled?: boolean
+  embeddingDisabled?: boolean
   [k: string]: unknown
 }
 

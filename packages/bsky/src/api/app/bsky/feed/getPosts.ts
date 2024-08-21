@@ -9,7 +9,7 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { creatorFromUri } from '../../../../views/util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { resHeaders } from '../../../util'
 import { ids } from '../../../../lexicon/lexicons'
 

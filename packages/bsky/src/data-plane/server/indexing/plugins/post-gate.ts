@@ -1,31 +1,31 @@
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
-import * as Threadgate from '../../../../lexicon/types/app/bsky/feed/threadgate'
+import * as Postgate from '../../../../lexicon/types/app/bsky/feed/postgate'
 import * as lex from '../../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { Database } from '../../db'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
 
-const lexId = lex.ids.AppBskyFeedThreadgate
-type IndexedGate = DatabaseSchemaType['thread_gate']
+const lexId = lex.ids.AppBskyFeedPostgate
+type IndexedGate = DatabaseSchemaType['post_gate']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Threadgate.Record,
+  obj: Postgate.Record,
   timestamp: string,
 ): Promise<IndexedGate | null> => {
   const postUri = new AtUri(obj.post)
   if (postUri.host !== uri.host || postUri.rkey !== uri.rkey) {
     throw new InvalidRequestError(
-      'Creator and rkey of thread gate does not match its post',
+      'Creator and rkey of post gate does not match its post',
     )
   }
   const inserted = await db
-    .insertInto('thread_gate')
+    .insertInto('post_gate')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
@@ -40,7 +40,7 @@ const insertFn = async (
   await db
     .updateTable('post')
     .where('uri', '=', postUri.toString())
-    .set({ hasThreadGate: true })
+    .set({ hasPostGate: true })
     .executeTakeFirst()
   return inserted || null
 }
@@ -48,10 +48,10 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: Threadgate.Record,
+  obj: Postgate.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('thread_gate')
+    .selectFrom('post_gate')
     .where('postUri', '=', obj.post)
     .selectAll()
     .executeTakeFirst()
@@ -67,7 +67,7 @@ const deleteFn = async (
   uri: AtUri,
 ): Promise<IndexedGate | null> => {
   const deleted = await db
-    .deleteFrom('thread_gate')
+    .deleteFrom('post_gate')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -75,7 +75,7 @@ const deleteFn = async (
     await db
       .updateTable('post')
       .where('uri', '=', deleted.postUri)
-      .set({ hasThreadGate: false })
+      .set({ hasPostGate: false })
       .executeTakeFirst()
   }
   return deleted || null
@@ -85,7 +85,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Threadgate.Record, IndexedGate>
+export type PluginType = RecordProcessor<Postgate.Record, IndexedGate>
 
 export const makePlugin = (
   db: Database,

@@ -55,6 +55,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -126,6 +127,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -174,6 +176,7 @@ Array [
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -250,6 +253,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -302,6 +306,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -429,6 +434,7 @@ Array [
       "repostCount": 0,
       "uri": "record(5)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -476,6 +482,7 @@ Array [
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -540,6 +547,7 @@ Array [
       "repostCount": 1,
       "uri": "record(6)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -575,6 +583,7 @@ Array [
       "repostCount": 0,
       "uri": "record(8)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -638,6 +647,7 @@ Array [
       "repostCount": 0,
       "uri": "record(9)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -700,6 +710,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -771,6 +782,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -819,6 +831,7 @@ Array [
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -895,6 +908,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -947,6 +961,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -989,6 +1004,7 @@ Array [
       "repostCount": 0,
       "uri": "record(5)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1036,6 +1052,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -1082,6 +1099,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -1153,6 +1171,7 @@ Array [
       "repostCount": 0,
       "uri": "record(8)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1187,6 +1206,7 @@ Array [
       "repostCount": 0,
       "uri": "record(10)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1234,6 +1254,7 @@ Array [
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1269,6 +1290,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1406,6 +1428,7 @@ Array [
       "repostCount": 0,
       "uri": "record(14)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(16)",
         "threadMuted": false,
       },
@@ -1453,6 +1476,7 @@ Array [
       "repostCount": 0,
       "uri": "record(15)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1516,6 +1540,7 @@ Array [
       "repostCount": 0,
       "uri": "record(17)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1578,6 +1603,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -1709,6 +1735,7 @@ Array [
         "repostCount": 0,
         "uri": "record(3)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -1755,6 +1782,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -1803,6 +1831,7 @@ Array [
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2014,6 +2043,7 @@ Array [
       "repostCount": 1,
       "uri": "record(7)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2086,6 +2116,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2198,6 +2229,7 @@ Array [
         "repostCount": 0,
         "uri": "record(3)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -2244,6 +2276,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -2286,6 +2319,7 @@ Array [
       "repostCount": 0,
       "uri": "record(12)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2333,6 +2367,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -2379,6 +2414,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -2465,6 +2501,7 @@ Array [
       "repostCount": 0,
       "uri": "record(3)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2512,6 +2549,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -2558,6 +2596,7 @@ Array [
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -2750,6 +2789,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2784,6 +2824,7 @@ Array [
       "repostCount": 0,
       "uri": "record(14)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -2831,6 +2872,7 @@ Array [
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3023,6 +3065,7 @@ Array [
       "repostCount": 1,
       "uri": "record(7)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3058,6 +3101,7 @@ Array [
       "repostCount": 0,
       "uri": "record(15)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3195,6 +3239,7 @@ Array [
       "repostCount": 0,
       "uri": "record(8)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(16)",
         "threadMuted": false,
       },
@@ -3242,6 +3287,7 @@ Array [
       "repostCount": 0,
       "uri": "record(11)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3305,6 +3351,7 @@ Array [
       "repostCount": 0,
       "uri": "record(17)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3499,6 +3546,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3572,6 +3620,7 @@ Array [
       "repostCount": 1,
       "uri": "record(5)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3684,6 +3733,7 @@ Array [
         "repostCount": 0,
         "uri": "record(10)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -3732,6 +3782,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -3774,6 +3825,7 @@ Array [
       "repostCount": 0,
       "uri": "record(12)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -3823,6 +3875,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -3872,6 +3925,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -3957,6 +4011,7 @@ Array [
       "repostCount": 0,
       "uri": "record(10)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -4006,6 +4061,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -4055,6 +4111,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -4249,6 +4306,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(14)",
         "threadMuted": false,
       },
@@ -4282,6 +4340,7 @@ Array [
       "repostCount": 0,
       "uri": "record(15)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -4331,6 +4390,7 @@ Array [
       "repostCount": 1,
       "uri": "record(9)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(11)",
         "threadMuted": false,
       },
@@ -4466,6 +4526,7 @@ Array [
       "repostCount": 0,
       "uri": "record(2)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(16)",
         "threadMuted": false,
       },
@@ -4511,6 +4572,7 @@ Array [
       "repostCount": 0,
       "uri": "record(4)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -4576,6 +4638,7 @@ Array [
       "repostCount": 0,
       "uri": "record(17)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -4769,6 +4832,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "repost": "record(4)",
         "threadMuted": false,
       },
@@ -4842,6 +4906,7 @@ Array [
       "repostCount": 1,
       "uri": "record(5)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -4955,6 +5020,7 @@ Array [
         "repostCount": 0,
         "uri": "record(10)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -5003,6 +5069,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -5044,6 +5111,7 @@ Array [
       "repostCount": 0,
       "uri": "record(12)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -5093,6 +5161,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -5142,6 +5211,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(11)",
           "threadMuted": false,
         },
@@ -5334,6 +5404,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(14)",
         "threadMuted": false,
       },
@@ -5384,6 +5455,7 @@ Array [
       "repostCount": 1,
       "uri": "record(9)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(11)",
         "threadMuted": false,
       },
@@ -5519,6 +5591,7 @@ Array [
       "repostCount": 0,
       "uri": "record(1)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -5584,6 +5657,7 @@ Array [
       "repostCount": 0,
       "uri": "record(15)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -5647,6 +5721,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "repost": "record(5)",
         "threadMuted": false,
       },
@@ -5778,6 +5853,7 @@ Array [
         "repostCount": 0,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -5825,6 +5901,7 @@ Array [
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,
@@ -5876,6 +5953,7 @@ Array [
       "repostCount": 1,
       "uri": "record(3)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(7)",
         "repost": "record(6)",
         "threadMuted": false,
@@ -5980,6 +6058,7 @@ Array [
       "repostCount": 0,
       "uri": "record(4)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -6028,6 +6107,7 @@ Array [
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,
@@ -6077,6 +6157,7 @@ Array [
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,
@@ -6113,6 +6194,7 @@ Array [
       "repostCount": 0,
       "uri": "record(9)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -6301,6 +6383,7 @@ Array [
       "repostCount": 1,
       "uri": "record(10)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -6335,6 +6418,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -6380,6 +6464,7 @@ Array [
       "repostCount": 0,
       "uri": "record(12)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },

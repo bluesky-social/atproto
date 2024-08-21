@@ -60,6 +60,7 @@ Array [
     "repostCount": 0,
     "uri": "record(0)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "threadMuted": false,
     },
   },
@@ -105,6 +106,7 @@ Array [
     "repostCount": 1,
     "uri": "record(2)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "threadMuted": false,
     },
   },
@@ -141,6 +143,7 @@ Array [
     "repostCount": 0,
     "uri": "record(3)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "threadMuted": false,
     },
   },
@@ -260,6 +263,7 @@ Array [
     "repostCount": 0,
     "uri": "record(6)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "like": "record(9)",
       "threadMuted": false,
     },
@@ -435,6 +439,7 @@ Array [
     "repostCount": 1,
     "uri": "record(10)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "threadMuted": false,
     },
   },
@@ -490,6 +495,7 @@ Array [
     "repostCount": 1,
     "uri": "record(12)",
     "viewer": Object {
+      "embeddingDisabled": false,
       "threadMuted": false,
     },
   },

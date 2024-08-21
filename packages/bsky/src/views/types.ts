@@ -39,6 +39,7 @@ export type {
   View as RecordEmbedView,
   ViewBlocked as EmbedBlocked,
   ViewNotFound as EmbedNotFound,
+  ViewDetached as EmbedDetached,
   ViewRecord as PostEmbedView,
 } from '../lexicon/types/app/bsky/embed/record'
 export { isMain as isRecordEmbed } from '../lexicon/types/app/bsky/embed/record'

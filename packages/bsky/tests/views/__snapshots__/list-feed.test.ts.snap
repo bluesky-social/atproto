@@ -57,6 +57,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -170,6 +171,7 @@ Array [
         "repostCount": 0,
         "uri": "record(5)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "threadMuted": false,
         },
       },
@@ -218,6 +220,7 @@ Array [
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(6)",
           "threadMuted": false,
         },
@@ -304,6 +307,7 @@ Array [
       "repostCount": 0,
       "uri": "record(5)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -353,6 +357,7 @@ Array [
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(6)",
           "threadMuted": false,
         },
@@ -402,6 +407,7 @@ Array [
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "embeddingDisabled": false,
           "like": "record(6)",
           "threadMuted": false,
         },
@@ -586,6 +592,7 @@ Array [
       "repostCount": 0,
       "uri": "record(8)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(12)",
         "threadMuted": false,
       },
@@ -620,6 +627,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -669,6 +677,7 @@ Array [
       "repostCount": 1,
       "uri": "record(4)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "like": "record(6)",
         "threadMuted": false,
       },
@@ -707,6 +716,7 @@ Array [
       "repostCount": 0,
       "uri": "record(11)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },
@@ -772,6 +782,7 @@ Array [
       "repostCount": 0,
       "uri": "record(14)",
       "viewer": Object {
+        "embeddingDisabled": false,
         "threadMuted": false,
       },
     },

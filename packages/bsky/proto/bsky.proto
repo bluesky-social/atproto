@@ -79,6 +79,9 @@ message PostRecordMeta {
   bool violates_thread_gate = 1;
   bool has_media = 2;
   bool is_reply = 3;
+  bool violates_embedding_rules = 4;
+  bool has_post_gate = 5;
+  bool has_thread_gate = 6;
 }
 
 message GetPostRecordsRequest {
@@ -119,6 +122,14 @@ message GetThreadGateRecordsRequest {
 }
 
 message GetThreadGateRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetPostGateRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetPostGateRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -1086,6 +1097,7 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetPostGateRecords(GetPostGateRecordsRequest) returns (GetPostGateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
 
