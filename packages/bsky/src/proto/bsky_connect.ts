@@ -128,12 +128,16 @@ import {
   GetNotificationSeenResponse,
   GetNotificationsRequest,
   GetNotificationsResponse,
+  GetPostGateRecordsRequest,
+  GetPostGateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
   GetPostReplyCountsRequest,
   GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
+  GetQuotesBySubjectRequest,
+  GetQuotesBySubjectResponse,
   GetRecordTakedownRequest,
   GetRecordTakedownResponse,
   GetRelationshipsRequest,
@@ -310,6 +314,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetPostGateRecords
+     */
+    getPostGateRecords: {
+      name: 'GetPostGateRecords',
+      I: GetPostGateRecordsRequest,
+      O: GetPostGateRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetLabelerRecords
      */
     getLabelerRecords: {
@@ -421,6 +434,17 @@ export const Service = {
       name: 'GetActorReposts',
       I: GetActorRepostsRequest,
       O: GetActorRepostsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Quotes
+     *
+     * @generated from rpc bsky.Service.GetQuotesBySubject
+     */
+    getQuotesBySubject: {
+      name: 'GetQuotesBySubject',
+      I: GetQuotesBySubjectRequest,
+      O: GetQuotesBySubjectResponse,
       kind: MethodKind.Unary,
     },
     /**

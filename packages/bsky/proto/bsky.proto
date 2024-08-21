@@ -79,6 +79,9 @@ message PostRecordMeta {
   bool violates_thread_gate = 1;
   bool has_media = 2;
   bool is_reply = 3;
+  bool violates_embedding_rules = 4;
+  bool has_post_gate = 5;
+  bool has_thread_gate = 6;
 }
 
 message GetPostRecordsRequest {
@@ -119,6 +122,14 @@ message GetThreadGateRecordsRequest {
 }
 
 message GetThreadGateRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetPostGateRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetPostGateRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -250,6 +261,23 @@ message GetActorLikesResponse {
 }
 
 //
+// Quotes
+//
+
+message GetQuotesBySubjectRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetQuotesBySubjectResponse {
+  repeated RecordRef refs = 1;
+  string cursor = 2;
+}
+
+// - return post uris that quote the given subject uri
+
+//
 // Interactions
 //
 message GetInteractionCountsRequest {
@@ -260,6 +288,7 @@ message GetInteractionCountsResponse {
   repeated int32 likes = 1;
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
+  repeated int32 quotes = 4;
 }
 
 message GetCountsForUsersRequest {
@@ -1068,6 +1097,7 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetPostGateRecords(GetPostGateRecordsRequest) returns (GetPostGateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
 
@@ -1086,6 +1116,9 @@ service Service {
   rpc GetRepostsBySubject(GetRepostsBySubjectRequest) returns (GetRepostsBySubjectResponse);
   rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
+
+  // Quotes
+  rpc GetQuotesBySubject(GetQuotesBySubjectRequest) returns (GetQuotesBySubjectResponse);
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);

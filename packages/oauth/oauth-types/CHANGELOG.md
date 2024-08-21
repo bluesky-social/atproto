@@ -1,5 +1,11 @@
 # @atproto/oauth-types
 
+## 0.1.3
+
+### Patch Changes
+
+- [#2729](https://github.com/bluesky-social/atproto/pull/2729) [`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid code duplication in the definition of OAuthEndpointName
+
 ## 0.1.2
 
 ### Patch Changes

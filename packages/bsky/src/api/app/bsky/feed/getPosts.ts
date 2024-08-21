@@ -9,13 +9,21 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { creatorFromUri } from '../../../../views/util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { resHeaders } from '../../../util'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authVerifier.standardOptionalParameterized({
+      lxmCheck: (method) => {
+        if (!method) return false
+        return (
+          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
+        )
+      },
+    }),
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)

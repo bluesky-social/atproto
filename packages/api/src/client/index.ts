@@ -110,11 +110,13 @@ import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+import * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
+import * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 import * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
@@ -307,11 +309,13 @@ export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
+export * as AppBskyFeedGetQuotes from './types/app/bsky/feed/getQuotes'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
+export * as AppBskyFeedPostgate from './types/app/bsky/feed/postgate'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 export * as AppBskyFeedSendInteractions from './types/app/bsky/feed/sendInteractions'
@@ -1599,6 +1603,7 @@ export class AppBskyFeedNS {
   generator: GeneratorRecord
   like: LikeRecord
   post: PostRecord
+  postgate: PostgateRecord
   repost: RepostRecord
   threadgate: ThreadgateRecord
 
@@ -1607,6 +1612,7 @@ export class AppBskyFeedNS {
     this.generator = new GeneratorRecord(client)
     this.like = new LikeRecord(client)
     this.post = new PostRecord(client)
+    this.postgate = new PostgateRecord(client)
     this.repost = new RepostRecord(client)
     this.threadgate = new ThreadgateRecord(client)
   }
@@ -1737,6 +1743,17 @@ export class AppBskyFeedNS {
     opts?: AppBskyFeedGetPosts.CallOptions,
   ): Promise<AppBskyFeedGetPosts.Response> {
     return this._client.call('app.bsky.feed.getPosts', params, undefined, opts)
+  }
+
+  getQuotes(
+    params?: AppBskyFeedGetQuotes.QueryParams,
+    opts?: AppBskyFeedGetQuotes.CallOptions,
+  ): Promise<AppBskyFeedGetQuotes.Response> {
+    return this._client
+      .call('app.bsky.feed.getQuotes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetQuotes.toKnownErr(e)
+      })
   }
 
   getRepostedBy(
@@ -1977,6 +1994,67 @@ export class PostRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.post', ...params },
+      { headers },
+    )
+  }
+}
+
+export class PostgateRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedPostgate.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.postgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedPostgate.Record }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.postgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedPostgate.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.postgate'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.postgate', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.postgate', ...params },
       { headers },
     )
   }

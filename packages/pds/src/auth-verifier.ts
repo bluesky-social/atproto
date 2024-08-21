@@ -15,6 +15,7 @@ import {
   InvalidRequestError,
   StreamAuthVerifierContext,
   XRPCError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import * as jose from 'jose'
@@ -574,10 +575,11 @@ export class AuthVerifier {
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+    const nsid = parseReqNsid(ctx.req)
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
-      null,
+      nsid,
       getSigningKey,
     )
     return { iss: payload.iss, aud: payload.aud }

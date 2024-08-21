@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds like views', () => {
   let network: TestNetwork
@@ -38,7 +39,7 @@ describe('pds like views', () => {
   it('fetches post likes', async () => {
     const alicePost = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
     )
 
     expect(forSnapshot(alicePost.data)).toMatchSnapshot()
@@ -50,7 +51,7 @@ describe('pds like views', () => {
   it('fetches reply likes', async () => {
     const bobReply = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.replies[bob][0].ref.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
     )
 
     expect(forSnapshot(bobReply.data)).toMatchSnapshot()
@@ -68,7 +69,9 @@ describe('pds like views', () => {
           cursor,
           limit: 2,
         },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes),
+        },
       )
       return res.data
     }
@@ -80,7 +83,7 @@ describe('pds like views', () => {
 
     const full = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
     )
 
     expect(full.data.likes.length).toEqual(4)
@@ -90,7 +93,7 @@ describe('pds like views', () => {
   it('fetches post likes unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice) },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getLikes({
       uri: sc.posts[alice][1].ref.uriStr,

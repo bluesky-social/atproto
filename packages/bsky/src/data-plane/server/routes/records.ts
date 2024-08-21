@@ -20,6 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getProfileRecords: getRecords(db, ids.AppBskyActorProfile),
   getRepostRecords: getRecords(db, ids.AppBskyFeedRepost),
   getThreadGateRecords: getRecords(db, ids.AppBskyFeedThreadgate),
+  getPostGateRecords: getRecords(db, ids.AppBskyFeedPostgate),
   getLabelerRecords: getRecords(db, ids.AppBskyLabelerService),
   getActorChatDeclarationRecords: getRecords(db, ids.ChatBskyActorDeclaration),
   getStarterPackRecords: getRecords(db, ids.AppBskyGraphStarterpack),
@@ -74,7 +75,13 @@ export const getPostRecords = (db: Database) => {
         ? await db.db
             .selectFrom('post')
             .where('uri', 'in', req.uris)
-            .select(['uri', 'violatesThreadGate'])
+            .select([
+              'uri',
+              'violatesThreadGate',
+              'violatesEmbeddingRules',
+              'hasThreadGate',
+              'hasPostGate',
+            ])
             .execute()
         : [],
     ])
@@ -82,6 +89,9 @@ export const getPostRecords = (db: Database) => {
     const meta = req.uris.map((uri) => {
       return new PostRecordMeta({
         violatesThreadGate: !!byKey[uri]?.violatesThreadGate,
+        violatesEmbeddingRules: !!byKey[uri]?.violatesEmbeddingRules,
+        hasThreadGate: !!byKey[uri]?.hasThreadGate,
+        hasPostGate: !!byKey[uri]?.hasPostGate,
       })
     })
     return { records, meta }

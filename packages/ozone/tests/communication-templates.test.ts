@@ -1,5 +1,6 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('communication-templates', () => {
   let network: TestNetwork
@@ -30,7 +31,10 @@ describe('communication-templates', () => {
     const { data } = await agent.api.tools.ozone.communication.listTemplates(
       {},
       {
-        headers: await network.ozone.modHeaders('moderator'),
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneCommunicationListTemplates,
+          'moderator',
+        ),
       },
     )
     return data.communicationTemplates
@@ -42,7 +46,10 @@ describe('communication-templates', () => {
         { ...templateOne, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('triage'),
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneCommunicationCreateTemplate,
+            'triage',
+          ),
         },
       )
       await expect(moderatorReq).rejects.toThrow(
@@ -52,7 +59,10 @@ describe('communication-templates', () => {
         { ...templateOne, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('admin'),
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneCommunicationCreateTemplate,
+            'admin',
+          ),
         },
       )
 
@@ -76,7 +86,10 @@ describe('communication-templates', () => {
         { ...templateTwo, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('admin'),
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneCommunicationCreateTemplate,
+            'admin',
+          ),
         },
       )
 
@@ -91,7 +104,10 @@ describe('communication-templates', () => {
         { id: '1', updatedBy: sc.dids.bob, name: '1 Test template' },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('admin'),
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneCommunicationUpdateTemplate,
+            'admin',
+          ),
         },
       )
 
@@ -105,7 +121,10 @@ describe('communication-templates', () => {
         { id: '1' },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('triage'),
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneCommunicationDeleteTemplate,
+            'triage',
+          ),
         },
       )
 
@@ -117,7 +136,10 @@ describe('communication-templates', () => {
         { id: '1' },
         {
           encoding: 'application/json',
-          headers: await network.ozone.modHeaders('moderator'),
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneCommunicationDeleteTemplate,
+            'moderator',
+          ),
         },
       )
       const list = await listTemplates()
