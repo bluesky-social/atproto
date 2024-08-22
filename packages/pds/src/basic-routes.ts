@@ -40,7 +40,6 @@ export const createRouter = (ctx: AppContext): express.Router => {
       assert(typeof uri === 'string')
       aturi = new AtUri(uri)
       ensureValidDid(aturi.host)
-      assert(aturi.rkey)
     } catch {
       return res.status(400).send({
         error: 'InvalidRequest',
@@ -51,10 +50,19 @@ export const createRouter = (ctx: AppContext): express.Router => {
     let redirectUrl: URL
     try {
       const data = await ctx.idResolver.did.resolveAtprotoData(aturi.host)
-      redirectUrl = new URL('/xrpc/com.atproto.repo.getRecord', data.pds)
-      redirectUrl.searchParams.set('repo', aturi.host)
-      redirectUrl.searchParams.set('collection', aturi.collection)
-      redirectUrl.searchParams.set('rkey', aturi.rkey)
+      if (aturi.rkey) {
+        redirectUrl = new URL('/xrpc/com.atproto.repo.getRecord', data.pds)
+        redirectUrl.searchParams.set('repo', aturi.host)
+        redirectUrl.searchParams.set('collection', aturi.collection)
+        redirectUrl.searchParams.set('rkey', aturi.rkey)
+      } else if (aturi.collection) {
+        redirectUrl = new URL('/xrpc/com.atproto.repo.listRecords', data.pds)
+        redirectUrl.searchParams.set('repo', aturi.host)
+        redirectUrl.searchParams.set('collection', aturi.collection)
+      } else {
+        redirectUrl = new URL('/xrpc/com.atproto.repo.describeRepo', data.pds)
+        redirectUrl.searchParams.set('repo', aturi.host)
+      }
     } catch {
       return res.status(404).send({
         error: 'NotFound',

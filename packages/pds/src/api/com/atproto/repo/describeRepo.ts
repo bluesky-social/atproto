@@ -29,7 +29,12 @@ export default function (server: Server, ctx: AppContext) {
     if (req.accepts(['json', 'html']) === 'html') {
       return {
         encoding: 'text/html',
-        buffer: page({ did: account.did, handle: account.handle, collections }),
+        buffer: page({
+          did: account.did,
+          handle: account.handle,
+          collections,
+          publicUrl: ctx.cfg.service.publicUrl,
+        }),
       }
     }
 
@@ -50,10 +55,12 @@ function page({
   did,
   handle,
   collections,
+  publicUrl,
 }: {
   did: string
   handle: string | null
   collections: string[]
+  publicUrl: string
 }) {
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
@@ -62,15 +69,18 @@ function page({
     </head>
     <body style="font-family:monospace">
       <h1>Repo at://${html(handle ?? did)}</h1>
-      <table>
+      <p style="font-style:italic;color:grey;">
+        Go to <a href="/xrpc/com.atproto.sync.listRepos">Repositories</a>
+      </p>
+      <table style="text-align:left;min-width:600px;">
         <tr>
           <th>DID</th>
           <td>${html(did)}</td>
         </tr>
         <tr>
-          <th>Collections</th>
+          <th style="vertical-align:top;">Collections</th>
           <td>
-            <ul>
+            <ul style="margin:0;padding:0;list-style:none;">
               ${html(
                 collections.map((collection) => {
                   return `<li>
@@ -84,6 +94,7 @@ function page({
           </td>
         </tr>
       </table>
+      <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
     </body>
   </html>`)
 }

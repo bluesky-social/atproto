@@ -3,9 +3,10 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { formatAccountStatus } from '../../../../account-manager'
+import { html, toArrayBuffer } from '../../../../util/html'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.listRepos(async ({ params }) => {
+  server.com.atproto.sync.listRepos(async ({ params, req }) => {
     const { limit, cursor } = params
     const db = ctx.accountManager.db
     const { ref } = db.db.dynamic
@@ -39,6 +40,18 @@ export default function (server: Server, ctx: AppContext) {
         status,
       }
     })
+
+    if (req.accepts(['json', 'html']) === 'html') {
+      return {
+        encoding: 'text/html',
+        buffer: page({
+          repos,
+          cursor: keyset.packFromResult(res),
+          publicUrl: ctx.cfg.service.publicUrl,
+        }),
+      }
+    }
+
     return {
       encoding: 'application/json',
       body: {
@@ -71,4 +84,64 @@ export class TimeDidKeyset extends GenericKeyset<TimeDidResult, Cursor> {
       secondary: cursor.secondary,
     }
   }
+}
+
+function page({
+  repos,
+  cursor,
+  publicUrl,
+}: {
+  repos: {
+    did: string
+    head: string
+    rev: string
+    active: boolean
+    status: string | undefined
+  }[]
+  cursor: string | undefined
+  publicUrl: string | undefined
+}) {
+  return toArrayBuffer(`<!DOCTYPE html>
+  <html>
+    <head>
+      <title>Repositories</title>
+    </head>
+    <body style="font-family:monospace">
+      <h1>Repositories</h1>
+      <table style="width:100%;text-align:left;">
+        <tr>
+          <th>DID</th>
+          <th>Commit</th>
+          <th>Revision</th>
+          <th>Active</th>
+          <th>Status</th>
+        </tr>
+        ${html(
+          repos.map(({ did, head, rev, active, status }) => {
+            return `<tr>
+              <td>
+                <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">
+                  ${html(did)}
+                </a>
+              </td>
+              <td>${html(head)}</td>
+              <td>${html(rev)}</td>
+              <td>${active ? '✔' : ''}</td>
+              <td>${html(status)}</td>
+            </tr>`
+          }),
+        )}
+      </table>
+      ${
+        cursor
+          ? `<p>
+              <a href="/xrpc/com.atproto.sync.listRepos?cursor=${encodeURIComponent(cursor)}">Next ${html('>')}</a>
+            </p>`
+          : `<p>
+              <a href="/xrpc/com.atproto.sync.listRepos">${html('<')} First</a>
+            </p>`
+      }
+      <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
+    </body>
+  </html>`)
 }

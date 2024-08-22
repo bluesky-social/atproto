@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
             collection,
             rkey,
             value: record.value,
+            publicUrl: ctx.cfg.service.publicUrl,
           }),
         }
       }
@@ -60,15 +61,16 @@ function page({
   collection,
   rkey,
   value,
+  publicUrl,
 }: {
   did: string
   handle: string | null
   collection: string
   rkey: string
   value: unknown
+  publicUrl: string
 }) {
   const uri = AtUri.make(handle ?? did, collection, rkey).toString()
-  const uriWithDid = AtUri.make(did, collection, rkey).toString()
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
     <head>
@@ -76,14 +78,25 @@ function page({
     </head>
     <body style="font-family:monospace">
       <h1>Record ${html(uri)}</h1>
-      <p><i>${html(uriWithDid)}</i></p>
+      <p style="font-style:italic;color:grey;">
+        at://
+        <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
+        /
+        <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">${html(collection)}</a>
+      </p>
       <pre>${html(JSON.stringify(value, null, 2))}</pre>
+      <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
       <script>
         const pre = document.querySelector('pre')
-        pre.innerHTML = pre.textContent.replace(/"(at:\\/\\/did:.+?)"/g, (_, match) => {
+        pre.innerHTML = pre.textContent.replace(/"(?:(at:\\/\\/did:.+?)|(did:.+?))"/g, (_, uri, did) => {
           const a = document.createElement('a')
-          a.href = \`/at?uri=\${encodeURIComponent(match)}\`
-          a.textContent = match
+          if (uri) {
+            a.href = \`/at?uri=\${encodeURIComponent(uri)}\`
+            a.textContent = uri
+          } else if (did) {
+            a.href = \`/at?uri=\${encodeURIComponent(\`at://\${did}\`)}\`
+            a.textContent = did
+          }
           return \`"\${a.outerHTML}"\`
         })
       </script>

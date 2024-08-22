@@ -47,6 +47,7 @@ export default function (server: Server, ctx: AppContext) {
           collection,
           records,
           cursor: lastUri?.rkey,
+          publicUrl: ctx.cfg.service.publicUrl,
         }),
       }
     }
@@ -68,15 +69,16 @@ function page({
   collection,
   records,
   cursor,
+  publicUrl,
 }: {
   did: string
   handle: string | null
   collection: string
   records: { uri: string; cid: string; size: number }[]
   cursor: string | undefined
+  publicUrl: string
 }) {
   const collectionUri = AtUri.make(handle ?? did, collection).toString()
-  const collectionUriWithDid = AtUri.make(did, collection).toString()
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
     <head>
@@ -84,8 +86,11 @@ function page({
     </head>
     <body style="font-family:monospace">
       <h1>Collection ${html(collectionUri)}</h1>
-      <p><i>${html(collectionUriWithDid)}</i></p>
-      <table style="width:100%">
+      <p style="font-style:italic;color:grey;">
+        at://
+        <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
+      </p>
+      <table style="width:100%;">
         <tr>
           <th>Record Key</th>
           <th>CID</th>
@@ -109,16 +114,13 @@ function page({
       ${
         cursor
           ? `<p>
-              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">
-                First
-              </a>
-              |
-              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}&cursor=${encodeURIComponent(cursor)}">
-                Next ${html('>')}
-              </a>
+              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}&cursor=${encodeURIComponent(cursor)}">Next ${html('>')}</a>
             </p>`
-          : ''
+          : `<p>
+              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">First</a>
+            </p>`
       }
+    <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
     </body>
   </html>`)
 }
