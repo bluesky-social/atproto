@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.3
+
+### Patch Changes
+
+- [#2735](https://github.com/bluesky-social/atproto/pull/2735) [`4ab248354`](https://github.com/bluesky-social/atproto/commit/4ab2483547d5dabfba88ed4419a4f374bbd7cae7) Thanks [@haileyok](https://github.com/haileyok)! - add `quoteCount` to embed view
+
 ## 0.13.2
 
 ### Patch Changes
