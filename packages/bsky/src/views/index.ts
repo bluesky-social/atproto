@@ -950,6 +950,7 @@ export class Views {
       likeCount: postView.likeCount,
       replyCount: postView.replyCount,
       repostCount: postView.repostCount,
+      quoteCount: postView.quoteCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }

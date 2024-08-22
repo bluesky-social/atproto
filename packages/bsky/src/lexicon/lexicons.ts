@@ -5034,6 +5034,9 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          quoteCount: {
+            type: 'integer',
+          },
           embeds: {
             type: 'array',
             items: {
