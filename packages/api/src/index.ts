@@ -25,7 +25,7 @@ export { LABELS, DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 export { Agent } from './agent'
 
 export { AtpAgent, type AtpAgentOptions } from './atp-agent'
-export { CredentialsSessionManager } from './atp-agent'
+export { CredentialSession } from './atp-agent'
 export { BskyAgent } from './bsky-agent'
 
 export {

@@ -39,10 +39,10 @@ export type AtpAgentOptions = {
  * directly.
  *
  * This class will be deprecated in the near future. Use {@link Agent} directly
- * with a {@link CredentialsSessionManager} instead:
+ * with a {@link CredentialSession} instead:
  *
  *  ```ts
- *  const session = new CredentialsSessionManager({
+ *  const session = new CredentialSession({
  *    service: new URL('https://example.com'),
  *  })
  *
@@ -50,13 +50,13 @@ export type AtpAgentOptions = {
  *  ```
  */
 export class AtpAgent extends Agent {
-  readonly sessionManager: CredentialsSessionManager
+  readonly sessionManager: CredentialSession
 
-  constructor(options: AtpAgentOptions | CredentialsSessionManager) {
+  constructor(options: AtpAgentOptions | CredentialSession) {
     const sessionManager =
-      options instanceof CredentialsSessionManager
+      options instanceof CredentialSession
         ? options
-        : new CredentialsSessionManager(
+        : new CredentialSession(
             new URL(options.service),
             options.fetch,
             options.persistSession,
@@ -68,7 +68,7 @@ export class AtpAgent extends Agent {
     // need to do it here to make TypeScript happy.
     this.sessionManager = sessionManager
 
-    if (!(options instanceof CredentialsSessionManager) && options.headers) {
+    if (!(options instanceof CredentialSession) && options.headers) {
       for (const [key, value] of options.headers) {
         this.setHeader(key, value)
       }
@@ -155,7 +155,7 @@ export class AtpAgent extends Agent {
  * They can also be used with an {@link XrpcClient}, if you want to use you
  * own Lexicons.
  */
-export class CredentialsSessionManager implements SessionManager {
+export class CredentialSession implements SessionManager {
   public pdsUrl?: URL // The PDS URL, driven by the did doc
   public session?: AtpSessionData
   public refreshSessionPromise: Promise<void> | undefined
