@@ -12,7 +12,7 @@ import {
   ComAtprotoServerCreateAccount,
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
-  ComNS,
+  ComAtprotoServerNS,
 } from './client'
 import { schemas } from './client/lexicons'
 import { SessionManager } from './session-manager'
@@ -34,8 +34,20 @@ export type AtpAgentOptions = {
 }
 
 /**
- * An {@link AtpAgent} extends the {@link Agent} abstract class by
- * implementing password based session management.
+ * A wrapper around the {@link Agent} class that uses credential based session
+ * management. This class also exposes most of the session management methods
+ * directly.
+ *
+ * This class will be deprecated in the near future. Use {@link Agent} directly
+ * with a {@link CredentialsSessionManager} instead:
+ *
+ *  ```ts
+ *  const session = new CredentialsSessionManager({
+ *    service: new URL('https://example.com'),
+ *  })
+ *
+ *  const agent = new Agent(session)
+ *  ```
  */
 export class AtpAgent extends Agent {
   readonly sessionManager: CredentialsSessionManager
@@ -149,15 +161,23 @@ export class CredentialsSessionManager implements SessionManager {
   public refreshSessionPromise: Promise<void> | undefined
 
   /**
-   * Private {@link XrpcClient} used to perform session management API
+   * Private {@link ComAtprotoServerNS} used to perform session management API
    * calls on the service endpoint. Calls performed by this agent will not be
-   * authenticated using the user's session.
+   * authenticated using the user's session to allow proper manual configuration
+   * of the headers when performing session management operations.
    */
-  protected xrpc = new XrpcClient((url, init) => {
-    return (0, this.fetch)(new URL(url, this.serviceUrl), init)
-  }, schemas)
-
-  protected com = new ComNS(this.xrpc)
+  protected server = new ComAtprotoServerNS(
+    // Note that the use of the codegen "schemas" (to instantiate `this.api`),
+    // as well as the use of `ComAtprotoServerNS` will cause this class to
+    // reference (way) more code than it actually needs. It is not possible,
+    // with the current state of the codegen, to generate a client that only
+    // includes the methods that are actually used by this class. This is a
+    // known limitation that should be addressed in a future version of the
+    // codegen.
+    new XrpcClient((url, init) => {
+      return (0, this.fetch)(new URL(url, this.serviceUrl), init)
+    }, schemas),
+  )
 
   constructor(
     public readonly serviceUrl: URL,
@@ -257,7 +277,7 @@ export class CredentialsSessionManager implements SessionManager {
     opts?: ComAtprotoServerCreateAccount.CallOptions,
   ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
-      const res = await this.com.atproto.server.createAccount(data, opts)
+      const res = await this.server.createAccount(data, opts)
       this.session = {
         accessJwt: res.data.accessJwt,
         refreshJwt: res.data.refreshJwt,
@@ -285,7 +305,7 @@ export class CredentialsSessionManager implements SessionManager {
     opts: AtpAgentLoginOpts,
   ): Promise<ComAtprotoServerCreateSession.Response> {
     try {
-      const res = await this.com.atproto.server.createSession({
+      const res = await this.server.createSession({
         identifier: opts.identifier,
         password: opts.password,
         authFactorToken: opts.authFactorToken,
@@ -314,7 +334,7 @@ export class CredentialsSessionManager implements SessionManager {
   async logout(): Promise<void> {
     if (this.session) {
       try {
-        await this.com.atproto.server.deleteSession(undefined, {
+        await this.server.deleteSession(undefined, {
           headers: {
             authorization: `Bearer ${this.session.accessJwt}`,
           },
@@ -337,7 +357,7 @@ export class CredentialsSessionManager implements SessionManager {
     this.session = session
 
     try {
-      const res = await this.com.atproto.server
+      const res = await this.server
         .getSession(undefined, {
           headers: { authorization: `Bearer ${session.accessJwt}` },
         })
@@ -348,15 +368,14 @@ export class CredentialsSessionManager implements SessionManager {
             session.refreshJwt
           ) {
             try {
-              const res = await this.com.atproto.server.refreshSession(
-                undefined,
-                { headers: { authorization: `Bearer ${session.refreshJwt}` } },
-              )
+              const res = await this.server.refreshSession(undefined, {
+                headers: { authorization: `Bearer ${session.refreshJwt}` },
+              })
 
               session.accessJwt = res.data.accessJwt
               session.refreshJwt = res.data.refreshJwt
 
-              return this.com.atproto.server.getSession(undefined, {
+              return this.server.getSession(undefined, {
                 headers: { authorization: `Bearer ${session.accessJwt}` },
               })
             } catch {
@@ -427,7 +446,7 @@ export class CredentialsSessionManager implements SessionManager {
     }
 
     try {
-      const res = await this.com.atproto.server.refreshSession(undefined, {
+      const res = await this.server.refreshSession(undefined, {
         headers: { authorization: `Bearer ${this.session.refreshJwt}` },
       })
       // succeeded, update the session

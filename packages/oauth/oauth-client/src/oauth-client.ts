@@ -23,7 +23,6 @@ import {
 
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
-import { OAuthSession } from './oauth-session.js'
 import {
   AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
@@ -36,6 +35,7 @@ import {
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
+import { OAuthSession } from './oauth-session.js'
 import { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
 import {
