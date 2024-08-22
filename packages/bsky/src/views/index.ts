@@ -64,7 +64,6 @@ import {
 } from '../lexicon/types/app/bsky/labeler/defs'
 import { Notification } from '../proto/bsky_pb'
 import { postUriToThreadgateUri, postUriToPostgateUri } from '../util/uris'
-import post from '../data-plane/server/indexing/plugins/post'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
