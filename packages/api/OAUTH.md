@@ -245,7 +245,7 @@ if (!session) {
 ```
 
 At this point in the script, the user **will** be authenticated. Authenticated
-API calls can be made using the `session`. The `session` can be used to the
+API calls can be made using the `session`. The `session` can be used to instantiate the
 `Agent` class from `@atproto/api`. Let's make a simple call to the API to
 retrieve the user's profile. Replace the `// TO BE CONTINUED` comment with the
 following code:
