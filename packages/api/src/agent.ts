@@ -1,19 +1,19 @@
 import { TID } from '@atproto/common-web'
 import { AtUri, ensureValidDid } from '@atproto/syntax'
-import {
-  buildFetchHandler,
-  FetchHandler,
-  FetchHandlerOptions,
-} from '@atproto/xrpc'
+import { buildFetchHandler, FetchHandler, XrpcClient } from '@atproto/xrpc'
 import AwaitLock from 'await-lock'
 import {
   AppBskyActorDefs,
   AppBskyActorProfile,
   AppBskyFeedPost,
   AppBskyLabelerDefs,
-  AtpBaseClient,
+  AppNS,
+  ChatNS,
   ComAtprotoRepoPutRecord,
+  ComNS,
+  ToolsNS,
 } from './client/index'
+import { schemas } from './client/lexicons'
 import { MutedWord } from './client/types/app/bsky/actor/defs'
 import { BSKY_LABELER_DID } from './const'
 import { interpretLabelValueDefinitions } from './moderation'
@@ -23,6 +23,7 @@ import {
   LabelPreference,
   ModerationPrefs,
 } from './moderation/types'
+import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
   AtprotoServiceType,
@@ -68,14 +69,13 @@ export type { FetchHandler }
 /**
  * An {@link Agent} is an {@link AtpBaseClient} with the following
  * additional features:
- * - Abstract session management utilities
  * - AT Protocol labelers configuration utilities
  * - AT Protocol proxy configuration utilities
  * - Cloning utilities
  * - `app.bsky` syntactic sugar
  * - `com.atproto` syntactic sugar
  */
-export abstract class Agent extends AtpBaseClient {
+export class Agent extends XrpcClient {
   //#region Static configuration
 
   /**
@@ -94,8 +94,18 @@ export abstract class Agent extends AtpBaseClient {
 
   //#endregion
 
-  constructor(fetchHandlerOpts: FetchHandler | FetchHandlerOptions) {
-    const fetchHandler = buildFetchHandler(fetchHandlerOpts)
+  com = new ComNS(this)
+  app = new AppNS(this)
+  chat = new ChatNS(this)
+  tools = new ToolsNS(this)
+
+  /** @deprecated use `this` instead */
+  get xrpc(): XrpcClient {
+    return this
+  }
+
+  constructor(readonly sessionManager: SessionManager) {
+    const fetchHandler = buildFetchHandler(sessionManager)
 
     super((url, init) => {
       const headers = new Headers(init?.headers)
@@ -118,16 +128,20 @@ export abstract class Agent extends AtpBaseClient {
       )
 
       return fetchHandler(url, { ...init, headers })
-    })
+    }, schemas)
   }
 
   //#region Cloning utilities
 
-  abstract clone(): Agent
+  clone(): Agent {
+    return this.copyInto(new Agent(this.sessionManager))
+  }
 
   copyInto<T extends Agent>(inst: T): T {
     inst.configureLabelers(this.labelers)
     inst.configureProxy(this.proxy ?? null)
+    inst.clearHeaders()
+    for (const [key, value] of this.headers) inst.setHeader(key, value)
     return inst
   }
 
@@ -185,7 +199,9 @@ export abstract class Agent extends AtpBaseClient {
   /**
    * Get the authenticated user's DID, if any.
    */
-  abstract readonly did?: string
+  get did() {
+    return this.sessionManager.did
+  }
 
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.

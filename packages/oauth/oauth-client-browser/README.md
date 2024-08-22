@@ -1,11 +1,12 @@
 # atproto OAuth Client for the Browser
 
-This package provides an OAuth bases `@atproto/api` agent interface for the
-browser. It implements all the OAuth features required by [ATPROTO] (PKCE, DPoP,
+This package provides a browser specific OAuth client implementation for
+atproto. It implements all the OAuth features required by [ATPROTO] (PKCE, DPoP,
 etc.).
 
 `@atproto/oauth-client-browser` is designed for front-end applications that do
-not have a backend server to manage OAuth sessions.
+not have a backend server to manage OAuth sessions, a.k.a "Single Page
+Applications" (SPA).
 
 > [!IMPORTANT]
 >
@@ -163,22 +164,24 @@ initialize itself. Note that this operation must be performed once (and **only
 once**) whenever the web app is loaded.
 
 ```typescript
-const result: undefined | { agent: OAuthAgent; state?: string } =
+const result: undefined | { session: OAuthSession; state?: string } =
   await client.init()
 
 if (result) {
-  const { agent, state } = result
+  const { session, state } = result
   if (state != null) {
-    console.log(`${agent.sub} was successfully authenticated (state: ${state})`)
+    console.log(
+      `${session.sub} was successfully authenticated (state: ${state})`,
+    )
   } else {
-    console.log(`${agent.sub} was restored (last active session)`)
+    console.log(`${session.sub} was restored (last active session)`)
   }
 }
 ```
 
 The return value can be used to determine if the client was able to restore the
-last used session (`agent` is defined) or if the current navigation is the
-result of an authorization redirect (both `agent` and `state` are defined).
+last used session (`session` is defined) or if the current navigation is the
+result of an authorization redirect (both `session` and `state` are defined).
 
 ### Initiating an OAuth flow
 
@@ -217,18 +220,21 @@ the OAuth server). The promise will reject if the user cancels the sign in
 
 When the user is redirected back to the application, the OAuth response will be
 available in the URL. The `BrowserOAuthClient` will automatically detect the
-response and handle it when `client.init()` is called.
+response and handle it when `client.init()` is called. Alternatively, the
+application can manually handle the response using the
+`client.callback(urlQueryParams)` method.
 
 ### Restoring a session
 
-The client keeps an internal store of all the sessions that it manages.
-Regardless of the agent that was returned from the `client.init()` call,
-any other session can be loaded into a new agent using the `client.restore()`
-method.
+The client keeps track of all the sessions that it manages through an internal
+store. Regardless of the session that was returned from the `client.init()`
+call, any other session can be loaded using the `client.restore()` method. This
+method will throw an error if the session is no longer available or if it has
+become expired.
 
 ```ts
-const aliceAgent = await client.restore('did:plc:alice')
-const bobAgent = await client.restore('did:plc:bob')
+const aliceSession = await client.restore('did:plc:alice')
+const bobSession = await client.restore('did:plc:bob')
 ```
 
 In its current form, the client does not expose methods to list all sessions
@@ -256,16 +262,19 @@ client.addEventListener(
 
 ## Usage with `@atproto/api`
 
-The `@atproto/api` package provides a way to interact with the `com.atproto` and
-`app.bsky` XRPC lexicons through the `Agent` interface. The `agent` returned
-by the `BrowserOAuthClient` extend the `Agent` class, allowing to use the
-`BrowserOAuthClient` as a regular `Agent` (akin to `AtpAgent` class
-instances).
+The `@atproto/api` package provides a way to interact with multiple Bluesky
+specific XRPC lexicons (`com.atproto`, `app.bsky`, `chat.bsky`, `tools.ozone`)
+through the `Agent` interface. The `oauthSession` returned by the
+`BrowserOAuthClient` can be used to instantiate an `Agent` instance.
 
 ```typescript
-const aliceAgent = await client.restore('did:plc:alice')
+import { Agent } from '@atproto/api'
 
-await aliceAgent.getProfile({ actor: aliceAgent.did })
+const session = await client.restore('did:plc:alice')
+
+const agent = new Agent(session)
+
+await agent.getProfile({ actor: agent.accountDid })
 ```
 
 Any refresh of the credentials will happen under the hood, and the new tokens

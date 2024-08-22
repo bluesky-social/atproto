@@ -1,5 +1,5 @@
+import { asDid } from '@atproto/did'
 import { Fetch, bindFetch } from '@atproto-labs/fetch'
-import { JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { TokenInvalidError } from './errors/token-invalid-error.js'
@@ -12,7 +12,16 @@ const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
-export class OAuthAgent {
+export type TokenInfo = {
+  expiresAt?: Date
+  expired?: boolean
+  scope?: string
+  iss: string
+  aud: string
+  sub: string
+}
+
+export class OAuthSession {
   protected dpopFetch: Fetch<unknown>
 
   constructor(
@@ -32,40 +41,34 @@ export class OAuthAgent {
     })
   }
 
-  get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {
-    return this.server.serverMetadata
+  get did() {
+    return asDid(this.sub)
   }
 
-  public async refreshIfNeeded(): Promise<void> {
-    await this.getTokenSet(undefined)
+  get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {
+    return this.server.serverMetadata
   }
 
   /**
    * @param refresh See {@link SessionGetter.getSession}
    */
-  protected async getTokenSet(refresh?: boolean): Promise<TokenSet> {
+  public async getTokenSet(refresh?: boolean): Promise<TokenSet> {
     const { tokenSet } = await this.sessionGetter.getSession(this.sub, refresh)
     return tokenSet
   }
 
-  async getInfo(): Promise<{
-    userinfo?: JwtPayload
-    expired?: boolean
-    scope?: string
-    iss: string
-    aud: string
-    sub: string
-  }> {
-    const tokenSet = await this.getTokenSet()
+  async getTokenInfo(refresh?: boolean): Promise<TokenInfo> {
+    const tokenSet = await this.getTokenSet(refresh)
+    const expiresAt =
+      tokenSet.expires_at == null ? undefined : new Date(tokenSet.expires_at)
 
     return {
-      userinfo: tokenSet.id_token
-        ? unsafeDecodeJwt(tokenSet.id_token).payload
-        : undefined,
-      expired:
-        tokenSet.expires_at == null
+      expiresAt,
+      get expired() {
+        return expiresAt == null
           ? undefined
-          : new Date(tokenSet.expires_at).getTime() < Date.now() - 5e3,
+          : expiresAt.getTime() < Date.now() - 5e3
+      },
       scope: tokenSet.scope,
       iss: tokenSet.iss,
       aud: tokenSet.aud,
@@ -85,7 +88,7 @@ export class OAuthAgent {
     }
   }
 
-  async request(pathname: string, init?: RequestInit): Promise<Response> {
+  async fetchHandler(pathname: string, init?: RequestInit): Promise<Response> {
     // This will try and refresh the token if it is known to be expired
     const tokenSet = await this.getTokenSet(undefined)
 

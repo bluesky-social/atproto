@@ -47,7 +47,10 @@ export function useAtpAuth() {
     [createAgent],
   )
 
-  return useMemo(() => ({ signIn, agent }), [signIn, agent])
+  return useMemo(
+    () => ({ agent, signIn, signOut: () => agent?.logout() }),
+    [signIn, agent],
+  )
 }
 
 const SESSION_KEY = '@@ATPROTO/SESSION'
