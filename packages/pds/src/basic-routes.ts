@@ -1,6 +1,8 @@
+import assert from 'node:assert'
 import express from 'express'
 import { sql } from 'kysely'
 import AppContext from './context'
+import { AtUri, ensureValidDid } from '@atproto/syntax'
 
 export const createRouter = (ctx: AppContext): express.Router => {
   const router = express.Router()
@@ -29,6 +31,37 @@ export const createRouter = (ctx: AppContext): express.Router => {
       return
     }
     res.send({ version })
+  })
+
+  router.get('/at', async function (req, res) {
+    const uri = req.query.uri
+    let aturi: AtUri
+    try {
+      assert(typeof uri === 'string')
+      aturi = new AtUri(uri)
+      ensureValidDid(aturi.host)
+      assert(aturi.rkey)
+    } catch {
+      return res.status(400).send({
+        error: 'InvalidRequest',
+        message:
+          'The uri query parameter must be an AT URI for a record, containing a DID.',
+      })
+    }
+    let redirectUrl: URL
+    try {
+      const data = await ctx.idResolver.did.resolveAtprotoData(aturi.host)
+      redirectUrl = new URL('/xrpc/com.atproto.repo.getRecord', data.pds)
+      redirectUrl.searchParams.set('repo', aturi.host)
+      redirectUrl.searchParams.set('collection', aturi.collection)
+      redirectUrl.searchParams.set('rkey', aturi.rkey)
+    } catch {
+      return res.status(404).send({
+        error: 'NotFound',
+        message: 'Could not resolve the DID.',
+      })
+    }
+    return res.redirect(redirectUrl.toString())
   })
 
   return router

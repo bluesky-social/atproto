@@ -52,6 +52,7 @@
     "file-type": "^16.5.4",
     "glob": "^10.3.10",
     "handlebars": "^4.7.7",
+    "html-escaper": "^3.0.3",
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
     "jose": "^5.0.1",

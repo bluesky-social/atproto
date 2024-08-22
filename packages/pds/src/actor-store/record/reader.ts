@@ -37,7 +37,7 @@ export class RecordReader {
     rkeyStart?: string
     rkeyEnd?: string
     includeSoftDeleted?: boolean
-  }): Promise<{ uri: string; cid: string; value: object }[]> {
+  }): Promise<{ uri: string; cid: string; size: number; value: object }[]> {
     const {
       collection,
       limit,
@@ -80,6 +80,7 @@ export class RecordReader {
       return {
         uri: row.uri,
         cid: row.cid,
+        size: row.size,
         value: cborToLexRecord(row.content),
       }
     })
@@ -101,6 +102,7 @@ export class RecordReader {
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.uri', '=', uri.toString())
+      // .where('repo_block.repoRev', '=', '')
       .selectAll()
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),

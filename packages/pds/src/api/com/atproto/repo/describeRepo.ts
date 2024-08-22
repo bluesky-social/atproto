@@ -4,9 +4,10 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { assertRepoAvailability } from '../sync/util'
+import { html, toArrayBuffer } from '../../../../util/html'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.describeRepo(async ({ params }) => {
+  server.com.atproto.repo.describeRepo(async ({ params, req }) => {
     const { repo } = params
 
     const account = await assertRepoAvailability(ctx, repo, false)
@@ -25,6 +26,13 @@ export default function (server: Server, ctx: AppContext) {
       store.record.listCollections(),
     )
 
+    if (req.accepts(['json', 'html']) === 'html') {
+      return {
+        encoding: 'text/html',
+        buffer: page({ did: account.did, handle: account.handle, collections }),
+      }
+    }
+
     return {
       encoding: 'application/json',
       body: {
@@ -36,4 +44,46 @@ export default function (server: Server, ctx: AppContext) {
       },
     }
   })
+}
+
+function page({
+  did,
+  handle,
+  collections,
+}: {
+  did: string
+  handle: string | null
+  collections: string[]
+}) {
+  return toArrayBuffer(`<!DOCTYPE html>
+  <html>
+    <head>
+      <title>Repo at://${html(handle ?? did)}</title>
+    </head>
+    <body style="font-family:monospace">
+      <h1>Repo at://${html(handle ?? did)}</h1>
+      <table>
+        <tr>
+          <th>DID</th>
+          <td>${html(did)}</td>
+        </tr>
+        <tr>
+          <th>Collections</th>
+          <td>
+            <ul>
+              ${html(
+                collections.map((collection) => {
+                  return `<li>
+                    <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">
+                      ${html(collection)}
+                    </a>
+                  </li>`
+                }),
+              )}
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>`)
 }
