@@ -115,14 +115,12 @@ const presentation = (
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
   }
-  let threadgate: OutputSchema['threadgate']
-  if (isThreadViewPost(thread) && isPostRecord(thread.post.record)) {
-    const rootUri = thread.post.record.reply?.root?.uri || thread.post.uri
-    threadgate = ctx.views.threadgate(
-      postUriToThreadgateUri(rootUri),
-      hydration,
-    )
-  }
+  const rootUri =
+    hydration.posts?.get(params.uri)?.record.reply?.root.uri ?? params.uri
+  const threadgate = ctx.views.threadgate(
+    postUriToThreadgateUri(rootUri),
+    hydration,
+  )
   return { thread, threadgate }
 }
 
