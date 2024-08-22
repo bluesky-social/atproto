@@ -147,16 +147,16 @@ const result = await client.callback(params)
 // Verify the state (e.g. to link to an internal user)
 result.state === '434321' // true
 
-const oauthAgent = result.agent
+const oauthSession = result.session
 ```
 
-The sign-in process results in an `OAuthAgent` instance that can be used to make
+The sign-in process results in an `OAuthSession` instance that can be used to make
 authenticated requests to the resource server. This instance will automatically
 refresh the credentials when needed.
 
 ### Making authenticated requests
 
-The `OAuthAgent` instance obtained after singing in can be used to make
+The `OAuthSession` instance obtained after singing in can be used to make
 authenticated requests to the user's PDS. There are two main use-cases:
 
 1. Making authenticated request to Bluesky's AppView in order to fetch and
@@ -167,15 +167,15 @@ authenticated requests to the user's PDS. There are two main use-cases:
 
 #### Making authenticated requests to Bluesky's AppView
 
-The `@atproto/oauth-client` package provides a `OAuthAgent` class that can be
+The `@atproto/oauth-client` package provides a `OAuthSession` class that can be
 used to make authenticated requests to Bluesky's AppView. This can be achieved
 by constructing an `OAuthAtpAgent` (from `@atproto/api`) instance using the
-`OAuthAgent` instance.
+`OAuthSession` instance.
 
 ```ts
 import { OAuthAtpAgent } from '@atproto/api'
 
-const agent = new OAuthAtpAgent(oauthAgent)
+const agent = new OAuthAtpAgent(oauthSession)
 
 // Make an authenticated request to the server. New credentials will be
 // automatically fetched if needed (causing sessionStore.set() to be called).
@@ -189,7 +189,7 @@ await agent.signOut()
 
 #### Making authenticated requests to your own AppView
 
-The `OAuthAgent` instance obtained after signing in can be used to instantiate
+The `OAuthSession` instance obtained after signing in can be used to instantiate
 the `XrpcClient` class from the `@atproto/xrpc` package.
 
 ```ts
@@ -216,10 +216,10 @@ const oauthClient = new OAuthClient({
 })
 
 // Authenticate the user
-const oauthAgent = await oauthClient.restore('did:plc:123')
+const oauthSession = await oauthClient.restore('did:plc:123')
 
-// Instantiate a client using the `oauthAgent` as fetch handler object
-const client = new XrpcClient(oauthAgent, myLexicon)
+// Instantiate a client using the `oauthSession` as fetch handler object
+const client = new XrpcClient(oauthSession, myLexicon)
 
 // Make authenticated calls
 const response = await client.call('com.example.query')
@@ -258,7 +258,7 @@ const boundClient = new XrpcClient((url, init) => {
     headers.set('atproto-proxy', 'did:plc:xyz#serviceId')
   }
 
-  return oauthAgent.fetchHandler(url, { ...init, headers })
+  return oauthSession.fetchHandler(url, { ...init, headers })
 }, myLexicon)
 
 // No need to specify the atproto-proxy header anymore

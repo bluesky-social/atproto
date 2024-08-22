@@ -201,19 +201,28 @@ following code:
 
 ```typescript
 const result = await oauthClient.init()
-const oauthAgent = result?.agent
+
+if (result) {
+  if ('state' in result) {
+    console.log('The used was just redirected back from the authorization page')
+  }
+
+  console.log(`The user is currently signed in as ${result.session.did}`)
+}
+
+const session = result?.session
 
 // TO BE CONTINUED
 ```
 
 At this point you can detect if the user is already authenticated or not (by
-checking if `oauthAgent` is `undefined`).
+checking if `session` is `undefined`).
 
 Let's initiate an authentication flow if the user is not authenticated. Replace
 the `// TO BE CONTINUED` comment with the following code:
 
 ```typescript
-if (!oauthAgent) {
+if (!session) {
   const handle = prompt('Enter your atproto handle to authenticate')
   if (!handle) throw new Error('Authentication process canceled by the user')
 
@@ -236,14 +245,14 @@ if (!oauthAgent) {
 ```
 
 At this point in the script, the user **will** be authenticated. Authenticated
-API calls can be made using the `oauthAgent`. The `oauthAgent` can be used to
+API calls can be made using the `session`. The `session` can be used to
 instantiate an `OAuthAtpAgent`, a sub-class of the `Agent` from `@atproto/api`.
 Let's make a simple call to the API to retrieve the user's profile. Replace the
 `// TO BE CONTINUED` comment with the following code:
 
 ```typescript
-if (oauthAgent) {
-  const agent = new OAuthAtpAgent(oauthAgent)
+if (session) {
+  const agent = new OAuthAtpAgent(session)
 
   const fetchProfile = async () => {
     const profile = await agent.getProfile({ actor: agent.did })
@@ -266,7 +275,7 @@ if (oauthAgent) {
   document.body.appendChild(logoutBtn)
   logoutBtn.textContent = 'Logout'
   logoutBtn.onclick = async () => {
-    await oauthAgent.signOut()
+    await session.signOut()
     window.location.reload()
   }
 

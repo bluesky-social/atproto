@@ -1,5 +1,5 @@
+import { asDid } from '@atproto/did'
 import { Fetch, bindFetch } from '@atproto-labs/fetch'
-import { JwtHeader, JwtPayload, unsafeDecodeJwt } from '@atproto/jwk'
 import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
 
 import { TokenInvalidError } from './errors/token-invalid-error.js'
@@ -13,10 +13,6 @@ const ReadableStream = globalThis.ReadableStream as
   | undefined
 
 export type TokenInfo = {
-  idToken?: {
-    header?: JwtHeader
-    payload: JwtPayload
-  }
   expiresAt?: Date
   expired?: boolean
   scope?: string
@@ -25,7 +21,7 @@ export type TokenInfo = {
   sub: string
 }
 
-export class OAuthAgent {
+export class OAuthSession {
   protected dpopFetch: Fetch<unknown>
 
   constructor(
@@ -43,6 +39,10 @@ export class OAuthAgent {
       nonces: server.dpopNonces,
       isAuthServer: false,
     })
+  }
+
+  get did() {
+    return asDid(this.sub)
   }
 
   get serverMetadata(): Readonly<OAuthAuthorizationServerMetadata> {
@@ -63,12 +63,12 @@ export class OAuthAgent {
       tokenSet.expires_at == null ? undefined : new Date(tokenSet.expires_at)
 
     return {
-      idToken: tokenSet.id_token
-        ? unsafeDecodeJwt(tokenSet.id_token)
-        : undefined,
       expiresAt,
-      expired:
-        expiresAt == null ? undefined : expiresAt.getTime() < Date.now() - 5e3,
+      get expired() {
+        return expiresAt == null
+          ? undefined
+          : expiresAt.getTime() < Date.now() - 5e3
+      },
       scope: tokenSet.scope,
       iss: tokenSet.iss,
       aud: tokenSet.aud,

@@ -178,7 +178,7 @@ export function useOAuth(options: UseOAuthOptions) {
 
           setClient(clientForInit)
           if (r) {
-            const agent = new OAuthAtpAgent(r.agent)
+            const agent = new OAuthAtpAgent(r.session)
 
             setAgent(agent)
 

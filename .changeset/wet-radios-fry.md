@@ -2,5 +2,4 @@
 "@atproto/oauth-client": patch
 ---
 
-Make `getTokenSet()` method public and add `getTokenInfo()` method to `OAuthAgent`.
-
+Make `getTokenSet()` method public in `OAuthSession`.

@@ -88,7 +88,7 @@ are available:
   Lower lever; compatible with most JS engines.
 
 Every `@atproto/oauth-client-*` implementation has a different way to obtain an
-`OAuthAgent` instance that can be used to instantiate an `OAuthAtpAgent` (from
+`OAuthSession` instance that can be used to instantiate an `OAuthAtpAgent` (from
 `@atproto/api`). Here is an example restoring a previously saved session:
 
 ```typescript
@@ -99,10 +99,10 @@ const oauthClient = new OAuthClient({
   // ...
 })
 
-const oauthAgent = await oauthClient.restore('did:plc:123')
+const oauthSession = await oauthClient.restore('did:plc:123')
 
-// Instantiate the api Agent using an OAuthAgent
-const agent = new OAuthAtpAgent(oauthAgent)
+// Instantiate the api Agent using an OAuthSession
+const agent = new OAuthAtpAgent(oauthSession)
 ```
 
 ### API calls
