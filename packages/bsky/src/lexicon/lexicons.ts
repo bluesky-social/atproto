@@ -6251,6 +6251,10 @@ export const schemaDict = {
                   'lex:app.bsky.feed.defs#blockedPost',
                 ],
               },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
             },
           },
         },

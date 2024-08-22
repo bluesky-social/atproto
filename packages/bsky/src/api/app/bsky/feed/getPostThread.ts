@@ -1,6 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import {
+  isNotFoundPost,
+  isThreadViewPost,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
+import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import {
   QueryParams,
   OutputSchema,
@@ -17,6 +21,7 @@ import {
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
+import { postUriToThreadgateUri } from '../../../../util/uris'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -106,11 +111,20 @@ const presentation = (
     height: params.parentHeight,
     depth: params.depth,
   })
+
+  let rootUri: string | undefined = undefined
+  if (isThreadViewPost(thread) && isPostRecord(thread.post.record)) {
+    rootUri = thread.post.record.reply?.root?.uri || thread.post.uri
+  }
+  const threadgate = rootUri
+    ? ctx.views.threadgate(postUriToThreadgateUri(rootUri), hydration)
+    : undefined
+
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
   }
-  return { thread }
+  return { thread, threadgate }
 }
 
 type Context = {
