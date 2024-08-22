@@ -90,7 +90,7 @@ function page({
         at://
         <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
       </p>
-      <table style="width:100%;">
+      <table style="text-align:left;width:100%;">
         <tr>
           <th>Record Key</th>
           <th>CID</th>

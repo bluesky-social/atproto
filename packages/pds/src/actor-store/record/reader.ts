@@ -102,7 +102,6 @@ export class RecordReader {
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.uri', '=', uri.toString())
-      // .where('repo_block.repoRev', '=', '')
       .selectAll()
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
