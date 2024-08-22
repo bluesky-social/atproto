@@ -125,11 +125,11 @@ message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetPostGateRecordsRequest {
+message GetPostgateRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetPostGateRecordsResponse {
+message GetPostgateRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -231,6 +231,17 @@ message GetLikesBySubjectSortedResponse {
   string cursor = 2;
 }
 
+message GetQuotesBySubjectSortedRequest {
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetQuotesBySubjectSortedResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
 // - return like uris for user A on subject B, C, D...
 //     - viewer state on posts
 message GetLikesByActorAndSubjectsRequest {
@@ -259,23 +270,6 @@ message GetActorLikesResponse {
   repeated LikeInfo likes = 1;
   string cursor = 2;
 }
-
-//
-// Quotes
-//
-
-message GetQuotesBySubjectRequest {
-  RecordRef subject = 1;
-  int32 limit = 2;
-  string cursor = 3;
-}
-
-message GetQuotesBySubjectResponse {
-  repeated RecordRef refs = 1;
-  string cursor = 2;
-}
-
-// - return post uris that quote the given subject uri
 
 //
 // Interactions
@@ -320,6 +314,15 @@ message GetListCountsRequest {
 
 message GetListCountsResponse {
   repeated int32 list_items = 1;
+}
+
+message GetNewUserCountForRangeRequest {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
+}
+
+message GetNewUserCountForRangeResponse {
+  int32 count = 1;
 }
 
 //
@@ -596,7 +599,6 @@ message GetThreadMutesOnSubjectsRequest {
 message GetThreadMutesOnSubjectsResponse {
   repeated bool muted = 1;
 }
-
 
 //
 // Blocks
@@ -1059,15 +1061,19 @@ message GetRecordTakedownResponse {
 
 // Polo-backed Graph Endpoints
 
-// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the target
+
+
+// GetFollowsFollowing gets the list of DIDs that the actor follows that also follow the targets
 message GetFollowsFollowingRequest {
   string actor_did = 1;
   repeated string target_dids = 2;
 }
+
 message FollowsFollowing {
   string target_did = 1;
   repeated string dids = 2;
 }
+
 message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
@@ -1097,7 +1103,7 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
-  rpc GetPostGateRecords(GetPostGateRecordsRequest) returns (GetPostGateRecordsResponse);
+  rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
 
@@ -1118,13 +1124,14 @@ service Service {
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
 
   // Quotes
-  rpc GetQuotesBySubject(GetQuotesBySubjectRequest) returns (GetQuotesBySubjectResponse);
+  rpc GetQuotesBySubjectSorted(GetQuotesBySubjectSortedRequest) returns (GetQuotesBySubjectSortedResponse);
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
   rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
   rpc GetStarterPackCounts(GetStarterPackCountsRequest) returns (GetStarterPackCountsResponse);
   rpc GetListCounts(GetListCountsRequest) returns (GetListCountsResponse);
+  rpc GetNewUserCountForRange(GetNewUserCountForRangeRequest) returns (GetNewUserCountForRangeResponse);
 
   // Profile
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);

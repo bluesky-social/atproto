@@ -20,7 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getProfileRecords: getRecords(db, ids.AppBskyActorProfile),
   getRepostRecords: getRecords(db, ids.AppBskyFeedRepost),
   getThreadGateRecords: getRecords(db, ids.AppBskyFeedThreadgate),
-  getPostGateRecords: getRecords(db, ids.AppBskyFeedPostgate),
+  getPostgateRecords: getRecords(db, ids.AppBskyFeedPostgate),
   getLabelerRecords: getRecords(db, ids.AppBskyLabelerService),
   getActorChatDeclarationRecords: getRecords(db, ids.ChatBskyActorDeclaration),
   getStarterPackRecords: getRecords(db, ids.AppBskyGraphStarterpack),

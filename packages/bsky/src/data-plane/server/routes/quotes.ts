@@ -4,7 +4,7 @@ import { Database } from '../db'
 import { paginate, TimeCidKeyset } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getQuotesBySubject(req) {
+  async getQuotesBySubjectSorted(req) {
     const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 
@@ -25,7 +25,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const quotes = await builder.execute()
 
     return {
-      refs: quotes.map((q) => ({ uri: q.uri, cid: q.cid })),
+      uris: quotes.map((q) => q.uri),
       cursor: keyset.packFromResult(quotes),
     }
   },

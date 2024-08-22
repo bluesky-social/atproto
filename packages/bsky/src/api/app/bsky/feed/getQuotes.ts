@@ -10,7 +10,7 @@ import {
 import { Views } from '../../../../views'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
-import { ItemRef, parseString } from '../../../../hydration/util'
+import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -40,15 +40,15 @@ const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   if (clearlyBadCursor(params.cursor)) {
-    return { refs: [] }
+    return { uris: [] }
   }
-  const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubject({
+  const quotesRes = await ctx.hydrator.dataplane.getQuotesBySubjectSorted({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
   })
   return {
-    refs: quotesRes.refs,
+    uris: quotesRes.uris,
     cursor: parseString(quotesRes.cursor),
   }
 }
@@ -59,7 +59,10 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydratePosts(skeleton.refs, params.hydrateCtx)
+  return await ctx.hydrator.hydratePosts(
+    skeleton.uris.map((uri) => ({ uri })),
+    params.hydrateCtx,
+  )
 }
 
 const noBlocks = (inputs: {
@@ -68,8 +71,8 @@ const noBlocks = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.refs = skeleton.refs.filter((ref) => {
-    return !ctx.views.viewerBlockExists(ref.uri, hydration)
+  skeleton.uris = skeleton.uris.filter((uri) => {
+    return !ctx.views.viewerBlockExists(uri, hydration)
   })
   return skeleton
 }
@@ -81,8 +84,8 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const postViews = mapDefined(skeleton.refs, (ref) => {
-    return ctx.views.post(ref.uri, hydration)
+  const postViews = mapDefined(skeleton.uris, (uri) => {
+    return ctx.views.post(uri, hydration)
   })
   return {
     posts: postViews,
@@ -100,6 +103,6 @@ type Context = {
 type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  refs: ItemRef[]
+  uris: string[]
   cursor?: string
 }
