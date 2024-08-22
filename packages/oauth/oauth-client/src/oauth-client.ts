@@ -295,8 +295,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         ) ?? 'code',
 
       display: options?.display,
-      id_token_hint: options?.id_token_hint,
-      max_age: options?.max_age, // this.clientMetadata.default_max_age
       prompt: options?.prompt,
       scope: options?.scope
         ?.split(' ')
@@ -434,17 +432,15 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
       try {
-        if (tokenSet.id_token) {
-          await this.runtime.validateIdTokenClaims(
-            tokenSet.id_token,
-            stateParam,
-            stateData.nonce,
-            codeParam,
-            tokenSet.access_token,
+        const { sub, nonce } = tokenSet
+
+        if (!nonce || nonce !== stateData.nonce) {
+          throw new OAuthCallbackError(
+            params,
+            'Nonce mismatch',
+            stateData.appState,
           )
         }
-
-        const { sub } = tokenSet
 
         await this.sessionGetter.setStored(sub, {
           dpopKey: stateData.dpopKey,

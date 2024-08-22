@@ -1,6 +1,6 @@
 import { Fetch, Json, bindFetch, fetchJsonProcessor } from '@atproto-labs/fetch'
 import { SimpleStore } from '@atproto-labs/simple-store'
-import { Key, Keyset, SignedJwt } from '@atproto/jwk'
+import { Key, Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationServerMetadata,
@@ -26,9 +26,9 @@ export type TokenSet = {
   iss: string
   sub: string
   aud: string
+  nonce?: string
   scope?: string
 
-  id_token?: SignedJwt
   refresh_token?: string
   access_token: string
   token_type: OAuthTokenType
@@ -127,9 +127,15 @@ export class OAuthServerAgent {
   private async processTokenResponse(
     tokenResponse: OAuthTokenResponse,
   ): Promise<TokenSet> {
-    const { sub } = tokenResponse
+    const { sub, nonce } = tokenResponse
+
     // ATPROTO requires that the "sub" is always present in the token response.
-    if (!sub) throw new TypeError(`Missing "sub" in token response`)
+    if (!sub) {
+      throw new TypeError(`Missing "sub" in token response`)
+    }
+    if (!nonce || typeof nonce !== 'string') {
+      throw new TypeError(`Missing or invalid "nonce" in token response`)
+    }
 
     // @TODO (?) make timeout configurable
     using signal = timeoutSignal(10e3)
@@ -146,12 +152,13 @@ export class OAuthServerAgent {
     }
 
     return {
-      sub,
       aud: resolved.identity.pds.href,
       iss: resolved.metadata.issuer,
 
+      sub,
+      nonce,
+
       scope: tokenResponse.scope,
-      id_token: tokenResponse.id_token,
       refresh_token: tokenResponse.refresh_token,
       access_token: tokenResponse.access_token,
       token_type: tokenResponse.token_type ?? 'Bearer',

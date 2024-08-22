@@ -45,7 +45,7 @@ needs of your application and must respect the [ATPROTO] spec.
   "tos_uri": "https://my-app.com/tos",
   "policy_uri": "https://my-app.com/policy",
   "redirect_uris": ["https://my-app.com/callback"],
-  "scope": "profile email offline_access",
+  "scope": "atproto",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
   "token_endpoint_auth_method": "none",

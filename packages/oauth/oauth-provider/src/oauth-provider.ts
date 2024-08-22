@@ -1,7 +1,7 @@
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
-import { Jwks, Keyset, SignedJwt, signedJwtSchema } from '@atproto/jwk'
+import { Jwks, Keyset } from '@atproto/jwk'
 import {
   AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -58,7 +58,6 @@ import {
   Middleware,
   Router,
   ServerResponse,
-  acceptMiddleware,
   combineMiddlewares,
   setupCsrfToken,
   staticJsonHandler,
@@ -74,7 +73,6 @@ import { Override } from './lib/util/type.js'
 import { CustomMetadata, buildMetadata } from './metadata/build-metadata.js'
 import { OAuthHooks } from './oauth-hooks.js'
 import { OAuthVerifier, OAuthVerifierOptions } from './oauth-verifier.js'
-import { Userinfo } from './oidc/userinfo.js'
 import { AuthorizationResultAuthorize } from './output/build-authorize-data.js'
 import {
   buildErrorPayload,
@@ -86,7 +84,6 @@ import {
   AuthorizationResultRedirect,
   sendAuthorizeRedirect,
 } from './output/send-authorize-redirect.js'
-import { oidcPayload } from './parameters/oidc-payload.js'
 import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { RequestInfo } from './request/request-info.js'
 import { RequestManager } from './request/request-manager.js'
@@ -103,7 +100,7 @@ import {
 } from './request/types.js'
 import { isTokenId } from './token/token-id.js'
 import { TokenManager } from './token/token-manager.js'
-import { TokenInfo, TokenStore, asTokenStore } from './token/token-store.js'
+import { TokenStore, asTokenStore } from './token/token-store.js'
 import {
   CodeGrantRequest,
   Introspect,
@@ -146,9 +143,7 @@ export type OAuthProviderOptions = Override<
   {
     /**
      * Maximum age a device/account session can be before requiring
-     * re-authentication. This can be overridden on a authorization request basis
-     * using the `max_age` parameter and on a client basis using the
-     * `default_max_age` client metadata.
+     * re-authentication.
      */
     authenticationMaxAge?: number
 
@@ -286,6 +281,7 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.accountManager = new AccountManager(accountStore)
     this.clientManager = new ClientManager(
+      this.metadata,
       this.keyset,
       rest,
       clientStore || null,
@@ -326,14 +322,7 @@ export class OAuthProvider extends OAuthVerifier {
       return true
     }
 
-    /** in seconds */
-    const maxAge = parameters.max_age ?? client.metadata.default_max_age
-
-    if (maxAge != null && maxAge < this.authenticationMaxAge) {
-      return authAge >= maxAge
-    } else {
-      return authAge >= this.authenticationMaxAge
-    }
+    return authAge >= this.authenticationMaxAge
   }
 
   protected async authenticateClient(
@@ -551,15 +540,14 @@ export class OAuthProvider extends OAuthVerifier {
             throw new ConsentRequiredError(parameters)
           }
 
-          const redirect = await this.requestManager.setAuthorized(
+          const code = await this.requestManager.setAuthorized(
             client,
             uri,
             deviceId,
             ssoSession.account,
-            ssoSession.info,
           )
 
-          return { issuer, client, parameters, redirect }
+          return { issuer, client, parameters, redirect: { code } }
         }
 
         // Automatic SSO when a did was provided
@@ -568,15 +556,14 @@ export class OAuthProvider extends OAuthVerifier {
           if (ssoSessions.length === 1) {
             const ssoSession = ssoSessions[0]!
             if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
-              const redirect = await this.requestManager.setAuthorized(
+              const code = await this.requestManager.setAuthorized(
                 client,
                 uri,
                 deviceId,
                 ssoSession.account,
-                ssoSession.info,
               )
 
-              return { issuer, client, parameters, redirect }
+              return { issuer, client, parameters, redirect: { code } }
             }
           }
         }
@@ -692,12 +679,11 @@ export class OAuthProvider extends OAuthVerifier {
           )
         }
 
-        const redirect = await this.requestManager.setAuthorized(
+        const code = await this.requestManager.setAuthorized(
           client,
           uri,
           deviceId,
           account,
-          info,
         )
 
         await this.accountManager.addAuthorizedClient(
@@ -707,7 +693,7 @@ export class OAuthProvider extends OAuthVerifier {
           clientAuth,
         )
 
-        return { issuer, client, parameters, redirect }
+        return { issuer, client, parameters, redirect: { code } }
       } catch (err) {
         await this.deleteRequest(uri, parameters)
 
@@ -891,31 +877,6 @@ export class OAuthProvider extends OAuthVerifier {
     }
   }
 
-  /**
-   * @see {@link https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.3.2 Successful UserInfo Response}
-   */
-  protected async userinfo({ data, account }: TokenInfo): Promise<Userinfo> {
-    return {
-      ...oidcPayload(data.parameters, account),
-
-      sub: account.sub,
-
-      client_id: data.clientId,
-      username: account.preferred_username,
-    }
-  }
-
-  protected async signUserinfo(userinfo: Userinfo): Promise<SignedJwt> {
-    const client = await this.clientManager.getClient(userinfo.client_id)
-    return this.signer.sign(
-      {
-        alg: client.metadata.userinfo_signed_response_alg,
-        typ: 'JWT',
-      },
-      userinfo,
-    )
-  }
-
   protected override async authenticateToken(
     tokenType: OAuthTokenType,
     token: AccessToken,
@@ -1066,20 +1027,6 @@ export class OAuthProvider extends OAuthVerifier {
 
     //- Public OAuth endpoints
 
-    /*
-     * Although OpenID compatibility is not required to implement the Atproto
-     * OAuth2 specification, we do support OIDC discovery in this
-     * implementation as we believe this may:
-     * 1) Make the implementation of Atproto clients easier (since lots of
-     *    libraries support OIDC discovery)
-     * 2) Allow self hosted PDS' to not implement authentication themselves
-     *    but rely on a trusted Atproto actor to act as their OIDC providers.
-     *    By supporting OIDC in the current implementation, Bluesky's
-     *    Authorization Server server can be used as an OIDC provider for
-     *    these users.
-     */
-    router.get('/.well-known/openid-configuration', staticJson(server.metadata))
-
     router.get(
       '/.well-known/oauth-authorization-server',
       staticJson(server.metadata),
@@ -1087,9 +1034,9 @@ export class OAuthProvider extends OAuthVerifier {
 
     // CORS preflight
     router.options<{
-      endpoint: 'jwks' | 'par' | 'token' | 'revoke' | 'introspect' | 'userinfo'
+      endpoint: 'jwks' | 'par' | 'token' | 'revoke' | 'introspect'
     }>(
-      /^\/oauth\/(?<endpoint>jwks|par|token|revoke|introspect|userinfo)$/,
+      /^\/oauth\/(?<endpoint>jwks|par|token|revoke|introspect)$/,
       function (req, res, _next) {
         res
           .writeHead(204, {
@@ -1183,64 +1130,6 @@ export class OAuthProvider extends OAuthVerifier {
         const input = await validateRequestPayload(req, introspectSchema)
         return server.introspect(input)
       }),
-    )
-
-    const userinfoBodySchema = z.object({
-      access_token: signedJwtSchema.optional(),
-    })
-
-    router.addRoute(
-      ['GET', 'POST'],
-      '/oauth/userinfo',
-      acceptMiddleware(
-        async function (req, _res) {
-          const body =
-            req.method === 'POST'
-              ? await validateRequestPayload(req, userinfoBodySchema)
-              : null
-
-          if (body?.access_token && req.headers['authorization']) {
-            throw new InvalidRequestError(
-              'access token must be provided in either the authorization header or the request body',
-            )
-          }
-
-          const auth = await server.authenticateRequest(
-            req.method!,
-            this.url,
-            body?.access_token // Allow credentials to be parsed from body.
-              ? {
-                  authorization: `Bearer ${body.access_token}`,
-                  dpop: undefined, // DPoP can only be used with headers
-                }
-              : req.headers,
-            {
-              scope: ['profile'],
-            },
-          )
-
-          const tokenInfo: TokenInfo =
-            'tokenInfo' in auth
-              ? (auth.tokenInfo as TokenInfo)
-              : await server.tokenManager.getTokenInfo(
-                  auth.tokenType,
-                  auth.tokenId,
-                )
-
-          return server.userinfo(tokenInfo)
-        },
-        {
-          '': 'application/json',
-          'application/json': jsonHandler(async function (_req, _res) {
-            return this.data
-          }),
-          'application/jwt': jsonHandler(async function (_req, res) {
-            const jwt = await server.signUserinfo(this.data)
-            res.writeHead(200, { 'Content-Type': 'application/jwt' }).end(jwt)
-            return undefined
-          }),
-        },
-      ),
     )
 
     //- Private authorization endpoints

@@ -1,4 +1,4 @@
-import { isSignedJwt, SignedJwt } from '@atproto/jwk'
+import { isSignedJwt } from '@atproto/jwk'
 import {
   AccessToken,
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -181,8 +181,7 @@ export class TokenManager {
     }
 
     const tokenId = await generateTokenId()
-    const scopes = parameters.scope?.split(' ')
-    const refreshToken = scopes?.includes('offline_access')
+    const refreshToken = client.metadata.grant_types.includes('refresh_token')
       ? await generateRefreshToken()
       : undefined
 
@@ -222,22 +221,11 @@ export class TokenManager {
           authorization_details: authorizationDetails,
         })
 
-    const idToken = scopes?.includes('openid')
-      ? await this.signer.idToken(client, parameters, account, {
-          exp: expiresAt,
-          iat: now,
-          // If there is no deviceInfo, we are in a "password_grant" context
-          auth_time: device?.info.authenticatedAt || new Date(),
-          access_token: accessToken,
-          code,
-        })
-      : undefined
-
     return this.buildTokenResponse(
       client,
       accessToken,
       refreshToken,
-      idToken,
+      parameters.nonce,
       expiresAt,
       parameters,
       account,
@@ -249,7 +237,7 @@ export class TokenManager {
     client: Client,
     accessToken: AccessToken,
     refreshToken: string | undefined,
-    idToken: SignedJwt | undefined,
+    nonce: string | undefined,
     expiresAt: Date,
     parameters: OAuthAuthenticationRequestParameters,
     account: Account,
@@ -259,7 +247,6 @@ export class TokenManager {
       access_token: accessToken,
       token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
       refresh_token: refreshToken,
-      id_token: idToken,
       scope: parameters.scope ?? '',
       authorization_details: authorizationDetails,
       get expires_in() {
@@ -270,6 +257,7 @@ export class TokenManager {
       // clients to resolve the PDS url (audience) using the did resolution
       // mechanism.
       sub: account.sub,
+      nonce,
     }
 
     await this.hooks.onTokenResponse?.call(null, tokenResponse, {
@@ -316,7 +304,7 @@ export class TokenManager {
       throw new InvalidGrantError(`Invalid refresh token`)
     }
 
-    const { account, info, data } = tokenInfo
+    const { account, data } = tokenInfo
     const { parameters } = data
 
     try {
@@ -397,29 +385,13 @@ export class TokenManager {
             iat: now,
             jti: nextTokenId,
             cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
-            authorization_details,
           })
-
-      // https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.3
-      //
-      // >  In addition to the response parameters specified by OAuth 2.0, the
-      // >  following parameters MUST be included in the response:
-      // >  - id_token: ID Token value associated with the authenticated session.
-      const scopes = parameters.scope?.split(' ')
-      const idToken = scopes?.includes('openid')
-        ? await this.signer.idToken(client, parameters, account, {
-            exp: expiresAt,
-            iat: now,
-            auth_time: info?.authenticatedAt,
-            access_token: accessToken,
-          })
-        : undefined
 
       return this.buildTokenResponse(
         client,
         accessToken,
         nextRefreshToken,
-        idToken,
+        undefined,
         expiresAt,
         parameters,
         account,

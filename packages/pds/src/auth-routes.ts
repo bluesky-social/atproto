@@ -11,7 +11,7 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
       resource: cfg.service.publicUrl,
       authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl],
       bearer_methods_supported: ['header'],
-      scopes_supported: ['profile', 'email', 'phone'],
+      scopes_supported: ['atproto'],
       resource_documentation: 'https://atproto.com',
     })
 

@@ -4,7 +4,6 @@ import {
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
 
-import { DeviceAccountInfo } from '../account/account-store.js'
 import { Account } from '../account/account.js'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
@@ -23,7 +22,6 @@ import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { compareRedirectUri } from '../lib/util/redirect-uri.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { OIDC_SCOPE_CLAIMS } from '../oidc/claims.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
 import {
@@ -92,8 +90,28 @@ export class RequestManager {
     clientAuth: ClientAuth,
     parameters: Readonly<OAuthAuthenticationRequestParameters>,
     dpopJkt: null | string,
-    pkceRequired = this.pkceRequired,
   ): Promise<Readonly<OAuthAuthenticationRequestParameters>> {
+    // Known unsupported OIDC parameters
+    for (const k of [
+      'claims',
+      'authorization_details',
+      'id_token_hint',
+    ] as const) {
+      if (parameters[k]) {
+        throw new InvalidParametersError(
+          parameters,
+          `Unsupported "${k}" parameter`,
+        )
+      }
+    }
+
+    if (parameters.response_type !== 'code') {
+      throw new InvalidParametersError(
+        parameters,
+        'Only "code" response type is allowed',
+      )
+    }
+
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
     // > The authorization server MAY fully or partially ignore the scope
     // > requested by the client, based on the authorization server policy or
@@ -102,42 +120,35 @@ export class RequestManager {
     // > server MUST include the scope response parameter in the token response
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
-    const cScopes = client.metadata.scope?.split(' ')
+    const cScopes = client.metadata.scope?.split(' ').filter(Boolean)
     const sScopes = this.metadata.scopes_supported
 
-    const scopes =
-      (parameters.scope || client.metadata.scope)
-        ?.split(' ')
-        .filter((scope) => !!scope && (sScopes?.includes(scope) ?? true)) ?? []
+    const scopes = new Set(
+      parameters.scope?.split(' ').filter(Boolean) || cScopes,
+    )
+
+    // There is no point in requesting a token without any scope
+    if (!scopes.size) {
+      throw new InvalidParametersError(parameters, 'Missing "scope" parameter')
+    }
 
     for (const scope of scopes) {
-      if (!cScopes?.includes(scope)) {
+      // Loopback clients do not define any scope in their metadata
+      if (cScopes && !cScopes.includes(scope)) {
         throw new InvalidParametersError(
           parameters,
           `Scope "${scope}" is not registered for this client`,
         )
       }
-    }
-
-    for (const [scope, claims] of Object.entries(OIDC_SCOPE_CLAIMS)) {
-      for (const claim of claims) {
-        if (
-          parameters?.claims?.id_token?.[claim]?.essential === true ||
-          parameters?.claims?.userinfo?.[claim]?.essential === true
-        ) {
-          if (!scopes?.includes(scope)) {
-            throw new InvalidParametersError(
-              parameters,
-              `Essential ${claim} claim requires "${scope}" scope`,
-            )
-          }
-        }
+      if (!sScopes?.includes(scope)) {
+        throw new InvalidParametersError(
+          parameters,
+          `Scope "${scope}" is not supported by this server`,
+        )
       }
     }
 
-    parameters = { ...parameters, scope: scopes.join(' ') }
-
-    const responseTypes = parameters.response_type.split(' ')
+    parameters = { ...parameters, scope: [...scopes].join(' ') }
 
     if (parameters.authorization_details) {
       const clientAuthDetailsTypes = client.metadata.authorization_details_types
@@ -208,16 +219,8 @@ export class RequestManager {
       )
     }
 
-    if (pkceRequired && responseTypes.includes('token')) {
-      throw new InvalidParametersError(
-        parameters,
-        `Response type "${parameters.response_type}" is incompatible with PKCE`,
-        'unsupported_response_type',
-      )
-    }
-
     // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
-    if (pkceRequired && !parameters.code_challenge) {
+    if (this.pkceRequired && !parameters.code_challenge) {
       throw new InvalidParametersError(parameters, 'code_challenge is required')
     }
 
@@ -240,44 +243,12 @@ export class RequestManager {
       )
     }
 
-    // https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
-    //
-    // > nonce: REQUIRED if the Response Type of the request is "code id_token" or
-    // >   "code id_token token" and OPTIONAL when the Response Type of the
-    // >   request is "code token". It is a string value used to associate a
-    // >   Client session with an ID Token, and to mitigate replay attacks. The
-    // >   value is passed through unmodified from the Authentication Request to
-    // >   the ID Token. Sufficient entropy MUST be present in the nonce values
-    // >   used to prevent attackers from guessing values. For implementation
-    // >   notes, see Section 15.5.2.
-    if (responseTypes.includes('id_token') && !parameters.nonce) {
+    // ATPROTO extension: require a nonce for "atproto" authorization flows
+    if (!parameters.nonce) {
       throw new InvalidParametersError(
         parameters,
-        'nonce is required for implicit and hybrid flows',
+        'A "nonce" parameter is required when performing an "atproto" authorization flow',
       )
-    }
-
-    // Make "expensive" checks after the "cheaper" checks
-
-    if (parameters.id_token_hint != null) {
-      const { payload } = await this.signer.verify(parameters.id_token_hint, {
-        // these are meant to be outdated when used as a hint
-        clockTolerance: Infinity,
-      })
-
-      if (!payload.sub) {
-        throw new InvalidParametersError(
-          parameters,
-          `Unexpected empty id_token_hint "sub"`,
-        )
-      } else if (parameters.login_hint == null) {
-        parameters = { ...parameters, login_hint: payload.sub }
-      } else if (parameters.login_hint !== payload.sub) {
-        throw new InvalidParametersError(
-          parameters,
-          'login_hint does not match "sub" of id_token_hint',
-        )
-      }
     }
 
     // ATPROTO extension: if the client is not trusted, force users to consent
@@ -366,8 +337,7 @@ export class RequestManager {
     uri: RequestUri,
     deviceId: DeviceId,
     account: Account,
-    info: DeviceAccountInfo,
-  ): Promise<{ code?: Code; token?: string; id_token?: string }> {
+  ): Promise<Code> {
     const id = decodeRequestUri(uri)
 
     const data = await this.store.readRequest(id)
@@ -396,18 +366,13 @@ export class RequestManager {
         )
       }
 
-      const responseType = data.parameters.response_type.split(' ')
-
-      if (responseType.includes('token')) {
+      if (data.parameters.response_type !== 'code') {
         throw new AccessDeniedError(
           data.parameters,
-          'Implicit "token" forbidden (use "code" with PKCE instead)',
+          'Only "code" response type is allowed',
         )
       }
-
-      const code = responseType.includes('code')
-        ? await generateCode()
-        : undefined
+      const code = await generateCode()
 
       // Bind the request to the account, preventing it from being used again.
       await this.store.updateRequest(id, {
@@ -417,15 +382,7 @@ export class RequestManager {
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
       })
 
-      const id_token = responseType.includes('id_token')
-        ? await this.signer.idToken(client, data.parameters, account, {
-            auth_time: info.authenticatedAt,
-            exp: this.createTokenExpiry(),
-            code,
-          })
-        : undefined
-
-      return { code, id_token }
+      return code
     } catch (err) {
       await this.store.deleteRequest(id)
       throw err
