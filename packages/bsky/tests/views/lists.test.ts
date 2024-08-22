@@ -8,7 +8,9 @@ describe('bsky actor likes feed views', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
+  let curateList: string
   let referenceList: string
+  let alice: string
   let eve: string
   let frankie: string
   let greta: string
@@ -35,17 +37,32 @@ describe('bsky actor likes feed views', () => {
       email: 'greta@greta.com',
       password: 'hunter4real',
     })
-    const newList = await sc.createList(
+
+    const newRefList = await sc.createList(
       sc.dids.eve,
       'blah starter pack list!',
       'reference',
     )
-    await sc.addToList(sc.dids.eve, sc.dids.eve, newList)
-    await sc.addToList(sc.dids.eve, sc.dids.bob, newList)
-    await sc.addToList(sc.dids.eve, sc.dids.frankie, newList)
+    const newCurrList = await sc.createList(
+      sc.dids.eve,
+      'blah curate list!',
+      'curate',
+    )
+
+    await sc.addToList(sc.dids.eve, sc.dids.eve, newRefList)
+    await sc.addToList(sc.dids.eve, sc.dids.bob, newRefList)
+    await sc.addToList(sc.dids.eve, sc.dids.frankie, newRefList)
+
+    await sc.addToList(sc.dids.eve, sc.dids.eve, newCurrList)
+    await sc.addToList(sc.dids.eve, sc.dids.bob, newCurrList)
+    await sc.addToList(sc.dids.eve, sc.dids.frankie, newCurrList)
+
     await sc.block(sc.dids.frankie, sc.dids.eve)
+
     await network.processAll()
-    referenceList = newList.uriStr
+    curateList = newCurrList.uriStr
+    referenceList = newRefList.uriStr
+    alice = sc.dids.alice
     eve = sc.dids.eve
     frankie = sc.dids.frankie
     greta = sc.dids.greta
@@ -61,44 +78,92 @@ describe('bsky actor likes feed views', () => {
     const view = await agent.api.app.bsky.graph.getLists({
       actor: eve,
     })
-    expect(view.data.lists.length).toBe(1)
+    expect(view.data.lists.length).toBe(2)
     expect(forSnapshot(view.data.lists)).toMatchSnapshot()
   })
 
   it('does not include users with creator block relationship in reference lists for non-creator, in-list viewers', async () => {
-    const view = await agent.api.app.bsky.graph.getList(
+    const curView = await agent.api.app.bsky.graph.getList(
+      {
+        list: curateList,
+      },
+      {
+        headers: await network.serviceHeaders(frankie, ids.AppBskyGraphGetList),
+      },
+    )
+    expect(curView.data.items.length).toBe(2)
+    expect(forSnapshot(curView.data.items)).toMatchSnapshot()
+
+    const refView = await agent.api.app.bsky.graph.getList(
       { list: referenceList },
       {
         headers: await network.serviceHeaders(frankie, ids.AppBskyGraphGetList),
       },
     )
-    expect(view.data.items.length).toBe(2)
-    expect(forSnapshot(view.data.items)).toMatchSnapshot()
+    expect(refView.data.items.length).toBe(2)
+    expect(forSnapshot(refView.data.items)).toMatchSnapshot()
   })
 
   it('does not include users with creator block relationship in reference lists for non-creator, not-in-list viewers', async () => {
-    const view = await agent.api.app.bsky.graph.getList(
+    const curView = await agent.api.app.bsky.graph.getList(
+      {
+        list: curateList,
+      },
+      { headers: await network.serviceHeaders(greta, ids.AppBskyGraphGetList) },
+    )
+    expect(curView.data.items.length).toBe(2)
+    expect(forSnapshot(curView.data.items)).toMatchSnapshot()
+
+    const refView = await agent.api.app.bsky.graph.getList(
       { list: referenceList },
       { headers: await network.serviceHeaders(greta, ids.AppBskyGraphGetList) },
     )
-    expect(view.data.items.length).toBe(2)
-    expect(forSnapshot(view.data.items)).toMatchSnapshot()
+    expect(refView.data.items.length).toBe(2)
+    expect(forSnapshot(refView.data.items)).toMatchSnapshot()
   })
 
-  it('does not include users with creator block relationship in reference lists for signed-out viewers', async () => {
-    const view = await agent.api.app.bsky.graph.getList({
+  it('does not include users with creator block relationship in reference and curate lists for signed-out viewers', async () => {
+    const curView = await agent.api.app.bsky.graph.getList({
+      list: curateList,
+    })
+    expect(curView.data.items.length).toBe(2)
+    expect(forSnapshot(curView.data.items)).toMatchSnapshot()
+
+    const refView = await agent.api.app.bsky.graph.getList({
       list: referenceList,
     })
-    expect(view.data.items.length).toBe(2)
-    expect(forSnapshot(view.data.items)).toMatchSnapshot()
+    expect(refView.data.items.length).toBe(2)
+    expect(forSnapshot(refView.data.items)).toMatchSnapshot()
   })
 
   it('does include users with creator block relationship in reference lists for creator', async () => {
-    const view = await agent.api.app.bsky.graph.getList(
+    const curView = await agent.api.app.bsky.graph.getList(
+      { list: curateList },
+      { headers: await network.serviceHeaders(eve, ids.AppBskyGraphGetList) },
+    )
+    expect(curView.data.items.length).toBe(3)
+    expect(forSnapshot(curView.data.items)).toMatchSnapshot()
+
+    const refView = await agent.api.app.bsky.graph.getList(
       { list: referenceList },
       { headers: await network.serviceHeaders(eve, ids.AppBskyGraphGetList) },
     )
-    expect(view.data.items.length).toBe(3)
+    expect(refView.data.items.length).toBe(3)
+    expect(forSnapshot(refView.data.items)).toMatchSnapshot()
+  })
+
+  it('does return all users regardless of creator block relationship in moderation lists', async () => {
+    const blockList = await sc.createList(eve, 'block list', 'mod')
+    await sc.addToList(eve, frankie, blockList)
+    await sc.addToList(eve, greta, blockList)
+    await sc.block(frankie, greta)
+    await network.processAll()
+
+    const view = await agent.api.app.bsky.graph.getList(
+      { list: blockList.uriStr },
+      { headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetList) },
+    )
+    expect(view.data.items.length).toBe(2)
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
   })
 })

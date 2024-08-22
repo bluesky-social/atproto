@@ -124,16 +124,22 @@ import {
   GetMutelistSubscriptionsResponse,
   GetMutesRequest,
   GetMutesResponse,
+  GetNewUserCountForRangeRequest,
+  GetNewUserCountForRangeResponse,
   GetNotificationSeenRequest,
   GetNotificationSeenResponse,
   GetNotificationsRequest,
   GetNotificationsResponse,
+  GetPostgateRecordsRequest,
+  GetPostgateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
   GetPostReplyCountsRequest,
   GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
+  GetQuotesBySubjectSortedRequest,
+  GetQuotesBySubjectSortedResponse,
   GetRecordTakedownRequest,
   GetRecordTakedownResponse,
   GetRelationshipsRequest,
@@ -310,6 +316,15 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc bsky.Service.GetPostgateRecords
+     */
+    getPostgateRecords: {
+      name: 'GetPostgateRecords',
+      I: GetPostgateRecordsRequest,
+      O: GetPostgateRecordsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc bsky.Service.GetLabelerRecords
      */
     getLabelerRecords: {
@@ -424,6 +439,17 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
+     * Quotes
+     *
+     * @generated from rpc bsky.Service.GetQuotesBySubjectSorted
+     */
+    getQuotesBySubjectSorted: {
+      name: 'GetQuotesBySubjectSorted',
+      I: GetQuotesBySubjectSortedRequest,
+      O: GetQuotesBySubjectSortedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * Interaction Counts
      *
      * @generated from rpc bsky.Service.GetInteractionCounts
@@ -459,6 +485,15 @@ export const Service = {
       name: 'GetListCounts',
       I: GetListCountsRequest,
       O: GetListCountsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetNewUserCountForRange
+     */
+    getNewUserCountForRange: {
+      name: 'GetNewUserCountForRange',
+      I: GetNewUserCountForRangeRequest,
+      O: GetNewUserCountForRangeResponse,
       kind: MethodKind.Unary,
     },
     /**

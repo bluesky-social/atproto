@@ -20,6 +20,7 @@
             "#viewRecord",
             "#viewNotFound",
             "#viewBlocked",
+            "#viewDetached",
             "app.bsky.feed.defs#generatorView",
             "app.bsky.graph.defs#listView",
             "app.bsky.labeler.defs#labelerView",
@@ -79,6 +80,14 @@
         "uri": { "type": "string", "format": "at-uri" },
         "blocked": { "type": "boolean", "const": true },
         "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
+      }
+    },
+    "viewDetached": {
+      "type": "object",
+      "required": ["uri", "detached"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "detached": { "type": "boolean", "const": true }
       }
     }
   }

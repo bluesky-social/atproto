@@ -127,28 +127,14 @@ export function buildMetadata(
     token_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
     revocation_endpoint: new URL('/oauth/revoke', issuer).href,
-    revocation_endpoint_auth_methods_supported: [
-      ...Client.AUTH_METHODS_SUPPORTED,
-    ],
-    revocation_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
     introspection_endpoint: new URL('/oauth/introspect', issuer).href,
-    introspection_endpoint_auth_methods_supported: [
-      ...Client.AUTH_METHODS_SUPPORTED,
-    ],
-    introspection_endpoint_auth_signing_alg_values_supported: [...VERIFY_ALGOS],
 
     userinfo_endpoint: new URL('/oauth/userinfo', issuer).href,
     // end_session_endpoint: new URL('/oauth/logout', issuer).href,
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-5
     pushed_authorization_request_endpoint: new URL('/oauth/par', issuer).href,
-    pushed_authorization_request_endpoint_auth_methods_supported: [
-      ...Client.AUTH_METHODS_SUPPORTED,
-    ],
-    pushed_authorization_request_endpoint_auth_signing_alg_values_supported: [
-      ...VERIFY_ALGOS,
-    ],
 
     require_pushed_authorization_requests: true,
 
