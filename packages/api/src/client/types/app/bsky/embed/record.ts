@@ -67,6 +67,7 @@ export interface ViewRecord {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  quoteCount?: number
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View

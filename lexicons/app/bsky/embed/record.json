@@ -50,6 +50,7 @@
         "replyCount": { "type": "integer" },
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
+        "quoteCount": { "type": "integer" },
         "embeds": {
           "type": "array",
           "items": {
