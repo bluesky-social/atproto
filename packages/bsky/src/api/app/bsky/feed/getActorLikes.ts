@@ -13,7 +13,7 @@ import {
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { creatorFromUri } from '../../../../views/util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {

@@ -29,6 +29,7 @@ import { LabelRow } from '../db/schema/label'
 import { dbLogger } from '../logger'
 import { httpLogger } from '../logger'
 import { ParsedLabelers } from '../util'
+import { ids } from '../lexicon/lexicons'
 
 export type AuthHeaders = {
   headers: {
@@ -43,12 +44,12 @@ export class ModerationViews {
     private signingKey: Keypair,
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
-    private appviewAuth: () => Promise<AuthHeaders>,
+    private appviewAuth: (method: string) => Promise<AuthHeaders>,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
-    const auth = await this.appviewAuth()
+    const auth = await this.appviewAuth(ids.ComAtprotoAdminGetAccountInfos)
     if (!auth) return new Map()
     try {
       const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
@@ -236,7 +237,7 @@ export class ModerationViews {
   async fetchRecords(
     subjects: RecordSubject[],
   ): Promise<Map<string, RecordInfo>> {
-    const auth = await this.appviewAuth()
+    const auth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
     if (!auth) return new Map()
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
@@ -547,7 +548,7 @@ export class ModerationViews {
   async fetchAuthorFeed(
     actor: string,
   ): Promise<AppBskyFeedDefs.FeedViewPost[]> {
-    const auth = await this.appviewAuth()
+    const auth = await this.appviewAuth(ids.AppBskyFeedGetAuthorFeed)
     if (!auth) return []
     const {
       data: { feed },

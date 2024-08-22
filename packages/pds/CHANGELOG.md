@@ -1,5 +1,41 @@
 # @atproto/pds
 
+## 0.4.53
+
+### Patch Changes
+
+- Updated dependencies [[`4ab248354`](https://github.com/bluesky-social/atproto/commit/4ab2483547d5dabfba88ed4419a4f374bbd7cae7)]:
+  - @atproto/api@0.13.3
+
+## 0.4.52
+
+### Patch Changes
+
+- [#2675](https://github.com/bluesky-social/atproto/pull/2675) [`aba664fbd`](https://github.com/bluesky-social/atproto/commit/aba664fbdfbaddba321e96db2478e0bc8fc72d27) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `postgate` records to power quote gating and detached quote posts, plus `hiddenReplies` to the `threadgate` record.
+
+- Updated dependencies [[`2a0c088cc`](https://github.com/bluesky-social/atproto/commit/2a0c088cc5d502ca70da9612a261186aa2f2e1fb), [`aba664fbd`](https://github.com/bluesky-social/atproto/commit/aba664fbdfbaddba321e96db2478e0bc8fc72d27)]:
+  - @atproto/api@0.13.2
+
+## 0.4.51
+
+### Patch Changes
+
+- [#2725](https://github.com/bluesky-social/atproto/pull/2725) [`f9a2f3ed1`](https://github.com/bluesky-social/atproto/commit/f9a2f3ed172ae1a8dc1cca0e893e13eac2e4955d) Thanks [@devinivy](https://github.com/devinivy)! - Fix calls from pds containing content-type but no body
+
+- Updated dependencies [[`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb), [`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb), [`35a126429`](https://github.com/bluesky-social/atproto/commit/35a1264297bc22acaa6e5ed3f4aed8c351be8bbb), [`5131b027f`](https://github.com/bluesky-social/atproto/commit/5131b027f019cf9f8ec47605648063ae1857f1e3), [`3ebcd4e61`](https://github.com/bluesky-social/atproto/commit/3ebcd4e6161291d3649d7f8a9c5ee4ac26d590a2)]:
+  - @atproto/oauth-provider@0.1.3
+
+## 0.4.50
+
+### Patch Changes
+
+- [#2711](https://github.com/bluesky-social/atproto/pull/2711) [`acbacbbd5`](https://github.com/bluesky-social/atproto/commit/acbacbbd5621473b14ee7a6a3132f675806d23b1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly authenticate OAuth requests in catch all handler.
+
+- [#2663](https://github.com/bluesky-social/atproto/pull/2663) [`50c0ec176`](https://github.com/bluesky-social/atproto/commit/50c0ec176c223c90e7c86e1e0c059455fecfa9ae) Thanks [@dholms](https://github.com/dholms)! - Validate lxm claims in service auth
+
+- Updated dependencies [[`acbacbbd5`](https://github.com/bluesky-social/atproto/commit/acbacbbd5621473b14ee7a6a3132f675806d23b1), [`50c0ec176`](https://github.com/bluesky-social/atproto/commit/50c0ec176c223c90e7c86e1e0c059455fecfa9ae), [`50c0ec176`](https://github.com/bluesky-social/atproto/commit/50c0ec176c223c90e7c86e1e0c059455fecfa9ae)]:
+  - @atproto/xrpc-server@0.6.2
+
 ## 0.4.49
 
 ### Patch Changes

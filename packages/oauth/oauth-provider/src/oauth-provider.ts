@@ -9,7 +9,6 @@ import {
   OAuthAuthorizationServerMetadata,
   OAuthClientIdentification,
   OAuthClientMetadata,
-  OAuthEndpointName,
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
@@ -339,14 +338,11 @@ export class OAuthProvider extends OAuthVerifier {
 
   protected async authenticateClient(
     client: Client,
-    endpoint: OAuthEndpointName,
     credentials: OAuthClientIdentification,
   ): Promise<ClientAuth> {
-    const { clientAuth, nonce } = await client.verifyCredentials(
-      credentials,
-      endpoint,
-      { audience: this.issuer },
-    )
+    const { clientAuth, nonce } = await client.verifyCredentials(credentials, {
+      audience: this.issuer,
+    })
 
     if (nonce != null) {
       const unique = await this.replayManager.uniqueAuth(nonce, client.id)
@@ -424,11 +420,7 @@ export class OAuthProvider extends OAuthVerifier {
   ) {
     try {
       const client = await this.clientManager.getClient(input.client_id)
-      const clientAuth = await this.authenticateClient(
-        client,
-        'pushed_authorization_request',
-        input,
-      )
+      const clientAuth = await this.authenticateClient(client, input)
 
       const { payload: parameters } =
         'request' in input // Handle JAR
@@ -767,7 +759,7 @@ export class OAuthProvider extends OAuthVerifier {
     dpopJkt: null | string,
   ): Promise<OAuthTokenResponse> {
     const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(client, 'token', input)
+    const clientAuth = await this.authenticateClient(client, input)
 
     if (!client.metadata.grant_types.includes(input.grant_type)) {
       throw new InvalidGrantError(
@@ -851,11 +843,7 @@ export class OAuthProvider extends OAuthVerifier {
     input: Introspect,
   ): Promise<IntrospectionResponse> {
     const client = await this.clientManager.getClient(input.client_id)
-    const clientAuth = await this.authenticateClient(
-      client,
-      'introspection',
-      input,
-    )
+    const clientAuth = await this.authenticateClient(client, input)
 
     // RFC7662 states the following:
     //

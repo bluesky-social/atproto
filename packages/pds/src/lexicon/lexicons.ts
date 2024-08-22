@@ -4989,6 +4989,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
+              'lex:app.bsky.embed.record#viewDetached',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
               'lex:app.bsky.labeler.defs#labelerView',
@@ -5031,6 +5032,9 @@ export const schemaDict = {
             type: 'integer',
           },
           likeCount: {
+            type: 'integer',
+          },
+          quoteCount: {
             type: 'integer',
           },
           embeds: {
@@ -5080,6 +5084,20 @@ export const schemaDict = {
           author: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      viewDetached: {
+        type: 'object',
+        required: ['uri', 'detached'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          detached: {
+            type: 'boolean',
+            const: true,
           },
         },
       },
@@ -5165,6 +5183,9 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          quoteCount: {
+            type: 'integer',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -5203,6 +5224,9 @@ export const schemaDict = {
             type: 'boolean',
           },
           replyDisabled: {
+            type: 'boolean',
+          },
+          embeddingDisabled: {
             type: 'boolean',
           },
         },
@@ -6280,6 +6304,69 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetQuotes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getQuotes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of quotes for a given post.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) of post record',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'If supplied, filters to quotes of specific version (by CID) of the post record.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'posts'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetRepostedBy: {
     lexicon: 1,
     id: 'app.bsky.feed.getRepostedBy',
@@ -6596,6 +6683,56 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedPostgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.postgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          'Record defining interaction rules for a post. The record key (rkey) of the postgate record must match the record key of the post, and that record must be in the same repository.',
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            post: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to the post record.',
+            },
+            detachedEmbeddingUris: {
+              type: 'array',
+              maxLength: 50,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description:
+                'List of AT-URIs embedding this post that the author has detached from.',
+            },
+            embeddingRules: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: ['lex:app.bsky.feed.postgate#disableRule'],
+              },
+            },
+          },
+        },
+      },
+      disableRule: {
+        type: 'object',
+        description: 'Disables embedding of this post.',
+        properties: {},
+      },
+    },
+  },
   AppBskyFeedRepost: {
     lexicon: 1,
     id: 'app.bsky.feed.repost',
@@ -6806,6 +6943,15 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            hiddenReplies: {
+              type: 'array',
+              maxLength: 50,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description: 'List of hidden reply URIs.',
             },
           },
         },
@@ -12065,11 +12211,13 @@ export const ids = {
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
+  AppBskyFeedPostgate: 'app.bsky.feed.postgate',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
   AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',

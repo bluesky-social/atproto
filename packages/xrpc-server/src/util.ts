@@ -1,5 +1,6 @@
 import assert from 'assert'
 import { Readable, Transform } from 'stream'
+import { IncomingMessage } from 'http'
 import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
@@ -307,7 +308,11 @@ export interface ServerTiming {
   description?: string
 }
 
-export const parseReqNsid = (req: express.Request): string => {
-  const nsid = req.originalUrl.split('?')[0].replace('/xrpc/', '')
+export const parseReqNsid = (
+  req: express.Request | IncomingMessage,
+): string => {
+  const originalUrl =
+    ('originalUrl' in req && req.originalUrl) || req.url || '/'
+  const nsid = originalUrl.split('?')[0].replace('/xrpc/', '')
   return nsid.endsWith('/') ? nsid.slice(0, -1) : nsid // trim trailing slash
 }
