@@ -111,18 +111,17 @@ const presentation = (
     height: params.parentHeight,
     depth: params.depth,
   })
-
-  let rootUri: string | undefined = undefined
-  if (isThreadViewPost(thread) && isPostRecord(thread.post.record)) {
-    rootUri = thread.post.record.reply?.root?.uri || thread.post.uri
-  }
-  const threadgate = rootUri
-    ? ctx.views.threadgate(postUriToThreadgateUri(rootUri), hydration)
-    : undefined
-
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+  }
+  let threadgate: OutputSchema['threadgate']
+  if (isThreadViewPost(thread) && isPostRecord(thread.post.record)) {
+    const rootUri = thread.post.record.reply?.root?.uri || thread.post.uri
+    threadgate = ctx.views.threadgate(
+      postUriToThreadgateUri(rootUri),
+      hydration,
+    )
   }
   return { thread, threadgate }
 }
