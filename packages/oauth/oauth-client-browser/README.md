@@ -262,16 +262,17 @@ client.addEventListener(
 
 ## Usage with `@atproto/api`
 
-The `@atproto/api` package provides a way to interact with the `com.atproto` and
-`app.bsky` XRPC lexicons through the `Agent` interface. The `oauthSession`
-returned by the `BrowserOAuthClient` extend the `Agent` class, allowing to use
-the `BrowserOAuthClient` as a regular `Agent` (akin to `AtpAgent` class
-instances).
+The `@atproto/api` package provides a way to interact with multiple Bluesky
+specific XRPC lexicons (`com.atproto`, `app.bsky`, `chat.bsky`, `tools.ozone`)
+through the `Agent` interface. The `oauthSession` returned by the
+`BrowserOAuthClient` can be used to instantiate an `Agent` instance.
 
 ```typescript
+import { Agent } from '@atproto/api'
+
 const session = await client.restore('did:plc:alice')
 
-const agent = new OAuthAtpAgent(session)
+const agent = new Agent(session)
 
 await agent.getProfile({ actor: agent.accountDid })
 ```

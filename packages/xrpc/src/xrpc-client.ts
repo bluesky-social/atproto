@@ -7,6 +7,7 @@ import {
 } from './fetch-handler'
 import {
   CallOptions,
+  Gettable,
   QueryParams,
   ResponseType,
   XRPCError,
@@ -15,6 +16,7 @@ import {
   httpResponseCodeToEnum,
 } from './types'
 import {
+  combineHeaders,
   constructMethodCallHeaders,
   constructMethodCallUrl,
   encodeMethodCallBody,
@@ -25,6 +27,7 @@ import {
 
 export class XrpcClient {
   readonly fetchHandler: FetchHandler
+  readonly headers = new Map<string, Gettable<null | string>>()
   readonly lex: Lexicons
 
   constructor(
@@ -36,6 +39,18 @@ export class XrpcClient {
     this.fetchHandler = buildFetchHandler(fetchHandlerOpts)
 
     this.lex = lex instanceof Lexicons ? lex : new Lexicons(lex)
+  }
+
+  setHeader(key: string, value: Gettable<null | string>): void {
+    this.headers.set(key.toLowerCase(), value)
+  }
+
+  unsetHeader(key: string): void {
+    this.headers.delete(key.toLowerCase())
+  }
+
+  clearHeaders(): void {
+    this.headers.clear()
   }
 
   async call(
@@ -66,7 +81,7 @@ export class XrpcClient {
     // anywhere in docs or types. See whatwg/fetch#1438, nodejs/node#46221.
     const init: RequestInit & { duplex: 'half' } = {
       method: reqMethod,
-      headers: reqHeaders,
+      headers: combineHeaders(reqHeaders, this.headers),
       body: reqBody,
       duplex: 'half',
       signal: opts?.signal,

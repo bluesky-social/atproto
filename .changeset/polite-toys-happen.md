@@ -1,6 +1,6 @@
 ---
-"@atproto/oauth-client": patch
-"@atproto/api": patch
+"@atproto/api": minor
 ---
 
-Add `OAuthAtpAgent` to `@atproto/api` to instantiate `Agent`s based on OAuth sessions (from `@atproto/oauth-client`).
+Introduction of the `SessionManager` interface that can be used to instantiate `Agent` instances.
+

@@ -1,17 +1,19 @@
 'use client'
 
-import { OAuthAtpAgent } from '@atproto/api'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import { Agent } from '@atproto/api'
 import {
   AuthorizeOptions,
   BrowserOAuthClient,
   BrowserOAuthClientLoadOptions,
   BrowserOAuthClientOptions,
   LoginContinuedInParentWindowError,
+  OAuthSession,
 } from '@atproto/oauth-client-browser'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-export type OnRestored = (agent: OAuthAtpAgent | null) => void
-export type OnSignedIn = (agent: OAuthAtpAgent, state: null | string) => void
+export type OnRestored = (session: OAuthSession | null) => void
+export type OnSignedIn = (session: OAuthSession, state: null | string) => void
 export type OnSignedOut = () => void
 export type GetState = () =>
   | undefined
@@ -154,7 +156,7 @@ export function useOAuth(options: UseOAuthOptions) {
 
   const clientForInit = useOAuthClient(options)
 
-  const [agent, setAgent] = useState<null | OAuthAtpAgent>(null)
+  const [session, setSession] = useState<null | OAuthSession>(null)
   const [client, setClient] = useState<BrowserOAuthClient | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
   const [isLoginPopup, setIsLoginPopup] = useState(false)
@@ -165,7 +167,7 @@ export function useOAuth(options: UseOAuthOptions) {
     if (clientForInitRef.current === clientForInit) return
     clientForInitRef.current = clientForInit
 
-    setAgent(null)
+    setSession(null)
     setClient(null)
     setIsLoginPopup(false)
     setIsInitializing(clientForInit != null)
@@ -178,14 +180,12 @@ export function useOAuth(options: UseOAuthOptions) {
 
           setClient(clientForInit)
           if (r) {
-            const agent = new OAuthAtpAgent(r.session)
-
-            setAgent(agent)
+            setSession(r.session)
 
             if ('state' in r) {
-              await onSignedIn(agent, r.state)
+              await onSignedIn(r.session, r.state)
             } else {
-              await onRestored(agent)
+              await onRestored(r.session)
             }
           } else {
             await onRestored(null)
@@ -220,22 +220,22 @@ export function useOAuth(options: UseOAuthOptions) {
     client.addEventListener(
       'updated',
       ({ detail: { sub } }) => {
-        if (!agent || agent.did !== sub) {
-          setAgent(null)
-          client.restore(sub, false).then((agent) => {
-            if (!signal.aborted) setAgent(new OAuthAtpAgent(agent))
+        if (!session || session.sub !== sub) {
+          setSession(null)
+          client.restore(sub, false).then((session) => {
+            if (!signal.aborted) setSession(session)
           })
         }
       },
       { signal },
     )
 
-    if (agent) {
+    if (session) {
       client.addEventListener(
         'deleted',
         ({ detail: { sub } }) => {
-          if (agent.did === sub) {
-            setAgent(null)
+          if (session.sub === sub) {
+            setSession(null)
             void onSignedOut()
           }
         },
@@ -244,22 +244,21 @@ export function useOAuth(options: UseOAuthOptions) {
     }
 
     // Force fetching the token info in order to trigger a token refresh
-    void agent?.getTokenInfo(true)
+    void session?.getTokenInfo(true)
 
     return () => {
       controller.abort()
     }
-  }, [client, agent, onSignedOut])
+  }, [client, session, onSignedOut])
 
   const signIn = useCallback(
     async (input: string, options?: AuthorizeOptions) => {
       if (!client) throw new Error('Client not initialized')
 
       const state = options?.state ?? (await getState()) ?? undefined
-      const agent = await client.signIn(input, { ...options, state })
-      setAgent(agent)
-      await onSignedIn(agent, state ?? null)
-      return agent
+      const session = await client.signIn(input, { ...options, state })
+      setSession(session)
+      await onSignedIn(session, state ?? null)
     },
     [client, getState, onSignedIn],
   )
@@ -272,10 +271,11 @@ export function useOAuth(options: UseOAuthOptions) {
       isLoginPopup,
 
       signIn,
+      signOut: () => session?.signOut(),
 
       client,
-      agent,
+      agent: session ? new Agent(session) : null,
     }),
-    [isInitializing, isLoginPopup, agent, client, signIn],
+    [isInitializing, isLoginPopup, session, client, signIn],
   )
 }

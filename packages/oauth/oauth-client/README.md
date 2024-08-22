@@ -169,13 +169,13 @@ authenticated requests to the user's PDS. There are two main use-cases:
 
 The `@atproto/oauth-client` package provides a `OAuthSession` class that can be
 used to make authenticated requests to Bluesky's AppView. This can be achieved
-by constructing an `OAuthAtpAgent` (from `@atproto/api`) instance using the
+by constructing an `Agent` (from `@atproto/api`) instance using the
 `OAuthSession` instance.
 
 ```ts
-import { OAuthAtpAgent } from '@atproto/api'
+import { Agent } from '@atproto/api'
 
-const agent = new OAuthAtpAgent(oauthSession)
+const agent = new Agent(oauthSession)
 
 // Make an authenticated request to the server. New credentials will be
 // automatically fetched if needed (causing sessionStore.set() to be called).

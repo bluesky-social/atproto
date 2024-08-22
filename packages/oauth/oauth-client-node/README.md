@@ -112,7 +112,7 @@ app.get('/atproto-oauth-callback', async (req, res, next) => {
 
     console.log('User authenticated as:', session.did)
 
-    const agent = new OAuthAtpAgent(session)
+    const agent = new Agent(session)
 
     // Make Authenticated API calls
     const profile = await agent.getProfile({ actor: agent.did })
@@ -134,7 +134,7 @@ async function worker() {
   // (and transparently) refresh it. The new token set will be saved though
   // the client's session store.
 
-  const agent = new OAuthAtpAgent(oauthSession)
+  const agent = new Agent(oauthSession)
 
   // Make Authenticated API calls
   const profile = await agent.getProfile({ actor: agent.did })
@@ -295,7 +295,7 @@ hood, and the new tokens will be saved in the session store.
 
 ```ts
 const session = await client.restore('did:plc:123')
-const agent = new OAuthAtpAgent(session)
+const agent = new Agent(session)
 
 // Feeds and content
 await agent.getTimeline(params, opts)
@@ -423,7 +423,7 @@ app.get('/atproto-oauth-callback', async (req, res) => {
 
       // Process successful authentication here. For example:
 
-      const agent = new OAuthAtpAgent(session)
+      const agent = new Agent(session)
 
       const profile = await agent.getProfile({ actor: agent.did })
 

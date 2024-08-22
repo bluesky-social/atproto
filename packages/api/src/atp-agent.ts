@@ -4,16 +4,18 @@ import {
   Gettable,
   ResponseType,
   XRPCError,
-  combineHeaders,
+  XrpcClient,
   errorResponseBody,
 } from '@atproto/xrpc'
 import { Agent } from './agent'
 import {
-  AtpBaseClient,
   ComAtprotoServerCreateAccount,
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
+  ComNS,
 } from './client'
+import { schemas } from './client/lexicons'
+import { SessionManager } from './session-manager'
 import {
   AtpAgentLoginOpts,
   AtpPersistSessionHandler,
@@ -36,88 +38,28 @@ export type AtpAgentOptions = {
  * implementing password based session management.
  */
 export class AtpAgent extends Agent {
-  public readonly headers: Map<string, Gettable<null | string>>
-  public readonly sessionManager: SessionManager
+  readonly sessionManager: CredentialsSessionManager
 
-  constructor(options: AtpAgentOptions | SessionManager) {
-    super(async (url: string, init?: RequestInit): Promise<Response> => {
-      // wait for any active session-refreshes to finish
-      await this.sessionManager.refreshSessionPromise
+  constructor(options: AtpAgentOptions | CredentialsSessionManager) {
+    const sessionManager =
+      options instanceof CredentialsSessionManager
+        ? options
+        : new CredentialsSessionManager(
+            new URL(options.service),
+            options.fetch,
+            options.persistSession,
+          )
 
-      const initialHeaders = combineHeaders(init?.headers, this.headers)
-      const reqInit = { ...init, headers: initialHeaders }
+    super(sessionManager)
 
-      const initialUri = new URL(url, this.dispatchUrl)
-      const initialReq = new Request(initialUri, reqInit)
+    // This assignment is already being done in the super constructor, but we
+    // need to do it here to make TypeScript happy.
+    this.sessionManager = sessionManager
 
-      const initialToken = this.session?.accessJwt
-      if (!initialToken || initialReq.headers.has('authorization')) {
-        return (0, this.sessionManager.fetch)(initialReq)
+    if (!(options instanceof CredentialsSessionManager) && options.headers) {
+      for (const [key, value] of options.headers) {
+        this.setHeader(key, value)
       }
-
-      initialReq.headers.set('authorization', `Bearer ${initialToken}`)
-      const initialRes = await (0, this.sessionManager.fetch)(initialReq)
-
-      if (!this.session?.refreshJwt) {
-        return initialRes
-      }
-      const isExpiredToken = await isErrorResponse(
-        initialRes,
-        [400],
-        ['ExpiredToken'],
-      )
-
-      if (!isExpiredToken) {
-        return initialRes
-      }
-
-      try {
-        await this.sessionManager.refreshSession()
-      } catch {
-        return initialRes
-      }
-
-      if (reqInit?.signal?.aborted) {
-        return initialRes
-      }
-
-      // The stream was already consumed. We cannot retry the request. A solution
-      // would be to tee() the input stream but that would bufferize the entire
-      // stream in memory which can lead to memory starvation. Instead, we will
-      // return the original response and let the calling code handle retries.
-      if (ReadableStream && reqInit.body instanceof ReadableStream) {
-        return initialRes
-      }
-
-      // Return initial "ExpiredToken" response if the session was not refreshed.
-      const updatedToken = this.session?.accessJwt
-      if (!updatedToken || updatedToken === initialToken) {
-        return initialRes
-      }
-
-      // Make sure the initial request is cancelled to avoid leaking resources
-      // (NodeJS 👀): https://undici.nodejs.org/#/?id=garbage-collection
-      await initialRes.body?.cancel()
-
-      // We need to re-compute the URI in case the PDS endpoint has changed
-      const updatedUri = new URL(url, this.dispatchUrl)
-      const updatedReq = new Request(updatedUri, reqInit)
-
-      updatedReq.headers.set('authorization', `Bearer ${updatedToken}`)
-
-      return await (0, this.sessionManager.fetch)(updatedReq)
-    })
-
-    if (options instanceof SessionManager) {
-      this.headers = new Map()
-      this.sessionManager = options
-    } else {
-      this.headers = new Map(options.headers)
-      this.sessionManager = new SessionManager(
-        new URL(options.service),
-        options.fetch,
-        options.persistSession,
-      )
     }
   }
 
@@ -125,36 +67,16 @@ export class AtpAgent extends Agent {
     return this.copyInto(new AtpAgent(this.sessionManager))
   }
 
-  copyInto<T extends Agent>(inst: T): T {
-    if (inst instanceof AtpAgent) {
-      for (const [key] of inst.headers) {
-        inst.unsetHeader(key)
-      }
-      for (const [key, value] of this.headers) {
-        inst.setHeader(key, value)
-      }
-    }
-    return super.copyInto(inst)
-  }
-
-  setHeader(key: string, value: Gettable<null | string>): void {
-    this.headers.set(key.toLowerCase(), value)
-  }
-
-  unsetHeader(key: string): void {
-    this.headers.delete(key.toLowerCase())
-  }
-
   get session() {
     return this.sessionManager.session
   }
 
   get hasSession() {
-    return !!this.session
+    return this.sessionManager.hasSession
   }
 
   get did() {
-    return this.session?.did
+    return this.sessionManager.did
   }
 
   get serviceUrl() {
@@ -166,7 +88,7 @@ export class AtpAgent extends Agent {
   }
 
   get dispatchUrl() {
-    return this.pdsUrl || this.serviceUrl
+    return this.sessionManager.dispatchUrl
   }
 
   /** @deprecated use {@link serviceUrl} instead */
@@ -186,7 +108,7 @@ export class AtpAgent extends Agent {
     )
   }
 
-  /** @deprecated This will be removed in OAuthAtpAgent */
+  /** @deprecated use {@link AtpAgent.serviceUrl} instead */
   getServiceUrl() {
     return this.serviceUrl
   }
@@ -216,23 +138,26 @@ export class AtpAgent extends Agent {
 }
 
 /**
- * Private class meant to be used by clones of {@link AtpAgent} so they can
- * share the same session across multiple instances (with different
- * proxying/labelers/headers options).
+ * Credentials (username / password) based session manager. Instances of this
+ * class will typically be used as the session manager for an {@link AtpAgent}.
+ * They can also be used with an {@link XrpcClient}, if you want to use you
+ * own Lexicons.
  */
-class SessionManager {
+export class CredentialsSessionManager implements SessionManager {
   public pdsUrl?: URL // The PDS URL, driven by the did doc
   public session?: AtpSessionData
   public refreshSessionPromise: Promise<void> | undefined
 
   /**
-   * Private {@link AtpBaseClient} used to perform session management API
+   * Private {@link XrpcClient} used to perform session management API
    * calls on the service endpoint. Calls performed by this agent will not be
    * authenticated using the user's session.
    */
-  protected api = new AtpBaseClient((url, init) => {
+  protected xrpc = new XrpcClient((url, init) => {
     return (0, this.fetch)(new URL(url, this.serviceUrl), init)
-  })
+  }, schemas)
+
+  protected com = new ComNS(this.xrpc)
 
   constructor(
     public readonly serviceUrl: URL,
@@ -240,11 +165,88 @@ class SessionManager {
     protected readonly persistSession?: AtpPersistSessionHandler,
   ) {}
 
+  get did() {
+    return this.session?.did
+  }
+
+  get dispatchUrl() {
+    return this.pdsUrl || this.serviceUrl
+  }
+
+  get hasSession() {
+    return !!this.session
+  }
+
   /**
    * Sets a WhatWG "fetch()" function to be used for making HTTP requests.
    */
   setFetch(fetch = globalThis.fetch) {
     this.fetch = fetch
+  }
+
+  async fetchHandler(url: string, init?: RequestInit): Promise<Response> {
+    // wait for any active session-refreshes to finish
+    await this.refreshSessionPromise
+
+    const initialUri = new URL(url, this.dispatchUrl)
+    const initialReq = new Request(initialUri, init)
+
+    const initialToken = this.session?.accessJwt
+    if (!initialToken || initialReq.headers.has('authorization')) {
+      return (0, this.fetch)(initialReq)
+    }
+
+    initialReq.headers.set('authorization', `Bearer ${initialToken}`)
+    const initialRes = await (0, this.fetch)(initialReq)
+
+    if (!this.session?.refreshJwt) {
+      return initialRes
+    }
+    const isExpiredToken = await isErrorResponse(
+      initialRes,
+      [400],
+      ['ExpiredToken'],
+    )
+
+    if (!isExpiredToken) {
+      return initialRes
+    }
+
+    try {
+      await this.refreshSession()
+    } catch {
+      return initialRes
+    }
+
+    if (init?.signal?.aborted) {
+      return initialRes
+    }
+
+    // The stream was already consumed. We cannot retry the request. A solution
+    // would be to tee() the input stream but that would bufferize the entire
+    // stream in memory which can lead to memory starvation. Instead, we will
+    // return the original response and let the calling code handle retries.
+    if (ReadableStream && init?.body instanceof ReadableStream) {
+      return initialRes
+    }
+
+    // Return initial "ExpiredToken" response if the session was not refreshed.
+    const updatedToken = this.session?.accessJwt
+    if (!updatedToken || updatedToken === initialToken) {
+      return initialRes
+    }
+
+    // Make sure the initial request is cancelled to avoid leaking resources
+    // (NodeJS 👀): https://undici.nodejs.org/#/?id=garbage-collection
+    await initialRes.body?.cancel()
+
+    // We need to re-compute the URI in case the PDS endpoint has changed
+    const updatedUri = new URL(url, this.dispatchUrl)
+    const updatedReq = new Request(updatedUri, init)
+
+    updatedReq.headers.set('authorization', `Bearer ${updatedToken}`)
+
+    return await (0, this.fetch)(updatedReq)
   }
 
   /**
@@ -255,7 +257,7 @@ class SessionManager {
     opts?: ComAtprotoServerCreateAccount.CallOptions,
   ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
-      const res = await this.api.com.atproto.server.createAccount(data, opts)
+      const res = await this.com.atproto.server.createAccount(data, opts)
       this.session = {
         accessJwt: res.data.accessJwt,
         refreshJwt: res.data.refreshJwt,
@@ -283,7 +285,7 @@ class SessionManager {
     opts: AtpAgentLoginOpts,
   ): Promise<ComAtprotoServerCreateSession.Response> {
     try {
-      const res = await this.api.com.atproto.server.createSession({
+      const res = await this.com.atproto.server.createSession({
         identifier: opts.identifier,
         password: opts.password,
         authFactorToken: opts.authFactorToken,
@@ -312,7 +314,7 @@ class SessionManager {
   async logout(): Promise<void> {
     if (this.session) {
       try {
-        await this.api.com.atproto.server.deleteSession(undefined, {
+        await this.com.atproto.server.deleteSession(undefined, {
           headers: {
             authorization: `Bearer ${this.session.accessJwt}`,
           },
@@ -335,7 +337,7 @@ class SessionManager {
     this.session = session
 
     try {
-      const res = await this.api.com.atproto.server
+      const res = await this.com.atproto.server
         .getSession(undefined, {
           headers: { authorization: `Bearer ${session.accessJwt}` },
         })
@@ -346,7 +348,7 @@ class SessionManager {
             session.refreshJwt
           ) {
             try {
-              const res = await this.api.com.atproto.server.refreshSession(
+              const res = await this.com.atproto.server.refreshSession(
                 undefined,
                 { headers: { authorization: `Bearer ${session.refreshJwt}` } },
               )
@@ -354,7 +356,7 @@ class SessionManager {
               session.accessJwt = res.data.accessJwt
               session.refreshJwt = res.data.refreshJwt
 
-              return this.api.com.atproto.server.getSession(undefined, {
+              return this.com.atproto.server.getSession(undefined, {
                 headers: { authorization: `Bearer ${session.accessJwt}` },
               })
             } catch {
@@ -425,7 +427,7 @@ class SessionManager {
     }
 
     try {
-      const res = await this.api.com.atproto.server.refreshSession(undefined, {
+      const res = await this.com.atproto.server.refreshSession(undefined, {
         headers: { authorization: `Bearer ${this.session.refreshJwt}` },
       })
       // succeeded, update the session

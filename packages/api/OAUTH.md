@@ -168,7 +168,7 @@ ngrok as the `client_id`:
 Replace the content of the `src/app.ts` file, with the following content:
 
 ```typescript
-import { OAuthAtpAgent } from '@atproto/api'
+import { Agent } from '@atproto/api'
 import { BrowserOAuthClient } from '@atproto/oauth-client-browser'
 
 async function main() {
@@ -245,14 +245,14 @@ if (!session) {
 ```
 
 At this point in the script, the user **will** be authenticated. Authenticated
-API calls can be made using the `session`. The `session` can be used to
-instantiate an `OAuthAtpAgent`, a sub-class of the `Agent` from `@atproto/api`.
-Let's make a simple call to the API to retrieve the user's profile. Replace the
-`// TO BE CONTINUED` comment with the following code:
+API calls can be made using the `session`. The `session` can be used to the
+`Agent` class from `@atproto/api`. Let's make a simple call to the API to
+retrieve the user's profile. Replace the `// TO BE CONTINUED` comment with the
+following code:
 
 ```typescript
 if (session) {
-  const agent = new OAuthAtpAgent(session)
+  const agent = new Agent(session)
 
   const fetchProfile = async () => {
     const profile = await agent.getProfile({ actor: agent.did })

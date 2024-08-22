@@ -25,11 +25,13 @@ export { LABELS, DEFAULT_LABEL_SETTINGS } from './moderation/const/labels'
 export { Agent } from './agent'
 
 export { AtpAgent, type AtpAgentOptions } from './atp-agent'
+export { CredentialsSessionManager } from './atp-agent'
 export { BskyAgent } from './bsky-agent'
-export { OAuthAtpAgent } from './oauth-atp-agent'
 
-/** @deprecated */
-export { AtpAgent as default } from './atp-agent'
+export {
+  /** @deprecated */
+  AtpAgent as default,
+} from './atp-agent'
 
 // Expose a copy to prevent alteration of the internal Lexicon instance used by
 // the AtpBaseClient class.

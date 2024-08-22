@@ -88,11 +88,11 @@ are available:
   Lower lever; compatible with most JS engines.
 
 Every `@atproto/oauth-client-*` implementation has a different way to obtain an
-`OAuthSession` instance that can be used to instantiate an `OAuthAtpAgent` (from
+`OAuthSession` instance that can be used to instantiate an `Agent` (from
 `@atproto/api`). Here is an example restoring a previously saved session:
 
 ```typescript
-import { OAuthAtpAgent } from '@atproto/api'
+import { Agent } from '@atproto/api'
 import { OAuthClient } from '@atproto/oauth-client'
 
 const oauthClient = new OAuthClient({
@@ -102,7 +102,7 @@ const oauthClient = new OAuthClient({
 const oauthSession = await oauthClient.restore('did:plc:123')
 
 // Instantiate the api Agent using an OAuthSession
-const agent = new OAuthAtpAgent(oauthSession)
+const agent = new Agent(oauthSession)
 ```
 
 ### API calls
@@ -110,8 +110,9 @@ const agent = new OAuthAtpAgent(oauthSession)
 The agent includes methods for many common operations, including:
 
 ```typescript
-// The DID of the user currently authenticated
+// The DID of the user currently authenticated (or undefined)
 agent.did
+agent.accountDid // Throw if the user is not authenticated
 
 // Feeds and content
 await agent.getTimeline(params, opts)
@@ -158,20 +159,12 @@ await agent.updateSeenNotifications()
 await agent.resolveHandle(params, opts)
 await agent.updateHandle(params, opts)
 
-// Session management
+// Legacy: Session management directly on the agent instance
 if (agent instanceof AtpAgent) {
   // AtpAgent instances support using different sessions during their lifetime
   await agent.createAccount({ ... }) // session a
   await agent.login({ ... }) // session b
-  await agent.resumeSession(saveSession) // session c
-}
-
-if (agent instanceof OAuthAtpAgent) {
-  // Ensure the tokens are still valid by forcing a refresh
-  await agent.getTokenInfo(true) // { sub: string, expiresAt?: Date, scope: string, ... }
-
-  // Once signed out, the agent can no longer be used
-  await agent.signOut()
+  await agent.resumeSession(savedSession) // session c
 }
 ```
 
