@@ -156,7 +156,7 @@ refresh the credentials when needed.
 
 ### Making authenticated requests
 
-The `OAuthSession` instance obtained after singing in can be used to make
+The `OAuthSession` instance obtained after signing in can be used to make
 authenticated requests to the user's PDS. There are two main use-cases:
 
 1. Making authenticated request to Bluesky's AppView in order to fetch and
