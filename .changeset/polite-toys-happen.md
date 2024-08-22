@@ -2,5 +2,6 @@
 "@atproto/api": minor
 ---
 
-Introduction of the `SessionManager` interface that can be used to instantiate `Agent` instances.
+`Agent` is no longer an abstract class. Instead it can be instantiated using object implementing a new `SessionManager` interface.
+
 

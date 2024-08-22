@@ -4,4 +4,4 @@
 "@atproto/oauth-client": minor
 ---
 
-The `OAuthClient` (and runtime specific sub-classes) no longer return @atproto/api `Agent` instances. Instead, the return `OAuthSession` instances that can be used to instantiate `Agent` instances.
+The `OAuthClient` (and runtime specific sub-classes) no longer return @atproto/api `Agent` instances. Instead, the return `OAuthSession` instances that can be used to instantiate the `Agent` class.

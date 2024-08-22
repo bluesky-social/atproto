@@ -2,4 +2,4 @@
 "@atproto/xrpc": patch
 ---
 
-Improve handing of fetchHandler errors when turning them into `XrpcError`.
+Improve handling of fetchHandler errors when turning them into `XrpcError`.
