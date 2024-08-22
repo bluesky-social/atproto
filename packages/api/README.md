@@ -159,7 +159,8 @@ await agent.updateSeenNotifications()
 await agent.resolveHandle(params, opts)
 await agent.updateHandle(params, opts)
 
-// Legacy: Session management directly on the agent instance
+// Legacy: Session management should be performed through the SessionManager
+// rather than the Agent instance.
 if (agent instanceof AtpAgent) {
   // AtpAgent instances support using different sessions during their lifetime
   await agent.createAccount({ ... }) // session a
