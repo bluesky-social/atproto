@@ -239,7 +239,7 @@ export class FeedHydrator {
     uris: string[],
     includeTakedowns = false,
   ): Promise<Postgates> {
-    const res = await this.dataplane.getPostGateRecords({ uris })
+    const res = await this.dataplane.getPostgateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<PostgateRecord>(
         res.records[i],

@@ -124,20 +124,22 @@ import {
   GetMutelistSubscriptionsResponse,
   GetMutesRequest,
   GetMutesResponse,
+  GetNewUserCountForRangeRequest,
+  GetNewUserCountForRangeResponse,
   GetNotificationSeenRequest,
   GetNotificationSeenResponse,
   GetNotificationsRequest,
   GetNotificationsResponse,
-  GetPostGateRecordsRequest,
-  GetPostGateRecordsResponse,
+  GetPostgateRecordsRequest,
+  GetPostgateRecordsResponse,
   GetPostRecordsRequest,
   GetPostRecordsResponse,
   GetPostReplyCountsRequest,
   GetPostReplyCountsResponse,
   GetProfileRecordsRequest,
   GetProfileRecordsResponse,
-  GetQuotesBySubjectRequest,
-  GetQuotesBySubjectResponse,
+  GetQuotesBySubjectSortedRequest,
+  GetQuotesBySubjectSortedResponse,
   GetRecordTakedownRequest,
   GetRecordTakedownResponse,
   GetRelationshipsRequest,
@@ -314,12 +316,12 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetPostGateRecords
+     * @generated from rpc bsky.Service.GetPostgateRecords
      */
-    getPostGateRecords: {
-      name: 'GetPostGateRecords',
-      I: GetPostGateRecordsRequest,
-      O: GetPostGateRecordsResponse,
+    getPostgateRecords: {
+      name: 'GetPostgateRecords',
+      I: GetPostgateRecordsRequest,
+      O: GetPostgateRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -439,12 +441,12 @@ export const Service = {
     /**
      * Quotes
      *
-     * @generated from rpc bsky.Service.GetQuotesBySubject
+     * @generated from rpc bsky.Service.GetQuotesBySubjectSorted
      */
-    getQuotesBySubject: {
-      name: 'GetQuotesBySubject',
-      I: GetQuotesBySubjectRequest,
-      O: GetQuotesBySubjectResponse,
+    getQuotesBySubjectSorted: {
+      name: 'GetQuotesBySubjectSorted',
+      I: GetQuotesBySubjectSortedRequest,
+      O: GetQuotesBySubjectSortedResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -483,6 +485,15 @@ export const Service = {
       name: 'GetListCounts',
       I: GetListCountsRequest,
       O: GetListCountsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetNewUserCountForRange
+     */
+    getNewUserCountForRange: {
+      name: 'GetNewUserCountForRange',
+      I: GetNewUserCountForRangeRequest,
+      O: GetNewUserCountForRangeResponse,
       kind: MethodKind.Unary,
     },
     /**
