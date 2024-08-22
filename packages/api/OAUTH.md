@@ -204,7 +204,7 @@ const result = await oauthClient.init()
 
 if (result) {
   if ('state' in result) {
-    console.log('The used was just redirected back from the authorization page')
+    console.log('The user was just redirected back from the authorization page')
   }
 
   console.log(`The user is currently signed in as ${result.session.did}`)
