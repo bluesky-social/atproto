@@ -112,7 +112,7 @@ The agent includes methods for many common operations, including:
 ```typescript
 // The DID of the user currently authenticated (or undefined)
 agent.did
-agent.accountDid // Throw if the user is not authenticated
+agent.accountDid // Throws if the user is not authenticated
 
 // Feeds and content
 await agent.getTimeline(params, opts)
