@@ -1749,11 +1749,7 @@ export class AppBskyFeedNS {
     params?: AppBskyFeedGetQuotes.QueryParams,
     opts?: AppBskyFeedGetQuotes.CallOptions,
   ): Promise<AppBskyFeedGetQuotes.Response> {
-    return this._client
-      .call('app.bsky.feed.getQuotes', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetQuotes.toKnownErr(e)
-      })
+    return this._client.call('app.bsky.feed.getQuotes', params, undefined, opts)
   }
 
   getRepostedBy(
