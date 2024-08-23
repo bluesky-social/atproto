@@ -15,7 +15,7 @@ import {
   oauthAuthenticationRequestParametersSchema,
 } from '@atproto/oauth-types'
 import { Redis, type RedisOptions } from 'ioredis'
-import { z } from 'zod'
+import z, { ZodError } from 'zod'
 
 import { AccessTokenType } from './access-token/access-token-type.js'
 import { AccountManager } from './account/account-manager.js'
@@ -1081,7 +1081,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/par',
       jsonHandler(async function (req, _res) {
-        const input = await validateRequestPayload(
+        const input = await validateRequest(
           req,
           pushedAuthorizationRequestSchema,
         )
@@ -1104,7 +1104,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/token',
       jsonHandler(async function (req, _res) {
-        const input = await validateRequestPayload(req, tokenRequestSchema)
+        const input = await validateRequest(req, tokenRequestSchema)
 
         const dpopJkt = await server.checkDpopProof(
           req.headers['dpop'],
@@ -1119,7 +1119,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/revoke',
       jsonHandler(async function (req, res) {
-        const input = await validateRequestPayload(req, revokeSchema)
+        const input = await validateRequest(req, revokeSchema)
 
         try {
           await server.revoke(input)
@@ -1153,7 +1153,7 @@ export class OAuthProvider extends OAuthVerifier {
     router.post(
       '/oauth/introspect',
       jsonHandler(async function (req, _res) {
-        const input = await validateRequestPayload(req, introspectSchema)
+        const input = await validateRequest(req, introspectSchema)
         return server.introspect(input)
       }),
     )
@@ -1202,7 +1202,7 @@ export class OAuthProvider extends OAuthVerifier {
         validateFetchMode(req, res, ['same-origin'])
         validateSameOrigin(req, res, issuerOrigin)
 
-        const input = await validateRequestPayload(req, signInPayloadSchema)
+        const input = await validateRequest(req, signInPayloadSchema)
 
         validateReferer(req, res, {
           origin: issuerOrigin,
@@ -1319,5 +1319,28 @@ export class OAuthProvider extends OAuthVerifier {
     )
 
     return router
+  }
+}
+
+async function validateRequest<S extends z.ZodTypeAny>(
+  req: IncomingMessage,
+  schema: S,
+): Promise<z.TypeOf<S>> {
+  try {
+    return await validateRequestPayload(req, schema)
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const issue = err.issues[0]
+      if (issue?.path.length) {
+        // "part" will typically be
+        const [part, ...path] = issue.path
+        throw new InvalidRequestError(
+          `Validation of ${part}'s "${path.join('.')}" with error: ${issue.message}`,
+          err,
+        )
+      }
+    }
+
+    throw new InvalidRequestError('Input validation error', err)
   }
 }
