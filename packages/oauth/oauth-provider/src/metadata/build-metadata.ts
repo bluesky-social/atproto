@@ -23,7 +23,6 @@ export function buildMetadata(
     issuer,
 
     scopes_supported: [
-      'atproto',
       //
       ...(customMetadata?.scopes_supported ?? []),
     ],

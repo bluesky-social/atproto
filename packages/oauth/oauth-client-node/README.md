@@ -36,7 +36,6 @@ const client = new NodeOAuthClientOptions({
     tos_uri: 'https://my-app.com/tos',
     policy_uri: 'https://my-app.com/policy',
     redirect_uris: ['https://my-app.com/callback'],
-    scope: 'atproto',
     grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
     application_type: 'web',
