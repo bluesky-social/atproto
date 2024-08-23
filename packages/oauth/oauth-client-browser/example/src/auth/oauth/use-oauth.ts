@@ -243,9 +243,6 @@ export function useOAuth(options: UseOAuthOptions) {
       )
     }
 
-    // Force fetching the token info in order to trigger a token refresh
-    void session?.getTokenInfo(true)
-
     return () => {
       controller.abort()
     }
