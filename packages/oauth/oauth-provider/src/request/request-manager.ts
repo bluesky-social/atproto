@@ -91,10 +91,9 @@ export class RequestManager {
     parameters: Readonly<OAuthAuthenticationRequestParameters>,
     dpopJkt: null | string,
   ): Promise<Readonly<OAuthAuthenticationRequestParameters>> {
-    // Known unsupported OIDC parameters
     for (const k of [
+      // Known unsupported OIDC parameters
       'claims',
-      'authorization_details',
       'id_token_hint',
     ] as const) {
       if (parameters[k]) {
@@ -247,7 +246,7 @@ export class RequestManager {
     if (!parameters.nonce) {
       throw new InvalidParametersError(
         parameters,
-        'A "nonce" parameter is required when performing an "atproto" authorization flow',
+        'A "nonce" parameter is required',
       )
     }
 
@@ -366,12 +365,7 @@ export class RequestManager {
         )
       }
 
-      if (data.parameters.response_type !== 'code') {
-        throw new AccessDeniedError(
-          data.parameters,
-          'Only "code" response type is allowed',
-        )
-      }
+      // Only response_type=code is supported
       const code = await generateCode()
 
       // Bind the request to the account, preventing it from being used again.

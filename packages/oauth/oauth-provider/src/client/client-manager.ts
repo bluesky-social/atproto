@@ -59,7 +59,7 @@ export class ClientManager {
   protected readonly metadataGetter: CachedGetter<string, OAuthClientMetadata>
 
   constructor(
-    protected readonly metadata: OAuthAuthorizationServerMetadata,
+    protected readonly serverMetadata: OAuthAuthorizationServerMetadata,
     protected readonly keyset: Keyset,
     protected readonly hooks: OAuthHooks,
     protected readonly store: ClientStore | null,
@@ -227,10 +227,17 @@ export class ClientManager {
 
     if (scopes) {
       for (const scope of scopes) {
-        if (!this.metadata.scopes_supported?.includes(scope)) {
+        if (!this.serverMetadata.scopes_supported?.includes(scope)) {
           throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
         }
       }
+    }
+
+    const dupGrantType = metadata.grant_types.find(isDuplicate)
+    if (dupGrantType) {
+      throw new InvalidClientMetadataError(
+        `Duplicate grant type "${dupGrantType}"`,
+      )
     }
 
     for (const grantType of metadata.grant_types) {
@@ -248,13 +255,6 @@ export class ClientManager {
             `Grant type "${grantType}" is not supported`,
           )
       }
-    }
-
-    const dupGrantType = metadata.grant_types.find(isDuplicate)
-    if (dupGrantType) {
-      throw new InvalidClientMetadataError(
-        `Duplicate grant type "${dupGrantType}"`,
-      )
     }
 
     if (metadata.client_id && metadata.client_id !== clientId) {
@@ -381,7 +381,7 @@ export class ClientManager {
       }
 
       const authorizationDetailsTypesSupported =
-        this.metadata.authorization_details_types_supported
+        this.serverMetadata.authorization_details_types_supported
       if (!authorizationDetailsTypesSupported) {
         throw new InvalidClientMetadataError(
           'authorization_details_types are not supported',

@@ -385,6 +385,7 @@ export class TokenManager {
             iat: now,
             jti: nextTokenId,
             cnf: parameters.dpop_jkt ? { jkt: parameters.dpop_jkt } : undefined,
+            authorization_details,
           })
 
       return this.buildTokenResponse(
