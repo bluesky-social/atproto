@@ -140,6 +140,10 @@ export class TokenManager {
       if (!('code_verifier' in input) || !input.code_verifier) {
         throw new InvalidGrantError('code_verifier is required')
       }
+      // Prevent client from generating too short code_verifiers
+      if (input.code_verifier.length < 43) {
+        throw new InvalidGrantError('code_verifier too short')
+      }
       switch (parameters.code_challenge_method) {
         case undefined: // Default is "plain" (per spec)
         case 'plain': {

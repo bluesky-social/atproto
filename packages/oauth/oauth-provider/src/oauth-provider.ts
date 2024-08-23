@@ -780,6 +780,32 @@ export class OAuthProvider extends OAuthVerifier {
         input.code,
       )
 
+      // the following check prevents re-use of PKCE challenges, enforcing the
+      // clients to generate a new challenge for each authorization request. The
+      // replay manager typically prevents replay over a certain time frame,
+      // which might not cover the entire lifetime of the token (depending on
+      // the implementation of the replay store). For this reason, we should
+      // ideally ensure that the code_challenge was not already used by any
+      // existing token or any other pending request.
+      //
+      // The current implementation will cause client devs not issuing a new
+      // code challenge for each authorization request to fail, which should be
+      // a good enough incentive to follow the best practices, until we have a
+      // better implementation.
+      //
+      // @TODO: Use tokenManager to ensure uniqueness of code_challenge
+      if (parameters.code_challenge) {
+        const unique = await this.replayManager.uniqueCodeChallenge(
+          parameters.code_challenge,
+        )
+        if (!unique) {
+          throw new InvalidGrantError(
+            'code_challenge',
+            'Code challenge already used',
+          )
+        }
+      }
+
       const { account, info } = await this.accountManager.get(deviceId, sub)
 
       return await this.tokenManager.create(

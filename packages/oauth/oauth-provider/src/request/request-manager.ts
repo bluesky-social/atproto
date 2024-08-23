@@ -43,7 +43,6 @@ export class RequestManager {
     protected readonly signer: Signer,
     protected readonly metadata: OAuthAuthorizationServerMetadata,
     protected readonly hooks: OAuthHooks,
-    protected readonly pkceRequired = true,
     protected readonly tokenMaxAge = TOKEN_MAX_AGE,
   ) {}
 
@@ -220,7 +219,8 @@ export class RequestManager {
     }
 
     // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
-    if (this.pkceRequired && !parameters.code_challenge) {
+    // PKCE is mandatory
+    if (!parameters.code_challenge) {
       throw new InvalidParametersError(parameters, 'code_challenge is required')
     }
 
