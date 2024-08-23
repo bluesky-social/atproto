@@ -126,6 +126,20 @@ export class RequestManager {
       parameters.scope?.split(' ').filter(Boolean) || cScopes,
     )
 
+    if (scopes.has('openid')) {
+      throw new InvalidParametersError(
+        parameters,
+        'OpenID Connect is not supported',
+      )
+    }
+
+    if (!scopes.has('atproto')) {
+      throw new InvalidParametersError(
+        parameters,
+        'The "atproto" scope is required',
+      )
+    }
+
     for (const scope of scopes) {
       // Loopback clients do not define any scope in their metadata
       if (cScopes && !cScopes.includes(scope)) {

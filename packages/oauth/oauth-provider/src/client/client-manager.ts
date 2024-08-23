@@ -227,6 +227,8 @@ export class ClientManager {
 
     if (scopes) {
       for (const scope of scopes) {
+        // Note, once we have dynamic scopes, this check will need to be
+        // updated to check against the server's supported scopes.
         if (!this.serverMetadata.scopes_supported?.includes(scope)) {
           throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
         }

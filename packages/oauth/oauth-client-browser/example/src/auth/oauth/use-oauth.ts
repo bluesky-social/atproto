@@ -253,7 +253,9 @@ export function useOAuth(options: UseOAuthOptions) {
       if (!client) throw new Error('Client not initialized')
 
       const state = options?.state ?? (await getState()) ?? undefined
-      const session = await client.signIn(input, { ...options, state })
+      const scope = options?.scope ?? 'atproto'
+
+      const session = await client.signIn(input, { ...options, state, scope })
       setSession(session)
       await onSignedIn(session, state ?? null)
     },

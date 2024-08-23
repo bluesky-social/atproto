@@ -26,7 +26,7 @@ export type TokenSet = {
   iss: string
   sub: string
   aud: string
-  scope?: string
+  scope: string
 
   refresh_token?: string
   access_token: string
@@ -132,6 +132,13 @@ export class OAuthServerAgent {
       throw new TypeError(`Unexpected ${typeof sub} "sub" in token response`)
     }
 
+    // Using an array to check for the presence of the "atproto" scope (we don't
+    // want atproto to be a substring of another scope)
+    const scopes = tokenResponse.scope?.split(' ')
+    if (!scopes?.includes('atproto')) {
+      throw new TypeError('Missing "atproto" scope in token response')
+    }
+
     // @TODO (?) make timeout configurable
     using signal = timeoutSignal(10e3)
 
@@ -152,7 +159,7 @@ export class OAuthServerAgent {
 
       sub,
 
-      scope: tokenResponse.scope,
+      scope: tokenResponse.scope!,
       refresh_token: tokenResponse.refresh_token,
       access_token: tokenResponse.access_token,
       token_type: tokenResponse.token_type ?? 'Bearer',
