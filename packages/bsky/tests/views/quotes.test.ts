@@ -106,7 +106,6 @@ describe('pds quote views', () => {
   })
 
   it('does not return post in list when the embed is blocked', async () => {
-    console.log('hi')
     await sc.block(carol, eve)
     await network.processAll()
 
