@@ -15,7 +15,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       // production
       // plcDirectoryUrl={undefined}
       // handleResolver="https://bsky.social"
-      getScope={() => 'transition:generic'}
+      getScope={() => 'atproto transition:generic'}
     >
       <App />
     </AuthProvider>
