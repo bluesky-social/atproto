@@ -261,7 +261,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       options,
     )
 
-    const nonce = await this.runtime.generateNonce()
     const pkce = await this.runtime.generatePKCE()
     const dpopKey = await this.runtime.generateKey(
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
@@ -272,7 +271,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     await this.stateStore.set(state, {
       iss: metadata.issuer,
       dpopKey,
-      nonce,
       verifier: pkce?.verifier,
       appState: options?.state,
     })
@@ -282,7 +280,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       redirect_uri: redirectUri,
       code_challenge: pkce?.challenge,
       code_challenge_method: pkce?.method,
-      nonce,
       state,
       login_hint: identity
         ? input // If input is a handle or a DID, use it as a login_hint
@@ -432,22 +429,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
       try {
-        const { sub, nonce } = tokenSet
-
-        if (!nonce || nonce !== stateData.nonce) {
-          throw new OAuthCallbackError(
-            params,
-            'Nonce mismatch',
-            stateData.appState,
-          )
-        }
-
-        await this.sessionGetter.setStored(sub, {
+        await this.sessionGetter.setStored(tokenSet.sub, {
           dpopKey: stateData.dpopKey,
           tokenSet,
         })
 
-        const session = this.createSession(server, sub)
+        const session = this.createSession(server, tokenSet.sub)
 
         return { session, state: stateData.appState ?? null }
       } catch (err) {

@@ -225,7 +225,6 @@ export class TokenManager {
       client,
       accessToken,
       refreshToken,
-      parameters.nonce,
       expiresAt,
       parameters,
       account,
@@ -237,7 +236,6 @@ export class TokenManager {
     client: Client,
     accessToken: AccessToken,
     refreshToken: string | undefined,
-    nonce: string | undefined,
     expiresAt: Date,
     parameters: OAuthAuthenticationRequestParameters,
     account: Account,
@@ -247,7 +245,7 @@ export class TokenManager {
       access_token: accessToken,
       token_type: parameters.dpop_jkt ? 'DPoP' : 'Bearer',
       refresh_token: refreshToken,
-      scope: parameters.scope ?? '',
+      scope: parameters.scope,
       authorization_details: authorizationDetails,
       get expires_in() {
         return dateToRelativeSeconds(expiresAt)
@@ -257,14 +255,7 @@ export class TokenManager {
       // clients to resolve the PDS url (audience) using the did resolution
       // mechanism.
       sub: account.sub,
-      nonce,
     }
-
-    await this.hooks.onTokenResponse?.call(null, tokenResponse, {
-      client,
-      parameters,
-      account,
-    })
 
     return tokenResponse
   }
@@ -392,7 +383,6 @@ export class TokenManager {
         client,
         accessToken,
         nextRefreshToken,
-        undefined,
         expiresAt,
         parameters,
         account,

@@ -95,6 +95,7 @@ export class RequestManager {
       // Known unsupported OIDC parameters
       'claims',
       'id_token_hint',
+      'nonce', // note that OIDC "nonce" is redundant with PKCE
     ] as const) {
       if (parameters[k]) {
         throw new InvalidParametersError(
@@ -239,14 +240,6 @@ export class RequestManager {
       throw new InvalidParametersError(
         parameters,
         'code_challenge_method requires code_challenge',
-      )
-    }
-
-    // ATPROTO extension: require a nonce for "atproto" authorization flows
-    if (!parameters.nonce) {
-      throw new InvalidParametersError(
-        parameters,
-        'A "nonce" parameter is required',
       )
     }
 

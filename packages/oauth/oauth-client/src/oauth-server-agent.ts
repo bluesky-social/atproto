@@ -26,7 +26,6 @@ export type TokenSet = {
   iss: string
   sub: string
   aud: string
-  nonce?: string
   scope?: string
 
   refresh_token?: string
@@ -127,14 +126,15 @@ export class OAuthServerAgent {
   private async processTokenResponse(
     tokenResponse: OAuthTokenResponse,
   ): Promise<TokenSet> {
-    const { sub, nonce } = tokenResponse
+    const { sub } = tokenResponse
 
-    // ATPROTO requires that the "sub" is always present in the token response.
     if (!sub || typeof sub !== 'string') {
       throw new TypeError(`Unexpected ${typeof sub} "sub" in token response`)
     }
-    if (!nonce || typeof nonce !== 'string') {
-      throw new TypeError(`Missing or invalid "nonce" in token response`)
+
+    if (this.serverMetadata.issuer !== tokenResponse.issuer) {
+      // Fool proofing
+      throw new TypeError('Issuer mismatch')
     }
 
     // @TODO (?) make timeout configurable
@@ -144,7 +144,7 @@ export class OAuthServerAgent {
       signal,
     })
 
-    if (resolved.metadata.issuer !== this.serverMetadata.issuer) {
+    if (this.serverMetadata.issuer !== resolved.metadata.issuer) {
       // Best case scenario; the user switched PDS. Worst case scenario; a bad
       // actor is trying to impersonate a user. In any case, we must not allow
       // this token to be used.
@@ -156,7 +156,6 @@ export class OAuthServerAgent {
       iss: resolved.metadata.issuer,
 
       sub,
-      nonce,
 
       scope: tokenResponse.scope,
       refresh_token: tokenResponse.refresh_token,

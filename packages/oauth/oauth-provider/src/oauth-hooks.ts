@@ -53,16 +53,4 @@ export type OAuthHooks = {
     parameters: OAuthAuthenticationRequestParameters
     account: Account
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
-
-  /**
-   * Allows altering the token response before it is sent to the client.
-   */
-  onTokenResponse?: (
-    tokenResponse: OAuthTokenResponse,
-    data: {
-      client: Client
-      parameters: OAuthAuthenticationRequestParameters
-      account: Account
-    },
-  ) => Awaitable<void>
 }
