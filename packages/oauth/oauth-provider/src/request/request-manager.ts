@@ -126,11 +126,6 @@ export class RequestManager {
       parameters.scope?.split(' ').filter(Boolean) || cScopes,
     )
 
-    // There is no point in requesting a token without any scope
-    if (!scopes.size) {
-      throw new InvalidParametersError(parameters, 'Missing "scope" parameter')
-    }
-
     for (const scope of scopes) {
       // Loopback clients do not define any scope in their metadata
       if (cScopes && !cScopes.includes(scope)) {
@@ -139,6 +134,10 @@ export class RequestManager {
           `Scope "${scope}" is not registered for this client`,
         )
       }
+
+      // Currently, the implementation requires all the scopes to be statically
+      // defined in the server metadata. In the future, we might add support
+      // for dynamic scopes.
       if (!sScopes?.includes(scope)) {
         throw new InvalidParametersError(
           parameters,
