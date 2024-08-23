@@ -113,10 +113,14 @@ const presentation = (
   })
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
-    throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+    throw new InvalidRequestError(
+      `Post not found: ${skeleton.anchor}`,
+      'NotFound',
+    )
   }
   const rootUri =
-    hydration.posts?.get(params.uri)?.record.reply?.root.uri ?? params.uri
+    hydration.posts?.get(skeleton.anchor)?.record.reply?.root.uri ??
+    skeleton.anchor
   const threadgate = ctx.views.threadgate(
     postUriToThreadgateUri(rootUri),
     hydration,
