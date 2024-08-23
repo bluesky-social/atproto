@@ -271,15 +271,15 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     await this.stateStore.set(state, {
       iss: metadata.issuer,
       dpopKey,
-      verifier: pkce?.verifier,
+      verifier: pkce.verifier,
       appState: options?.state,
     })
 
     const parameters = {
       client_id: this.clientMetadata.client_id,
       redirect_uri: redirectUri,
-      code_challenge: pkce?.challenge,
-      code_challenge_method: pkce?.method,
+      code_challenge: pkce.challenge,
+      code_challenge_method: pkce.method,
       state,
       login_hint: identity
         ? input // If input is a handle or a DID, use it as a login_hint
