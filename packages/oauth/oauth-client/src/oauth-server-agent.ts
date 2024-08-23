@@ -130,8 +130,8 @@ export class OAuthServerAgent {
     const { sub, nonce } = tokenResponse
 
     // ATPROTO requires that the "sub" is always present in the token response.
-    if (!sub) {
-      throw new TypeError(`Missing "sub" in token response`)
+    if (!sub || typeof sub !== 'string') {
+      throw new TypeError(`Unexpected ${typeof sub} "sub" in token response`)
     }
     if (!nonce || typeof nonce !== 'string') {
       throw new TypeError(`Missing or invalid "nonce" in token response`)
