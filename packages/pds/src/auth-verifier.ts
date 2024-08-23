@@ -456,13 +456,6 @@ export class AuthVerifier {
     ctx: ReqCtx,
     scopes: AuthScope[],
   ): Promise<AccessOutput> {
-    if (!scopes.includes(AuthScope.Access)) {
-      throw new InvalidRequestError(
-        'DPoP access token cannot be used for this request',
-        'InvalidToken',
-      )
-    }
-
     this.setAuthHeaders(ctx)
 
     const { req } = ctx
@@ -488,18 +481,38 @@ export class AuthVerifier {
         { audience: [this.dids.pds] },
       )
 
-      const { sub } = result.claims
+      const { sub, scope } = result.claims
       if (typeof sub !== 'string' || !sub.startsWith('did:')) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
+
+      if (!scope?.includes('transition:generic')) {
+        throw new AuthRequiredError('Missing required scope', 'InvalidToken')
+      }
+
+      const scopeEquivalent = scope.includes('transition:chat.bsky')
+        ? AuthScope.AppPassPrivileged
+        : AuthScope.AppPass
+
+      if (!scopes.includes(scopeEquivalent)) {
+        throw new InvalidRequestError(
+          'DPoP access token cannot be used for this request',
+          'InvalidToken',
+        )
+      }
+
+      const isPrivileged = [
+        AuthScope.Access,
+        AuthScope.AppPassPrivileged,
+      ].includes(scopeEquivalent)
 
       return {
         credentials: {
           type: 'access',
           did: result.claims.sub,
-          scope: AuthScope.Access,
+          scope: scopeEquivalent,
           audience: this.dids.pds,
-          isPrivileged: true,
+          isPrivileged,
         },
         artifacts: result.token,
       }

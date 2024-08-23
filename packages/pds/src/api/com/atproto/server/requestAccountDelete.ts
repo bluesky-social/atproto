@@ -1,8 +1,11 @@
+import assert from 'node:assert'
+
 import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
+
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestAccountDelete({
@@ -19,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     auth: ctx.authVerifier.accessFull({ checkTakedown: true }),
-    handler: async ({ auth, req }) => {
+    handler: async ({ auth }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -30,9 +33,14 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.requestAccountDelete(
           undefined,
-          authPassthru(req),
+          await ctx.serviceAuthHeaders(
+            auth.credentials.did,
+            ctx.cfg.entryway.did,
+            ids.ComAtprotoServerRequestAccountDelete,
+          ),
         )
         return
       }
