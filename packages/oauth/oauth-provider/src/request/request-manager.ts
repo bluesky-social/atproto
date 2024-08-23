@@ -146,7 +146,7 @@ export class RequestManager {
       }
     }
 
-    parameters = { ...parameters, scope: [...scopes].join(' ') }
+    parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
 
     if (parameters.authorization_details) {
       const clientAuthDetailsTypes = client.metadata.authorization_details_types
