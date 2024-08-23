@@ -132,11 +132,6 @@ export class OAuthServerAgent {
       throw new TypeError(`Unexpected ${typeof sub} "sub" in token response`)
     }
 
-    if (this.serverMetadata.issuer !== tokenResponse.issuer) {
-      // Fool proofing
-      throw new TypeError('Issuer mismatch')
-    }
-
     // @TODO (?) make timeout configurable
     using signal = timeoutSignal(10e3)
 
