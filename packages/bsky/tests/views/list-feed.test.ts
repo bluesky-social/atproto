@@ -175,4 +175,16 @@ describe('list feed views', () => {
       recordUri: postRef.uriStr,
     })
   })
+
+  it('does not return posts with creator blocks', async () => {
+    await sc.block(bob, alice)
+    await network.processAll()
+
+    const res = await agent.api.app.bsky.feed.getListFeed({
+      list: listRef.uriStr,
+    })
+
+    const hasBob = res.data.feed.some((item) => item.post.author.did === bob)
+    expect(hasBob).toBe(false)
+  })
 })

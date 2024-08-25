@@ -1,4 +1,3 @@
-import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
@@ -7,11 +6,11 @@ import {
   isListRule,
   isMentionRule,
 } from '../lexicon/types/app/bsky/feed/threadgate'
+import {
+  Record as PostgateRecord,
+  isDisableRule as isPostgateDisableRule,
+} from '../lexicon/types/app/bsky/feed/postgate'
 import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
-
-export const creatorFromUri = (uri: string): string => {
-  return new AtUri(uri).hostname
-}
 
 export const parseThreadGate = (
   replierDid: string,
@@ -27,8 +26,8 @@ export const parseThreadGate = (
     return { canReply: true }
   }
 
-  const allowMentions = !!gate.allow.find(isMentionRule)
-  const allowFollowing = !!gate.allow.find(isFollowingRule)
+  const allowMentions = gate.allow.some(isMentionRule)
+  const allowFollowing = gate.allow.some(isFollowingRule)
   const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
 
   // check mentions first since it's quick and synchronous
@@ -61,4 +60,35 @@ export const cidFromBlobJson = (json: BlobRef) => {
     return (json['ref']?.['$link'] ?? '') as string
   }
   return (json['cid'] ?? '') as string
+}
+
+export const parsePostgate = ({
+  gate,
+  viewerDid,
+  authorDid,
+}: {
+  gate: PostgateRecord | undefined
+  viewerDid: string | undefined
+  authorDid: string
+}): ParsedPostgate => {
+  if (viewerDid === authorDid) {
+    return { embeddingRules: { canEmbed: true } }
+  }
+  // default state is unset, allow everyone
+  if (!gate || !gate.embeddingRules) {
+    return { embeddingRules: { canEmbed: true } }
+  }
+
+  const disabled = gate.embeddingRules.some(isPostgateDisableRule)
+  if (disabled) {
+    return { embeddingRules: { canEmbed: false } }
+  }
+
+  return { embeddingRules: { canEmbed: true } }
+}
+
+type ParsedPostgate = {
+  embeddingRules: {
+    canEmbed: boolean
+  }
 }

@@ -44,16 +44,17 @@ describe('views with thread gating', () => {
 
   it('applies gate for empty rules.', async () => {
     const post = await sc.post(sc.dids.carol, 'empty rules')
-    await pdsAgent.api.app.bsky.feed.threadgate.create(
-      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
-      { post: post.ref.uriStr, createdAt: iso(), allow: [] },
-      sc.getHeaders(sc.dids.carol),
-    )
+    const { uri: threadgateUri } =
+      await pdsAgent.api.app.bsky.feed.threadgate.create(
+        { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+        { post: post.ref.uriStr, createdAt: iso(), allow: [] },
+        sc.getHeaders(sc.dids.carol),
+      )
     await network.processAll()
     await sc.reply(sc.dids.alice, post.ref, post.ref, 'empty rules reply')
     await network.processAll()
     const {
-      data: { thread },
+      data: { thread, threadgate },
     } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr },
       {
@@ -67,6 +68,7 @@ describe('views with thread gating', () => {
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.post.viewer?.replyDisabled).toBe(true)
     expect(thread.replies?.length).toEqual(0)
+    expect(threadgate?.uri).toEqual(threadgateUri)
     await checkReplyDisabled(post.ref.uriStr, sc.dids.alice, true)
   })
 

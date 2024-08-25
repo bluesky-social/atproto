@@ -23,8 +23,6 @@ import {
 
 import { FALLBACK_ALG } from './constants.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
-import { OAuthAgent } from './oauth-agent.js'
-import { OAuthAtpAgent } from './oauth-atp-agent.js'
 import {
   AuthorizationServerMetadataCache,
   OAuthAuthorizationServerMetadataResolver,
@@ -37,6 +35,7 @@ import {
 import { OAuthResolver } from './oauth-resolver.js'
 import { DpopNonceCache, OAuthServerAgent } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
+import { OAuthSession } from './oauth-session.js'
 import { RuntimeImplementation } from './runtime-implementation.js'
 import { Runtime } from './runtime.js'
 import {
@@ -362,7 +361,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   async callback(params: URLSearchParams): Promise<{
-    agent: OAuthAtpAgent
+    session: OAuthSession
     state: string | null
   }> {
     const responseJwt = params.get('response')
@@ -452,9 +451,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
           tokenSet,
         })
 
-        const agent = this.createAgent(server, sub)
+        const session = this.createSession(server, sub)
 
-        return { agent, state: stateData.appState ?? null }
+        return { session, state: stateData.appState ?? null }
       } catch (err) {
         await server.revoke(tokenSet.access_token)
 
@@ -468,12 +467,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
   }
 
   /**
-   * Build an agent from a stored session. This will refresh the token only if
-   * needed (about to expire) by default.
+   * Load a stored session. This will refresh the token only if needed (about to
+   * expire) by default.
    *
    * @param refresh See {@link SessionGetter.getSession}
    */
-  async restore(sub: string, refresh?: boolean): Promise<OAuthAtpAgent> {
+  async restore(sub: string, refresh?: boolean): Promise<OAuthSession> {
     const { dpopKey, tokenSet } = await this.sessionGetter.getSession(
       sub,
       refresh,
@@ -484,7 +483,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       allowStale: refresh === false,
     })
 
-    return this.createAgent(server, sub)
+    return this.createSession(server, sub)
   }
 
   async revoke(sub: string) {
@@ -504,14 +503,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     }
   }
 
-  createAgent(server: OAuthServerAgent, sub: string): OAuthAtpAgent {
-    const oauthAgent = new OAuthAgent(
-      server,
-      sub,
-      this.sessionGetter,
-      this.fetch,
-    )
-
-    return new OAuthAtpAgent(oauthAgent)
+  protected createSession(server: OAuthServerAgent, sub: string): OAuthSession {
+    return new OAuthSession(server, sub, this.sessionGetter, this.fetch)
   }
 }

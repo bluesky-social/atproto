@@ -1,4 +1,4 @@
-import { AtpAgent, AtUri } from '@atproto/api'
+import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, authorFeedSeed } from '@atproto/dev-env'
 import {
   forSnapshot,
@@ -10,6 +10,7 @@ import { ReplyRef, isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { uriToDid } from '../../src/util/uris'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds author feed views', () => {
@@ -388,12 +389,5 @@ describe('pds author feed views', () => {
 })
 
 function isReplyTo(reply: ReplyRef, did: string) {
-  return (
-    getDidFromUri(reply.root.uri) === did &&
-    getDidFromUri(reply.parent.uri) === did
-  )
-}
-
-function getDidFromUri(uri: string) {
-  return new AtUri(uri).hostname
+  return uriToDid(reply.root.uri) === did && uriToDid(reply.parent.uri) === did
 }

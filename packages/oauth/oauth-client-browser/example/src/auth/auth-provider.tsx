@@ -26,18 +26,23 @@ export const AuthProvider = ({
     client: oauthClient,
     agent: oauthAgent,
     signIn: oauthSignIn,
+    signOut: oauthSignOut,
   } = useOAuth(options)
 
-  const { agent: atpAgent, signIn: atpSignIn } = useAtpAuth()
+  const {
+    agent: atpAgent,
+    signIn: atpSignIn,
+    signOut: atpSignOut,
+  } = useAtpAuth()
 
   const value = useMemo<AuthContext | null>(
     () =>
       oauthAgent
-        ? { pdsAgent: oauthAgent, signOut: () => oauthAgent.signOut() }
+        ? { pdsAgent: oauthAgent, signOut: oauthSignOut }
         : atpAgent
-          ? { pdsAgent: atpAgent, signOut: () => atpAgent.logout() }
+          ? { pdsAgent: atpAgent, signOut: atpSignOut }
           : null,
-    [atpAgent, oauthAgent],
+    [oauthAgent, oauthSignOut, atpAgent, atpSignOut],
   )
 
   if (isLoginPopup) {

@@ -771,9 +771,6 @@ importers:
       '@atproto-labs/simple-store-memory':
         specifier: workspace:*
         version: link:../../internal/simple-store-memory
-      '@atproto/api':
-        specifier: workspace:*
-        version: link:../../api
       '@atproto/did':
         specifier: workspace:*
         version: link:../../did
@@ -918,9 +915,6 @@ importers:
         specifier: workspace:*
         version: link:../oauth-types
     devDependencies:
-      '@atproto/api':
-        specifier: workspace:*
-        version: link:../../api
       typescript:
         specifier: ^5.3.3
         version: 5.4.4

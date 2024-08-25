@@ -8,7 +8,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getInteractionCounts(req) {
     const uris = req.refs.map((ref) => ref.uri)
     if (uris.length === 0) {
-      return { likes: [], replies: [], reposts: [] }
+      return { likes: [], replies: [], reposts: [], quotes: [] }
     }
     const res = await db.db
       .selectFrom('post_agg')
@@ -20,6 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       likes: uris.map((uri) => byUri[uri]?.likeCount ?? 0),
       replies: uris.map((uri) => byUri[uri]?.replyCount ?? 0),
       reposts: uris.map((uri) => byUri[uri]?.repostCount ?? 0),
+      quotes: uris.map((uri) => byUri[uri]?.quoteCount ?? 0),
     }
   },
   async getCountsForUsers(req) {

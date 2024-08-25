@@ -38,6 +38,7 @@ export interface View {
     | ViewRecord
     | ViewNotFound
     | ViewBlocked
+    | ViewDetached
     | AppBskyFeedDefs.GeneratorView
     | AppBskyGraphDefs.ListView
     | AppBskyLabelerDefs.LabelerView
@@ -66,6 +67,7 @@ export interface ViewRecord {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  quoteCount?: number
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
@@ -124,4 +126,22 @@ export function isViewBlocked(v: unknown): v is ViewBlocked {
 
 export function validateViewBlocked(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.record#viewBlocked', v)
+}
+
+export interface ViewDetached {
+  uri: string
+  detached: true
+  [k: string]: unknown
+}
+
+export function isViewDetached(v: unknown): v is ViewDetached {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.record#viewDetached'
+  )
+}
+
+export function validateViewDetached(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.record#viewDetached', v)
 }

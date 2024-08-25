@@ -6,7 +6,8 @@ import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
 import * as postAgg from './tables/post-agg'
 import * as repost from './tables/repost'
-import * as threadGate from './tables/thread-gate'
+import * as threadgate from './tables/thread-gate'
+import * as postgate from './tables/post-gate'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
@@ -35,6 +36,7 @@ import * as taggedSuggestion from './tables/tagged-suggestion'
 import * as blobTakedown from './tables/blob-takedown'
 import * as labeler from './tables/labeler'
 import * as starterPack from './tables/starter-pack'
+import * as quote from './tables/quote'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -43,7 +45,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   postEmbed.PartialDB &
   postAgg.PartialDB &
   repost.PartialDB &
-  threadGate.PartialDB &
+  threadgate.PartialDB &
+  postgate.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
@@ -71,7 +74,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   blobTakedown.PartialDB &
   labeler.PartialDB &
   starterPack.PartialDB &
-  taggedSuggestion.PartialDB
+  taggedSuggestion.PartialDB &
+  quote.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

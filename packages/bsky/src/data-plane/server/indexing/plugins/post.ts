@@ -7,6 +7,7 @@ import {
   ReplyRef,
 } from '../../../../lexicon/types/app/bsky/feed/post'
 import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
+import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
@@ -26,9 +27,14 @@ import {
   getDescendentsQb,
   invalidReplyRoot as checkInvalidReplyRoot,
   violatesThreadGate as checkViolatesThreadGate,
-  postToThreadgateUri,
 } from '../../util'
 import { BackgroundQueue } from '../../background'
+import { parsePostgate } from '../../../../views/util'
+import {
+  postUriToThreadgateUri,
+  postUriToPostgateUri,
+  uriToDid,
+} from '../../../../util/uris'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -52,6 +58,7 @@ type IndexedPost = {
   embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
   ancestors?: PostAncestor[]
   descendents?: PostDescendent[]
+  threadgate?: GateRecord
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -168,6 +175,7 @@ const insertFn = async (
       await db.insertInto('post_embed_external').values(externalEmbed).execute()
     } else if (isEmbedRecord(postEmbed)) {
       const { record } = postEmbed
+      const embedUri = new AtUri(record.uri)
       const recordEmbed = {
         postUri: uri.toString(),
         embedUri: record.uri,
@@ -175,9 +183,59 @@ const insertFn = async (
       }
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
+
+      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        const quote = {
+          uri: uri.toString(),
+          cid: cid.toString(),
+          subject: record.uri,
+          subjectCid: record.cid,
+          createdAt: normalizeDatetimeAlways(obj.createdAt),
+          indexedAt: timestamp,
+        }
+        await db
+          .insertInto('quote')
+          .values(quote)
+          .onConflict((oc) => oc.doNothing())
+          .returningAll()
+          .executeTakeFirst()
+
+        const quoteCountQb = db
+          .insertInto('post_agg')
+          .values({
+            uri: record.uri.toString(),
+            quoteCount: db
+              .selectFrom('quote')
+              .where('quote.subjectCid', '=', record.cid.toString())
+              .select(countAll.as('count')),
+          })
+          .onConflict((oc) =>
+            oc
+              .column('uri')
+              .doUpdateSet({ quoteCount: excluded(db, 'quoteCount') }),
+          )
+        await quoteCountQb.execute()
+
+        const { violatesEmbeddingRules } = await validatePostEmbed(
+          db,
+          embedUri.toString(),
+          uri.toString(),
+        )
+        Object.assign(insertedPost, {
+          violatesEmbeddingRules: violatesEmbeddingRules,
+        })
+        if (violatesEmbeddingRules) {
+          await db
+            .updateTable('post')
+            .where('uri', '=', insertedPost.uri)
+            .set({ violatesEmbeddingRules: violatesEmbeddingRules })
+            .executeTakeFirst()
+        }
+      }
     }
   }
 
+  const threadgate = await getThreadgateRecord(db, post.replyRoot || post.uri)
   const ancestors = await getAncestorsAndSelfQb(db, {
     uri: post.uri,
     parentHeight: REPLY_NOTIF_DEPTH,
@@ -200,6 +258,7 @@ const insertFn = async (
     embeds,
     ancestors,
     descendents,
+    threadgate,
   }
 }
 
@@ -228,19 +287,22 @@ const notifsForInsert = (obj: IndexedPost) => {
       })
     }
   }
-  for (const embed of obj.embeds ?? []) {
-    if ('embedUri' in embed) {
-      const embedUri = new AtUri(embed.embedUri)
-      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
-        maybeNotify({
-          did: embedUri.host,
-          reason: 'quote',
-          reasonSubject: embedUri.toString(),
-          author: obj.post.creator,
-          recordUri: obj.post.uri,
-          recordCid: obj.post.cid,
-          sortAt: obj.post.sortAt,
-        })
+
+  if (!obj.post.violatesEmbeddingRules) {
+    for (const embed of obj.embeds ?? []) {
+      if ('embedUri' in embed) {
+        const embedUri = new AtUri(embed.embedUri)
+        if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+          maybeNotify({
+            did: embedUri.host,
+            reason: 'quote',
+            reasonSubject: embedUri.toString(),
+            author: obj.post.creator,
+            recordUri: obj.post.uri,
+            recordCid: obj.post.cid,
+            sortAt: obj.post.sortAt,
+          })
+        }
       }
     }
   }
@@ -249,6 +311,8 @@ const notifsForInsert = (obj: IndexedPost) => {
     // don't generate reply notifications when post violates threadgate
     return notifs
   }
+
+  const threadgateHiddenReplies = obj.threadgate?.hiddenReplies || []
 
   // reply notifications
 
@@ -265,6 +329,8 @@ const notifsForInsert = (obj: IndexedPost) => {
         recordCid: obj.post.cid,
         sortAt: obj.post.sortAt,
       })
+      // found hidden reply, don't notify any higher ancestors
+      if (threadgateHiddenReplies.includes(ancestorUri.toString())) break
     }
   }
 
@@ -304,6 +370,7 @@ const deleteFn = async (
       .executeTakeFirst(),
     db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
   ])
+  await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -333,7 +400,27 @@ const deleteFn = async (
     deletedEmbeds.push(deletedExternals)
   }
   if (deletedPosts) {
+    const embedUri = new AtUri(deletedPosts.embedUri)
     deletedEmbeds.push(deletedPosts)
+
+    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+      await db.deleteFrom('quote').where('uri', '=', uriStr).execute()
+      await db
+        .insertInto('post_agg')
+        .values({
+          uri: deletedPosts.embedUri,
+          quoteCount: db
+            .selectFrom('quote')
+            .where('quote.subjectCid', '=', deletedPosts.embedCid.toString())
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('uri')
+            .doUpdateSet({ quoteCount: excluded(db, 'quoteCount') }),
+        )
+        .execute()
+    }
   }
   return deleted
     ? {
@@ -434,7 +521,7 @@ async function validateReply(
   const violatesThreadGate = await checkViolatesThreadGate(
     db,
     creator,
-    new AtUri(reply.root.uri).hostname,
+    uriToDid(reply.root.uri),
     replyRefs.root?.record ?? null,
     replyRefs.gate?.record ?? null,
   )
@@ -444,10 +531,58 @@ async function validateReply(
   }
 }
 
+async function getThreadgateRecord(db: DatabaseSchema, postUri: string) {
+  const threadgateRecordUri = postUriToThreadgateUri(postUri)
+  const results = await db
+    .selectFrom('record')
+    .where('record.uri', '=', threadgateRecordUri)
+    .selectAll()
+    .execute()
+  const threadgateRecord = results.find(
+    (ref) => ref.uri === threadgateRecordUri,
+  )
+  if (threadgateRecord) {
+    return jsonStringToLex(threadgateRecord.json) as GateRecord
+  }
+}
+
+async function validatePostEmbed(
+  db: DatabaseSchema,
+  embedUri: string,
+  parentUri: string,
+) {
+  const postgateRecordUri = postUriToPostgateUri(embedUri)
+  const postgateRecord = await db
+    .selectFrom('record')
+    .where('record.uri', '=', postgateRecordUri)
+    .selectAll()
+    .executeTakeFirst()
+  if (!postgateRecord) {
+    return {
+      violatesEmbeddingRules: false,
+    }
+  }
+  const {
+    embeddingRules: { canEmbed },
+  } = parsePostgate({
+    gate: jsonStringToLex(postgateRecord.json) as PostgateRecord,
+    viewerDid: uriToDid(parentUri),
+    authorDid: uriToDid(embedUri),
+  })
+  if (canEmbed) {
+    return {
+      violatesEmbeddingRules: false,
+    }
+  }
+  return {
+    violatesEmbeddingRules: true,
+  }
+}
+
 async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
-  const replyGate = postToThreadgateUri(replyRoot)
+  const replyGate = postUriToThreadgateUri(replyRoot)
   const results = await db
     .selectFrom('record')
     .where('record.uri', 'in', [replyRoot, replyGate, replyParent])

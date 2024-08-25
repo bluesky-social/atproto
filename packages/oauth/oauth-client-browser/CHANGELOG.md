@@ -1,5 +1,19 @@
 # @atproto/oauth-client-browser
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.1.7
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.1.6
+
 ## 0.1.5
 
 ### Patch Changes
