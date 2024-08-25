@@ -214,8 +214,19 @@ export async function generateMockSetup(env: TestNetwork) {
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply ? target.value.reply.root : target,
-            parent: target,
+            root: target.value.reply
+              ? {
+                  uri: target.value.reply.root.uri,
+                  cid: target.value.reply.root.cid,
+                }
+              : {
+                  uri: target.uri,
+                  cid: target.cid,
+                },
+            parent: {
+              uri: target.uri,
+              cid: target.cid,
+            },
           },
           createdAt: date.next().value,
         },

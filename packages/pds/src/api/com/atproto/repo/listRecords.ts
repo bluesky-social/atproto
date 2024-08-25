@@ -84,11 +84,10 @@ function page({
     <head>
       <title>Collection ${html(collectionUri)}</title>
     </head>
-    <body style="font-family:monospace">
+    <body style="font-family:monospace;">
       <h1>Collection ${html(collectionUri)}</h1>
       <p style="font-style:italic;color:grey;">
-        at://
-        <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
+        Go to at://<a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
       </p>
       <table style="text-align:left;width:100%;">
         <tr>
@@ -110,6 +109,15 @@ function page({
             </tr>`
           }),
         )}
+        ${
+          records.length === 0
+            ? `<tr>
+              <td colspan="3">
+                <span style="font-style:italic;color:grey;">(none)</span>
+              </td>
+            </td>`
+            : ''
+        }
       </table>
       ${
         cursor

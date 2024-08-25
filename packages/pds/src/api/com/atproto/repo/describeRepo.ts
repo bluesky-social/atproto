@@ -65,33 +65,38 @@ function page({
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
     <head>
-      <title>Repo at://${html(handle ?? did)}</title>
+      <title>Repository at://${html(handle ?? did)}</title>
     </head>
-    <body style="font-family:monospace">
-      <h1>Repo at://${html(handle ?? did)}</h1>
+    <body style="font-family:monospace;">
+      <h1>Repository at://${html(handle ?? did)}</h1>
       <p style="font-style:italic;color:grey;">
         Go to <a href="/xrpc/com.atproto.sync.listRepos">Repositories</a>
       </p>
-      <table style="text-align:left;min-width:600px;">
-        <tr>
-          <th>DID</th>
-          <td>${html(did)}</td>
-        </tr>
-        <tr>
-          <th style="vertical-align:top;">Collections</th>
-          <td>
-            <ul style="margin:0;padding:0;list-style:none;">
-              ${html(
-                collections.map((collection) => {
-                  return `<li>
-                    <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">
-                      ${html(collection)}
-                    </a>
-                  </li>`
-                }),
-              )}
-            </ul>
-          </td>
+      <table style="text-align:left;">
+        <tr><th>DID</th></tr>
+        <tr><td>${html(did)}</td></tr>
+        <tr><td>&nbsp;</td></tr>
+        <tr><th>Collections</th></tr>
+        ${html(
+          collections.map((collection) => {
+            return `<tr>
+              <td>
+                <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">
+                  ${html(collection)}
+                </a>
+              </td>
+            </tr>`
+          }),
+        )}
+        ${
+          collections.length === 0
+            ? `<tr>
+              <td>
+                <span style="font-style:italic;color:grey;">(none)</span>
+              </td>
+            </td>`
+            : ''
+        }
         </tr>
       </table>
       <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>

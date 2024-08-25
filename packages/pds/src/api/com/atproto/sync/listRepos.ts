@@ -106,7 +106,7 @@ function page({
     <head>
       <title>Repositories</title>
     </head>
-    <body style="font-family:monospace">
+    <body style="font-family:monospace;">
       <h1>Repositories</h1>
       <table style="width:100%;text-align:left;">
         <tr>
@@ -131,6 +131,15 @@ function page({
             </tr>`
           }),
         )}
+        ${
+          repos.length === 0
+            ? `<tr>
+              <td colspan="5">
+                <span style="font-style:italic;color:grey;">(none)</span>
+              </td>
+            </td>`
+            : ''
+        }
       </table>
       ${
         cursor

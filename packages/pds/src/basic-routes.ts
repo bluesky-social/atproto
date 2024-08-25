@@ -66,7 +66,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
     } catch {
       return res.status(404).send({
         error: 'NotFound',
-        message: 'Could not resolve the DID.',
+        message: 'Could not resolve DID.',
       })
     }
     return res.redirect(redirectUrl.toString())

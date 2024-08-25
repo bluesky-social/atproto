@@ -93,6 +93,7 @@ export class RecordReader {
   ): Promise<{
     uri: string
     cid: string
+    size: number
     value: object
     indexedAt: string
     takedownRef: string | null
@@ -114,6 +115,7 @@ export class RecordReader {
     return {
       uri: record.uri,
       cid: record.cid,
+      size: record.size,
       value: cborToLexRecord(record.content),
       indexedAt: record.indexedAt,
       takedownRef: record.takedownRef ? record.takedownRef.toString() : null,

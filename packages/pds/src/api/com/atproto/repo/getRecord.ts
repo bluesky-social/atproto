@@ -31,6 +31,8 @@ export default function (server: Server, ctx: AppContext) {
             handle: account.handle,
             collection,
             rkey,
+            cid: record.cid,
+            size: record.size,
             value: record.value,
             publicUrl: ctx.cfg.service.publicUrl,
           }),
@@ -60,6 +62,8 @@ function page({
   handle,
   collection,
   rkey,
+  cid,
+  size,
   value,
   publicUrl,
 }: {
@@ -67,6 +71,8 @@ function page({
   handle: string | null
   collection: string
   rkey: string
+  cid: string
+  size: number
   value: unknown
   publicUrl: string
 }) {
@@ -76,19 +82,26 @@ function page({
     <head>
       <title>Record ${html(uri)}</title>
     </head>
-    <body style="font-family:monospace">
+    <body style="font-family:monospace;">
       <h1>Record ${html(uri)}</h1>
       <p style="font-style:italic;color:grey;">
-        at://
-        <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
-        /
-        <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">${html(collection)}</a>
+        Go to at://<a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>/<a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">${html(collection)}</a>
       </p>
-      <pre>${html(JSON.stringify(value, null, 2))}</pre>
+      <table style="text-align:left;min-width:600px;">
+        <tr>
+          <th>CID</th>
+          <th>Size (bytes)</th>
+        </tr>
+        <tr>
+          <td>${html(cid)}</td>
+          <td>${html(size)}</td>
+        </tr>
+      </table>
+      <pre id="record_value">${html(JSON.stringify(typeFieldFirst(value), null, 2))}</pre>
       <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
       <script>
-        const pre = document.querySelector('pre')
-        pre.innerHTML = pre.textContent.replace(/"(?:(at:\\/\\/did:.+?)|(did:.+?))"/g, (_, uri, did) => {
+        const el = document.getElementById('record_value')
+        el.innerHTML = el.textContent.replace(/"(?:(at:\\/\\/did:.+?)|(did:.+?))"/g, (_, uri, did) => {
           const a = document.createElement('a')
           if (uri) {
             a.href = \`/at?uri=\${encodeURIComponent(uri)}\`
@@ -102,4 +115,16 @@ function page({
       </script>
     </body>
   </html>`)
+}
+
+function typeFieldFirst(obj: unknown) {
+  if (!obj || typeof obj !== 'object') return obj
+  const result = {}
+  if ('$type' in obj) {
+    result['$type'] = obj.$type
+  }
+  for (const [key, val] of Object.entries(obj)) {
+    result[key] = val
+  }
+  return result
 }
