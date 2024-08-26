@@ -16,6 +16,8 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
     })
 
   router.get('/.well-known/oauth-protected-resource', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Method', '*')
     res.status(200).json(oauthProtectedResourceMetadata)
   })
 
