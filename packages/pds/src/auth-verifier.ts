@@ -481,19 +481,21 @@ export class AuthVerifier {
         { audience: [this.dids.pds] },
       )
 
-      const { sub, scope } = result.claims
+      const { sub } = result.claims
       if (typeof sub !== 'string' || !sub.startsWith('did:')) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
 
-      if (!scope?.includes('transition:generic')) {
+      const tokenScopes = new Set(result.claims.scope?.split(' '))
+
+      if (!tokenScopes.has('transition:generic')) {
         throw new AuthRequiredError(
           'Missing required scope: transition:generic',
           'InvalidToken',
         )
       }
 
-      const scopeEquivalent = scope.includes('transition:chat.bsky')
+      const scopeEquivalent: AuthScope = tokenScopes.has('transition:chat.bsky')
         ? AuthScope.AppPassPrivileged
         : AuthScope.AppPass
 
