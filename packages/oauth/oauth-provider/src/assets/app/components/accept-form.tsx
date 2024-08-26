@@ -110,7 +110,7 @@ export function AcceptForm({
         <ul className="list-disc list-inside">
           {scopeDetails.map(
             ({ scope, description = getScopeDescription(scope) }) => (
-              <li>{description}</li>
+              <li key={scope}>{description}</li>
             ),
           )}
         </ul>
