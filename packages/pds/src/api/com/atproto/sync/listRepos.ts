@@ -47,6 +47,9 @@ export default function (server: Server, ctx: AppContext) {
         buffer: page({
           repos,
           cursor: keyset.packFromResult(res),
+          limit,
+          firstPage: !cursor,
+          lastPage: repos.length < limit,
           publicUrl: ctx.cfg.service.publicUrl,
         }),
       }
@@ -89,6 +92,9 @@ export class TimeDidKeyset extends GenericKeyset<TimeDidResult, Cursor> {
 function page({
   repos,
   cursor,
+  limit,
+  firstPage,
+  lastPage,
   publicUrl,
 }: {
   repos: {
@@ -99,8 +105,12 @@ function page({
     status: string | undefined
   }[]
   cursor: string | undefined
+  limit: number
+  firstPage: boolean
+  lastPage: boolean
   publicUrl: string | undefined
 }) {
+  const encURI = encodeURIComponent
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
     <head>
@@ -120,7 +130,7 @@ function page({
           repos.map(({ did, head, rev, active, status }) => {
             return `<tr>
               <td>
-                <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">
+                <a href="/xrpc/com.atproto.repo.describeRepo?repo=${encURI(did)}">
                   ${html(did)}
                 </a>
               </td>
@@ -142,13 +152,15 @@ function page({
         }
       </table>
       ${
-        cursor
+        cursor && !lastPage
           ? `<p>
-              <a href="/xrpc/com.atproto.sync.listRepos?cursor=${encodeURIComponent(cursor)}">Next ${html('>')}</a>
+            <a href="/xrpc/com.atproto.sync.listRepos?cursor=${encURI(cursor)}&limit=${encURI(limit)}">Next ${html('>')}</a>
+          </p>`
+          : !firstPage
+            ? `<p>
+              <a href="/xrpc/com.atproto.sync.listRepos?limit=${encURI(limit)}">${html('<')} First</a>
             </p>`
-          : `<p>
-              <a href="/xrpc/com.atproto.sync.listRepos">${html('<')} First</a>
-            </p>`
+            : ''
       }
       <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
     </body>

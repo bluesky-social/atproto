@@ -43,24 +43,23 @@ export const createRouter = (ctx: AppContext): express.Router => {
     } catch {
       return res.status(400).send({
         error: 'InvalidRequest',
-        message:
-          'The uri query parameter must be an AT URI for a record, containing a DID.',
+        message: 'The uri query parameter must be an AT URI containing a DID.',
       })
     }
     let redirectUrl: URL
     try {
-      const data = await ctx.idResolver.did.resolveAtprotoData(aturi.host)
+      const { pds } = await ctx.idResolver.did.resolveAtprotoData(aturi.host)
       if (aturi.rkey) {
-        redirectUrl = new URL('/xrpc/com.atproto.repo.getRecord', data.pds)
+        redirectUrl = new URL('/xrpc/com.atproto.repo.getRecord', pds)
         redirectUrl.searchParams.set('repo', aturi.host)
         redirectUrl.searchParams.set('collection', aturi.collection)
         redirectUrl.searchParams.set('rkey', aturi.rkey)
       } else if (aturi.collection) {
-        redirectUrl = new URL('/xrpc/com.atproto.repo.listRecords', data.pds)
+        redirectUrl = new URL('/xrpc/com.atproto.repo.listRecords', pds)
         redirectUrl.searchParams.set('repo', aturi.host)
         redirectUrl.searchParams.set('collection', aturi.collection)
       } else {
-        redirectUrl = new URL('/xrpc/com.atproto.repo.describeRepo', data.pds)
+        redirectUrl = new URL('/xrpc/com.atproto.repo.describeRepo', pds)
         redirectUrl.searchParams.set('repo', aturi.host)
       }
     } catch {

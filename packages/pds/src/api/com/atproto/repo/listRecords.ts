@@ -47,6 +47,9 @@ export default function (server: Server, ctx: AppContext) {
           collection,
           records,
           cursor: lastUri?.rkey,
+          limit,
+          firstPage: !cursor,
+          lastPage: records.length < limit,
           publicUrl: ctx.cfg.service.publicUrl,
         }),
       }
@@ -69,6 +72,9 @@ function page({
   collection,
   records,
   cursor,
+  limit,
+  firstPage,
+  lastPage,
   publicUrl,
 }: {
   did: string
@@ -76,8 +82,12 @@ function page({
   collection: string
   records: { uri: string; cid: string; size: number }[]
   cursor: string | undefined
+  limit: number
+  firstPage: boolean
+  lastPage: boolean
   publicUrl: string
 }) {
+  const encURI = encodeURIComponent
   const collectionUri = AtUri.make(handle ?? did, collection).toString()
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
@@ -87,7 +97,7 @@ function page({
     <body style="font-family:monospace;">
       <h1>Collection ${html(collectionUri)}</h1>
       <p style="font-style:italic;color:grey;">
-        Go to at://<a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>
+        Go to at://<a href="/xrpc/com.atproto.repo.describeRepo?repo=${encURI(did)}">${html(did)}</a>
       </p>
       <table style="text-align:left;width:100%;">
         <tr>
@@ -100,7 +110,7 @@ function page({
             const rkey = new AtUri(uri).rkey
             return `<tr>
               <td>
-                <a href="/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}&rkey=${encodeURIComponent(rkey)}">
+                <a href="/xrpc/com.atproto.repo.getRecord?repo=${encURI(did)}&collection=${encURI(collection)}&rkey=${encURI(rkey)}">
                   ${html(rkey)}
                 </a>
               </td>
@@ -120,13 +130,15 @@ function page({
         }
       </table>
       ${
-        cursor
+        cursor && !lastPage
           ? `<p>
-              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}&cursor=${encodeURIComponent(cursor)}">Next ${html('>')}</a>
+            <a href="/xrpc/com.atproto.repo.listRecords?repo=${encURI(did)}&collection=${encURI(collection)}&cursor=${encURI(cursor)}&limit=${encURI(limit)}">Next ${html('>')}</a>
+          </p>`
+          : !firstPage
+            ? `<p>
+              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encURI(did)}&collection=${encURI(collection)}&limit=${encURI(limit)}">${html('<')} First</a>
             </p>`
-          : `<p>
-              <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">First</a>
-            </p>`
+            : ''
       }
     <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
     </body>

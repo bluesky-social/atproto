@@ -62,6 +62,7 @@ function page({
   collections: string[]
   publicUrl: string
 }) {
+  const encURI = encodeURIComponent
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
     <head>
@@ -81,7 +82,7 @@ function page({
           collections.map((collection) => {
             return `<tr>
               <td>
-                <a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">
+                <a href="/xrpc/com.atproto.repo.listRecords?repo=${encURI(did)}&collection=${encURI(collection)}">
                   ${html(collection)}
                 </a>
               </td>

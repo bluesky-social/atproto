@@ -76,6 +76,7 @@ function page({
   value: unknown
   publicUrl: string
 }) {
+  const encURI = encodeURIComponent
   const uri = AtUri.make(handle ?? did, collection, rkey).toString()
   return toArrayBuffer(`<!DOCTYPE html>
   <html>
@@ -85,7 +86,7 @@ function page({
     <body style="font-family:monospace;">
       <h1>Record ${html(uri)}</h1>
       <p style="font-style:italic;color:grey;">
-        Go to at://<a href="/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(did)}">${html(did)}</a>/<a href="/xrpc/com.atproto.repo.listRecords?repo=${encodeURIComponent(did)}&collection=${encodeURIComponent(collection)}">${html(collection)}</a>
+        Go to at://<a href="/xrpc/com.atproto.repo.describeRepo?repo=${encURI(did)}">${html(did)}</a>/<a href="/xrpc/com.atproto.repo.listRecords?repo=${encURI(did)}&collection=${encURI(collection)}">${html(collection)}</a>
       </p>
       <table style="text-align:left;min-width:600px;">
         <tr>
