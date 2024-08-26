@@ -125,6 +125,14 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.sequencer.sequenceCommit(did, commit, writes)
       await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+
+      return {
+        encoding: 'application/json',
+        body: {
+          commitCid: commit?.cid.toString(),
+          commitRev: commit?.rev,
+        },
+      }
     },
   })
 }

@@ -102,7 +102,12 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: { uri: write.uri.toString(), cid: write.cid.toString() },
+        body: {
+          uri: write.uri.toString(),
+          cid: write.cid.toString(),
+          commitCid: commit.cid.toString(),
+          commitRev: commit.rev,
+        },
       }
     },
   })
