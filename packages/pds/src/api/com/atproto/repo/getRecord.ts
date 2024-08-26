@@ -101,18 +101,30 @@ function page({
       <pre id="record_value">${html(JSON.stringify(typeFieldFirst(value), null, 2))}</pre>
       <p style="padding-top:20px;font-style:italic;color:grey;">AT Protocol PDS running at ${html(publicUrl)}</p>
       <script>
-        const el = document.getElementById('record_value')
-        el.innerHTML = el.textContent.replace(/"(?:(at:\\/\\/did:.+?)|(did:.+?))"/g, (_, uri, did) => {
-          const a = document.createElement('a')
-          if (uri) {
-            a.href = \`/at?uri=\${encodeURIComponent(uri)}\`
-            a.textContent = uri
-          } else if (did) {
-            a.href = \`/at?uri=\${encodeURIComponent(\`at://\${did}\`)}\`
-            a.textContent = did
-          }
-          return \`"\${a.outerHTML}"\`
-        })
+        {
+          const SPLIT_REGEXP = /("(?:(?:at:\\/\\/did:.+?)|(?:did:.+?))")/g
+          const MATCH_REGEXP = /^"(?:(at:\\/\\/did:.+?)|(did:.+?))"$/
+          const textNode = (text) => document.createTextNode(text)
+          const el = document.getElementById('record_value')
+          const parts = el.textContent.split(SPLIT_REGEXP)
+          el.replaceChildren(
+            ...parts.flatMap((part) => {
+              const [, uri, did] = part.match(MATCH_REGEXP) ?? []
+              if (uri) {
+                const link = document.createElement('a')
+                link.href = \`/at?uri=\${encodeURIComponent(uri)}\`
+                link.textContent = uri
+                return [textNode('"'), link, textNode('"')]
+              } else if (did) {
+                const link = document.createElement('a')
+                link.href = \`/at?uri=\${encodeURIComponent(\`at://\${did}\`)}\`
+                link.textContent = did
+                return [textNode('"'), link, textNode('"')]
+              }
+              return textNode(part)
+            }),
+          )
+        }
       </script>
     </body>
   </html>`)
