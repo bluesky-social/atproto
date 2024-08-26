@@ -203,10 +203,15 @@ export class Agent extends XrpcClient {
     return this.sessionManager.did
   }
 
+  /** @deprecated Use {@link Agent.assertDid} instead */
+  get accountDid() {
+    return this.assertDid
+  }
+
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.
    */
-  public get accountDid(): string {
+  get assertDid(): string {
     this.assertAuthenticated()
     return this.did
   }
