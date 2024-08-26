@@ -1,5 +1,6 @@
 import {
   jsonStringToLex,
+  LexValue,
   LexXrpcProcedure,
   LexXrpcQuery,
   stringifyLex,
@@ -357,7 +358,7 @@ function iterableToReadableStream(
 export function httpResponseBodyParse(
   mimeType: string | null,
   data: ArrayBuffer | undefined,
-): any {
+): LexValue {
   try {
     if (mimeType) {
       if (mimeType.includes('application/json')) {
@@ -369,7 +370,11 @@ export function httpResponseBodyParse(
       }
     }
     if (data instanceof ArrayBuffer) {
-      return new Uint8Array(data)
+      if (data.byteLength === 0) {
+        return undefined
+      } else {
+        return new Uint8Array(data)
+      }
     }
     return data
   } catch (cause) {
