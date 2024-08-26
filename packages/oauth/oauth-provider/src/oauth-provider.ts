@@ -61,7 +61,9 @@ import {
   setupCsrfToken,
   staticJsonHandler,
   validateCsrfToken,
+  validateFetchDest,
   validateFetchMode,
+  validateFetchSite,
   validateReferer,
   validateRequestPayload,
   validateSameOrigin,
@@ -1005,6 +1007,8 @@ export class OAuthProvider extends OAuthVerifier {
       combineMiddlewares([
         function (req, res, next) {
           res.setHeader('Access-Control-Allow-Origin', '*')
+          res.setHeader('Access-Control-Allow-Headers', '*')
+
           res.setHeader('Cache-Control', 'max-age=300')
           next()
         },
@@ -1021,6 +1025,7 @@ export class OAuthProvider extends OAuthVerifier {
     ): Handler<T, TReq, TRes> =>
       async function (req, res) {
         res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Headers', '*')
 
         // https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
         res.setHeader('Cache-Control', 'no-store')
@@ -1063,11 +1068,15 @@ export class OAuthProvider extends OAuthVerifier {
       handler: (this: T, req: TReq, res: TRes) => void | Promise<void>,
     ): Handler<T, TReq, TRes> =>
       async function (req, res) {
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Headers', '*')
+
         res.setHeader('Cache-Control', 'no-store')
         res.setHeader('Pragma', 'no-cache')
 
         try {
           validateFetchMode(req, res, ['navigate'])
+          validateFetchDest(req, res, ['document'])
           validateSameOrigin(req, res, issuerOrigin)
 
           await handler.call(this, req, res)
@@ -1098,25 +1107,35 @@ export class OAuthProvider extends OAuthVerifier {
     )
 
     // CORS preflight
-    router.options<{
-      endpoint: 'jwks' | 'par' | 'token' | 'revoke' | 'introspect'
-    }>(
-      /^\/oauth\/(?<endpoint>jwks|par|token|revoke|introspect)$/,
-      function (req, res, _next) {
-        res
-          .writeHead(204, {
-            'Access-Control-Allow-Origin': req.headers['origin'] || '*',
-            'Access-Control-Allow-Methods':
-              this.params.endpoint === 'jwks' ? 'GET' : 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization,DPoP',
-            'Access-Control-Max-Age': '86400', // 1 day
-          })
-          .end()
-      },
-    )
+    const corsPreflight: Middleware = function (req, res, _next) {
+      res
+        .writeHead(204, {
+          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+          //
+          // > For requests without credentials, the literal value "*" can be
+          // > specified as a wildcard; the value tells browsers to allow
+          // > requesting code from any origin to access the resource.
+          // > Attempting to use the wildcard with credentials results in an
+          // > error.
+          //
+          // A "*" is safer to use than reflecting the request origin.
+          'Access-Control-Allow-Origin': '*',
+          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+          // > The value "*" only counts as a special wildcard value for
+          // > requests without credentials (requests without HTTP cookies or
+          // > HTTP authentication information). In requests with credentials,
+          // > it is treated as the literal method name "*" without special
+          // > semantics.
+          'Access-Control-Allow-Methods': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization,DPoP',
+          'Access-Control-Max-Age': '86400', // 1 day
+        })
+        .end()
+    }
 
     router.get('/oauth/jwks', staticJson(server.jwks))
 
+    router.options('/oauth/par', corsPreflight)
     router.post(
       '/oauth/par',
       jsonHandler(async function (req, _res) {
@@ -1136,10 +1155,14 @@ export class OAuthProvider extends OAuthVerifier {
     )
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-2.3
-    router.addRoute('*', '/oauth/par', (req, res) => {
+    // > If the request did not use the POST method, the authorization server
+    // > responds with an HTTP 405 (Method Not Allowed) status code.
+    router.options('/oauth/par', corsPreflight)
+    router.all('/oauth/par', (req, res) => {
       res.writeHead(405).end()
     })
 
+    router.options('/oauth/token', corsPreflight)
     router.post(
       '/oauth/token',
       jsonHandler(async function (req, _res) {
@@ -1155,6 +1178,7 @@ export class OAuthProvider extends OAuthVerifier {
       }),
     )
 
+    router.options('/oauth/revoke', corsPreflight)
     router.post(
       '/oauth/revoke',
       jsonHandler(async function (req, res) {
@@ -1168,6 +1192,7 @@ export class OAuthProvider extends OAuthVerifier {
       }),
     )
 
+    router.options('/oauth/revoke', corsPreflight)
     router.get(
       '/oauth/revoke',
       navigationHandler(async function (req, res) {
@@ -1204,6 +1229,8 @@ export class OAuthProvider extends OAuthVerifier {
     router.get(
       '/oauth/authorize',
       navigationHandler(async function (req, res) {
+        validateFetchSite(req, res, ['cross-site', 'none'])
+
         const query = Object.fromEntries(this.url.searchParams)
         const input = await authorizationRequestQuerySchema.parseAsync(query, {
           path: ['query'],
@@ -1235,10 +1262,12 @@ export class OAuthProvider extends OAuthVerifier {
       credentials: signInCredentialsSchema,
     })
 
+    router.options('/oauth/authorize/sign-in', corsPreflight)
     router.post(
       '/oauth/authorize/sign-in',
       jsonHandler(async function (req, res) {
         validateFetchMode(req, res, ['same-origin'])
+        validateFetchSite(req, res, ['same-origin'])
         validateSameOrigin(req, res, issuerOrigin)
 
         const input = await validateRequest(req, signInPayloadSchema)
@@ -1272,9 +1301,20 @@ export class OAuthProvider extends OAuthVerifier {
       account_sub: z.string(),
     })
 
+    // Though this is a "no-cors" request, meaning that the browser will allow
+    // any cross-origin request, with credentials, to be sent, the handler will
+    // 1) validate the request origin,
+    // 2) validate the CSRF token,
+    // 3) validate the referer,
+    // 4) validate the sec-fetch-site header,
+    // 4) validate the sec-fetch-mode header,
+    // 5) validate the sec-fetch-dest header (see navigationHandler).
+    // And will error if any of these checks fail.
     router.get(
       '/oauth/authorize/accept',
       navigationHandler(async function (req, res) {
+        validateFetchSite(req, res, ['same-origin'])
+
         const query = Object.fromEntries(this.url.searchParams)
         const input = await acceptQuerySchema.parseAsync(query, {
           path: ['query'],
@@ -1315,9 +1355,20 @@ export class OAuthProvider extends OAuthVerifier {
       client_id: clientIdSchema,
     })
 
+    // Though this is a "no-cors" request, meaning that the browser will allow
+    // any cross-origin request, with credentials, to be sent, the handler will
+    // 1) validate the request origin,
+    // 2) validate the CSRF token,
+    // 3) validate the referer,
+    // 4) validate the sec-fetch-site header,
+    // 4) validate the sec-fetch-mode header,
+    // 5) validate the sec-fetch-dest header (see navigationHandler).
+    // And will error if any of these checks fail.
     router.get(
       '/oauth/authorize/reject',
       navigationHandler(async function (req, res) {
+        validateFetchSite(req, res, ['same-origin'])
+
         const query = Object.fromEntries(this.url.searchParams)
         const input = await rejectQuerySchema.parseAsync(query, {
           path: ['query'],

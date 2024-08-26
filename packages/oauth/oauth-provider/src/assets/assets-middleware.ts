@@ -1,8 +1,13 @@
-import { writeStream } from '../lib/http/index.js'
+import {
+  Middleware,
+  validateFetchDest,
+  validateFetchSite,
+  writeStream,
+} from '../lib/http/index.js'
 
 import { ASSETS_URL_PREFIX, getAsset } from './index.js'
 
-export function authorizeAssetsMiddleware() {
+export function authorizeAssetsMiddleware(): Middleware {
   return async function assetsMiddleware(req, res, next): Promise<void> {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next()
     if (!req.url?.startsWith(ASSETS_URL_PREFIX)) return next()
@@ -16,6 +21,13 @@ export function authorizeAssetsMiddleware() {
 
     const asset = await getAsset(filename).catch(() => null)
     if (!asset) return next()
+
+    try {
+      validateFetchSite(req, res, ['same-origin'])
+      validateFetchDest(req, res, ['style', 'script'])
+    } catch (err) {
+      return next(err)
+    }
 
     if (req.headers['if-none-match'] === asset.sha256) {
       return void res.writeHead(304).end()
