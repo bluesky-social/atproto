@@ -21,9 +21,21 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
+export interface OutputSchema {
+  commitCid?: string
+  commitRev?: string
+  [k: string]: unknown
+}
+
 export interface HandlerInput {
   encoding: 'application/json'
   body: InputSchema
+}
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
@@ -32,7 +44,7 @@ export interface HandlerError {
   error?: 'InvalidSwap'
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

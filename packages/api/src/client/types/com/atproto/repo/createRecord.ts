@@ -28,6 +28,8 @@ export interface InputSchema {
 export interface OutputSchema {
   uri: string
   cid: string
+  commitCid?: string
+  commitRev?: string
   [k: string]: unknown
 }
 

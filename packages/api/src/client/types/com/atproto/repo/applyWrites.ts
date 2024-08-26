@@ -20,6 +20,12 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
+export interface OutputSchema {
+  commitCid?: string
+  commitRev?: string
+  [k: string]: unknown
+}
+
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
@@ -30,6 +36,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export class InvalidSwapError extends XRPCError {

@@ -1279,6 +1279,21 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              commitCid: {
+                type: 'string',
+                format: 'cid',
+              },
+              commitRev: {
+                type: 'string',
+              },
+            },
+          },
+        },
         errors: [
           {
             name: 'InvalidSwap',
@@ -1401,6 +1416,13 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
               },
+              commitCid: {
+                type: 'string',
+                format: 'cid',
+              },
+              commitRev: {
+                type: 'string',
+              },
             },
           },
         },
@@ -1454,6 +1476,21 @@ export const schemaDict = {
                 format: 'cid',
                 description:
                   'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              commitCid: {
+                type: 'string',
+                format: 'cid',
+              },
+              commitRev: {
+                type: 'string',
               },
             },
           },
@@ -1814,6 +1851,13 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+              commitCid: {
+                type: 'string',
+                format: 'cid',
+              },
+              commitRev: {
+                type: 'string',
               },
             },
           },

@@ -37,6 +37,16 @@
           }
         }
       },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "commitCid": { "type": "string", "format": "cid" },
+            "commitRev": { "type": "string" }
+          }
+        }
+      },
       "errors": [
         {
           "name": "InvalidSwap",
