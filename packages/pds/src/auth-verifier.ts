@@ -487,7 +487,10 @@ export class AuthVerifier {
       }
 
       if (!scope?.includes('transition:generic')) {
-        throw new AuthRequiredError('Missing required scope', 'InvalidToken')
+        throw new AuthRequiredError(
+          'Missing required scope: transition:generic',
+          'InvalidToken',
+        )
       }
 
       const scopeEquivalent = scope.includes('transition:chat.bsky')
@@ -495,6 +498,16 @@ export class AuthVerifier {
         : AuthScope.AppPass
 
       if (!scopes.includes(scopeEquivalent)) {
+        // AppPassPrivileged is sufficient but was not provided "transition:chat.bsky"
+        if (scopes.includes(AuthScope.AppPassPrivileged)) {
+          throw new InvalidRequestError(
+            'Missing required scope: transition:chat.bsky',
+            'InvalidToken',
+          )
+        }
+
+        // AuthScope.Access and AuthScope.SignupQueued do not have an OAuth
+        // scope equivalent.
         throw new InvalidRequestError(
           'DPoP access token cannot be used for this request',
           'InvalidToken',
