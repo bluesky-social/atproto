@@ -12,11 +12,16 @@ export interface QueryParams {}
 export interface InputSchema {
   /** The handle or DID of the repo (aka, current account). */
   repo: string
-  /** Can be set to 'false' to skip Lexicon schema validation of record data, for all operations. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
   writes: (Create | Update | Delete)[]
   /** If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations. */
   swapCommit?: string
+  [k: string]: unknown
+}
+
+export interface OutputSchema {
+  results?: (CreateResult | UpdateResult | DeleteResult)[]
   [k: string]: unknown
 }
 
@@ -30,6 +35,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export class InvalidSwapError extends XRPCError {
@@ -103,4 +109,58 @@ export function isDelete(v: unknown): v is Delete {
 
 export function validateDelete(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#delete', v)
+}
+
+export interface CreateResult {
+  uri: string
+  cid: string
+  validationStatus?: 'valid' | 'unknown' | (string & {})
+  [k: string]: unknown
+}
+
+export function isCreateResult(v: unknown): v is CreateResult {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.applyWrites#createResult'
+  )
+}
+
+export function validateCreateResult(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.applyWrites#createResult', v)
+}
+
+export interface UpdateResult {
+  uri: string
+  cid: string
+  validationStatus?: 'valid' | 'unknown' | (string & {})
+  [k: string]: unknown
+}
+
+export function isUpdateResult(v: unknown): v is UpdateResult {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.applyWrites#updateResult'
+  )
+}
+
+export function validateUpdateResult(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.applyWrites#updateResult', v)
+}
+
+export interface DeleteResult {
+  [k: string]: unknown
+}
+
+export function isDeleteResult(v: unknown): v is DeleteResult {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.repo.applyWrites#deleteResult'
+  )
+}
+
+export function validateDeleteResult(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.repo.applyWrites#deleteResult', v)
 }

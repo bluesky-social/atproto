@@ -1254,9 +1254,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data, for all operations.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               writes: {
                 type: 'array',
@@ -1275,6 +1274,27 @@ export const schemaDict = {
                 description:
                   'If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations.',
                 format: 'cid',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              results: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.repo.applyWrites#createResult',
+                    'lex:com.atproto.repo.applyWrites#updateResult',
+                    'lex:com.atproto.repo.applyWrites#deleteResult',
+                  ],
+                  closed: true,
+                },
               },
             },
           },
@@ -1336,6 +1356,47 @@ export const schemaDict = {
           },
         },
       },
+      createResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      updateResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      deleteResult: {
+        type: 'object',
+        required: [],
+        properties: {},
+      },
     },
   },
   ComAtprotoRepoCreateRecord: {
@@ -1370,9 +1431,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               record: {
                 type: 'unknown',
@@ -1400,6 +1460,10 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
               },
             },
           },
@@ -1778,9 +1842,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               record: {
                 type: 'unknown',
@@ -1814,6 +1877,10 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
               },
             },
           },

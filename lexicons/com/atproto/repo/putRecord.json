@@ -29,8 +29,7 @@
             },
             "validate": {
               "type": "boolean",
-              "default": true,
-              "description": "Can be set to 'false' to skip Lexicon schema validation of record data."
+              "description": "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons."
             },
             "record": {
               "type": "unknown",
@@ -56,7 +55,11 @@
           "required": ["uri", "cid"],
           "properties": {
             "uri": { "type": "string", "format": "at-uri" },
-            "cid": { "type": "string", "format": "cid" }
+            "cid": { "type": "string", "format": "cid" },
+            "validationStatus": {
+              "type": "string",
+              "knownValues": ["valid", "unknown"]
+            }
           }
         }
       },

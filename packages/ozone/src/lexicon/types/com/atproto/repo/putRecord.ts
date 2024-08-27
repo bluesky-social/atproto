@@ -17,8 +17,8 @@ export interface InputSchema {
   collection: string
   /** The Record Key. */
   rkey: string
-  /** Can be set to 'false' to skip Lexicon schema validation of record data. */
-  validate: boolean
+  /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
+  validate?: boolean
   /** The record to write. */
   record: {}
   /** Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation */
@@ -31,6 +31,7 @@ export interface InputSchema {
 export interface OutputSchema {
   uri: string
   cid: string
+  validationStatus?: 'valid' | 'unknown' | (string & {})
   [k: string]: unknown
 }
 
