@@ -385,6 +385,11 @@ export class AuthVerifier {
     ) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
+    if (payload['cnf'] !== undefined) {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
     if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
       throw new InvalidRequestError('Bad token scope', 'InvalidToken')
     }
