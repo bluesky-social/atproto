@@ -1,5 +1,12 @@
 # @atproto/repo
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [[`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31)]:
+  - @atproto/crypto@0.4.1
+
 ## 0.4.2
 
 ### Patch Changes

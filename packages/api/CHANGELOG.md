@@ -1,5 +1,22 @@
 # @atproto/api
 
+## 0.13.4
+
+### Patch Changes
+
+- [#2714](https://github.com/bluesky-social/atproto/pull/2714) [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Drop use of `AtpBaseClient` class
+
+- [#2714](https://github.com/bluesky-social/atproto/pull/2714) [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose the `CredentialSession` class that can be used to instantiate both `Agent` and `XrpcClient`, while internally managing credential based (username/password) sessions.
+
+- [`bbca17bc5`](https://github.com/bluesky-social/atproto/commit/bbca17bc5388e0b2af26fb107347c8ab507ee42f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate Agent.accountDid in favor of Agent.assertDid
+
+- [#2737](https://github.com/bluesky-social/atproto/pull/2737) [`a8e1f9000`](https://github.com/bluesky-social/atproto/commit/a8e1f9000d9617c4df9d9f0e74ae0e0b73fcfd66) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `threadgate: ThreadgateView` to response from `getPostThread`
+
+- [#2714](https://github.com/bluesky-social/atproto/pull/2714) [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `Agent` is no longer an abstract class. Instead it can be instantiated using object implementing a new `SessionManager` interface. If your project extends `Agent` and overrides the constructor or any method implementations, consider that you may want to call them from `super`.
+
+- Updated dependencies [[`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c)]:
+  - @atproto/xrpc@0.6.1
+
 ## 0.13.3
 
 ### Patch Changes
