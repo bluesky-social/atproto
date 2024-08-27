@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
+    "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",

@@ -12,7 +12,6 @@ import {
   RepoContents,
   RecordPath,
   WriteOpAction,
-  RecordClaim,
   Commit,
   DataDiff,
   CommitData,
@@ -169,20 +168,6 @@ export const formatEdit = async (
     commit,
     data: repoData,
   }
-}
-
-export const contentsToClaims = (contents: RepoContents): RecordClaim[] => {
-  const claims: RecordClaim[] = []
-  for (const coll of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[coll])) {
-      claims.push({
-        collection: coll,
-        rkey: rkey,
-        record: contents[coll][rkey],
-      })
-    }
-  }
-  return claims
 }
 
 export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>

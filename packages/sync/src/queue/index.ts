@@ -4,8 +4,6 @@ import { PartitionedQueue } from './partitioned'
 
 export type SyncQueueOptions = {
   handleEvt: (evt: Event) => Promise<void>
-  getCursor?: () => Promise<number | undefined>
-  setCursor?: (cursor: number) => Promise<void>
 }
 
 export class SyncQueue {

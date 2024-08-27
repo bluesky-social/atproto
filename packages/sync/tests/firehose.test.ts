@@ -1,5 +1,6 @@
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { Firehose, SyncQueue } from '../src'
+import { IdResolver } from '@atproto/identity'
 
 describe('firehose', () => {
   let network: TestNetwork
@@ -22,7 +23,9 @@ describe('firehose', () => {
     //     console.log(evt)
     //   },
     // })
+    const idResolver = new IdResolver({ plcUrl: network.plc.url })
     const firehose = new Firehose({
+      idResolver,
       service: network.pds.url.replace('http', 'ws'),
       onError: (typ, err) => {
         console.log('typ: ', typ)

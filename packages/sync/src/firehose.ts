@@ -1,5 +1,13 @@
 import { createDeferrable, Deferrable, wait } from '@atproto/common'
-import { cborToLexRecord, readCar } from '@atproto/repo'
+import { IdResolver } from '@atproto/identity'
+import {
+  cborToLexRecord,
+  formatDataKey,
+  parseDataKey,
+  readCar,
+  RepoVerificationError,
+  verifyProofs,
+} from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
 import {
@@ -7,6 +15,7 @@ import {
   type Commit,
   type Identity,
   type RepoEvent,
+  RepoOp,
   isAccount,
   isCommit,
   isIdentity,
@@ -21,8 +30,11 @@ import {
   IdentityEvt,
 } from './events'
 import { SyncQueue } from './queue'
+import { CID } from 'multiformats/cid'
 
 export type FirehoseOptions = {
+  idResolver: IdResolver
+  unauthenticated?: boolean
   service?: string
   syncQueue?: SyncQueue
   getCursor?: () => Promise<number | undefined>
@@ -72,7 +84,9 @@ export class Firehose {
       for await (const evt of this.sub) {
         try {
           if (isCommit(evt) && !this.opts.excludeCommit) {
-            const parsed = await parseCommit(evt)
+            const parsed = this.opts.unauthenticated
+              ? await parseCommitUnauthenticated(evt)
+              : await parseCommitAuthenticated(this.opts.idResolver, evt)
             for (const write of parsed) {
               if (
                 !this.opts.filterCollections ||
@@ -114,12 +128,56 @@ export class Firehose {
   }
 }
 
-export const parseCommit = async (evt: Commit): Promise<CommitEvt[]> => {
+export const parseCommitAuthenticated = async (
+  idResolver: IdResolver,
+  evt: Commit,
+  forceKeyRefresh = false,
+): Promise<CommitEvt[]> => {
+  const did = evt.repo
+  const key = await idResolver.did.resolveAtprotoKey(did, forceKeyRefresh)
+  const claims = evt.ops.map((op) => {
+    const { collection, rkey } = parseDataKey(op.path)
+    return {
+      collection,
+      rkey,
+      cid: op.action === 'delete' ? null : op.cid,
+    }
+  })
+  const verifiedCids: Record<string, CID | null> = {}
+  try {
+    const results = await verifyProofs(evt.blocks, claims, did, key)
+    results.verified.forEach((op) => {
+      const path = formatDataKey(op.collection, op.rkey)
+      verifiedCids[path] = op.cid
+    })
+  } catch (err) {
+    if (err instanceof RepoVerificationError) {
+      return parseCommitAuthenticated(idResolver, evt, true)
+    }
+    throw err
+  }
+  const verifiedOps: RepoOp[] = evt.ops.filter((op) => {
+    if (op.action === 'delete') {
+      return verifiedCids[op.path] === null
+    } else {
+      return op.cid !== null && op.cid.equals(verifiedCids[op.path])
+    }
+  })
+  return formatCommitOps(evt, verifiedOps)
+}
+
+export const parseCommitUnauthenticated = async (
+  evt: Commit,
+): Promise<CommitEvt[]> => {
+  return formatCommitOps(evt, evt.ops)
+}
+
+const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
   const car = await readCar(evt.blocks)
 
   const evts: CommitEvt[] = []
 
-  for (const op of evt.ops) {
+  for (const op of ops) {
     const uri = new AtUri(`at://${evt.repo}/${op.path}`)
 
     const meta: CommitMeta = {
