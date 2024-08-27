@@ -1,6 +1,7 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { TOOLS_OZONE_TEAM } from '../src/lexicon'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('get-config', () => {
   let network: TestNetwork
@@ -25,7 +26,10 @@ describe('get-config', () => {
     const { data } = await agent.api.tools.ozone.server.getConfig(
       {},
       {
-        headers: await network.ozone.modHeaders(role),
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneServerGetConfig,
+          role,
+        ),
       },
     )
     return data

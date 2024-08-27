@@ -69,7 +69,7 @@ describe('notif service proxy', () => {
     const auth = await verifyJwt(
       spy.current?.['jwt'] as string,
       notifDid,
-      null,
+      'app.bsky.notification.registerPush',
       async (did) => {
         const keypair = await network.pds.ctx.actorStore.keypair(did)
         return keypair.did()

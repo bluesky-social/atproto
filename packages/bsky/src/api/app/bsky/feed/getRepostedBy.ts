@@ -10,7 +10,7 @@ import {
 } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
-import { creatorFromUri } from '../../../../views/util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {

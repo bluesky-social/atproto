@@ -49,6 +49,7 @@ import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
+import { ids } from '../lexicon/lexicons'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -62,7 +63,10 @@ export class ModerationService {
     public idResolver: IdResolver,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
-    private createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
+    private createAuthHeaders: (
+      aud: string,
+      method: string,
+    ) => Promise<AuthHeaders>,
     public imgInvalidator?: ImageInvalidator,
   ) {}
 
@@ -74,7 +78,7 @@ export class ModerationService {
     idResolver: IdResolver,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
-    createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
+    createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     imgInvalidator?: ImageInvalidator,
   ) {
     return (db: Database) =>
@@ -97,8 +101,11 @@ export class ModerationService {
     this.signingKey,
     this.signingKeyId,
     this.appviewAgent,
-    async (labelers?: ParsedLabelers) => {
-      const authHeaders = await this.createAuthHeaders(this.cfg.appview.did)
+    async (method: string, labelers?: ParsedLabelers) => {
+      const authHeaders = await this.createAuthHeaders(
+        this.cfg.appview.did,
+        method,
+      )
       if (labelers?.dids?.length) {
         authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
       }
@@ -936,7 +943,10 @@ export class ModerationService {
       },
       {
         encoding: 'application/json',
-        ...(await this.createAuthHeaders(serverInfo.did)),
+        ...(await this.createAuthHeaders(
+          serverInfo.did,
+          ids.ComAtprotoAdminSendEmail,
+        )),
       },
     )
     if (!delivery.sent) {

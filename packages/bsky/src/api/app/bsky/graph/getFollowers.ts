@@ -10,7 +10,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { didFromUri } from '../../../../hydration/util'
+import { uriToDid as didFromUri } from '../../../../util/uris'
 import {
   HydrateCtx,
   Hydrator,

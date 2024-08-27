@@ -1,6 +1,4 @@
 import { sql } from 'kysely'
-import { AtUri } from '@atproto/syntax'
-import { ids } from '../../lexicon/lexicons'
 import {
   Record as PostRecord,
   ReplyRef,
@@ -143,10 +141,4 @@ export const violatesThreadGate = async (
   }
 
   return true
-}
-
-export const postToThreadgateUri = (postUri: string) => {
-  const gateUri = new AtUri(postUri)
-  gateUri.collection = ids.AppBskyFeedThreadgate
-  return gateUri.toString()
 }

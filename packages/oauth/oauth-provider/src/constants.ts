@@ -67,3 +67,6 @@ export const DPOP_NONCE_MAX_AGE = 3 * MINUTE
 
 /** 5 seconds */
 export const SESSION_FIXATION_MAX_AGE = 5 * SECOND
+
+/** 1 day */
+export const CODE_CHALLENGE_REPLAY_TIMEFRAME = 1 * DAY

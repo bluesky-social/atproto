@@ -11,6 +11,7 @@ import { ClientAuth } from './client/client-auth.js'
 import { ClientId } from './client/client-id.js'
 import { ClientInfo } from './client/client-info.js'
 import { Client } from './client/client.js'
+import { InvalidAuthorizationDetailsError } from './errors/invalid-authorization-details-error.js'
 import { Awaitable } from './lib/util/type.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
@@ -20,6 +21,7 @@ export type {
   ClientAuth,
   ClientId,
   ClientInfo,
+  InvalidAuthorizationDetailsError,
   Jwks,
   OAuthAuthenticationRequestParameters,
   OAuthAuthorizationDetails,
@@ -42,7 +44,7 @@ export type OAuthHooks = {
 
   /**
    * Allows enriching the authorization details with additional information
-   * before the tokens are issued.
+   * when the tokens are issued.
    *
    * @see {@link https://datatracker.ietf.org/doc/html/rfc9396 | RFC 9396}
    */
@@ -51,16 +53,4 @@ export type OAuthHooks = {
     parameters: OAuthAuthenticationRequestParameters
     account: Account
   }) => Awaitable<undefined | OAuthAuthorizationDetails>
-
-  /**
-   * Allows altering the token response before it is sent to the client.
-   */
-  onTokenResponse?: (
-    tokenResponse: OAuthTokenResponse,
-    data: {
-      client: Client
-      parameters: OAuthAuthenticationRequestParameters
-      account: Account
-    },
-  ) => Awaitable<void>
 }

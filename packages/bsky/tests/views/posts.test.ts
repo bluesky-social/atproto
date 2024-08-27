@@ -3,6 +3,7 @@ import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
 import { RecordEmbed, VideoEmbed } from '../../src/views/types'
 import { RecordWithMedia } from '../../dist/views/types'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('pds posts views', () => {
   let network: TestNetwork
@@ -36,7 +37,12 @@ describe('pds posts views', () => {
     ]
     const posts = await agent.api.app.bsky.feed.getPosts(
       { uris },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
     )
 
     expect(posts.data.posts.length).toBe(uris.length)
@@ -55,7 +61,12 @@ describe('pds posts views', () => {
 
     const authed = await agent.api.app.bsky.feed.getPosts(
       { uris },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPosts,
+        ),
+      },
     )
     const unauthed = await agent.api.app.bsky.feed.getPosts({
       uris,

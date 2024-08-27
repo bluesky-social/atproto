@@ -2,6 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('notification views', () => {
   let network: TestNetwork
@@ -48,14 +49,24 @@ describe('notification views', () => {
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
         {},
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationGetUnreadCount,
+          ),
+        },
       )
 
     expect(notifCountAlice.data.count).toBe(12)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationGetUnreadCount,
+        ),
+      },
     )
 
     expect(notifCountBob.data.count).toBeGreaterThanOrEqual(3)
@@ -75,14 +86,24 @@ describe('notification views', () => {
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
         {},
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationGetUnreadCount,
+          ),
+        },
       )
 
     expect(notifCountAlice.data.count).toBe(13)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationGetUnreadCount,
+        ),
+      },
     )
 
     expect(notifCountBob.data.count).toBeGreaterThanOrEqual(4)
@@ -97,7 +118,12 @@ describe('notification views', () => {
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     const hasNotif = notifsAlice.data.notifications.some(
       (notif) => notif.uri === second.ref.uriStr,
@@ -114,7 +140,12 @@ describe('notification views', () => {
     // Dan was quoted by alice
     const notifsDan = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(sc.dids.dan) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.dan,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
   })
@@ -122,7 +153,12 @@ describe('notification views', () => {
   it('fetches notifications without a last-seen', async () => {
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
 
     const notifs = notifRes.data.notifications
@@ -140,7 +176,12 @@ describe('notification views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.notification.listNotifications(
         { cursor, limit: 6 },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
       )
       return res.data
     }
@@ -152,7 +193,12 @@ describe('notification views', () => {
 
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
 
     expect(full.data.notifications.length).toEqual(13)
@@ -162,26 +208,44 @@ describe('notification views', () => {
   it('fetches notification count with a last-seen', async () => {
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     const seenAt = full.data.notifications[3].indexedAt
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt },
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationUpdateSeen,
+        ),
         encoding: 'application/json',
       },
     )
     const full2 = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(full2.data.notifications.length).toBe(full.data.notifications.length)
     expect(full2.data.seenAt).toEqual(seenAt)
 
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationGetUnreadCount,
+        ),
+      },
     )
 
     expect(notifCount.data.count).toBe(
@@ -193,7 +257,10 @@ describe('notification views', () => {
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationUpdateSeen,
+        ),
         encoding: 'application/json',
       },
     )
@@ -202,19 +269,32 @@ describe('notification views', () => {
   it('fetches notifications with a last-seen', async () => {
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     const seenAt = full.data.notifications[3].indexedAt
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt },
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationUpdateSeen,
+        ),
         encoding: 'application/json',
       },
     )
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
 
     const notifs = notifRes.data.notifications
@@ -226,7 +306,10 @@ describe('notification views', () => {
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
       {
-        headers: await network.serviceHeaders(alice),
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationUpdateSeen,
+        ),
         encoding: 'application/json',
       },
     )
@@ -245,11 +328,21 @@ describe('notification views', () => {
 
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await network.serviceHeaders(alice) },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyNotificationGetUnreadCount,
+        ),
+      },
     )
 
     const notifs = sort(notifRes.data.notifications)
@@ -270,7 +363,12 @@ describe('notification views', () => {
   it('fetches notifications with explicit priority', async () => {
     const priority = await agent.api.app.bsky.notification.listNotifications(
       { priority: true },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     // only notifs from follow (alice)
     expect(
@@ -281,7 +379,12 @@ describe('notification views', () => {
     expect(forSnapshot(priority.data)).toMatchSnapshot()
     const noPriority = await agent.api.app.bsky.notification.listNotifications(
       { priority: false },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     expect(forSnapshot(noPriority.data)).toMatchSnapshot()
   })
@@ -291,13 +394,21 @@ describe('notification views', () => {
       { priority: true },
       {
         encoding: 'application/json',
-        headers: await network.serviceHeaders(sc.dids.carol),
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationPutPreferences,
+        ),
       },
     )
     await network.processAll()
     const notifs = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(sc.dids.carol) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
     // only notifs from follow (alice)
     expect(
@@ -312,7 +423,12 @@ describe('notification views', () => {
     const { data: notifs } =
       await agent.api.app.bsky.notification.listNotifications(
         { cursor: '90210::bafycid' },
-        { headers: await network.serviceHeaders(alice) },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
       )
     expect(notifs).toMatchObject({ notifications: [] })
   })

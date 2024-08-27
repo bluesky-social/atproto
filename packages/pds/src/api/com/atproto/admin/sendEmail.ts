@@ -26,14 +26,14 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)
         return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.admin.sendEmail(input.body, {
-            encoding: 'application/json',
-            ...(await ctx.serviceAuthHeaders(
+          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
+            input.body,
+            await ctx.serviceAuthHeaders(
               recipientDid,
               ctx.cfg.entryway.did,
               ids.ComAtprotoAdminSendEmail,
-            )),
-          }),
+            ),
+          ),
         )
       }
 

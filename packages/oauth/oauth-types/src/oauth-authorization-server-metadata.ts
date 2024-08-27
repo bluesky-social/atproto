@@ -44,24 +44,8 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
     .optional(),
 
   revocation_endpoint: z.string().url().optional(),
-  revocation_endpoint_auth_methods_supported: z.array(z.string()).optional(),
-  revocation_endpoint_auth_signing_alg_values_supported: z
-    .array(z.string())
-    .optional(),
-
   introspection_endpoint: z.string().url().optional(),
-  introspection_endpoint_auth_methods_supported: z.array(z.string()).optional(),
-  introspection_endpoint_auth_signing_alg_values_supported: z
-    .array(z.string())
-    .optional(),
-
   pushed_authorization_request_endpoint: z.string().url().optional(),
-  pushed_authorization_request_endpoint_auth_methods_supported: z
-    .array(z.string())
-    .optional(),
-  pushed_authorization_request_endpoint_auth_signing_alg_values_supported: z
-    .array(z.string())
-    .optional(),
 
   require_pushed_authorization_requests: z.boolean().optional(),
 

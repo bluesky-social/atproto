@@ -28,6 +28,27 @@ export async function validateRequestPayload<S extends z.ZodTypeAny>(
   return schema.parseAsync(payload, { path: ['body'] })
 }
 
+export function validateHeaderValue(
+  req: IncomingMessage,
+  name: keyof IncomingMessage['headers'],
+  allowedValues: readonly (string | null)[],
+) {
+  const value = req.headers[name] ?? null
+
+  if (Array.isArray(value)) {
+    throw createHttpError(400, `Invalid ${name} header`)
+  }
+
+  if (!allowedValues.includes(value)) {
+    throw createHttpError(
+      400,
+      value
+        ? `Forbidden ${name} header "${value}" (expected ${allowedValues})`
+        : `Missing ${name} header`,
+    )
+  }
+}
+
 export function validateFetchMode(
   req: IncomingMessage,
   res: ServerResponse,
@@ -39,20 +60,45 @@ export function validateFetchMode(
     | 'cors'
   )[],
 ) {
-  const reqMode = req.headers['sec-fetch-mode'] ?? null
+  validateHeaderValue(req, 'sec-fetch-mode', expectedMode)
+}
 
-  if (Array.isArray(reqMode)) {
-    throw createHttpError(400, `Invalid sec-fetch-mode header`)
-  }
+export function validateFetchDest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  expectedDest: readonly (
+    | null
+    | 'document'
+    | 'embed'
+    | 'font'
+    | 'image'
+    | 'manifest'
+    | 'media'
+    | 'object'
+    | 'report'
+    | 'script'
+    | 'serviceworker'
+    | 'sharedworker'
+    | 'style'
+    | 'worker'
+    | 'xslt'
+  )[],
+) {
+  validateHeaderValue(req, 'sec-fetch-dest', expectedDest)
+}
 
-  if (!(expectedMode as (string | null)[]).includes(reqMode)) {
-    throw createHttpError(
-      403,
-      reqMode
-        ? `Forbidden sec-fetch-mode "${reqMode}" (expected ${expectedMode})`
-        : `Missing sec-fetch-mode (expected ${expectedMode})`,
-    )
-  }
+export function validateFetchSite(
+  req: IncomingMessage,
+  res: ServerResponse,
+  expectedSite: readonly (
+    | null
+    | 'same-origin'
+    | 'same-site'
+    | 'cross-site'
+    | 'none'
+  )[],
+) {
+  validateHeaderValue(req, 'sec-fetch-site', expectedSite)
 }
 
 export function validateReferer(
@@ -64,7 +110,7 @@ export function validateReferer(
   const referer = req.headers['referer']
   const refererUrl = referer ? new URL(referer) : null
   if (refererUrl ? !urlMatch(refererUrl, reference) : !allowNull) {
-    throw createHttpError(403, `Invalid referer ${referer}`)
+    throw createHttpError(400, `Invalid referer ${referer}`)
   }
 }
 
@@ -95,7 +141,7 @@ export function validateSameOrigin(
 ) {
   const reqOrigin = req.headers['origin']
   if (reqOrigin ? reqOrigin !== origin : !allowNull) {
-    throw createHttpError(403, `Invalid origin ${reqOrigin}`)
+    throw createHttpError(400, `Invalid origin ${reqOrigin}`)
   }
 }
 
@@ -113,7 +159,7 @@ export function validateCsrfToken(
     !cookieName ||
     cookies[cookieName] !== csrfToken
   ) {
-    throw createHttpError(403, `Invalid CSRF token`)
+    throw createHttpError(400, `Invalid CSRF token`)
   }
 
   if (clearCookie) {
