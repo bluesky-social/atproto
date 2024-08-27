@@ -75,12 +75,17 @@ export const verifyJwt = async (
 
   const header = parseHeader(parts[0])
 
-  // "typ" if, present, should not be anything other than "JWT" (such as
-  // "at+jwt", "dpop+jwt", etc.)
+  // The spec does not describe what to do with the "typ" claim. We can,
+  // however, forbid some values that are not compatible with our use case.
   if (
-    header['typ'] !== undefined &&
-    header['typ'] !== 'JWT' &&
-    header['typ'] !== 'jwt'
+    // service tokens are not OAuth 2.0 access tokens
+    // https://datatracker.ietf.org/doc/html/rfc9068
+    header['typ'] === 'at+jwt' ||
+    // "refresh+jwt" is a non-standard type used by the @atproto packages
+    header['typ'] === 'refresh+jwt' ||
+    // "DPoP" proofs are not meant to be used as service tokens
+    // https://datatracker.ietf.org/doc/html/rfc9449
+    header['typ'] === 'dpop+jwt'
   ) {
     throw new AuthRequiredError('jwt is not of type "JWT"', 'BadJwtType')
   }
