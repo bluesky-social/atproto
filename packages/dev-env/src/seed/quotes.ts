@@ -32,6 +32,9 @@ export default async (sc: SeedClient) => {
     sc.replies[sc.dids.bob][0].ref,
   )
 
+  const carolPost = await sc.post(sc.dids.carol, 'post')
+  await sc.post(sc.dids.eve, 'qUoTe 4', undefined, undefined, carolPost.ref)
+
   const spamPosts: Promise<any>[] = []
   for (let i = 0; i < 5; i++) {
     spamPosts.push(
