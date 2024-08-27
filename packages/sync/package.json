@@ -18,9 +18,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "../dev-infra/with-test-redis-and-db.sh jest"
   },
   "dependencies": {
+    "@atproto/common": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
@@ -29,6 +31,6 @@
     "p-queue": "^6.6.2"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "jest": "^28.1.2"
   }
 }

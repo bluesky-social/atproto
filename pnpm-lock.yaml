@@ -1365,6 +1365,9 @@ importers:
 
   packages/sync:
     dependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon

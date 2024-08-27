@@ -11,14 +11,24 @@ export type SyncQueueOptions = {
 export class SyncQueue {
   consecutive = new ConsecutiveList<number>()
   repoQueue = new PartitionedQueue({ concurrency: Infinity })
+  cursor = 0
 
-  constructor(public handleEvt: (evt: Event) => Promise<void>) {}
+  constructor(public opts: SyncQueueOptions) {}
 
   async addEvent(evt: Event) {
     const item = this.consecutive.push(evt.seq)
-    await this.repoQueue.add(evt.did, () => this.handleEvt(evt))
+    await this.repoQueue.add(evt.did, () => this.opts.handleEvt(evt))
     const latest = item.complete().at(-1)
-    // @TODO something with latest
-    console.log(latest)
+    if (latest !== undefined) {
+      this.cursor = latest
+    }
+  }
+
+  async processAll() {
+    await this.repoQueue.main.onIdle()
+  }
+
+  async destroy() {
+    await this.repoQueue.destroy()
   }
 }

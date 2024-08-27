@@ -1,3 +1,4 @@
+import { createDeferrable, Deferrable, wait } from '@atproto/common'
 import { cborToLexRecord, readCar } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
@@ -19,11 +20,13 @@ import {
   AccountStatus,
   IdentityEvt,
 } from './events'
+import { SyncQueue } from './queue'
 
-type Opts = {
+export type FirehoseOptions = {
   service?: string
+  syncQueue?: SyncQueue
   getCursor?: () => Promise<number | undefined>
-  setCursor?: (cursor: number) => Promise<void>
+  onError?: (errorType: FirehoseErrorType, err: unknown) => void
   subscriptionReconnectDelay?: number
   filterCollections?: string[]
   excludeIdentity?: boolean
@@ -32,31 +35,39 @@ type Opts = {
 }
 
 export class Firehose {
-  public sub: Subscription<RepoEvent>
+  private sub: Subscription<RepoEvent>
   private abortController: AbortController
+  private destoryDefer: Deferrable
 
-  constructor(public opts: Opts) {
+  constructor(public opts: FirehoseOptions) {
+    this.destoryDefer = createDeferrable()
     this.abortController = new AbortController()
     this.sub = new Subscription({
-      service: opts.service ?? 'https://bsky.network',
+      service: opts.service ?? 'wss://bsky.network',
       method: 'com.atproto.sync.subscribeRepos',
       signal: this.abortController.signal,
       getParams: async () => {
-        if (!opts.getCursor) return undefined
-        const cursor = await opts.getCursor()
-        return { cursor }
+        if (opts.getCursor) {
+          const cursor = await opts.getCursor()
+          return { cursor }
+        } else if (opts.syncQueue) {
+          return { cursor: opts.syncQueue.cursor }
+        }
+        return undefined
       },
       validate: (value: unknown) => {
         try {
           return isValidRepoEvent(value)
         } catch (err) {
-          console.error('repo subscription skipped invalid message', err)
+          if (opts.onError) {
+            opts.onError('validation', err)
+          }
         }
       },
     })
   }
 
-  async *run(): AsyncGenerator<Event> {
+  async *[Symbol.asyncIterator](): AsyncGenerator<Event> {
     try {
       for await (const evt of this.sub) {
         try {
@@ -79,20 +90,27 @@ export class Firehose {
             yield parseIdentity(evt)
           }
         } catch (err) {
-          console.error('repo subscription could not handle message', err)
-        }
-        if (this.opts.setCursor && typeof evt.seq === 'number') {
-          await this.opts.setCursor(evt.seq)
+          if (this.opts.onError) {
+            this.opts.onError('parse', err)
+          }
         }
       }
     } catch (err) {
-      console.error('repo subscription errored', err)
-      setTimeout(() => this.run(), this.opts.subscriptionReconnectDelay ?? 3000)
+      if (err && err['name'] === 'AbortError') {
+        this.destoryDefer.resolve()
+        return
+      }
+      if (this.opts.onError) {
+        this.opts.onError('subscription', err)
+      }
+      await wait(3000)
+      return this
     }
   }
 
-  destroy() {
+  async destroy(): Promise<void> {
     this.abortController.abort()
+    await this.destoryDefer.complete
   }
 }
 
@@ -159,3 +177,5 @@ export const parseAccount = (evt: Account): AccountEvt | undefined => {
 const isValidStatus = (str: string): str is AccountStatus => {
   return ['takendown', 'suspended', 'deleted', 'deactivated'].includes(str)
 }
+
+export type FirehoseErrorType = 'validation' | 'parse' | 'subscription'
