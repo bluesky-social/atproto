@@ -28,7 +28,12 @@ import {
   StarterPackView,
   StarterPackViewBasic,
 } from '../lexicon/types/app/bsky/graph/defs'
-import { creatorFromUri, parseThreadGate, cidFromBlobJson } from './util'
+import {
+  creatorFromUri,
+  parseThreadGate,
+  cidFromBlobJson,
+  VideoUriBuilder,
+} from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -48,6 +53,8 @@ import {
   RecordEmbedViewInternal,
   RecordWithMedia,
   RecordWithMediaView,
+  VideoEmbed,
+  VideoEmbedView,
   isExternalEmbed,
   isImagesEmbed,
   isRecordEmbed,
@@ -64,7 +71,10 @@ import {
 import { Notification } from '../proto/bsky_pb'
 
 export class Views {
-  constructor(public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public imgUriBuilder: ImageUriBuilder,
+    public videoUriBuilder: VideoUriBuilder,
+  ) {}
 
   // Actor
   // ------------
@@ -827,7 +837,7 @@ export class Views {
     if (isImagesEmbed(embed)) {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbed(embed)) {
-      return undefined // @TODO handle video embed
+      return this.videoEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbed(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed)
     } else if (isRecordEmbed(embed)) {
@@ -857,6 +867,18 @@ export class Views {
     return {
       $type: 'app.bsky.embed.images#view',
       images: imgViews,
+    }
+  }
+
+  videoEmbed(did: string, embed: VideoEmbed): VideoEmbedView {
+    const cid = cidFromBlobJson(embed.video)
+    return {
+      $type: 'app.bsky.embed.video#view',
+      cid,
+      playlist: this.videoUriBuilder.playlist({ did, cid }),
+      thumbnail: this.videoUriBuilder.thumbnail({ did, cid }),
+      alt: embed.alt,
+      aspectRatio: embed.aspectRatio,
     }
   }
 
@@ -992,9 +1014,11 @@ export class Views {
     depth: number,
   ): RecordWithMediaView | undefined {
     const creator = creatorFromUri(postUri)
-    let mediaEmbed: ImagesEmbedView | ExternalEmbedView
+    let mediaEmbed: ImagesEmbedView | VideoEmbedView | ExternalEmbedView
     if (isImagesEmbed(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
+    } else if (isVideoEmbed(embed.media)) {
+      mediaEmbed = this.videoEmbed(creator, embed.media)
     } else if (isExternalEmbed(embed.media)) {
       mediaEmbed = this.externalEmbed(creator, embed.media)
     } else {
