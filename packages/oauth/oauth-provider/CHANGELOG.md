@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.2.1
+
+### Patch Changes
+
+- [#2749](https://github.com/bluesky-social/atproto/pull/2749) [`c180cf4d8`](https://github.com/bluesky-social/atproto/commit/c180cf4d86d174c24dd640d3c95b8a461c0cd41d) Thanks [@devinivy](https://github.com/devinivy)! - Fix client-side crash on authorize page
+
 ## 0.2.0
 
 ### Minor Changes
