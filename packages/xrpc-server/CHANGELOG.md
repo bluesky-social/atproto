@@ -1,5 +1,17 @@
 # @atproto/xrpc-server
 
+## 0.6.3
+
+### Patch Changes
+
+- [#2743](https://github.com/bluesky-social/atproto/pull/2743) [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `iat` claim to service JWTs
+
+- [#2743](https://github.com/bluesky-social/atproto/pull/2743) [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that service auth JWT headers contain an `alg` claim, and ensure that `typ`, if present, is not an unexpected type (e.g. not an access or DPoP token).
+
+- Updated dependencies [[`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`ebb318325`](https://github.com/bluesky-social/atproto/commit/ebb318325b6e80c4ea1a93a617569da2698afe31), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c), [`d9ffa3c46`](https://github.com/bluesky-social/atproto/commit/d9ffa3c460924010d7002b616cb7a0c66111cc6c)]:
+  - @atproto/xrpc@0.6.1
+  - @atproto/crypto@0.4.1
+
 ## 0.6.2
 
 ### Patch Changes
