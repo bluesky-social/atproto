@@ -320,10 +320,11 @@ export class AuthVerifier {
 
   protected async validateRefreshToken(
     ctx: ReqCtx,
-    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience'>,
+    verifyOptions?: Omit<jose.JWTVerifyOptions, 'audience' | 'typ'>,
   ): Promise<ValidatedRefreshBearer> {
     const result = await this.validateBearerToken(ctx, [AuthScope.Refresh], {
       ...verifyOptions,
+      typ: 'refresh+jwt',
       // when using entryway, proxying refresh credentials
       audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
     })
@@ -340,7 +341,8 @@ export class AuthVerifier {
   protected async validateBearerToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
-    verifyOptions?: jose.JWTVerifyOptions,
+    verifyOptions: jose.JWTVerifyOptions &
+      Required<Pick<jose.JWTVerifyOptions, 'audience' | 'typ'>>,
   ): Promise<ValidatedBearer> {
     this.setAuthHeaders(ctx)
 
@@ -351,15 +353,26 @@ export class AuthVerifier {
 
     const { payload, protectedHeader } = await this.jwtVerify(
       token,
-      verifyOptions,
+      // @TODO: Once all access & refresh tokens have a "typ" claim (i.e. 90
+      // days after this code was deployed), replace the following line with
+      // "verifyOptions," (to re-enable the verification of the "typ" property
+      // from verifyJwt()). Once the change is made, the "if" block below that
+      // checks for "typ" can be removed.
+      {
+        ...verifyOptions,
+        typ: undefined,
+      },
     )
 
-    if (protectedHeader.typ === 'dpop+jwt') {
-      // @TODO we should make sure that bearer access tokens do have their "typ"
-      // claim, and allow list the possible value(s) here (typically "at+jwt"),
-      // instead of using a deny list. This would be more secure & future proof
-      // against new token types that would be introduced in the future
-      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    // @TODO: remove the next check once all access & refresh tokens have "typ"
+    // Note: when removing the check, make sure that the "verifyOptions"
+    // contains the "typ" property, so that the token is verified correctly by
+    // this.verifyJwt()
+    if (protectedHeader.typ && verifyOptions.typ !== protectedHeader.typ) {
+      // Temporarily allow historical tokens without "typ" to pass through. See:
+      // createAccessToken() and createRefreshToken() in
+      // src/account-manager/helpers/auth.ts
+      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
     }
 
     const { sub, aud, scope } = payload
@@ -372,8 +385,9 @@ export class AuthVerifier {
     ) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if ((payload.cnf as any)?.jkt) {
-      // DPoP bound tokens must not be usable as regular Bearer tokens
+    if (payload['cnf'] !== undefined) {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
@@ -550,7 +564,7 @@ export class AuthVerifier {
     const { did, scope, token, audience } = await this.validateBearerToken(
       ctx,
       scopes,
-      { audience: this.dids.pds },
+      { audience: this.dids.pds, typ: 'at+jwt' },
     )
     const isPrivileged = [
       AuthScope.Access,
