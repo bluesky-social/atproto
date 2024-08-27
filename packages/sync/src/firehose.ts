@@ -224,7 +224,7 @@ export const parseIdentity = async (
   evt: Identity,
 ): Promise<IdentityEvt | null> => {
   const res = await idResolver.did.resolve(evt.did)
-  const handle = res ? await verifyHandle(idResolver, res) : undefined
+  const handle = res ? await verifyHandle(idResolver, evt.did, res) : undefined
 
   return {
     event: 'identity',
@@ -237,6 +237,7 @@ export const parseIdentity = async (
 
 const verifyHandle = async (
   idResolver: IdResolver,
+  did: string,
   didDoc: DidDocument,
 ): Promise<string | undefined> => {
   const { handle } = parseToAtprotoDocument(didDoc)
@@ -244,7 +245,7 @@ const verifyHandle = async (
     return undefined
   }
   const res = await idResolver.handle.resolve(handle)
-  return res === handle ? handle : undefined
+  return res === did ? handle : undefined
 }
 
 export const parseAccount = (evt: Account): AccountEvt | undefined => {
