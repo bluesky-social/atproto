@@ -7,7 +7,7 @@ import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.listAppPasswords({
-    auth: ctx.authVerifier.accessFull(),
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth }) => {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)

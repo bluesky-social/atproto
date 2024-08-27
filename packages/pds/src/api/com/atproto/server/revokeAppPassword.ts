@@ -6,7 +6,7 @@ import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.revokeAppPassword({
-    auth: ctx.authVerifier.accessFull(),
+    auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth, input }) => {
       if (ctx.entrywayAgent) {
         assert(ctx.cfg.entryway)
