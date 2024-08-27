@@ -87,7 +87,10 @@ export const verifyJwt = async (
     // https://datatracker.ietf.org/doc/html/rfc9449
     header['typ'] === 'dpop+jwt'
   ) {
-    throw new AuthRequiredError('jwt is not of type "JWT"', 'BadJwtType')
+    throw new AuthRequiredError(
+      `Invalid jwt type "${header['typ']}"`,
+      'BadJwtType',
+    )
   }
 
   const payload = parsePayload(parts[1])
