@@ -1,3 +1,4 @@
+import { DidDocument } from '@atproto/identity'
 import type { RepoRecord } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import type { CID } from 'multiformats/cid'
@@ -35,6 +36,7 @@ export type IdentityEvt = {
   event: 'identity'
   did: string
   handle?: string
+  didDocument: DidDocument | null
 }
 
 export type AccountEvt = {

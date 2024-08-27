@@ -1,5 +1,9 @@
 import { createDeferrable, Deferrable, wait } from '@atproto/common'
-import { IdResolver } from '@atproto/identity'
+import {
+  IdResolver,
+  parseToAtprotoDocument,
+  DidDocument,
+} from '@atproto/identity'
 import {
   cborToLexRecord,
   formatDataKey,
@@ -101,7 +105,10 @@ export class Firehose {
               yield parsed
             }
           } else if (isIdentity(evt) && !this.opts.excludeIdentity) {
-            yield parseIdentity(evt)
+            const parsed = await parseIdentity(this.opts.idResolver, evt)
+            if (parsed) {
+              yield parsed
+            }
           }
         } catch (err) {
           if (this.opts.onError) {
@@ -212,13 +219,32 @@ const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
   return evts
 }
 
-export const parseIdentity = (evt: Identity): IdentityEvt => {
+export const parseIdentity = async (
+  idResolver: IdResolver,
+  evt: Identity,
+): Promise<IdentityEvt | null> => {
+  const res = await idResolver.did.resolve(evt.did)
+  const handle = res ? await verifyHandle(idResolver, res) : undefined
+
   return {
     event: 'identity',
     seq: evt.seq,
     did: evt.did,
-    handle: evt.handle,
+    handle,
+    didDocument: res,
   }
+}
+
+const verifyHandle = async (
+  idResolver: IdResolver,
+  didDoc: DidDocument,
+): Promise<string | undefined> => {
+  const { handle } = parseToAtprotoDocument(didDoc)
+  if (!handle) {
+    return undefined
+  }
+  const res = await idResolver.handle.resolve(handle)
+  return res === handle ? handle : undefined
 }
 
 export const parseAccount = (evt: Account): AccountEvt | undefined => {
