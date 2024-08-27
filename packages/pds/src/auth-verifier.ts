@@ -341,10 +341,7 @@ export class AuthVerifier {
   protected async validateBearerToken(
     ctx: ReqCtx,
     scopes: AuthScope[],
-    {
-      typ,
-      ...verifyOptions
-    }: jose.JWTVerifyOptions &
+    verifyOptions: jose.JWTVerifyOptions &
       Required<Pick<jose.JWTVerifyOptions, 'audience' | 'typ'>>,
   ): Promise<ValidatedBearer> {
     this.setAuthHeaders(ctx)
@@ -356,14 +353,22 @@ export class AuthVerifier {
 
     const { payload, protectedHeader } = await this.jwtVerify(
       token,
-      verifyOptions,
+      // @TODO: Once all access & refresh tokens have a "typ" claim (i.e. 90
+      // days after this code was deployed), replace the following line with
+      // "verifyOptions," (to re-enable the verification of the "typ" property
+      // from verifyJwt()). Once the change is made, the "if" block below that
+      // checks for "typ" can be removed.
+      {
+        ...verifyOptions,
+        typ: undefined,
+      },
     )
 
     // @TODO: remove the next check once all access & refresh tokens have "typ"
     // Note: when removing the check, make sure that the "verifyOptions"
     // contains the "typ" property, so that the token is verified correctly by
     // this.verifyJwt()
-    if (protectedHeader.typ && typ !== protectedHeader.typ) {
+    if (protectedHeader.typ && verifyOptions.typ !== protectedHeader.typ) {
       // Temporarily allow historical tokens without "typ" to pass through. See:
       // createAccessToken() and createRefreshToken() in
       // src/account-manager/helpers/auth.ts

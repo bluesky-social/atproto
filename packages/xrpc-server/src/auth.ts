@@ -75,10 +75,13 @@ export const verifyJwt = async (
 
   const header = parseHeader(parts[0])
 
-  // Assume JWT type is 'JWT' if not specified
-  const typ = header['typ'] || 'JWT'
-
-  if (typ !== 'JWT') {
+  // "typ" if, present, should not be anything other than "JWT" (such as
+  // "at+jwt", "dpop+jwt", etc.)
+  if (
+    header['typ'] !== undefined &&
+    header['typ'] !== 'JWT' &&
+    header['typ'] !== 'jwt'
+  ) {
     throw new AuthRequiredError('jwt is not of type "JWT"', 'BadJwtType')
   }
 
