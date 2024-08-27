@@ -372,7 +372,7 @@ export class AuthVerifier {
       // Temporarily allow historical tokens without "typ" to pass through. See:
       // createAccessToken() and createRefreshToken() in
       // src/account-manager/helpers/auth.ts
-      throw new InvalidRequestError('Unexpected token', 'InvalidToken')
+      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
     }
 
     const { sub, aud, scope } = payload
