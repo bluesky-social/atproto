@@ -283,21 +283,21 @@ export const PRIVILEGED_METHODS = new Set([
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
 export const PROTECTED_METHODS = new Set([
-  ids.ComAtprotoServerActivateAccount,
-  ids.ComAtprotoServerRequestEmailUpdate,
-  ids.ComAtprotoServerRequestAccountDelete,
-  ids.ComAtprotoServerGetAccountInviteCodes,
-  ids.ComAtprotoServerCreateAppPassword,
-  ids.ComAtprotoServerRequestEmailConfirmation,
-  ids.ComAtprotoServerListAppPasswords,
-  ids.ComAtprotoServerConfirmEmail,
-  ids.ComAtprotoServerUpdateEmail,
-  ids.ComAtprotoServerDeactivateAccount,
-  ids.ComAtprotoServerRevokeAppPassword,
   ids.ComAtprotoAdminSendEmail,
   ids.ComAtprotoIdentityRequestPlcOperationSignature,
-  ids.ComAtprotoIdentityUpdateHandle,
   ids.ComAtprotoIdentitySignPlcOperation,
+  ids.ComAtprotoIdentityUpdateHandle,
+  ids.ComAtprotoServerActivateAccount,
+  ids.ComAtprotoServerConfirmEmail,
+  ids.ComAtprotoServerCreateAppPassword,
+  ids.ComAtprotoServerDeactivateAccount,
+  ids.ComAtprotoServerGetAccountInviteCodes,
+  ids.ComAtprotoServerListAppPasswords,
+  ids.ComAtprotoServerRequestAccountDelete,
+  ids.ComAtprotoServerRequestEmailConfirmation,
+  ids.ComAtprotoServerRequestEmailUpdate,
+  ids.ComAtprotoServerRevokeAppPassword,
+  ids.ComAtprotoServerUpdateEmail,
 ])
 
 const defaultService = (
