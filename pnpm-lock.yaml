@@ -1363,6 +1363,31 @@ importers:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.24)(ts-node@10.8.2)
 
+  packages/sync:
+    dependencies:
+      '@atproto/lexicon':
+        specifier: workspace:^
+        version: link:../lexicon
+      '@atproto/repo':
+        specifier: workspace:^
+        version: link:../repo
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
+      '@atproto/xrpc-server':
+        specifier: workspace:^
+        version: link:../xrpc-server
+      multiformats:
+        specifier: ^9.9.0
+        version: 9.9.0
+      p-queue:
+        specifier: ^6.6.2
+        version: 6.6.2
+    devDependencies:
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.4
+
   packages/syntax:
     devDependencies:
       jest:
