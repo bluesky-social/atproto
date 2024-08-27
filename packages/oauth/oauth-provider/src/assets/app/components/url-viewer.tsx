@@ -1,4 +1,4 @@
-import { Component, HTMLAttributes, useMemo } from 'react'
+import { HTMLAttributes, useMemo } from 'react'
 
 export type UrlPartRenderingOptions = {
   faded?: boolean
@@ -28,7 +28,7 @@ export function UrlViewer({
   const urlObj = useMemo(() => new URL(url), [url])
 
   return (
-    <Component as={As} {...attrs}>
+    <As {...attrs}>
       {proto && (
         <UrlPartViewer
           value={`${urlObj.protocol}//`}
@@ -56,7 +56,7 @@ export function UrlViewer({
       {hash && (
         <UrlPartViewer value={urlObj.hash} {...(hash === true ? null : hash)} />
       )}
-    </Component>
+    </As>
   )
 }
 
