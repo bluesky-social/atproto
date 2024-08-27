@@ -1,8 +1,18 @@
 import { useCallback, useState } from 'react'
 import { useAuthContext } from './auth/auth-provider'
+import { OAuthSession } from '@atproto/oauth-client'
 
 function App() {
   const { pdsAgent, signOut } = useAuthContext()
+
+  const hasTokenInfo = pdsAgent.sessionManager instanceof OAuthSession
+
+  const [tokeninfo, setTokeninfo] = useState<unknown>(undefined)
+  const loadTokeninfo = useCallback(async () => {
+    if (pdsAgent.sessionManager instanceof OAuthSession) {
+      setTokeninfo(await pdsAgent.sessionManager.getTokenInfo())
+    }
+  }, [pdsAgent])
 
   // A call that requires to be authenticated
   const [serviceAuth, setServiceAuth] = useState<unknown>(undefined)
@@ -29,6 +39,19 @@ function App() {
   return (
     <div>
       <p>Logged in!</p>
+
+      {hasTokenInfo && (
+        <>
+          <button onClick={loadTokeninfo}>Load token info</button>
+          <code>
+            <pre>
+              {tokeninfo !== undefined
+                ? JSON.stringify(tokeninfo, undefined, 2)
+                : null}
+            </pre>
+          </code>
+        </>
+      )}
 
       <button onClick={loadProfile}>Load profile</button>
       <code>

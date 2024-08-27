@@ -12,13 +12,11 @@ import {
   OAuthSession,
 } from '@atproto/oauth-client-browser'
 
+type Gettable<T> = () => PromiseLike<T> | T
+
 export type OnRestored = (session: OAuthSession | null) => void
 export type OnSignedIn = (session: OAuthSession, state: null | string) => void
 export type OnSignedOut = () => void
-export type GetState = () =>
-  | undefined
-  | string
-  | PromiseLike<undefined | string>
 
 function useCallbackRef<T extends (this: any, ...args: any[]) => any>(
   fn: T,
@@ -145,13 +143,15 @@ export type UseOAuthOptions = ClientOptions & {
   onRestored?: OnRestored
   onSignedIn?: OnSignedIn
   onSignedOut?: OnSignedOut
-  getState?: GetState
+  getScope?: Gettable<undefined | string>
+  getState?: Gettable<undefined | string>
 }
 
 export function useOAuth(options: UseOAuthOptions) {
   const onRestored = useCallbackRef(options.onRestored)
   const onSignedIn = useCallbackRef(options.onSignedIn)
   const onSignedOut = useCallbackRef(options.onSignedOut)
+  const getScope = useCallbackRef(options.getScope)
   const getState = useCallbackRef(options.getState)
 
   const clientForInit = useOAuthClient(options)
@@ -243,9 +243,6 @@ export function useOAuth(options: UseOAuthOptions) {
       )
     }
 
-    // Force fetching the token info in order to trigger a token refresh
-    void session?.getTokenInfo(true)
-
     return () => {
       controller.abort()
     }
@@ -256,11 +253,13 @@ export function useOAuth(options: UseOAuthOptions) {
       if (!client) throw new Error('Client not initialized')
 
       const state = options?.state ?? (await getState()) ?? undefined
-      const session = await client.signIn(input, { ...options, state })
+      const scope = options?.scope ?? (await getScope()) ?? 'atproto'
+
+      const session = await client.signIn(input, { ...options, scope, state })
       setSession(session)
       await onSignedIn(session, state ?? null)
     },
-    [client, getState, onSignedIn],
+    [client, getScope, getState, onSignedIn],
   )
 
   // Memoize the return value to avoid re-renders in consumers

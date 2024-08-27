@@ -1,10 +1,11 @@
+import assert from 'node:assert'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { DAY, MINUTE } from '@atproto/common'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { httpLogger } from '../../../../logger'
-import { authPassthru } from '../../../proxy'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -21,16 +22,22 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ auth }) => auth.credentials.did,
       },
     ],
-    handler: async ({ auth, input, req }) => {
+    handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
+
         // the full flow is:
         // -> entryway(identity.updateHandle) [update handle, submit plc op]
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
         await ctx.entrywayAgent.com.atproto.identity.updateHandle(
           { did: requester, handle: input.body.handle },
-          authPassthru(req, true),
+          await ctx.serviceAuthHeaders(
+            auth.credentials.did,
+            ctx.cfg.entryway.did,
+            ids.ComAtprotoIdentityUpdateHandle,
+          ),
         )
         return
       }

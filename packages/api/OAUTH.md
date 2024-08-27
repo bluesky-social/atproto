@@ -40,7 +40,7 @@ Here is an example client metadata.
   "tos_uri": "https://example.com/tos",
   "policy_uri": "https://example.com/policy",
   "redirect_uris": ["https://example.com/callback"],
-  "scope": "offline_access",
+  "scope": "atproto",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
   "token_endpoint_auth_method": "none",
@@ -73,8 +73,7 @@ Here is an example client metadata.
   the user during the authentication process.
 
 - If you don't want or need the user to stay authenticated for long periods
-  (better for security), you can remove the `offline_access` scope, and
-  `refresh_token` from the `grant_types`.
+  (better for security), you can remove `refresh_token` from the `grant_types`.
 
 > [!NOTE]
 >

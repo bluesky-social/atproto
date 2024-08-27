@@ -21,9 +21,8 @@ export function atprotoLoopbackClientMetadata(
   return {
     client_id: clientId,
     client_name: 'Loopback client',
-    response_types: ['code id_token', 'code'],
-    grant_types: ['authorization_code', 'implicit', 'refresh_token'],
-    scope: 'openid profile offline_access',
+    response_types: ['code'],
+    grant_types: ['authorization_code', 'refresh_token'],
     redirect_uris: (redirectUris.length
       ? redirectUris
       : (['127.0.0.1', '[::1]'] as const).map(

@@ -1,20 +1,29 @@
+import assert from 'node:assert'
+
 import { CidSet } from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { INVALID_HANDLE } from '@atproto/syntax'
-import { Server } from '../../../../lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 import { assertValidDidDocumentForService } from './util'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.activateAccount({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth, req }) => {
+    handler: async ({ auth }) => {
       // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
+
         await ctx.entrywayAgent.com.atproto.server.activateAccount(
           undefined,
-          authPassthru(req),
+          await ctx.serviceAuthHeaders(
+            auth.credentials.did,
+            ctx.cfg.entryway.did,
+            ids.ComAtprotoServerActivateAccount,
+          ),
         )
         return
       }
