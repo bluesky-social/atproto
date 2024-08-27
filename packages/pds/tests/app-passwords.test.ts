@@ -218,7 +218,7 @@ describe('app_passwords', () => {
   })
 
   it('lists available app-specific passwords', async () => {
-    const res = await accntAgent.api.com.atproto.server.listAppPasswords()
+    const res = await appAgent.api.com.atproto.server.listAppPasswords()
     expect(res.data.passwords.length).toBe(2)
     expect(res.data.passwords[0].name).toEqual('privi-pass')
     expect(res.data.passwords[0].privileged).toEqual(true)
