@@ -1,16 +1,24 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import assert from 'node:assert'
+
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { authPassthru } from '../../../proxy'
+
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.requestPlcOperationSignature({
     auth: ctx.authVerifier.accessFull(),
-    handler: async ({ auth, req }) => {
+    handler: async ({ auth }) => {
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.identity.requestPlcOperationSignature(
           undefined,
-          authPassthru(req),
+          await ctx.serviceAuthHeaders(
+            auth.credentials.did,
+            ctx.cfg.entryway.did,
+            ids.ComAtprotoIdentityRequestPlcOperationSignature,
+          ),
         )
         return
       }

@@ -140,6 +140,7 @@ export class Client {
           audience: checks.audience,
           subject: this.id,
           maxTokenAge: CLIENT_ASSERTION_MAX_AGE / 1000,
+          requiredClaims: ['jti'],
         }).catch((err) => {
           if (err instanceof JOSEError) {
             const msg = `Validation of "client_assertion" failed: ${err.message}`
@@ -151,10 +152,6 @@ export class Client {
 
         if (!result.protectedHeader.kid) {
           throw new InvalidClientError(`"kid" required in client_assertion`)
-        }
-
-        if (!result.payload.jti) {
-          throw new InvalidClientError(`"jti" required in client_assertion`)
         }
 
         const clientAuth: ClientAuth = {
