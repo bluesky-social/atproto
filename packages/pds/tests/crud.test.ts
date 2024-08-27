@@ -9,7 +9,6 @@ import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { forSnapshot, paginateAll } from './_util'
 import AppContext from '../src/context'
 import { ids, lexicons } from '../src/lexicon/lexicons'
-import { text } from 'stream/consumers'
 
 describe('crud operations', () => {
   let network: TestNetworkNoAppView
@@ -580,13 +579,12 @@ describe('crud operations', () => {
 
   it('does not require the schema to be known if not explicitly validating', async () => {
     const prom = await aliceAgent.api.com.atproto.repo.createRecord({
+      // validate not set
       repo: aliceAgent.accountDid,
       collection: 'com.example.foobar',
       record: { $type: 'com.example.foobar' },
     })
-    expect(prom.data).toMatchObject({
-      validationStatus: 'unknown',
-    })
+    expect(prom.data.validationStatus).toBe('unknown')
   })
 
   it('requires the $type to match the schema', async () => {

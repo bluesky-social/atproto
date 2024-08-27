@@ -42,7 +42,7 @@ import { hasExplicitSlur } from '../handle/explicit-slurs'
 
 export const assertValidRecordWithStatus = (
   record: Record<string, unknown>,
-  requireLexicon: boolean,
+  opts: { requireLexicon: boolean },
 ): ValidationStatus => {
   if (typeof record.$type !== 'string') {
     throw new InvalidRecordError('No $type provided')
@@ -52,7 +52,7 @@ export const assertValidRecordWithStatus = (
     assertValidCreatedAt(record)
   } catch (e) {
     if (e instanceof LexiconDefNotFoundError) {
-      if (requireLexicon) {
+      if (opts.requireLexicon) {
         throw new InvalidRecordError(e.message)
       } else {
         return 'unknown'
@@ -112,9 +112,10 @@ export const prepareCreate = async (opts: {
   const record = setCollectionName(collection, opts.record, maybeValidate)
   let validationStatus: ValidationStatus
   if (maybeValidate) {
-    validationStatus = assertValidRecordWithStatus(record, validate === true)
+    validationStatus = assertValidRecordWithStatus(record, {
+      requireLexicon: validate === true,
+    })
   }
-
   const nextRkey = TID.next()
   const rkey = opts.rkey || nextRkey.toString()
   // @TODO: validate against Lexicon record 'key' type, not just overall recordkey syntax
@@ -144,7 +145,9 @@ export const prepareUpdate = async (opts: {
   const record = setCollectionName(collection, opts.record, maybeValidate)
   let validationStatus: ValidationStatus
   if (maybeValidate) {
-    validationStatus = assertValidRecordWithStatus(record, validate === true)
+    validationStatus = assertValidRecordWithStatus(record, {
+      requireLexicon: validate === true,
+    })
   }
   assertNoExplicitSlurs(rkey, record)
   return {
