@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
 import { clearlyBadCursor, resHeaders } from '../../../util'
+import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import {
   HydrateCtx,
   HydrationState,
@@ -72,7 +73,7 @@ const noBlocks = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   skeleton.uris = skeleton.uris.filter((uri) => {
-    const creator = creatorFromUri(item.post.uri)
+    const creator = creatorFromUri(uri)
     const embedBlock = hydration.postBlocks?.get(uri)?.embed
     return !ctx.views.viewerBlockExists(creator, hydration) && !embedBlock
   })
