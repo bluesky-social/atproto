@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
 
 /**
@@ -19,7 +20,10 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
   response_types_supported: z.array(z.string()).optional(),
   response_modes_supported: z.array(z.string()).optional(),
   grant_types_supported: z.array(z.string()).optional(),
-  code_challenge_methods_supported: z.array(z.string()).min(1).optional(),
+  code_challenge_methods_supported: z
+    .array(oauthCodeChallengeMethodSchema)
+    .min(1)
+    .optional(),
   ui_locales_supported: z.array(z.string()).optional(),
   id_token_signing_alg_values_supported: z.array(z.string()).optional(),
   display_values_supported: z.array(z.string()).optional(),

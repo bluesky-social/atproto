@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
+import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oauthScopeSchema } from './oauth-scope.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
@@ -22,7 +23,9 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
   // PKCE
 
   code_challenge: z.string().optional(),
-  code_challenge_method: z.enum(['S256', 'plain']).default('S256').optional(),
+  code_challenge_method: oauthCodeChallengeMethodSchema
+    .default('S256')
+    .optional(),
 
   // DPOP
 
