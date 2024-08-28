@@ -12,11 +12,12 @@ export function atprotoLoopbackClientMetadata(
   const { origin, pathname, searchParams } = parseOAuthClientIdUrl(clientId)
 
   for (const name of searchParams.keys()) {
-    if (name !== 'redirect_uri') {
+    if (name !== 'redirect_uri' && name !== 'scope') {
       throw new TypeError(`Invalid query parameter ${name} in client ID`)
     }
   }
   const redirectUris = searchParams.getAll('redirect_uri')
+  const scope = searchParams.get('scope')
 
   return {
     client_id: clientId,
@@ -29,6 +30,7 @@ export function atprotoLoopbackClientMetadata(
           (ip) =>
             Object.assign(new URL(pathname, origin), { hostname: ip }).href,
         )) as [string, ...string[]],
+    scope: scope || 'atproto',
     token_endpoint_auth_method: 'none',
     application_type: 'native',
     dpop_bound_access_tokens: true,
