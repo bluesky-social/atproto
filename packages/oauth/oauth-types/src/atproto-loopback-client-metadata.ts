@@ -1,15 +1,12 @@
-import { isOAuthClientIdLoopback } from './oauth-client-id-loopback.js'
+import { parseOAuthLoopbackClientId } from './oauth-client-id-loopback.js'
 import { OAuthClientMetadataInput } from './oauth-client-metadata.js'
-import { parseOAuthClientIdUrl } from './oauth-client-id-url.js'
 
 export function atprotoLoopbackClientMetadata(
   clientId: string,
 ): OAuthClientMetadataInput {
-  if (!isOAuthClientIdLoopback(clientId)) {
-    throw new TypeError(`Invalid loopback client ID ${clientId}`)
-  }
-
-  const { origin, pathname, searchParams } = parseOAuthClientIdUrl(clientId)
+  const { origin, pathname, searchParams } =
+    // throws if not a (valid) loopback client
+    parseOAuthLoopbackClientId(clientId)
 
   for (const name of searchParams.keys()) {
     if (name !== 'redirect_uri' && name !== 'scope') {
