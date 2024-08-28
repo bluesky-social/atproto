@@ -96,7 +96,7 @@ export class RequestManager {
       'id_token_hint',
       'nonce', // note that OIDC "nonce" is redundant with PKCE
     ] as const) {
-      if (parameters[k]) {
+      if (parameters[k] !== undefined) {
         throw new InvalidParametersError(
           parameters,
           `Unsupported "${k}" parameter`,
