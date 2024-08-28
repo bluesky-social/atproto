@@ -11,14 +11,25 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export type InputSchema = undefined
+
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
 export type HandlerInput = undefined
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
 
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

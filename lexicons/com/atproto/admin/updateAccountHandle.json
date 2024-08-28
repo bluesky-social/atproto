@@ -15,6 +15,13 @@
             "handle": { "type": "string", "format": "handle" }
           }
         }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       }
     }
   }

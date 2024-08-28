@@ -14,6 +14,13 @@
             "actor": { "type": "string", "format": "at-identifier" }
           }
         }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       }
     }
   }

@@ -11,6 +11,10 @@ export interface QueryParams {}
 
 export type InputSchema = undefined
 
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
@@ -20,6 +24,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

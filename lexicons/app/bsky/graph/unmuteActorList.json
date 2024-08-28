@@ -14,6 +14,13 @@
             "list": { "type": "string", "format": "at-uri" }
           }
         }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       }
     }
   }

@@ -122,6 +122,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -148,6 +155,13 @@ export const schemaDict = {
                 description: 'Optional reason for disabled invites.',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -181,6 +195,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -206,6 +227,13 @@ export const schemaDict = {
                 description: 'Optional reason for enabled invites.',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -498,6 +526,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -525,6 +560,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -550,6 +592,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -659,6 +708,13 @@ export const schemaDict = {
         type: 'procedure',
         description:
           'Request an email with a code to in order to request a signed PLC operation. Requires Auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -771,6 +827,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -794,6 +857,13 @@ export const schemaDict = {
                 description: 'The new handle.',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -1279,6 +1349,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
         errors: [
           {
             name: 'InvalidSwap',
@@ -1458,6 +1535,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
         errors: [
           {
             name: 'InvalidSwap',
@@ -1596,6 +1680,13 @@ export const schemaDict = {
           'Import a repo in the form of a CAR file. Requires Content-Length HTTP header to be set.',
         input: {
           encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
         },
       },
     },
@@ -1881,6 +1972,13 @@ export const schemaDict = {
         type: 'procedure',
         description:
           "Activates a currently deactivated account. Used to finalize account migration after the account's repo is imported and identity is setup.",
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -1963,6 +2061,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
         errors: [
@@ -2358,6 +2463,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -2448,6 +2560,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
         errors: [
           {
             name: 'ExpiredToken',
@@ -2466,6 +2585,13 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description: 'Delete the current session. Requires auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -2796,6 +2922,13 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description: 'Initiate a user account deletion via email.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -2807,6 +2940,13 @@ export const schemaDict = {
         type: 'procedure',
         description:
           'Request an email with a code to confirm ownership of email.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -2849,6 +2989,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -2914,6 +3061,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
         errors: [
           {
             name: 'ExpiredToken',
@@ -2944,6 +3098,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -2972,6 +3133,13 @@ export const schemaDict = {
                   "Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed.",
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
         errors: [
@@ -3515,6 +3683,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -3538,6 +3713,13 @@ export const schemaDict = {
                   'Hostname of the current service (eg, PDS) that is requesting to be crawled.',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -3912,6 +4094,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -4692,6 +4881,13 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.actor.defs#preferences',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -8138,6 +8334,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -8162,6 +8365,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -8184,6 +8394,13 @@ export const schemaDict = {
                 format: 'at-uri',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -8273,6 +8490,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -8296,6 +8520,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -8317,6 +8548,13 @@ export const schemaDict = {
                 format: 'at-uri',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -8688,6 +8926,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -8722,6 +8967,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -8744,6 +8996,13 @@ export const schemaDict = {
                 format: 'datetime',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -10101,6 +10360,13 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -10218,6 +10484,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -11716,6 +11989,13 @@ export const schemaDict = {
                 format: 'did',
               },
             },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
         errors: [

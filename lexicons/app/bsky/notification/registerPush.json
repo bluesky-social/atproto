@@ -20,6 +20,13 @@
             "appId": { "type": "string" }
           }
         }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       }
     }
   }

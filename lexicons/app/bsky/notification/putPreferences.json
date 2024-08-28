@@ -14,6 +14,13 @@
             "priority": { "type": "boolean" }
           }
         }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       }
     }
   }

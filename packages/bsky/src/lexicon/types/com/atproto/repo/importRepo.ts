@@ -13,9 +13,19 @@ export interface QueryParams {}
 
 export type InputSchema = string | Uint8Array | Blob
 
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
 export interface HandlerInput {
   encoding: 'application/vnd.ipld.car'
   body: stream.Readable
+}
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
@@ -23,7 +33,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

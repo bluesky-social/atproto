@@ -37,6 +37,13 @@
           }
         }
       },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
       "errors": [
         {
           "name": "InvalidSwap",

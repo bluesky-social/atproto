@@ -4,7 +4,14 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Request an email with a code to in order to request a signed PLC operation. Requires Auth."
+      "description": "Request an email with a code to in order to request a signed PLC operation. Requires Auth.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
     }
   }
 }

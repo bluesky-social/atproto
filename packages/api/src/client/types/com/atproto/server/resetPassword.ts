@@ -15,6 +15,10 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
+export interface OutputSchema {
+  [k: string]: unknown
+}
+
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
@@ -25,6 +29,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export class ExpiredTokenError extends XRPCError {

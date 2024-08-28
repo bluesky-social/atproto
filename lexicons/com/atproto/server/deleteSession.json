@@ -4,7 +4,14 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete the current session. Requires auth."
+      "description": "Delete the current session. Requires auth.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
     }
   }
 }

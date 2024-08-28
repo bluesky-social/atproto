@@ -4,7 +4,14 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Initiate a user account deletion via email."
+      "description": "Initiate a user account deletion via email.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
     }
   }
 }
