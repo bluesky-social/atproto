@@ -2,7 +2,6 @@ import {
   bindFetch,
   Fetch,
   fetchJsonProcessor,
-  fetchJsonZodProcessor,
   fetchOkProcessor,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
@@ -41,13 +40,11 @@ const fetchMetadataHandler = pipe(
   fetchOkProcessor(),
   // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
   fetchJsonProcessor('application/json', true),
-  fetchJsonZodProcessor(oauthClientMetadataSchema),
 )
 
 const fetchJwksHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor('application/json', false),
-  fetchJsonZodProcessor(jwksSchema),
 )
 
 export type LoopbackMetadataGetter = (
@@ -71,20 +68,32 @@ export class ClientManager {
     const fetch = bindFetch(safeFetch)
 
     this.jwks = new CachedGetter(async (uri, options) => {
-      const jwks = await fetch(buildJsonGetRequest(uri, options)).then(
+      const response = await fetch(buildJsonGetRequest(uri, options)).then(
         fetchJwksHandler,
       )
 
-      return jwks
+      const result = jwksSchema.safeParse(response.json)
+
+      if (!result.success) {
+        throw InvalidClientMetadataError.from(result.error)
+      }
+
+      return result.data
     }, clientJwksCache)
 
     this.metadataGetter = new CachedGetter(async (uri, options) => {
-      const metadata = await fetch(buildJsonGetRequest(uri, options)).then(
+      const response = await fetch(buildJsonGetRequest(uri, options)).then(
         fetchMetadataHandler,
       )
 
+      const result = oauthClientMetadataSchema.safeParse(response.json)
+
+      if (!result.success) {
+        throw InvalidClientMetadataError.from(result.error)
+      }
+
       // Validate within the getter to avoid caching invalid metadata
-      return this.validateClientMetadata(uri, metadata)
+      return this.validateClientMetadata(uri, result.data)
     }, clientMetadataCache)
   }
 

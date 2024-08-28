@@ -1,3 +1,5 @@
+import { ZodError } from 'zod'
+
 import { OAuthError } from './oauth-error.js'
 
 /**
@@ -14,6 +16,16 @@ export class InvalidClientMetadataError extends OAuthError {
 
   static from(cause: unknown): InvalidClientMetadataError {
     if (cause instanceof InvalidClientMetadataError) return cause
+    if (cause instanceof ZodError) {
+      const issues = cause.issues
+        .map(
+          ({ path, message }) =>
+            `Validation${path.length ? ` of "${path.join('.')}"` : ''} failed with error: ${message}`,
+        )
+        .join(' ')
+
+      return new InvalidClientMetadataError(issues || cause.message, cause)
+    }
     return new InvalidClientMetadataError('Invalid client configuration', cause)
   }
 }
