@@ -43,6 +43,7 @@ export type Schema = {
     iss: string
     verifier?: string
     appState?: string
+    redirectUri: string
   }>
   session: Item<{
     dpopKey: EncodedKey
