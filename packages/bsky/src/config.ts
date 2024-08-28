@@ -24,6 +24,8 @@ export interface ServerConfigValues {
   suggestionsUrl?: string
   suggestionsApiKey?: string
   cdnUrl?: string
+  videoPlaylistUrlPattern?: string
+  videoThumbnailUrlPattern?: string
   blobRateLimitBypassKey?: string
   blobRateLimitBypassHostname?: string
   // identity
@@ -58,6 +60,11 @@ export class ServerConfig {
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
+    const videoPlaylistUrlPattern = process.env.BSKY_VIDEO_PLAYLIST_URL_PATTERN
+    // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
+    const videoThumbnailUrlPattern =
+      process.env.BSKY_VIDEO_THUMBNAIL_URL_PATTERN
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
     const searchUrl =
       process.env.BSKY_SEARCH_URL ||
@@ -129,6 +136,8 @@ export class ServerConfig {
       labelsFromIssuerDids,
       handleResolveNameservers,
       cdnUrl,
+      videoPlaylistUrlPattern,
+      videoThumbnailUrlPattern,
       blobCacheLocation,
       bsyncUrl,
       bsyncApiKey,
@@ -243,6 +252,14 @@ export class ServerConfig {
 
   get cdnUrl() {
     return this.cfg.cdnUrl
+  }
+
+  get videoPlaylistUrlPattern() {
+    return this.cfg.videoPlaylistUrlPattern
+  }
+
+  get videoThumbnailUrlPattern() {
+    return this.cfg.videoThumbnailUrlPattern
   }
 
   get blobRateLimitBypassKey() {

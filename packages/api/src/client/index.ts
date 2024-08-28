@@ -92,10 +92,12 @@ import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
+import * as AppBskyEmbedVideo from './types/app/bsky/embed/video'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
@@ -163,6 +165,10 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyVideoDefs from './types/app/bsky/video/defs'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 import * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
 import * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
@@ -291,10 +297,12 @@ export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
+export * as AppBskyEmbedVideo from './types/app/bsky/embed/video'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
@@ -362,6 +370,10 @@ export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+export * as AppBskyVideoDefs from './types/app/bsky/video/defs'
+export * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+export * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 export * as ChatBskyActorDeclaration from './types/chat/bsky/actor/declaration'
 export * as ChatBskyActorDefs from './types/chat/bsky/actor/defs'
 export * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
@@ -1421,6 +1433,7 @@ export class AppBskyNS {
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -1432,6 +1445,7 @@ export class AppBskyNS {
     this.notification = new AppBskyNotificationNS(client)
     this.richtext = new AppBskyRichtextNS(client)
     this.unspecced = new AppBskyUnspeccedNS(client)
+    this.video = new AppBskyVideoNS(client)
   }
 }
 
@@ -3016,6 +3030,45 @@ export class AppBskyUnspeccedNS {
       .catch((e) => {
         throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
       })
+  }
+}
+
+export class AppBskyVideoNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getJobStatus(
+    params?: AppBskyVideoGetJobStatus.QueryParams,
+    opts?: AppBskyVideoGetJobStatus.CallOptions,
+  ): Promise<AppBskyVideoGetJobStatus.Response> {
+    return this._client.call(
+      'app.bsky.video.getJobStatus',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getUploadLimits(
+    params?: AppBskyVideoGetUploadLimits.QueryParams,
+    opts?: AppBskyVideoGetUploadLimits.CallOptions,
+  ): Promise<AppBskyVideoGetUploadLimits.Response> {
+    return this._client.call(
+      'app.bsky.video.getUploadLimits',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  uploadVideo(
+    data?: AppBskyVideoUploadVideo.InputSchema,
+    opts?: AppBskyVideoUploadVideo.CallOptions,
+  ): Promise<AppBskyVideoUploadVideo.Response> {
+    return this._client.call('app.bsky.video.uploadVideo', opts?.qp, data, opts)
   }
 }
 

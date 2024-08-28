@@ -139,6 +139,9 @@ import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspec
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
+import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus'
+import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits'
+import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData'
 import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/deleteMessageForSelf'
@@ -1140,6 +1143,7 @@ export class AppBskyNS {
   notification: AppBskyNotificationNS
   richtext: AppBskyRichtextNS
   unspecced: AppBskyUnspeccedNS
+  video: AppBskyVideoNS
 
   constructor(server: Server) {
     this._server = server
@@ -1151,6 +1155,7 @@ export class AppBskyNS {
     this.notification = new AppBskyNotificationNS(server)
     this.richtext = new AppBskyRichtextNS(server)
     this.unspecced = new AppBskyUnspeccedNS(server)
+    this.video = new AppBskyVideoNS(server)
   }
 }
 
@@ -1830,6 +1835,47 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.searchPostsSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyVideoNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getJobStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoGetJobStatus.Handler<ExtractAuth<AV>>,
+      AppBskyVideoGetJobStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getJobStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUploadLimits<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoGetUploadLimits.Handler<ExtractAuth<AV>>,
+      AppBskyVideoGetUploadLimits.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.getUploadLimits' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  uploadVideo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyVideoUploadVideo.Handler<ExtractAuth<AV>>,
+      AppBskyVideoUploadVideo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.video.uploadVideo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
