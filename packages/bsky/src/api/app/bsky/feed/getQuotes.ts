@@ -1,3 +1,4 @@
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { createPipeline } from '../../../../pipeline'
@@ -73,7 +74,8 @@ const noBlocks = (inputs: {
   const { ctx, skeleton, hydration } = inputs
   skeleton.uris = skeleton.uris.filter((uri) => {
     const embedBlock = hydration.postBlocks?.get(uri)?.embed
-    return !ctx.views.viewerBlockExists(uri, hydration) && !embedBlock
+    const authorDid = new AtUri(uri).hostname
+    return !ctx.views.viewerBlockExists(authorDid, hydration) && !embedBlock
   })
   return skeleton
 }
