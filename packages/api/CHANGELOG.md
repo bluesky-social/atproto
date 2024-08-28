@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.13.5
+
+### Patch Changes
+
+- [#2751](https://github.com/bluesky-social/atproto/pull/2751) [`80ada8f47`](https://github.com/bluesky-social/atproto/commit/80ada8f47628f55f3074cd16a52857e98d117e14) Thanks [@devinivy](https://github.com/devinivy)! - Lexicons and support for video embeds within bsky posts.
+
 ## 0.13.4
 
 ### Patch Changes
