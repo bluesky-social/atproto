@@ -1,8 +1,11 @@
 import {
   bindFetch,
   Fetch,
+  FetchError,
   fetchJsonProcessor,
+  fetchJsonZodProcessor,
   fetchOkProcessor,
+  FetchResponseError,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
 import {
@@ -23,6 +26,7 @@ import {
   OAuthClientMetadataInput,
   oauthClientMetadataSchema,
 } from '@atproto/oauth-types'
+import { ZodError } from 'zod'
 
 import { ALLOW_LOOPBACK_CLIENT_REFRESH_TOKEN } from '../constants.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
@@ -40,11 +44,13 @@ const fetchMetadataHandler = pipe(
   fetchOkProcessor(),
   // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
   fetchJsonProcessor('application/json', true),
+  fetchJsonZodProcessor(oauthClientMetadataSchema),
 )
 
 const fetchJwksHandler = pipe(
   fetchOkProcessor(),
   fetchJsonProcessor('application/json', false),
+  fetchJsonZodProcessor(jwksSchema),
 )
 
 export type LoopbackMetadataGetter = (
@@ -68,32 +74,16 @@ export class ClientManager {
     const fetch = bindFetch(safeFetch)
 
     this.jwks = new CachedGetter(async (uri, options) => {
-      const response = await fetch(buildJsonGetRequest(uri, options)).then(
-        fetchJwksHandler,
-      )
-
-      const result = jwksSchema.safeParse(response.json)
-
-      if (!result.success) {
-        throw InvalidClientMetadataError.from(result.error)
-      }
-
-      return result.data
+      return fetch(buildJsonGetRequest(uri, options)).then(fetchJwksHandler)
     }, clientJwksCache)
 
     this.metadataGetter = new CachedGetter(async (uri, options) => {
-      const response = await fetch(buildJsonGetRequest(uri, options)).then(
+      const metadata = await fetch(buildJsonGetRequest(uri, options)).then(
         fetchMetadataHandler,
       )
 
-      const result = oauthClientMetadataSchema.safeParse(response.json)
-
-      if (!result.success) {
-        throw InvalidClientMetadataError.from(result.error)
-      }
-
       // Validate within the getter to avoid caching invalid metadata
-      return this.validateClientMetadata(uri, result.data)
+      return this.validateClientMetadata(uri, metadata)
     }, clientMetadataCache)
   }
 
@@ -124,11 +114,34 @@ export class ClientManager {
 
       return new Client(clientId, metadata, jwks, { isFirstParty, isTrusted })
     } catch (err) {
-      if (err instanceof OAuthError) throw err
+      if (err instanceof OAuthError) {
+        throw err
+      }
+      if (err instanceof FetchError) {
+        const message =
+          err instanceof FetchResponseError || err.statusCode !== 500
+            ? // Only expose 500 message if it was generated on another server
+              `Failed to fetch client information: ${err.message}`
+            : `Failed to fetch client information due to an internal error`
+        throw new InvalidClientMetadataError(message, err)
+      }
+      if (err instanceof ZodError) {
+        const issues = err.issues
+          .map(
+            ({ path, message }) =>
+              `Validation${path.length ? ` of "${path.join('.')}"` : ''} failed with error: ${message}`,
+          )
+          .join(' ')
+        throw new InvalidClientMetadataError(issues || err.message, err)
+      }
       if (err?.['code'] === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
         throw new InvalidClientMetadataError('Self-signed certificate', err)
       }
-      throw InvalidClientMetadataError.from(err)
+
+      throw InvalidClientMetadataError.from(
+        err,
+        `Unable to load client information for "${clientId}"`,
+      )
     }
   }
 
@@ -154,15 +167,11 @@ export class ClientManager {
       throw new InvalidClientMetadataError('Loopback clients are not allowed')
     }
 
-    const result = oauthClientMetadataSchema.safeParse(
+    const metadata = oauthClientMetadataSchema.parse(
       await loopbackMetadata(clientId),
     )
 
-    if (!result.success) {
-      throw InvalidClientMetadataError.from(result.error)
-    }
-
-    return this.validateClientMetadata(clientId, result.data)
+    return this.validateClientMetadata(clientId, metadata)
   }
 
   protected async getDiscoverableClientMetadata(

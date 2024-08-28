@@ -30,7 +30,10 @@ export function parseDiscoverableClientId(
 
     return url
   } catch (err) {
-    throw InvalidClientIdError.from(err)
+    throw InvalidClientIdError.from(
+      err,
+      'Invalid discoverable client identifier',
+    )
   }
 }
 
@@ -38,6 +41,6 @@ export function parseLoopbackClientId(clientId: OAuthClientIdLoopback): URL {
   try {
     return parseOAuthLoopbackClientId(clientId)
   } catch (err) {
-    throw InvalidClientIdError.from(err)
+    throw InvalidClientIdError.from(err, 'Invalid loopback client identifier')
   }
 }
