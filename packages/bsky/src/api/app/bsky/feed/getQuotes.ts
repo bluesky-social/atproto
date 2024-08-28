@@ -12,6 +12,7 @@ import { Views } from '../../../../views'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
 import { parseString } from '../../../../hydration/util'
+import { uriToDid } from '../../../../util/uris'
 
 export default function (server: Server, ctx: AppContext) {
   const getQuotes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -74,7 +75,7 @@ const noBlocks = (inputs: {
   const { ctx, skeleton, hydration } = inputs
   skeleton.uris = skeleton.uris.filter((uri) => {
     const embedBlock = hydration.postBlocks?.get(uri)?.embed
-    const authorDid = new AtUri(uri).hostname
+    const authorDid = uriToDid(uri)
     return !ctx.views.viewerBlockExists(authorDid, hydration) && !embedBlock
   })
   return skeleton
