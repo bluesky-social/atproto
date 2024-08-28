@@ -32,15 +32,13 @@ import {
   AccountEvt,
   AccountStatus,
   IdentityEvt,
-} from './events'
-import { SyncQueue } from './queue'
+} from '../events'
 import { CID } from 'multiformats/cid'
 
 export type FirehoseOptions = {
   idResolver: IdResolver
   unauthenticated?: boolean
   service?: string
-  syncQueue?: SyncQueue
   getCursor?: () => Promise<number | undefined>
   onError?: (errorType: FirehoseErrorType, err: unknown) => void
   subscriptionReconnectDelay?: number
@@ -63,13 +61,11 @@ export class Firehose {
       method: 'com.atproto.sync.subscribeRepos',
       signal: this.abortController.signal,
       getParams: async () => {
-        if (opts.getCursor) {
-          const cursor = await opts.getCursor()
-          return { cursor }
-        } else if (opts.syncQueue) {
-          return { cursor: opts.syncQueue.cursor }
+        if (!opts.getCursor) {
+          return undefined
         }
-        return undefined
+        const cursor = await opts.getCursor()
+        return { cursor }
       },
       validate: (value: unknown) => {
         try {
