@@ -119,7 +119,7 @@ export class RequestManager {
     // > server MUST include the scope response parameter in the token response
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
-    const cScopes = client.metadata.scope?.split(' ').filter(Boolean)
+    const cScopes = (client.metadata.scope || '').split(' ').filter(Boolean)
     const sScopes = this.metadata.scopes_supported
 
     const scopes = new Set(
@@ -141,8 +141,7 @@ export class RequestManager {
     }
 
     for (const scope of scopes) {
-      // Loopback clients do not define any scope in their metadata
-      if (cScopes && !cScopes.includes(scope)) {
+      if (!cScopes.includes(scope)) {
         throw new InvalidParametersError(
           parameters,
           `Scope "${scope}" is not registered for this client`,
