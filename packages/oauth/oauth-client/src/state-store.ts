@@ -6,6 +6,7 @@ export type InternalStateData = {
   dpopKey: Key
   verifier?: string
   appState?: string
+  redirectUri: string
 }
 
 export type StateStore = SimpleStore<string, InternalStateData>
