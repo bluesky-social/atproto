@@ -10303,7 +10303,7 @@ export const schemaDict = {
     defs: {
       subjectBasicView: {
         type: 'object',
-        required: ['subject', 'status', 'reviewState', 'subjectProfile'],
+        required: ['subject', 'status', 'modAction'],
         properties: {
           subject: {
             type: 'string',
@@ -10312,8 +10312,15 @@ export const schemaDict = {
           status: {
             type: 'string',
           },
-          reviewState: {
+          modAction: {
             type: 'string',
+            knownValues: [
+              'lex:tools.ozone.history.defs#modActionPending',
+              'lex:tools.ozone.history.defs#modActionLabel',
+              'lex:tools.ozone.history.defs#modActionResolve',
+              'lex:tools.ozone.history.defs#modActionSuspend',
+              'lex:tools.ozone.history.defs#modActionTakedown',
+            ],
           },
           subjectProfile: {
             type: 'ref',
@@ -10435,6 +10442,28 @@ export const schemaDict = {
           },
         },
       },
+      modActionPending: {
+        type: 'token',
+        description: 'Awaiting moderator review on the reported subject',
+      },
+      modActionResolve: {
+        type: 'token',
+        description:
+          'Moderator acknowledged report and marked as resolved the subject without action',
+      },
+      modActionLabel: {
+        type: 'token',
+        description:
+          'Moderator added or removed label(s) on the reported subject',
+      },
+      modActionTakedown: {
+        type: 'token',
+        description: 'Moderator permanently took down the reported subject',
+      },
+      modActionSuspend: {
+        type: 'token',
+        description: 'Moderator temporarily took down the reported subject',
+      },
     },
   },
   ToolsOzoneHistoryGetAccountActions: {
@@ -10455,6 +10484,9 @@ export const schemaDict = {
             },
             limit: {
               type: 'integer',
+              minimum: 1,
+              default: 50,
+              maximum: 100,
             },
             cursor: {
               type: 'string',
@@ -10491,7 +10523,6 @@ export const schemaDict = {
         description: 'Fetch all subjects reported by the account.',
         parameters: {
           type: 'params',
-          required: ['account'],
           properties: {
             account: {
               type: 'string',
@@ -10499,6 +10530,14 @@ export const schemaDict = {
             },
             limit: {
               type: 'integer',
+              minimum: 1,
+              default: 50,
+              maximum: 100,
+            },
+            sortDirection: {
+              type: 'string',
+              knownValues: ['asc', 'desc'],
+              default: 'desc',
             },
             cursor: {
               type: 'string',
@@ -10509,18 +10548,52 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
+            required: ['subjects'],
             properties: {
               subjects: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:tools.ozone.history.defs#subjectBasicView',
+                  ref: 'lex:tools.ozone.history.getReportedSubjects#reportView',
                 },
               },
               cursor: {
                 type: 'string',
               },
             },
+          },
+        },
+      },
+      reportView: {
+        type: 'object',
+        required: ['subject', 'report'],
+        properties: {
+          subject: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.history.defs#subjectBasicView',
+          },
+          report: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.history.getReportedSubjects#report',
+          },
+        },
+      },
+      report: {
+        type: 'object',
+        required: ['reasonType', 'reason', 'createdAt'],
+        properties: {
+          reasonType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+          },
+          reason: {
+            type: 'string',
+            maxGraphemes: 2000,
+            maxLength: 20000,
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -10543,6 +10616,9 @@ export const schemaDict = {
             },
             limit: {
               type: 'integer',
+              minimum: 1,
+              default: 50,
+              maximum: 100,
             },
             cursor: {
               type: 'string',

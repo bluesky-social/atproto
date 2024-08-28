@@ -10,7 +10,12 @@
         "required": ["account"],
         "properties": {
           "account": { "type": "string", "format": "did" },
-          "limit": { "type": "integer" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 50,
+            "maximum": 100
+          },
           "cursor": { "type": "string" }
         }
       },

@@ -204,6 +204,13 @@ export const APP_BSKY_GRAPH = {
   DefsCuratelist: 'app.bsky.graph.defs#curatelist',
   DefsReferencelist: 'app.bsky.graph.defs#referencelist',
 }
+export const TOOLS_OZONE_HISTORY = {
+  DefsModActionPending: 'tools.ozone.history.defs#modActionPending',
+  DefsModActionResolve: 'tools.ozone.history.defs#modActionResolve',
+  DefsModActionLabel: 'tools.ozone.history.defs#modActionLabel',
+  DefsModActionTakedown: 'tools.ozone.history.defs#modActionTakedown',
+  DefsModActionSuspend: 'tools.ozone.history.defs#modActionSuspend',
+}
 export const TOOLS_OZONE_MODERATION = {
   DefsReviewOpen: 'tools.ozone.moderation.defs#reviewOpen',
   DefsReviewEscalated: 'tools.ozone.moderation.defs#reviewEscalated',

@@ -11,7 +11,7 @@ import * as ToolsOzoneHistoryDefs from './defs'
 
 export interface QueryParams {
   subject: string
-  limit?: number
+  limit: number
   cursor?: string
 }
 

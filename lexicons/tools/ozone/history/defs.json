@@ -4,7 +4,7 @@
   "defs": {
     "subjectBasicView": {
       "type": "object",
-      "required": ["subject", "status", "reviewState", "subjectProfile"],
+      "required": ["subject", "status", "modAction"],
       "properties": {
         "subject": {
           "type": "string",
@@ -13,8 +13,15 @@
         "status": {
           "type": "string"
         },
-        "reviewState": {
-          "type": "string"
+        "modAction": {
+          "type": "string",
+          "knownValues": [
+            "#modActionPending",
+            "#modActionLabel",
+            "#modActionResolve",
+            "#modActionSuspend",
+            "#modActionTakedown"
+          ]
         },
         "subjectProfile": {
           "type": "ref",
@@ -134,6 +141,26 @@
           "description": "Describe the resolution or acknowledgment."
         }
       }
+    },
+    "modActionPending": {
+      "type": "token",
+      "description": "Awaiting moderator review on the reported subject"
+    },
+    "modActionResolve": {
+      "type": "token",
+      "description": "Moderator acknowledged report and marked as resolved the subject without action"
+    },
+    "modActionLabel": {
+      "type": "token",
+      "description": "Moderator added or removed label(s) on the reported subject"
+    },
+    "modActionTakedown": {
+      "type": "token",
+      "description": "Moderator permanently took down the reported subject"
+    },
+    "modActionSuspend": {
+      "type": "token",
+      "description": "Moderator temporarily took down the reported subject"
     }
   }
 }

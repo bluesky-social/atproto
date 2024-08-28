@@ -12,8 +12,14 @@ import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 export interface SubjectBasicView {
   subject: string
   status: string
-  reviewState: string
-  subjectProfile: AppBskyActorDefs.ProfileViewBasic
+  modAction:
+    | 'lex:tools.ozone.history.defs#modActionPending'
+    | 'lex:tools.ozone.history.defs#modActionLabel'
+    | 'lex:tools.ozone.history.defs#modActionResolve'
+    | 'lex:tools.ozone.history.defs#modActionSuspend'
+    | 'lex:tools.ozone.history.defs#modActionTakedown'
+    | (string & {})
+  subjectProfile?: AppBskyActorDefs.ProfileViewBasic
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
@@ -156,3 +162,14 @@ export function isEventResolve(v: unknown): v is EventResolve {
 export function validateEventResolve(v: unknown): ValidationResult {
   return lexicons.validate('tools.ozone.history.defs#eventResolve', v)
 }
+
+/** Awaiting moderator review on the reported subject */
+export const MODACTIONPENDING = 'tools.ozone.history.defs#modActionPending'
+/** Moderator acknowledged report and marked as resolved the subject without action */
+export const MODACTIONRESOLVE = 'tools.ozone.history.defs#modActionResolve'
+/** Moderator added or removed label(s) on the reported subject */
+export const MODACTIONLABEL = 'tools.ozone.history.defs#modActionLabel'
+/** Moderator permanently took down the reported subject */
+export const MODACTIONTAKEDOWN = 'tools.ozone.history.defs#modActionTakedown'
+/** Moderator temporarily took down the reported subject */
+export const MODACTIONSUSPEND = 'tools.ozone.history.defs#modActionSuspend'

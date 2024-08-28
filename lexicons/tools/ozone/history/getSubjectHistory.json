@@ -10,7 +10,12 @@
         "required": ["subject"],
         "properties": {
           "subject": { "type": "string", "format": "uri" },
-          "limit": { "type": "integer" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 50,
+            "maximum": 100
+          },
           "cursor": { "type": "string" }
         }
       },

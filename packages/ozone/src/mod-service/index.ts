@@ -50,6 +50,7 @@ import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
 import { ids } from '../lexicon/lexicons'
+import { ModerationStatusHistory } from '../history/status'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -112,6 +113,8 @@ export class ModerationService {
       return authHeaders
     },
   )
+
+  statusHistory = new ModerationStatusHistory(this.db)
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -364,11 +367,10 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    const subjectStatus = await adjustModerationSubjectStatus(
-      this.db,
-      modEvent,
-      subject.blobCids,
-    )
+    const [subjectStatus] = await Promise.all([
+      adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids),
+      this.statusHistory.adjustForModEvent(modEvent),
+    ])
 
     return { event: modEvent, subjectStatus }
   }

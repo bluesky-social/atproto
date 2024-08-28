@@ -22,6 +22,7 @@ import listMembers from './team/listMembers'
 import getConfig from './server/getConfig'
 import chat from './chat'
 import proxied from './proxied'
+import getReportedSubjects from './history/getReportedSubjects'
 
 export * as health from './health'
 
@@ -50,5 +51,6 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
+  getReportedSubjects(server, ctx)
   return server
 }

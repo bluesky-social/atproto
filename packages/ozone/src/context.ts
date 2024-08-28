@@ -26,11 +26,16 @@ import {
   ParsedLabelers,
   parseLabelerHeader,
 } from './util'
+import {
+  ModerationStatusHistory,
+  ModerationStatusHistoryCreator,
+} from './history/status'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  modStatusHistoryService: ModerationStatusHistoryCreator
   communicationTemplateService: CommunicationTemplateServiceCreator
   teamService: TeamServiceCreator
   appviewAgent: AtpAgent
@@ -116,6 +121,7 @@ export class AppContext {
     )
 
     const communicationTemplateService = CommunicationTemplateService.creator()
+    const modStatusHistoryService = ModerationStatusHistory.creator()
     const teamService = TeamService.creator()
 
     const sequencer = new Sequencer(modService(db))
@@ -131,6 +137,7 @@ export class AppContext {
         db,
         cfg,
         modService,
+        modStatusHistoryService,
         communicationTemplateService,
         teamService,
         appviewAgent,
@@ -176,6 +183,10 @@ export class AppContext {
 
   get communicationTemplateService(): CommunicationTemplateServiceCreator {
     return this.opts.communicationTemplateService
+  }
+
+  get modStatusHistoryService(): ModerationStatusHistoryCreator {
+    return this.opts.modStatusHistoryService
   }
 
   get teamService(): TeamServiceCreator {

@@ -7,10 +7,19 @@
       "description": "Fetch all subjects reported by the account.",
       "parameters": {
         "type": "params",
-        "required": ["account"],
         "properties": {
           "account": { "type": "string", "format": "did" },
-          "limit": { "type": "integer" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 50,
+            "maximum": 100
+          },
+          "sortDirection": {
+            "type": "string",
+            "knownValues": ["asc", "desc"],
+            "default": "desc"
+          },
           "cursor": { "type": "string" }
         }
       },
@@ -18,17 +27,48 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["subjects"],
           "properties": {
             "subjects": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "tools.ozone.history.defs#subjectBasicView"
+                "ref": "#reportView"
               }
             },
             "cursor": { "type": "string" }
           }
         }
+      }
+    },
+    "reportView": {
+      "type": "object",
+      "required": ["subject", "report"],
+      "properties": {
+        "subject": {
+          "type": "ref",
+          "ref": "tools.ozone.history.defs#subjectBasicView"
+        },
+        "report": {
+          "type": "ref",
+          "ref": "#report"
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "required": ["reasonType", "reason", "createdAt"],
+      "properties": {
+        "reasonType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        },
+        "reason": {
+          "type": "string",
+          "maxGraphemes": 2000,
+          "maxLength": 20000
+        },
+        "createdAt": { "type": "string", "format": "datetime" }
       }
     }
   }
