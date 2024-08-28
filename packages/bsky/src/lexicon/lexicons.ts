@@ -1284,12 +1284,9 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              commitCid: {
-                type: 'string',
-                format: 'cid',
-              },
-              commitRev: {
-                type: 'string',
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -1416,12 +1413,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
               },
-              commitCid: {
-                type: 'string',
-                format: 'cid',
-              },
-              commitRev: {
-                type: 'string',
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -1433,6 +1427,25 @@ export const schemaDict = {
               "Indicates that 'swapCommit' didn't match current repo commit.",
           },
         ],
+      },
+    },
+  },
+  ComAtprotoRepoDefs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.defs',
+    defs: {
+      commitMeta: {
+        type: 'object',
+        required: ['cid', 'rev'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          rev: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -1485,12 +1498,9 @@ export const schemaDict = {
           schema: {
             type: 'object',
             properties: {
-              commitCid: {
-                type: 'string',
-                format: 'cid',
-              },
-              commitRev: {
-                type: 'string',
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -1852,12 +1862,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
               },
-              commitCid: {
-                type: 'string',
-                format: 'cid',
-              },
-              commitRev: {
-                type: 'string',
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -10185,6 +10192,7 @@ export const ids = {
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
+  ComAtprotoRepoDefs: 'com.atproto.repo.defs',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',

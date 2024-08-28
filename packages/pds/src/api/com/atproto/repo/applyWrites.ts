@@ -129,8 +129,10 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          commitCid: commit?.cid.toString(),
-          commitRev: commit?.rev,
+          commit: {
+            cid: commit.cid.toString(),
+            rev: commit.rev,
+          },
         },
       }
     },

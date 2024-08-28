@@ -57,8 +57,10 @@
           "properties": {
             "uri": { "type": "string", "format": "at-uri" },
             "cid": { "type": "string", "format": "cid" },
-            "commitCid": { "type": "string", "format": "cid" },
-            "commitRev": { "type": "string" }
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.repo.defs#commitMeta"
+            }
           }
         }
       },

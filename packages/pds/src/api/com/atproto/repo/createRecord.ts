@@ -105,8 +105,10 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),
-          commitCid: commit.cid.toString(),
-          commitRev: commit.rev,
+          commit: {
+            cid: commit.cid.toString(),
+            rev: commit.rev,
+          },
         },
       }
     },

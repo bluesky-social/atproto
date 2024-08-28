@@ -42,8 +42,10 @@
         "schema": {
           "type": "object",
           "properties": {
-            "commitCid": { "type": "string", "format": "cid" },
-            "commitRev": { "type": "string" }
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.repo.defs#commitMeta"
+            }
           }
         }
       },
