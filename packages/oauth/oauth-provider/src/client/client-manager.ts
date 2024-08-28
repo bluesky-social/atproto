@@ -227,20 +227,26 @@ export class ClientManager {
       throw new InvalidClientMetadataError('client_uri must be a valid URL')
     }
 
-    const scopes = metadata.scope?.split(' ').filter(Boolean)
+    const scopes = metadata.scope?.split(' ')
+
+    if (!scopes) {
+      throw new InvalidClientMetadataError('Missing scope property')
+    }
+
+    if (!scopes.includes('atproto')) {
+      throw new InvalidClientMetadataError('Missing "atproto" scope')
+    }
 
     const dupScope = scopes?.find(isDuplicate)
     if (dupScope) {
       throw new InvalidClientMetadataError(`Duplicate scope "${dupScope}"`)
     }
 
-    if (scopes) {
-      for (const scope of scopes) {
-        // Note, once we have dynamic scopes, this check will need to be
-        // updated to check against the server's supported scopes.
-        if (!this.serverMetadata.scopes_supported?.includes(scope)) {
-          throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
-        }
+    for (const scope of scopes) {
+      // Note, once we have dynamic scopes, this check will need to be
+      // updated to check against the server's supported scopes.
+      if (!this.serverMetadata.scopes_supported?.includes(scope)) {
+        throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
       }
     }
 

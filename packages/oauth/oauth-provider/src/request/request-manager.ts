@@ -119,12 +119,11 @@ export class RequestManager {
     // > server MUST include the scope response parameter in the token response
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
-    const cScopes = client.metadata.scope?.split(' ').filter(Boolean)
+    const cScopes = client.metadata.scope?.split(' ')
     const sScopes = this.metadata.scopes_supported
 
-    const scopes = new Set(
-      parameters.scope?.split(' ').filter(Boolean) || cScopes,
-    )
+    // ATProto defines the default scope as the (required) client metadata scope
+    const scopes = new Set(parameters.scope?.split(' ') || cScopes)
 
     if (scopes.has('openid')) {
       throw new InvalidParametersError(
@@ -141,8 +140,9 @@ export class RequestManager {
     }
 
     for (const scope of scopes) {
-      // Loopback clients do not define any scope in their metadata
-      if (cScopes && !cScopes.includes(scope)) {
+      // Any scope requested by the client must be registered in the client
+      // metadata
+      if (!cScopes?.includes(scope)) {
         throw new InvalidParametersError(
           parameters,
           `Scope "${scope}" is not registered for this client`,
