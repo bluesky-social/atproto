@@ -248,6 +248,14 @@ export class RequestManager {
       )
     }
 
+    // atproto specific
+    if (parameters.code_challenge_method !== 'S256') {
+      throw new InvalidParametersError(
+        parameters,
+        'Only "S256" code_challenge_method is allowed',
+      )
+    }
+
     // https://datatracker.ietf.org/doc/html/rfc7636#section-4.3
     if (parameters.code_challenge_method && !parameters.code_challenge) {
       throw new InvalidParametersError(
