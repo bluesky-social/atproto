@@ -72,8 +72,9 @@ const noBlocks = (inputs: {
 }) => {
   const { ctx, skeleton, hydration } = inputs
   skeleton.uris = skeleton.uris.filter((uri) => {
+    const creator = creatorFromUri(item.post.uri)
     const embedBlock = hydration.postBlocks?.get(uri)?.embed
-    return !ctx.views.viewerBlockExists(uri, hydration) && !embedBlock
+    return !ctx.views.viewerBlockExists(creator, hydration) && !embedBlock
   })
   return skeleton
 }
