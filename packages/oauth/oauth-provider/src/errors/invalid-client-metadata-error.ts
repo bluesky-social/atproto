@@ -20,6 +20,10 @@ export class InvalidClientMetadataError extends OAuthError {
       return cause
     }
     if (cause instanceof TypeError) {
+      // This method is meant to be used in the context of parsing & validating
+      // a client client metadata. In that context, a TypeError would more
+      // likely represent a problem with the data (e.g. invalid URL constructor
+      // arg) and not a programming error.
       return new InvalidClientMetadataError(cause.message, cause)
     }
     return new InvalidClientMetadataError(fallbackMessage, cause)
