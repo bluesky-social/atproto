@@ -65,8 +65,12 @@ export class BskyAppView {
       config.cdnUrl || `${config.publicUrl}/img`,
     )
     const videoUriBuilder = new VideoUriBuilder({
-      playlistUrlPattern: `${config.publicUrl}/vid/%s/%s/playlist.m3u8`,
-      thumbnailUrlPattern: `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
+      playlistUrlPattern:
+        config.videoPlaylistUrlPattern ||
+        `${config.publicUrl}/vid/%s/%s/playlist.m3u8`,
+      thumbnailUrlPattern:
+        config.videoThumbnailUrlPattern ||
+        `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
     })
 
     let imgProcessingServer: ImageProcessingServer | undefined
