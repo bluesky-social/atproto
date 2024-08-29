@@ -123,7 +123,7 @@ export class RequestManager {
     const sScopes = this.metadata.scopes_supported
 
     // ATProto defines the default scope as the (required) client metadata scope
-    const scopes = new Set(parameters.scope?.split(' ') || cScopes)
+    const scopes = new Set(parameters.scope?.split(' '))
 
     if (scopes.has('openid')) {
       throw new InvalidParametersError(
