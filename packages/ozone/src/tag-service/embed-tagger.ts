@@ -2,6 +2,8 @@ import {
   AppBskyEmbedImages,
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedPost,
+  AppBskyEmbedVideo,
+  AppBskyEmbedExternal,
 } from '@atproto/api'
 import { langLogger as log } from '../logger'
 import { ContentTagger } from './content-tagger'
@@ -33,7 +35,14 @@ export class EmbedTagger extends ContentTagger {
         if (AppBskyEmbedImages.isMain(recordValue.embed.media)) {
           tags.push(`${this.tagPrefix}image`)
         }
-        //     @TODO: check for video embed here
+
+        if (AppBskyEmbedVideo.isMain(recordValue.embed.media)) {
+          tags.push(`${this.tagPrefix}video`)
+        }
+
+        if (AppBskyEmbedExternal.isMain(recordValue.embed.media)) {
+          tags.push(`${this.tagPrefix}external`)
+        }
       }
       return tags
     } catch (err) {
