@@ -40,7 +40,7 @@ export type FirehoseOptions = {
   unauthenticated?: boolean
   service?: string
   getCursor?: () => Promise<number | undefined>
-  onError?: (errorType: FirehoseErrorType, err: unknown) => void
+  onError?: (err: Error) => void
   subscriptionReconnectDelay?: number
   filterCollections?: string[]
   excludeIdentity?: boolean
@@ -71,9 +71,7 @@ export class Firehose {
         try {
           return isValidRepoEvent(value)
         } catch (err) {
-          if (opts.onError) {
-            opts.onError('validation', err)
-          }
+          this.sendError(new FirehoseValidationError(err, value))
         }
       },
     })
@@ -107,9 +105,7 @@ export class Firehose {
             }
           }
         } catch (err) {
-          if (this.opts.onError) {
-            this.opts.onError('parse', err)
-          }
+          this.sendError(new FirehoseParseError(err, evt))
         }
       }
     } catch (err) {
@@ -117,11 +113,15 @@ export class Firehose {
         this.destoryDefer.resolve()
         return
       }
-      if (this.opts.onError) {
-        this.opts.onError('subscription', err)
-      }
+      this.sendError(new FirehoseSubscriptionError(err))
       await wait(3000)
       return this
+    }
+  }
+
+  private sendError(err: Error) {
+    if (this.opts.onError) {
+      this.opts.onError(err)
     }
   }
 
@@ -259,4 +259,26 @@ const isValidStatus = (str: string): str is AccountStatus => {
   return ['takendown', 'suspended', 'deleted', 'deactivated'].includes(str)
 }
 
-export type FirehoseErrorType = 'validation' | 'parse' | 'subscription'
+export class FirehoseValidationError extends Error {
+  constructor(
+    public err: unknown,
+    public value: unknown,
+  ) {
+    super(`error in firehose event validation: ${err}`)
+  }
+}
+
+export class FirehoseParseError extends Error {
+  constructor(
+    public err: unknown,
+    public event: RepoEvent,
+  ) {
+    super(`error in parsing firehose event: ${err}`)
+  }
+}
+
+export class FirehoseSubscriptionError extends Error {
+  constructor(err: unknown) {
+    super(`error on firehose subscription: ${err}`)
+  }
+}

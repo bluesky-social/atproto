@@ -6,6 +6,7 @@ import { PartitionedQueue } from './partitioned'
 export type SyncQueueOptions = {
   handleEvt: (evt: Event) => Promise<void>
   setCursor?: (cursor: number) => Promise<void>
+  onError?: (err: Error) => void
 }
 
 export class SyncQueue {
@@ -23,6 +24,7 @@ export class SyncQueue {
     }
     this.firehose = new Firehose({
       getCursor: async () => this.cursor,
+      onError: opts.onError ?? this.opts.onError,
       ...opts,
     })
     this.readFirehose()
@@ -44,14 +46,28 @@ export class SyncQueue {
   }
 
   async addEvent(evt: Event) {
-    const item = this.consecutive.push(evt.seq)
-    await this.repoQueue.add(evt.did, () => this.opts.handleEvt(evt))
-    const latest = item.complete().at(-1)
-    if (latest !== undefined) {
-      this.cursor = latest
-      if (this.opts.setCursor) {
-        await this.opts.setCursor(this.cursor)
+    try {
+      const item = this.consecutive.push(evt.seq)
+      await this.repoQueue.add(evt.did, () => this.opts.handleEvt(evt))
+      const latest = item.complete().at(-1)
+      if (latest !== undefined) {
+        this.cursor = latest
+        if (this.opts.setCursor) {
+          try {
+            await this.opts.setCursor(this.cursor)
+          } catch (err) {
+            this.sendError(new SyncQueueCursorError(err, this.cursor))
+          }
+        }
       }
+    } catch (err) {
+      this.sendError(new SyncQueueHandlerError(err, evt))
+    }
+  }
+
+  private sendError(err: Error) {
+    if (this.opts.onError) {
+      this.opts.onError(err)
     }
   }
 
@@ -62,5 +78,23 @@ export class SyncQueue {
   async destroy() {
     await this.firehose?.destroy()
     await this.repoQueue.destroy()
+  }
+}
+
+export class SyncQueueCursorError extends Error {
+  constructor(
+    public err: unknown,
+    public cursor: number,
+  ) {
+    super(`error setting cursor: ${err}`)
+  }
+}
+
+export class SyncQueueHandlerError extends Error {
+  constructor(
+    public err: unknown,
+    public event: Event,
+  ) {
+    super(`error in event handler: ${err}`)
   }
 }
