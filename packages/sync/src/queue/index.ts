@@ -1,100 +1,69 @@
+import PQueue from 'p-queue'
 import { Event } from '../events'
-import { Firehose, FirehoseOptions } from '../firehose'
+import { Firehose } from '../firehose'
 import { ConsecutiveList } from './consecutive-list'
-import { PartitionedQueue } from './partitioned'
 
 export type SyncQueueOptions = {
-  handleEvt: (evt: Event) => Promise<void>
   setCursor?: (cursor: number) => Promise<void>
-  onError?: (err: Error) => void
+  concurrency?: number
+  startCursor?: number
 }
 
+type EvtHandler = (evt: Event) => Promise<void>
+
+// A queue with arbitrarily many partitions, each processing work sequentially.
+// Partitions are created lazily and taken out of memory when they go idle.
 export class SyncQueue {
   consecutive = new ConsecutiveList<number>()
-  repoQueue = new PartitionedQueue({ concurrency: Infinity })
-  cursor = 0
+  mainQueue: PQueue
+  partitions = new Map<string, PQueue>()
+  cursor: number
 
   public firehose: Firehose | undefined
 
-  constructor(public opts: SyncQueueOptions) {}
+  constructor(public opts: SyncQueueOptions = {}) {
+    this.mainQueue = new PQueue({ concurrency: opts.concurrency ?? Infinity })
+    this.cursor = opts.startCursor ?? 0
+  }
 
-  addFirehose(opts: FirehoseOptions) {
-    if (this.firehose) {
-      throw new Error('already consuming from firehose')
-    }
-    this.firehose = new Firehose({
-      getCursor: async () => this.cursor,
-      onError: opts.onError ?? this.opts.onError,
-      ...opts,
+  async addTask(partitionId: string, task: () => Promise<void>) {
+    if (this.mainQueue.isPaused) return
+    return this.mainQueue.add(() => {
+      return this.getPartition(partitionId).add(task)
     })
-    this.readFirehose()
   }
 
-  private async readFirehose() {
-    if (!this.firehose) {
-      throw new Error('firehose is undefined')
+  private getPartition(partitionId: string) {
+    let partition = this.partitions.get(partitionId)
+    if (!partition) {
+      partition = new PQueue({ concurrency: 1 })
+      partition.once('idle', () => this.partitions.delete(partitionId))
+      this.partitions.set(partitionId, partition)
     }
-    for await (const evt of this.firehose) {
-      this.addEvent(evt)
-      await this.repoQueue.main.onEmpty() // backpressure
-    }
+    return partition
   }
 
-  async removeFirehose() {
-    await this.firehose?.destroy()
-    this.firehose = undefined
-  }
-
-  async addEvent(evt: Event) {
-    try {
-      const item = this.consecutive.push(evt.seq)
-      await this.repoQueue.add(evt.did, () => this.opts.handleEvt(evt))
-      const latest = item.complete().at(-1)
-      if (latest !== undefined) {
-        this.cursor = latest
-        if (this.opts.setCursor) {
-          try {
-            await this.opts.setCursor(this.cursor)
-          } catch (err) {
-            this.sendError(new SyncQueueCursorError(err, this.cursor))
-          }
-        }
+  async handleEvt(evt: Event, handler: EvtHandler) {
+    const item = this.consecutive.push(evt.seq)
+    await this.addTask(evt.did, () => handler(evt))
+    const latest = item.complete().at(-1)
+    if (latest !== undefined) {
+      this.cursor = latest
+      if (this.opts.setCursor) {
+        await this.opts.setCursor(this.cursor)
       }
-    } catch (err) {
-      this.sendError(new SyncQueueHandlerError(err, evt))
-    }
-  }
-
-  private sendError(err: Error) {
-    if (this.opts.onError) {
-      this.opts.onError(err)
     }
   }
 
   async processAll() {
-    await this.repoQueue.main.onIdle()
+    await this.mainQueue.onIdle()
   }
 
   async destroy() {
     await this.firehose?.destroy()
-    await this.repoQueue.destroy()
-  }
-}
-
-export class SyncQueueCursorError extends Error {
-  constructor(
-    public err: unknown,
-    public cursor: number,
-  ) {
-    super(`error setting cursor: ${err}`)
-  }
-}
-
-export class SyncQueueHandlerError extends Error {
-  constructor(
-    public err: unknown,
-    public event: Event,
-  ) {
-    super(`error in event handler: ${err}`)
+    this.mainQueue.pause()
+    this.mainQueue.clear()
+    this.partitions.forEach((p) => p.clear())
+    await this.mainQueue.onIdle()
   }
 }

@@ -34,14 +34,23 @@ import {
   IdentityEvt,
 } from '../events'
 import { CID } from 'multiformats/cid'
+import { SyncQueue } from '../queue'
 
 export type FirehoseOptions = {
   idResolver: IdResolver
-  unauthenticated?: boolean
-  service?: string
+
+  handleEvt: (evt: Event) => Promise<void>
+  onError: (err: Error) => void
   getCursor?: () => Promise<number | undefined>
-  onError?: (err: Error) => void
+
+  syncQueue?: SyncQueue // sync queue getCursor takes precedence over `getCursor`
+
+  service?: string
   subscriptionReconnectDelay?: number
+
+  unauthenticatedCommits?: boolean
+  unauthenticatedHandles?: boolean
+
   filterCollections?: string[]
   excludeIdentity?: boolean
   excludeAccount?: boolean
@@ -61,51 +70,43 @@ export class Firehose {
       method: 'com.atproto.sync.subscribeRepos',
       signal: this.abortController.signal,
       getParams: async () => {
-        if (!opts.getCursor) {
-          return undefined
+        if (this.opts.syncQueue) {
+          return { cursor: this.opts.syncQueue.cursor }
+        } else if (opts.getCursor) {
+          const cursor = await opts.getCursor()
+          return { cursor }
         }
-        const cursor = await opts.getCursor()
-        return { cursor }
+        return undefined
       },
       validate: (value: unknown) => {
         try {
           return isValidRepoEvent(value)
         } catch (err) {
-          this.sendError(new FirehoseValidationError(err, value))
+          this.opts?.onError(new FirehoseValidationError(err, value))
         }
       },
     })
   }
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<Event> {
+  async start() {
     try {
       for await (const evt of this.sub) {
-        try {
-          if (isCommit(evt) && !this.opts.excludeCommit) {
-            const parsed = this.opts.unauthenticated
-              ? await parseCommitUnauthenticated(evt)
-              : await parseCommitAuthenticated(this.opts.idResolver, evt)
-            for (const write of parsed) {
-              if (
-                !this.opts.filterCollections ||
-                this.opts.filterCollections.includes(write.uri.collection)
-              ) {
-                yield write
+        if (this.opts.syncQueue) {
+          const did = didForEvt(evt)
+          if (did) {
+            this.opts.syncQueue.addTask(did, async () => {
+              const parsed = await this.parseEvt(evt)
+              for (const write of parsed) {
+                this.opts.syncQueue
+                  ?.handleEvt(write, this.opts.handleEvt)
+                  .catch((err) => {
+                    this.opts.onError(new FirehoseHandlerError(err, write))
+                  })
               }
-            }
-          } else if (isAccount(evt) && !this.opts.excludeAccount) {
-            const parsed = parseAccount(evt)
-            if (parsed) {
-              yield parsed
-            }
-          } else if (isIdentity(evt) && !this.opts.excludeIdentity) {
-            const parsed = await parseIdentity(this.opts.idResolver, evt)
-            if (parsed) {
-              yield parsed
-            }
+            })
           }
-        } catch (err) {
-          this.sendError(new FirehoseParseError(err, evt))
+        } else {
+          await this.processEvt(evt)
         }
       }
     } catch (err) {
@@ -113,15 +114,51 @@ export class Firehose {
         this.destoryDefer.resolve()
         return
       }
-      this.sendError(new FirehoseSubscriptionError(err))
+      this.opts.onError?.(new FirehoseSubscriptionError(err))
       await wait(3000)
       return this
     }
   }
 
-  private sendError(err: Error) {
-    if (this.opts.onError) {
-      this.opts.onError(err)
+  private async parseEvt(evt: RepoEvent): Promise<Event[]> {
+    try {
+      if (isCommit(evt) && !this.opts.excludeCommit) {
+        const parsed = this.opts.unauthenticatedCommits
+          ? await parseCommitUnauthenticated(evt)
+          : await parseCommitAuthenticated(this.opts.idResolver, evt)
+        const filtered = parsed.filter(
+          (write) =>
+            !this.opts.filterCollections ||
+            this.opts.filterCollections.includes(write.uri.collection),
+        )
+        return filtered
+      } else if (isAccount(evt) && !this.opts.excludeAccount) {
+        const parsed = parseAccount(evt)
+        return parsed ? [parsed] : []
+      } else if (isIdentity(evt) && !this.opts.excludeIdentity) {
+        const parsed = await parseIdentity(
+          this.opts.idResolver,
+          evt,
+          this.opts.unauthenticatedHandles,
+        )
+        return parsed ? [parsed] : []
+      } else {
+        return []
+      }
+    } catch (err) {
+      this.opts.onError?.(new FirehoseParseError(err, evt))
+      return []
+    }
+  }
+
+  private async processEvt(evt: RepoEvent) {
+    const parsed = await this.parseEvt(evt)
+    for (const write of parsed) {
+      try {
+        await this.opts.handleEvt(write)
+      } catch (err) {
+        this.opts.onError(new FirehoseHandlerError(err, write))
+      }
     }
   }
 
@@ -129,6 +166,12 @@ export class Firehose {
     this.abortController.abort()
     await this.destoryDefer.complete
   }
+}
+
+const didForEvt = (evt: RepoEvent): string | undefined => {
+  if (isCommit(evt)) return evt.repo
+  else if (isAccount(evt) || isIdentity(evt)) return evt.did
+  return undefined
 }
 
 export const parseCommitAuthenticated = async (
@@ -218,9 +261,13 @@ const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
 export const parseIdentity = async (
   idResolver: IdResolver,
   evt: Identity,
+  unauthenticated = false,
 ): Promise<IdentityEvt | null> => {
   const res = await idResolver.did.resolve(evt.did)
-  const handle = res ? await verifyHandle(idResolver, evt.did, res) : undefined
+  const handle =
+    res && !unauthenticated
+      ? await verifyHandle(idResolver, evt.did, res)
+      : undefined
 
   return {
     event: 'identity',
@@ -261,24 +308,33 @@ const isValidStatus = (str: string): str is AccountStatus => {
 
 export class FirehoseValidationError extends Error {
   constructor(
-    public err: unknown,
+    err: unknown,
     public value: unknown,
   ) {
-    super(`error in firehose event validation: ${err}`)
+    super('error in firehose event lexicon validation', { cause: err })
   }
 }
 
 export class FirehoseParseError extends Error {
   constructor(
-    public err: unknown,
+    err: unknown,
     public event: RepoEvent,
   ) {
-    super(`error in parsing firehose event: ${err}`)
+    super('error in parsing and authenticating firehose event', { cause: err })
   }
 }
 
 export class FirehoseSubscriptionError extends Error {
   constructor(err: unknown) {
-    super(`error on firehose subscription: ${err}`)
+    super('error on firehose subscription', { cause: err })
+  }
+}
+
+export class FirehoseHandlerError extends Error {
+  constructor(
+    err: unknown,
+    public event: Event,
+  ) {
+    super('error in firehose event handler', { cause: err })
   }
 }
