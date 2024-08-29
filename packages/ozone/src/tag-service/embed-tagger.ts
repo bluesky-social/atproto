@@ -28,19 +28,22 @@ export class EmbedTagger extends ContentTagger {
         return []
       }
       const tags: string[] = []
-      if (
-        AppBskyFeedPost.isRecord(recordValue) &&
-        AppBskyEmbedRecordWithMedia.isMain(recordValue.embed)
-      ) {
-        if (AppBskyEmbedImages.isMain(recordValue.embed.media)) {
+      if (AppBskyFeedPost.isRecord(recordValue)) {
+        const embedContent = AppBskyEmbedRecordWithMedia.isMain(
+          recordValue.embed,
+        )
+          ? recordValue.embed.media
+          : recordValue.embed
+
+        if (AppBskyEmbedImages.isMain(embedContent)) {
           tags.push(`${this.tagPrefix}image`)
         }
 
-        if (AppBskyEmbedVideo.isMain(recordValue.embed.media)) {
+        if (AppBskyEmbedVideo.isMain(embedContent)) {
           tags.push(`${this.tagPrefix}video`)
         }
 
-        if (AppBskyEmbedExternal.isMain(recordValue.embed.media)) {
+        if (AppBskyEmbedExternal.isMain(embedContent)) {
           tags.push(`${this.tagPrefix}external`)
         }
       }

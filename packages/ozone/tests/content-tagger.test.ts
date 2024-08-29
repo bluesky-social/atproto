@@ -107,18 +107,34 @@ describe('moderation subject content tagging', () => {
 
   describe('embed tagger', () => {
     it('Adds image tag to post with image', async () => {
-      const post = sc.posts[sc.dids.carol][0]
-      await sc.createReport({
-        reasonType: REASONSPAM,
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.ref.uriStr,
-          cid: post.ref.cidStr,
-        },
-        reportedBy: sc.dids.alice,
-      })
+      const postWithImageMediaEmbed = sc.posts[sc.dids.carol][0]
+      const postWithImageEmbed = sc.replies[sc.dids.bob][0]
+      await Promise.all([
+        sc.createReport({
+          reasonType: REASONSPAM,
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postWithImageMediaEmbed.ref.uriStr,
+            cid: postWithImageMediaEmbed.ref.cidStr,
+          },
+          reportedBy: sc.dids.alice,
+        }),
+        sc.createReport({
+          reasonType: REASONSPAM,
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postWithImageEmbed.ref.uriStr,
+            cid: postWithImageEmbed.ref.cidStr,
+          },
+          reportedBy: sc.dids.alice,
+        }),
+      ])
 
-      const imagePostStatus = await getStatus(post.ref.uriStr)
+      const [mediaImagePostStatus, imagePostStatus] = await Promise.all([
+        getStatus(postWithImageMediaEmbed.ref.uriStr),
+        getStatus(postWithImageEmbed.ref.uriStr),
+      ])
+      expect(mediaImagePostStatus.tags).toContain('embed:image')
       expect(imagePostStatus.tags).toContain('embed:image')
     })
   })

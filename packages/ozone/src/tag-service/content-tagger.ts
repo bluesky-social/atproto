@@ -15,7 +15,6 @@ export abstract class ContentTagger {
   protected abstract buildTags(): Promise<string[]>
 
   async getTags(): Promise<string[]> {
-    console.log(this.isApplicable(), 'isApplicable')
     if (!this.isApplicable()) {
       return []
     }
