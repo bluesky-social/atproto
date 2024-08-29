@@ -1,5 +1,6 @@
 import { DidDocument } from '@atproto/identity'
 import type { RepoRecord } from '@atproto/lexicon'
+import { BlockMap } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import type { CID } from 'multiformats/cid'
 
@@ -7,6 +8,10 @@ export type Event = CommitEvt | IdentityEvt | AccountEvt
 
 export type CommitMeta = {
   seq: number
+  time: string
+  commit: CID
+  blocks: BlockMap
+  rev: string
   uri: AtUri
   did: string
   collection: string
@@ -33,6 +38,7 @@ export type Delete = CommitMeta & {
 
 export type IdentityEvt = {
   seq: number
+  time: string
   event: 'identity'
   did: string
   handle?: string
@@ -41,6 +47,7 @@ export type IdentityEvt = {
 
 export type AccountEvt = {
   seq: number
+  time: string
   event: 'account'
   did: string
   active: boolean
