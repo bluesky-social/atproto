@@ -5,46 +5,26 @@ import {
   AppBskyGraphList,
 } from '@atproto/api'
 
-import { ModerationService } from '.'
-import { ModSubject } from './subject'
-import { ModerationSubjectStatusRow } from './types'
 import { langLogger as log } from '../logger'
-import { code3ToCode2 } from './lang-data'
+import { code3ToCode2 } from './language-data'
+import { ContentTagger } from './content-tagger'
 
-export class ModerationLangService {
-  constructor(private moderationService: ModerationService) {}
+export class LanguageTagger extends ContentTagger {
+  tagPrefix = 'lang:'
 
-  async tagSubjectWithLang({
-    subject,
-    subjectStatus,
-    createdBy,
-  }: {
-    subject: ModSubject
-    createdBy: string
-    subjectStatus: ModerationSubjectStatusRow | null
-  }) {
-    if (
-      subjectStatus &&
-      !subjectStatus.tags?.find((tag) => tag.includes('lang:'))
-    ) {
-      try {
-        const recordLangs = await this.getRecordLang({
-          subject,
-        })
-        await this.moderationService.logEvent({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventTag',
-            add: recordLangs
-              ? recordLangs.map((lang) => `lang:${lang}`)
-              : ['lang:und'],
-            remove: [],
-          },
-          subject,
-          createdBy,
-        })
-      } catch (err) {
-        log.error({ subject, err }, 'Error getting record langs')
-      }
+  isApplicable(): boolean {
+    return !!this.subjectStatus && !this.tagAlreadyExists()
+  }
+
+  async buildTags(): Promise<string[]> {
+    try {
+      const recordLangs = await this.getRecordLang()
+      return recordLangs
+        ? recordLangs.map((lang) => `${this.tagPrefix}${lang}`)
+        : [`${this.tagPrefix}und`]
+    } catch (err) {
+      log.error({ subject: this.subject, err }, 'Error getting record langs')
+      return []
     }
   }
 
@@ -65,20 +45,16 @@ export class ModerationLangService {
     return text?.trim()
   }
 
-  async getRecordLang({
-    subject,
-  }: {
-    subject: ModSubject
-  }): Promise<string[] | null> {
-    const isRecord = subject.isRecord()
+  async getRecordLang(): Promise<string[] | null> {
     const langs = new Set<string>()
 
     if (
-      subject.isRepo() ||
-      (isRecord && subject.uri.endsWith('/app.bsky.actor.profile/self'))
+      this.subject.isRepo() ||
+      (this.subject.isRecord() &&
+        this.subject.uri.endsWith('/app.bsky.actor.profile/self'))
     ) {
       const feed = await this.moderationService.views.fetchAuthorFeed(
-        subject.did,
+        this.subject.did,
       )
       feed.forEach((item) => {
         const itemLangs = item.post.record['langs'] as string[] | null
@@ -89,11 +65,11 @@ export class ModerationLangService {
       })
     }
 
-    if (isRecord) {
+    if (this.subject.isRecord()) {
       const recordByUri = await this.moderationService.views.fetchRecords([
-        subject,
+        this.subject,
       ])
-      const record = recordByUri.get(subject.uri)
+      const record = recordByUri.get(this.subject.uri)
       const recordLang = record?.value.langs as string[] | null
       const recordText = this.getTextFromRecord(record?.value)
       if (recordLang?.length) {
