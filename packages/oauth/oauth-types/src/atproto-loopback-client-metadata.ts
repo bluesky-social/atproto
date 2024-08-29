@@ -16,16 +16,17 @@ export function atprotoLoopbackClientMetadata(
 
   const redirectUris = searchParams.getAll('redirect_uri')
 
-  // Allows both a single space separated string, multiple individual values, or
-  // a mix of both.
-  const scope = searchParams.getAll('scope').join(' ')
+  const scopes = searchParams.getAll('scope')
+  if (scopes.length > 1) {
+    throw new TypeError('Multiple scope parameters are not allowed')
+  }
 
   return {
     client_id: clientId,
     client_name: 'Loopback client',
     response_types: ['code'],
     grant_types: ['authorization_code', 'refresh_token'],
-    scope: scope || 'atproto',
+    scope: scopes[0] || 'atproto',
     redirect_uris: (redirectUris.length
       ? redirectUris
       : (['127.0.0.1', '[::1]'] as const).map(
