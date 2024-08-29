@@ -7,9 +7,9 @@ import { isIP } from './util.js'
  */
 export type OAuthClientIdDiscoverable = OAuthClientId & `https://${string}`
 
-export function isOAuthClientIdDiscoverable<C extends OAuthClientId>(
-  clientId: C,
-): clientId is C & OAuthClientIdDiscoverable {
+export function isOAuthClientIdDiscoverable(
+  clientId: string,
+): clientId is OAuthClientIdDiscoverable {
   try {
     parseOAuthDiscoverableClientId(clientId)
     return true
@@ -18,7 +18,13 @@ export function isOAuthClientIdDiscoverable<C extends OAuthClientId>(
   }
 }
 
-export function parseOAuthDiscoverableClientId(clientId: OAuthClientId): URL {
+export function assertOAuthDiscoverableClientId(
+  value: string,
+): asserts value is OAuthClientIdDiscoverable {
+  void parseOAuthDiscoverableClientId(value)
+}
+
+export function parseOAuthDiscoverableClientId(clientId: string): URL {
   const url = parseOAuthClientIdUrl(clientId)
 
   // Optimization: cheap checks first

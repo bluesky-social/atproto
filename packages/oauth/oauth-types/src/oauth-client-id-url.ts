@@ -1,6 +1,4 @@
-import { OAuthClientId } from './oauth-client-id.js'
-
-export function parseOAuthClientIdUrl(clientId: OAuthClientId): URL {
+export function parseOAuthClientIdUrl(clientId: string): URL {
   const url = new URL(clientId)
 
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {

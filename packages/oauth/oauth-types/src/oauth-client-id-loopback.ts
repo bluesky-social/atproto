@@ -4,9 +4,9 @@ import { OAuthClientId } from './oauth-client-id.js'
 export type OAuthClientIdLoopback = OAuthClientId &
   `http://localhost${'' | `${'/' | '?' | '#'}${string}`}`
 
-export function isOAuthClientIdLoopback<C extends OAuthClientId>(
-  clientId: C,
-): clientId is C & OAuthClientIdLoopback {
+export function isOAuthClientIdLoopback(
+  clientId: string,
+): clientId is OAuthClientIdLoopback {
   try {
     parseOAuthLoopbackClientId(clientId)
     return true
@@ -15,7 +15,13 @@ export function isOAuthClientIdLoopback<C extends OAuthClientId>(
   }
 }
 
-export function parseOAuthLoopbackClientId(clientId: OAuthClientId): URL {
+export function assertOAuthLoopbackClientId(
+  clientId: string,
+): asserts clientId is OAuthClientIdLoopback {
+  void parseOAuthLoopbackClientId(clientId)
+}
+
+export function parseOAuthLoopbackClientId(clientId: string): URL {
   const url = parseOAuthClientIdUrl(clientId)
 
   if (url.protocol !== 'http:') {
