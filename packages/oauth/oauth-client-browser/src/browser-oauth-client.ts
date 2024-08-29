@@ -12,8 +12,6 @@ import {
   assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
-  OAuthClientIdDiscoverable,
-  OAuthClientIdLoopback,
   OAuthClientMetadataInput,
 } from '@atproto/oauth-types'
 
@@ -63,7 +61,7 @@ export type BrowserOAuthClientLoadOptions = Omit<
   BrowserOAuthClientOptions,
   'clientMetadata'
 > & {
-  clientId: OAuthClientIdDiscoverable | OAuthClientIdLoopback
+  clientId: string
   signal?: AbortSignal
 }
 
