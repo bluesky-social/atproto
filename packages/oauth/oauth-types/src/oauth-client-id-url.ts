@@ -1,5 +1,3 @@
-import { posix } from 'node:path'
-
 import { OAuthClientId } from './oauth-client-id.js'
 
 export function parseOAuthClientIdUrl(clientId: OAuthClientId): URL {
@@ -15,7 +13,7 @@ export function parseOAuthClientIdUrl(clientId: OAuthClientId): URL {
 
   // URL constructor normalizes the "/./" and "/../" in the pathname, but not
   // "//".
-  if (url.pathname !== posix.normalize(url.pathname)) {
+  if (url.pathname !== normalizePath(url.pathname)) {
     throw new TypeError(
       'ClientID must not contain ".", ".." or "//" path segments',
     )
@@ -32,4 +30,21 @@ export function parseOAuthClientIdUrl(clientId: OAuthClientId): URL {
   }
 
   return url
+}
+
+function normalizePath(path: string): string {
+  const isAbsolute = path.startsWith('/')
+  const parts = path.split('/')
+
+  const normalized: string[] = []
+
+  for (const part of parts) {
+    if (part === '..') {
+      normalized.pop()
+    } else if (part !== '.' && part !== '') {
+      normalized.push(part)
+    }
+  }
+
+  return `${isAbsolute ? '/' : ''}${normalized.join('/')}`
 }
