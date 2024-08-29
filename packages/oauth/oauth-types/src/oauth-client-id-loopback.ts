@@ -18,8 +18,6 @@ export function isOAuthClientIdLoopback<C extends OAuthClientId>(
 export function parseOAuthLoopbackClientId(clientId: OAuthClientId): URL {
   const url = parseOAuthClientIdUrl(clientId)
 
-  // Optimization: cheap checks first
-
   if (url.protocol !== 'http:') {
     throw new TypeError('Loopback ClientID must use the "http:" protocol')
   }
@@ -40,19 +38,21 @@ export function parseOAuthLoopbackClientId(clientId: OAuthClientId): URL {
     throw new TypeError('Loopback ClientID must not contain a port')
   }
 
-  // Note: url.pathname === '/' is allowed for loopback URIs
-
-  if (url.pathname !== '/' && url.pathname.endsWith('/')) {
-    throw new TypeError('Loopback ClientID must not end with a trailing slash')
+  for (const name of url.searchParams.keys()) {
+    if (name !== 'redirect_uri' && name !== 'scope') {
+      throw new TypeError(`Invalid query parameter ${name} in client ID`)
+    }
   }
 
-  if (url.pathname.includes('//')) {
-    throw new TypeError(
-      `Loopback ClientID must not contain any double slashes in its path`,
-    )
+  for (const name of ['redirect_uri', 'scope'] as const) {
+    if (!url.searchParams.getAll(name).every(Boolean)) {
+      throw new TypeError(`Invalid empty ${name} parameter in client ID`)
+    }
   }
 
-  // Note: Query string is allowed
+  if (url.searchParams.getAll('scope').length > 1) {
+    throw new TypeError('Multiple scope parameters are not allowed')
+  }
 
   return url
 }

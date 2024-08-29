@@ -7,15 +7,15 @@ export function parseOAuthClientIdUrl(clientId: OAuthClientId): URL {
     throw new TypeError('ClientID must use the "https:" or "http:" protocol')
   }
 
-  if (url.pathname.endsWith('/')) {
+  if (url.pathname !== '/' && url.pathname.endsWith('/')) {
     throw new TypeError('ClientID path must not end with a trailing slash')
   }
 
   // URL constructor normalizes the "/./" and "/../" in the pathname, but not
   // "//".
-  if (url.pathname !== normalizePath(url.pathname)) {
+  if (url.pathname.includes('//')) {
     throw new TypeError(
-      'ClientID must not contain ".", ".." or "//" path segments',
+      `Loopback ClientID must not contain any double slashes in its path`,
     )
   }
 
@@ -30,21 +30,4 @@ export function parseOAuthClientIdUrl(clientId: OAuthClientId): URL {
   }
 
   return url
-}
-
-function normalizePath(path: string): string {
-  const isAbsolute = path.startsWith('/')
-  const parts = path.split('/')
-
-  const normalized: string[] = []
-
-  for (const part of parts) {
-    if (part === '..') {
-      normalized.pop()
-    } else if (part !== '.' && part !== '') {
-      normalized.push(part)
-    }
-  }
-
-  return `${isAbsolute ? '/' : ''}${normalized.join('/')}`
 }

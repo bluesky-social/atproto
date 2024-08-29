@@ -41,17 +41,7 @@ export function parseOAuthDiscoverableClientId(clientId: OAuthClientId): URL {
 
   if (url.pathname === '/') {
     throw new TypeError(
-      'ClientID must contain a path (e.g. "/client-metadata")',
-    )
-  }
-
-  if (url.pathname !== '/' && url.pathname.endsWith('/')) {
-    throw new TypeError('ClientID must not end with a trailing slash')
-  }
-
-  if (url.pathname.includes('//')) {
-    throw new TypeError(
-      `ClientID must not contain any double slashes in its path`,
+      'ClientID must contain a path (e.g. "/client-metadata.json")',
     )
   }
 
