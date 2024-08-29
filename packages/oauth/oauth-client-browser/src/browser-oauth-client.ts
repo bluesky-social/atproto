@@ -3,14 +3,14 @@ import {
   AuthorizeOptions,
   ClientMetadata,
   Fetch,
-  OAuthSession,
   OAuthCallbackError,
   OAuthClient,
+  OAuthSession,
   SessionEventMap,
 } from '@atproto/oauth-client'
 import {
+  assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
-  isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
   OAuthClientIdDiscoverable,
   OAuthClientIdLoopback,
@@ -69,10 +69,11 @@ export type BrowserOAuthClientLoadOptions = Omit<
 
 export class BrowserOAuthClient extends OAuthClient implements Disposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
-    if (isOAuthClientIdLoopback(clientId)) {
+    if (clientId.startsWith('http:')) {
       const clientMetadata = atprotoLoopbackClientMetadata(clientId)
       return new BrowserOAuthClient({ clientMetadata, ...options })
-    } else if (isOAuthClientIdDiscoverable(clientId)) {
+    } else if (clientId.startsWith('https:')) {
+      assertOAuthDiscoverableClientId(clientId)
       const clientMetadata = await OAuthClient.fetchMetadata({
         clientId,
         ...options,
