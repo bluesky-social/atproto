@@ -1,8 +1,12 @@
+import assert from 'node:assert'
+
 import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
+
 import AppContext from '../../../../context'
-import { authPassthru, resultPassthru } from '../../../proxy'
+import { Server } from '../../../../lexicon'
+import { resultPassthru } from '../../../proxy'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailUpdate({
@@ -19,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
-    handler: async ({ auth, req }) => {
+    handler: async ({ auth }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -30,10 +34,15 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.requestEmailUpdate(
             undefined,
-            authPassthru(req),
+            await ctx.serviceAuthHeaders(
+              auth.credentials.did,
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoServerRequestEmailUpdate,
+            ),
           ),
         )
       }

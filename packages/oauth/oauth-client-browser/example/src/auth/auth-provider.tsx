@@ -3,7 +3,7 @@
 import { Agent } from '@atproto/api'
 import { createContext, ReactNode, useContext, useMemo } from 'react'
 
-import { useAtpAuth } from './atp/use-atp-auth'
+import { useCredentialAuth } from './credential/use-credential-auth'
 import { AuthForm } from './auth-form'
 import { useOAuth, UseOAuthOptions } from './oauth/use-oauth'
 
@@ -26,18 +26,23 @@ export const AuthProvider = ({
     client: oauthClient,
     agent: oauthAgent,
     signIn: oauthSignIn,
+    signOut: oauthSignOut,
   } = useOAuth(options)
 
-  const { agent: atpAgent, signIn: atpSignIn } = useAtpAuth()
+  const {
+    agent: credentialAgent,
+    signIn: credentialSignIn,
+    signOut: credentialSignOut,
+  } = useCredentialAuth()
 
   const value = useMemo<AuthContext | null>(
     () =>
       oauthAgent
-        ? { pdsAgent: oauthAgent, signOut: () => oauthAgent.signOut() }
-        : atpAgent
-          ? { pdsAgent: atpAgent, signOut: () => atpAgent.logout() }
+        ? { pdsAgent: oauthAgent, signOut: oauthSignOut }
+        : credentialAgent
+          ? { pdsAgent: credentialAgent, signOut: credentialSignOut }
           : null,
-    [atpAgent, oauthAgent],
+    [oauthAgent, oauthSignOut, credentialAgent, credentialSignOut],
   )
 
   if (isLoginPopup) {
@@ -51,7 +56,7 @@ export const AuthProvider = ({
   if (!value) {
     return (
       <AuthForm
-        atpSignIn={atpSignIn}
+        atpSignIn={credentialSignIn}
         oauthSignIn={oauthClient ? oauthSignIn : undefined}
       />
     )

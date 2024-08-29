@@ -1,22 +1,22 @@
 'use client'
 
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import { Agent } from '@atproto/api'
 import {
   AuthorizeOptions,
   BrowserOAuthClient,
   BrowserOAuthClientLoadOptions,
   BrowserOAuthClientOptions,
   LoginContinuedInParentWindowError,
-  OAuthAtpAgent,
+  OAuthSession,
 } from '@atproto/oauth-client-browser'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-export type OnRestored = (agent: OAuthAtpAgent | null) => void
-export type OnSignedIn = (agent: OAuthAtpAgent, state: null | string) => void
+type Gettable<T> = () => PromiseLike<T> | T
+
+export type OnRestored = (session: OAuthSession | null) => void
+export type OnSignedIn = (session: OAuthSession, state: null | string) => void
 export type OnSignedOut = () => void
-export type GetState = () =>
-  | undefined
-  | string
-  | PromiseLike<undefined | string>
 
 function useCallbackRef<T extends (this: any, ...args: any[]) => any>(
   fn: T,
@@ -143,18 +143,20 @@ export type UseOAuthOptions = ClientOptions & {
   onRestored?: OnRestored
   onSignedIn?: OnSignedIn
   onSignedOut?: OnSignedOut
-  getState?: GetState
+  getScope?: Gettable<undefined | string>
+  getState?: Gettable<undefined | string>
 }
 
 export function useOAuth(options: UseOAuthOptions) {
   const onRestored = useCallbackRef(options.onRestored)
   const onSignedIn = useCallbackRef(options.onSignedIn)
   const onSignedOut = useCallbackRef(options.onSignedOut)
+  const getScope = useCallbackRef(options.getScope)
   const getState = useCallbackRef(options.getState)
 
   const clientForInit = useOAuthClient(options)
 
-  const [agent, setAgent] = useState<null | OAuthAtpAgent>(null)
+  const [session, setSession] = useState<null | OAuthSession>(null)
   const [client, setClient] = useState<BrowserOAuthClient | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
   const [isLoginPopup, setIsLoginPopup] = useState(false)
@@ -165,7 +167,7 @@ export function useOAuth(options: UseOAuthOptions) {
     if (clientForInitRef.current === clientForInit) return
     clientForInitRef.current = clientForInit
 
-    setAgent(null)
+    setSession(null)
     setClient(null)
     setIsLoginPopup(false)
     setIsInitializing(clientForInit != null)
@@ -178,12 +180,12 @@ export function useOAuth(options: UseOAuthOptions) {
 
           setClient(clientForInit)
           if (r) {
-            setAgent(r.agent)
+            setSession(r.session)
 
             if ('state' in r) {
-              await onSignedIn(r.agent, r.state)
+              await onSignedIn(r.session, r.state)
             } else {
-              await onRestored(r.agent)
+              await onRestored(r.session)
             }
           } else {
             await onRestored(null)
@@ -218,22 +220,22 @@ export function useOAuth(options: UseOAuthOptions) {
     client.addEventListener(
       'updated',
       ({ detail: { sub } }) => {
-        if (!agent || agent.did !== sub) {
-          setAgent(null)
-          client.restore(sub, false).then((agent) => {
-            if (!signal.aborted) setAgent(agent)
+        if (!session || session.sub !== sub) {
+          setSession(null)
+          client.restore(sub, false).then((session) => {
+            if (!signal.aborted) setSession(session)
           })
         }
       },
       { signal },
     )
 
-    if (agent) {
+    if (session) {
       client.addEventListener(
         'deleted',
         ({ detail: { sub } }) => {
-          if (agent.did === sub) {
-            setAgent(null)
+          if (session.sub === sub) {
+            setSession(null)
             void onSignedOut()
           }
         },
@@ -241,24 +243,23 @@ export function useOAuth(options: UseOAuthOptions) {
       )
     }
 
-    void agent?.refreshIfNeeded()
-
     return () => {
       controller.abort()
     }
-  }, [client, agent, onSignedOut])
+  }, [client, session, onSignedOut])
 
   const signIn = useCallback(
     async (input: string, options?: AuthorizeOptions) => {
       if (!client) throw new Error('Client not initialized')
 
       const state = options?.state ?? (await getState()) ?? undefined
-      const agent = await client.signIn(input, { ...options, state })
-      setAgent(agent)
-      await onSignedIn(agent, state ?? null)
-      return agent
+      const scope = options?.scope ?? (await getScope()) ?? 'atproto'
+
+      const session = await client.signIn(input, { ...options, scope, state })
+      setSession(session)
+      await onSignedIn(session, state ?? null)
     },
-    [client, getState, onSignedIn],
+    [client, getScope, getState, onSignedIn],
   )
 
   // Memoize the return value to avoid re-renders in consumers
@@ -269,10 +270,11 @@ export function useOAuth(options: UseOAuthOptions) {
       isLoginPopup,
 
       signIn,
+      signOut: () => session?.signOut(),
 
       client,
-      agent,
+      agent: session ? new Agent(session) : null,
     }),
-    [isInitializing, isLoginPopup, agent, client, signIn],
+    [isInitializing, isLoginPopup, session, client, signIn],
   )
 }

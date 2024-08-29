@@ -11,11 +11,13 @@ export const createRouter = ({ authProvider, cfg }: AppContext): Router => {
       resource: cfg.service.publicUrl,
       authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl],
       bearer_methods_supported: ['header'],
-      scopes_supported: ['profile', 'email', 'phone'],
+      scopes_supported: [],
       resource_documentation: 'https://atproto.com',
     })
 
   router.get('/.well-known/oauth-protected-resource', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Method', '*')
     res.status(200).json(oauthProtectedResourceMetadata)
   })
 

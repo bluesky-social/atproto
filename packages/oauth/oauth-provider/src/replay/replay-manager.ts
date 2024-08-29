@@ -2,6 +2,7 @@ import { ClientId } from '../client/client-id.js'
 import {
   CLIENT_ASSERTION_MAX_AGE,
   DPOP_NONCE_MAX_AGE,
+  CODE_CHALLENGE_REPLAY_TIMEFRAME,
   JAR_MAX_AGE,
 } from '../constants.js'
 import { ReplayStore } from './replay-store.js'
@@ -33,6 +34,14 @@ export class ReplayManager {
       clientId ? `DPoP@${clientId}` : `DPoP`,
       jti,
       asTimeFrame(DPOP_NONCE_MAX_AGE),
+    )
+  }
+
+  async uniqueCodeChallenge(challenge: string): Promise<boolean> {
+    return this.replayStore.unique(
+      'CodeChallenge',
+      challenge,
+      asTimeFrame(CODE_CHALLENGE_REPLAY_TIMEFRAME),
     )
   }
 }

@@ -3,6 +3,10 @@ import {
   View as ImagesEmbedView,
 } from '../lexicon/types/app/bsky/embed/images'
 import {
+  Main as VideoEmbed,
+  View as VideoEmbedView,
+} from '../lexicon/types/app/bsky/embed/video'
+import {
   Main as ExternalEmbed,
   View as ExternalEmbedView,
 } from '../lexicon/types/app/bsky/embed/external'
@@ -30,6 +34,11 @@ export type {
 } from '../lexicon/types/app/bsky/embed/images'
 export { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
 export type {
+  Main as VideoEmbed,
+  View as VideoEmbedView,
+} from '../lexicon/types/app/bsky/embed/video'
+export { isMain as isVideoEmbed } from '../lexicon/types/app/bsky/embed/video'
+export type {
   Main as ExternalEmbed,
   View as ExternalEmbedView,
 } from '../lexicon/types/app/bsky/embed/external'
@@ -39,6 +48,7 @@ export type {
   View as RecordEmbedView,
   ViewBlocked as EmbedBlocked,
   ViewNotFound as EmbedNotFound,
+  ViewDetached as EmbedDetached,
   ViewRecord as PostEmbedView,
 } from '../lexicon/types/app/bsky/embed/record'
 export { isMain as isRecordEmbed } from '../lexicon/types/app/bsky/embed/record'
@@ -58,10 +68,16 @@ export type { ListView } from '../lexicon/types/app/bsky/graph/defs'
 
 export type { Notification as NotificationView } from '../lexicon/types/app/bsky/notification/listNotifications'
 
-export type Embed = ImagesEmbed | ExternalEmbed | RecordEmbed | RecordWithMedia
+export type Embed =
+  | ImagesEmbed
+  | VideoEmbed
+  | ExternalEmbed
+  | RecordEmbed
+  | RecordWithMedia
 
 export type EmbedView =
   | ImagesEmbedView
+  | VideoEmbedView
   | ExternalEmbedView
   | RecordEmbedView
   | RecordWithMediaView

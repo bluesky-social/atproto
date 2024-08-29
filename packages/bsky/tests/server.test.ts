@@ -89,7 +89,7 @@ describe('server', () => {
       {
         decompress: false,
         headers: {
-          ...(await network.serviceHeaders(alice)),
+          ...(await network.serviceHeaders(alice, 'app.bsky.feed.getTimeline')),
           'accept-encoding': 'gzip',
         },
       },

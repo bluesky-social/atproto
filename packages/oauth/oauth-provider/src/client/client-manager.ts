@@ -17,7 +17,7 @@ import {
   isLoopbackUrl,
   isOAuthClientIdDiscoverable,
   isOAuthClientIdLoopback,
-  OAUTH_AUTHENTICATED_ENDPOINT_NAMES,
+  OAuthAuthorizationServerMetadata,
   OAuthClientIdDiscoverable,
   OAuthClientIdLoopback,
   OAuthClientMetadata,
@@ -56,9 +56,10 @@ export type LoopbackMetadataGetter = (
 
 export class ClientManager {
   protected readonly jwks: CachedGetter<string, Jwks>
-  protected readonly metadata: CachedGetter<string, OAuthClientMetadata>
+  protected readonly metadataGetter: CachedGetter<string, OAuthClientMetadata>
 
   constructor(
+    protected readonly serverMetadata: OAuthAuthorizationServerMetadata,
     protected readonly keyset: Keyset,
     protected readonly hooks: OAuthHooks,
     protected readonly store: ClientStore | null,
@@ -77,7 +78,7 @@ export class ClientManager {
       return jwks
     }, clientJwksCache)
 
-    this.metadata = new CachedGetter(async (uri, options) => {
+    this.metadataGetter = new CachedGetter(async (uri, options) => {
       const metadata = await fetch(buildJsonGetRequest(uri, options)).then(
         fetchMetadataHandler,
       )
@@ -160,7 +161,7 @@ export class ClientManager {
   ): Promise<OAuthClientMetadata> {
     const metadataUrl = parseDiscoverableClientId(clientId)
 
-    const metadata = await this.metadata.get(metadataUrl.href)
+    const metadata = await this.metadataGetter.get(metadataUrl.href)
 
     // Note: we do *not* re-validate the metadata here, as the metadata is
     // validated within the getter. This is to avoid double validation.
@@ -196,6 +197,18 @@ export class ClientManager {
       )
     }
 
+    // Known OIDC specific parameters
+    for (const k of [
+      'default_max_age',
+      'userinfo_signed_response_alg',
+      'id_token_signed_response_alg',
+      'userinfo_encrypted_response_alg',
+    ] as const) {
+      if (metadata[k] != null) {
+        throw new InvalidClientMetadataError(`Unsupported "${k}" parameter`)
+      }
+    }
+
     const clientUriUrl = metadata.client_uri
       ? new URL(metadata.client_uri)
       : null
@@ -205,13 +218,27 @@ export class ClientManager {
       throw new InvalidClientMetadataError('client_uri must be a valid URL')
     }
 
-    const scopes = metadata.scope?.split(' ')
-    if (
-      metadata.grant_types.includes('refresh_token') !==
-      (scopes?.includes('offline_access') ?? false)
-    ) {
+    const scopes = metadata.scope?.split(' ').filter(Boolean)
+
+    const dupScope = scopes?.find(isDuplicate)
+    if (dupScope) {
+      throw new InvalidClientMetadataError(`Duplicate scope "${dupScope}"`)
+    }
+
+    if (scopes) {
+      for (const scope of scopes) {
+        // Note, once we have dynamic scopes, this check will need to be
+        // updated to check against the server's supported scopes.
+        if (!this.serverMetadata.scopes_supported?.includes(scope)) {
+          throw new InvalidClientMetadataError(`Unsupported scope "${scope}"`)
+        }
+      }
+    }
+
+    const dupGrantType = metadata.grant_types.find(isDuplicate)
+    if (dupGrantType) {
       throw new InvalidClientMetadataError(
-        'Grant type "refresh_token" requires scope "offline_access" (and vice versa)',
+        `Duplicate grant type "${dupGrantType}"`,
       )
     }
 
@@ -219,8 +246,8 @@ export class ClientManager {
       switch (grantType) {
         case 'authorization_code':
         case 'refresh_token':
-        case 'implicit': // Required by OIDC (for id_token)
           continue
+        case 'implicit':
         case 'password':
           throw new InvalidClientMetadataError(
             `Grant type "${grantType}" is not allowed`,
@@ -242,78 +269,43 @@ export class ClientManager {
       )
     }
 
-    if (
-      metadata.userinfo_signed_response_alg &&
-      !this.keyset.signAlgorithms.includes(
-        metadata.userinfo_signed_response_alg,
-      )
-    ) {
-      throw new InvalidClientMetadataError(
-        `Unsupported "userinfo_signed_response_alg" ${metadata.userinfo_signed_response_alg}`,
-      )
-    }
+    const method = metadata[`token_endpoint_auth_method`]
+    switch (method) {
+      case undefined:
+        throw new InvalidClientMetadataError(
+          'Missing token_endpoint_auth_method client metadata',
+        )
 
-    if (
-      metadata.id_token_signed_response_alg &&
-      !this.keyset.signAlgorithms.includes(
-        metadata.id_token_signed_response_alg,
-      )
-    ) {
-      throw new InvalidClientMetadataError(
-        `Unsupported "id_token_signed_response_alg" ${metadata.id_token_signed_response_alg}`,
-      )
-    }
-
-    if (metadata.userinfo_encrypted_response_alg) {
-      // We only support signature for now.
-      throw new InvalidClientMetadataError(
-        'Encrypted userinfo response is not supported',
-      )
-    }
-
-    if (!metadata[`token_endpoint_auth_method`]) {
-      throw new InvalidClientMetadataError(
-        'Missing token_endpoint_auth_method client metadata',
-      )
-    }
-
-    for (const endpoint of OAUTH_AUTHENTICATED_ENDPOINT_NAMES) {
-      const method =
-        metadata[`${endpoint}_endpoint_auth_method`] ||
-        metadata[`token_endpoint_auth_method`]
-
-      switch (method) {
-        case 'none':
-          if (metadata.token_endpoint_auth_signing_alg) {
-            throw new InvalidClientMetadataError(
-              `${endpoint}_endpoint_auth_method "none" must not have ${endpoint}_endpoint_auth_signing_alg`,
-            )
-          }
-          break
-
-        case 'private_key_jwt':
-          if (!metadata.jwks && !metadata.jwks_uri) {
-            throw new InvalidClientMetadataError(
-              `private_key_jwt auth method requires jwks or jwks_uri`,
-            )
-          }
-          if (metadata.jwks?.keys.length === 0) {
-            throw new InvalidClientMetadataError(
-              `private_key_jwt auth method requires at least one key in jwks`,
-            )
-          }
-          if (!metadata.token_endpoint_auth_signing_alg) {
-            throw new InvalidClientMetadataError(
-              `Missing token_endpoint_auth_signing_alg client metadata`,
-            )
-          }
-          break
-
-        default:
+      case 'none':
+        if (metadata.token_endpoint_auth_signing_alg) {
           throw new InvalidClientMetadataError(
-            `${method} is not a supported "${endpoint}_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+            `token_endpoint_auth_method "none" must not have token_endpoint_auth_signing_alg`,
           )
-      }
+        }
+        break
+
+      case 'private_key_jwt':
+        if (!metadata.jwks && !metadata.jwks_uri) {
+          throw new InvalidClientMetadataError(
+            `private_key_jwt auth method requires jwks or jwks_uri`,
+          )
+        }
+        if (metadata.jwks?.keys.length === 0) {
+          throw new InvalidClientMetadataError(
+            `private_key_jwt auth method requires at least one key in jwks`,
+          )
+        }
+        if (!metadata.token_endpoint_auth_signing_alg) {
+          throw new InvalidClientMetadataError(
+            `Missing token_endpoint_auth_signing_alg client metadata`,
+          )
+        }
+        break
+
+      default:
+        throw new InvalidClientMetadataError(
+          `${method} is not a supported "token_endpoint_auth_method". Use "private_key_jwt" or "none".`,
+        )
     }
 
     if (metadata.authorization_encrypted_response_enc) {
@@ -345,35 +337,26 @@ export class ClientManager {
     }
 
     for (const responseType of metadata.response_types) {
-      const rt = responseType.split(' ')
+      if (responseType.includes('id_token')) {
+        throw new InvalidClientMetadataError(
+          `OpenID Connect response type "${responseType}" is not supported`,
+        )
+      }
 
       // ATPROTO spec requires the use of PKCE
-      if (rt.includes('token')) {
+      if (responseType !== 'code') {
         throw new InvalidClientMetadataError(
-          '"token" response type is not compatible with PKCE (use "code" instead)',
+          `Unsupported response type "${responseType}"`,
         )
       }
 
       // Consistency check
       if (
-        rt.includes('code') &&
+        responseType === 'code' &&
         !metadata.grant_types.includes('authorization_code')
       ) {
         throw new InvalidClientMetadataError(
           `Response type "${responseType}" requires the "authorization_code" grant type`,
-        )
-      }
-
-      // Asking for "code token" or "code id_token" is fine (as long as the
-      // grant_types includes "authorization_code" and the scope includes
-      // "openid"). Asking for "token" or "id_token" (without "code") requires
-      // the "implicit" grant type.
-      if (
-        (rt.includes('token') || rt.includes('id_token')) &&
-        !metadata.grant_types.includes('implicit')
-      ) {
-        throw new InvalidClientMetadataError(
-          `Response type "${responseType}" requires the "implicit" grant type`,
         )
       }
     }
@@ -390,11 +373,33 @@ export class ClientManager {
       // > accordingly.
     }
 
+    if (metadata.authorization_details_types?.length) {
+      const dupAuthDetailsType =
+        metadata.authorization_details_types.find(isDuplicate)
+      if (dupAuthDetailsType) {
+        throw new InvalidClientMetadataError(
+          `Duplicate authorization_details_type "${dupAuthDetailsType}"`,
+        )
+      }
+
+      const authorizationDetailsTypesSupported =
+        this.serverMetadata.authorization_details_types_supported
+      if (!authorizationDetailsTypesSupported) {
+        throw new InvalidClientMetadataError(
+          'authorization_details_types are not supported',
+        )
+      }
+      for (const type of metadata.authorization_details_types) {
+        if (!authorizationDetailsTypesSupported.includes(type)) {
+          throw new InvalidClientMetadataError(
+            `Unsupported authorization_details_type "${type}"`,
+          )
+        }
+      }
+    }
+
     if (!metadata.redirect_uris?.length) {
-      // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
-      //
-      // >  OPs can require that request_uri values used be pre-registered with
-      // > the require_request_uri_registration discovery parameter.
+      // ATPROTO spec requires that at least one redirect URI is provided
 
       throw new InvalidClientMetadataError(
         'At least one redirect_uri is required',
@@ -693,16 +698,11 @@ export class ClientManager {
       )
     }
 
-    for (const endpoint of OAUTH_AUTHENTICATED_ENDPOINT_NAMES) {
-      const method =
-        metadata[`${endpoint}_endpoint_auth_method`] ||
-        metadata[`token_endpoint_auth_method`]
-
-      if (method !== 'none') {
-        throw new InvalidClientMetadataError(
-          `Loopback clients are not allowed to use "${endpoint}_endpoint_auth_method" ${method}`,
-        )
-      }
+    const method = metadata[`token_endpoint_auth_method`]
+    if (method !== 'none') {
+      throw new InvalidClientMetadataError(
+        `Loopback clients are not allowed to use "token_endpoint_auth_method" ${method}`,
+      )
     }
 
     for (const redirectUri of metadata.redirect_uris) {
@@ -766,16 +766,14 @@ export class ClientManager {
       }
     }
 
-    for (const endpoint of OAUTH_AUTHENTICATED_ENDPOINT_NAMES) {
-      const method = metadata[`${endpoint}_endpoint_auth_method`]
-      switch (method) {
-        case 'client_secret_post':
-        case 'client_secret_basic':
-        case 'client_secret_jwt':
-          throw new InvalidClientMetadataError(
-            `Client authentication method "${method}" is not allowed for discoverable clients`,
-          )
-      }
+    const method = metadata[`token_endpoint_auth_method`]
+    switch (method) {
+      case 'client_secret_post':
+      case 'client_secret_basic':
+      case 'client_secret_jwt':
+        throw new InvalidClientMetadataError(
+          `Client authentication method "${method}" is not allowed for discoverable clients`,
+        )
     }
 
     for (const redirectUri of metadata.redirect_uris) {
@@ -798,6 +796,12 @@ export class ClientManager {
 
     return metadata
   }
+}
+
+function isDuplicate<
+  T extends string | number | boolean | null | undefined | symbol,
+>(value: T, index: number, array: T[]) {
+  return array.includes(value, index + 1)
 }
 
 function reverseDomain(domain: string) {

@@ -4796,6 +4796,28 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedDefs: {
+    lexicon: 1,
+    id: 'app.bsky.embed.defs',
+    defs: {
+      aspectRatio: {
+        type: 'object',
+        description:
+          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+            minimum: 1,
+          },
+          height: {
+            type: 'integer',
+            minimum: 1,
+          },
+        },
+      },
+    },
+  },
   AppBskyEmbedExternal: {
     lexicon: 1,
     id: 'app.bsky.embed.external',
@@ -4900,23 +4922,7 @@ export const schemaDict = {
           },
           aspectRatio: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.images#aspectRatio',
-          },
-        },
-      },
-      aspectRatio: {
-        type: 'object',
-        description:
-          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
-        required: ['width', 'height'],
-        properties: {
-          width: {
-            type: 'integer',
-            minimum: 1,
-          },
-          height: {
-            type: 'integer',
-            minimum: 1,
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -4957,7 +4963,7 @@ export const schemaDict = {
           },
           aspectRatio: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.images#aspectRatio',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -4989,6 +4995,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
+              'lex:app.bsky.embed.record#viewDetached',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
               'lex:app.bsky.labeler.defs#labelerView',
@@ -5033,12 +5040,16 @@ export const schemaDict = {
           likeCount: {
             type: 'integer',
           },
+          quoteCount: {
+            type: 'integer',
+          },
           embeds: {
             type: 'array',
             items: {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images#view',
+                'lex:app.bsky.embed.video#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
                 'lex:app.bsky.embed.recordWithMedia#view',
@@ -5083,6 +5094,20 @@ export const schemaDict = {
           },
         },
       },
+      viewDetached: {
+        type: 'object',
+        required: ['uri', 'detached'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          detached: {
+            type: 'boolean',
+            const: true,
+          },
+        },
+      },
     },
   },
   AppBskyEmbedRecordWithMedia: {
@@ -5101,7 +5126,11 @@ export const schemaDict = {
           },
           media: {
             type: 'union',
-            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
+            refs: [
+              'lex:app.bsky.embed.images',
+              'lex:app.bsky.embed.video',
+              'lex:app.bsky.embed.external',
+            ],
           },
         },
       },
@@ -5117,8 +5146,88 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.video#view',
               'lex:app.bsky.embed.external#view',
             ],
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedVideo: {
+    lexicon: 1,
+    id: 'app.bsky.embed.video',
+    description: 'A video embedded in a Bluesky record (eg, a post).',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['video'],
+        properties: {
+          video: {
+            type: 'blob',
+            accept: ['video/mp4'],
+            maxSize: 50000000,
+          },
+          captions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.video#caption',
+            },
+            maxLength: 20,
+          },
+          alt: {
+            type: 'string',
+            description:
+              'Alt text description of the video, for accessibility.',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+        },
+      },
+      caption: {
+        type: 'object',
+        required: ['lang', 'file'],
+        properties: {
+          lang: {
+            type: 'string',
+            format: 'language',
+          },
+          file: {
+            type: 'blob',
+            accept: ['text/vtt'],
+            maxSize: 20000,
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['cid', 'playlist'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          playlist: {
+            type: 'string',
+            format: 'uri',
+          },
+          thumbnail: {
+            type: 'string',
+            format: 'uri',
+          },
+          alt: {
+            type: 'string',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
         },
       },
@@ -5151,6 +5260,7 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.video#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
               'lex:app.bsky.embed.recordWithMedia#view',
@@ -5163,6 +5273,9 @@ export const schemaDict = {
             type: 'integer',
           },
           likeCount: {
+            type: 'integer',
+          },
+          quoteCount: {
             type: 'integer',
           },
           indexedAt: {
@@ -5203,6 +5316,9 @@ export const schemaDict = {
             type: 'boolean',
           },
           replyDisabled: {
+            type: 'boolean',
+          },
+          embeddingDisabled: {
             type: 'boolean',
           },
         },
@@ -5728,7 +5844,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a list of posts liked by an actor. Does not require auth.',
+          'Get a list of posts liked by an actor. Requires auth, actor must be the requesting account.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -6227,6 +6343,10 @@ export const schemaDict = {
                   'lex:app.bsky.feed.defs#blockedPost',
                 ],
               },
+              threadgate: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#threadgateView',
+              },
             },
           },
         },
@@ -6267,6 +6387,69 @@ export const schemaDict = {
             type: 'object',
             required: ['posts'],
             properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGetQuotes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getQuotes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of quotes for a given post.',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) of post record',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'If supplied, filters to quotes of specific version (by CID) of the post record.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'posts'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
               posts: {
                 type: 'array',
                 items: {
@@ -6505,6 +6688,7 @@ export const schemaDict = {
               type: 'union',
               refs: [
                 'lex:app.bsky.embed.images',
+                'lex:app.bsky.embed.video',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
                 'lex:app.bsky.embed.recordWithMedia',
@@ -6593,6 +6777,56 @@ export const schemaDict = {
             minimum: 0,
           },
         },
+      },
+    },
+  },
+  AppBskyFeedPostgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.postgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          'Record defining interaction rules for a post. The record key (rkey) of the postgate record must match the record key of the post, and that record must be in the same repository.',
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+            post: {
+              type: 'string',
+              format: 'at-uri',
+              description: 'Reference (AT-URI) to the post record.',
+            },
+            detachedEmbeddingUris: {
+              type: 'array',
+              maxLength: 50,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description:
+                'List of AT-URIs embedding this post that the author has detached from.',
+            },
+            embeddingRules: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: ['lex:app.bsky.feed.postgate#disableRule'],
+              },
+            },
+          },
+        },
+      },
+      disableRule: {
+        type: 'object',
+        description: 'Disables embedding of this post.',
+        properties: {},
       },
     },
   },
@@ -6806,6 +7040,15 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            hiddenReplies: {
+              type: 'array',
+              maxLength: 50,
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              description: 'List of hidden reply URIs.',
             },
           },
         },
@@ -9049,6 +9292,138 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyVideoDefs: {
+    lexicon: 1,
+    id: 'app.bsky.video.defs',
+    defs: {
+      jobStatus: {
+        type: 'object',
+        required: ['jobId', 'did', 'state'],
+        properties: {
+          jobId: {
+            type: 'string',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          state: {
+            type: 'string',
+            description:
+              'The state of the video processing job. All values not listed as a known value indicate that the job is in process.',
+            knownValues: ['JOB_STATE_COMPLETED', 'JOB_STATE_FAILED'],
+          },
+          progress: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+            description: 'Progress within the current processing state.',
+          },
+          blob: {
+            type: 'blob',
+          },
+          error: {
+            type: 'string',
+          },
+          message: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoGetJobStatus: {
+    lexicon: 1,
+    id: 'app.bsky.video.getJobStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get status details for a video processing job.',
+        parameters: {
+          type: 'params',
+          required: ['jobId'],
+          properties: {
+            jobId: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jobStatus'],
+            properties: {
+              jobStatus: {
+                type: 'ref',
+                ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoGetUploadLimits: {
+    lexicon: 1,
+    id: 'app.bsky.video.getUploadLimits',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get video upload limits for the authenticated user.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canUpload'],
+            properties: {
+              canUpload: {
+                type: 'boolean',
+              },
+              remainingDailyVideos: {
+                type: 'integer',
+              },
+              remainingDailyBytes: {
+                type: 'integer',
+              },
+              message: {
+                type: 'string',
+              },
+              error: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyVideoUploadVideo: {
+    lexicon: 1,
+    id: 'app.bsky.video.uploadVideo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Upload a video to be processed then stored on the PDS.',
+        input: {
+          encoding: 'video/mp4',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['jobStatus'],
+            properties: {
+              jobStatus: {
+                type: 'ref',
+                ref: 'lex:app.bsky.video.defs#jobStatus',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ChatBskyActorDeclaration: {
     lexicon: 1,
     id: 'chat.bsky.actor.declaration',
@@ -10056,10 +10431,12 @@ export const ids = {
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
+  AppBskyEmbedVideo: 'app.bsky.embed.video',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
@@ -10074,11 +10451,13 @@ export const ids = {
   AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
+  AppBskyFeedPostgate: 'app.bsky.feed.postgate',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
   AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',
@@ -10131,6 +10510,10 @@ export const ids = {
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  AppBskyVideoDefs: 'app.bsky.video.defs',
+  AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
+  AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
+  AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
   ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
   ChatBskyActorDefs: 'chat.bsky.actor.defs',
   ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',

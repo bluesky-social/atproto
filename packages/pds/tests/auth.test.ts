@@ -243,7 +243,7 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow('Bad token scope')
+    await expect(refreshWithAccess).rejects.toThrow('Invalid token type')
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {

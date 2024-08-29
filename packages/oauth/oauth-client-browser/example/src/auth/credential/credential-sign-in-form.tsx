@@ -11,7 +11,7 @@ export type AtpSignIn = (input: {
  * @returns Nice tailwind css form asking to enter either a handle or the host
  *   to use to login.
  */
-export function AtpSignInForm({
+export function CredentialSignInForm({
   signIn,
   ...props
 }: {

@@ -14,6 +14,7 @@ export type Account = {
 
 export type Session = {
   account: Account
+  info?: never // Prevent relying on this in the frontend
 
   selected: boolean
   loginRequired: boolean
@@ -37,15 +38,21 @@ export type ErrorData = {
   error_description: string
 }
 
+export type ScopeDetail = {
+  scope: string
+  description?: string
+}
+
 export type AuthorizeData = {
   clientId: string
   clientMetadata: OAuthClientMetadata
   clientTrusted: boolean
   requestUri: string
   csrfCookie: string
-  sessions: Session[]
-  newSessionsRequireConsent: boolean
   loginHint?: string
+  scopeDetails?: ScopeDetail[]
+  newSessionsRequireConsent: boolean
+  sessions: Session[]
 }
 
 // see "declareBackendData()" in the backend

@@ -9,7 +9,7 @@ export interface ReplayStore {
    * strictly necessary for security purposes, the namespace should be used to
    * mitigate denial of service attacks from one client to the other.
    *
-   * @param timeFrame expressed in milliseconds. Will never exceed 24 hours.
+   * @param timeFrame expressed in milliseconds.
    */
   unique(
     namespace: string,

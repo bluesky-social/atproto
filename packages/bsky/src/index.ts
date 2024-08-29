@@ -24,6 +24,7 @@ import { AuthVerifier } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
+import { VideoUriBuilder } from './views/util'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -63,6 +64,14 @@ export class BskyAppView {
     const imgUriBuilder = new ImageUriBuilder(
       config.cdnUrl || `${config.publicUrl}/img`,
     )
+    const videoUriBuilder = new VideoUriBuilder({
+      playlistUrlPattern:
+        config.videoPlaylistUrlPattern ||
+        `${config.publicUrl}/vid/%s/%s/playlist.m3u8`,
+      thumbnailUrlPattern:
+        config.videoThumbnailUrlPattern ||
+        `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
+    })
 
     let imgProcessingServer: ImageProcessingServer | undefined
     if (!config.cdnUrl) {
@@ -92,7 +101,7 @@ export class BskyAppView {
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
     const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
-    const views = new Views(imgUriBuilder)
+    const views = new Views(imgUriBuilder, videoUriBuilder)
 
     const bsyncClient = createBsyncClient({
       baseUrl: config.bsyncUrl,

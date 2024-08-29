@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
+import { oauthResponseTypeSchema } from './oauth-response-type.js'
 import { oidcClaimsParameterSchema } from './oidc-claims-parameter.js'
 import { oidcClaimsPropertiesSchema } from './oidc-claims-properties.js'
 import { oidcEntityTypeSchema } from './oidc-entity-type.js'
@@ -17,19 +18,7 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
   nonce: z.string().optional(),
   dpop_jkt: z.string().optional(),
 
-  response_type: z.enum([
-    // OAuth2 (https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-4.1.1)
-    'code',
-    'token',
-
-    // OIDC (https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
-    'id_token',
-    'none',
-    'code token',
-    'code id_token',
-    'id_token token',
-    'code id_token token',
-  ]),
+  response_type: oauthResponseTypeSchema,
 
   // Default depend on response_type
   response_mode: z.enum(['query', 'fragment', 'form_post']).optional(),
@@ -40,10 +29,13 @@ export const oauthAuthenticationRequestParametersSchema = z.object({
 
   redirect_uri: z.string().url().optional(),
 
-  // email profile openid (other?)
+  // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-1.4.1
+  // scope       = scope-token *( SP scope-token )
+  // scope-token = 1*( %x21 / %x23-5B / %x5D-7E )
+  // = Basically most ASCII characters except backslash and double quote
   scope: z
     .string()
-    .regex(/^[a-zA-Z0-9_]+( [a-zA-Z0-9_]+)*$/)
+    .regex(/^[!\x23-\x5B\x5D-\x7E]+( [!\x23-\x5B\x5D-\x7E]+)*$/)
     .optional(),
 
   // OIDC

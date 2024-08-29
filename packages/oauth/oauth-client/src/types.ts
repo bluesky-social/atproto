@@ -16,10 +16,8 @@ export type AuthorizeOptions = {
   state?: string
   signal?: AbortSignal
 
-  // Only for OIDC compatible
+  // Borrowed from OIDC
   ui_locales?: string
-  id_token_hint?: string
-  max_age?: number
 }
 
 export const clientMetadataSchema = oauthClientMetadataSchema.extend({

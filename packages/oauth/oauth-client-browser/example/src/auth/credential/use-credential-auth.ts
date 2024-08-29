@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react'
 
 type Session = AtpSessionData & { service: string }
 
-export function useAtpAuth() {
+export function useCredentialAuth() {
   const createAgent = useCallback((service: string) => {
     const agent = new AtpAgent({
       service,
@@ -47,7 +47,10 @@ export function useAtpAuth() {
     [createAgent],
   )
 
-  return useMemo(() => ({ signIn, agent }), [signIn, agent])
+  return useMemo(
+    () => ({ agent, signIn, signOut: () => agent?.logout() }),
+    [signIn, agent],
+  )
 }
 
 const SESSION_KEY = '@@ATPROTO/SESSION'

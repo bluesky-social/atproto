@@ -1,12 +1,8 @@
-import { JwtHeader, JwtPayload, Key, unsafeDecodeJwt } from '@atproto/jwk'
+import { Key } from '@atproto/jwk'
 import { base64url } from 'multiformats/bases/base64'
 
 import { requestLocalLock } from './lock.js'
-import {
-  DigestAlgorithm,
-  RuntimeImplementation,
-  RuntimeLock,
-} from './runtime-implementation.js'
+import { RuntimeImplementation, RuntimeLock } from './runtime-implementation.js'
 
 export class Runtime {
   readonly hasImplementationLock: boolean
@@ -38,64 +34,6 @@ export class Runtime {
     return base64url.baseEncode(bytes)
   }
 
-  public async validateIdTokenClaims(
-    token: string,
-    state: string,
-    nonce: string,
-    code?: string,
-    accessToken?: string,
-  ): Promise<{
-    header: JwtHeader
-    payload: JwtPayload
-  }> {
-    // It's fine to use unsafeDecodeJwt here because the token was received from
-    // the server's token endpoint. The following checks are to ensure that the
-    // oauth flow was indeed initiated by the client.
-    const { header, payload } = unsafeDecodeJwt(token)
-    if (!payload.nonce || payload.nonce !== nonce) {
-      throw new TypeError('Nonce mismatch')
-    }
-    if (payload.c_hash) {
-      await this.validateHashClaim(payload.c_hash, code, header)
-    }
-    if (payload.s_hash) {
-      await this.validateHashClaim(payload.s_hash, state, header)
-    }
-    if (payload.at_hash) {
-      await this.validateHashClaim(payload.at_hash, accessToken, header)
-    }
-    return { header, payload }
-  }
-
-  private async validateHashClaim(
-    claim: unknown,
-    source: unknown,
-    header: { alg: string; crv?: string },
-  ): Promise<void> {
-    if (typeof claim !== 'string' || !claim) {
-      throw new TypeError(`string "_hash" claim expected`)
-    }
-    if (typeof source !== 'string' || !source) {
-      throw new TypeError(`string value expected`)
-    }
-    const expected = await this.generateHashClaim(source, header)
-    if (expected !== claim) {
-      throw new TypeError(`"_hash" does not match`)
-    }
-  }
-
-  protected async generateHashClaim(
-    source: string,
-    header: { alg: string; crv?: string },
-  ) {
-    const algo = getHashAlgo(header)
-    const bytes = new TextEncoder().encode(source)
-    const digest = await this.implementation.digest(bytes, algo)
-    if (digest.length % 2 !== 0) throw new TypeError('Invalid digest length')
-    const digestHalf = digest.slice(0, digest.length / 2)
-    return base64url.baseEncode(digestHalf)
-  }
-
   public async generatePKCE(byteLength?: number) {
     const verifier = await this.generateVerifier(byteLength)
     return {
@@ -124,36 +62,6 @@ export class Runtime {
     }
     const bytes = await this.implementation.getRandomValues(byteLength)
     return base64url.baseEncode(bytes)
-  }
-}
-
-function getHashAlgo(header: { alg: string; crv?: string }): DigestAlgorithm {
-  switch (header.alg) {
-    case 'HS256':
-    case 'RS256':
-    case 'PS256':
-    case 'ES256':
-    case 'ES256K':
-      return { name: 'sha256' }
-    case 'HS384':
-    case 'RS384':
-    case 'PS384':
-    case 'ES384':
-      return { name: 'sha384' }
-    case 'HS512':
-    case 'RS512':
-    case 'PS512':
-    case 'ES512':
-      return { name: 'sha512' }
-    case 'EdDSA':
-      switch (header.crv) {
-        case 'Ed25519':
-          return { name: 'sha512' }
-        default:
-          throw new TypeError('unrecognized or invalid EdDSA curve provided')
-      }
-    default:
-      throw new TypeError('unrecognized or invalid JWS algorithm provided')
   }
 }
 
