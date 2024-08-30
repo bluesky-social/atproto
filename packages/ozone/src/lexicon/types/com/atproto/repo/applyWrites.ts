@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
+import * as ComAtprotoRepoDefs from './defs'
 
 export interface QueryParams {}
 
@@ -22,6 +23,7 @@ export interface InputSchema {
 }
 
 export interface OutputSchema {
+  commit?: ComAtprotoRepoDefs.CommitMeta
   results?: (CreateResult | UpdateResult | DeleteResult)[]
   [k: string]: unknown
 }

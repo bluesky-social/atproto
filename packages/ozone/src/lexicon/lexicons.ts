@@ -1284,6 +1284,10 @@ export const schemaDict = {
             type: 'object',
             required: [],
             properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
               results: {
                 type: 'array',
                 items: {
@@ -1461,6 +1465,10 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
               },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
               validationStatus: {
                 type: 'string',
                 knownValues: ['valid', 'unknown'],
@@ -1475,6 +1483,25 @@ export const schemaDict = {
               "Indicates that 'swapCommit' didn't match current repo commit.",
           },
         ],
+      },
+    },
+  },
+  ComAtprotoRepoDefs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.defs',
+    defs: {
+      commitMeta: {
+        type: 'object',
+        required: ['cid', 'rev'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          rev: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -1518,6 +1545,18 @@ export const schemaDict = {
                 format: 'cid',
                 description:
                   'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -1877,6 +1916,10 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
               validationStatus: {
                 type: 'string',
@@ -12151,6 +12194,7 @@ export const ids = {
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
+  ComAtprotoRepoDefs: 'com.atproto.repo.defs',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',

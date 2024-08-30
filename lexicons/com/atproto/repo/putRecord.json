@@ -56,6 +56,10 @@
           "properties": {
             "uri": { "type": "string", "format": "at-uri" },
             "cid": { "type": "string", "format": "cid" },
+            "commit": {
+              "type": "ref",
+              "ref": "com.atproto.repo.defs#commitMeta"
+            },
             "validationStatus": {
               "type": "string",
               "knownValues": ["valid", "unknown"]

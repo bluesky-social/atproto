@@ -6,6 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoRepoDefs from './defs'
 
 export interface QueryParams {}
 
@@ -30,6 +31,7 @@ export interface InputSchema {
 export interface OutputSchema {
   uri: string
   cid: string
+  commit?: ComAtprotoRepoDefs.CommitMeta
   validationStatus?: 'valid' | 'unknown' | (string & {})
   [k: string]: unknown
 }
