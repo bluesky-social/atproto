@@ -1,5 +1,4 @@
 import PQueue from 'p-queue'
-import { Event } from '../events'
 import { Firehose } from '../firehose'
 import { ConsecutiveList } from './consecutive-list'
 
@@ -8,8 +7,6 @@ export type SyncQueueOptions = {
   concurrency?: number
   startCursor?: number
 }
-
-type EvtHandler = (evt: Event) => Promise<void>
 
 // A queue with arbitrarily many partitions, each processing work sequentially.
 // Partitions are created lazily and taken out of memory when they go idle.
@@ -43,9 +40,9 @@ export class SyncQueue {
     return partition
   }
 
-  async handleEvt(evt: Event, handler: EvtHandler) {
-    const item = this.consecutive.push(evt.seq)
-    await this.addTask(evt.did, () => handler(evt))
+  async trackEvt(did: string, seq: number, handler: () => Promise<void>) {
+    const item = this.consecutive.push(seq)
+    await this.addTask(did, handler)
     const latest = item.complete().at(-1)
     if (latest !== undefined) {
       this.cursor = latest

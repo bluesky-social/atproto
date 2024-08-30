@@ -35,6 +35,7 @@ import {
 } from '../events'
 import { CID } from 'multiformats/cid'
 import { SyncQueue } from '../queue'
+import { didAndSeqForEvt } from '../util'
 
 export type FirehoseOptions = {
   idResolver: IdResolver
@@ -92,19 +93,20 @@ export class Firehose {
     try {
       for await (const evt of this.sub) {
         if (this.opts.syncQueue) {
-          const did = didForEvt(evt)
-          if (did) {
-            this.opts.syncQueue.addTask(did, async () => {
-              const parsed = await this.parseEvt(evt)
-              for (const write of parsed) {
-                this.opts.syncQueue
-                  ?.handleEvt(write, this.opts.handleEvt)
-                  .catch((err) => {
-                    this.opts.onError(new FirehoseHandlerError(err, write))
-                  })
-              }
-            })
+          const parsed = didAndSeqForEvt(evt)
+          if (!parsed) {
+            continue
           }
+          this.opts.syncQueue.trackEvt(parsed.did, parsed.seq, async () => {
+            const parsed = await this.parseEvt(evt)
+            for (const write of parsed) {
+              try {
+                await this.opts.handleEvt(write)
+              } catch (err) {
+                this.opts.onError(new FirehoseHandlerError(err, write))
+              }
+            }
+          })
         } else {
           await this.processEvt(evt)
         }
@@ -168,12 +170,6 @@ export class Firehose {
   }
 }
 
-const didForEvt = (evt: RepoEvent): string | undefined => {
-  if (isCommit(evt)) return evt.repo
-  else if (isAccount(evt) || isIdentity(evt)) return evt.did
-  return undefined
-}
-
 export const parseCommitAuthenticated = async (
   idResolver: IdResolver,
   evt: Commit,
@@ -228,6 +224,10 @@ const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
 
     const meta: CommitMeta = {
       seq: evt.seq,
+      time: evt.time,
+      commit: evt.commit,
+      blocks: car.blocks,
+      rev: evt.rev,
       uri,
       did: uri.host,
       collection: uri.collection,
@@ -272,6 +272,7 @@ export const parseIdentity = async (
   return {
     event: 'identity',
     seq: evt.seq,
+    time: evt.time,
     did: evt.did,
     handle,
     didDocument: res,
@@ -296,6 +297,7 @@ export const parseAccount = (evt: Account): AccountEvt | undefined => {
   return {
     event: 'account',
     seq: evt.seq,
+    time: evt.time,
     did: evt.did,
     active: evt.active,
     status: evt.status as AccountStatus,
