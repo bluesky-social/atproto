@@ -136,6 +136,7 @@ export default function (server: Server, ctx: AppContext) {
                 rev: commit.rev,
               }
             : undefined,
+          validationStatus: write.validationStatus,
         },
       }
     },

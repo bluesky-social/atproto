@@ -17,7 +17,7 @@ export interface InputSchema {
   collection: string
   /** The Record Key. */
   rkey?: string
-  /** Can be set to 'false' to skip Lexicon schema validation of record data. */
+  /** Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons. */
   validate?: boolean
   /** The record itself. Must contain a $type field. */
   record: {}
@@ -30,6 +30,7 @@ export interface OutputSchema {
   uri: string
   cid: string
   commit?: ComAtprotoRepoDefs.CommitMeta
+  validationStatus?: 'valid' | 'unknown' | (string & {})
   [k: string]: unknown
 }
 

@@ -68,12 +68,13 @@ export default function (server: Server, ctx: AppContext) {
       const { commit, writes } = await ctx.actorStore.transact(
         did,
         async (actorTxn) => {
-          const backlinkConflicts = validate
-            ? await actorTxn.record.getBacklinkConflicts(
-                write.uri,
-                write.record,
-              )
-            : []
+          const backlinkConflicts =
+            validate !== false
+              ? await actorTxn.record.getBacklinkConflicts(
+                  write.uri,
+                  write.record,
+                )
+              : []
           const backlinkDeletions = backlinkConflicts.map((uri) =>
             prepareDelete({
               did: uri.hostname,
@@ -109,6 +110,7 @@ export default function (server: Server, ctx: AppContext) {
             cid: commit.cid.toString(),
             rev: commit.rev,
           },
+          validationStatus: write.validationStatus,
         },
       }
     },
