@@ -1,11 +1,11 @@
 import { AtpAgent } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
-import { DatabaseSchemaType } from '../../../src/data-plane/server/db/database-schema'
+import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { PreparedWrite, sequencer } from '@atproto/pds'
 import { CommitData } from '@atproto/repo'
-import { ids } from '../../../src/lexicon/lexicons'
-import { forSnapshot } from '../../_util'
+import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
 

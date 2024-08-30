@@ -1,10 +1,10 @@
 import { Firehose, SyncQueue } from '@atproto/sync'
 import { IdResolver } from '@atproto/identity'
 import { WriteOpAction } from '@atproto/repo'
-import { subLogger as log } from '../../../logger'
-import { IndexingService } from '../indexing'
-import { Database } from '../db'
-import { BackgroundQueue } from '../background'
+import { subLogger as log } from '../../logger'
+import { IndexingService } from './indexing'
+import { Database } from './db'
+import { BackgroundQueue } from './background'
 
 export class RepoSubscription {
   firehose: Firehose
