@@ -13,9 +13,9 @@ export function atprotoLoopbackClientMetadata(
     client_name: 'Loopback client',
     response_types: ['code'],
     grant_types: ['authorization_code', 'refresh_token'],
-    scope: searchParams.get('scope') || 'atproto',
+    scope: searchParams.get('scope') ?? 'atproto',
     redirect_uris: (searchParams.has('redirect_uri')
-      ? searchParams.getAll('redirect_uri')
+      ? searchParams.getAll('redirect_uri').filter(Boolean)
       : (['127.0.0.1', '[::1]'] as const).map(
           (ip) =>
             Object.assign(new URL(pathname, origin), { hostname: ip }).href,

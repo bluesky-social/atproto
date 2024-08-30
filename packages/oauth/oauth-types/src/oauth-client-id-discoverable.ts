@@ -37,22 +37,8 @@ export function parseOAuthDiscoverableClientId(clientId: string): URL {
     throw new TypeError('ClientID must use the "https:" protocol')
   }
 
-  if (url.hash) {
-    throw new TypeError('ClientID must not contain a fragment')
-  }
-
-  if (url.username || url.password) {
-    throw new TypeError('ClientID must not contain credentials')
-  }
-
-  if (url.pathname === '/') {
-    throw new TypeError(
-      'ClientID must contain a path (e.g. "/client-metadata.json")',
-    )
-  }
-
   // Note: Query string is allowed
-  // Note: no restriction on the port for non-loopback URIs
+  // Note: no restriction on the port
 
   if (isIP(url.hostname)) {
     throw new TypeError('ClientID must not be an IP address')

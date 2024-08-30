@@ -32,14 +32,6 @@ export function parseOAuthLoopbackClientId(clientId: string): URL {
     throw new TypeError('Loopback ClientID must use the "localhost" hostname')
   }
 
-  if (url.hash) {
-    throw new TypeError('Loopback ClientID must not contain a fragment')
-  }
-
-  if (url.username || url.password) {
-    throw new TypeError('Loopback ClientID must not contain credentials')
-  }
-
   if (url.port) {
     throw new TypeError('Loopback ClientID must not contain a port')
   }
@@ -50,14 +42,13 @@ export function parseOAuthLoopbackClientId(clientId: string): URL {
     }
   }
 
-  for (const name of ['redirect_uri', 'scope'] as const) {
-    if (!url.searchParams.getAll(name).every(Boolean)) {
-      throw new TypeError(`Invalid empty ${name} parameter in client ID`)
-    }
-  }
-
-  if (url.searchParams.getAll('scope').length > 1) {
-    throw new TypeError('Multiple scope parameters are not allowed')
+  if (
+    url.searchParams.has('scope') &&
+    url.searchParams.getAll('scope').length > 1
+  ) {
+    throw new TypeError(
+      'Loopback ClientID must contain at most one scope query parameter',
+    )
   }
 
   return url
