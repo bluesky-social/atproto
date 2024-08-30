@@ -1,6 +1,8 @@
 import PQueue from 'p-queue'
 import { ConsecutiveList } from './consecutive-list'
 
+export { ConsecutiveList }
+
 export type SyncQueueOptions = {
   setCursor?: (cursor: number) => Promise<void>
   concurrency?: number
