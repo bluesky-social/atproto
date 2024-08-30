@@ -25,7 +25,9 @@ export function parseDiscoverableClientId(
 
     // Extra validation, prevent usage of invalid internet domain names.
     if (!isInternetHost(url.hostname)) {
-      throw new InvalidClientIdError('ClientID is not a valid internet address')
+      throw new InvalidClientIdError(
+        "The client_id's TLD must belong to the Public Suffix List (PSL)",
+      )
     }
 
     return url
