@@ -6,7 +6,7 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
-import { paginateAll } from './_util'
+import { forSnapshot, paginateAll } from './_util'
 import AppContext from '../src/context'
 import { ids, lexicons } from '../src/lexicon/lexicons'
 
@@ -565,8 +565,9 @@ describe('crud operations', () => {
     expect(got.data.value['$type']).toBe(uri.collection)
   })
 
-  it('requires the schema to be known if validating', async () => {
+  it('requires the schema to be known if explicitly validating', async () => {
     const prom = aliceAgent.api.com.atproto.repo.createRecord({
+      validate: true,
       repo: aliceAgent.accountDid,
       collection: 'com.example.foobar',
       record: { $type: 'com.example.foobar' },
@@ -574,6 +575,16 @@ describe('crud operations', () => {
     await expect(prom).rejects.toThrow(
       'Lexicon not found: lex:com.example.foobar',
     )
+  })
+
+  it('does not require the schema to be known if not explicitly validating', async () => {
+    const prom = await aliceAgent.api.com.atproto.repo.createRecord({
+      // validate not set
+      repo: aliceAgent.accountDid,
+      collection: 'com.example.foobar',
+      record: { $type: 'com.example.foobar' },
+    })
+    expect(prom.data.validationStatus).toBe('unknown')
   })
 
   it('requires the $type to match the schema', async () => {
@@ -637,6 +648,7 @@ describe('crud operations', () => {
   describe('unvalidated writes', () => {
     it('disallows creation of unknown lexicons when validate is set to true', async () => {
       const attempt = aliceAgent.api.com.atproto.repo.createRecord({
+        validate: true,
         repo: aliceAgent.accountDid,
         collection: 'com.example.record',
         record: {
@@ -648,50 +660,155 @@ describe('crud operations', () => {
       )
     })
 
-    it('allows creation of unknown lexicons when validate is set to false', async () => {
-      const res = await aliceAgent.api.com.atproto.repo.createRecord({
+    it('allows creation of unknown lexicons when validate is not set to true', async () => {
+      // validate: default
+      const res1 = await aliceAgent.api.com.atproto.repo.createRecord({
         repo: aliceAgent.accountDid,
         collection: 'com.example.record',
         record: {
-          blah: 'thing',
+          blah: 'thing1',
         },
-        validate: false,
       })
-      const record = await ctx.actorStore.read(aliceAgent.accountDid, (store) =>
-        store.record.getRecord(new AtUri(res.data.uri), res.data.cid),
+      expect(res1.data.validationStatus).toBe('unknown')
+      const record1 = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecord(new AtUri(res1.data.uri), res1.data.cid),
       )
-      expect(record?.value).toEqual({
+      expect(record1?.value).toEqual({
         $type: 'com.example.record',
-        blah: 'thing',
+        blah: 'thing1',
+      })
+      // validate: false
+      const res2 = await aliceAgent.api.com.atproto.repo.createRecord({
+        validate: false,
+        repo: aliceAgent.accountDid,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing2',
+        },
+      })
+      expect(res2.data.validationStatus).toBeUndefined()
+      const record2 = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) =>
+          store.record.getRecord(new AtUri(res2.data.uri), res2.data.cid),
+      )
+      expect(record2?.value).toEqual({
+        $type: 'com.example.record',
+        blah: 'thing2',
       })
     })
 
     it('allows update of unknown lexicons when validate is set to false', async () => {
       const createRes = await aliceAgent.api.com.atproto.repo.createRecord({
+        validate: false,
         repo: aliceAgent.accountDid,
         collection: 'com.example.record',
         record: {
           blah: 'thing',
         },
-        validate: false,
       })
       const uri = new AtUri(createRes.data.uri)
-      const updateRes = await aliceAgent.api.com.atproto.repo.putRecord({
+      // validate: default
+      const updateRes1 = await aliceAgent.api.com.atproto.repo.putRecord({
         repo: aliceAgent.accountDid,
         collection: 'com.example.record',
         rkey: uri.rkey,
         record: {
           blah: 'something else',
         },
-        validate: false,
       })
-      const record = await ctx.actorStore.read(aliceAgent.accountDid, (store) =>
-        store.record.getRecord(uri, updateRes.data.cid),
+      const record1 = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) => store.record.getRecord(uri, updateRes1.data.cid),
       )
-      expect(record?.value).toEqual({
+      expect(record1?.value).toEqual({
         $type: 'com.example.record',
         blah: 'something else',
       })
+      // validate: false
+      const updateRes2 = await aliceAgent.api.com.atproto.repo.putRecord({
+        validate: false,
+        repo: aliceAgent.accountDid,
+        collection: 'com.example.record',
+        rkey: uri.rkey,
+        record: {
+          blah: 'something else',
+        },
+      })
+      const record2 = await ctx.actorStore.read(
+        aliceAgent.accountDid,
+        (store) => store.record.getRecord(uri, updateRes2.data.cid),
+      )
+      expect(record2?.value).toEqual({
+        $type: 'com.example.record',
+        blah: 'something else',
+      })
+    })
+
+    it('applyWrites returns results with validation status', async () => {
+      const existing1 = await aliceAgent.api.com.atproto.repo.createRecord({
+        validate: false,
+        repo: aliceAgent.accountDid,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing1',
+        },
+      })
+      const existing2 = await aliceAgent.api.com.atproto.repo.createRecord({
+        validate: false,
+        repo: aliceAgent.accountDid,
+        collection: 'com.example.record',
+        record: {
+          blah: 'thing2',
+        },
+      })
+      const {
+        data: { results },
+      } = await aliceAgent.com.atproto.repo.applyWrites({
+        repo: aliceAgent.accountDid,
+        writes: [
+          {
+            $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
+            action: 'create',
+            collection: ids.AppBskyFeedPost,
+            value: {
+              $type: ids.AppBskyFeedPost,
+              text: '👋',
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            $type: `${ids.ComAtprotoRepoApplyWrites}#update`,
+            action: 'update',
+            collection: 'com.example.record',
+            rkey: new AtUri(existing1.data.uri).rkey,
+            value: {},
+          },
+          {
+            $type: `${ids.ComAtprotoRepoApplyWrites}#delete`,
+            action: 'delete',
+            collection: 'com.example.record',
+            rkey: new AtUri(existing2.data.uri).rkey,
+          },
+        ],
+      })
+      expect(forSnapshot(results)).toEqual([
+        {
+          $type: `${ids.ComAtprotoRepoApplyWrites}#createResult`,
+          cid: 'cids(0)',
+          uri: 'record(0)',
+          validationStatus: 'valid',
+        },
+        {
+          $type: `${ids.ComAtprotoRepoApplyWrites}#updateResult`,
+          cid: 'cids(1)',
+          uri: 'record(1)',
+          validationStatus: 'unknown',
+        },
+        { $type: `${ids.ComAtprotoRepoApplyWrites}#deleteResult` },
+      ])
     })
 
     it('correctly associates images with unknown record types', async () => {

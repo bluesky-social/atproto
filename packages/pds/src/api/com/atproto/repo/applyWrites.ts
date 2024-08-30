@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
+import { WriteOpAction } from '@atproto/repo'
 import { prepareCreate, prepareDelete, prepareUpdate } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
@@ -7,6 +8,9 @@ import {
   isCreate,
   isUpdate,
   isDelete,
+  CreateResult,
+  UpdateResult,
+  DeleteResult,
 } from '../../../../lexicon/types/com/atproto/repo/applyWrites'
 import {
   BadCommitSwapError,
@@ -69,6 +73,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
 
+      // @NOTE should preserve order of ts.writes for final use in response
       let writes: PreparedWrite[]
       try {
         writes = await Promise.all(
@@ -125,6 +130,38 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.sequencer.sequenceCommit(did, commit, writes)
       await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+
+      return {
+        encoding: 'application/json',
+        body: {
+          results: writes.map(writeToOutputResult),
+        },
+      }
     },
   })
+}
+
+const writeToOutputResult = (write: PreparedWrite) => {
+  switch (write.action) {
+    case WriteOpAction.Create:
+      return {
+        $type: 'com.atproto.repo.applyWrites#createResult',
+        cid: write.cid.toString(),
+        uri: write.uri.toString(),
+        validationStatus: write.validationStatus,
+      } satisfies CreateResult
+    case WriteOpAction.Update:
+      return {
+        $type: 'com.atproto.repo.applyWrites#updateResult',
+        cid: write.cid.toString(),
+        uri: write.uri.toString(),
+        validationStatus: write.validationStatus,
+      } satisfies UpdateResult
+    case WriteOpAction.Delete:
+      return {
+        $type: 'com.atproto.repo.applyWrites#deleteResult',
+      } satisfies DeleteResult
+    default:
+      throw new Error(`Unrecognized action: ${write}`)
+  }
 }
