@@ -32,7 +32,11 @@ import { ALLOW_LOOPBACK_CLIENT_REFRESH_TOKEN } from '../constants.js'
 import { InvalidClientMetadataError } from '../errors/invalid-client-metadata-error.js'
 import { InvalidRedirectUriError } from '../errors/invalid-redirect-uri-error.js'
 import { OAuthError } from '../errors/oauth-error.js'
-import { parseDomain, parseUrlDomain } from '../lib/util/hostname.js'
+import {
+  isInternetHost,
+  isInternetUrl,
+  parseUrlPublicSuffix,
+} from '../lib/util/hostname.js'
 import { Awaitable } from '../lib/util/type.js'
 import { OAuthHooks } from '../oauth-hooks.js'
 import { ClientId } from './client-id.js'
@@ -230,7 +234,9 @@ export class ClientManager {
     const clientUriUrl = metadata.client_uri
       ? new URL(metadata.client_uri)
       : null
-    const clientUriParsed = clientUriUrl ? parseUrlDomain(clientUriUrl) : null
+    const clientUriParsed = clientUriUrl
+      ? parseUrlPublicSuffix(clientUriUrl)
+      : null
 
     if (clientUriUrl && !clientUriParsed) {
       throw new InvalidClientMetadataError('client_uri must be a valid URL')
@@ -569,13 +575,13 @@ export class ClientManager {
         }
 
         case url.protocol === 'https:': {
-          const redirectUriDomain = parseUrlDomain(url)
-          if (!redirectUriDomain) {
+          if (!isInternetUrl(url)) {
             throw new InvalidRedirectUriError(
-              `Redirect URI ${url} must be a valid URL`,
+              `Redirect URI "${url}"'s domain name must belong to the Public Suffix List (PSL)`,
             )
           }
 
+          //
           // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
           //
           // > In addition to the collision-resistant properties, requiring a
@@ -584,19 +590,12 @@ export class ClientManager {
           // > where two apps claim the same private-use URI scheme (where one
           // > app is acting maliciously).
           //
-          // Although this only applies to "native" clients (extract being from
-          // rfc8252), we apply this rule to "web" clients as well.
-          if (!clientUriParsed) {
-            throw new InvalidClientMetadataError(
-              'client_uri is required for HTTPS redirect URIs',
-            )
-          } else {
-            if (redirectUriDomain.domain !== clientUriParsed.domain) {
-              throw new InvalidRedirectUriError(
-                `Redirect URI ${url} must be under the same domain as client_uri ${metadata.client_uri}`,
-              )
-            }
-          }
+          // We can't enforce this here (in generic client validation) because
+          // we don't have a concept of generic proven ownership.
+          //
+          // Discoverable clients, however, will have this check covered in the
+          // `validateDiscoverableClientMetadata`, by using the client_id's
+          // domain as "proven ownership".
 
           break
         }
@@ -615,16 +614,6 @@ export class ClientManager {
             )
           }
 
-          const redirectUriDomain = parseDomain(
-            reverseDomain(url.protocol.slice(0, -1)),
-          )
-
-          if (!redirectUriDomain) {
-            throw new InvalidRedirectUriError(
-              `Private-use URI Scheme redirect URI must be based on a valid domain name`,
-            )
-          }
-
           // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
           //
           // > In addition to the collision-resistant properties, requiring a
@@ -632,16 +621,17 @@ export class ClientManager {
           // > the app can help to prove ownership in the event of a dispute
           // > where two apps claim the same private-use URI scheme (where one
           // > app is acting maliciously).
-          if (!clientUriParsed) {
-            throw new InvalidClientMetadataError(
-              'client_uri is required for native apps using private-use URI Scheme redirect URIs',
+          //
+          // We can't check for ownership here (as there is no concept of
+          // proven ownership in the generic client validation), but we can
+          // check that the domain is a valid domain name.
+
+          const urlDomain = reverseDomain(url.protocol.slice(0, -1))
+
+          if (!isInternetHost(urlDomain)) {
+            throw new InvalidRedirectUriError(
+              `Private-use URI Scheme redirect URI must be based on a valid domain name`,
             )
-          } else {
-            if (redirectUriDomain.domain !== clientUriParsed.domain) {
-              throw new InvalidRedirectUriError(
-                `Private-Use URI Scheme redirect URI ${url} must be under the same domain as client_uri ${metadata.client_uri}`,
-              )
-            }
           }
 
           // https://datatracker.ietf.org/doc/html/rfc8252#section-7.1
@@ -799,6 +789,14 @@ export class ClientManager {
       const url = parseRedirectUri(redirectUri)
 
       if (isPrivateUseUriScheme(url)) {
+        // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+        //
+        // > In addition to the collision-resistant properties, requiring a
+        // > URI scheme based on a domain name that is under the control of
+        // > the app can help to prove ownership in the event of a dispute
+        // > where two apps claim the same private-use URI scheme (where one
+        // > app is acting maliciously).
+
         // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
         //
         // Fully qualified domain name (FQDN) of the client_id, in reverse
@@ -808,6 +806,25 @@ export class ClientManager {
         if (url.protocol !== protocol) {
           throw new InvalidRedirectUriError(
             `Private-Use URI Scheme redirect URI, for discoverable client metadata, must be the fully qualified domain name (FQDN) of the client_id, in reverse order (${protocol})`,
+          )
+        }
+      }
+
+      if (url.protocol === 'https:') {
+        // https://datatracker.ietf.org/doc/html/rfc8252#section-8.4
+        //
+        // > In addition to the collision-resistant properties, requiring a
+        // > URI scheme based on a domain name that is under the control of
+        // > the app can help to prove ownership in the event of a dispute
+        // > where two apps claim the same private-use URI scheme (where one
+        // > app is acting maliciously).
+        //
+        // Although this only applies to "native" clients (extract being from
+        // rfc8252), we apply this rule to "web" clients as well.
+
+        if (url.hostname !== clientIdUrl.hostname) {
+          throw new InvalidRedirectUriError(
+            `Redirect URI ${url} must be under the same domain as client_id ${metadata.client_uri}`,
           )
         }
       }
