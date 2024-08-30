@@ -1,5 +1,4 @@
 import PQueue from 'p-queue'
-import { Firehose } from '../firehose'
 import { ConsecutiveList } from './consecutive-list'
 
 export type SyncQueueOptions = {
@@ -15,8 +14,6 @@ export class SyncQueue {
   mainQueue: PQueue
   partitions = new Map<string, PQueue>()
   cursor: number
-
-  public firehose: Firehose | undefined
 
   constructor(public opts: SyncQueueOptions = {}) {
     this.mainQueue = new PQueue({ concurrency: opts.concurrency ?? Infinity })
@@ -57,7 +54,6 @@ export class SyncQueue {
   }
 
   async destroy() {
-    await this.firehose?.destroy()
     this.mainQueue.pause()
     this.mainQueue.clear()
     this.partitions.forEach((p) => p.clear())
