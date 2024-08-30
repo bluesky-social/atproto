@@ -403,7 +403,7 @@ describe('account', () => {
     )
 
     expect(mail.to).toEqual(email)
-    expect(mail.html).toContain('Reset your password')
+    expect(mail.html).toContain('Reset password')
     expect(mail.html).toContain('alice.test')
 
     const token = getTokenFromMail(mail)
@@ -474,7 +474,7 @@ describe('account', () => {
     )
 
     expect(mail.to).toEqual(email)
-    expect(mail.html).toContain('Reset your password')
+    expect(mail.html).toContain('Reset password')
     expect(mail.html).toContain('alice.test')
 
     const token = getTokenFromMail(mail)
