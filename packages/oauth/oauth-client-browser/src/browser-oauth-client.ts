@@ -348,7 +348,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
     // Replace the current history entry without the params (this will prevent
     // the following code to run again if the user refreshes the page)
-    history.replaceState(null, '', location.pathname)
+    if (this.responseMode === 'fragment') {
+      history.replaceState(null, '', location.pathname + location.search)
+    } else if (this.responseMode === 'query') {
+      history.replaceState(null, '', location.pathname)
+    }
 
     // Utility function to send the result of the popup to the parent window
     const sendPopupResult = (message: PopupChannelResultData) => {
