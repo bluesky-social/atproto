@@ -6,7 +6,6 @@ import { PreparedWrite, sequencer } from '@atproto/pds'
 import { CommitData } from '@atproto/repo'
 import { ids } from '../../../src/lexicon/lexicons'
 import { forSnapshot } from '../../_util'
-import { RepoSubscription } from '../../../src'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -61,10 +60,7 @@ describe('sync', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    await network.bsky.sub.destroy()
-    network.bsky.sub = new RepoSubscription(network.bsky.sub.opts)
-    // Boot streams back up
-    network.bsky.sub.start()
+    await network.bsky.sub.restart()
     await network.processAll()
 
     // Permissive of indexedAt times changing

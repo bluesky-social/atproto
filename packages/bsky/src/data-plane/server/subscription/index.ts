@@ -19,51 +19,29 @@ export class RepoSubscription {
     this.background = new BackgroundQueue(db)
     this.indexingSvc = new IndexingService(db, idResolver, this.background)
 
-    this.syncQueue = new SyncQueue()
-    this.firehose = new Firehose({
+    const { syncQueue, firehose } = createFirehose({
       idResolver,
-      syncQueue: this.syncQueue,
       service,
-      unauthenticatedHandles: true, // indexing service handles these
-      onError: (err) => log.error({ err }, 'error in subscription'),
-      handleEvt: async (evt) => {
-        if (evt.event === 'identity') {
-          await this.indexingSvc.indexHandle(evt.did, evt.time, true)
-        } else if (evt.event === 'account') {
-          if (evt.active === false && evt.status === 'deleted') {
-            await this.indexingSvc.deleteActor(evt.did)
-          } else {
-            await this.indexingSvc.updateActorStatus(
-              evt.did,
-              evt.active,
-              evt.status,
-            )
-          }
-        } else {
-          const indexFn =
-            evt.event === 'delete'
-              ? this.indexingSvc.deleteRecord(evt.uri)
-              : this.indexingSvc.indexRecord(
-                  evt.uri,
-                  evt.cid,
-                  evt.record,
-                  evt.event === 'create'
-                    ? WriteOpAction.Create
-                    : WriteOpAction.Update,
-                  evt.time,
-                )
-          await Promise.all([
-            indexFn,
-            this.indexingSvc.setCommitLastSeen(evt.did, evt.commit, evt.rev),
-            this.indexingSvc.indexHandle(evt.did, evt.time),
-          ])
-        }
-      },
+      indexingSvc: this.indexingSvc,
     })
+    this.syncQueue = syncQueue
+    this.firehose = firehose
   }
 
   start() {
     this.firehose.start()
+  }
+
+  async restart() {
+    await this.destroy()
+    const { syncQueue, firehose } = createFirehose({
+      idResolver: this.opts.idResolver,
+      service: this.opts.service,
+      indexingSvc: this.indexingSvc,
+    })
+    this.syncQueue = syncQueue
+    this.firehose = firehose
+    this.start()
   }
 
   async processAll() {
@@ -76,4 +54,50 @@ export class RepoSubscription {
     await this.syncQueue.destroy()
     await this.background.processAll()
   }
+}
+
+const createFirehose = (opts: {
+  idResolver: IdResolver
+  service: string
+  indexingSvc: IndexingService
+}) => {
+  const { idResolver, service, indexingSvc } = opts
+  const syncQueue = new SyncQueue()
+  const firehose = new Firehose({
+    idResolver,
+    syncQueue,
+    service,
+    unauthenticatedHandles: true, // indexing service handles these
+    onError: (err) => log.error({ err }, 'error in subscription'),
+    handleEvt: async (evt) => {
+      if (evt.event === 'identity') {
+        await indexingSvc.indexHandle(evt.did, evt.time, true)
+      } else if (evt.event === 'account') {
+        if (evt.active === false && evt.status === 'deleted') {
+          await indexingSvc.deleteActor(evt.did)
+        } else {
+          await indexingSvc.updateActorStatus(evt.did, evt.active, evt.status)
+        }
+      } else {
+        const indexFn =
+          evt.event === 'delete'
+            ? indexingSvc.deleteRecord(evt.uri)
+            : indexingSvc.indexRecord(
+                evt.uri,
+                evt.cid,
+                evt.record,
+                evt.event === 'create'
+                  ? WriteOpAction.Create
+                  : WriteOpAction.Update,
+                evt.time,
+              )
+        await Promise.all([
+          indexFn,
+          indexingSvc.setCommitLastSeen(evt.did, evt.commit, evt.rev),
+          indexingSvc.indexHandle(evt.did, evt.time),
+        ])
+      }
+    },
+  })
+  return { firehose, syncQueue }
 }
