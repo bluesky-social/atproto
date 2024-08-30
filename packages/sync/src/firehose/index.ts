@@ -296,7 +296,6 @@ export const parseAccount = (evt: Account): AccountEvt | undefined => {
   if (evt.status && !isValidStatus(evt.status)) return
   return {
     event: 'account',
-    time: evt.time,
     seq: evt.seq,
     time: evt.time,
     did: evt.did,
