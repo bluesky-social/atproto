@@ -457,29 +457,16 @@ export class ClientManager {
       }
     }
 
-    if (metadata.application_type === 'native') {
-      // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
-      //
-      // > Native Clients [as defined by "application_type"] MUST only
-      // > register redirect_uris using custom URI schemes or loopback URLs
-      // > using the http scheme; loopback URLs use localhost or the IP
-      // > loopback literals 127.0.0.1 or [::1] as the hostname.
-
-      for (const redirectUri of metadata.redirect_uris) {
-        const url = parseRedirectUri(redirectUri)
-        if (url.protocol !== 'http:') {
-          throw new InvalidRedirectUriError(
-            `Native clients must use HTTP redirect URIs (got ${url})`,
-          )
-        }
-
-        if (!isLoopbackHost(url.hostname) && !isPrivateUseUriScheme(url)) {
-          throw new InvalidRedirectUriError(
-            'Loopback redirect URIs are only allowed for native apps',
-          )
-        }
-      }
-    }
+    // The following restriction from OIDC is *not* enforced for clients as it
+    // prevents "App Links" / "Apple Universal Links" from being used as
+    // redirect URIs.
+    //
+    // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
+    //
+    // > Native Clients [as defined by "application_type"] MUST only
+    // > register redirect_uris using custom URI schemes or loopback URLs
+    // > using the http scheme; loopback URLs use localhost or the IP
+    // > loopback literals 127.0.0.1 or [::1] as the hostname.
 
     if (metadata.application_type === 'native') {
       // https://openid.net/specs/openid-connect-registration-1_0.html#rfc.section.2
@@ -575,7 +562,7 @@ export class ClientManager {
           // > target Request Object is signed in a way that is verifiable by
           // > the OP.
           //
-          // TODO: Should we allow this (and check for signed request objects)?
+          // @TODO: Should we allow this (and check for signed request objects)?
           throw new InvalidRedirectUriError(
             `Non loopback redirect URI ${url} must use HTTPS`,
           )
