@@ -1,12 +1,15 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import assert from 'node:assert'
+
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { authPassthru } from '../../../proxy'
+
+import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.confirmEmail({
     auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
-    handler: async ({ auth, input, req }) => {
+    handler: async ({ auth, input }) => {
       const did = auth.credentials.did
 
       const user = await ctx.accountManager.getAccount(did, {
@@ -17,9 +20,14 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
         await ctx.entrywayAgent.com.atproto.server.confirmEmail(
           input.body,
-          authPassthru(req, true),
+          await ctx.serviceAuthHeaders(
+            auth.credentials.did,
+            ctx.cfg.entryway.did,
+            ids.ComAtprotoServerConfirmEmail,
+          ),
         )
         return
       }

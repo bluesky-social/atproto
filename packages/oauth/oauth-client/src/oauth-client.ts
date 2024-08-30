@@ -261,7 +261,6 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       options,
     )
 
-    const nonce = await this.runtime.generateNonce()
     const pkce = await this.runtime.generatePKCE()
     const dpopKey = await this.runtime.generateKey(
       metadata.dpop_signing_alg_values_supported || [FALLBACK_ALG],
@@ -272,17 +271,15 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
     await this.stateStore.set(state, {
       iss: metadata.issuer,
       dpopKey,
-      nonce,
-      verifier: pkce?.verifier,
+      verifier: pkce.verifier,
       appState: options?.state,
     })
 
     const parameters = {
       client_id: this.clientMetadata.client_id,
       redirect_uri: redirectUri,
-      code_challenge: pkce?.challenge,
-      code_challenge_method: pkce?.method,
-      nonce,
+      code_challenge: pkce.challenge,
+      code_challenge_method: pkce.method,
       state,
       login_hint: identity
         ? input // If input is a handle or a DID, use it as a login_hint
@@ -295,13 +292,8 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         ) ?? 'code',
 
       display: options?.display,
-      id_token_hint: options?.id_token_hint,
-      max_age: options?.max_age, // this.clientMetadata.default_max_age
       prompt: options?.prompt,
-      scope: options?.scope
-        ?.split(' ')
-        .filter((s) => metadata.scopes_supported?.includes(s))
-        .join(' '),
+      scope: options?.scope || undefined,
       ui_locales: options?.ui_locales,
     }
 
@@ -434,24 +426,12 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const tokenSet = await server.exchangeCode(codeParam, stateData.verifier)
       try {
-        if (tokenSet.id_token) {
-          await this.runtime.validateIdTokenClaims(
-            tokenSet.id_token,
-            stateParam,
-            stateData.nonce,
-            codeParam,
-            tokenSet.access_token,
-          )
-        }
-
-        const { sub } = tokenSet
-
-        await this.sessionGetter.setStored(sub, {
+        await this.sessionGetter.setStored(tokenSet.sub, {
           dpopKey: stateData.dpopKey,
           tokenSet,
         })
 
-        const session = this.createSession(server, sub)
+        const session = this.createSession(server, tokenSet.sub)
 
         return { session, state: stateData.appState ?? null }
       } catch (err) {

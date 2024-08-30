@@ -341,7 +341,6 @@ or
 ```ts
 const url = await client.authorize(handle, {
   state,
-  max_age: 600, // Require re-authentication after 10 minutes
 })
 ```
 

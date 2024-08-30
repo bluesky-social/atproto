@@ -7,12 +7,14 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyEmbedRecord from './record'
 import * as AppBskyEmbedImages from './images'
+import * as AppBskyEmbedVideo from './video'
 import * as AppBskyEmbedExternal from './external'
 
 export interface Main {
   record: AppBskyEmbedRecord.Main
   media:
     | AppBskyEmbedImages.Main
+    | AppBskyEmbedVideo.Main
     | AppBskyEmbedExternal.Main
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
@@ -35,6 +37,7 @@ export interface View {
   record: AppBskyEmbedRecord.View
   media:
     | AppBskyEmbedImages.View
+    | AppBskyEmbedVideo.View
     | AppBskyEmbedExternal.View
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown

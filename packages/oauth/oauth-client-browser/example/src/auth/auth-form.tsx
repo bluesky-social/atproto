@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { AtpSignIn, AtpSignInForm } from './atp/atp-sign-in-form'
+import {
+  AtpSignIn,
+  CredentialSignInForm,
+} from './credential/credential-sign-in-form'
 import { OAuthSignIn, OAuthSignInForm } from './oauth/oauth-sign-in-form'
 
 export function AuthForm({
@@ -10,19 +13,20 @@ export function AuthForm({
   atpSignIn?: AtpSignIn
   oauthSignIn?: OAuthSignIn
 }) {
-  const defaultMethod = useCallback(
-    () => (oauthSignIn ? 'oauth' : atpSignIn ? 'atp' : undefined),
-    [],
-  )
+  const defaultMethod = oauthSignIn
+    ? 'oauth'
+    : atpSignIn
+      ? 'credential'
+      : undefined
 
-  const [method, setMethod] = useState<undefined | 'oauth' | 'atp'>(
+  const [method, setMethod] = useState<undefined | 'oauth' | 'credential'>(
     defaultMethod,
   )
 
   useEffect(() => {
     if (method === 'oauth' && !oauthSignIn) {
       setMethod(defaultMethod)
-    } else if (method === 'atp' && !atpSignIn) {
+    } else if (method === 'credential' && !atpSignIn) {
       setMethod(defaultMethod)
     } else if (!method) {
       setMethod(defaultMethod)
@@ -45,9 +49,9 @@ export function AuthForm({
 
         <button
           className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded ${
-            method === 'atp' ? 'bg-blue-700' : ''
+            method === 'credential' ? 'bg-blue-700' : ''
           }`}
-          onClick={() => atpSignIn && setMethod('atp')}
+          onClick={() => atpSignIn && setMethod('credential')}
           disabled={!atpSignIn}
         >
           Credentials
@@ -55,7 +59,7 @@ export function AuthForm({
       </div>
 
       {method === 'oauth' && <OAuthSignInForm signIn={oauthSignIn!} />}
-      {method === 'atp' && <AtpSignInForm signIn={atpSignIn!} />}
+      {method === 'credential' && <CredentialSignInForm signIn={atpSignIn!} />}
       {method == null && <div>No auth method available</div>}
     </div>
   )

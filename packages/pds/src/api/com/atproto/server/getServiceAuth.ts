@@ -2,7 +2,7 @@ import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
 import { HOUR, MINUTE } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { PRIVILEGED_METHODS } from '../../../../pipethrough'
+import { PRIVILEGED_METHODS, PROTECTED_METHODS } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getServiceAuth({
@@ -30,15 +30,20 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
       }
-      if (
-        !auth.credentials.isPrivileged &&
-        lxm &&
-        PRIVILEGED_METHODS.has(lxm)
-      ) {
-        throw new InvalidRequestError(
-          `cannot request a service auth token for the following method with an app password: ${lxm}`,
-        )
+
+      if (lxm) {
+        if (PROTECTED_METHODS.has(lxm)) {
+          throw new InvalidRequestError(
+            `cannot request a service auth token for the following protected method: ${lxm}`,
+          )
+        }
+        if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(lxm)) {
+          throw new InvalidRequestError(
+            `insufficient access to request a service auth token for the following method: ${lxm}`,
+          )
+        }
       }
+
       const keypair = await ctx.actorStore.keypair(did)
 
       const token = await createServiceJwt({

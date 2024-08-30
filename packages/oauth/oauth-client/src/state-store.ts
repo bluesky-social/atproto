@@ -3,7 +3,6 @@ import { Key } from '@atproto/jwk'
 
 export type InternalStateData = {
   iss: string
-  nonce: string
   dpopKey: Key
   verifier?: string
   appState?: string

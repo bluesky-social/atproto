@@ -7,9 +7,14 @@ export const verifySignature = (
   didKey: string,
   data: Uint8Array,
   sig: Uint8Array,
-  opts?: VerifyOptions,
+  opts?: VerifyOptions & {
+    jwtAlg?: string
+  },
 ): Promise<boolean> => {
   const parsed = parseDidKey(didKey)
+  if (opts?.jwtAlg && opts.jwtAlg !== parsed.jwtAlg) {
+    throw new Error(`Expected key alg ${opts.jwtAlg}, got ${parsed.jwtAlg}`)
+  }
   const plugin = plugins.find((p) => p.jwtAlg === parsed.jwtAlg)
   if (!plugin) {
     throw new Error(`Unsupported signature alg: ${parsed.jwtAlg}`)
