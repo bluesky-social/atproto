@@ -44,6 +44,11 @@ export class ActorStore {
     this.keyCache = new LRUCache<string, Keypair>({
       max: cfg.keyCacheSize,
       ttl: cfg.keyCacheTTL,
+      fetchMethod: async (did: string) => {
+        const { keyLocation } = await this.getLocation(did)
+        const privKey = await fs.readFile(keyLocation)
+        return crypto.Secp256k1Keypair.import(privKey)
+      },
     })
   }
 
@@ -61,15 +66,11 @@ export class ActorStore {
   }
 
   async keypair(did: string): Promise<Keypair> {
-    const got = this.keyCache.get(did)
-    if (got) {
-      return got
+    const got = await this.keyCache.fetch(did)
+    if (!got) {
+      throw new Error('Could not load key')
     }
-    const { keyLocation } = await this.getLocation(did)
-    const privKey = await fs.readFile(keyLocation)
-    const imported = await crypto.Secp256k1Keypair.import(privKey)
-    this.keyCache.set(did, imported)
-    return imported
+    return got
   }
 
   async openDb(did: string): Promise<ActorDb> {
