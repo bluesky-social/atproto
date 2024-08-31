@@ -311,8 +311,30 @@ export interface ServerTiming {
 export const parseReqNsid = (
   req: express.Request | IncomingMessage,
 ): string => {
+  // /!\ Hot path
   const originalUrl =
     ('originalUrl' in req && req.originalUrl) || req.url || '/'
-  const nsid = originalUrl.split('?')[0].replace('/xrpc/', '')
-  return nsid.endsWith('/') ? nsid.slice(0, -1) : nsid // trim trailing slash
+
+  // Before the code was doing:
+
+  // const nsid = originalUrl.split('?')[0].replace('/xrpc/', '')
+  // return nsid.endsWith('/') ? nsid.slice(0, -1) : nsid
+
+  // Backwards compatibility: strings without an /xrpc/ prefix used to be allowed
+  const startOfNsid = originalUrl.startsWith('/xrpc/') ? 6 : 0
+
+  const queryIdx = originalUrl.indexOf('?', startOfNsid)
+  const endOfPath = queryIdx === -1 ? originalUrl.length : queryIdx
+
+  const slashIdx = originalUrl.indexOf('/', startOfNsid)
+
+  const endOfNsid =
+    slashIdx !== -1 && slashIdx < endOfPath ? slashIdx : endOfPath
+
+  // Allow trailing slash (only)
+  if (endOfNsid !== endOfPath && slashIdx !== endOfPath - 1) {
+    throw new InvalidRequestError('invalid request path')
+  }
+
+  return originalUrl.slice(startOfNsid, endOfNsid)
 }
