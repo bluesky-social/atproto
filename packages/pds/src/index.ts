@@ -96,7 +96,7 @@ export class PDS {
 
     const app = express()
     app.set('trust proxy', true)
-    app.use(loggerMiddleware)
+    // app.use(loggerMiddleware)
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))
