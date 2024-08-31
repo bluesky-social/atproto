@@ -87,7 +87,6 @@ import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
-import * as AppBskyFeedPinPost from './types/app/bsky/feed/pinPost'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
@@ -1137,8 +1136,8 @@ export class AppNS {
 export class AppBskyNS {
   _server: Server
   actor: AppBskyActorNS
-  feed: AppBskyFeedNS
   embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
   graph: AppBskyGraphNS
   labeler: AppBskyLabelerNS
   notification: AppBskyNotificationNS
@@ -1149,8 +1148,8 @@ export class AppBskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new AppBskyActorNS(server)
-    this.feed = new AppBskyFeedNS(server)
     this.embed = new AppBskyEmbedNS(server)
+    this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
     this.labeler = new AppBskyLabelerNS(server)
     this.notification = new AppBskyNotificationNS(server)
@@ -1245,22 +1244,19 @@ export class AppBskyActorNS {
   }
 }
 
-export class AppBskyFeedNS {
+export class AppBskyEmbedNS {
   _server: Server
 
   constructor(server: Server) {
     this._server = server
   }
+}
 
-  pinPost<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyFeedPinPost.Handler<ExtractAuth<AV>>,
-      AppBskyFeedPinPost.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.feed.pinPost' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
+export class AppBskyFeedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 
   describeFeedGenerator<AV extends AuthVerifier>(
@@ -1459,14 +1455,6 @@ export class AppBskyFeedNS {
   ) {
     const nsid = 'app.bsky.feed.sendInteractions' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class AppBskyEmbedNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
   }
 }
 
