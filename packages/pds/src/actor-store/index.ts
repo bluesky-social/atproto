@@ -60,14 +60,18 @@ export class ActorStore {
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
-  async openDb(did: string): Promise<ActorDb> {
+  private async openInternalDb(did: string): Promise<ActorDb> {
     const { dbLocation } = await this.getLocation(did)
     const exists = await fileExists(dbLocation)
     if (!exists) {
       throw new InvalidRequestError('Repo not found', 'NotFound')
     }
 
-    const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    return getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+  }
+
+  async openDb(did: string): Promise<ActorDb> {
+    const db = await this.openInternalDb(did)
 
     // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
     try {
@@ -83,12 +87,15 @@ export class ActorStore {
   }
 
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
-    const db = await this.openDb(did)
+    const db = await this.openInternalDb(did)
     try {
       const reader = createActorReader(did, db, this.resources, () =>
         this.keypair(did),
       )
-      return await fn(reader)
+
+      // Instead of running a dummy query (as openDb() does), we run the actual
+      // query while checking for WAL recovery mode, and retry if needed.
+      return await retrySqlite(async () => fn(reader))
     } finally {
       db.close()
     }
