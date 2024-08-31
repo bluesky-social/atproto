@@ -93,14 +93,35 @@ export const formatUrlAndAud = async (
   req: express.Request,
   audOverride?: string,
 ): Promise<{ url: URL; aud: string; nsid: string }> => {
-  const proxyTo = await parseProxyHeader(ctx, req)
+  // /!\ Hot path
+
   const nsid = parseReqNsid(req)
-  const defaultProxy = defaultService(ctx, nsid)
-  const serviceUrl = proxyTo?.serviceUrl ?? defaultProxy?.url
-  const aud = audOverride ?? proxyTo?.did ?? defaultProxy?.did
-  if (!serviceUrl || !aud) {
-    throw new InvalidRequestError(`No service configured for ${req.path}`)
+
+  const proxyToHeader = req.header('atproto-proxy')
+  if (proxyToHeader) {
+    const proxyTo = await parseProxyHeader(ctx, proxyToHeader)
+    const serviceUrl = proxyTo.serviceUrl
+    const aud = audOverride ?? proxyTo.did
+    return checkUrlAndAud(ctx, req, serviceUrl, aud, nsid)
   }
+
+  const defaultProxy = defaultService(ctx, nsid)
+  if (defaultProxy) {
+    const serviceUrl = defaultProxy.url
+    const aud = audOverride ?? defaultProxy.did
+    return checkUrlAndAud(ctx, req, serviceUrl, aud, nsid)
+  }
+
+  throw new InvalidRequestError(`No service configured for ${req.path}`)
+}
+
+export const checkUrlAndAud = (
+  ctx: AppContext,
+  req: express.Request,
+  serviceUrl: string,
+  aud: string,
+  nsid: string,
+): { url: URL; aud: string; nsid: string } => {
   const url = new URL(req.originalUrl, serviceUrl)
   if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
     throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
@@ -159,15 +180,35 @@ const formatReqInit = (
 }
 
 export const parseProxyHeader = async (
-  ctx: AppContext,
-  req: express.Request,
-): Promise<{ did: string; serviceUrl: string } | undefined> => {
-  const proxyTo = req.header('atproto-proxy')
-  if (!proxyTo) return
-  const [did, serviceId] = proxyTo.split('#')
-  if (!serviceId) {
-    throw new InvalidRequestError('no service id specified')
+  // Using subset of AppContext for testing purposes
+  ctx: Pick<AppContext, 'idResolver'>,
+  proxyTo: string,
+): Promise<{ did: string; serviceUrl: string }> => {
+  // /!\ Hot path
+
+  const hashIndex = proxyTo.indexOf('#')
+
+  if (hashIndex === 0) {
+    throw new InvalidRequestError('no did specified in proxy header')
   }
+
+  if (hashIndex === -1 || hashIndex === proxyTo.length - 1) {
+    throw new InvalidRequestError('no service id specified in proxy header')
+  }
+
+  // More than one hash
+  if (proxyTo.indexOf('#', hashIndex + 1) !== -1) {
+    throw new InvalidRequestError('invalid proxy header format')
+  }
+
+  // Basic validation
+  if (proxyTo.includes(' ')) {
+    throw new InvalidRequestError('proxy header cannot contain spaces')
+  }
+
+  const did = proxyTo.slice(0, hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
+
   const didDoc = await ctx.idResolver.did.resolve(did)
   if (!didDoc) {
     throw new InvalidRequestError('could not resolve proxy did')
@@ -344,9 +385,13 @@ const readArrayBufferRes = async (res: Response): Promise<ArrayBuffer> => {
   }
 }
 
+// @TODO: improve SSRF protection (use safeFetch instead of relying on this)
 const isSafeUrl = (url: URL) => {
   if (url.protocol !== 'https:') return false
   if (!url.hostname || url.hostname === 'localhost') return false
+  // IPv6 hostnames are surrounded by brackets
+  if (url.hostname.startsWith('[') && url.hostname.endsWith(']')) return false
+  // IPv4
   if (net.isIP(url.hostname) !== 0) return false
   return true
 }
