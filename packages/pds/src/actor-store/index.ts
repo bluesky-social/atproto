@@ -24,6 +24,7 @@ import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
+import { LRUCache } from 'lru-cache'
 
 type ActorStoreResources = {
   blobstore: (did: string) => BlobStore
@@ -33,12 +34,17 @@ type ActorStoreResources = {
 
 export class ActorStore {
   reservedKeyDir: string
+  keyCache: LRUCache<string, Keypair>
 
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
     this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
+    this.keyCache = new LRUCache<string, Keypair>({
+      max: cfg.keyCacheSize,
+      ttl: cfg.keyCacheTTL,
+    })
   }
 
   async getLocation(did: string) {
@@ -55,9 +61,15 @@ export class ActorStore {
   }
 
   async keypair(did: string): Promise<Keypair> {
+    const got = this.keyCache.get(did)
+    if (got) {
+      return got
+    }
     const { keyLocation } = await this.getLocation(did)
     const privKey = await fs.readFile(keyLocation)
-    return crypto.Secp256k1Keypair.import(privKey)
+    const imported = await crypto.Secp256k1Keypair.import(privKey)
+    this.keyCache.set(did, imported)
+    return imported
   }
 
   async openDb(did: string): Promise<ActorDb> {

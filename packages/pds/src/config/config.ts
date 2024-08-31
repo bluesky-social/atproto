@@ -1,6 +1,6 @@
 import path from 'node:path'
 import assert from 'node:assert'
-import { DAY, HOUR, SECOND } from '@atproto/common'
+import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common'
 import { Customization } from '@atproto/oauth-provider'
 import { ServerEnvironment } from './env'
 
@@ -44,7 +44,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
-    cacheSize: env.actorStoreCacheSize ?? 100,
+    keyCacheSize: env.actorStoreKeyCacheSize ?? 1000,
+    keyCacheTTL: env.actorStoreKeyCacheTTL ?? 10 * MINUTE,
     disableWalAutoCheckpoint,
   }
 
@@ -350,7 +351,8 @@ export type DatabaseConfig = {
 
 export type ActorStoreConfig = {
   directory: string
-  cacheSize: number
+  keyCacheSize: number
+  keyCacheTTL: number
   disableWalAutoCheckpoint: boolean
 }
 

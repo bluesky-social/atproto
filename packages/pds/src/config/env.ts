@@ -32,7 +32,8 @@ export const readEnv = (): ServerEnvironment => {
 
     // actor store
     actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
-    actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
+    actorStoreKeyCacheSize: envInt('PDS_ACTOR_STORE_KEY_CACHE_SIZE'),
+    actorStoreKeyCacheTTL: envInt('PDS_ACTOR_STORE_KEY_CACHE_TTL'),
 
     // blobstore: one required
     // s3
@@ -153,7 +154,8 @@ export type ServerEnvironment = {
 
   // actor store
   actorStoreDirectory?: string
-  actorStoreCacheSize?: number
+  actorStoreKeyCacheSize?: number
+  actorStoreKeyCacheTTL?: number
 
   // blobstore: one required
   blobstoreS3Bucket?: string
