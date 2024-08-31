@@ -79,21 +79,45 @@ export const skeleton = async (inputs: {
   if (clearlyBadCursor(params.cursor)) {
     return { actor, filter: params.filter, items: [] }
   }
+
+  const hasPinnedPost =
+    params.includePins && !params.cursor && !!actor.profile?.pinnedPost
+  const modifiedLimit = Math.max(1, params.limit - (hasPinnedPost ? 1 : 0))
+
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
-    limit: params.limit,
+    limit: modifiedLimit,
     cursor: params.cursor,
     feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
+
+  const items = res.items.map((item) => ({
+    post: { uri: item.uri, cid: item.cid || undefined },
+    repost: item.repost
+      ? { uri: item.repost, cid: item.repostCid || undefined }
+      : undefined,
+  }))
+
+  if (hasPinnedPost && actor.profile?.pinnedPost) {
+    const pinnedItem = {
+      post: {
+        uri: actor.profile.pinnedPost.uri,
+        cid: actor.profile.pinnedPost.cid,
+      },
+      repost: undefined,
+      pinned: true,
+    }
+    if (params.limit === 1) {
+      items[0] = pinnedItem
+    } else {
+      items.unshift(pinnedItem)
+    }
+  }
+
   return {
     actor,
     filter: params.filter,
-    items: res.items.map((item) => ({
-      post: { uri: item.uri, cid: item.cid || undefined },
-      repost: item.repost
-        ? { uri: item.repost, cid: item.repostCid || undefined }
-        : undefined,
-    })),
+    items,
     cursor: parseString(res.cursor),
   }
 }
@@ -181,7 +205,7 @@ type Params = QueryParams & {
 
 type Skeleton = {
   actor: Actor
-  items: FeedItem[]
+  items: (FeedItem & { pinned?: boolean })[]
   filter: QueryParams['filter']
   cursor?: string
 }

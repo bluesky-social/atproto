@@ -71,7 +71,7 @@ export type ThreadRef = ItemRef & { threadRoot: string }
 
 // @NOTE the feed item types in the protos for author feeds and timelines
 // technically have additional fields, not supported by the mock dataplane.
-export type FeedItem = { post: ItemRef; repost?: ItemRef }
+export type FeedItem = { post: ItemRef; repost?: ItemRef; pinned?: boolean }
 
 export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) {}
