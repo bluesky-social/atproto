@@ -205,7 +205,7 @@ type Params = QueryParams & {
 
 type Skeleton = {
   actor: Actor
-  items: (FeedItem & { pinned?: boolean })[]
+  items: FeedItem[]
   filter: QueryParams['filter']
   cursor?: string
 }
