@@ -260,6 +260,10 @@ export class ActorStore {
     const opLoc = path.join(directory, `did-op`)
     await rmIfExists(opLoc)
   }
+
+  close() {
+    this.dbCache.clear()
+  }
 }
 
 const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {
