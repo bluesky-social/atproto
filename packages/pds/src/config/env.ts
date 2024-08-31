@@ -16,6 +16,7 @@ export const readEnv = (): ServerEnvironment => {
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),
+    disableReadAfterWrite: envBool('PDS_DISABLE_READ_AFTER_WRITE'),
     devMode: envBool('PDS_DEV_MODE'),
 
     // branding
@@ -138,6 +139,7 @@ export type ServerEnvironment = {
   contactEmailAddress?: string
   acceptingImports?: boolean
   blobUploadLimit?: number
+  disableReadAfterWrite?: boolean
   devMode?: boolean
 
   // branding

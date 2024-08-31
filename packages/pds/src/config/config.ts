@@ -26,6 +26,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
+    disableReadAfterWrite: env.disableReadAfterWrite ?? false,
     devMode: env.devMode ?? false,
   }
 
@@ -338,6 +339,7 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
   acceptingImports: boolean
   blobUploadLimit: number
+  disableReadAfterWrite: boolean
   contactEmailAddress?: string
   devMode: boolean
 }
