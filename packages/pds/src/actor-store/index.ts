@@ -103,25 +103,11 @@ export class ActorStore {
   }
 
   async openDb(did: string): Promise<ActorDb> {
-    const { dbLocation } = await this.getLocation(did)
-    const exists = await fileExists(dbLocation)
-    if (!exists) {
+    const got = await this.dbCache.fetch(did)
+    if (!got) {
       throw new InvalidRequestError('Repo not found', 'NotFound')
     }
-
-    const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
-
-    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
-    try {
-      await retrySqlite(() =>
-        db.db.selectFrom('repo_root').selectAll().execute(),
-      )
-    } catch (err) {
-      db.close()
-      throw err
-    }
-
-    return db
+    return got
   }
 
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
