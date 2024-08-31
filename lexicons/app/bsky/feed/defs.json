@@ -44,7 +44,8 @@
         "like": { "type": "string", "format": "at-uri" },
         "threadMuted": { "type": "boolean" },
         "replyDisabled": { "type": "boolean" },
-        "embeddingDisabled": { "type": "boolean" }
+        "embeddingDisabled": { "type": "boolean" },
+        "pinned": { "type": "boolean" }
       }
     },
     "feedViewPost": {

@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.pinPost",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Pin a post to the profile of the requesting account. Requires auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject"],
+          "properties": {
+            "subject": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  }
+}

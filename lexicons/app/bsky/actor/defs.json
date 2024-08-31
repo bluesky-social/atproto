@@ -85,6 +85,10 @@
           "type": "ref",
           "ref": "app.bsky.graph.defs#starterPackViewBasic"
         },
+        "pinnedPost": {
+          "type": "ref",
+          "ref": "app.bsky.feed.defs#feedViewPost"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "createdAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
