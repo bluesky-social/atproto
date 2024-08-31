@@ -7,7 +7,6 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyGraphDefs from '../graph/defs'
-import * as AppBskyFeedDefs from '../feed/defs'
 
 export interface ProfileViewBasic {
   did: string
@@ -71,7 +70,6 @@ export interface ProfileViewDetailed {
   postsCount?: number
   associated?: ProfileAssociated
   joinedViaStarterPack?: AppBskyGraphDefs.StarterPackViewBasic
-  pinnedPost?: AppBskyFeedDefs.FeedViewPost
   indexedAt?: string
   createdAt?: string
   viewer?: ViewerState

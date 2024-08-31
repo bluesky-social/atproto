@@ -4171,10 +4171,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
           },
-          pinnedPost: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#feedViewPost',
-          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -4813,6 +4809,10 @@ export const schemaDict = {
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             joinedViaStarterPack: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            pinnedPost: {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
