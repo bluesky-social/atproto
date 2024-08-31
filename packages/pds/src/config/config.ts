@@ -47,6 +47,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
     keyCacheSize: env.actorStoreKeyCacheSize ?? 1000,
     keyCacheTTL: env.actorStoreKeyCacheTTL ?? 10 * MINUTE,
+    dbCacheSize: env.actorStoreDbCacheSize ?? 100,
+    dbCacheTTL: env.actorStoreDbCacheTTL ?? MINUTE,
     disableWalAutoCheckpoint,
   }
 
@@ -353,6 +355,8 @@ export type DatabaseConfig = {
 
 export type ActorStoreConfig = {
   directory: string
+  dbCacheSize: number
+  dbCacheTTL: number
   keyCacheSize: number
   keyCacheTTL: number
   disableWalAutoCheckpoint: boolean
