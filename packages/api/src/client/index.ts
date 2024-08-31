@@ -89,6 +89,7 @@ import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyFeedPinPost from './types/app/bsky/feed/pinPost'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
@@ -295,6 +296,7 @@ export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferenc
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+export * as AppBskyFeedPinPost from './types/app/bsky/feed/pinPost'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
@@ -1428,8 +1430,8 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
+  embed: AppBskyEmbedNS
   graph: AppBskyGraphNS
   labeler: AppBskyLabelerNS
   notification: AppBskyNotificationNS
@@ -1440,8 +1442,8 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
-    this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
+    this.embed = new AppBskyEmbedNS(client)
     this.graph = new AppBskyGraphNS(client)
     this.labeler = new AppBskyLabelerNS(client)
     this.notification = new AppBskyNotificationNS(client)
@@ -1606,14 +1608,6 @@ export class ProfileRecord {
   }
 }
 
-export class AppBskyEmbedNS {
-  _client: XrpcClient
-
-  constructor(client: XrpcClient) {
-    this._client = client
-  }
-}
-
 export class AppBskyFeedNS {
   _client: XrpcClient
   generator: GeneratorRecord
@@ -1631,6 +1625,13 @@ export class AppBskyFeedNS {
     this.postgate = new PostgateRecord(client)
     this.repost = new RepostRecord(client)
     this.threadgate = new ThreadgateRecord(client)
+  }
+
+  pinPost(
+    data?: AppBskyFeedPinPost.InputSchema,
+    opts?: AppBskyFeedPinPost.CallOptions,
+  ): Promise<AppBskyFeedPinPost.Response> {
+    return this._client.call('app.bsky.feed.pinPost', opts?.qp, data, opts)
   }
 
   describeFeedGenerator(
@@ -2195,6 +2196,14 @@ export class ThreadgateRecord {
       { collection: 'app.bsky.feed.threadgate', ...params },
       { headers },
     )
+  }
+}
+
+export class AppBskyEmbedNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
   }
 }
 

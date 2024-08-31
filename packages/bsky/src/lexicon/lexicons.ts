@@ -4171,6 +4171,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.graph.defs#starterPackViewBasic',
           },
+          pinnedPost: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#feedViewPost',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -4761,6 +4765,37 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedPinPost: {
+    lexicon: 1,
+    id: 'app.bsky.feed.pinPost',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Pin a post to the profile of the requesting account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.strongRef',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -5466,6 +5501,9 @@ export const schemaDict = {
             type: 'boolean',
           },
           embeddingDisabled: {
+            type: 'boolean',
+          },
+          pinned: {
             type: 'boolean',
           },
         },
@@ -7162,7 +7200,7 @@ export const schemaDict = {
         type: 'record',
         key: 'tid',
         description:
-          "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository..",
+          "Record defining interaction gating rules for a thread (aka, reply controls). The record key (rkey) of the threadgate record must match the record key of the thread's root post, and that record must be in the same repository.",
         record: {
           type: 'object',
           required: ['post', 'createdAt'],
@@ -10587,6 +10625,7 @@ export const ids = {
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
+  AppBskyFeedPinPost: 'app.bsky.feed.pinPost',
   AppBskyActorProfile: 'app.bsky.actor.profile',
   AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',

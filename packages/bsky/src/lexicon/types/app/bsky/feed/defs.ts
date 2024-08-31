@@ -55,6 +55,7 @@ export interface ViewerState {
   threadMuted?: boolean
   replyDisabled?: boolean
   embeddingDisabled?: boolean
+  pinned?: boolean
   [k: string]: unknown
 }
 
