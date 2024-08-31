@@ -83,40 +83,54 @@ export const getServiceEndpoint = (
   doc: DidDocument,
   opts: { id: string; type?: string },
 ) => {
+  // /!\ Hot path
+
+  // Throws if no id (hence this statement being first)
   const did = getDid(doc)
-  let services = doc.service
+
+  const services = doc.service
   if (!services) return undefined
   if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
+
+  // Using for loop instead of .find() as an optimization
+  for (let i = 0; i < services.length; i++) {
+    const service = services[i]
+    if (
+      service.id === opts.id ||
+      // Optimized version of: service.id === `${did}${opts.id}`
+      (service.id.startsWith(did) &&
+        service.id.endsWith(opts.id) &&
+        service.id.length === did.length + opts.id.length)
+    ) {
+      if (opts.type && service.type !== opts.type) {
+        return undefined
+      }
+      if (typeof service.serviceEndpoint !== 'string') {
+        return undefined
+      }
+      return validateUrl(service.serviceEndpoint)
+    }
   }
-  const found = services.find(
-    (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
-  )
-  if (!found) return undefined
-  if (opts.type && found.type !== opts.type) {
-    return undefined
-  }
-  if (typeof found.serviceEndpoint !== 'string') {
-    return undefined
-  }
-  return validateUrl(found.serviceEndpoint)
+
+  return undefined
 }
 
 // Check protocol and hostname to prevent potential SSRF
 const validateUrl = (urlStr: string): string | undefined => {
-  let url
-  try {
-    url = new URL(urlStr)
-  } catch {
+  if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://')) {
     return undefined
   }
-  if (!['http:', 'https:'].includes(url.protocol)) {
-    return undefined
-  } else if (!url.hostname) {
-    return undefined
-  } else {
+
+  try {
+    const url = new URL(urlStr)
+
+    if (!url.hostname) {
+      return undefined
+    }
+
     return urlStr
+  } catch {
+    return undefined
   }
 }
 
