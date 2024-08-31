@@ -9,6 +9,8 @@ export interface Profile {
   avatarCid: string | null
   bannerCid: string | null
   joinedViaStarterPackUri: string | null
+  pinnedPost: string | null
+  pinnedPostCid: string | null
   createdAt: string
   indexedAt: string
 }
