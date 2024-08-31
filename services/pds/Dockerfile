@@ -62,7 +62,7 @@ EXPOSE 3000
 ENV PDS_PORT=3000
 ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
-ENV UV_USE_IO_URING=0
+ENV UV_USE_IO_URING=1
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
