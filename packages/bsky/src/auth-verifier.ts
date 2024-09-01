@@ -119,6 +119,10 @@ export class AuthVerifier {
         const token = bearerTokenFromReq(ctx.req)
         const header = token ? jose.decodeProtectedHeader(token) : undefined
         if (header?.typ === 'at+jwt') {
+          // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
+          if (opts.skipAudCheck) {
+            throw new AuthRequiredError('Malformed token', 'InvalidToken')
+          }
           return this.entrywaySession(ctx)
         }
 
