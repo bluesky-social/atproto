@@ -703,7 +703,7 @@ export class ModerationService {
     cursor?: string
     limit?: number
     takendown?: boolean
-    appealed?: boolean | null
+    appealed?: boolean
     reviewedBefore?: string
     reviewState?: ModerationSubjectStatusRow['reviewState']
     reviewedAfter?: string
@@ -769,7 +769,7 @@ export class ModerationService {
 
     if (appealed !== undefined) {
       builder =
-        appealed === null
+        appealed === false
           ? builder.where('appealed', 'is', null)
           : builder.where('appealed', '=', appealed)
     }
