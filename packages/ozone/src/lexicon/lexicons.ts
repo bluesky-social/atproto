@@ -5350,6 +5350,15 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
+          attribution: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          licenseUri: {
+            type: 'string',
+            format: 'uri',
+          },
         },
       },
     },

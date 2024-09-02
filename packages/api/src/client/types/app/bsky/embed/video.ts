@@ -56,6 +56,8 @@ export interface View {
   thumbnail?: string
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  attribution?: string
+  licenseUri?: string
   [k: string]: unknown
 }
 
