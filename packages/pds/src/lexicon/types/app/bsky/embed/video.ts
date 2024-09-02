@@ -13,6 +13,9 @@ export interface Main {
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  /** Attribution for the video, e.g. the creator or source. */
+  attribution?: string
+  licenseUri?: string
   [k: string]: unknown
 }
 
