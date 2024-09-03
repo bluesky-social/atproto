@@ -42,6 +42,21 @@ describe('pds quote views', () => {
     expect(forSnapshot(alicePostQuotes.data)).toMatchSnapshot()
   })
 
+  it('does not return post in list when the quote author has a block', async () => {
+    await sc.block(eve, carol)
+    await network.processAll()
+
+    const quotes = await agent.api.app.bsky.feed.getQuotes(
+      { uri: sc.posts[alice][0].ref.uriStr, limit: 30 },
+      {
+        headers: await network.serviceHeaders(carol, ids.AppBskyFeedGetQuotes),
+      },
+    )
+
+    expect(quotes.data.posts.length).toBe(0)
+    await sc.unblock(eve, carol)
+  })
+
   it('utilizes limit parameter and cursor', async () => {
     const alicePostQuotes1 = await agent.api.app.bsky.feed.getQuotes(
       { uri: sc.posts[alice][1].ref.uriStr, limit: 3 },

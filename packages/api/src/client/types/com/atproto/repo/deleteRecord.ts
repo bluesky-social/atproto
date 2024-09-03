@@ -6,6 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoRepoDefs from './defs'
 
 export interface QueryParams {}
 
@@ -23,6 +24,11 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
+export interface OutputSchema {
+  commit?: ComAtprotoRepoDefs.CommitMeta
+  [k: string]: unknown
+}
+
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
@@ -33,6 +39,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export class InvalidSwapError extends XRPCError {

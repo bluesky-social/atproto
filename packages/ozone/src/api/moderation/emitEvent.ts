@@ -14,7 +14,7 @@ import {
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { subjectFromInput } from '../../mod-service/subject'
-import { ModerationLangService } from '../../mod-service/lang'
+import { TagService } from '../../tag-service'
 import { retryHttp } from '../../util'
 import { ModeratorOutput, AdminTokenOutput } from '../../auth-verifier'
 
@@ -137,12 +137,13 @@ const handleModerationEvent = async ({
       createdBy,
     })
 
-    const moderationLangService = new ModerationLangService(moderationTxn)
-    await moderationLangService.tagSubjectWithLang({
+    const tagService = new TagService(
       subject,
-      createdBy: ctx.cfg.service.did,
-      subjectStatus: result.subjectStatus,
-    })
+      result.subjectStatus,
+      ctx.cfg.service.did,
+      moderationTxn,
+    )
+    await tagService.evaluateForSubject()
 
     if (subject.isRepo()) {
       if (isTakedownEvent) {
