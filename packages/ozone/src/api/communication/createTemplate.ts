@@ -35,10 +35,6 @@ export default function (server: Server, ctx: AppContext) {
           body: communicationTemplate.view(newTemplate),
         }
       } catch (err) {
-        console.error(
-          err?.['code'] === '23505',
-          err?.['constraint'] === 'communication_template_unique_name',
-        )
         if (
           err?.['code'] === '23505' &&
           err?.['constraint'] === 'communication_template_unique_name'
