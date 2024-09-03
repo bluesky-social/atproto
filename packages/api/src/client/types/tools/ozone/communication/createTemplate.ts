@@ -37,6 +37,17 @@ export interface Response {
   data: OutputSchema
 }
 
+export class DuplicateTemplateNameError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'DuplicateTemplateName')
+      return new DuplicateTemplateNameError(e)
+  }
+
   return e
 }

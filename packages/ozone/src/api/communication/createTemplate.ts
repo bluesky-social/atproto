@@ -22,15 +22,33 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const communicationTemplate = ctx.communicationTemplateService(db)
-      const newTemplate = await communicationTemplate.create({
-        ...template,
-        disabled: false,
-        lastUpdatedBy: createdBy,
-      })
 
-      return {
-        encoding: 'application/json',
-        body: communicationTemplate.view(newTemplate),
+      try {
+        const newTemplate = await communicationTemplate.create({
+          ...template,
+          disabled: false,
+          lastUpdatedBy: createdBy,
+        })
+
+        return {
+          encoding: 'application/json',
+          body: communicationTemplate.view(newTemplate),
+        }
+      } catch (err) {
+        console.error(
+          err?.['code'] === '23505',
+          err?.['constraint'] === 'communication_template_unique_name',
+        )
+        if (
+          err?.['code'] === '23505' &&
+          err?.['constraint'] === 'communication_template_unique_name'
+        ) {
+          throw new InvalidRequestError(
+            `${template.name} already exists. Please choose a different name.`,
+            'DuplicateTemplateName',
+          )
+        }
+        throw err
       }
     },
   })

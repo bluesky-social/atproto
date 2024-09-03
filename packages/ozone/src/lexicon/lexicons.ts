@@ -10481,6 +10481,11 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.communication.defs#templateView',
           },
         },
+        errors: [
+          {
+            name: 'DuplicateTemplateName',
+          },
+        ],
       },
     },
   },
