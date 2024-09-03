@@ -1,6 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
+import { isDuplicateTemplateNameError } from '../../communication-service/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.communication.createTemplate({
@@ -37,10 +38,7 @@ export default function (server: Server, ctx: AppContext) {
           body: communicationTemplate.view(newTemplate),
         }
       } catch (err) {
-        if (
-          err?.['code'] === '23505' &&
-          err?.['constraint'] === 'communication_template_unique_name'
-        ) {
+        if (isDuplicateTemplateNameError(err)) {
           throw new InvalidRequestError(
             `${template.name} already exists. Please choose a different name.`,
             'DuplicateTemplateName',

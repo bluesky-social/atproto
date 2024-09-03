@@ -10468,6 +10468,7 @@ export const schemaDict = {
               },
               lang: {
                 type: 'string',
+                format: 'language',
                 description: 'Message language.',
               },
               createdBy: {
@@ -10530,6 +10531,7 @@ export const schemaDict = {
           },
           lang: {
             type: 'string',
+            format: 'language',
             description: 'Message language.',
           },
           lastUpdatedBy: {
@@ -10621,6 +10623,7 @@ export const schemaDict = {
               },
               lang: {
                 type: 'string',
+                format: 'language',
                 description: 'Message language.',
               },
               contentMarkdown: {

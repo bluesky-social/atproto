@@ -27,6 +27,7 @@
         "disabled": { "type": "boolean" },
         "lang": {
           "type": "string",
+          "format": "language",
           "description": "Message language."
         },
         "lastUpdatedBy": {

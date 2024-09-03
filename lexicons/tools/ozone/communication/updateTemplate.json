@@ -21,6 +21,7 @@
             },
             "lang": {
               "type": "string",
+              "format": "language",
               "description": "Message language."
             },
             "contentMarkdown": {
