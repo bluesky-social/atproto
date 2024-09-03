@@ -11454,6 +11454,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventMuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
+                  'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
                   'lex:tools.ozone.moderation.defs#modEventTag',
                 ],
