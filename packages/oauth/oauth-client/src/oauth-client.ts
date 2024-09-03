@@ -293,7 +293,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       display: options?.display,
       prompt: options?.prompt,
-      scope: options?.scope ?? this.clientMetadata.scope ?? undefined,
+      scope: options?.scope ?? this.clientMetadata.scope,
       ui_locales: options?.ui_locales,
     }
 

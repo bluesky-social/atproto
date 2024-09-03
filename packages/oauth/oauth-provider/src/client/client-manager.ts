@@ -78,7 +78,11 @@ export class ClientManager {
     const fetch = bindFetch(safeFetch)
 
     this.jwks = new CachedGetter(async (uri, options) => {
-      return fetch(buildJsonGetRequest(uri, options)).then(fetchJwksHandler)
+      const jwks = await fetch(buildJsonGetRequest(uri, options)).then(
+        fetchJwksHandler,
+      )
+
+      return jwks
     }, clientJwksCache)
 
     this.metadataGetter = new CachedGetter(async (uri, options) => {
@@ -234,12 +238,12 @@ export class ClientManager {
     const clientUriUrl = metadata.client_uri
       ? new URL(metadata.client_uri)
       : null
-    const clientUriParsed = clientUriUrl
+    const clientUriDomain = clientUriUrl
       ? parseUrlPublicSuffix(clientUriUrl)
       : null
 
-    if (clientUriUrl && !clientUriParsed) {
-      throw new InvalidClientMetadataError('client_uri must be a valid URL')
+    if (clientUriUrl && !clientUriDomain) {
+      throw new InvalidClientMetadataError('client_uri hostname is invalid')
     }
 
     const scopes = metadata.scope?.split(' ')
@@ -568,9 +572,10 @@ export class ClientManager {
           // > target Request Object is signed in a way that is verifiable by
           // > the OP.
           //
-          // @TODO: Should we allow this (and check for signed request objects)?
+          // OIDC/Request Object are not supported. ATproto spec should not
+          // allow HTTP redirect URIs either.
           throw new InvalidRedirectUriError(
-            `Non loopback redirect URI ${url} must use HTTPS`,
+            'Only loopback redirect URIs are allowed to use the "http" scheme',
           )
         }
 
