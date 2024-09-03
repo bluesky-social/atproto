@@ -42,6 +42,7 @@ export class BlobTransactor extends BlobReader {
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<BlobMetadata> {
+    blobStream = img.stripMetadata(blobStream)
     const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),

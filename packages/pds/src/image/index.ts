@@ -1,7 +1,8 @@
-import { Readable } from 'stream'
+import { PassThrough, Readable, pipeline as streamPipeline } from 'stream'
 import { pipeline } from 'stream/promises'
 import sharp from 'sharp'
 import { errHasMsg } from '@atproto/common'
+import ExifTransformer from 'exif-be-gone'
 
 export async function maybeGetInfo(
   stream: Readable,
@@ -64,4 +65,13 @@ export const formatsToMimes: {
   tif: 'image/tiff',
   tiff: 'image/tiff',
   webp: 'image/webp',
+}
+
+export function stripMetadata(stream: Readable): Readable {
+  return streamPipeline(
+    stream,
+    new ExifTransformer(),
+    new PassThrough(),
+    () => {},
+  )
 }
