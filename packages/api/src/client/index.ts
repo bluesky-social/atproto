@@ -3450,12 +3450,11 @@ export class ToolsOzoneCommunicationNS {
     data?: ToolsOzoneCommunicationUpdateTemplate.InputSchema,
     opts?: ToolsOzoneCommunicationUpdateTemplate.CallOptions,
   ): Promise<ToolsOzoneCommunicationUpdateTemplate.Response> {
-    return this._client.call(
-      'tools.ozone.communication.updateTemplate',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.communication.updateTemplate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneCommunicationUpdateTemplate.toKnownErr(e)
+      })
   }
 }
 
