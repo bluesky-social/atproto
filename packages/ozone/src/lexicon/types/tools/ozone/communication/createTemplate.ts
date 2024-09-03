@@ -18,6 +18,8 @@ export interface InputSchema {
   contentMarkdown: string
   /** Subject of the message, used in emails. */
   subject: string
+  /** Message language. */
+  lang?: string
   /** DID of the user who is creating the template. */
   createdBy?: string
   [k: string]: unknown

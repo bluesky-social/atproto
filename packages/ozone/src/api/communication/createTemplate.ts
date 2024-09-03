@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { createdBy, ...template } = input.body
+      const { createdBy, lang, ...template } = input.body
 
       if (!access.isModerator) {
         throw new AuthRequiredError(
@@ -26,6 +26,8 @@ export default function (server: Server, ctx: AppContext) {
       try {
         const newTemplate = await communicationTemplate.create({
           ...template,
+          // We are not using ?? here because we want to use null instead of potentially empty string
+          lang: lang || null,
           disabled: false,
           lastUpdatedBy: createdBy,
         })

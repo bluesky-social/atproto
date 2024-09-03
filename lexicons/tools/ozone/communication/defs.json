@@ -25,6 +25,10 @@
           "description": "Subject of the message, used in emails."
         },
         "disabled": { "type": "boolean" },
+        "lang": {
+          "type": "string",
+          "description": "Message language."
+        },
         "lastUpdatedBy": {
           "type": "string",
           "format": "did",

@@ -19,6 +19,10 @@
               "type": "string",
               "description": "Name of the template."
             },
+            "lang": {
+              "type": "string",
+              "description": "Message language."
+            },
             "contentMarkdown": {
               "type": "string",
               "description": "Content of the template, markdown supported, can contain variable placeholders."

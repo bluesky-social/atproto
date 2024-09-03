@@ -10466,6 +10466,10 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Subject of the message, used in emails.',
               },
+              lang: {
+                type: 'string',
+                description: 'Message language.',
+              },
               createdBy: {
                 type: 'string',
                 format: 'did',
@@ -10523,6 +10527,10 @@ export const schemaDict = {
           },
           disabled: {
             type: 'boolean',
+          },
+          lang: {
+            type: 'string',
+            description: 'Message language.',
           },
           lastUpdatedBy: {
             type: 'string',
@@ -10610,6 +10618,10 @@ export const schemaDict = {
               name: {
                 type: 'string',
                 description: 'Name of the template.',
+              },
+              lang: {
+                type: 'string',
+                description: 'Message language.',
               },
               contentMarkdown: {
                 type: 'string',
