@@ -315,7 +315,7 @@ export const parseAccount = (evt: Account): AccountEvt | undefined => {
     time: evt.time,
     did: evt.did,
     active: evt.active,
-    status: evt.status as AccountStatus,
+    status: evt.status as AccountStatus | undefined,
   }
 }
 
