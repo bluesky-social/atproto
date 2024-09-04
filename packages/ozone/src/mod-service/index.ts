@@ -165,26 +165,22 @@ export class ModerationService {
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
+
     if (subject) {
-      builder = builder.where((qb) => {
-        if (includeAllUserRecords) {
-          // If subject is an at-uri, we need to extract the DID from the at-uri
-          // otherwise, subject is probably a DID already
-          if (subject.startsWith('at://')) {
-            const uri = new AtUri(subject)
-            return qb.where('subjectDid', '=', uri.hostname)
-          }
-          return qb.where('subjectDid', '=', subject)
-        }
-        return qb
-          .where((subQb) =>
-            subQb
-              .where('subjectDid', '=', subject)
-              .where('subjectUri', 'is', null),
-          )
-          .orWhere('subjectUri', '=', subject)
-      })
+      const isSubjectAtUri = subject.startsWith('at://')
+      const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
+      const subjectUri = isSubjectAtUri ? subject : null
+      // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
+      builder = builder.where('subjectDid', '=', subjectDid)
+
+      // if requester wants to include all user records, let's ignore matching on subjectUri
+      if (!includeAllUserRecords) {
+        builder = builder
+          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
+          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+      }
     }
+
     if (types.length) {
       builder = builder.where((qb) => {
         if (types.length === 1) {
