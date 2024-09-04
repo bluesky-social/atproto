@@ -125,15 +125,13 @@ export class Firehose {
   private async parseEvt(evt: RepoEvent): Promise<Event[]> {
     try {
       if (isCommit(evt) && !this.opts.excludeCommit) {
-        const parsed = this.opts.unauthenticatedCommits
-          ? await parseCommitUnauthenticated(evt)
-          : await parseCommitAuthenticated(this.opts.idResolver, evt)
-        const filtered = parsed.filter(
-          (write) =>
-            !this.opts.filterCollections ||
-            this.opts.filterCollections.includes(write.uri.collection),
-        )
-        return filtered
+        return this.opts.unauthenticatedCommits
+          ? await parseCommitUnauthenticated(evt, this.opts.filterCollections)
+          : await parseCommitAuthenticated(
+              this.opts.idResolver,
+              evt,
+              this.opts.filterCollections,
+            )
       } else if (isAccount(evt) && !this.opts.excludeAccount) {
         const parsed = parseAccount(evt)
         return parsed ? [parsed] : []
@@ -173,11 +171,12 @@ export class Firehose {
 export const parseCommitAuthenticated = async (
   idResolver: IdResolver,
   evt: Commit,
+  filterCollections?: string[],
   forceKeyRefresh = false,
 ): Promise<CommitEvt[]> => {
   const did = evt.repo
   const key = await idResolver.did.resolveAtprotoKey(did, forceKeyRefresh)
-  const claims = evt.ops.map((op) => {
+  const claims = maybeFilterOps(evt.ops, filterCollections).map((op) => {
     const { collection, rkey } = parseDataKey(op.path)
     return {
       collection,
@@ -194,7 +193,7 @@ export const parseCommitAuthenticated = async (
     })
   } catch (err) {
     if (err instanceof RepoVerificationError) {
-      return parseCommitAuthenticated(idResolver, evt, true)
+      return parseCommitAuthenticated(idResolver, evt, filterCollections, true)
     }
     throw err
   }
@@ -210,8 +209,21 @@ export const parseCommitAuthenticated = async (
 
 export const parseCommitUnauthenticated = async (
   evt: Commit,
+  filterCollections?: string[],
 ): Promise<CommitEvt[]> => {
-  return formatCommitOps(evt, evt.ops)
+  const ops = maybeFilterOps(evt.ops, filterCollections)
+  return formatCommitOps(evt, ops)
+}
+
+const maybeFilterOps = (
+  ops: RepoOp[],
+  filterCollections?: string[],
+): RepoOp[] => {
+  if (!filterCollections) return ops
+  return ops.filter((op) => {
+    const { collection } = parseDataKey(op.path)
+    return filterCollections.includes(collection)
+  })
 }
 
 const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
