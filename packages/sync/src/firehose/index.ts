@@ -69,12 +69,13 @@ export class Firehose {
     if (this.opts.getCursor && this.opts.runner) {
       throw new Error('Must set only `getCursor` or `runner`')
     }
-    const getCursorFn = this.opts.runner?.getCursor ?? this.opts.getCursor
     this.sub = new Subscription({
       service: opts.service ?? 'wss://bsky.network',
       method: 'com.atproto.sync.subscribeRepos',
       signal: this.abortController.signal,
       getParams: async () => {
+        const getCursorFn = () =>
+          this.opts.runner?.getCursor() ?? this.opts.getCursor
         if (!getCursorFn) {
           return undefined
         }
