@@ -140,7 +140,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      if (sub.syncQueue.cursor >= lastSeq) {
+      const runnerCursor = await sub.runner.getCursor()
+      if (runnerCursor && runnerCursor >= lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
         await sub.processAll()
         return

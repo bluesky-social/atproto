@@ -1,4 +1,4 @@
-import { Firehose, SyncQueue } from '@atproto/sync'
+import { Firehose, MemoryRunner } from '@atproto/sync'
 import { IdResolver } from '@atproto/identity'
 import { WriteOpAction } from '@atproto/repo'
 import { subLogger as log } from '../../logger'
@@ -8,7 +8,7 @@ import { BackgroundQueue } from './background'
 
 export class RepoSubscription {
   firehose: Firehose
-  syncQueue: SyncQueue
+  runner: MemoryRunner
   background: BackgroundQueue
   indexingSvc: IndexingService
 
@@ -19,12 +19,12 @@ export class RepoSubscription {
     this.background = new BackgroundQueue(db)
     this.indexingSvc = new IndexingService(db, idResolver, this.background)
 
-    const { syncQueue, firehose } = createFirehose({
+    const { runner, firehose } = createFirehose({
       idResolver,
       service,
       indexingSvc: this.indexingSvc,
     })
-    this.syncQueue = syncQueue
+    this.runner = runner
     this.firehose = firehose
   }
 
@@ -34,24 +34,24 @@ export class RepoSubscription {
 
   async restart() {
     await this.destroy()
-    const { syncQueue, firehose } = createFirehose({
+    const { runner, firehose } = createFirehose({
       idResolver: this.opts.idResolver,
       service: this.opts.service,
       indexingSvc: this.indexingSvc,
     })
-    this.syncQueue = syncQueue
+    this.runner = runner
     this.firehose = firehose
     this.start()
   }
 
   async processAll() {
-    await this.syncQueue.processAll()
+    await this.runner.processAll()
     await this.background.processAll()
   }
 
   async destroy() {
     await this.firehose.destroy()
-    await this.syncQueue.destroy()
+    await this.runner.destroy()
     await this.background.processAll()
   }
 }
@@ -62,14 +62,14 @@ const createFirehose = (opts: {
   indexingSvc: IndexingService
 }) => {
   const { idResolver, service, indexingSvc } = opts
-  const syncQueue = new SyncQueue()
+  const runner = new MemoryRunner()
   const firehose = new Firehose({
     idResolver,
-    syncQueue,
+    runner,
     service,
     unauthenticatedHandles: true, // indexing service handles these
     onError: (err) => log.error({ err }, 'error in subscription'),
-    handleEvt: async (evt) => {
+    handleEvent: async (evt) => {
       if (evt.event === 'identity') {
         await indexingSvc.indexHandle(evt.did, evt.time, true)
       } else if (evt.event === 'account') {
@@ -99,5 +99,5 @@ const createFirehose = (opts: {
       }
     },
   })
-  return { firehose, syncQueue }
+  return { firehose, runner }
 }
