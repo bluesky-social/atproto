@@ -8,8 +8,8 @@ import { parseRes } from '../pipethrough'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
-export const getRepoRev = (headers: Headers): string | undefined => {
-  return headers[REPO_REV_HEADER]
+export const getRepoRev = (headers?: Headers): string | undefined => {
+  return headers?.[REPO_REV_HEADER]
 }
 
 export const getLocalLag = (local: LocalRecords): number | undefined => {
@@ -45,7 +45,7 @@ export const readAfterWriteInternal = async <T>(
   res: HandlerPipeThrough,
   munge: MungeFn<T>,
 ): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
-  const rev = getRepoRev(res.headers ?? {})
+  const rev = getRepoRev(res.headers)
   if (!rev) return res
 
   // If the response's "atproto-repo-rev" header matches the current repo rev,
