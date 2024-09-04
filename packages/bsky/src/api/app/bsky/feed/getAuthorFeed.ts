@@ -80,18 +80,18 @@ export const skeleton = async (inputs: {
     return { actor, filter: params.filter, items: [] }
   }
 
+  const isFirstPageRequest = !params.cursor
   const hasPinnedPost =
-    params.includePins && !params.cursor && !!actor.profile?.pinnedPost
-  const modifiedLimit = Math.max(1, params.limit - (hasPinnedPost ? 1 : 0))
+    isFirstPageRequest && params.includePins && !!actor.profile?.pinnedPost
 
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,
-    limit: modifiedLimit,
+    limit: params.limit,
     cursor: params.cursor,
     feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
 
-  const items = res.items.map((item) => ({
+  let items = res.items.map((item) => ({
     post: { uri: item.uri, cid: item.cid || undefined },
     repost: item.repost
       ? { uri: item.repost, cid: item.repostCid || undefined }
@@ -105,11 +105,13 @@ export const skeleton = async (inputs: {
         cid: actor.profile.pinnedPost.cid,
       },
       repost: undefined,
-      pinned: true,
+      authorPinned: true,
     }
     if (params.limit === 1) {
       items[0] = pinnedItem
     } else {
+      // filter pinned post from first page only
+      items = items.filter((item) => item.post.uri !== pinnedItem.post.uri)
       items.unshift(pinnedItem)
     }
   }

@@ -607,6 +607,7 @@ export class Views {
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
+            pinned: this.viewerPinned(uri, state),
           }
         : undefined,
       labels,
@@ -622,7 +623,7 @@ export class Views {
   ): FeedViewPost | undefined {
     const postInfo = state.posts?.get(item.post.uri)
     let reason: ReasonRepost | ReasonPin | undefined
-    if (item.pinned) {
+    if (item.authorPinned) {
       reason = this.reasonPin()
     } else if (item.repost) {
       const repost = state.reposts?.get(item.repost.uri)
@@ -1135,6 +1136,16 @@ export class Views {
       return false
     }
     return true
+  }
+
+  viewerPinned(uri: string, state: HydrationState) {
+    const authorDid = creatorFromUri(uri)
+    if (!state.ctx?.viewer || state.ctx.viewer !== authorDid) return
+    const actor = state.actors?.get(authorDid)
+    if (!actor) return
+    const pinnedPost = actor.profile?.pinnedPost
+    if (!pinnedPost) return undefined
+    return pinnedPost.uri === uri
   }
 
   notification(
