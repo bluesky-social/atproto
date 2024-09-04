@@ -117,7 +117,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
-    await bsky.sub.background.processAll()
+    await bsky.sub.processAll()
     await thirdPartyPds.close()
 
     let introspect: IntrospectServer | undefined = undefined
@@ -140,9 +140,10 @@ export class TestNetwork extends TestNetworkNoAppView {
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      if (sub.seenSeq !== null && sub.seenSeq >= lastSeq) {
+      const runnerCursor = await sub.runner.getCursor()
+      if (runnerCursor && runnerCursor >= lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
-        await sub.repoQueue.main.onIdle()
+        await sub.processAll()
         return
       }
       await wait(5)

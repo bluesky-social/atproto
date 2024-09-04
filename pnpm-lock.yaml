@@ -159,6 +159,9 @@ importers:
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
+      '@atproto/sync':
+        specifier: workspace:^
+        version: link:../sync
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -434,6 +437,9 @@ importers:
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
+      '@atproto/sync':
+        specifier: workspace:^
+        version: link:../sync
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
