@@ -3,7 +3,7 @@ import {
   SeedClient,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
-import { Firehose, FirehoseOptions, SyncQueue } from '../src'
+import { Firehose, FirehoseOptions, MemoryRunner } from '../src'
 import { IdResolver } from '@atproto/identity'
 import { Create, Event } from '../src/events'
 import { createDeferrable, wait } from '@atproto/common'
@@ -36,7 +36,7 @@ describe('firehose', () => {
     const firehose = new Firehose({
       idResolver,
       service: network.pds.url.replace('http', 'ws'),
-      handleEvt: async (evt) => {
+      handleEvent: async (evt) => {
         if (addRandomWait) {
           const time = Math.floor(Math.random()) * 20
           await wait(time)
@@ -127,8 +127,10 @@ describe('firehose', () => {
 
   it('processes events through the sync queue', async () => {
     const currCursor = await network.pds.ctx.sequencer.curr()
-    const syncQueue = new SyncQueue({ startCursor: currCursor ?? undefined })
-    const evtsPromise = createAndReadFirehose(20, { syncQueue }, true)
+    const runner = new MemoryRunner({
+      startCursor: currCursor ?? undefined,
+    })
+    const evtsPromise = createAndReadFirehose(20, { runner }, true)
     const createAndPost = async (name: string) => {
       const user = await sc.createAccount('name', {
         handle: `${name}.test`,

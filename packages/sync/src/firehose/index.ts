@@ -34,17 +34,17 @@ import {
   IdentityEvt,
 } from '../events'
 import { CID } from 'multiformats/cid'
-import { SyncQueue } from '../queue'
+import { EventRunner } from '../runner'
 import { didAndSeqForEvt } from '../util'
 
 export type FirehoseOptions = {
   idResolver: IdResolver
 
-  handleEvt: (evt: Event) => Promise<void>
+  handleEvent: (evt: Event) => Awaited<void>
   onError: (err: Error) => void
-  getCursor?: () => Promise<number | undefined>
+  getCursor?: () => Awaited<number | undefined>
 
-  syncQueue?: SyncQueue // sync queue getCursor takes precedence over `getCursor`
+  runner?: EventRunner // should only set getCursor *or* runner
 
   service?: string
   subscriptionReconnectDelay?: number
@@ -66,24 +66,27 @@ export class Firehose {
   constructor(public opts: FirehoseOptions) {
     this.destoryDefer = createDeferrable()
     this.abortController = new AbortController()
+    if (this.opts.getCursor && this.opts.runner) {
+      throw new Error('Must set only `getCursor` or `runner`')
+    }
     this.sub = new Subscription({
       service: opts.service ?? 'wss://bsky.network',
       method: 'com.atproto.sync.subscribeRepos',
       signal: this.abortController.signal,
       getParams: async () => {
-        if (this.opts.syncQueue) {
-          return { cursor: this.opts.syncQueue.cursor }
-        } else if (opts.getCursor) {
-          const cursor = await opts.getCursor()
-          return { cursor }
+        const getCursorFn = () =>
+          this.opts.runner?.getCursor() ?? this.opts.getCursor
+        if (!getCursorFn) {
+          return undefined
         }
-        return undefined
+        const cursor = await getCursorFn()
+        return { cursor }
       },
       validate: (value: unknown) => {
         try {
           return isValidRepoEvent(value)
         } catch (err) {
-          this.opts?.onError(new FirehoseValidationError(err, value))
+          this.opts.onError(new FirehoseValidationError(err, value))
         }
       },
     })
@@ -92,16 +95,16 @@ export class Firehose {
   async start() {
     try {
       for await (const evt of this.sub) {
-        if (this.opts.syncQueue) {
+        if (this.opts.runner) {
           const parsed = didAndSeqForEvt(evt)
           if (!parsed) {
             continue
           }
-          this.opts.syncQueue.trackEvt(parsed.did, parsed.seq, async () => {
+          this.opts.runner.trackEvent(parsed.did, parsed.seq, async () => {
             const parsed = await this.parseEvt(evt)
             for (const write of parsed) {
               try {
-                await this.opts.handleEvt(write)
+                await this.opts.handleEvent(write)
               } catch (err) {
                 this.opts.onError(new FirehoseHandlerError(err, write))
               }
@@ -116,24 +119,22 @@ export class Firehose {
         this.destoryDefer.resolve()
         return
       }
-      this.opts.onError?.(new FirehoseSubscriptionError(err))
-      await wait(3000)
-      return this
+      this.opts.onError(new FirehoseSubscriptionError(err))
+      await wait(this.opts.subscriptionReconnectDelay ?? 3000)
+      return this.start()
     }
   }
 
   private async parseEvt(evt: RepoEvent): Promise<Event[]> {
     try {
       if (isCommit(evt) && !this.opts.excludeCommit) {
-        const parsed = this.opts.unauthenticatedCommits
-          ? await parseCommitUnauthenticated(evt)
-          : await parseCommitAuthenticated(this.opts.idResolver, evt)
-        const filtered = parsed.filter(
-          (write) =>
-            !this.opts.filterCollections ||
-            this.opts.filterCollections.includes(write.uri.collection),
-        )
-        return filtered
+        return this.opts.unauthenticatedCommits
+          ? await parseCommitUnauthenticated(evt, this.opts.filterCollections)
+          : await parseCommitAuthenticated(
+              this.opts.idResolver,
+              evt,
+              this.opts.filterCollections,
+            )
       } else if (isAccount(evt) && !this.opts.excludeAccount) {
         const parsed = parseAccount(evt)
         return parsed ? [parsed] : []
@@ -148,7 +149,7 @@ export class Firehose {
         return []
       }
     } catch (err) {
-      this.opts.onError?.(new FirehoseParseError(err, evt))
+      this.opts.onError(new FirehoseParseError(err, evt))
       return []
     }
   }
@@ -157,7 +158,7 @@ export class Firehose {
     const parsed = await this.parseEvt(evt)
     for (const write of parsed) {
       try {
-        await this.opts.handleEvt(write)
+        await this.opts.handleEvent(write)
       } catch (err) {
         this.opts.onError(new FirehoseHandlerError(err, write))
       }
@@ -173,11 +174,12 @@ export class Firehose {
 export const parseCommitAuthenticated = async (
   idResolver: IdResolver,
   evt: Commit,
+  filterCollections?: string[],
   forceKeyRefresh = false,
 ): Promise<CommitEvt[]> => {
   const did = evt.repo
   const key = await idResolver.did.resolveAtprotoKey(did, forceKeyRefresh)
-  const claims = evt.ops.map((op) => {
+  const claims = maybeFilterOps(evt.ops, filterCollections).map((op) => {
     const { collection, rkey } = parseDataKey(op.path)
     return {
       collection,
@@ -193,8 +195,8 @@ export const parseCommitAuthenticated = async (
       verifiedCids[path] = op.cid
     })
   } catch (err) {
-    if (err instanceof RepoVerificationError) {
-      return parseCommitAuthenticated(idResolver, evt, true)
+    if (err instanceof RepoVerificationError && !forceKeyRefresh) {
+      return parseCommitAuthenticated(idResolver, evt, filterCollections, true)
     }
     throw err
   }
@@ -210,8 +212,21 @@ export const parseCommitAuthenticated = async (
 
 export const parseCommitUnauthenticated = async (
   evt: Commit,
+  filterCollections?: string[],
 ): Promise<CommitEvt[]> => {
-  return formatCommitOps(evt, evt.ops)
+  const ops = maybeFilterOps(evt.ops, filterCollections)
+  return formatCommitOps(evt, ops)
+}
+
+const maybeFilterOps = (
+  ops: RepoOp[],
+  filterCollections?: string[],
+): RepoOp[] => {
+  if (!filterCollections) return ops
+  return ops.filter((op) => {
+    const { collection } = parseDataKey(op.path)
+    return filterCollections.includes(collection)
+  })
 }
 
 const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
@@ -220,7 +235,7 @@ const formatCommitOps = async (evt: Commit, ops: RepoOp[]) => {
   const evts: CommitEvt[] = []
 
   for (const op of ops) {
-    const uri = new AtUri(`at://${evt.repo}/${op.path}`)
+    const uri = AtUri.make(evt.repo, op.path)
 
     const meta: CommitMeta = {
       seq: evt.seq,
@@ -275,7 +290,7 @@ export const parseIdentity = async (
     time: evt.time,
     did: evt.did,
     handle,
-    didDocument: res,
+    didDocument: res ?? undefined,
   }
 }
 

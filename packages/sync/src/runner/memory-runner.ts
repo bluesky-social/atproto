@@ -1,9 +1,10 @@
 import PQueue from 'p-queue'
 import { ConsecutiveList } from './consecutive-list'
+import { EventRunner } from './types'
 
 export { ConsecutiveList }
 
-export type SyncQueueOptions = {
+export type MemoryRunnerOptions = {
   setCursor?: (cursor: number) => Promise<void>
   concurrency?: number
   startCursor?: number
@@ -11,15 +12,19 @@ export type SyncQueueOptions = {
 
 // A queue with arbitrarily many partitions, each processing work sequentially.
 // Partitions are created lazily and taken out of memory when they go idle.
-export class SyncQueue {
+export class MemoryRunner implements EventRunner {
   consecutive = new ConsecutiveList<number>()
   mainQueue: PQueue
   partitions = new Map<string, PQueue>()
-  cursor: number
+  cursor: number | undefined
 
-  constructor(public opts: SyncQueueOptions = {}) {
+  constructor(public opts: MemoryRunnerOptions = {}) {
     this.mainQueue = new PQueue({ concurrency: opts.concurrency ?? Infinity })
-    this.cursor = opts.startCursor ?? 0
+    this.cursor = opts.startCursor
+  }
+
+  getCursor() {
+    return this.cursor
   }
 
   async addTask(partitionId: string, task: () => Promise<void>) {
@@ -39,7 +44,8 @@ export class SyncQueue {
     return partition
   }
 
-  async trackEvt(did: string, seq: number, handler: () => Promise<void>) {
+  async trackEvent(did: string, seq: number, handler: () => Promise<void>) {
+    if (this.mainQueue.isPaused) return
     const item = this.consecutive.push(seq)
     await this.addTask(did, handler)
     const latest = item.complete().at(-1)

@@ -42,7 +42,7 @@ export type IdentityEvt = {
   event: 'identity'
   did: string
   handle?: string
-  didDocument: DidDocument | null
+  didDocument?: DidDocument
 }
 
 export type AccountEvt = {
