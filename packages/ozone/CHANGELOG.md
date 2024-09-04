@@ -1,5 +1,16 @@
 # @atproto/ozone
 
+## 0.1.43
+
+### Patch Changes
+
+- [#2762](https://github.com/bluesky-social/atproto/pull/2762) [`325859b8b`](https://github.com/bluesky-social/atproto/commit/325859b8bff8dcfdd1eb8cabd51bffedb03aad87) Thanks [@foysalit](https://github.com/foysalit)! - Tag moderation subjects with the content type of embeds in the records
+
+- [#2780](https://github.com/bluesky-social/atproto/pull/2780) [`e4d41d66f`](https://github.com/bluesky-social/atproto/commit/e4d41d66fa4757a696363f39903562458967b63d) Thanks [@foysalit](https://github.com/foysalit)! - Add language property to communication templates
+
+- Updated dependencies [[`e4d41d66f`](https://github.com/bluesky-social/atproto/commit/e4d41d66fa4757a696363f39903562458967b63d)]:
+  - @atproto/api@0.13.6
+
 ## 0.1.42
 
 ### Patch Changes
