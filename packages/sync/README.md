@@ -51,23 +51,23 @@ firehose.start()
 await firehose.destroy()
 ```
 
-For more robust indexing pipelines, it's recommended to use the supplied `SyncQueue` class. This provides an in-memory partitioned queue. As events from a given repo must be processed in order, this allows events to be processed concurrently while still processing events from any given repo serially.
+For more robust indexing pipelines, it's recommended to use the supplied `MemoryRunner` class. This provides an in-memory partitioned queue. As events from a given repo must be processed in order, this allows events to be processed concurrently while still processing events from any given repo serially.
 
-The `SyncQueue` also tracks an internal cursor based on the last finished consecutive work. This ensures that no events are dropped, altho it does mean that some events may occassionally be replayed (if the websocket drops and reconnects) and therefore it's recommended that any indexing logic is idempotent. An optional `setCursor` parameter may be supplied to the `SyncQueue` which can be used to persistently store the most recently processed cursor.
+The `MemoryRunner` also tracks an internal cursor based on the last finished consecutive work. This ensures that no events are dropped, although it does mean that some events may occassionally be replayed (if the websocket drops and reconnects) and therefore it's recommended that any indexing logic is idempotent. An optional `setCursor` parameter may be supplied to the `MemoryRunner` which can be used to persistently store the most recently processed cursor.
 
 ```ts
-import { Firehose, SyncQueue } from '@atproto/sync'
+import { Firehose, MemoryRunner } from '@atproto/sync'
 import { IdResolver } from '@atproto/identity'
 
 const idResolver = new IdResolver()
-const syncQueue = new SyncQueue({
+const runner = new MemoryRunner({
   setCursor: (cursor) => {
     // persist cursor
   },
 })
 const firehose = new Firehose({
   idResolver,
-  syncQueue,
+  runner,
   service: 'wss://bsky.network',
   handleEvt: async (evt) => {
     // ...
@@ -80,7 +80,7 @@ firehose.start()
 
 // on service shutdown
 await firehose.destroy()
-await syncQueue.destroy
+await runner.destroy()
 ```
 
 ## License
