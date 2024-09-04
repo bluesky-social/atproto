@@ -62,7 +62,7 @@ const createFirehose = (opts: {
   indexingSvc: IndexingService
 }) => {
   const { idResolver, service, indexingSvc } = opts
-  const runner = new MemoryRunner()
+  const runner = new MemoryRunner({ startCursor: 0 })
   const firehose = new Firehose({
     idResolver,
     runner,
