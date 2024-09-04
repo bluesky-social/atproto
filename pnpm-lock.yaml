@@ -1162,6 +1162,9 @@ importers:
       '@atproto-labs/fetch-node':
         specifier: workspace:*
         version: link:../internal/fetch-node
+      '@atproto-labs/simple-store':
+        specifier: workspace:*
+        version: link:../internal/simple-store
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
