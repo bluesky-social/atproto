@@ -273,7 +273,9 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       dpopKey,
       verifier: pkce.verifier,
       appState: options?.state,
-      redirectUri,
+      ...(redirectUri !== this.clientMetadata.redirect_uris[0]
+        ? { redirectUri }
+        : {}),
     })
 
     const parameters = {
@@ -427,7 +429,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
 
       const tokenSet = await server.exchangeCode(
         codeParam,
-        stateData.redirectUri,
+        stateData.redirectUri ?? this.clientMetadata.redirect_uris[0],
         stateData.verifier,
       )
       try {
