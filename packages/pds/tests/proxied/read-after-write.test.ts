@@ -19,6 +19,11 @@ describe('proxy read after write', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_read_after_write',
+      pds: {
+        redisScratchAddress: process.env.REDIS_HOST,
+        redisScratchPassword: process.env.REDIS_PASSWORD,
+        repoRevCacheMaxAge: 3600,
+      },
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -30,7 +35,7 @@ describe('proxy read after write', () => {
   })
 
   afterAll(async () => {
-    await network.close()
+    await network?.close()
   })
 
   it('handles read after write on profiles', async () => {
@@ -265,5 +270,76 @@ describe('proxy read after write', () => {
     expect(lag).toBeDefined()
     const parsed = parseInt(lag)
     expect(parsed > 0).toBe(true)
+  })
+
+  it('does not open a database connection when reading cached profile', async () => {
+    const { actorStore } = network.pds.ctx
+    const openDbOrig = actorStore.openDb
+    const openDbMock = jest.fn((...args: Parameters<typeof openDbOrig>) =>
+      openDbOrig.call(actorStore, ...args),
+    )
+    actorStore.openDb = openDbMock
+
+    const agent = network.pds.getClient()
+
+    try {
+      // Initialize the cache
+      await agent.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        {
+          headers: { ...sc.getHeaders(sc.dids.alice) },
+        },
+      )
+
+      expect(openDbMock).toHaveBeenCalled()
+      openDbMock.mockClear()
+
+      await agent.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        {
+          headers: { ...sc.getHeaders(sc.dids.alice) },
+        },
+      )
+      await agent.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        {
+          headers: { ...sc.getHeaders(sc.dids.alice) },
+        },
+      )
+
+      expect(openDbMock).not.toHaveBeenCalled()
+    } finally {
+      // @ts-expect-error: openDb is defined on the prototype
+      delete actorStore.openDb
+    }
+  })
+
+  it('performs read-after write if the server respond with non-matching rev', async () => {
+    const { actorStore } = network.pds.ctx
+    const openDbOrig = actorStore.openDb
+    const openDbMock = jest.fn((...args: Parameters<typeof openDbOrig>) =>
+      openDbOrig.call(actorStore, ...args),
+    )
+    actorStore.openDb = openDbMock
+
+    const agent = network.pds.getClient()
+
+    try {
+      await sc.updateProfile(alice, { displayName: 'blah' })
+
+      // Note that this test relies on the fact that the app-view did not
+      // process the update at this point.
+      await agent.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        {
+          headers: { ...sc.getHeaders(sc.dids.alice) },
+        },
+      )
+
+      expect(openDbMock).toHaveBeenCalled()
+    } finally {
+      // @ts-expect-error: openDb is defined on the prototype
+      delete actorStore.openDb
+    }
   })
 })
