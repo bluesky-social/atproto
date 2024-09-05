@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.1.44
+
+### Patch Changes
+
+- [#2787](https://github.com/bluesky-social/atproto/pull/2787) [`642c7ae96`](https://github.com/bluesky-social/atproto/commit/642c7ae968b0dd2bfb448aa6eba0c1fd9312d909) Thanks [@foysalit](https://github.com/foysalit)! - Improve query performance on moderation_event table
+
 ## 0.1.43
 
 ### Patch Changes
