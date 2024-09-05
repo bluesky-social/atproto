@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         handle,
         email,
-        password,
+        ethAddress,
         inviteCode,
         signingKey,
         plcOp,
@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
           did,
           handle,
           email,
-          password,
+          ethAddress,
           repoCid: commit.cid,
           repoRev: commit.rev,
           inviteCode,
@@ -148,7 +148,7 @@ const validateInputsForEntrywayPds = async (
     did,
     handle,
     email: undefined,
-    password: undefined,
+    ethAddress: undefined,
     inviteCode: undefined,
     signingKey,
     plcOp,
@@ -161,7 +161,7 @@ const validateInputsForLocalPds = async (
   input: CreateAccountInput,
   requester: string | null,
 ) => {
-  const { email, password, inviteCode } = input
+  const { email, ethAddress, inviteCode } = input
   if (input.plcOp) {
     throw new InvalidRequestError('Unsupported input: "plcOp"')
   }
@@ -230,7 +230,7 @@ const validateInputsForLocalPds = async (
     did,
     handle,
     email,
-    password,
+    ethAddress,
     inviteCode,
     signingKey,
     plcOp,

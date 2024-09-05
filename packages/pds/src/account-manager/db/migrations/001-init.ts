@@ -78,7 +78,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('account')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('email', 'varchar', (col) => col.notNull())
-    .addColumn('passwordScrypt', 'varchar', (col) => col.notNull())
+    .addColumn('ethAddress', 'varchar', (col) => col.notNull())
     .addColumn('emailConfirmedAt', 'varchar')
     .addColumn('invitesDisabled', 'int2', (col) => col.notNull().defaultTo(0))
     .execute()

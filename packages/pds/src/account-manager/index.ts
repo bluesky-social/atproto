@@ -21,7 +21,7 @@ import {
 } from '@atproto/oauth-provider'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
-import { KeyObject } from 'node:crypto'
+import { KeyObject, sign } from 'node:crypto'
 
 import { AuthScope } from '../auth-verifier'
 import { BackgroundQueue } from '../background'
@@ -38,9 +38,11 @@ import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
 import * as password from './helpers/password'
 import * as repo from './helpers/repo'
-import * as scrypt from './helpers/scrypt'
+import * as siwe from './helpers/siwe'
 import * as token from './helpers/token'
 import * as usedRefreshToken from './helpers/used-refresh-token'
+import { Hex } from 'viem'
+import { Selectable } from 'kysely'
 
 export { AccountStatus, formatAccountStatus } from './helpers/account'
 
@@ -113,7 +115,7 @@ export class AccountManager
     did: string
     handle: string
     email?: string
-    password?: string
+    ethAddress?: string
     repoCid: CID
     repoRev: string
     inviteCode?: string
@@ -123,15 +125,13 @@ export class AccountManager
       did,
       handle,
       email,
-      password,
+      ethAddress,
       repoCid,
       repoRev,
       inviteCode,
       deactivated,
     } = opts
-    const passwordScrypt = password
-      ? await scrypt.genSaltAndHash(password)
-      : undefined
+    
 
     const { accessJwt, refreshJwt } = await auth.createTokens({
       did,
@@ -147,8 +147,8 @@ export class AccountManager
       }
       await Promise.all([
         account.registerActor(dbTxn, { did, handle, deactivated }),
-        email && passwordScrypt
-          ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
+        ethAddress
+          ? account.registerAccount(dbTxn, { did, email: email ?? null, ethAddress })
           : Promise.resolve(),
         invite.recordInviteUse(dbTxn, {
           did,
@@ -281,10 +281,10 @@ export class AccountManager
 
   async login({
     identifier,
-    password,
+    siweSignature
   }: {
     identifier: string
-    password: string
+    siweSignature: string
   }): Promise<{
     user: ActorAccount
     appPassword: password.AppPassDescript | null
@@ -308,16 +308,19 @@ export class AccountManager
       }
 
       let appPassword: password.AppPassDescript | null = null
-      const validAccountPass = await this.verifyAccountPassword(
+      const validAccountPass = await this.verifySIWE(
         user.did,
-        password,
+        siweSignature as `0x${string}`
       )
       if (!validAccountPass) {
-        appPassword = await this.verifyAppPassword(user.did, password)
-        if (appPassword === null) {
-          throw new AuthRequiredError('Invalid identifier or password')
-        }
+        throw new AuthRequiredError('App passwords are not allowed')
       }
+      // if (!validAccountPass) {
+      //   appPassword = await this.verifyAppPassword(user.did, password)
+      //   if (appPassword === null) {
+      //     throw new AuthRequiredError('Invalid identifier or password')
+      //   }
+      // }
 
       if (softDeleted(user)) {
         throw new AuthRequiredError(
@@ -344,11 +347,11 @@ export class AccountManager
     return password.listAppPasswords(this.db, did)
   }
 
-  async verifyAccountPassword(
+  async verifySIWE(
     did: string,
-    passwordStr: string,
+    siweSignature: Hex,
   ): Promise<boolean> {
-    return password.verifyAccountPassword(this.db, did, passwordStr)
+    return siwe.verifySIWE(this.db, did, siweSignature)
   }
 
   async verifyAppPassword(
@@ -462,35 +465,34 @@ export class AccountManager
     )
   }
 
-  async resetPassword(opts: { password: string; token: string }) {
-    const did = await emailToken.assertValidTokenAndFindDid(
-      this.db,
-      'reset_password',
-      opts.token,
-    )
-    await this.updateAccountPassword({ did, password: opts.password })
-  }
+  // async resetPassword(opts: { password: string; token: string }) {
+  //   const did = await emailToken.assertValidTokenAndFindDid(
+  //     this.db,
+  //     'reset_password',
+  //     opts.token,
+  //   )
+  //   await this.updateAccountPassword({ did, password: opts.password })
+  // }
 
-  async updateAccountPassword(opts: { did: string; password: string }) {
-    const { did } = opts
-    const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
-    await this.db.transaction(async (dbTxn) =>
-      Promise.all([
-        password.updateUserPassword(dbTxn, { did, passwordScrypt }),
-        emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-      ]),
-    )
-  }
+  // async updateAccountPassword(opts: { did: string; password: string }) {
+  //   const { did } = opts
+  //   const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
+  //   await this.db.transaction(async (dbTxn) =>
+  //     Promise.all([
+  //       password.updateUserPassword(dbTxn, { did, passwordScrypt }),
+  //       emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
+  //       auth.revokeRefreshTokensByDid(dbTxn, did),
+  //     ]),
+  //   )
+  // }
 
   // AccountStore
-
   async authenticateAccount(
-    { username: identifier, password, remember = false }: SignInCredentials,
+    { username: identifier, siweSignature, remember = false }: SignInCredentials,
     deviceId: DeviceId,
   ): Promise<AccountInfo | null> {
     try {
-      const { user, appPassword } = await this.login({ identifier, password })
+      const { user, appPassword } = await this.login({ identifier, siweSignature })
 
       if (appPassword) {
         throw new AuthRequiredError('App passwords are not allowed')
@@ -549,10 +551,10 @@ export class AccountManager
       .listRememberedQB(this.db, deviceId)
       .execute()
 
-    return rows.map((row) => ({
+      return rows.map((row) => ({
       account: deviceAccount.toAccount(row, this.serviceDid),
-      info: deviceAccount.toDeviceAccountInfo(row),
-    }))
+        info: deviceAccount.toDeviceAccountInfo(row),
+      }))
   }
 
   async removeDeviceAccount(deviceId: DeviceId, sub: string): Promise<void> {

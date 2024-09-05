@@ -12,7 +12,7 @@ export class Api {
 
   async signIn(credentials: {
     username: string
-    password: string
+    siweSignature: string
     remember?: boolean
   }): Promise<Session> {
     const response = await fetch('/oauth/authorize/sign-in', {

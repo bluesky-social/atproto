@@ -23,12 +23,13 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ input, req }) => {
       if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.createSession(
-            input.body,
-            authPassthru(req, true),
-          ),
-        )
+        //TODO: probablu need this
+        // return resultPassthru(
+        //   await ctx.entrywayAgent.com.atproto.server.createSession(
+        //     input.body,
+        //     authPassthru(req, true),
+        //   ),
+        // )
       }
 
       const { user, appPassword } = await ctx.accountManager.login(input.body)

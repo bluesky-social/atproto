@@ -13,7 +13,7 @@ export interface QueryParams {}
 export interface InputSchema {
   /** Handle or other identifier supported by the server for the authenticating user. */
   identifier: string
-  password: string
+  siweSignature: string
   authFactorToken?: string
   [k: string]: unknown
 }

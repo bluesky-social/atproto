@@ -9,8 +9,8 @@ export class OzoneServiceProfile {
 
   modUserDetails = {
     email: 'mod-authority@test.com',
+    ethAddress: '0xE6C9Ea928c0BA8fF32ab877D8F89C6cD1c47c515',
     handle: 'mod-authority.test',
-    password: 'hunter2',
   }
 
   public constructor(public thirdPartyPds: TestPds) {

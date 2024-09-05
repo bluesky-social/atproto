@@ -8,6 +8,7 @@ export type Account = Simplify<{
   // OIDC inspired
   preferred_username?: string
   email?: string
+  ethAddress?: string
   email_verified?: boolean
   picture?: string
   name?: string

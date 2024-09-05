@@ -9,18 +9,18 @@ export type AppPassDescript = {
   privileged: boolean
 }
 
-export const verifyAccountPassword = async (
-  db: AccountDb,
-  did: string,
-  password: string,
-): Promise<boolean> => {
-  const found = await db.db
-    .selectFrom('account')
-    .selectAll()
-    .where('did', '=', did)
-    .executeTakeFirst()
-  return found ? await scrypt.verify(password, found.passwordScrypt) : false
-}
+// export const verifyAccountPassword = async (
+//   db: AccountDb,
+//   did: string,
+//   password: string,
+// ): Promise<boolean> => {
+//   const found = await db.db
+//     .selectFrom('account')
+//     .selectAll()
+//     .where('did', '=', did)
+//     .executeTakeFirst()
+//   return found ? await scrypt.verify(password, found.ethAddress) : false
+// }
 
 export const verifyAppPassword = async (
   db: AccountDb,
@@ -41,20 +41,20 @@ export const verifyAppPassword = async (
   }
 }
 
-export const updateUserPassword = async (
-  db: AccountDb,
-  opts: {
-    did: string
-    passwordScrypt: string
-  },
-) => {
-  await db.executeWithRetry(
-    db.db
-      .updateTable('account')
-      .set({ passwordScrypt: opts.passwordScrypt })
-      .where('did', '=', opts.did),
-  )
-}
+// export const updateUserPassword = async (
+//   db: AccountDb,
+//   opts: {
+//     did: string
+//     passwordScrypt: string
+//   },
+// ) => {
+//   await db.executeWithRetry(
+//     db.db
+//       .updateTable('account')
+//       .set({ passwordScrypt: opts.passwordScrypt })
+//       .where('did', '=', opts.did),
+//   )
+// }
 
 export const createAppPassword = async (
   db: AccountDb,

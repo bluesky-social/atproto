@@ -71,6 +71,7 @@ export function toAccount(
     sub: row.did,
     aud: audience,
     email: row.email || undefined,
+    ethAddress: row.ethAddress || undefined,
     email_verified: row.email ? row.emailConfirmedAt != null : undefined,
     preferred_username: row.handle || undefined,
   }

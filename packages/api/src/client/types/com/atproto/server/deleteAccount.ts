@@ -11,7 +11,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   did: string
-  password: string
+  password: string //TODO replace with siweSignature
   token: string
   [k: string]: unknown
 }

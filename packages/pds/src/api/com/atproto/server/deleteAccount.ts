@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru } from '../../../proxy'
 import { AccountStatus } from '../../../../account-manager'
+import { Hex } from 'viem'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
@@ -12,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       points: 50,
     },
     handler: async ({ input, req }) => {
-      const { did, password, token } = input.body
+      const { did, signature, token } = input.body
 
       const account = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -30,9 +31,9 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      const validPass = await ctx.accountManager.verifyAccountPassword(
+      const validPass = await ctx.accountManager.verifySIWE(
         did,
-        password,
+        signature as Hex,
       )
       if (!validPass) {
         throw new AuthRequiredError('Invalid did or password')

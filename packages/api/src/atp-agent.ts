@@ -284,6 +284,7 @@ export class CredentialSession implements SessionManager {
         handle: res.data.handle,
         did: res.data.did,
         email: data.email,
+        ethAddress: data.ethAddress,
         emailConfirmed: false,
         emailAuthFactor: false,
         active: true,
@@ -307,7 +308,7 @@ export class CredentialSession implements SessionManager {
     try {
       const res = await this.server.createSession({
         identifier: opts.identifier,
-        password: opts.password,
+        siweSignature: opts.siweSignature,
         authFactorToken: opts.authFactorToken,
       })
       this.session = {

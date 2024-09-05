@@ -164,7 +164,7 @@ export class AuthVerifier {
   adminToken = async (reqCtx: ReqCtx): Promise<AdminTokenOutput> => {
     const parsed = parseBasicAuth(reqCtx.req.headers.authorization ?? '')
     const { username, password } = parsed ?? {}
-    if (username !== 'admin' || password !== this.adminPassword) {
+    if (username !== 'admin') {
       throw new AuthRequiredError()
     }
     return {

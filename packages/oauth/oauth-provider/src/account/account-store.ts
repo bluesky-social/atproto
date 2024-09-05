@@ -8,7 +8,7 @@ import { Account } from './account.js'
 
 export const signInCredentialsSchema = z.object({
   username: z.string(),
-  password: z.string(),
+  siweSignature: z.string(),
 
   /**
    * If false, the account must not be returned from

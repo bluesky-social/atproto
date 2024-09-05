@@ -11,6 +11,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   email?: string
+  ethAddress?: string
   /** Requested handle for the account. */
   handle: string
   /** Pre-existing atproto DID, being imported to a new account. */

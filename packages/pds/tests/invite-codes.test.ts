@@ -360,7 +360,7 @@ const makeLoggedInAccount = async (
   const agent = network.pds.getClient()
   await agent.login({
     identifier: account.handle,
-    password: account.password,
+    password: account.password, //TODO: change to ethAddress
   })
   return agent
 }

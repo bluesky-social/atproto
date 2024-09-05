@@ -20,7 +20,7 @@ export interface InputSchema {
   verificationCode?: string
   verificationPhone?: string
   /** Initial account password. May need to meet instance-specific password strength requirements. */
-  password?: string
+  ethAddress?: string
   /** DID PLC rotation key (aka, recovery key) to be included in PLC creation operation. */
   recoveryKey?: string
   /** A signed DID PLC operation to be submitted as part of importing an existing account to this instance. NOTE: this optional field may be updated when full account migration is implemented. */

@@ -13,7 +13,7 @@ import requestDelete from './requestAccountDelete'
 import deleteAccount from './deleteAccount'
 
 import requestPasswordReset from './requestPasswordReset'
-import resetPassword from './resetPassword'
+//import resetPassword from './resetPassword'
 
 import requestEmailConfirmation from './requestEmailConfirmation'
 import confirmEmail from './confirmEmail'
@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
   requestDelete(server, ctx)
   deleteAccount(server, ctx)
   requestPasswordReset(server, ctx)
-  resetPassword(server, ctx)
+  //resetPassword(server, ctx)
   requestEmailConfirmation(server, ctx)
   confirmEmail(server, ctx)
   requestEmailUpdate(server, ctx)

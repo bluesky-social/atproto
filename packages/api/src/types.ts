@@ -26,6 +26,7 @@ export interface AtpSessionData {
   handle: string
   did: string
   email?: string
+  ethAddress?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
   active: boolean
@@ -45,7 +46,7 @@ export type AtpPersistSessionHandler = (
  */
 export interface AtpAgentLoginOpts {
   identifier: string
-  password: string
+  siweSignature: string
   authFactorToken?: string | undefined
 }
 
