@@ -66,6 +66,7 @@ export const addAccountInfoToRepoViewDetail = (
     ...otherAccountInfo
   } = accountInfo
   return {
+    ...otherAccountInfo,
     ...repoView,
     email: includeEmail ? email : undefined,
     invitedBy,
@@ -74,7 +75,6 @@ export const addAccountInfoToRepoViewDetail = (
     invites,
     emailConfirmedAt,
     deactivatedAt,
-    ...otherAccountInfo,
   }
 }
 
