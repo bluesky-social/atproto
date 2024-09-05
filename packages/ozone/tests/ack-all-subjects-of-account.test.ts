@@ -1,31 +1,22 @@
 import {
   TestNetwork,
   TestOzone,
-  ImageRef,
   RecordRef,
   SeedClient,
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import { AtpAgent, ToolsOzoneModerationEmitEvent } from '@atproto/api'
-import { AtUri } from '@atproto/syntax'
-import { forSnapshot } from './_util'
+import { AtpAgent } from '@atproto/api'
 import {
   REASONAPPEAL,
-  REASONMISLEADING,
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
-  ModEventLabel,
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
-import { EventReverser } from '../src'
-import { ImageInvalidator } from '../src/image-invalidator'
-import { TAKEDOWN_LABEL } from '../src/mod-service'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('moderation', () => {
   let network: TestNetwork
