@@ -22,7 +22,10 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
     try {
       const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req, res })
-      if (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(nsid)) {
+      if (
+        PROTECTED_METHODS.has(nsid) ||
+        (!auth.credentials.isPrivileged && PRIVILEGED_METHODS.has(nsid))
+      ) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
       const headers = await formatHeaders(ctx, req, {
@@ -274,6 +277,27 @@ export const PRIVILEGED_METHODS = new Set([
   ids.ChatBskyConvoUnmuteConvo,
   ids.ChatBskyConvoUpdateRead,
   ids.ComAtprotoServerCreateAccount,
+])
+
+// These endpoints are related to account management and must be used directly,
+// not proxied or service-authed. Service auth may be utilized between PDS and
+// entryway for these methods.
+export const PROTECTED_METHODS = new Set([
+  ids.ComAtprotoAdminSendEmail,
+  ids.ComAtprotoIdentityRequestPlcOperationSignature,
+  ids.ComAtprotoIdentitySignPlcOperation,
+  ids.ComAtprotoIdentityUpdateHandle,
+  ids.ComAtprotoServerActivateAccount,
+  ids.ComAtprotoServerConfirmEmail,
+  ids.ComAtprotoServerCreateAppPassword,
+  ids.ComAtprotoServerDeactivateAccount,
+  ids.ComAtprotoServerGetAccountInviteCodes,
+  ids.ComAtprotoServerListAppPasswords,
+  ids.ComAtprotoServerRequestAccountDelete,
+  ids.ComAtprotoServerRequestEmailConfirmation,
+  ids.ComAtprotoServerRequestEmailUpdate,
+  ids.ComAtprotoServerRevokeAppPassword,
+  ids.ComAtprotoServerUpdateEmail,
 ])
 
 const defaultService = (

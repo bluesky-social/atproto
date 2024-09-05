@@ -1,3 +1,4 @@
+import * as util from 'node:util'
 import { BlobRef } from '@atproto/lexicon'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
@@ -90,5 +91,28 @@ export const parsePostgate = ({
 type ParsedPostgate = {
   embeddingRules: {
     canEmbed: boolean
+  }
+}
+
+export class VideoUriBuilder {
+  constructor(
+    private opts: {
+      playlistUrlPattern: string // e.g. https://hostname/vid/%s/%s/playlist.m3u8
+      thumbnailUrlPattern: string // e.g. https://hostname/vid/%s/%s/thumbnail.jpg
+    },
+  ) {}
+  playlist({ did, cid }: { did: string; cid: string }) {
+    return util.format(
+      this.opts.playlistUrlPattern,
+      encodeURIComponent(did),
+      encodeURIComponent(cid),
+    )
+  }
+  thumbnail({ did, cid }: { did: string; cid: string }) {
+    return util.format(
+      this.opts.thumbnailUrlPattern,
+      encodeURIComponent(did),
+      encodeURIComponent(cid),
+    )
   }
 }

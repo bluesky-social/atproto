@@ -12,7 +12,6 @@ export const oauthTokenResponseSchema = z
     access_token: z.string(),
     token_type: oauthTokenTypeSchema,
     issuer: z.string().url().optional(),
-    sub: z.string().optional(),
     scope: z.string().optional(),
     id_token: signedJwtSchema.optional(),
     refresh_token: z.string().optional(),

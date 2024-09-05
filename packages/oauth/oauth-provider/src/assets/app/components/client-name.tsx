@@ -1,30 +1,38 @@
-import { OAuthClientMetadata } from '@atproto/oauth-types'
+import {
+  isOAuthClientIdDiscoverable,
+  isOAuthClientIdLoopback,
+  OAuthClientMetadata,
+} from '@atproto/oauth-types'
 import { HTMLAttributes } from 'react'
 
-import { ClientIdentifier } from './client-identifier'
+import { UrlViewer } from './url-viewer'
 
 export type ClientNameProps = {
   clientId: string
   clientMetadata: OAuthClientMetadata
-  as?: keyof JSX.IntrinsicElements
-}
+} & HTMLAttributes<Element>
 
 export function ClientName({
   clientId,
   clientMetadata,
-  as: As = 'span',
   ...attrs
-}: ClientNameProps & HTMLAttributes<Element>) {
-  if (clientMetadata.client_name) {
-    return <As {...attrs}>{clientMetadata.client_name}</As>
+}: ClientNameProps) {
+  if (isOAuthClientIdLoopback(clientId)) {
+    return <span {...attrs}>An application on your device</span>
   }
 
-  return (
-    <ClientIdentifier
-      clientId={clientId}
-      clientMetadata={clientMetadata}
-      as={As}
-      {...attrs}
-    />
-  )
+  if (isOAuthClientIdDiscoverable(clientId)) {
+    if (clientMetadata.client_name) {
+      return (
+        <span {...attrs}>
+          {clientMetadata.client_name} (
+          <UrlViewer url={clientId} path />)
+        </span>
+      )
+    }
+
+    return <UrlViewer {...attrs} url={clientId} path />
+  }
+
+  return <span {...attrs}>{clientMetadata.client_name || clientId}</span>
 }
