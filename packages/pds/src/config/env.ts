@@ -122,6 +122,9 @@ export const readEnv = (): ServerEnvironment => {
 
     // Repo revision cache
     repoRevCacheMaxAge: envInt('PDS_REPO_REV_CACHE_MAX_AGE'), // Seconds (use 0 to disable)
+
+    // Preferences cache
+    preferencesCacheMaxTTL: envInt('PDS_REPO_REV_CACHE_MAX_TTL'), // Seconds (use 0 to disable)
   }
 }
 
@@ -241,4 +244,7 @@ export type ServerEnvironment = {
 
   // Repo revision cache
   repoRevCacheMaxAge?: number
+
+  // Preferences cache
+  preferencesCacheMaxTTL?: number
 }

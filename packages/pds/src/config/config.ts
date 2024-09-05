@@ -242,6 +242,13 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         }
       : null
 
+  const preferencesCacheCfg: ServerConfig['preferencesCache'] =
+    env.preferencesCacheMaxTTL != null && env.preferencesCacheMaxTTL > 0
+      ? {
+          maxAge: env.preferencesCacheMaxTTL * SECOND,
+        }
+      : null
+
   const fetchCfg: ServerConfig['fetch'] = {
     disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
   }
@@ -309,6 +316,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     repoRevCache: repoRevCacheCfg,
+    preferencesCache: preferencesCacheCfg,
     fetch: fetchCfg,
     oauth: oauthCfg,
   }
@@ -332,6 +340,7 @@ export type ServerConfig = {
   rateLimits: RateLimitsConfig
   crawlers: string[]
   repoRevCache: RepoRevCacheConfig | null
+  preferencesCache: PreferencesCacheConfig | null
   fetch: FetchConfig
   oauth: OAuthConfig
 }
@@ -401,6 +410,10 @@ export type EntrywayConfig = {
 }
 
 export type RepoRevCacheConfig = {
+  maxAge: number
+}
+
+export type PreferencesCacheConfig = {
   maxAge: number
 }
 
