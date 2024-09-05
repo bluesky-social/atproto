@@ -548,6 +548,15 @@ export class SeedClient<
     return result.data
   }
 
+  pdsAgent(did: string) {
+    const agent = this.network.pds.getClient()
+    agent.sessionManager.session = {
+      ...agent.sessionManager.session!,
+      ...this.accounts[did],
+    }
+    return agent
+  }
+
   getHeaders(did: string) {
     return SeedClient.getHeaders(this.accounts[did].accessJwt)
   }
