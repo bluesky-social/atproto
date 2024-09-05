@@ -1254,9 +1254,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data, for all operations.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               writes: {
                 type: 'array',
@@ -1275,6 +1274,31 @@ export const schemaDict = {
                 description:
                   'If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations.',
                 format: 'cid',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              results: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.repo.applyWrites#createResult',
+                    'lex:com.atproto.repo.applyWrites#updateResult',
+                    'lex:com.atproto.repo.applyWrites#deleteResult',
+                  ],
+                  closed: true,
+                },
               },
             },
           },
@@ -1336,6 +1360,47 @@ export const schemaDict = {
           },
         },
       },
+      createResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      updateResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      deleteResult: {
+        type: 'object',
+        required: [],
+        properties: {},
+      },
     },
   },
   ComAtprotoRepoCreateRecord: {
@@ -1370,9 +1435,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               record: {
                 type: 'unknown',
@@ -1401,6 +1465,14 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
               },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
+              },
             },
           },
         },
@@ -1411,6 +1483,25 @@ export const schemaDict = {
               "Indicates that 'swapCommit' didn't match current repo commit.",
           },
         ],
+      },
+    },
+  },
+  ComAtprotoRepoDefs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.defs',
+    defs: {
+      commitMeta: {
+        type: 'object',
+        required: ['cid', 'rev'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          rev: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -1454,6 +1545,18 @@ export const schemaDict = {
                 format: 'cid',
                 description:
                   'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
               },
             },
           },
@@ -1778,9 +1881,8 @@ export const schemaDict = {
               },
               validate: {
                 type: 'boolean',
-                default: true,
                 description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data.",
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
               },
               record: {
                 type: 'unknown',
@@ -1814,6 +1916,14 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
               },
             },
           },
@@ -10366,6 +10476,7 @@ export const ids = {
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
+  ComAtprotoRepoDefs: 'com.atproto.repo.defs',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',

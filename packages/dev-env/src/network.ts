@@ -117,7 +117,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     mockNetworkUtilities(pds, bsky)
     await pds.processAll()
-    await bsky.sub.background.processAll()
+    await bsky.sub.processAll()
     await thirdPartyPds.close()
 
     let introspect: IntrospectServer | undefined = undefined
@@ -140,9 +140,11 @@ export class TestNetwork extends TestNetworkNoAppView {
     const lastSeq = await this.pds.ctx.sequencer.curr()
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      if (sub.seenSeq !== null && sub.seenSeq >= lastSeq) {
-        // has seen last seq, just need to wait for it to finish processing
-        await sub.repoQueue.main.onIdle()
+      await sub.processAll()
+      const runnerCursor = await sub.runner.getCursor()
+      // if subscription claims to be done, ensure we are at the most recent cursor from PDS, else wait to process again
+      // (the subscription may claim to be finished before the PDS has even emitted it's event)
+      if (runnerCursor && runnerCursor >= lastSeq) {
         return
       }
       await wait(5)
@@ -154,7 +156,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.pds.processAll()
     await this.ozone.processAll()
     await this.processFullSubscription(timeout)
-    await this.bsky.sub.background.processAll()
   }
 
   async serviceHeaders(did: string, lxm: string, aud?: string) {

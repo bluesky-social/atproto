@@ -1,6 +1,6 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
-import { TID } from '@atproto/common'
+import { cidForCbor, TID } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
@@ -169,10 +169,10 @@ describe('repo sync', () => {
     const claim = {
       collection,
       rkey,
-      record: repoData[collection][rkey],
+      cid: await cidForCbor(repoData[collection][rkey]),
     }
     expect(records.length).toBe(1)
-    expect(records[0].record).toEqual(claim.record)
+    expect(await cidForCbor(records[0].record)).toEqual(claim.cid)
     const result = await repo.verifyProofs(
       new Uint8Array(car.data),
       [claim],
@@ -194,7 +194,7 @@ describe('repo sync', () => {
     const claim = {
       collection,
       rkey,
-      record: null,
+      cid: null,
     }
     const result = await repo.verifyProofs(
       new Uint8Array(car.data),
