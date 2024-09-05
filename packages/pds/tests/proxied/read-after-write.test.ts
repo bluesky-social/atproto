@@ -273,73 +273,74 @@ describe('proxy read after write', () => {
   })
 
   it('does not open a database connection when reading cached profile', async () => {
-    const { actorStore } = network.pds.ctx
-    const openDbOrig = actorStore.openDb
-    const openDbMock = jest.fn((...args: Parameters<typeof openDbOrig>) =>
-      openDbOrig.call(actorStore, ...args),
-    )
-    actorStore.openDb = openDbMock
+    await usingNewNetwork(async (network, sc) => {
+      const alice = sc.pdsAgent(sc.dids.alice)
 
-    const agent = network.pds.getClient()
-
-    try {
       // Initialize the cache
-      await agent.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
-        {
-          headers: { ...sc.getHeaders(sc.dids.alice) },
-        },
-      )
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
 
+      // Mock the openDb method to check if it's called
+      const openDbMock = mockPdsActorStoreOpenDb(network)
+
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
+
+      expect(openDbMock).not.toHaveBeenCalled()
+    })
+  })
+
+  it('avoids read after write after write was processed by appview', async () => {
+    await usingNewNetwork(async (network, sc) => {
+      const openDbMock = mockPdsActorStoreOpenDb(network)
+
+      await sc.updateProfile(sc.dids.alice, { displayName: 'blah' })
+
+      // Writing a new profile requires opening a database connection
       expect(openDbMock).toHaveBeenCalled()
       openDbMock.mockClear()
 
-      await agent.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
-        {
-          headers: { ...sc.getHeaders(sc.dids.alice) },
-        },
-      )
-      await agent.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
-        {
-          headers: { ...sc.getHeaders(sc.dids.alice) },
-        },
-      )
+      // Wait for the app-view to process the update
+      await network.bsky.sub.background.processAll()
+
+      const alice = sc.pdsAgent(sc.dids.alice)
+
+      await alice.app.bsky.actor.getProfile({ actor: alice.assertDid })
 
       expect(openDbMock).not.toHaveBeenCalled()
-    } finally {
-      // @ts-expect-error: openDb is defined on the prototype
-      delete actorStore.openDb
-    }
-  })
-
-  it('performs read-after write if the server respond with non-matching rev', async () => {
-    const { actorStore } = network.pds.ctx
-    const openDbOrig = actorStore.openDb
-    const openDbMock = jest.fn((...args: Parameters<typeof openDbOrig>) =>
-      openDbOrig.call(actorStore, ...args),
-    )
-    actorStore.openDb = openDbMock
-
-    const agent = network.pds.getClient()
-
-    try {
-      await sc.updateProfile(alice, { displayName: 'blah' })
-
-      // Note that this test relies on the fact that the app-view did not
-      // process the update at this point.
-      await agent.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
-        {
-          headers: { ...sc.getHeaders(sc.dids.alice) },
-        },
-      )
-
-      expect(openDbMock).toHaveBeenCalled()
-    } finally {
-      // @ts-expect-error: openDb is defined on the prototype
-      delete actorStore.openDb
-    }
+    })
   })
 })
+
+function mockPdsActorStoreOpenDb(network: TestNetwork) {
+  const { actorStore } = network.pds.ctx
+  const openDbOrig = actorStore.openDb
+  const openDbMock = jest.fn((...args: Parameters<typeof openDbOrig>) => {
+    return openDbOrig.call(actorStore, ...args)
+  })
+  actorStore.openDb = openDbMock
+
+  return openDbMock
+}
+
+async function usingNewNetwork<T>(
+  fn: (network: TestNetwork, sc: SeedClient) => T | PromiseLike<T>,
+): Promise<T> {
+  const network = await TestNetwork.create({
+    dbPostgresSchema: 'proxy_read_after_write',
+    pds: {
+      redisScratchAddress: process.env.REDIS_HOST,
+      redisScratchPassword: process.env.REDIS_PASSWORD,
+      repoRevCacheMaxAge: 3600,
+    },
+  })
+
+  try {
+    const sc = network.getSeedClient()
+    await basicSeed(sc, { addModLabels: network.bsky })
+    await network.processAll()
+
+    return await fn(network, sc)
+  } finally {
+    await network.close()
+  }
+}

@@ -59,7 +59,7 @@ export const readAfterWriteInternal = async <T>(
     // from this requester can skip the munge step.
     if (repoRev == null && ctx.repoRevCache) {
       const { rev } = await store.repo.storage.getRootDetailed()
-      ctx.repoRevCache.set(requester, rev)
+      await ctx.repoRevCache.set(requester, rev)
     }
 
     const local = await getRecordsSinceRev(store, rev)
