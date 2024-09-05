@@ -6,15 +6,15 @@ import { redisLogger } from '../logger'
 export class RedisSimpleStore implements SimpleStore<string, string> {
   /**
    * @param redis - Redis client
-   * @param maxAge - Maximum age of a cached revision in milliseconds
+   * @param maxTTL - Maximum age of a cached revision in milliseconds
    */
   constructor(
     protected readonly redis: Redis,
-    protected readonly maxAge: number,
+    protected readonly maxTTL: number,
     protected readonly storeName: string,
   ) {
-    // Redis expects the expiration time in seconds
-    if (!Number.isFinite(this.maxAge) || this.maxAge <= 0) {
+    // Redis expects the expiration time in milliseconds
+    if (!Number.isFinite(this.maxTTL) || this.maxTTL <= 0) {
       throw new TypeError('maxAge must be a positive number')
     }
   }
@@ -35,7 +35,7 @@ export class RedisSimpleStore implements SimpleStore<string, string> {
 
   async set(did: string, value: string): Promise<void> {
     try {
-      await this.redis.set(this.key(did), value, 'PX', this.maxAge)
+      await this.redis.set(this.key(did), value, 'PX', this.maxTTL)
     } catch (err) {
       redisLogger.error({ err, did, value }, `error setting ${this.storeName}`)
     }
