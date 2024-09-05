@@ -9,6 +9,7 @@ import {
   OAuthAuthorizationServerMetadata,
   OAuthClientIdentification,
   OAuthClientMetadata,
+  OAuthParResponse,
   OAuthTokenResponse,
   OAuthTokenType,
   atprotoLoopbackClientMetadata,
@@ -407,7 +408,7 @@ export class OAuthProvider extends OAuthVerifier {
   protected async pushedAuthorizationRequest(
     input: PushedAuthorizationRequest,
     dpopJkt: null | string,
-  ) {
+  ): Promise<OAuthParResponse> {
     try {
       const client = await this.clientManager.getClient(input.client_id)
       const clientAuth = await this.authenticateClient(client, input)
