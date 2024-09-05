@@ -3415,12 +3415,11 @@ export class ToolsOzoneCommunicationNS {
     data?: ToolsOzoneCommunicationCreateTemplate.InputSchema,
     opts?: ToolsOzoneCommunicationCreateTemplate.CallOptions,
   ): Promise<ToolsOzoneCommunicationCreateTemplate.Response> {
-    return this._client.call(
-      'tools.ozone.communication.createTemplate',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.communication.createTemplate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneCommunicationCreateTemplate.toKnownErr(e)
+      })
   }
 
   deleteTemplate(
@@ -3451,12 +3450,11 @@ export class ToolsOzoneCommunicationNS {
     data?: ToolsOzoneCommunicationUpdateTemplate.InputSchema,
     opts?: ToolsOzoneCommunicationUpdateTemplate.CallOptions,
   ): Promise<ToolsOzoneCommunicationUpdateTemplate.Response> {
-    return this._client.call(
-      'tools.ozone.communication.updateTemplate',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.communication.updateTemplate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneCommunicationUpdateTemplate.toKnownErr(e)
+      })
   }
 }
 

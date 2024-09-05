@@ -7,6 +7,7 @@ export interface CommunicationTemplate {
   name: string
   contentMarkdown: string
   subject: string | null
+  lang: string | null
   disabled: Generated<boolean>
   createdAt: Date
   updatedAt: Date

@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.5.0
+
+### Minor Changes
+
+- [#2752](https://github.com/bluesky-social/atproto/pull/2752) [`b15dec2f4`](https://github.com/bluesky-social/atproto/commit/b15dec2f4feb25ac91b169c83ccff1adbb5a9442) Thanks [@dholms](https://github.com/dholms)! - Updated verifyProofs consumer method to verify Cid claims rather than record claims
+
 ## 0.4.3
 
 ### Patch Changes

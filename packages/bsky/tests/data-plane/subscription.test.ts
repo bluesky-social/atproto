@@ -1,11 +1,11 @@
 import { AtpAgent } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
-import { DatabaseSchemaType } from '../../../src/data-plane/server/db/database-schema'
+import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { PreparedWrite, sequencer } from '@atproto/pds'
 import { CommitData } from '@atproto/repo'
-import { ids } from '../../../src/lexicon/lexicons'
-import { forSnapshot } from '../../_util'
+import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -60,12 +60,7 @@ describe('sync', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    await network.bsky.sub.destroy()
-    // Hard reset of state
-    network.bsky.sub.cursor = 0
-    network.bsky.sub.seenSeq = null
-    // Boot streams back up
-    network.bsky.sub.run()
+    await network.bsky.sub.restart()
     await network.processAll()
 
     // Permissive of indexedAt times changing
