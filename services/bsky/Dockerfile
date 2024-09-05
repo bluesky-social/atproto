@@ -23,7 +23,7 @@ COPY ./services/bsky ./services/bsky
 # install all deps
 RUN pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
-RUN pnpm build > /dev/null
+RUN pnpm build
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
