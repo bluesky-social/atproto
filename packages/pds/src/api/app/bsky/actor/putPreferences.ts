@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError('Preference is missing a $type')
         }
       }
+
       await ctx.actorStore.transact(requester, async (actorTxn) => {
         await actorTxn.pref.putPreferences(
           checkedPreferences,
@@ -25,6 +26,11 @@ export default function (server: Server, ctx: AppContext) {
           auth.credentials.scope,
         )
       })
+
+      await ctx.preferencesCache?.set(
+        requester,
+        JSON.stringify(checkedPreferences),
+      )
     },
   })
 }

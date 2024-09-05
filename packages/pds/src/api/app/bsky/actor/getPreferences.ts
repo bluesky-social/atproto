@@ -7,6 +7,16 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessStandard(),
     handler: async ({ auth }) => {
       const requester = auth.credentials.did
+
+      const cachedPrefs = await ctx.preferencesCache?.get(requester)
+      if (cachedPrefs) {
+        const preferences = JSON.parse(cachedPrefs)
+        return {
+          encoding: 'application/json',
+          body: { preferences },
+        }
+      }
+
       const preferences = await ctx.actorStore.read(requester, (store) =>
         store.pref.getPreferences('app.bsky', auth.credentials.scope),
       )

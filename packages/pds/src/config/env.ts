@@ -120,8 +120,9 @@ export const readEnv = (): ServerEnvironment => {
     // fetch
     fetchDisableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
 
-    // Repo revision cache
+    // caching
     repoRevCacheMaxTTL: envInt('PDS_REPO_REV_CACHE_MAX_TTL'), // milliseconds (use 0 to disable)
+    preferencesCacheMaxTTL: envInt('PDS_REPO_REV_CACHE_MAX_TTL'), // milliseconds (use 0 to disable)
   }
 }
 
@@ -239,6 +240,7 @@ export type ServerEnvironment = {
   // fetch
   fetchDisableSsrfProtection?: boolean
 
-  // Repo revision cache
+  // Caching
   repoRevCacheMaxTTL?: number
+  preferencesCacheMaxTTL?: number
 }

@@ -40,7 +40,7 @@ import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
-import { RepoRevCacheRedis } from './account-manager/repo-rev-cache-redis'
+import { RedisSimpleStore } from './caching/redis-simple-store'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -56,6 +56,7 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
   repoRevCache?: SimpleStore<string, string>
+  preferencesCache?: SimpleStore<string, string>
   ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   appViewAgent?: AtpAgent
@@ -83,6 +84,7 @@ export class AppContext {
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
   public repoRevCache?: SimpleStore<string, string>
+  public preferencesCache?: SimpleStore<string, string>
   public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public appViewAgent: AtpAgent | undefined
@@ -109,6 +111,7 @@ export class AppContext {
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
     this.repoRevCache = opts.repoRevCache
+    this.preferencesCache = opts.preferencesCache
     this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
@@ -231,8 +234,22 @@ export class AppContext {
       : null
 
     const repoRevCache =
-      redisScratch && cfg.repoRevCache
-        ? new RepoRevCacheRedis(redisScratch, cfg.repoRevCache.maxTTL)
+      redisScratch && cfg.caching.repoRevMaxTTL
+        ? new RedisSimpleStore(
+            redisScratch,
+            cfg.caching.repoRevMaxTTL,
+            'latestRev',
+          )
+        : // Note: Single instance PDS that have no redis could use a memory cache
+          undefined
+
+    const preferencesCache =
+      redisScratch && cfg.caching.preferencesMaxTTL
+        ? new RedisSimpleStore(
+            redisScratch,
+            cfg.caching.preferencesMaxTTL,
+            'preferences',
+          )
         : // Note: Single instance PDS that have no redis could use a memory cache
           undefined
 
@@ -340,6 +357,7 @@ export class AppContext {
       backgroundQueue,
       redisScratch,
       repoRevCache,
+      preferencesCache,
       ratelimitCreator,
       crawlers,
       appViewAgent,
