@@ -10,6 +10,7 @@ import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
+  forAccount?: string
   subject?: string
   /** Search subjects by keyword from comments */
   comment?: string

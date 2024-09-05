@@ -8,6 +8,7 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "forAccount": { "type": "string", "format": "did" },
           "subject": { "type": "string", "format": "uri" },
           "comment": {
             "type": "string",

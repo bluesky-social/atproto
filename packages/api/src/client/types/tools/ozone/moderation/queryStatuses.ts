@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as ToolsOzoneModerationDefs from './defs'
 
 export interface QueryParams {
+  forAccount?: string
   subject?: string
   /** Search subjects by keyword from comments */
   comment?: string
