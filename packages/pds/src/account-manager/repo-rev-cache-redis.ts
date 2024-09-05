@@ -8,15 +8,15 @@ const key = (did: string) => `latestRev:${did}`
 export class RepoRevCacheRedis implements SimpleStore<string, string> {
   /**
    * @param redis - Redis client
-   * @param maxAge - Maximum age of a cached revision in milliseconds
+   * @param maxTTL - Maximum age of a cached revision in milliseconds
    */
   constructor(
     protected readonly redis: Redis,
-    protected readonly px: number,
+    protected readonly maxTTL: number,
   ) {
-    // Redis expects the expiration time in seconds
-    if (!Number.isFinite(this.px) || this.px <= 0) {
-      throw new TypeError('maxAge must be a positive number')
+    // Redis expects the expiration time in milliseconds
+    if (!Number.isFinite(this.maxTTL) || this.maxTTL <= 0) {
+      throw new TypeError('maxTTL must be a positive number')
     }
   }
 
@@ -32,7 +32,7 @@ export class RepoRevCacheRedis implements SimpleStore<string, string> {
 
   async set(did: string, rev: string): Promise<void> {
     try {
-      await this.redis.set(key(did), rev, 'PX', this.px)
+      await this.redis.set(key(did), rev, 'PX', this.maxTTL)
     } catch (err) {
       redisLogger.error({ err, did, rev }, 'error setting latestRev')
     }

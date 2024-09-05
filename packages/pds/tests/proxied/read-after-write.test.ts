@@ -22,7 +22,7 @@ describe('proxy read after write', () => {
       pds: {
         redisScratchAddress: process.env.REDIS_HOST,
         redisScratchPassword: process.env.REDIS_PASSWORD,
-        repoRevCacheMaxAge: 3600,
+        repoRevCacheMaxTTL: 60000,
       },
     })
     agent = network.pds.getClient()
@@ -330,7 +330,7 @@ async function usingNewNetwork<T>(
     pds: {
       redisScratchAddress: process.env.REDIS_HOST,
       redisScratchPassword: process.env.REDIS_PASSWORD,
-      repoRevCacheMaxAge: 3600,
+      repoRevCacheMaxTTL: 60000,
     },
   })
 

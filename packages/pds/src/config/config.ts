@@ -236,10 +236,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
   const repoRevCacheCfg: ServerConfig['repoRevCache'] =
-    env.repoRevCacheMaxAge != null && env.repoRevCacheMaxAge > 0
-      ? {
-          maxAge: env.repoRevCacheMaxAge * SECOND,
-        }
+    env.repoRevCacheMaxTTL != null && env.repoRevCacheMaxTTL > 0
+      ? { maxTTL: env.repoRevCacheMaxTTL }
       : null
 
   const fetchCfg: ServerConfig['fetch'] = {
@@ -401,7 +399,7 @@ export type EntrywayConfig = {
 }
 
 export type RepoRevCacheConfig = {
-  maxAge: number
+  maxTTL: number
 }
 
 export type FetchConfig = {

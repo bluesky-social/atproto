@@ -232,7 +232,7 @@ export class AppContext {
 
     const repoRevCache =
       redisScratch && cfg.repoRevCache
-        ? new RepoRevCacheRedis(redisScratch, cfg.repoRevCache.maxAge)
+        ? new RepoRevCacheRedis(redisScratch, cfg.repoRevCache.maxTTL)
         : // Note: Single instance PDS that have no redis could use a memory cache
           undefined
 
