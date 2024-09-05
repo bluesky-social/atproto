@@ -47,14 +47,16 @@ export class MemoryRunner implements EventRunner {
   async trackEvent(did: string, seq: number, handler: () => Promise<void>) {
     if (this.mainQueue.isPaused) return
     const item = this.consecutive.push(seq)
-    await this.addTask(did, handler)
-    const latest = item.complete().at(-1)
-    if (latest !== undefined) {
-      this.cursor = latest
-      if (this.opts.setCursor) {
-        await this.opts.setCursor(this.cursor)
+    await this.addTask(did, async () => {
+      await handler()
+      const latest = item.complete().at(-1)
+      if (latest !== undefined) {
+        this.cursor = latest
+        if (this.opts.setCursor) {
+          await this.opts.setCursor(this.cursor)
+        }
       }
-    }
+    })
   }
 
   async processAll() {

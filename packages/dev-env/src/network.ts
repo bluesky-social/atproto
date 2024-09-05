@@ -142,8 +142,9 @@ export class TestNetwork extends TestNetworkNoAppView {
     while (Date.now() - start < timeout) {
       await sub.processAll()
       const runnerCursor = await sub.runner.getCursor()
+      // if subscription claims to be done, ensure we are at the most recent cursor from PDS, else wait to process again
+      // (the subscription may claim to be finished before the PDS has even emitted it's event)
       if (runnerCursor && runnerCursor >= lastSeq) {
-        // has seen last seq, just need to wait for it to finish processing
         return
       }
       await wait(5)
@@ -155,7 +156,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.pds.processAll()
     await this.ozone.processAll()
     await this.processFullSubscription(timeout)
-    await this.bsky.sub.background.processAll()
   }
 
   async serviceHeaders(did: string, lxm: string, aud?: string) {

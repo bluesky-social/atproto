@@ -68,6 +68,7 @@ const createFirehose = (opts: {
     runner,
     service,
     unauthenticatedHandles: true, // indexing service handles these
+    unauthenticatedCommits: true, // @TODO there seems to be a very rare issue where the authenticator thinks a block is missing in deletion ops
     onError: (err) => log.error({ err }, 'error in subscription'),
     handleEvent: async (evt) => {
       if (evt.event === 'identity') {
