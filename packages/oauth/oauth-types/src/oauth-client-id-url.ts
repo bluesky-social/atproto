@@ -1,11 +1,7 @@
+import { extractUrlPath, isHostnameIP } from './util.js'
+
 export function parseOAuthClientIdUrl(clientId: string): URL {
   const url = new URL(clientId)
-
-  // assert(hasHttpsScheme(clientId))
-  // assert(hasPathComponent(clientId))
-  // assert(noPathTraversal(clientId))
-  // assert(noFragment(clientId))
-  // assert(noUsernamePassword(clientId))
 
   if (url.hash) {
     throw new TypeError('ClientID must not contain a fragment')
@@ -21,7 +17,7 @@ export function parseOAuthClientIdUrl(clientId: string): URL {
 
   if (url.pathname === '/') {
     throw new TypeError(
-      'ClientID must contain a path (e.g. "/client-metadata.json")',
+      'ClientID must contain a path component (e.g. "/client-metadata.json")',
     )
   }
 
@@ -29,14 +25,14 @@ export function parseOAuthClientIdUrl(clientId: string): URL {
     throw new TypeError('ClientID path must not end with a trailing slash')
   }
 
-  // URL constructor will check (and normalize) path traversal. The following
-  // check will thus ensure that no path traversal is present in the url.
-  // However, the URL constructor will also normalize other parts of the URL
-  // (lowercasing the hostname, removing the default port, etc.), so the
-  // following check is stricter that the rules in the Atproto spec. Relying on
-  // the URL constructor is however more robust and less error-prone than trying
-  // to implement the same checks manually.
-  if (url.href !== clientId) {
+  if (isHostnameIP(url.hostname)) {
+    throw new TypeError('ClientID hostname must not be an IP address')
+  }
+
+  // URL constructor normalizes the URL, so we extract the path manually to
+  // avoid normalization, then compare it to the normalized path to ensure
+  // that the URL does not contain path traversal or other unexpected characters
+  if (extractUrlPath(clientId) !== url.pathname) {
     throw new TypeError(
       `ClientID must be in canonical form ("${url.href}", got "${clientId}")`,
     )
