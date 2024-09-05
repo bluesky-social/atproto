@@ -1,0 +1,37 @@
+{
+  "name": "@atproto/sync",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "atproto sync library",
+  "keywords": [
+    "atproto",
+    "sync",
+    "firehose",
+    "relay"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/sync"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "../dev-infra/with-test-redis-and-db.sh jest"
+  },
+  "dependencies": {
+    "@atproto/common": "workspace:^",
+    "@atproto/identity": "workspace:^",
+    "@atproto/lexicon": "workspace:^",
+    "@atproto/repo": "workspace:^",
+    "@atproto/syntax": "workspace:^",
+    "@atproto/xrpc-server": "workspace:^",
+    "multiformats": "^9.9.0",
+    "p-queue": "^6.6.2"
+  },
+  "devDependencies": {
+    "jest": "^28.1.2"
+  }
+}

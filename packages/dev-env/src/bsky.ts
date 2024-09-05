@@ -3,7 +3,6 @@ import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { BackgroundQueue } from '@atproto/bsky'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const'
@@ -92,11 +91,11 @@ export class TestBsky {
       service: cfg.repoProvider,
       db,
       idResolver: dataplane.idResolver,
-      background: new BackgroundQueue(db),
     })
 
     await server.start()
-    sub.run()
+
+    sub.start()
 
     return new TestBsky(url, port, db, server, dataplane, bsync, sub)
   }
