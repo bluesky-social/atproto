@@ -25,6 +25,7 @@ const {
   envToSecrets,
   readEnv,
   httpLogger,
+  Database,
 } = require('@atproto/ozone')
 
 const main = async () => {
@@ -61,6 +62,16 @@ const main = async () => {
     imgInvalidators.length > 1
       ? new MultiImageInvalidator(imgInvalidators)
       : imgInvalidators[0]
+
+  const migrate = process.env.OZONE_DB_MIGRATE === '1'
+  if (migrate) {
+    const db = new Database({
+      url: cfg.db.postgresUrl,
+      schema: cfg.db.postgresSchema,
+    })
+    await db.migrateToLatestOrThrow()
+    await db.close()
+  }
 
   const ozone = await OzoneService.create(cfg, secrets, { imgInvalidator })
 
