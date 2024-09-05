@@ -3,10 +3,14 @@ import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
 import DataDiff from '../data-diff'
 import ReadableRepo from '../readable-repo'
 import * as util from '../util'
-import { RecordClaim, VerifiedDiff, VerifiedRepo } from '../types'
+import {
+  RecordClaim,
+  RecordCidClaim,
+  VerifiedDiff,
+  VerifiedRepo,
+} from '../types'
 import { def } from '../types'
 import { MST } from '../mst'
-import { cidForCbor } from '@atproto/common'
 import BlockMap from '../block-map'
 
 export const verifyRepoCar = async (
@@ -118,10 +122,10 @@ const verifyRepoRoot = async (
 
 export const verifyProofs = async (
   proofs: Uint8Array,
-  claims: RecordClaim[],
+  claims: RecordCidClaim[],
   did: string,
   didKey: string,
-): Promise<{ verified: RecordClaim[]; unverified: RecordClaim[] }> => {
+): Promise<{ verified: RecordCidClaim[]; unverified: RecordCidClaim[] }> => {
   const car = await util.readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
@@ -135,22 +139,21 @@ export const verifyProofs = async (
     )
   }
   const mst = MST.load(blockstore, commit.data)
-  const verified: RecordClaim[] = []
-  const unverified: RecordClaim[] = []
+  const verified: RecordCidClaim[] = []
+  const unverified: RecordCidClaim[] = []
   for (const claim of claims) {
     const found = await mst.get(
       util.formatDataKey(claim.collection, claim.rkey),
     )
     const record = found ? await blockstore.readObj(found, def.map) : null
-    if (claim.record === null) {
+    if (claim.cid === null) {
       if (record === null) {
         verified.push(claim)
       } else {
         unverified.push(claim)
       }
     } else {
-      const expected = await cidForCbor(claim.record)
-      if (expected.equals(found)) {
+      if (claim.cid.equals(found)) {
         verified.push(claim)
       } else {
         unverified.push(claim)

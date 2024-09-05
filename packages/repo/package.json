@@ -1,6 +1,6 @@
 {
   "name": "@atproto/repo",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "license": "MIT",
   "description": "atproto repo and MST implementation",
   "keywords": [

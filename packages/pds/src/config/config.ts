@@ -235,19 +235,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
-  const repoRevCacheCfg: ServerConfig['repoRevCache'] =
-    env.repoRevCacheMaxAge != null && env.repoRevCacheMaxAge > 0
-      ? {
-          maxAge: env.repoRevCacheMaxAge * SECOND,
-        }
-      : null
-
-  const preferencesCacheCfg: ServerConfig['preferencesCache'] =
-    env.preferencesCacheMaxTTL != null && env.preferencesCacheMaxTTL > 0
-      ? {
-          maxAge: env.preferencesCacheMaxTTL * SECOND,
-        }
-      : null
+  const cachingCfg: ServerConfig['caching'] = {
+    repoRevMaxTTL: env.repoRevCacheMaxTTL,
+    preferencesMaxTTL: env.preferencesCacheMaxTTL,
+  }
 
   const fetchCfg: ServerConfig['fetch'] = {
     disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
@@ -315,8 +306,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
-    repoRevCache: repoRevCacheCfg,
-    preferencesCache: preferencesCacheCfg,
+    caching: cachingCfg,
     fetch: fetchCfg,
     oauth: oauthCfg,
   }
@@ -339,8 +329,7 @@ export type ServerConfig = {
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
-  repoRevCache: RepoRevCacheConfig | null
-  preferencesCache: PreferencesCacheConfig | null
+  caching: CachingConfig
   fetch: FetchConfig
   oauth: OAuthConfig
 }
@@ -409,12 +398,9 @@ export type EntrywayConfig = {
   plcRotationKey: string
 }
 
-export type RepoRevCacheConfig = {
-  maxAge: number
-}
-
-export type PreferencesCacheConfig = {
-  maxAge: number
+export type CachingConfig = {
+  repoRevMaxTTL?: number
+  preferencesMaxTTL?: number
 }
 
 export type FetchConfig = {
