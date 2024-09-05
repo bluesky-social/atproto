@@ -772,7 +772,9 @@ export class ModerationService {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     const { ref } = this.db.db.dynamic
 
-    if (subject) {
+    if (forAccount) {
+      builder = builder.where('moderation_subject_status.did', '=', forAccount)
+    } else if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
       builder = builder
         .where('moderation_subject_status.did', '=', subjectInfo.did)
@@ -781,8 +783,6 @@ export class ModerationService {
             ? qb.where('recordPath', '=', subjectInfo.recordPath)
             : qb.where('recordPath', '=', ''),
         )
-    } else if (forAccount) {
-      builder = builder.where('moderation_subject_status.did', '=', forAccount)
     }
 
     if (ignoreSubjects?.length) {

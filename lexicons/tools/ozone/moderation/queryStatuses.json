@@ -8,8 +8,16 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "forAccount": { "type": "string", "format": "did" },
-          "subject": { "type": "string", "format": "uri" },
+          "forAccount": {
+            "type": "string",
+            "format": "did",
+            "description": "All subjects belonging to this account will be returned. If provided, this will take priority over 'subject' parameter."
+          },
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "The subject to get the status for. If provided along with 'forAccount', this will be ignored."
+          },
           "comment": {
             "type": "string",
             "description": "Search subjects by keyword from comments"
@@ -48,7 +56,10 @@
           },
           "ignoreSubjects": {
             "type": "array",
-            "items": { "type": "string", "format": "uri" }
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
           },
           "lastReviewedBy": {
             "type": "string",
@@ -58,12 +69,18 @@
           "sortField": {
             "type": "string",
             "default": "lastReportedAt",
-            "enum": ["lastReviewedAt", "lastReportedAt"]
+            "enum": [
+              "lastReviewedAt",
+              "lastReportedAt"
+            ]
           },
           "sortDirection": {
             "type": "string",
             "default": "desc",
-            "enum": ["asc", "desc"]
+            "enum": [
+              "asc",
+              "desc"
+            ]
           },
           "takendown": {
             "type": "boolean",
@@ -81,22 +98,32 @@
           },
           "tags": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "excludeTags": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
-          "cursor": { "type": "string" }
+          "cursor": {
+            "type": "string"
+          }
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subjectStatuses"],
+          "required": [
+            "subjectStatuses"
+          ],
           "properties": {
-            "cursor": { "type": "string" },
+            "cursor": {
+              "type": "string"
+            },
             "subjectStatuses": {
               "type": "array",
               "items": {
