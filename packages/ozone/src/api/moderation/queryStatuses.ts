@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       const {
-        forAccount,
+        includeAllUserRecords,
         subject,
         takendown,
         appealed,
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       const modService = ctx.modService(db)
       const results = await modService.getSubjectStatuses({
         reviewState: getReviewState(reviewState),
-        forAccount,
+        includeAllUserRecords,
         subject,
         takendown,
         appealed,

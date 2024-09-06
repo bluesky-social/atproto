@@ -213,7 +213,7 @@
         },
         "acknowledgeAllSubjectsOfAccount": {
           "type": "boolean",
-          "description": "Set to true if all subjects authored by the account should be resolved."
+          "description": "If true, all other reports on content authored by this account will be resolved (acknowledged)."
         }
       }
     },

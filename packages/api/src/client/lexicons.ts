@@ -10923,7 +10923,7 @@ export const schemaDict = {
           acknowledgeAllSubjectsOfAccount: {
             type: 'boolean',
             description:
-              'Set to true if all subjects authored by the account should be resolved.',
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
           },
         },
       },
@@ -11736,13 +11736,15 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            forAccount: {
-              type: 'string',
-              format: 'did',
+            includeAllUserRecords: {
+              type: 'boolean',
+              description:
+                "All subjects belonging to the account specified in the 'subject' param will be returned.",
             },
             subject: {
               type: 'string',
               format: 'uri',
+              description: 'The subject to get the status for.',
             },
             comment: {
               type: 'string',

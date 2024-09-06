@@ -8,15 +8,14 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "forAccount": {
-            "type": "string",
-            "format": "did",
-            "description": "All subjects belonging to this account will be returned. If provided, this will take priority over 'subject' parameter."
+          "includeAllUserRecords": {
+            "type": "boolean",
+            "description": "All subjects belonging to the account specified in the 'subject' param will be returned."
           },
           "subject": {
             "type": "string",
             "format": "uri",
-            "description": "The subject to get the status for. If provided along with 'forAccount', this will be ignored."
+            "description": "The subject to get the status for."
           },
           "comment": {
             "type": "string",
@@ -69,18 +68,12 @@
           "sortField": {
             "type": "string",
             "default": "lastReportedAt",
-            "enum": [
-              "lastReviewedAt",
-              "lastReportedAt"
-            ]
+            "enum": ["lastReviewedAt", "lastReportedAt"]
           },
           "sortDirection": {
             "type": "string",
             "default": "desc",
-            "enum": [
-              "asc",
-              "desc"
-            ]
+            "enum": ["asc", "desc"]
           },
           "takendown": {
             "type": "boolean",
@@ -117,9 +110,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [
-            "subjectStatuses"
-          ],
+          "required": ["subjectStatuses"],
           "properties": {
             "cursor": {
               "type": "string"

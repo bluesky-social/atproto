@@ -1,12 +1,10 @@
 import {
   TestNetwork,
-  TestOzone,
   RecordRef,
   SeedClient,
   basicSeed,
   ModeratorClient,
 } from '@atproto/dev-env'
-import { AtpAgent } from '@atproto/api'
 import {
   REASONAPPEAL,
   REASONOTHER,
@@ -20,10 +18,6 @@ import {
 
 describe('moderation', () => {
   let network: TestNetwork
-  let ozone: TestOzone
-  let agent: AtpAgent
-  let bskyAgent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
   let modClient: ModeratorClient
 
@@ -42,10 +36,6 @@ describe('moderation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_ack_all_subjects_of_account',
     })
-    ozone = network.ozone
-    agent = network.ozone.getClient()
-    bskyAgent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
@@ -88,7 +78,8 @@ describe('moderation', () => {
     })
 
     const { subjectStatuses: statusesBefore } = await modClient.queryStatuses({
-      forAccount: sc.dids.bob,
+      subject: sc.dids.bob,
+      includeAllUserRecords: true,
     })
 
     await modClient.performTakedown({
@@ -97,7 +88,8 @@ describe('moderation', () => {
     })
 
     const { subjectStatuses: statusesAfter } = await modClient.queryStatuses({
-      forAccount: sc.dids.bob,
+      subject: sc.dids.bob,
+      includeAllUserRecords: true,
     })
 
     statusesBefore.forEach((item) => {

@@ -729,7 +729,7 @@ export class ModerationService {
   }
 
   async getSubjectStatuses({
-    forAccount,
+    includeAllUserRecords,
     cursor,
     limit = 50,
     takendown,
@@ -749,7 +749,7 @@ export class ModerationService {
     tags,
     excludeTags,
   }: {
-    forAccount?: string
+    includeAllUserRecords?: boolean
     cursor?: string
     limit?: number
     takendown?: boolean
@@ -772,17 +772,21 @@ export class ModerationService {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     const { ref } = this.db.db.dynamic
 
-    if (forAccount) {
-      builder = builder.where('moderation_subject_status.did', '=', forAccount)
-    } else if (subject) {
+    if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
-      builder = builder
-        .where('moderation_subject_status.did', '=', subjectInfo.did)
-        .where((qb) =>
+      builder = builder.where(
+        'moderation_subject_status.did',
+        '=',
+        subjectInfo.did,
+      )
+
+      if (!includeAllUserRecords) {
+        builder = builder.where((qb) =>
           subjectInfo.recordPath
             ? qb.where('recordPath', '=', subjectInfo.recordPath)
             : qb.where('recordPath', '=', ''),
         )
+      }
     }
 
     if (ignoreSubjects?.length) {
