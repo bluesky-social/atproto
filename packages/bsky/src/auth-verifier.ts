@@ -205,6 +205,9 @@ export class AuthVerifier {
     }
   }
 
+  // @NOTE this auth verifier method is not recommended to be implemented by most appviews
+  // this is a short term fix to remove proxy load from Bluesky's PDS and in line with possible
+  // future plans to have the client talk directly with the appview
   entrywaySession = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
     const token = bearerTokenFromReq(reqCtx.req)
     if (!token) {
@@ -233,7 +236,7 @@ export class AuthVerifier {
       throw new AuthRequiredError('Malformed token', 'InvalidToken')
     } else if (
       typeof aud !== 'string' ||
-      !aud.startsWith('did:web') ||
+      !aud.startsWith('did:web:') ||
       !aud.endsWith('.bsky.network')
     ) {
       throw new AuthRequiredError('Bad token aud', 'InvalidToken')

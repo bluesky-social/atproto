@@ -6,6 +6,7 @@ import * as crypto from '@atproto/crypto'
 import { AtpAgent, AtUri } from '@atproto/api'
 import { basicSeed, SeedClient, TestNetwork } from '@atproto/dev-env'
 import assert from 'node:assert'
+import { MINUTE } from '@atproto/common'
 
 const keyEncoder = new KeyEncoder('secp256k1')
 
@@ -21,6 +22,7 @@ const derivePrivKey = async (
   return nodeCrypto.createPrivateKey(privKeyEncoded)
 }
 
+// @NOTE temporary measure, see note on entrywaySession in bsky/src/auth-verifier.ts
 describe('entryway auth', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -92,6 +94,25 @@ describe('entryway auth', () => {
       { headers: { authorization: `Bearer ${token}` } },
     )
     await expect(attempt).rejects.toThrow('Bad token scope')
+  })
+
+  it('does not work on expired tokens', async () => {
+    const time = Math.floor((Date.now() - 5 * MINUTE) / 1000)
+    const signer = new jose.SignJWT({ scope: 'com.atproto.access' })
+      .setSubject(alice)
+      .setIssuedAt()
+      .setExpirationTime(time)
+      .setAudience('did:web:fake.server.bsky.network')
+      .setProtectedHeader({
+        typ: 'at+jwt', // https://www.rfc-editor.org/rfc/rfc9068.html
+        alg: 'ES256K',
+      })
+    const token = await signer.sign(jwtPrivKey)
+    const attempt = agent.app.bsky.actor.getProfile(
+      { actor: sc.dids.bob },
+      { headers: { authorization: `Bearer ${token}` } },
+    )
+    await expect(attempt).rejects.toThrow('Token has expired')
   })
 
   it('does not work on bad auds', async () => {
