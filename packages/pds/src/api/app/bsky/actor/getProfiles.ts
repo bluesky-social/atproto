@@ -1,10 +1,9 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
-import { pipethrough } from '../../../../pipethrough'
 import {
   LocalViewer,
-  handleReadAfterWrite,
+  pipethroughReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
 
@@ -15,15 +14,11 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.accessStandard(),
-    handler: async ({ req, auth }) => {
-      const requester = auth.credentials.did
-
-      const res = await pipethrough(ctx, req, requester)
-      return handleReadAfterWrite(
+    handler: async (reqCtx) => {
+      return pipethroughReadAfterWrite(
         ctx,
+        reqCtx,
         METHOD_NSID,
-        requester,
-        res,
         getProfilesMunge,
       )
     },

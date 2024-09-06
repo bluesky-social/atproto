@@ -18,10 +18,9 @@ import {
   getRepoRev,
   LocalRecords,
   RecordDescript,
-  handleReadAfterWrite,
+  pipethroughReadAfterWrite,
   formatMungedResponse,
 } from '../../../../read-after-write'
-import { pipethrough } from '../../../../pipethrough'
 import { ids } from '../../../../lexicon/lexicons'
 
 const METHOD_NSID = 'app.bsky.feed.getPostThread'
@@ -31,21 +30,18 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessStandard(),
-    handler: async ({ req, auth, params }) => {
-      const requester = auth.credentials.did
-
+    handler: async (reqCtx) => {
       try {
-        const res = await pipethrough(ctx, req, requester)
-
-        return await handleReadAfterWrite(
+        return await pipethroughReadAfterWrite(
           ctx,
+          reqCtx,
           METHOD_NSID,
-          requester,
-          res,
           getPostThreadMunge,
         )
       } catch (err) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
+          const { auth, params } = reqCtx
+          const requester = auth.credentials.did
           const headers = err.headers
           const local = await ctx.actorStore.read(requester, (store) => {
             const localViewer = ctx.localViewer(store)

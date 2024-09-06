@@ -4,10 +4,9 @@ import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorF
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
   LocalViewer,
-  handleReadAfterWrite,
+  pipethroughReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
-import { pipethrough } from '../../../../pipethrough'
 
 const METHOD_NSID = 'app.bsky.feed.getAuthorFeed'
 
@@ -16,19 +15,8 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authVerifier.accessStandard(),
-    handler: async ({ req, auth }) => {
-      const requester = auth.credentials.did
-      const res = await pipethrough(ctx, req, requester)
-      if (!requester) {
-        return res
-      }
-      return await handleReadAfterWrite(
-        ctx,
-        METHOD_NSID,
-        requester,
-        res,
-        getAuthorMunge,
-      )
+    handler: async (reqCtx) => {
+      return pipethroughReadAfterWrite(ctx, reqCtx, METHOD_NSID, getAuthorMunge)
     },
   })
 }

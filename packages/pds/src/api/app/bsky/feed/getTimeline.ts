@@ -3,10 +3,9 @@ import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import {
   LocalViewer,
-  handleReadAfterWrite,
+  pipethroughReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
-import { pipethrough } from '../../../../pipethrough'
 
 const METHOD_NSID = 'app.bsky.feed.getTimeline'
 
@@ -15,14 +14,11 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.accessStandard(),
-    handler: async ({ req, auth }) => {
-      const requester = auth.credentials.did
-      const res = await pipethrough(ctx, req, requester)
-      return await handleReadAfterWrite(
+    handler: async (reqCtx) => {
+      return pipethroughReadAfterWrite(
         ctx,
+        reqCtx,
         METHOD_NSID,
-        requester,
-        res,
         getTimelineMunge,
       )
     },

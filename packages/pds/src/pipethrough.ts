@@ -1,20 +1,21 @@
-import express from 'express'
-import * as ui8 from 'uint8arrays'
-import net from 'node:net'
-import stream from 'node:stream'
-import webStream from 'node:stream/web'
-import { LexValue, jsonToLex, stringifyLex } from '@atproto/lexicon'
+import { getServiceEndpoint } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   CatchallHandler,
-  HandlerPipeThrough,
+  HandlerPipeThroughStream,
   InvalidRequestError,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
-import { getServiceEndpoint, noUndefinedVals } from '@atproto/common'
-import { ids, lexicons } from './lexicon/lexicons'
-import { httpLogger } from './logger'
+import express from 'express'
+import net from 'node:net'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
+import { ReadableStream } from 'node:stream/web'
+import * as ui8 from 'uint8arrays'
+
 import AppContext from './context'
+import { ids } from './lexicon/lexicons'
+import { httpLogger } from './logger'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
@@ -33,11 +34,33 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         lxm: nsid,
         requester: auth.credentials.did,
       })
-      const body: webStream.ReadableStream<Uint8Array> =
-        stream.Readable.toWeb(req)
+      const body: ReadableStream<Uint8Array> = Readable.toWeb(req)
       const reqInit = formatReqInit(req, headers, body)
       const proxyRes = await makeRequest(url, reqInit)
-      await pipeProxyRes(proxyRes, res)
+
+      for (const [name, val] of buildHeadersToForward(proxyRes.headers)) {
+        res.setHeader(name, val)
+      }
+
+      if (proxyRes.body) {
+        const contentLength = proxyRes.headers.get('content-length')
+        const contentEncoding = proxyRes.headers.get('content-encoding')
+        if (
+          contentLength &&
+          (!contentEncoding || contentEncoding === 'identity')
+        ) {
+          res.setHeader('content-length', contentLength)
+        } else {
+          res.setHeader('transfer-encoding', 'chunked')
+        }
+        res.status(200)
+        const resStream = Readable.fromWeb(
+          proxyRes.body as ReadableStream<Uint8Array>,
+        )
+        await pipeline(resStream, res)
+      } else {
+        res.status(200).end()
+      }
     } catch (err) {
       next(err)
     }
@@ -52,29 +75,21 @@ export const pipethrough = async (
     aud?: string
     lxm?: string
   } = {},
-): Promise<HandlerPipeThrough> => {
+): Promise<HandlerPipeThroughStream> => {
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req, override.aud)
   const lxm = override.lxm ?? nsid
-  const headers = await formatHeaders(ctx, req, { aud, lxm, requester })
-  const reqInit = formatReqInit(req, headers)
+  const reqHeaders = await formatHeaders(ctx, req, { aud, lxm, requester })
+  const reqInit = formatReqInit(req, reqHeaders)
   const res = await makeRequest(url, reqInit)
-  return parseProxyRes(res)
-}
 
-export const pipethroughProcedure = async (
-  ctx: AppContext,
-  req: express.Request,
-  requester: string | null,
-  body?: LexValue,
-): Promise<HandlerPipeThrough> => {
-  const { url, aud, nsid: lxm } = await formatUrlAndAud(ctx, req)
-  const headers = await formatHeaders(ctx, req, { aud, lxm, requester })
-  const encodedBody = body
-    ? new TextEncoder().encode(stringifyLex(body))
-    : undefined
-  const reqInit = formatReqInit(req, headers, encodedBody)
-  const res = await makeRequest(url, reqInit)
-  return parseProxyRes(res)
+  if (!res.body) {
+    throw new InvalidRequestError('No body in response')
+  }
+
+  const stream = Readable.fromWeb(res.body as ReadableStream<Uint8Array>)
+  const encoding = res.headers.get('content-type') ?? 'application/json'
+  const headers = Object.fromEntries(buildHeadersToForward(res.headers))
+  return { encoding, stream, headers }
 }
 
 // Request setup/formatting
@@ -154,7 +169,7 @@ export const formatHeaders = async (
 const formatReqInit = (
   req: express.Request,
   headers: Record<string, string>,
-  body?: Uint8Array | webStream.ReadableStream<Uint8Array>,
+  body?: Uint8Array | ReadableStream<Uint8Array>,
 ): RequestInit => {
   if (req.method === 'GET') {
     return {
@@ -222,7 +237,7 @@ export const parseProxyHeader = async (
 // Sending request
 // -------------------
 
-export const makeRequest = async (
+const makeRequest = async (
   url: URL,
   reqInit: RequestInit,
 ): Promise<Response> => {
@@ -257,45 +272,12 @@ const RES_HEADERS_TO_FORWARD = [
   'atproto-content-labelers',
 ]
 
-export const pipeProxyRes = async (
-  upstreamRes: Response,
-  ownRes: express.Response,
-) => {
-  for (const headerName of RES_HEADERS_TO_FORWARD) {
-    const headerVal = upstreamRes.headers.get(headerName)
-    if (headerVal) {
-      ownRes.setHeader(headerName, headerVal)
-    }
+function* buildHeadersToForward(headers: Headers): Generator<[string, string]> {
+  for (let i = 0; i < RES_HEADERS_TO_FORWARD.length; i++) {
+    const header = RES_HEADERS_TO_FORWARD[i]
+    const val = headers.get(header)
+    if (val != null) yield [header, val]
   }
-  if (upstreamRes.body) {
-    const contentLength = upstreamRes.headers.get('content-length')
-    const contentEncoding = upstreamRes.headers.get('content-encoding')
-    if (contentLength && (!contentEncoding || contentEncoding === 'identity')) {
-      ownRes.setHeader('content-length', contentLength)
-    } else {
-      ownRes.setHeader('transfer-encoding', 'chunked')
-    }
-    ownRes.status(200)
-    const resStream = stream.Readable.fromWeb(
-      upstreamRes.body as webStream.ReadableStream<Uint8Array>,
-    )
-    await stream.promises.pipeline(resStream, ownRes)
-  } else {
-    ownRes.status(200).end()
-  }
-}
-
-export const parseProxyRes = async (res: Response) => {
-  const buffer = await readArrayBufferRes(res)
-  const encoding = res.headers.get('content-type') ?? 'application/json'
-  const resHeaders = RES_HEADERS_TO_FORWARD.reduce(
-    (acc, cur) => {
-      acc[cur] = res.headers.get(cur) ?? undefined
-      return acc
-    },
-    {} as Record<string, string | undefined>,
-  )
-  return { encoding, buffer, headers: noUndefinedVals(resHeaders) }
 }
 
 // Utils
@@ -368,13 +350,6 @@ const defaultService = (
   }
 }
 
-export const parseRes = <T>(nsid: string, res: HandlerPipeThrough): T => {
-  const buffer = new Uint8Array(res.buffer)
-  const json = safeParseJson(ui8.toString(buffer, 'utf8'))
-  const lex = json && jsonToLex(json)
-  return lexicons.assertValidXrpcOutput(nsid, lex) as T
-}
-
 const readArrayBufferRes = async (res: Response): Promise<ArrayBuffer> => {
   try {
     return await res.arrayBuffer()
@@ -399,7 +374,7 @@ const safeString = (str: string): string | undefined => {
   return typeof str === 'string' ? str : undefined
 }
 
-const safeParseJson = (json: string): unknown => {
+export const safeParseJson = (json: string): unknown => {
   try {
     return JSON.parse(json)
   } catch {

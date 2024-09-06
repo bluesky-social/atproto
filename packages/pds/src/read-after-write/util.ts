@@ -1,14 +1,21 @@
-import { Headers } from '@atproto/xrpc'
-import { readStickyLogger as log } from '../logger'
+import { jsonToLex } from '@atproto/lexicon'
+import { HeadersMap } from '@atproto/xrpc'
+import {
+  HandlerPipeThrough,
+  HandlerPipeThroughBuffer,
+} from '@atproto/xrpc-server'
+import express from 'express'
+
 import AppContext from '../context'
+import { lexicons } from '../lexicon/lexicons'
+import { readStickyLogger as log } from '../logger'
+import { pipethrough, safeParseJson } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
-import { HandlerPipeThrough } from '@atproto/xrpc-server'
-import { parseRes } from '../pipethrough'
 
 const REPO_REV_HEADER = 'atproto-repo-rev'
 
-export const getRepoRev = (headers: Headers): string | undefined => {
+export const getRepoRev = (headers: HeadersMap): string | undefined => {
   return headers[REPO_REV_HEADER]
 }
 
@@ -23,13 +30,29 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
   return Date.now() - new Date(oldest).getTime()
 }
 
-export const handleReadAfterWrite = async <T>(
+export const pipethroughReadAfterWrite = async <T>(
   ctx: AppContext,
+  reqCtx: { req: express.Request; auth: { credentials: { did: string } } },
   nsid: string,
-  requester: string,
-  res: HandlerPipeThrough,
   munge: MungeFn<T>,
 ): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
+  const { req, auth } = reqCtx
+  const requester = auth.credentials.did
+
+  const upstreamRes = await pipethrough(ctx, req, requester)
+
+  const chunks: Buffer[] = []
+  for await (const chunk of upstreamRes.stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  const buffer = Buffer.concat(chunks)
+
+  const res: HandlerPipeThroughBuffer = {
+    encoding: 'application/json',
+    headers: upstreamRes.headers,
+    buffer,
+  }
+
   try {
     return await readAfterWriteInternal(ctx, nsid, requester, res, munge)
   } catch (err) {
@@ -38,13 +61,13 @@ export const handleReadAfterWrite = async <T>(
   }
 }
 
-export const readAfterWriteInternal = async <T>(
+const readAfterWriteInternal = async <T>(
   ctx: AppContext,
   nsid: string,
   requester: string,
-  res: HandlerPipeThrough,
+  res: HandlerPipeThroughBuffer,
   munge: MungeFn<T>,
-): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
+): Promise<HandlerResponse<T> | HandlerPipeThroughBuffer> => {
   const rev = getRepoRev(res.headers ?? {})
   if (!rev) return res
   return ctx.actorStore.read(requester, async (store) => {
@@ -53,7 +76,12 @@ export const readAfterWriteInternal = async <T>(
       return res
     }
     const localViewer = ctx.localViewer(store)
-    const parsedRes = parseRes<T>(nsid, res)
+
+    const value = safeParseJson(Buffer.from(res.buffer).toString('utf8'))
+    const lex = value && jsonToLex(value)
+
+    const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
+
     const data = await munge(localViewer, parsedRes, local, requester)
     return formatMungedResponse(data, getLocalLag(local))
   })
