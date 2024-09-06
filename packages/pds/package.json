@@ -66,6 +66,7 @@
     "sharp": "^0.32.6",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
+    "undici": "^6.19.8",
     "zod": "^3.23.8"
   },
   "devDependencies": {

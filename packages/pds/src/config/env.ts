@@ -118,7 +118,11 @@ export const readEnv = (): ServerEnvironment => {
     ),
 
     // fetch
+    fetchAllowHTTP2: envBool('PDS_FETCH_ALLOW_HTTP2'),
     fetchDisableSsrfProtection: envBool('PDS_DISABLE_SSRF_PROTECTION'),
+    fetchHeadersTimeout: envInt('PDS_FETCH_HEADERS_TIMEOUT'),
+    fetchBodyTimeout: envInt('PDS_FETCH_BODY_TIMEOUT'),
+    fetchMaxResponseSize: envInt('PDS_FETCH_MAX_RESPONSE_SIZE'),
   }
 }
 
@@ -234,5 +238,9 @@ export type ServerEnvironment = {
   plcRotationKeyK256PrivateKeyHex?: string
 
   // fetch
+  fetchAllowHTTP2?: boolean
   fetchDisableSsrfProtection?: boolean
+  fetchHeadersTimeout?: number
+  fetchBodyTimeout?: number
+  fetchMaxResponseSize?: number
 }

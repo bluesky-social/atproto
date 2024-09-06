@@ -236,7 +236,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
   const fetchCfg: ServerConfig['fetch'] = {
+    allowHTTP2: env.fetchAllowHTTP2 ?? false,
     disableSsrfProtection: env.fetchDisableSsrfProtection ?? false,
+    headersTimeout: env.fetchHeadersTimeout ?? 10e3,
+    bodyTimeout: env.fetchBodyTimeout ?? 30e3,
+    maxResponseSize: env.fetchMaxResponseSize ?? 512 * 1024, // 512kb
   }
 
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
@@ -392,7 +396,11 @@ export type EntrywayConfig = {
 }
 
 export type FetchConfig = {
+  allowHTTP2: boolean
   disableSsrfProtection: boolean
+  headersTimeout: number
+  bodyTimeout: number
+  maxResponseSize: number
 }
 
 export type OAuthConfig = {

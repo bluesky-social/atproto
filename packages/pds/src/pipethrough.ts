@@ -7,11 +7,8 @@ import {
   parseReqNsid,
 } from '@atproto/xrpc-server'
 import express from 'express'
-import net from 'node:net'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import { ReadableStream } from 'node:stream/web'
-import * as ui8 from 'uint8arrays'
+import { IncomingHttpHeaders } from 'node:http'
+import { Writable } from 'node:stream'
 
 import AppContext from './context'
 import { ids } from './lexicon/lexicons'
@@ -21,6 +18,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const accessStandard = ctx.authVerifier.accessStandard()
   return async (req, res, next) => {
     try {
+      assertXrpcHttpMethod(req.method)
+
       const { url, aud, nsid } = await formatUrlAndAud(ctx, req)
       const auth = await accessStandard({ req, res })
       if (
@@ -29,37 +28,55 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       ) {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
-      const headers = await formatHeaders(ctx, req, {
+      const reqHeaders = await formatHeaders(ctx, req, {
         aud,
         lxm: nsid,
         requester: auth.credentials.did,
       })
-      const body: ReadableStream<Uint8Array> = Readable.toWeb(req)
-      const reqInit = formatReqInit(req, headers, body)
-      const proxyRes = await makeRequest(url, reqInit)
 
-      for (const [name, val] of buildHeadersToForward(proxyRes.headers)) {
-        res.setHeader(name, val)
-      }
+      try {
+        await ctx.safeAgent.stream(
+          {
+            method: req.method,
+            origin: url.origin,
+            path: url.pathname + url.search,
+            headers: reqHeaders,
+            body: req.method === 'POST' ? req : undefined,
+          },
+          ({ statusCode, headers }) => {
+            // In case of error, collect all the data and propagate an error
+            if (statusCode !== ResponseType.Success) {
+              return new Collector((buffer, callback) => {
+                const err = buildError(statusCode, headers, buffer)
+                callback(err)
+              })
+            }
 
-      if (proxyRes.body) {
-        const contentLength = proxyRes.headers.get('content-length')
-        const contentEncoding = proxyRes.headers.get('content-encoding')
-        if (
-          contentLength &&
-          (!contentEncoding || contentEncoding === 'identity')
-        ) {
-          res.setHeader('content-length', contentLength)
-        } else {
-          res.setHeader('transfer-encoding', 'chunked')
-        }
-        res.status(200)
-        const resStream = Readable.fromWeb(
-          proxyRes.body as ReadableStream<Uint8Array>,
+            // Forward status code
+            res.status(statusCode)
+
+            // Forward headers
+            const length = headers?.['content-length']
+            const encoding = headers?.['content-encoding'] ?? 'identity'
+            if (length && encoding === 'identity') {
+              res.setHeader('content-length', length)
+            } else {
+              res.setHeader('transfer-encoding', 'chunked')
+            }
+            for (const [name, val] of buildHeadersToForward(headers)) {
+              res.setHeader(name, val)
+            }
+
+            // Forward body
+            return res
+          },
         )
-        await pipeline(resStream, res)
-      } else {
-        res.status(200).end()
+      } catch (err) {
+        if (err instanceof XRPCError) throw err
+        else {
+          httpLogger.warn({ err }, 'pipethrough network error')
+          throw new XRPCError(ResponseType.UpstreamFailure)
+        }
       }
     } catch (err) {
       next(err)
@@ -76,20 +93,42 @@ export const pipethrough = async (
     lxm?: string
   } = {},
 ): Promise<HandlerPipeThroughStream> => {
+  assertXrpcHttpMethod(req.method)
+
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req, override.aud)
   const lxm = override.lxm ?? nsid
   const reqHeaders = await formatHeaders(ctx, req, { aud, lxm, requester })
-  const reqInit = formatReqInit(req, reqHeaders)
-  const res = await makeRequest(url, reqInit)
 
-  if (!res.body) {
-    throw new InvalidRequestError('No body in response')
+  const response = await ctx.safeAgent.request({
+    method: req.method,
+    origin: url.origin,
+    path: url.pathname + url.search,
+    headers: reqHeaders,
+  })
+
+  if (response.statusCode !== ResponseType.Success) {
+    const chunks: Buffer[] = []
+    for await (const chunk of response.body) chunks.push(chunk)
+    const buffer = Buffer.concat(chunks)
+    throw buildError(response.statusCode, response.headers, buffer)
   }
 
-  const stream = Readable.fromWeb(res.body as ReadableStream<Uint8Array>)
-  const encoding = res.headers.get('content-type') ?? 'application/json'
-  const headers = Object.fromEntries(buildHeadersToForward(res.headers))
-  return { encoding, stream, headers }
+  try {
+    const encoding = response.headers['content-type'] ?? 'application/json'
+
+    if (typeof encoding !== 'string') {
+      throw new InvalidRequestError('Invalid content type')
+    }
+
+    return {
+      headers: Object.fromEntries(buildHeadersToForward(response.headers)),
+      stream: response.body,
+      encoding,
+    }
+  } catch (err) {
+    response.body.destroy()
+    throw err
+  }
 }
 
 // Request setup/formatting
@@ -137,9 +176,6 @@ export const checkUrlAndAud = (
   nsid: string,
 ): { url: URL; aud: string; nsid: string } => {
   const url = new URL(req.originalUrl, serviceUrl)
-  if (!ctx.cfg.service.devMode && !isSafeUrl(url)) {
-    throw new InvalidRequestError(`Invalid service url: ${url.toString()}`)
-  }
   return { url, aud, nsid }
 }
 
@@ -164,33 +200,6 @@ export const formatHeaders = async (
     }
   }
   return headers
-}
-
-const formatReqInit = (
-  req: express.Request,
-  headers: Record<string, string>,
-  body?: Uint8Array | ReadableStream<Uint8Array>,
-): RequestInit => {
-  if (req.method === 'GET') {
-    return {
-      method: 'get',
-      headers,
-    }
-  } else if (req.method === 'HEAD') {
-    return {
-      method: 'head',
-      headers,
-    }
-  } else if (req.method === 'POST') {
-    return {
-      method: 'post',
-      headers,
-      body,
-      duplex: 'half',
-    } as RequestInit
-  } else {
-    throw new InvalidRequestError('Method not found')
-  }
 }
 
 export const parseProxyHeader = async (
@@ -237,33 +246,33 @@ export const parseProxyHeader = async (
 // Sending request
 // -------------------
 
-const makeRequest = async (
-  url: URL,
-  reqInit: RequestInit,
-): Promise<Response> => {
-  let res: Response
-  try {
-    res = await fetch(url, reqInit)
-  } catch (err) {
-    httpLogger.warn({ err }, 'pipethrough network error')
-    throw new XRPCError(ResponseType.UpstreamFailure)
+function assertXrpcHttpMethod(
+  method: string,
+): asserts method is 'POST' | 'GET' | 'HEAD' {
+  if (method !== 'POST' && method !== 'GET' && method !== 'HEAD') {
+    throw new InvalidRequestError('Method not found')
   }
-  if (res.status !== ResponseType.Success) {
-    const arrBuffer = await readArrayBufferRes(res)
-    const ui8Buffer = new Uint8Array(arrBuffer)
-    const errInfo = safeParseJson(ui8.toString(ui8Buffer, 'utf8'))
-    throw new XRPCError(
-      res.status,
-      safeString(errInfo?.['error']),
-      safeString(errInfo?.['message']),
-      simpleHeaders(res.headers),
-    )
-  }
-  return res
 }
 
 // Response parsing/forwarding
 // -------------------
+
+class Collector extends Writable {
+  constructor(
+    onFinal: (buffer: Buffer, callback: (err?: null | Error) => void) => void,
+  ) {
+    const chunks: Buffer[] = []
+    super({
+      write(chunk, _, callback) {
+        chunks.push(chunk)
+        callback()
+      },
+      final(callback) {
+        onFinal(Buffer.concat(chunks), callback)
+      },
+    })
+  }
+}
 
 const RES_HEADERS_TO_FORWARD = [
   'content-type',
@@ -272,11 +281,13 @@ const RES_HEADERS_TO_FORWARD = [
   'atproto-content-labelers',
 ]
 
-function* buildHeadersToForward(headers: Headers): Generator<[string, string]> {
+function* buildHeadersToForward(
+  headers: IncomingHttpHeaders,
+): Generator<[string, string]> {
   for (let i = 0; i < RES_HEADERS_TO_FORWARD.length; i++) {
     const header = RES_HEADERS_TO_FORWARD[i]
-    const val = headers.get(header)
-    if (val != null) yield [header, val]
+    const val = headers[header]
+    if (typeof val === 'string') yield [header, val]
   }
 }
 
@@ -350,26 +361,6 @@ const defaultService = (
   }
 }
 
-const readArrayBufferRes = async (res: Response): Promise<ArrayBuffer> => {
-  try {
-    return await res.arrayBuffer()
-  } catch (err) {
-    httpLogger.warn({ err }, 'pipethrough network error')
-    throw new XRPCError(ResponseType.UpstreamFailure)
-  }
-}
-
-// @TODO: improve SSRF protection (use safeFetch instead of relying on this)
-const isSafeUrl = (url: URL) => {
-  if (url.protocol !== 'https:') return false
-  if (!url.hostname || url.hostname === 'localhost') return false
-  // IPv6 hostnames are surrounded by brackets
-  if (url.hostname.startsWith('[') && url.hostname.endsWith(']')) return false
-  // IPv4
-  if (net.isIP(url.hostname) !== 0) return false
-  return true
-}
-
 const safeString = (str: string): string | undefined => {
   return typeof str === 'string' ? str : undefined
 }
@@ -382,10 +373,16 @@ export const safeParseJson = (json: string): unknown => {
   }
 }
 
-const simpleHeaders = (headers: Headers): Record<string, string> => {
-  const result = {}
-  for (const [key, val] of headers) {
-    result[key] = val
-  }
-  return result
+function buildError(
+  status: number,
+  headers: IncomingHttpHeaders,
+  body: Buffer,
+): XRPCError {
+  const errInfo = safeParseJson(body.toString('utf8'))
+  return new XRPCError(
+    status,
+    safeString(errInfo?.['error']),
+    safeString(errInfo?.['message']),
+    Object.fromEntries(buildHeadersToForward(headers)),
+  )
 }
