@@ -9,7 +9,7 @@ import express from 'express'
 import AppContext from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
-import { pipethrough, safeParseJson } from '../pipethrough'
+import { collect, pipethrough, safeParseJson } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
 
@@ -41,50 +41,37 @@ export const pipethroughReadAfterWrite = async <T>(
 
   const upstreamRes = await pipethrough(ctx, req, requester)
 
-  const chunks: Buffer[] = []
-  for await (const chunk of upstreamRes.stream) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-  }
-  const buffer = Buffer.concat(chunks)
+  const rev = upstreamRes.headers && getRepoRev(upstreamRes.headers)
+  if (!rev) return upstreamRes
+
+  const buffer = await collect(upstreamRes.stream)
 
   const res: HandlerPipeThroughBuffer = {
-    encoding: 'application/json',
+    encoding: upstreamRes.encoding,
     headers: upstreamRes.headers,
-    buffer,
+    buffer: buffer.buffer,
   }
 
   try {
-    return await readAfterWriteInternal(ctx, nsid, requester, res, munge)
+    return await ctx.actorStore.read(requester, async (store) => {
+      const local = await getRecordsSinceRev(store, rev)
+      if (local.count === 0) {
+        return res
+      }
+      const localViewer = ctx.localViewer(store)
+
+      const value = safeParseJson(Buffer.from(res.buffer).toString('utf8'))
+      const lex = value && jsonToLex(value)
+
+      const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
+
+      const data = await munge(localViewer, parsedRes, local, requester)
+      return formatMungedResponse(data, getLocalLag(local))
+    })
   } catch (err) {
     log.warn({ err, requester }, 'error in read after write munge')
     return res
   }
-}
-
-const readAfterWriteInternal = async <T>(
-  ctx: AppContext,
-  nsid: string,
-  requester: string,
-  res: HandlerPipeThroughBuffer,
-  munge: MungeFn<T>,
-): Promise<HandlerResponse<T> | HandlerPipeThroughBuffer> => {
-  const rev = getRepoRev(res.headers ?? {})
-  if (!rev) return res
-  return ctx.actorStore.read(requester, async (store) => {
-    const local = await getRecordsSinceRev(store, rev)
-    if (local.count === 0) {
-      return res
-    }
-    const localViewer = ctx.localViewer(store)
-
-    const value = safeParseJson(Buffer.from(res.buffer).toString('utf8'))
-    const lex = value && jsonToLex(value)
-
-    const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
-
-    const data = await munge(localViewer, parsedRes, local, requester)
-    return formatMungedResponse(data, getLocalLag(local))
-  })
 }
 
 export const formatMungedResponse = <T>(

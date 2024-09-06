@@ -8,7 +8,7 @@ import {
 } from '@atproto/xrpc-server'
 import express from 'express'
 import { IncomingHttpHeaders } from 'node:http'
-import { Writable } from 'node:stream'
+import { Readable, Writable } from 'node:stream'
 
 import AppContext from './context'
 import { ids } from './lexicon/lexicons'
@@ -107,9 +107,7 @@ export const pipethrough = async (
   })
 
   if (response.statusCode !== ResponseType.Success) {
-    const chunks: Buffer[] = []
-    for await (const chunk of response.body) chunks.push(chunk)
-    const buffer = Buffer.concat(chunks)
+    const buffer = await collect(response.body)
     throw buildError(response.statusCode, response.headers, buffer)
   }
 
@@ -256,6 +254,14 @@ function assertXrpcHttpMethod(
 
 // Response parsing/forwarding
 // -------------------
+
+export async function collect(readable: Readable): Promise<Buffer> {
+  const chunks: Buffer[] = []
+  for await (const chunk of readable) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  return Buffer.concat(chunks)
+}
 
 class Collector extends Writable {
   constructor(
