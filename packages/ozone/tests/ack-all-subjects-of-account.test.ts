@@ -14,7 +14,10 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
+  SubjectStatusView,
 } from '../src/lexicon/types/tools/ozone/moderation/defs'
+import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
+import { ComAtprotoRepoStrongRef } from '@atproto/api'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -92,26 +95,37 @@ describe('moderation', () => {
       includeAllUserRecords: true,
     })
 
-    statusesBefore.forEach((item) => {
-      if (item.subject.uri === postOne.uriStr) {
-        expect(item.reviewState).toBe(REVIEWOPEN)
-      } else if (item.subject.uri === postTwo.uriStr) {
-        expect(item.reviewState).toBe(REVIEWESCALATED)
-        expect(item.appealed).toBe(true)
-      } else if (!item.subject.uri && item.subject.did === sc.dids.bob) {
-        expect(item.reviewState).toBe(REVIEWOPEN)
-      }
-    })
+    const getReviewStateBySubject = (subjects: SubjectStatusView[]) => {
+      const states = new Map<string, SubjectStatusView>()
 
-    statusesAfter.forEach((item) => {
-      if (item.subject.uri === postOne.uriStr) {
-        expect(item.reviewState).toBe(REVIEWCLOSED)
-      } else if (item.subject.uri === postTwo.uriStr) {
-        expect(item.reviewState).toBe(REVIEWCLOSED)
-        expect(item.appealed).toBe(false)
-      } else if (!item.subject.uri && item.subject.did === sc.dids.bob) {
-        expect(item.reviewState).toBe(REVIEWCLOSED)
-      }
-    })
+      subjects.forEach((item) => {
+        if (ComAtprotoRepoStrongRef.isMain(item.subject)) {
+          states.set(item.subject.uri, item)
+        } else if (isRepoRef(item.subject)) {
+          states.set(item.subject.did, item)
+        }
+      })
+
+      return states
+    }
+
+    const reviewStatesBefore = getReviewStateBySubject(statusesBefore)
+    const reviewStatesAfter = getReviewStateBySubject(statusesAfter)
+
+    // Check that review states before were different for different subjects
+    expect(reviewStatesBefore.get(postOne.uriStr)?.reviewState).toBe(REVIEWOPEN)
+    expect(reviewStatesBefore.get(postTwo.uriStr)?.reviewState).toBe(
+      REVIEWESCALATED,
+    )
+    expect(reviewStatesBefore.get(sc.dids.bob)?.reviewState).toBe(REVIEWOPEN)
+
+    // Check that review states after are all closed
+    expect(reviewStatesAfter.get(postOne.uriStr)?.reviewState).toBe(
+      REVIEWCLOSED,
+    )
+    expect(reviewStatesAfter.get(postTwo.uriStr)?.reviewState).toBe(
+      REVIEWCLOSED,
+    )
+    expect(reviewStatesAfter.get(sc.dids.bob)?.reviewState).toBe(REVIEWCLOSED)
   })
 })
