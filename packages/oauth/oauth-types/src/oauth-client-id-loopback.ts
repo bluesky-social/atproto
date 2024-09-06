@@ -2,7 +2,7 @@ import { parseOAuthClientIdUrl } from './oauth-client-id-url.js'
 import { OAuthClientId } from './oauth-client-id.js'
 
 export type OAuthClientIdLoopback = OAuthClientId &
-  `http://localhost${'' | `${'/' | '?' | '#'}${string}`}`
+  `http://localhost/${'' | `?${string}`}`
 
 export function isOAuthClientIdLoopback(
   clientId: string,
@@ -32,13 +32,20 @@ export function parseOAuthLoopbackClientId(clientId: string): URL {
     throw new TypeError('Loopback ClientID must use the "localhost" hostname')
   }
 
+  if (url.pathname !== '/') {
+    throw new TypeError('Loopback ClientID must not contain a path component')
+  }
+
   if (url.port) {
     throw new TypeError('Loopback ClientID must not contain a port')
   }
 
-  for (const name of url.searchParams.keys()) {
+  for (const [name, value] of url.searchParams) {
     if (name !== 'redirect_uri' && name !== 'scope') {
       throw new TypeError(`Invalid query parameter ${name} in client ID`)
+    }
+    if (!value) {
+      throw new TypeError(`Empty query parameter ${name} in client ID`)
     }
   }
 

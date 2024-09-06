@@ -15,16 +15,6 @@ export function parseOAuthClientIdUrl(clientId: string): URL {
     throw new TypeError('ClientID must not contain credentials')
   }
 
-  if (url.pathname === '/') {
-    throw new TypeError(
-      'ClientID must contain a path component (e.g. "/client-metadata.json")',
-    )
-  }
-
-  if (url.pathname.endsWith('/')) {
-    throw new TypeError('ClientID path must not end with a trailing slash')
-  }
-
   if (isHostnameIP(url.hostname)) {
     throw new TypeError('ClientID hostname must not be an IP address')
   }
