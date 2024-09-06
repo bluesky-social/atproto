@@ -204,6 +204,9 @@ importers:
       jose:
         specifier: ^5.0.1
         version: 5.1.3
+      key-encoder:
+        specifier: ^2.0.3
+        version: 2.0.3
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
@@ -10359,7 +10362,7 @@ packages:
     resolution: {integrity: sha512-2s6B2CWZM//kPgwnuI0KrYwNjfdByE25zvAaEpq9IH4zcNsarH8Ihu/UuX6XMPEogDAxkuUFeZn60pXNHAqn3A==}
     engines: {node: '>=10'}
     dependencies:
-      semver: 7.5.4
+      semver: 7.6.0
 
   /node-abi@3.57.0:
     resolution: {integrity: sha512-Dp+A9JWxRaKuHP35H77I4kCKesDy5HUDEmScia2FyncMTOXASMyg251F5PhFoDA5uqBrDDffiLpbqnrZmNXW+g==}

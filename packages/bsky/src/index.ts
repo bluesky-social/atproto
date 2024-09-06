@@ -20,7 +20,7 @@ import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
-import { AuthVerifier } from './auth-verifier'
+import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 import { FeatureGates } from './feature-gates'
@@ -119,11 +119,15 @@ export class BskyAppView {
         : [],
     })
 
+    const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
+      ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
+      : undefined
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       alternateAudienceDids: config.alternateAudienceDids,
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
+      entrywayJwtPublicKey,
     })
 
     const featureGates = new FeatureGates({
