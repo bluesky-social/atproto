@@ -39,9 +39,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const proxyRes = await makeRequest(url, reqInit)
       await pipeProxyRes(proxyRes, res)
     } catch (err) {
-      return next(err)
+      next(err)
     }
-    return next()
   }
 }
 
