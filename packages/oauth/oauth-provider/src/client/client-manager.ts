@@ -370,29 +370,14 @@ export class ClientManager {
       )
     }
 
-    for (const responseType of metadata.response_types) {
-      if (responseType.includes('id_token')) {
-        throw new InvalidClientMetadataError(
-          `OpenID Connect response type "${responseType}" is not supported`,
-        )
-      }
-
-      // ATPROTO spec requires the use of PKCE
-      if (responseType !== 'code') {
-        throw new InvalidClientMetadataError(
-          `Unsupported response type "${responseType}"`,
-        )
-      }
-
+    // ATPROTO spec requires the use of PKCE, does not support OIDC
+    if (!metadata.response_types.includes('code')) {
+      throw new InvalidClientMetadataError('response_types must include "code"')
+    } else if (!metadata.grant_types.includes('authorization_code')) {
       // Consistency check
-      if (
-        responseType === 'code' &&
-        !metadata.grant_types.includes('authorization_code')
-      ) {
-        throw new InvalidClientMetadataError(
-          `Response type "${responseType}" requires the "authorization_code" grant type`,
-        )
-      }
+      throw new InvalidClientMetadataError(
+        `The "code" response type requires that "grant_types" contains "authorization_code"`,
+      )
     }
 
     if (metadata.application_type === 'native') {

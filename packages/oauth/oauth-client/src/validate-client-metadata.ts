@@ -42,9 +42,12 @@ export function validateClientMetadata(
   }
 
   const scopes = metadata.scope?.split(' ')
-
   if (!scopes?.includes('atproto')) {
     throw new TypeError(`Client metadata must include the "atproto" scope`)
+  }
+
+  if (!metadata.response_types.includes('code')) {
+    throw new TypeError(`"response_types" must include "code"`)
   }
 
   const method = metadata[TOKEN_ENDPOINT_AUTH_METHOD]

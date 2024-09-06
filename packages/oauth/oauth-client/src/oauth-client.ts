@@ -285,11 +285,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         ? input // If input is a handle or a DID, use it as a login_hint
         : undefined,
       response_mode: this.responseMode,
-      response_type:
-        // Negotiate by using the order in the client metadata
-        this.clientMetadata.response_types?.find((t) =>
-          metadata['response_types_supported']?.includes(t),
-        ) ?? 'code',
+      response_type: 'code',
 
       display: options?.display,
       prompt: options?.prompt,
