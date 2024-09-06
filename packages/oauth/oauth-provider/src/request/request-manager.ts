@@ -192,16 +192,27 @@ export class RequestManager {
     }
 
     const { redirect_uri } = parameters
-    if (
-      redirect_uri &&
-      !client.metadata.redirect_uris.some((uri) =>
-        compareRedirectUri(uri, redirect_uri),
-      )
-    ) {
-      throw new InvalidParametersError(
-        parameters,
-        `Invalid redirect_uri ${redirect_uri} (allowed: ${client.metadata.redirect_uris.join(' ')})`,
-      )
+    if (redirect_uri) {
+      if (
+        !client.metadata.redirect_uris.some((uri) =>
+          compareRedirectUri(uri, redirect_uri),
+        )
+      ) {
+        throw new InvalidParametersError(
+          parameters,
+          `Invalid redirect_uri ${redirect_uri} (allowed: ${client.metadata.redirect_uris.join(' ')})`,
+        )
+      }
+    } else if (client.metadata.redirect_uris.length === 1) {
+      const [redirect_uri] = client.metadata.redirect_uris
+      parameters = { ...parameters, redirect_uri }
+    } else {
+      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#authorization-request
+      //
+      // > "redirect_uri": OPTIONAL if only one redirect URI is registered for
+      // > this client. REQUIRED if multiple redirict URIs are registered for
+      // > this client.
+      throw new InvalidParametersError(parameters, 'redirect_uri is required')
     }
 
     // https://datatracker.ietf.org/doc/html/rfc9449#section-10

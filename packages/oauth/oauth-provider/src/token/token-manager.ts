@@ -115,18 +115,9 @@ export class TokenManager {
           throw new InvalidGrantError('PKCE is required')
         }
 
-        if (!parameters.redirect_uri) {
-          const redirect_uri = client.metadata.redirect_uris.find((uri) =>
-            compareRedirectUri(uri, input.redirect_uri),
-          )
-          if (redirect_uri) {
-            parameters = { ...parameters, redirect_uri }
-          } else {
-            throw new InvalidGrantError(`Invalid redirect_uri`)
-          }
-        } else if (parameters.redirect_uri !== input.redirect_uri) {
+        if (parameters.redirect_uri !== input.redirect_uri) {
           throw new InvalidGrantError(
-            'This code was issued for another redirect_uri',
+            'The redirect_uri parameter must match the one used in the authorization request',
           )
         }
 
