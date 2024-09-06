@@ -11,3 +11,5 @@ export const oauthScopeSchema = z
   // scope       = scope-token *( SP scope-token )
   // scope-token = 1*( %x21 / %x23-5B / %x5D-7E )
   .regex(/^[\x21\x23-\x5B\x5D-\x7E]+(?: [\x21\x23-\x5B\x5D-\x7E]+)*$/)
+
+export type OAuthScope = z.infer<typeof oauthScopeSchema>
