@@ -19,6 +19,11 @@
               "type": "string",
               "description": "Name of the template."
             },
+            "lang": {
+              "type": "string",
+              "format": "language",
+              "description": "Message language."
+            },
             "contentMarkdown": {
               "type": "string",
               "description": "Content of the template, markdown supported, can contain variable placeholders."
@@ -44,7 +49,8 @@
           "type": "ref",
           "ref": "tools.ozone.communication.defs#templateView"
         }
-      }
+      },
+      "errors": [{ "name": "DuplicateTemplateName" }]
     }
   }
 }

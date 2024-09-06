@@ -429,7 +429,7 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
-      network.bsky.sub.run()
+      await network.bsky.sub.restart()
       await basicSeed(sc, false)
       await network.processAll()
       await network.bsky.sub.destroy()

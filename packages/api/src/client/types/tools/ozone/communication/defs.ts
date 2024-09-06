@@ -15,6 +15,8 @@ export interface TemplateView {
   /** Subject of the message, used in emails. */
   contentMarkdown: string
   disabled: boolean
+  /** Message language. */
+  lang?: string
   /** DID of the user who last updated the template. */
   lastUpdatedBy: string
   createdAt: string

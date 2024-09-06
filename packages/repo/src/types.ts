@@ -154,6 +154,12 @@ export type RecordPath = {
   rkey: string
 }
 
+export type RecordCidClaim = {
+  collection: string
+  rkey: string
+  cid: CID | null
+}
+
 export type RecordClaim = {
   collection: string
   rkey: string
