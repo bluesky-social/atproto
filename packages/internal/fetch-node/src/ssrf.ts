@@ -11,13 +11,14 @@ import ipaddr from 'ipaddr.js'
 import { isValid as isValidDomain } from 'psl'
 import { Agent } from 'undici'
 
+import { isUnicastIp } from './util.js'
+
 const { IPv4, IPv6 } = ipaddr
 
 const [NODE_VERSION] = process.versions.node.split('.').map(Number)
 
 export type SsrfFetchWrapOptions<C = FetchContext> = {
   allowCustomPort?: boolean
-  allowUnknownTld?: boolean
   fetch?: Fetch<C>
 }
 
@@ -26,10 +27,9 @@ export type SsrfFetchWrapOptions<C = FetchContext> = {
  */
 export function ssrfFetchWrap<C = FetchContext>({
   allowCustomPort = false,
-  allowUnknownTld = false,
   fetch = globalThis.fetch,
 }: SsrfFetchWrapOptions<C>): Fetch<C> {
-  const ssrfAgent = new Agent({ connect: { lookup } })
+  const ssrfAgent = new Agent({ connect: { lookup: unicastLookup } })
 
   return toRequestTransformer(async function (
     this: C,
@@ -43,15 +43,6 @@ export function ssrfFetchWrap<C = FetchContext>({
     }
 
     if (url.protocol === 'http:' || url.protocol === 'https:') {
-      // @ts-expect-error non-standard option
-      if (request.dispatcher) {
-        throw new FetchRequestError(
-          request,
-          500,
-          'SSRF protection cannot be used with a custom request dispatcher',
-        )
-      }
-
       // Check port (OWASP)
       if (url.port && !allowCustomPort) {
         throw new FetchRequestError(
@@ -70,30 +61,23 @@ export function ssrfFetchWrap<C = FetchContext>({
         )
       }
 
-      // If the hostname is an IP address, it must be a unicast address.
-      const ip = parseIpHostname(url.hostname)
-      if (ip) {
-        if (ip.range() !== 'unicast') {
+      switch (isUnicastIp(url.hostname)) {
+        case true:
+          // Safe to proceed
+          return fetch.call(this, request)
+
+        case false:
           throw new FetchRequestError(
             request,
             400,
             'Hostname resolved to non-unicast address',
           )
-        }
-        // No additional check required
-        return fetch.call(this, request)
-      }
 
-      if (allowUnknownTld !== true && !isValidDomain(url.hostname)) {
-        throw new FetchRequestError(
-          request,
-          400,
-          'Hostname is not a public domain',
-        )
+        case undefined:
+          // hostname is a domain name, use DNS lookup to check if it resolves
+          // to a unicast address (see bellow)
+          break
       }
-
-      // Else hostname is a domain name, use DNS lookup to check if it resolves
-      // to a unicast address
 
       if (NODE_VERSION < 21) {
         // Note: due to the issue nodejs/undici#2828 (fixed in undici >=6.7.0,
@@ -116,7 +100,7 @@ export function ssrfFetchWrap<C = FetchContext>({
           connect: {
             lookup(...args) {
               didLookup = true
-              lookup(...args)
+              unicastLookup(...args)
             },
           },
         })
@@ -160,25 +144,16 @@ export function ssrfFetchWrap<C = FetchContext>({
   })
 }
 
-function parseIpHostname(
-  hostname: string,
-): ipaddr.IPv4 | ipaddr.IPv6 | undefined {
-  if (IPv4.isIPv4(hostname)) {
-    return IPv4.parse(hostname)
-  }
-
-  if (hostname.startsWith('[') && hostname.endsWith(']')) {
-    return IPv6.parse(hostname.slice(1, -1))
-  }
-
-  return undefined
-}
-
-function lookup(
+export function unicastLookup(
   hostname: string,
   options: dns.LookupOptions,
   callback: Parameters<LookupFunction>[2],
 ) {
+  if (!isValidDomain(hostname)) {
+    callback(new Error('Hostname is not a public domain'), '')
+    return
+  }
+
   dns.lookup(hostname, options, (err, address, family) => {
     if (err) {
       callback(err, address, family)
@@ -187,7 +162,7 @@ function lookup(
         ? address.map(parseLookupAddress)
         : [parseLookupAddress({ address, family })]
 
-      if (ips.some((ip) => ip.range() !== 'unicast')) {
+      if (ips.some(isNotUnicast)) {
         callback(
           new Error('Hostname resolved to non-unicast address'),
           address,
@@ -198,6 +173,10 @@ function lookup(
       }
     }
   })
+}
+
+function isNotUnicast(ip: ipaddr.IPv4 | ipaddr.IPv6): boolean {
+  return ip.range() !== 'unicast'
 }
 
 function parseLookupAddress({
