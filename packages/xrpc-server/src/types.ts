@@ -7,6 +7,7 @@ import {
   ResponseTypeStrings,
   ResponseTypeNames,
 } from '@atproto/xrpc'
+import { Readable } from 'stream'
 
 export type CatchallHandler = (
   req: express.Request,
@@ -46,18 +47,40 @@ export const handlerAuth = zod.object({
 })
 export type HandlerAuth = zod.infer<typeof handlerAuth>
 
+export const headersSchema = zod.record(zod.string())
+
 export const handlerSuccess = zod.object({
   encoding: zod.string(),
   body: zod.any(),
-  headers: zod.record(zod.string()).optional(),
+  headers: headersSchema.optional(),
 })
 export type HandlerSuccess = zod.infer<typeof handlerSuccess>
 
-export const handlerPipeThrough = zod.object({
+export const handlerPipeThroughBuffer = zod.object({
   encoding: zod.string(),
   buffer: zod.instanceof(ArrayBuffer),
-  headers: zod.record(zod.string()).optional(),
+  headers: headersSchema.optional(),
 })
+
+export type HandlerPipeThroughBuffer = zod.infer<
+  typeof handlerPipeThroughBuffer
+>
+
+export const handlerPipeThroughStream = zod.object({
+  encoding: zod.string(),
+  stream: zod.instanceof(Readable),
+  headers: headersSchema.optional(),
+})
+
+export type HandlerPipeThroughStream = zod.infer<
+  typeof handlerPipeThroughStream
+>
+
+export const handlerPipeThrough = zod.union([
+  handlerPipeThroughBuffer,
+  handlerPipeThroughStream,
+])
+
 export type HandlerPipeThrough = zod.infer<typeof handlerPipeThrough>
 
 export const handlerError = zod.object({

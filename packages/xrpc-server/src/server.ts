@@ -1,4 +1,5 @@
-import { Readable } from 'stream'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import express, {
   Application,
   Express,
@@ -17,13 +18,14 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
+import { ZodSchema } from 'zod'
 import { check, forwardStreamErrors, schema } from '@atproto/common'
+
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
   XRPCHandler,
   XRPCError,
   InvalidRequestError,
-  HandlerOutput,
   HandlerSuccess,
   handlerSuccess,
   XRPCHandlerConfig,
@@ -41,6 +43,8 @@ import {
   RateLimiterConsume,
   isShared,
   RateLimitExceededError,
+  handlerPipeThroughStream,
+  handlerPipeThroughBuffer,
   HandlerPipeThrough,
 } from './types'
 import {
@@ -291,29 +295,26 @@ export class Server {
           throw XRPCError.fromError(outputUnvalidated)
         }
 
-        if (outputUnvalidated && isHandlerPipeThrough(outputUnvalidated)) {
-          // set headers
-          if (outputUnvalidated?.headers) {
-            Object.entries(outputUnvalidated.headers).forEach(([name, val]) => {
-              res.header(name, val)
-            })
-          }
+        if (isHandlerPipeThroughBuffer(outputUnvalidated)) {
+          setHeaders(res, outputUnvalidated)
           res
-            .header('Content-Type', outputUnvalidated.encoding)
             .status(200)
-            .send(Buffer.from(outputUnvalidated.buffer))
+            .header('Content-Type', outputUnvalidated.encoding)
+            .end(Buffer.from(outputUnvalidated.buffer))
           return
+        }
+
+        if (isHandlerPipeThroughStream(outputUnvalidated)) {
+          setHeaders(res, outputUnvalidated)
+          res.status(200).header('Content-Type', outputUnvalidated.encoding)
+          return pipeline(outputUnvalidated.stream, res)
         }
 
         if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
           // validate response
           const output = validateResOutput(outputUnvalidated)
           // set headers
-          if (output?.headers) {
-            Object.entries(output.headers).forEach(([name, val]) => {
-              res.header(name, val)
-            })
-          }
+          setHeaders(res, output)
           // send response
           if (
             output?.encoding === 'application/json' ||
@@ -486,29 +487,26 @@ export class Server {
   }
 }
 
-function isHandlerSuccess(v: HandlerOutput): v is HandlerSuccess {
-  return handlerSuccess.safeParse(v).success
-}
+const createValidator =
+  <T>(schema: ZodSchema<T>) =>
+  (v: unknown): v is T =>
+    schema.safeParse(v).success
 
-function isHandlerPipeThrough(v: HandlerOutput): v is HandlerPipeThrough {
-  if (v === null || typeof v !== 'object') {
-    return false
-  }
-  if (!isString(v['encoding']) || !(v['buffer'] instanceof ArrayBuffer)) {
-    return false
-  }
-  if (v['headers'] !== undefined) {
-    if (v['headers'] === null || typeof v['headers'] !== 'object') {
-      return false
-    }
-    if (!Object.values(v['headers']).every(isString)) {
-      return false
-    }
-  }
-  return true
-}
+const isHandlerSuccess = createValidator(handlerSuccess)
+const isHandlerPipeThroughStream = createValidator(handlerPipeThroughStream)
+const isHandlerPipeThroughBuffer = createValidator(handlerPipeThroughBuffer)
 
-const isString = (val: unknown): val is string => typeof val === 'string'
+function setHeaders(
+  res: Response,
+  result?: HandlerSuccess | HandlerPipeThrough,
+) {
+  const headers = result?.headers
+  if (headers) {
+    for (const [name, val] of Object.entries(headers)) {
+      res.header(name, val)
+    }
+  }
+}
 
 const kRequestLocals = Symbol('requestLocals')
 
