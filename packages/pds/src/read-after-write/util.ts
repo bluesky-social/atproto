@@ -9,7 +9,7 @@ import express from 'express'
 import AppContext from '../context'
 import { lexicons } from '../lexicon/lexicons'
 import { readStickyLogger as log } from '../logger'
-import { collect, pipethrough, safeParseJson } from '../pipethrough'
+import { pipethrough, safeParseJson } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
 
@@ -44,23 +44,28 @@ export const pipethroughReadAfterWrite = async <T>(
   const rev = upstreamRes.headers && getRepoRev(upstreamRes.headers)
   if (!rev) return upstreamRes
 
-  const buffer = await collect(upstreamRes.stream)
-
-  const res: HandlerPipeThroughBuffer = {
-    encoding: upstreamRes.encoding,
-    headers: upstreamRes.headers,
-    buffer: buffer.buffer,
-  }
+  let bufferedRes: HandlerPipeThroughBuffer | undefined
 
   try {
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await getRecordsSinceRev(store, rev)
       if (local.count === 0) {
-        return res
+        return upstreamRes
       }
       const localViewer = ctx.localViewer(store)
 
-      const value = safeParseJson(Buffer.from(res.buffer).toString('utf8'))
+      const buffer = Buffer.concat(await upstreamRes.stream.toArray())
+
+      // if the munging fails, we can't return the original response because the
+      // stream has already been read. In that case, we'll return a buffered
+      // response instead.
+      bufferedRes = {
+        encoding: upstreamRes.encoding,
+        headers: upstreamRes.headers,
+        buffer: buffer.buffer,
+      }
+
+      const value = safeParseJson(buffer.toString('utf8'))
       const lex = value && jsonToLex(value)
 
       const parsedRes = lexicons.assertValidXrpcOutput(nsid, lex) as T
@@ -69,8 +74,11 @@ export const pipethroughReadAfterWrite = async <T>(
       return formatMungedResponse(data, getLocalLag(local))
     })
   } catch (err) {
+    // The error occurred while reading the stream, this is non-recoverable
+    if (!bufferedRes && !upstreamRes.stream.readable) throw err
+
     log.warn({ err, requester }, 'error in read after write munge')
-    return res
+    return bufferedRes ?? upstreamRes
   }
 }
 

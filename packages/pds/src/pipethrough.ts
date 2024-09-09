@@ -5,10 +5,13 @@ import {
   HandlerPipeThroughStream,
   InvalidRequestError,
   parseReqNsid,
+  UpstreamFailureError,
 } from '@atproto/xrpc-server'
 import express from 'express'
 import { IncomingHttpHeaders } from 'node:http'
-import { Readable, Writable } from 'node:stream'
+import { Duplex, PassThrough, pipeline, Writable } from 'node:stream'
+import * as zlib from 'node:zlib'
+import { Dispatcher } from 'undici'
 
 import AppContext from './context'
 import { ids } from './lexicon/lexicons'
@@ -43,37 +46,44 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
             headers: reqHeaders,
             body: req.method === 'POST' ? req : undefined,
           },
-          ({ statusCode, headers }) => {
-            // In case of error, collect all the data and propagate an error
-            if (statusCode !== ResponseType.Success) {
-              return new Collector((buffer, callback) => {
-                const err = buildError(statusCode, headers, buffer)
-                callback(err)
-              })
+          (data) => {
+            if (data.statusCode !== ResponseType.Success) {
+              // The xrpcErrorWriter function will trigger a stream error
+              // containing the error information from the upstream service.
+              // This error will cause the safeAgent.stream() to reject with
+              // the error, which will be caught by the catch block below.
+              return xrpcErrorWriter(data)
             }
+
+            const encodings = parseContentEncoding(
+              data.headers['content-encoding'],
+            )
 
             // Forward status code
-            res.status(statusCode)
+            res.status(data.statusCode)
 
             // Forward headers
-            const length = headers?.['content-length']
-            const encoding = headers?.['content-encoding'] ?? 'identity'
-            if (length && encoding === 'identity') {
-              res.setHeader('content-length', length)
-            } else {
-              res.setHeader('transfer-encoding', 'chunked')
-            }
-            for (const [name, val] of buildHeadersToForward(headers)) {
+            for (const [name, val] of buildHeadersToForward(data.headers)) {
               res.setHeader(name, val)
             }
+            const length = data.headers['content-length']
+            if (length && !encodings?.length) {
+              res.setHeader('content-length', length)
+            } else {
+              res.setHeader('content-encoding', encodings.join(', '))
+              res.setHeader('transfer-encoding', 'chunked')
+            }
 
-            // Forward body
+            // Forward the upstream response directly to the incoming response
             return res
           },
         )
       } catch (err) {
-        if (err instanceof XRPCError) throw err
-        else {
+        if (err instanceof XRPCError) {
+          // Response XRPCError (created through xrpcErrorWriter())
+          throw err
+        } else {
+          // Request error
           httpLogger.warn({ err }, 'pipethrough network error')
           throw new XRPCError(ResponseType.UpstreamFailure)
         }
@@ -84,7 +94,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   }
 }
 
-export const pipethrough = async (
+export async function pipethrough(
   ctx: AppContext,
   req: express.Request,
   requester: string | null,
@@ -92,41 +102,54 @@ export const pipethrough = async (
     aud?: string
     lxm?: string
   } = {},
-): Promise<HandlerPipeThroughStream> => {
-  assertXrpcHttpMethod(req.method)
+): Promise<HandlerPipeThroughStream> {
+  const { method } = req
+  assertXrpcHttpMethod(method)
 
   const { url, aud, nsid } = await formatUrlAndAud(ctx, req, override.aud)
   const lxm = override.lxm ?? nsid
   const reqHeaders = await formatHeaders(ctx, req, { aud, lxm, requester })
 
-  const response = await ctx.safeAgent.request({
-    method: req.method,
-    origin: url.origin,
-    path: url.pathname + url.search,
-    headers: reqHeaders,
+  return new Promise((resolve, reject) => {
+    void ctx.safeAgent
+      .stream(
+        {
+          method,
+          origin: url.origin,
+          path: url.pathname + url.search,
+          headers: reqHeaders,
+        },
+        (data) => {
+          if (data.statusCode !== ResponseType.Success) {
+            return xrpcErrorWriter(data)
+          }
+
+          // Because the HandlerPipeThroughStream type does not permit to
+          // reflect the content-encoding, we need to decode the stream and
+          // return the decoded stream in the response. Reflecting the
+          // content-encoding in HandlerPipeThroughStream would require
+          // consumers to handle the decoding themselves, which is cumbersome.
+          const decoders = createDecoders(data.headers['content-encoding'])
+
+          const writable = decoders[0] ?? new PassThrough()
+          const readable =
+            decoders.length > 1
+              ? // pipeline returns the last stream in the chain
+                (pipeline(decoders, () => {}) as Duplex)
+              : writable
+
+          resolve({
+            stream: readable,
+            headers: Object.fromEntries(buildHeadersToForward(data.headers)),
+            encoding:
+              safeString(data.headers['content-type']) ?? 'application/json',
+          })
+
+          return writable
+        },
+      )
+      .catch(reject)
   })
-
-  if (response.statusCode !== ResponseType.Success) {
-    const buffer = await collect(response.body)
-    throw buildError(response.statusCode, response.headers, buffer)
-  }
-
-  try {
-    const encoding = response.headers['content-type'] ?? 'application/json'
-
-    if (typeof encoding !== 'string') {
-      throw new InvalidRequestError('Invalid content type')
-    }
-
-    return {
-      headers: Object.fromEntries(buildHeadersToForward(response.headers)),
-      stream: response.body,
-      encoding,
-    }
-  } catch (err) {
-    response.body.destroy()
-    throw err
-  }
 }
 
 // Request setup/formatting
@@ -255,28 +278,85 @@ function assertXrpcHttpMethod(
 // Response parsing/forwarding
 // -------------------
 
-export async function collect(readable: Readable): Promise<Buffer> {
-  const chunks: Buffer[] = []
-  for await (const chunk of readable) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+function parseContentEncoding(contentEncoding?: string | string[]): string[] {
+  // undefined, empty string, and empty array
+  if (!contentEncoding?.length) return []
+
+  // Non empty string
+  if (typeof contentEncoding === 'string') {
+    return (
+      contentEncoding
+        .split(',')
+        // https://www.rfc-editor.org/rfc/rfc7231#section-3.1.2.1
+        // > All content-coding values are case-insensitive...
+        .map((x) => x.toLowerCase().trim())
+        .filter((x) => x && x !== 'identity')
+    )
   }
-  return Buffer.concat(chunks)
+
+  // Should never happen. Makes TS happy.
+  throw new UpstreamFailureError('Multiple content-encoding headers')
 }
 
-class Collector extends Writable {
-  constructor(
-    onFinal: (buffer: Buffer, callback: (err?: null | Error) => void) => void,
-  ) {
-    const chunks: Buffer[] = []
-    super({
-      write(chunk, _, callback) {
-        chunks.push(chunk)
-        callback()
-      },
-      final(callback) {
-        onFinal(Buffer.concat(chunks), callback)
-      },
+function createDecoders(contentEncoding?: string | string[]): Duplex[] {
+  return parseContentEncoding(contentEncoding).map(createDecoder)
+}
+
+function createDecoder(encoding: string): Duplex {
+  switch (encoding) {
+    // https://www.rfc-editor.org/rfc/rfc9112.html#section-7.2
+    case 'gzip':
+    case 'x-gzip':
+      return zlib.createGunzip({
+        // using Z_SYNC_FLUSH (cURL default) to be less strict when decoding
+        flush: zlib.constants.Z_SYNC_FLUSH,
+        finishFlush: zlib.constants.Z_SYNC_FLUSH,
+      })
+    case 'deflate':
+      return zlib.createInflate()
+    case 'br':
+      return zlib.createBrotliDecompress()
+    default:
+      throw new UpstreamFailureError(
+        `Unsupported upstream content-encoding: ${encoding}`,
+      )
+  }
+}
+
+function xrpcErrorWriter({
+  statusCode,
+  headers,
+}: Dispatcher.StreamFactoryData): Writable {
+  const chunks: Buffer[] = []
+  const writable = new Writable({
+    write(chunk, encoding, callback) {
+      chunks.push(chunk)
+      callback()
+    },
+    final(callback) {
+      const buffer = Buffer.concat(chunks.splice(0, chunks.length))
+      const errInfo = safeParseJson(buffer.toString('utf8'))
+      const error = new XRPCError(
+        statusCode,
+        safeString(errInfo?.['error']),
+        safeString(errInfo?.['message']),
+        Object.fromEntries(buildHeadersToForward(headers)),
+      )
+
+      callback(error)
+    },
+  })
+
+  const decoders = createDecoders(headers?.['content-encoding'])
+  if (decoders.length) {
+    // @ts-expect-error
+    pipeline(decoders.concat(writable), () => {
+      // the writable is meant to be used as writer for undici.stream()
+      // meaning that any error will be propagated to the stream
     })
+    return decoders[0]
+  } else {
+    return writable
   }
 }
 
@@ -367,7 +447,7 @@ const defaultService = (
   }
 }
 
-const safeString = (str: string): string | undefined => {
+const safeString = (str: unknown): string | undefined => {
   return typeof str === 'string' ? str : undefined
 }
 
@@ -377,18 +457,4 @@ export const safeParseJson = (json: string): unknown => {
   } catch {
     return null
   }
-}
-
-function buildError(
-  status: number,
-  headers: IncomingHttpHeaders,
-  body: Buffer,
-): XRPCError {
-  const errInfo = safeParseJson(body.toString('utf8'))
-  return new XRPCError(
-    status,
-    safeString(errInfo?.['error']),
-    safeString(errInfo?.['message']),
-    Object.fromEntries(buildHeadersToForward(headers)),
-  )
 }
