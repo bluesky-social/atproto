@@ -97,9 +97,9 @@ export class SqlRepoReader extends ReadableBlockstore {
       do {
         const res = await this.getBlockRange(since, cursor)
         await writeRows(res)
-        await wait(100) // @NOTE temporary measure to prevent over-writing to buffer. can remove once we refactor car writer to give back pressure on streams
         const lastRow = res.at(-1)
         if (lastRow && lastRow.repoRev) {
+          await wait(100) // @NOTE temporary measure to prevent over-writing to buffer. can remove once we refactor car writer to give back pressure on streams
           cursor = {
             cid: CID.parse(lastRow.cid),
             rev: lastRow.repoRev,
