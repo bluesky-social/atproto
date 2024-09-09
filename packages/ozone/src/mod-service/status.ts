@@ -182,6 +182,7 @@ const getSubjectStatusForRecordEvent = ({
     }
 
     if (event.meta?.tombstone) {
+      status.recordStatus = 'tombstoned'
       status.recordDeletedAt = timestamp
     }
 
