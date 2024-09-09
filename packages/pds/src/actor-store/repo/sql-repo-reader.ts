@@ -4,7 +4,7 @@ import {
   ReadableBlockstore,
   writeCarStream,
 } from '@atproto/repo'
-import { chunkArray } from '@atproto/common'
+import { chunkArray, wait } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ActorDb } from '../db'
 import { sql } from 'kysely'
@@ -94,13 +94,12 @@ export class SqlRepoReader extends ReadableBlockstore {
         }
       }
       // allow us to write to car while fetching the next page
-      let writePromise: Promise<void> = Promise.resolve()
       do {
         const res = await this.getBlockRange(since, cursor)
-        await writePromise
-        writePromise = writeRows(res)
+        await writeRows(res)
         const lastRow = res.at(-1)
         if (lastRow && lastRow.repoRev) {
+          await wait(100) // @NOTE temporary measure to prevent over-writing to buffer. can remove once we refactor car writer to give back pressure on streams
           cursor = {
             cid: CID.parse(lastRow.cid),
             rev: lastRow.repoRev,
@@ -109,8 +108,6 @@ export class SqlRepoReader extends ReadableBlockstore {
           cursor = undefined
         }
       } while (cursor)
-      // ensure we flush the last page of blocks
-      await writePromise
     })
   }
 

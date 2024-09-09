@@ -37,7 +37,11 @@ export function authPassthru(req: IncomingMessage, withEncoding?: boolean) {
     // This is fine since app views are usually called using the requester's
     // credentials when "auth.credentials.type === 'access'", which is the only
     // case were DPoP is used.
-    if (authorization.startsWith('DPoP ') || req.headers['dpop']) {
+    const [type] = authorization.split(' ', 1)
+    if (!type) {
+      throw new InvalidRequestError('Invalid authorization header')
+    }
+    if (type.toLowerCase() === 'dpop' || req.headers['dpop']) {
       throw new InvalidRequestError('DPoP requests cannot be proxied')
     }
 

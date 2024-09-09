@@ -41,7 +41,6 @@ export type Schema = {
     dpopKey: EncodedKey
 
     iss: string
-    nonce: string
     verifier?: string
     appState?: string
   }>

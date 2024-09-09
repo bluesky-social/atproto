@@ -79,10 +79,11 @@ export function AuthorizeView({
   if (view === 'accept' && session) {
     return (
       <AcceptView
-        session={session}
         clientId={authorizeData.clientId}
         clientMetadata={authorizeData.clientMetadata}
         clientTrusted={authorizeData.clientTrusted}
+        account={session.account}
+        scopeDetails={authorizeData.scopeDetails}
         onAccept={() => doAccept(session.account)}
         onReject={doReject}
         onBack={

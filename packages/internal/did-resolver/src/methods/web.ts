@@ -30,6 +30,11 @@ export class DidWebMethod implements DidMethod<'web'> {
   async resolve(did: Did<'web'>, options?: ResolveDidOptions) {
     const didDocumentUrl = buildDidWebDocumentUrl(did)
 
+    // Note we do not explicitly check for "localhost" here. Instead, we rely on
+    // the injected 'fetch' function to handle the URL. If the URL is
+    // "localhost", or resolves to a private IP address, the fetch function is
+    // responsible for handling it.
+
     return this.fetch(didDocumentUrl, {
       redirect: 'error',
       headers: { accept: 'application/did+ld+json,application/json' },

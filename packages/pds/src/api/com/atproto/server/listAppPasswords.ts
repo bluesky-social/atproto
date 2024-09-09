@@ -1,16 +1,24 @@
+import assert from 'node:assert'
+
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { authPassthru, resultPassthru } from '../../../proxy'
+import { ids } from '../../../../lexicon/lexicons'
+import { resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.listAppPasswords({
     auth: ctx.authVerifier.accessStandard(),
-    handler: async ({ auth, req }) => {
+    handler: async ({ auth }) => {
       if (ctx.entrywayAgent) {
+        assert(ctx.cfg.entryway)
         return resultPassthru(
           await ctx.entrywayAgent.com.atproto.server.listAppPasswords(
             undefined,
-            authPassthru(req),
+            await ctx.serviceAuthHeaders(
+              auth.credentials.did,
+              ctx.cfg.entryway.did,
+              ids.ComAtprotoServerListAppPasswords,
+            ),
           ),
         )
       }

@@ -116,10 +116,6 @@ export const parseCid = (cidStr: string | undefined): CID | undefined => {
   }
 }
 
-export const didFromUri = (uri: string) => {
-  return new AtUri(uri).hostname
-}
-
 export const urisByCollection = (uris: string[]): Map<string, string[]> => {
   const result = new Map<string, string[]>()
   for (const uri of uris) {

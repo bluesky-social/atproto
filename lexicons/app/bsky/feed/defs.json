@@ -17,6 +17,7 @@
           "type": "union",
           "refs": [
             "app.bsky.embed.images#view",
+            "app.bsky.embed.video#view",
             "app.bsky.embed.external#view",
             "app.bsky.embed.record#view",
             "app.bsky.embed.recordWithMedia#view"
@@ -25,6 +26,7 @@
         "replyCount": { "type": "integer" },
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
+        "quoteCount": { "type": "integer" },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
@@ -41,7 +43,8 @@
         "repost": { "type": "string", "format": "at-uri" },
         "like": { "type": "string", "format": "at-uri" },
         "threadMuted": { "type": "boolean" },
-        "replyDisabled": { "type": "boolean" }
+        "replyDisabled": { "type": "boolean" },
+        "embeddingDisabled": { "type": "boolean" }
       }
     },
     "feedViewPost": {

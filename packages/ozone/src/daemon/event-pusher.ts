@@ -8,6 +8,7 @@ import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { Insertable, Selectable } from 'kysely'
+import { ids } from '../lexicon/lexicons'
 
 type EventSubject = InputSchema['subject']
 
@@ -45,7 +46,10 @@ export class EventPusher {
 
   constructor(
     public db: Database,
-    public createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
+    public createAuthHeaders: (
+      aud: string,
+      method: string,
+    ) => Promise<AuthHeaders>,
     services: {
       appview?: {
         url: string
@@ -162,7 +166,10 @@ export class EventPusher {
     subject: EventSubject,
     takedownRef: string | null,
   ): Promise<boolean> {
-    const auth = await this.createAuthHeaders(service.did)
+    const auth = await this.createAuthHeaders(
+      service.did,
+      ids.ComAtprotoAdminUpdateSubjectStatus,
+    )
     try {
       await retryHttp(() =>
         service.agent.com.atproto.admin.updateSubjectStatus(
