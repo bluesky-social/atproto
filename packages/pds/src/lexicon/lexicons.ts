@@ -12048,7 +12048,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Remove an entire set. Attempting to delete a set that does not exist will result in an error.',
+          'Delete an entire set. Attempting to delete a set that does not exist will result in an error.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -12085,7 +12085,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Remove values from a specific set. Attempting to delete values that are not in the set will not result in an error',
+          'Delete values from a specific set. Attempting to delete values that are not in the set will not result in an error',
         input: {
           encoding: 'application/json',
           schema: {

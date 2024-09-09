@@ -15,7 +15,7 @@ export interface SetValue {
   id: GeneratedAlways<number>
   setId: number
   value: string
-  createdAt: Generated<Date>
+  createdAt: string
 }
 
 export type PartialDB = {

@@ -2,6 +2,7 @@ import Database from '../db'
 import { Selectable } from 'kysely'
 import { SetDetail } from '../db/schema/ozone_set'
 import { SetView } from '../lexicon/types/tools/ozone/set/defs'
+import { paginate, TimeIdKeyset } from '../db/pagination'
 
 export type SetServiceCreator = (db: Database) => SetService
 
@@ -113,24 +114,26 @@ export class SetService {
     const set = await this.getByNameWithSize(name)
     if (!set) return undefined
 
+    const { ref } = this.db.db.dynamic
     let qb = this.db.db
       .selectFrom('set_value')
-      .select(['value'])
+      .selectAll()
       .where('setId', '=', set.id)
-      .limit(limit)
 
-    if (cursor) {
-      qb = qb.where('value', '>', cursor)
-    }
+    const keyset = new TimeIdKeyset(ref(`createdAt`), ref('id'))
+    const paginatedBuilder = paginate(qb, {
+      limit,
+      cursor,
+      keyset,
+      direction: 'asc',
+    })
 
-    qb = qb.orderBy('value', 'asc')
-
-    const values = await qb.execute()
+    const result = await paginatedBuilder.execute()
 
     return {
       set,
-      values: values.map((v) => v.value),
-      cursor: values.at(-1)?.value,
+      values: result.map((v) => v.value),
+      cursor: keyset.packFromResult(result),
     }
   }
   async upsert({
@@ -161,9 +164,16 @@ export class SetService {
 
   async addValues(setId: number, values: string[]): Promise<void> {
     await this.db.transaction(async (txn) => {
+      const now = new Date()
       const query = txn.db
         .insertInto('set_value')
-        .values(values.map((value) => ({ setId, value })))
+        .values(
+          values.map((value) => ({
+            setId,
+            value,
+            createdAt: now.toISOString(),
+          })),
+        )
         .onConflict((oc) => oc.columns(['setId', 'value']).doNothing())
 
       await query.execute()
@@ -171,7 +181,7 @@ export class SetService {
       // Update the set's updatedAt timestamp
       await txn.db
         .updateTable('set_detail')
-        .set({ updatedAt: new Date() })
+        .set({ updatedAt: now })
         .where('id', '=', setId)
         .execute()
     })

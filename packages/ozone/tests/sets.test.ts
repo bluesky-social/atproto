@@ -4,6 +4,7 @@ import AtpAgent, {
   ToolsOzoneSetQuerySets,
 } from '@atproto/api'
 import { forSnapshot } from './_util'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('ozone-sets', () => {
   let network: TestNetwork
@@ -27,7 +28,10 @@ describe('ozone-sets', () => {
   const upsertSet = async (set: ToolsOzoneSetDefs.Set) => {
     const { data } = await agent.tools.ozone.set.upsertSet(set, {
       encoding: 'application/json',
-      headers: await network.ozone.modHeaders('admin'),
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneSetUpsertSet,
+        'admin',
+      ),
     })
 
     return data
@@ -38,26 +42,35 @@ describe('ozone-sets', () => {
       { name },
       {
         encoding: 'application/json',
-        headers: await network.ozone.modHeaders('admin'),
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneSetDeleteSet,
+          'admin',
+        ),
       },
     )
   }
 
-  const addToSet = async (name: string, values: string[]) => {
+  const addValues = async (name: string, values: string[]) => {
     await agent.tools.ozone.set.addValues(
       { name, values },
       {
         encoding: 'application/json',
-        headers: await network.ozone.modHeaders('admin'),
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneSetAddValues,
+          'admin',
+        ),
       },
     )
   }
 
-  const getSet = async (name: string) => {
+  const getValues = async (name: string, limit?: number, cursor?: string) => {
     const { data } = await agent.tools.ozone.set.getValues(
-      { name },
+      { name, limit, cursor },
       {
-        headers: await network.ozone.modHeaders('moderator'),
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneSetGetValues,
+          'moderator',
+        ),
       },
     )
     return data
@@ -65,7 +78,10 @@ describe('ozone-sets', () => {
 
   const querySets = async (params: ToolsOzoneSetQuerySets.QueryParams) => {
     const { data } = await agent.tools.ozone.set.querySets(params, {
-      headers: await network.ozone.modHeaders('moderator'),
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneSetQuerySets,
+        'moderator',
+      ),
     })
     return data
   }
@@ -175,37 +191,56 @@ describe('ozone-sets', () => {
     })
   })
 
-  describe('add', () => {
+  describe('addValues', () => {
     beforeAll(async () => {
       await upsertSet(sampleSet1)
       await upsertSet(sampleSet2)
     })
     afterAll(async () => {
-      await removeSet('test-set-1')
-      await removeSet('test-set-2')
+      await removeSet(sampleSet1.name)
+      await removeSet(sampleSet2.name)
     })
     it('adds new values to an existing set', async () => {
-      const setName = 'test-set-1'
       const newValues = ['value1', 'value2', 'value3']
-      await addToSet(setName, newValues)
+      await addValues(sampleSet1.name, newValues)
 
-      const result = await getSet(setName)
+      const result = await getValues(sampleSet1.name)
       expect(result.values).toEqual(expect.arrayContaining(newValues))
     })
 
     it('does not duplicate existing values', async () => {
-      const setName = 'test-set-2'
       const initialValues = ['initial1', 'initial2']
-      await addToSet(setName, initialValues)
+      await addValues(sampleSet2.name, initialValues)
 
       const newValues = ['initial2', 'new1', 'new2']
-      await addToSet(setName, newValues)
+      await addValues(sampleSet2.name, newValues)
 
-      const result = await getSet(setName)
+      const result = await getValues(sampleSet2.name)
       expect(result.values).toEqual(
         expect.arrayContaining([...initialValues, 'new1', 'new2']),
       )
       expect(result.values.filter((v) => v === 'initial2').length).toBe(1)
+    })
+  })
+
+  describe('getValues', () => {
+    beforeAll(async () => {
+      await upsertSet(sampleSet1)
+    })
+    afterAll(async () => {
+      await removeSet(sampleSet1.name)
+    })
+    it('paginates values from a set', async () => {
+      const allValues = Array.from({ length: 9 }, (_, i) => `value${i}`)
+      await addValues(sampleSet1.name, allValues)
+
+      const firstPage = await getValues(sampleSet1.name, 3)
+      const secondPage = await getValues(sampleSet1.name, 3, firstPage.cursor)
+      const lastPage = await getValues(sampleSet1.name, 3, secondPage.cursor)
+
+      expect(firstPage.values).toEqual(allValues.slice(0, 3))
+      expect(secondPage.values).toEqual(allValues.slice(3, 6))
+      expect(lastPage.values).toEqual(allValues.slice(6, 9))
     })
   })
 })
