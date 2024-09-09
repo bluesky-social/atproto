@@ -784,19 +784,19 @@ export class ModerationService {
     }
 
     if (recordUpdatedAfter) {
-      builder = builder.where('recordUpdatedAt', '<', recordUpdatedAfter)
+      builder = builder.where('recordUpdatedAt', '>', recordUpdatedAfter)
     }
 
     if (recordUpdatedBefore) {
-      builder = builder.where('recordUpdatedAt', '>', recordUpdatedBefore)
+      builder = builder.where('recordUpdatedAt', '<', recordUpdatedBefore)
     }
 
     if (recordDeletedAfter) {
-      builder = builder.where('recordDeletedAt', '<', recordDeletedAfter)
+      builder = builder.where('recordDeletedAt', '>', recordDeletedAfter)
     }
 
     if (recordDeletedBefore) {
-      builder = builder.where('recordDeletedAt', '>', recordDeletedBefore)
+      builder = builder.where('recordDeletedAt', '<', recordDeletedBefore)
     }
 
     if (recordStatus) {
