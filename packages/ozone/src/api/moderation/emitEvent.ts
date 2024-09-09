@@ -162,7 +162,7 @@ const handleModerationEvent = async ({
       }
     }
 
-    if (isTakedownEvent && result.event.meta?.acknowledgeAllSubjectsOfAccount) {
+    if (isTakedownEvent && result.event.meta?.acknowledgeAccountSubjects) {
       await moderationTxn.resolveSubjectsForAccount(subject.did, createdBy)
     }
 

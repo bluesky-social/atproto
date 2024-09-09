@@ -368,8 +368,8 @@ export class ModerationService {
       }
     }
 
-    if (isModEventTakedown(event) && event.acknowledgeAllSubjectsOfAccount) {
-      meta.acknowledgeAllSubjectsOfAccount = true
+    if (isModEventTakedown(event) && event.acknowledgeAccountSubjects) {
+      meta.acknowledgeAccountSubjects = true
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated

@@ -87,7 +87,7 @@ describe('moderation', () => {
 
     await modClient.performTakedown({
       subject: repoSubject(sc.dids.bob),
-      acknowledgeAllSubjectsOfAccount: true,
+      acknowledgeAccountSubjects: true,
     })
 
     const { subjectStatuses: statusesAfter } = await modClient.queryStatuses({

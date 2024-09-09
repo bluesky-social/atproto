@@ -124,12 +124,11 @@ export class ModerationViews {
 
     if (
       event.action === 'tools.ozone.moderation.defs#modEventTakedown' &&
-      event.meta?.acknowledgeAllSubjectsOfAccount
+      event.meta?.acknowledgeAccountSubjects
     ) {
       eventView.event = {
         ...eventView.event,
-        acknowledgeAllSubjectsOfAccount:
-          event.meta?.acknowledgeAllSubjectsOfAccount,
+        acknowledgeAccountSubjects: event.meta?.acknowledgeAccountSubjects,
       }
     }
 
