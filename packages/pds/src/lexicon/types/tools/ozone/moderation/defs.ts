@@ -117,6 +117,17 @@ export interface SubjectStatusView {
   updatedAt: string
   /** Timestamp referencing the first moderation status impacting event was emitted on the subject */
   createdAt: string
+  /** Last update timestamp of the record the subject is associated with */
+  recordUpdatedAt?: string
+  /** Timestamp referencing when the record the subject is associated with was deleted */
+  recordDeletedAt?: string
+  /** Status of the record the subject is associated with. Statuses are different when the subject references an account vs. a record */
+  recordStatus?:
+    | 'takendown'
+    | 'suspended'
+    | 'deleted'
+    | 'deactivated'
+    | (string & {})
   reviewState: SubjectReviewState
   /** Sticky comment on the subject. */
   comment?: string
@@ -481,7 +492,7 @@ export interface AccountEvent {
   comment?: string
   /** Indicates that the account has a repository which can be fetched from the host that emitted this event. */
   active: boolean
-  status: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
+  status?: 'takendown' | 'suspended' | 'deleted' | 'deactivated' | (string & {})
   timestamp: string
   [k: string]: unknown
 }

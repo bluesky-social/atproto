@@ -326,7 +326,7 @@ export class ModerationService {
     if (isAccountEvent(event)) {
       meta.active = event.active
       meta.timestamp = event.timestamp
-      meta.status = event.status
+      if (event.status) meta.status = event.status
     }
 
     if (isIdentityEvent(event)) {
@@ -709,6 +709,11 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
+    recordDeletedBefore,
+    recordDeletedAfter,
+    recordUpdatedBefore,
+    recordUpdatedAfter,
+    recordStatus,
     onlyMuted,
     ignoreSubjects,
     sortDirection,
@@ -728,6 +733,11 @@ export class ModerationService {
     reportedAfter?: string
     reportedBefore?: string
     includeMuted?: boolean
+    recordDeletedBefore?: string
+    recordDeletedAfter?: string
+    recordUpdatedBefore?: string
+    recordUpdatedAfter?: string
+    recordStatus?: string
     onlyMuted?: boolean
     subject?: string
     ignoreSubjects?: string[]
@@ -771,6 +781,26 @@ export class ModerationService {
 
     if (reviewedBefore) {
       builder = builder.where('lastReviewedAt', '<', reviewedBefore)
+    }
+
+    if (recordUpdatedAfter) {
+      builder = builder.where('recordUpdatedAt', '<', recordUpdatedAfter)
+    }
+
+    if (recordUpdatedBefore) {
+      builder = builder.where('recordUpdatedAt', '>', recordUpdatedBefore)
+    }
+
+    if (recordDeletedAfter) {
+      builder = builder.where('recordDeletedAt', '<', recordDeletedAfter)
+    }
+
+    if (recordDeletedBefore) {
+      builder = builder.where('recordDeletedAt', '>', recordDeletedBefore)
+    }
+
+    if (recordStatus) {
+      builder = builder.where('recordStatus', '=', recordStatus)
     }
 
     if (reportedAfter) {

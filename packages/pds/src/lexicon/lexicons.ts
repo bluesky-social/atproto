@@ -10831,6 +10831,24 @@ export const schemaDict = {
             description:
               'Timestamp referencing the first moderation status impacting event was emitted on the subject',
           },
+          recordUpdatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Last update timestamp of the record the subject is associated with',
+          },
+          recordDeletedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the record the subject is associated with was deleted',
+          },
+          recordStatus: {
+            type: 'string',
+            description:
+              'Status of the record the subject is associated with. Statuses are different when the subject references an account vs. a record',
+            knownValues: ['takendown', 'suspended', 'deleted', 'deactivated'],
+          },
           reviewState: {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#subjectReviewState',
@@ -11127,7 +11145,7 @@ export const schemaDict = {
         type: 'object',
         description:
           'Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.',
-        required: ['timestamp', 'status', 'active'],
+        required: ['timestamp', 'active'],
         properties: {
           comment: {
             type: 'string',
@@ -11835,6 +11853,36 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
               description: 'Search subjects reviewed after a given timestamp',
+            },
+            recordDeletedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted after a given timestamp',
+            },
+            recordDeletedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was deleted before a given timestamp',
+            },
+            recordUpdatedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated after a given timestamp',
+            },
+            recordUpdatedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Search subjects where the associated record/account was updated before a given timestamp',
+            },
+            recordStatus: {
+              type: 'string',
+              knownValues: ['deactivated', 'deleted', 'takendown', 'suspended'],
+              description:
+                'Search subjects by the status of the associated record/account',
             },
             reviewedBefore: {
               type: 'string',

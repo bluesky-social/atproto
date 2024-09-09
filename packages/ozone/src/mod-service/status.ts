@@ -126,6 +126,71 @@ const getSubjectStatusForModerationEvent = ({
   }
 }
 
+const recordEvents = [
+  'tools.ozone.moderation.defs#accountEvent',
+  'tools.ozone.moderation.defs#identityEvent',
+  'tools.ozone.moderation.defs#recordEvent',
+]
+
+const getSubjectStatusForRecordEvent = ({
+  event,
+  currentStatus,
+}: {
+  event: ModerationEventRow
+  currentStatus?: ModerationSubjectStatusRow
+}): Partial<ModerationSubjectStatusRow> => {
+  const timestamp = event.meta?.timestamp
+    ? `${event.meta?.timestamp}`
+    : event.createdAt
+  if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+    if (event.meta?.op === 'delete') {
+      return {
+        recordStatus: 'deleted',
+        recordDeletedAt: timestamp,
+      }
+    } else if (event.meta?.op === 'update') {
+      return {
+        recordUpdatedAt: timestamp,
+      }
+    }
+    return {}
+  }
+
+  if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
+    const status: Partial<ModerationSubjectStatusRow> = {
+      recordStatus: `${event.meta?.status}`,
+    }
+
+    if (event.meta?.status === 'deleted') {
+      status.recordDeletedAt = timestamp
+    } else {
+      status.recordUpdatedAt = timestamp
+      // When deactivated accounts are re-activated, we receive the event with just the active flag set to true
+      // so we want to make sure that the recordStatus is not set to an outdated value
+      if (currentStatus?.recordStatus !== 'active' && event.meta?.active) {
+        status.recordStatus = 'active'
+        status.recordDeletedAt = null
+      }
+    }
+
+    return status
+  }
+
+  if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
+    const status: Partial<ModerationSubjectStatusRow> = {
+      recordUpdatedAt: timestamp,
+    }
+
+    if (event.meta?.tombstone) {
+      status.recordDeletedAt = timestamp
+    }
+
+    return status
+  }
+
+  return {}
+}
+
 // Based on a given moderation action event, this function will update the moderation status of the subject
 // If there's no existing status, it will create one
 // If the action event does not affect the status, it will do nothing
@@ -133,7 +198,7 @@ export const adjustModerationSubjectStatus = async (
   db: Database,
   moderationEvent: ModerationEventRow,
   blobCids?: string[],
-) => {
+): Promise<ModerationSubjectStatusRow | null> => {
   const {
     action,
     subjectDid,
@@ -152,6 +217,7 @@ export const adjustModerationSubjectStatus = async (
 
   db.assertTransaction()
 
+  const now = new Date().toISOString()
   const currentStatus = await db.db
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
@@ -161,6 +227,37 @@ export const adjustModerationSubjectStatus = async (
     .selectAll()
     .executeTakeFirst()
 
+  if (recordEvents.includes(action)) {
+    const newStatus = getSubjectStatusForRecordEvent({ event: moderationEvent })
+    if (!Object.keys(newStatus).length) {
+      return currentStatus || null
+    }
+
+    const status = await db.db
+      .insertInto('moderation_subject_status')
+      .values({
+        ...identifier,
+        ...newStatus,
+        // newStatus doesn't contain a reviewState or takendown so in case this is a new entry
+        // we need to set a default values so that the insert doesn't fail
+        reviewState: currentStatus ? currentStatus.reviewState : REVIEWNONE,
+        // @TODO: should we try to update this based on status property of account event?
+        // For now we're the only one emitting takedowns so i don't think it makes too much of a difference
+        takendown: currentStatus ? currentStatus.takendown : false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflict((oc) =>
+        oc.constraint('moderation_status_unique_idx').doUpdateSet({
+          ...newStatus,
+          updatedAt: now,
+        }),
+      )
+      .returningAll()
+      .executeTakeFirst()
+
+    return status || null
+  }
   // If reporting is muted for this reporter, we don't want to update the subject status
   if (meta?.isReporterMuted) {
     return currentStatus || null
@@ -178,7 +275,6 @@ export const adjustModerationSubjectStatus = async (
     durationInHours: moderationEvent.durationInHours,
   })
 
-  const now = new Date().toISOString()
   if (
     currentStatus?.reviewState === REVIEWESCALATED &&
     subjectStatus.reviewState !== REVIEWCLOSED

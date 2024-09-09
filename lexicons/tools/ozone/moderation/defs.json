@@ -131,6 +131,21 @@
           "format": "datetime",
           "description": "Timestamp referencing the first moderation status impacting event was emitted on the subject"
         },
+        "recordUpdatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Last update timestamp of the record the subject is associated with"
+        },
+        "recordDeletedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp referencing when the record the subject is associated with was deleted"
+        },
+        "recordStatus": {
+          "type": "string",
+          "description": "Status of the record the subject is associated with. Statuses are different when the subject references an account vs. a record",
+          "knownValues": ["takendown", "suspended", "deleted", "deactivated"]
+        },
         "reviewState": {
           "type": "ref",
           "ref": "#subjectReviewState"
@@ -395,7 +410,7 @@
     "accountEvent": {
       "type": "object",
       "description": "Logs account status related events on a repo subject. Normally captured by automod from the firehose and emitted to ozone for historical tracking.",
-      "required": ["timestamp", "status", "active"],
+      "required": ["timestamp", "active"],
       "properties": {
         "comment": { "type": "string" },
         "active": {

@@ -18,6 +18,21 @@ export interface QueryParams {
   reportedBefore?: string
   /** Search subjects reviewed after a given timestamp */
   reviewedAfter?: string
+  /** Search subjects where the associated record/account was deleted after a given timestamp */
+  recordDeletedAfter?: string
+  /** Search subjects where the associated record/account was deleted before a given timestamp */
+  recordDeletedBefore?: string
+  /** Search subjects where the associated record/account was updated after a given timestamp */
+  recordUpdatedAfter?: string
+  /** Search subjects where the associated record/account was updated before a given timestamp */
+  recordUpdatedBefore?: string
+  /** Search subjects by the status of the associated record/account */
+  recordStatus?:
+    | 'deactivated'
+    | 'deleted'
+    | 'takendown'
+    | 'suspended'
+    | (string & {})
   /** Search subjects reviewed before a given timestamp */
   reviewedBefore?: string
   /** By default, we don't include muted subjects in the results. Set this to true to include them. */
