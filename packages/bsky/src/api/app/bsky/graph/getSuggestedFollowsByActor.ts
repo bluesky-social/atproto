@@ -71,7 +71,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         { headers: params.headers },
       )
     return {
-      isFallback: !!res.data.relativeToDid,
+      isFallback: !res.data.relativeToDid,
       suggestedDids: res.data.actors.map((a) => a.did),
       headers: res.headers,
     }
