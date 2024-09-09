@@ -1,6 +1,9 @@
 import * as os from 'node:os'
 import * as path from 'node:path'
+import assert from 'node:assert'
+import { decodeJwt } from 'jose'
 import * as plcLib from '@did-plc/lib'
+import { parseReqNsid } from '@atproto/xrpc-server'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
@@ -114,10 +117,11 @@ describe('entryway', () => {
   it('updates handle from entryway.', async () => {
     await entrywayAgent.api.com.atproto.identity.updateHandle(
       { handle: 'alice3.test' },
-      {
-        headers: SeedClient.getHeaders(accessToken),
-        encoding: 'application/json',
-      },
+      await pds.ctx.serviceAuthHeaders(
+        alice,
+        'did:example:entryway',
+        'com.atproto.identity.updateHandle',
+      ),
     )
     const doc = await entryway.ctx.idResolver.did.resolve(alice)
     const handleToDid =
@@ -182,6 +186,28 @@ const createEntryway = async (
   const server = await pdsEntryway.PDS.create(cfg, secrets)
   await server.ctx.db.migrateToLatestOrThrow()
   await server.start()
+  // patch entryway access token verification to handle internal service auth pds -> entryway
+  const origValidateAccessToken =
+    server.ctx.authVerifier.validateAccessToken.bind(server.ctx.authVerifier)
+  server.ctx.authVerifier.validateAccessToken = async (req, scopes) => {
+    const jwt = req.headers.authorization?.replace('Bearer ', '') ?? ''
+    const claims = decodeJwt(jwt)
+    if (claims.aud === 'did:example:entryway') {
+      assert(claims.lxm === parseReqNsid(req), 'bad lxm claim in service auth')
+      assert(claims.aud, 'missing aud claim in service auth')
+      assert(claims.iss, 'missing iss claim in service auth')
+      return {
+        artifacts: jwt,
+        credentials: {
+          type: 'access',
+          scope: 'com.atproto.access' as any,
+          audience: claims.aud,
+          did: claims.iss,
+        },
+      }
+    }
+    return origValidateAccessToken(req, scopes)
+  }
   // @TODO temp hack because entryway teardown calls signupActivator.run() by mistake
   server.ctx.signupActivator.run = server.ctx.signupActivator.destroy
   return server

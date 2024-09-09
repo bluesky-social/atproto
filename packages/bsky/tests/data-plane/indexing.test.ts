@@ -97,7 +97,12 @@ describe('indexing', () => {
 
     const getAfterCreate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
     const createNotifications = await getNotifications(db, uri)
@@ -107,7 +112,12 @@ describe('indexing', () => {
 
     const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
     const updateNotifications = await getNotifications(db, uri)
@@ -117,7 +127,12 @@ describe('indexing', () => {
 
     const getAfterDelete = agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyFeedGetPostThread,
+        ),
+      },
     )
     await expect(getAfterDelete).rejects.toThrow(/Post not found:/)
     const deleteNotifications = await getNotifications(db, uri)
@@ -162,7 +177,12 @@ describe('indexing', () => {
 
     const getAfterCreate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
 
@@ -171,7 +191,12 @@ describe('indexing', () => {
 
     const getAfterUpdate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
 
@@ -180,7 +205,12 @@ describe('indexing', () => {
 
     const getAfterDelete = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
-      { headers: await network.serviceHeaders(sc.dids.alice) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
     expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
   })
@@ -247,6 +277,7 @@ describe('indexing', () => {
       replyCount: 1,
       repostCount: 1,
       likeCount: 1,
+      quoteCount: 0,
     })
     // Cleanup
     const del = (uri: AtUri) => {
@@ -331,7 +362,12 @@ describe('indexing', () => {
       data: { notifications },
     } = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await network.serviceHeaders(sc.dids.bob) },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.bob,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
     )
 
     expect(notifications).toHaveLength(2)
@@ -393,7 +429,7 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
-      network.bsky.sub.run()
+      await network.bsky.sub.restart()
       await basicSeed(sc, false)
       await network.processAll()
       await network.bsky.sub.destroy()
@@ -404,15 +440,30 @@ describe('indexing', () => {
       // Mark originals
       const { data: origProfile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       const { data: origFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
       )
       const { data: origFollows } = await agent.api.app.bsky.graph.getFollows(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyGraphGetFollows,
+          ),
+        },
       )
       // Index
       const { data: commit } =
@@ -424,15 +475,30 @@ describe('indexing', () => {
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       const { data: feed } = await agent.api.app.bsky.feed.getAuthorFeed(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
       )
       const { data: follows } = await agent.api.app.bsky.graph.getFollows(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyGraphGetFollows,
+          ),
+        },
       )
       expect(forSnapshot([origProfile, origFeed, origFollows])).toEqual(
         forSnapshot([profile, feed, follows]),
@@ -468,15 +534,30 @@ describe('indexing', () => {
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       const { data: feed } = await agent.api.app.bsky.feed.getAuthorFeed(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyFeedGetAuthorFeed,
+          ),
+        },
       )
       const { data: follows } = await agent.api.app.bsky.graph.getFollows(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyGraphGetFollows,
+          ),
+        },
       )
       expect(profile.description).toEqual('freshening things up')
       expect(feed.feed[0].post.uri).toEqual(newPost.ref.uriStr)
@@ -525,12 +606,22 @@ describe('indexing', () => {
       // Check
       const getGoodPost = agent.api.app.bsky.feed.getPostThread(
         { uri: writes[0].uri.toString(), depth: 0 },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
       await expect(getGoodPost).resolves.toBeDefined()
       const getBadPost = agent.api.app.bsky.feed.getPostThread(
         { uri: writes[1].uri.toString(), depth: 0 },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyFeedGetPostThread,
+          ),
+        },
       )
       await expect(getBadPost).rejects.toThrow('Post not found')
     })
@@ -540,7 +631,12 @@ describe('indexing', () => {
     const getIndexedHandle = async (did) => {
       const res = await agent.api.app.bsky.actor.getProfile(
         { actor: did },
-        { headers: await network.serviceHeaders(sc.dids.alice) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       return res.data.handle
     }
@@ -618,13 +714,23 @@ describe('indexing', () => {
     it('does not unindex actor when they are still being hosted by their pds', async () => {
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       // Attempt indexing tombstone
       await network.bsky.sub.indexingSvc.deleteActor(sc.dids.alice)
       const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       expect(profileAfter).toEqual(profileBefore)
     })
@@ -633,7 +739,12 @@ describe('indexing', () => {
       const { alice } = sc.dids
       const getProfileBefore = agent.api.app.bsky.actor.getProfile(
         { actor: alice },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       await expect(getProfileBefore).resolves.toBeDefined()
       // Delete account on pds
@@ -651,7 +762,12 @@ describe('indexing', () => {
       await network.bsky.sub.indexingSvc.deleteActor(alice)
       const getProfileAfter = agent.api.app.bsky.actor.getProfile(
         { actor: alice },
-        { headers: await network.serviceHeaders(sc.dids.bob) },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.bob,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
       )
       await expect(getProfileAfter).rejects.toThrow('Profile not found')
     })

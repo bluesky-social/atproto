@@ -54,12 +54,6 @@ export class PDS {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<PDS> {
-    const app = express()
-    app.set('trust proxy', true)
-    app.use(cors({ maxAge: DAY / SECOND }))
-    app.use(loggerMiddleware)
-    app.use(compression())
-
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
     const xrpcOpts: XrpcServerOptions = {
@@ -100,7 +94,12 @@ export class PDS {
 
     server = API(server, ctx)
 
-    app.use(authRoutes.createRouter(ctx))
+    const app = express()
+    app.set('trust proxy', true)
+    app.use(loggerMiddleware)
+    app.use(compression())
+    app.use(authRoutes.createRouter(ctx)) // Before CORS
+    app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)

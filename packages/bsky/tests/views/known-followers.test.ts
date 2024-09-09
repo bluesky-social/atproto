@@ -2,6 +2,7 @@ import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 
 import { knownFollowersSeed } from '../seed/known-followers'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('known followers (social proof)', () => {
   let network: TestNetwork
@@ -70,7 +71,12 @@ describe('known followers (social proof)', () => {
   it('basic profile views do not return knownFollowers', async () => {
     const { data } = await agent.api.app.bsky.graph.getFollows(
       { actor: dids.base_res_1 },
-      { headers: await network.serviceHeaders(dids.base_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.base_view,
+          ids.AppBskyGraphGetFollows,
+        ),
+      },
     )
     const follow = data.follows[0]
 
@@ -80,7 +86,12 @@ describe('known followers (social proof)', () => {
   it('getKnownFollowers: returns data', async () => {
     const { data } = await agent.api.app.bsky.graph.getKnownFollowers(
       { actor: dids.base_sub },
-      { headers: await network.serviceHeaders(dids.base_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.base_view,
+          ids.AppBskyGraphGetKnownFollowers,
+        ),
+      },
     )
 
     expect(data.subject.did).toBe(dids.base_sub)
@@ -91,7 +102,12 @@ describe('known followers (social proof)', () => {
   it('getProfile: returns knownFollowers', async () => {
     const { data } = await agent.api.app.bsky.actor.getProfile(
       { actor: dids.base_sub },
-      { headers: await network.serviceHeaders(dids.base_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.base_view,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
 
     const knownFollowers = data.viewer?.knownFollowers
@@ -103,7 +119,12 @@ describe('known followers (social proof)', () => {
   it('getProfile: filters 1st-party blocks', async () => {
     const { data } = await agent.api.app.bsky.actor.getProfile(
       { actor: dids.fp_block_sub },
-      { headers: await network.serviceHeaders(dids.fp_block_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.fp_block_view,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
 
     const knownFollowers = data.viewer?.knownFollowers
@@ -114,7 +135,12 @@ describe('known followers (social proof)', () => {
   it('getProfile: filters second-party blocks', async () => {
     const result = await agent.api.app.bsky.actor.getProfile(
       { actor: dids.sp_block_sub },
-      { headers: await network.serviceHeaders(dids.sp_block_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.sp_block_view,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
     )
 
     const knownFollowers = result.data.viewer?.knownFollowers
@@ -125,7 +151,12 @@ describe('known followers (social proof)', () => {
   it('getProfiles: filters second-party blocks', async () => {
     const result = await agent.api.app.bsky.actor.getProfiles(
       { actors: [dids.sp_block_sub] },
-      { headers: await network.serviceHeaders(dids.sp_block_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.sp_block_view,
+          ids.AppBskyActorGetProfiles,
+        ),
+      },
     )
 
     expect(result.data.profiles).toHaveLength(1)
@@ -138,7 +169,12 @@ describe('known followers (social proof)', () => {
   it('getProfiles: mix of results', async () => {
     const result = await agent.api.app.bsky.actor.getProfiles(
       { actors: [dids.mix_sub_1, dids.mix_sub_2, dids.mix_sub_3] },
-      { headers: await network.serviceHeaders(dids.mix_view) },
+      {
+        headers: await network.serviceHeaders(
+          dids.mix_view,
+          ids.AppBskyActorGetProfiles,
+        ),
+      },
     )
 
     expect(result.data.profiles).toHaveLength(3)

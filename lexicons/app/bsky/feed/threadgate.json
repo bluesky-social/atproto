@@ -23,7 +23,16 @@
               "refs": ["#mentionRule", "#followingRule", "#listRule"]
             }
           },
-          "createdAt": { "type": "string", "format": "datetime" }
+          "createdAt": { "type": "string", "format": "datetime" },
+          "hiddenReplies": {
+            "type": "array",
+            "maxLength": 50,
+            "items": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "description": "List of hidden reply URIs."
+          }
         }
       }
     },

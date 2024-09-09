@@ -27,16 +27,10 @@
           "type": "string",
           "description": "Alt text description of the image, for accessibility."
         },
-        "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
-      }
-    },
-    "aspectRatio": {
-      "type": "object",
-      "description": "width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.",
-      "required": ["width", "height"],
-      "properties": {
-        "width": { "type": "integer", "minimum": 1 },
-        "height": { "type": "integer", "minimum": 1 }
+        "aspectRatio": {
+          "type": "ref",
+          "ref": "app.bsky.embed.defs#aspectRatio"
+        }
       }
     },
     "view": {
@@ -68,7 +62,10 @@
           "type": "string",
           "description": "Alt text description of the image, for accessibility."
         },
-        "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
+        "aspectRatio": {
+          "type": "ref",
+          "ref": "app.bsky.embed.defs#aspectRatio"
+        }
       }
     }
   }

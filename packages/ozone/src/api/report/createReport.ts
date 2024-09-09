@@ -4,7 +4,7 @@ import { getReasonType } from '../util'
 import { subjectFromInput } from '../../mod-service/subject'
 import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 import { ForbiddenError } from '@atproto/xrpc-server'
-import { ModerationLangService } from '../../mod-service/lang'
+import { TagService } from '../../tag-service'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -31,12 +31,13 @@ export default function (server: Server, ctx: AppContext) {
             reportedBy: requester || ctx.cfg.service.did,
           })
 
-        const moderationLangService = new ModerationLangService(moderationTxn)
-        await moderationLangService.tagSubjectWithLang({
+        const tagService = new TagService(
           subject,
           subjectStatus,
-          createdBy: ctx.cfg.service.did,
-        })
+          ctx.cfg.service.did,
+          moderationTxn,
+        )
+        await tagService.evaluateForSubject()
 
         return reportEvent
       })

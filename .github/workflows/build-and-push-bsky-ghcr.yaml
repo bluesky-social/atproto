@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - divy/mod-full-thread
+      - bsky-tweaks
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

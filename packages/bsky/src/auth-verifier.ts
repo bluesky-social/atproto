@@ -1,8 +1,12 @@
+import { KeyObject, createPublicKey } from 'node:crypto'
 import {
   AuthRequiredError,
+  parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
+import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
+import * as jose from 'jose'
 import express from 'express'
 import {
   Code,
@@ -15,6 +19,11 @@ import { GetIdentityByDidResponse } from './proto/bsky_pb'
 
 type ReqCtx = {
   req: express.Request
+}
+
+type StandardAuthOpts = {
+  skipAudCheck?: boolean
+  lxmCheck?: (method?: string) => boolean
 }
 
 export enum RoleStatus {
@@ -53,11 +62,18 @@ type ModServiceOutput = {
   }
 }
 
+const ALLOWED_AUTH_SCOPES = new Set([
+  'com.atproto.access',
+  'com.atproto.appPass',
+  'com.atproto.appPassPrivileged',
+])
+
 export type AuthVerifierOpts = {
   ownDid: string
   alternateAudienceDids: string[]
   modServiceDid: string
   adminPasses: string[]
+  entrywayJwtPublicKey?: KeyObject
 }
 
 export class AuthVerifier {
@@ -65,6 +81,7 @@ export class AuthVerifier {
   public standardAudienceDids: Set<string>
   public modServiceDid: string
   private adminPasses: Set<string>
+  private entrywayJwtPublicKey?: KeyObject
 
   constructor(
     public dataplane: DataPlaneClient,
@@ -77,64 +94,70 @@ export class AuthVerifier {
     ])
     this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
+    this.entrywayJwtPublicKey = opts.entrywayJwtPublicKey
   }
 
   // verifiers (arrow fns to preserve scope)
+  standardOptionalParameterized =
+    (opts: StandardAuthOpts) =>
+    async (ctx: ReqCtx): Promise<StandardOutput | NullOutput> => {
+      // @TODO remove! basic auth + did supported just for testing.
+      if (isBasicToken(ctx.req)) {
+        const aud = this.ownDid
+        const iss = ctx.req.headers['appview-as-did']
+        if (typeof iss !== 'string' || !iss.startsWith('did:')) {
+          throw new AuthRequiredError('bad issuer')
+        }
+        if (!this.parseRoleCreds(ctx.req).admin) {
+          throw new AuthRequiredError('bad credentials')
+        }
+        return {
+          credentials: { type: 'standard', iss, aud },
+        }
+      } else if (isBearerToken(ctx.req)) {
+        // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
+        const token = bearerTokenFromReq(ctx.req)
+        const header = token ? jose.decodeProtectedHeader(token) : undefined
+        if (header?.typ === 'at+jwt') {
+          // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
+          if (opts.skipAudCheck) {
+            throw new AuthRequiredError('Malformed token', 'InvalidToken')
+          }
+          return this.entrywaySession(ctx)
+        }
+
+        const { iss, aud } = await this.verifyServiceJwt(ctx, {
+          lxmCheck: opts.lxmCheck,
+          iss: null,
+          aud: null,
+        })
+        if (!opts.skipAudCheck && !this.standardAudienceDids.has(aud)) {
+          throw new AuthRequiredError(
+            'jwt audience does not match service did',
+            'BadJwtAudience',
+          )
+        }
+        return {
+          credentials: {
+            type: 'standard',
+            iss,
+            aud,
+          },
+        }
+      } else {
+        return this.nullCreds()
+      }
+    }
+
+  standardOptional: (ctx: ReqCtx) => Promise<StandardOutput | NullOutput> =
+    this.standardOptionalParameterized({})
 
   standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
-    // @TODO remove! basic auth + did supported just for testing.
-    if (isBasicToken(ctx.req)) {
-      const aud = this.ownDid
-      const iss = ctx.req.headers['appview-as-did']
-      if (typeof iss !== 'string' || !iss.startsWith('did:')) {
-        throw new AuthRequiredError('bad issuer')
-      }
-      if (!this.parseRoleCreds(ctx.req).admin) {
-        throw new AuthRequiredError('bad credentials')
-      }
-      return {
-        credentials: { type: 'standard', iss, aud },
-      }
+    const output = await this.standardOptional(ctx)
+    if (output.credentials.type === 'none') {
+      throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: null,
-      iss: null,
-    })
-    if (!this.standardAudienceDids.has(aud)) {
-      throw new AuthRequiredError(
-        'jwt audience does not match service did',
-        'BadJwtAudience',
-      )
-    }
-    return {
-      credentials: {
-        type: 'standard',
-        iss,
-        aud,
-      },
-    }
-  }
-
-  standardOptional = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | NullOutput> => {
-    if (isBearerToken(ctx.req) || isBasicToken(ctx.req)) {
-      return this.standard(ctx)
-    }
-    return this.nullCreds()
-  }
-
-  standardOptionalAnyAud = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | NullOutput> => {
-    if (!isBearerToken(ctx.req)) {
-      return this.nullCreds()
-    }
-    const { iss, aud } = await this.verifyServiceJwt(ctx, {
-      aud: null,
-      iss: null,
-    })
-    return { credentials: { type: 'standard', iss, aud } }
+    return output as StandardOutput
   }
 
   role = (ctx: ReqCtx): RoleOutput => {
@@ -182,6 +205,54 @@ export class AuthVerifier {
     }
   }
 
+  // @NOTE this auth verifier method is not recommended to be implemented by most appviews
+  // this is a short term fix to remove proxy load from Bluesky's PDS and in line with possible
+  // future plans to have the client talk directly with the appview
+  entrywaySession = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
+    const token = bearerTokenFromReq(reqCtx.req)
+    if (!token) {
+      throw new AuthRequiredError(undefined, 'AuthMissing')
+    }
+
+    // if entryway jwt key not configured then do not parsed these tokens
+    if (!this.entrywayJwtPublicKey) {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    }
+
+    const res = await jose
+      .jwtVerify(token, this.entrywayJwtPublicKey)
+      .catch((err) => {
+        if (err?.['code'] === 'ERR_JWT_EXPIRED') {
+          throw new AuthRequiredError('Token has expired', 'ExpiredToken')
+        }
+        throw new AuthRequiredError(
+          'Token could not be verified',
+          'InvalidToken',
+        )
+      })
+
+    const { sub, aud, scope } = res.payload
+    if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+      throw new AuthRequiredError('Malformed token', 'InvalidToken')
+    } else if (
+      typeof aud !== 'string' ||
+      !aud.startsWith('did:web:') ||
+      !aud.endsWith('.bsky.network')
+    ) {
+      throw new AuthRequiredError('Bad token aud', 'InvalidToken')
+    } else if (typeof scope !== 'string' || !ALLOWED_AUTH_SCOPES.has(scope)) {
+      throw new AuthRequiredError('Bad token scope', 'InvalidToken')
+    }
+
+    return {
+      credentials: {
+        type: 'standard',
+        aud: this.ownDid,
+        iss: sub,
+      },
+    }
+  }
+
   modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
@@ -215,7 +286,11 @@ export class AuthVerifier {
 
   async verifyServiceJwt(
     reqCtx: ReqCtx,
-    opts: { aud: string | null; iss: string[] | null },
+    opts: {
+      iss: string[] | null
+      aud: string | null
+      lxmCheck?: (method?: string) => boolean
+    },
   ) {
     const getSigningKey = async (
       iss: string,
@@ -243,17 +318,40 @@ export class AuthVerifier {
       }
       return didKey
     }
+    const assertLxmCheck = () => {
+      const lxm = parseReqNsid(reqCtx.req)
+      if (
+        (opts.lxmCheck && !opts.lxmCheck(payload.lxm)) ||
+        (!opts.lxmCheck && payload.lxm !== lxm)
+      ) {
+        throw new AuthRequiredError(
+          payload.lxm !== undefined
+            ? `bad jwt lexicon method ("lxm"). must match: ${lxm}`
+            : `missing jwt lexicon method ("lxm"). must match: ${lxm}`,
+          'BadJwtLexiconMethod',
+        )
+      }
+    }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
+    // if validating additional scopes, skip scope check in initial validation & follow up afterwards
     const payload = await verifyServiceJwt(
       jwtStr,
       opts.aud,
       null,
       getSigningKey,
     )
+    if (
+      !payload.iss.endsWith('#atproto_labeler') ||
+      payload.lxm !== undefined
+    ) {
+      // @TODO currently permissive of labelers who dont set lxm yet.
+      // we'll allow ozone self-hosters to upgrade before removing this condition.
+      assertLxmCheck()
+    }
     return { iss: payload.iss, aud: payload.aud }
   }
 
@@ -337,4 +435,10 @@ export const buildBasicAuth = (username: string, password: string): string => {
     BASIC +
     ui8.toString(ui8.fromString(`${username}:${password}`, 'utf8'), 'base64pad')
   )
+}
+
+const keyEncoder = new KeyEncoder('secp256k1')
+export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
+  const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
+  return createPublicKey({ format: 'pem', key })
 }

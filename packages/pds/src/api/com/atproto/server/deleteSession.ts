@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     server.com.atproto.server.deleteSession(async (reqCtx) => {
       await entrywayAgent.com.atproto.server.deleteSession(
         undefined,
-        authPassthru(reqCtx.req, true),
+        authPassthru(reqCtx.req),
       )
     })
   } else {

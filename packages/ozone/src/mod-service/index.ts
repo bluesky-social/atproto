@@ -52,6 +52,7 @@ import { ImageInvalidator } from '../image-invalidator'
 import { httpLogger as log } from '../logger'
 import { OzoneConfig } from '../config'
 import { LABELER_HEADER_NAME, ParsedLabelers } from '../util'
+import { ids } from '../lexicon/lexicons'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -65,7 +66,10 @@ export class ModerationService {
     public idResolver: IdResolver,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
-    private createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
+    private createAuthHeaders: (
+      aud: string,
+      method: string,
+    ) => Promise<AuthHeaders>,
     public imgInvalidator?: ImageInvalidator,
   ) {}
 
@@ -77,7 +81,7 @@ export class ModerationService {
     idResolver: IdResolver,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
-    createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
+    createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     imgInvalidator?: ImageInvalidator,
   ) {
     return (db: Database) =>
@@ -100,8 +104,11 @@ export class ModerationService {
     this.signingKey,
     this.signingKeyId,
     this.appviewAgent,
-    async (labelers?: ParsedLabelers) => {
-      const authHeaders = await this.createAuthHeaders(this.cfg.appview.did)
+    async (method: string, labelers?: ParsedLabelers) => {
+      const authHeaders = await this.createAuthHeaders(
+        this.cfg.appview.did,
+        method,
+      )
       if (labelers?.dids?.length) {
         authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
       }
@@ -161,26 +168,22 @@ export class ModerationService {
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
+
     if (subject) {
-      builder = builder.where((qb) => {
-        if (includeAllUserRecords) {
-          // If subject is an at-uri, we need to extract the DID from the at-uri
-          // otherwise, subject is probably a DID already
-          if (subject.startsWith('at://')) {
-            const uri = new AtUri(subject)
-            return qb.where('subjectDid', '=', uri.hostname)
-          }
-          return qb.where('subjectDid', '=', subject)
-        }
-        return qb
-          .where((subQb) =>
-            subQb
-              .where('subjectDid', '=', subject)
-              .where('subjectUri', 'is', null),
-          )
-          .orWhere('subjectUri', '=', subject)
-      })
+      const isSubjectAtUri = subject.startsWith('at://')
+      const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
+      const subjectUri = isSubjectAtUri ? subject : null
+      // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
+      builder = builder.where('subjectDid', '=', subjectDid)
+
+      // if requester wants to include all user records, let's ignore matching on subjectUri
+      if (!includeAllUserRecords) {
+        builder = builder
+          .if(!subjectUri, (q) => q.where('subjectUri', 'is', null))
+          .if(!!subjectUri, (q) => q.where('subjectUri', '=', subjectUri))
+      }
     }
+
     if (types.length) {
       builder = builder.where((qb) => {
         if (types.length === 1) {
@@ -718,7 +721,7 @@ export class ModerationService {
     cursor?: string
     limit?: number
     takendown?: boolean
-    appealed?: boolean | null
+    appealed?: boolean
     reviewedBefore?: string
     reviewState?: ModerationSubjectStatusRow['reviewState']
     reviewedAfter?: string
@@ -784,7 +787,7 @@ export class ModerationService {
 
     if (appealed !== undefined) {
       builder =
-        appealed === null
+        appealed === false
           ? builder.where('appealed', 'is', null)
           : builder.where('appealed', '=', appealed)
     }
@@ -958,7 +961,10 @@ export class ModerationService {
       },
       {
         encoding: 'application/json',
-        ...(await this.createAuthHeaders(serverInfo.did)),
+        ...(await this.createAuthHeaders(
+          serverInfo.did,
+          ids.ComAtprotoAdminSendEmail,
+        )),
       },
     )
     if (!delivery.sent) {

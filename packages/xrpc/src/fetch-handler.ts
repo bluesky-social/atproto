@@ -39,11 +39,27 @@ export type BuildFetchHandlerOptions = {
   fetch?: typeof globalThis.fetch
 }
 
+export interface FetchHandlerObject {
+  fetchHandler: (
+    this: FetchHandlerObject,
+    /**
+     * The URL (pathname + query parameters) to make the request to, without the
+     * origin. The origin (protocol, hostname, and port) must be added by this
+     * {@link FetchHandler}, typically based on authentication or other factors.
+     */
+    url: string,
+    init: RequestInit,
+  ) => Promise<Response>
+}
+
 export function buildFetchHandler(
-  options: FetchHandler | FetchHandlerOptions,
+  options: FetchHandler | FetchHandlerObject | FetchHandlerOptions,
 ): FetchHandler {
   // Already a fetch handler (allowed for convenience)
   if (typeof options === 'function') return options
+  if (typeof options === 'object' && 'fetchHandler' in options) {
+    return options.fetchHandler.bind(options)
+  }
 
   const {
     service,

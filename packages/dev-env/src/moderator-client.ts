@@ -21,7 +21,10 @@ export class ModeratorClient {
     const result = await this.agent.tools.ozone.moderation.getEvent(
       { id },
       {
-        headers: await this.ozone.modHeaders(role),
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.getEvent',
+          role,
+        ),
       },
     )
     return result.data
@@ -31,7 +34,10 @@ export class ModeratorClient {
     const result = await this.agent.tools.ozone.moderation.queryStatuses(
       input,
       {
-        headers: await this.ozone.modHeaders(role),
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.queryStatuses',
+          role,
+        ),
       },
     )
     return result.data
@@ -39,7 +45,10 @@ export class ModeratorClient {
 
   async queryEvents(input: QueryEventsParams, role?: ModLevel) {
     const result = await this.agent.tools.ozone.moderation.queryEvents(input, {
-      headers: await this.ozone.modHeaders(role),
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.moderation.queryEvents',
+        role,
+      ),
     })
     return result.data
   }
@@ -66,7 +75,10 @@ export class ModeratorClient {
       { event, subject, subjectBlobCids, createdBy, reason },
       {
         encoding: 'application/json',
-        headers: await this.ozone.modHeaders(role),
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.emitEvent',
+          role,
+        ),
       },
     )
     return result.data
@@ -93,7 +105,10 @@ export class ModeratorClient {
       },
       {
         encoding: 'application/json',
-        headers: await this.ozone.modHeaders(role),
+        headers: await this.ozone.modHeaders(
+          'tools.ozone.moderation.emitEvent',
+          role,
+        ),
       },
     )
     return result.data

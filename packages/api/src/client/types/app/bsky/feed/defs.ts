@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from '../embed/images'
+import * as AppBskyEmbedVideo from '../embed/video'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
@@ -21,6 +22,7 @@ export interface PostView {
   record: {}
   embed?:
     | AppBskyEmbedImages.View
+    | AppBskyEmbedVideo.View
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
     | AppBskyEmbedRecordWithMedia.View
@@ -28,6 +30,7 @@ export interface PostView {
   replyCount?: number
   repostCount?: number
   likeCount?: number
+  quoteCount?: number
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -51,6 +54,7 @@ export interface ViewerState {
   like?: string
   threadMuted?: boolean
   replyDisabled?: boolean
+  embeddingDisabled?: boolean
   [k: string]: unknown
 }
 

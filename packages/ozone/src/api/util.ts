@@ -26,6 +26,7 @@ import {
   ROLEMODERATOR,
   ROLETRIAGE,
 } from '../lexicon/types/tools/ozone/team/defs'
+import { ids } from '../lexicon/lexicons'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,
@@ -33,7 +34,7 @@ export const getPdsAccountInfo = async (
 ): Promise<AccountView | null> => {
   const agent = ctx.pdsAgent
   if (!agent) return null
-  const auth = await ctx.pdsAuth()
+  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfo)
   if (!auth) return null
   try {
     const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
@@ -49,15 +50,31 @@ export const addAccountInfoToRepoViewDetail = (
   includeEmail = false,
 ): RepoViewDetail => {
   if (!accountInfo) return repoView
+  const {
+    email,
+    deactivatedAt,
+    emailConfirmedAt,
+    inviteNote,
+    invitedBy,
+    invites,
+    invitesDisabled,
+    // pick some duplicate/unwanted details out
+    did: _did,
+    handle: _handle,
+    indexedAt: _indexedAt,
+    relatedRecords: _relatedRecords,
+    ...otherAccountInfo
+  } = accountInfo
   return {
+    ...otherAccountInfo,
     ...repoView,
-    email: includeEmail ? accountInfo.email : undefined,
-    invitedBy: accountInfo.invitedBy,
-    invitesDisabled: accountInfo.invitesDisabled,
-    inviteNote: accountInfo.inviteNote,
-    invites: accountInfo.invites,
-    emailConfirmedAt: accountInfo.emailConfirmedAt,
-    deactivatedAt: accountInfo.deactivatedAt,
+    email: includeEmail ? email : undefined,
+    invitedBy,
+    invitesDisabled,
+    inviteNote,
+    invites,
+    emailConfirmedAt,
+    deactivatedAt,
   }
 }
 

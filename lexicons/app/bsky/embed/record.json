@@ -20,6 +20,7 @@
             "#viewRecord",
             "#viewNotFound",
             "#viewBlocked",
+            "#viewDetached",
             "app.bsky.feed.defs#generatorView",
             "app.bsky.graph.defs#listView",
             "app.bsky.labeler.defs#labelerView",
@@ -49,12 +50,14 @@
         "replyCount": { "type": "integer" },
         "repostCount": { "type": "integer" },
         "likeCount": { "type": "integer" },
+        "quoteCount": { "type": "integer" },
         "embeds": {
           "type": "array",
           "items": {
             "type": "union",
             "refs": [
               "app.bsky.embed.images#view",
+              "app.bsky.embed.video#view",
               "app.bsky.embed.external#view",
               "app.bsky.embed.record#view",
               "app.bsky.embed.recordWithMedia#view"
@@ -79,6 +82,14 @@
         "uri": { "type": "string", "format": "at-uri" },
         "blocked": { "type": "boolean", "const": true },
         "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
+      }
+    },
+    "viewDetached": {
+      "type": "object",
+      "required": ["uri", "detached"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "detached": { "type": "boolean", "const": true }
       }
     }
   }

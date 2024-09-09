@@ -23,6 +23,11 @@
               "type": "string",
               "description": "Subject of the message, used in emails."
             },
+            "lang": {
+              "type": "string",
+              "format": "language",
+              "description": "Message language."
+            },
             "createdBy": {
               "type": "string",
               "format": "did",
@@ -37,7 +42,8 @@
           "type": "ref",
           "ref": "tools.ozone.communication.defs#templateView"
         }
-      }
+      },
+      "errors": [{ "name": "DuplicateTemplateName" }]
     }
   }
 }

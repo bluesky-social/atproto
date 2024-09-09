@@ -59,7 +59,6 @@ export class Client {
 /** @deprecated Use {@link XrpcClient} instead */
 export class ServiceClient extends XrpcClient {
   uri: URL
-  headers: Record<string, string> = {}
 
   constructor(
     public baseClient: Client,
@@ -70,13 +69,5 @@ export class ServiceClient extends XrpcClient {
       return fetch(new URL(input, this.uri), { ...init, headers })
     }, baseClient.lex)
     this.uri = typeof serviceUri === 'string' ? new URL(serviceUri) : serviceUri
-  }
-
-  setHeader(key: string, value: string): void {
-    this.headers[key] = value
-  }
-
-  unsetHeader(key: string): void {
-    delete this.headers[key]
   }
 }
