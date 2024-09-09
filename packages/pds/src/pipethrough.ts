@@ -55,10 +55,6 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
               return xrpcErrorWriter(data)
             }
 
-            const encodings = parseContentEncoding(
-              data.headers['content-encoding'],
-            )
-
             // Forward status code
             res.status(data.statusCode)
 
@@ -66,7 +62,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
             for (const [name, val] of buildHeadersToForward(data.headers)) {
               res.setHeader(name, val)
             }
+
             const length = data.headers['content-length']
+            const encodings = parseContentEncoding(
+              data.headers['content-encoding'],
+            )
             if (length && !encodings?.length) {
               res.setHeader('content-length', length)
             } else {
@@ -74,7 +74,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
               res.setHeader('transfer-encoding', 'chunked')
             }
 
-            // Forward the upstream response directly to the incoming response
+            // Forward payload
             return res
           },
         )
@@ -176,28 +176,17 @@ export const formatUrlAndAud = async (
     const proxyTo = await parseProxyHeader(ctx, proxyToHeader)
     const serviceUrl = proxyTo.serviceUrl
     const aud = audOverride ?? proxyTo.did
-    return checkUrlAndAud(ctx, req, serviceUrl, aud, nsid)
+    return { url: new URL(req.originalUrl, serviceUrl), aud, nsid }
   }
 
   const defaultProxy = defaultService(ctx, nsid)
   if (defaultProxy) {
     const serviceUrl = defaultProxy.url
     const aud = audOverride ?? defaultProxy.did
-    return checkUrlAndAud(ctx, req, serviceUrl, aud, nsid)
+    return { url: new URL(req.originalUrl, serviceUrl), aud, nsid }
   }
 
   throw new InvalidRequestError(`No service configured for ${req.path}`)
-}
-
-export const checkUrlAndAud = (
-  ctx: AppContext,
-  req: express.Request,
-  serviceUrl: string,
-  aud: string,
-  nsid: string,
-): { url: URL; aud: string; nsid: string } => {
-  const url = new URL(req.originalUrl, serviceUrl)
-  return { url, aud, nsid }
 }
 
 export const formatHeaders = async (
