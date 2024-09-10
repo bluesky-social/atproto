@@ -39,7 +39,7 @@ export const pipethroughReadAfterWrite = async <T>(
   const { req, auth } = reqCtx
   const requester = auth.credentials.did
 
-  const upstreamRes = await pipethrough(ctx, req, requester)
+  const upstreamRes = await pipethrough(ctx, req, { iss: requester })
 
   const rev = upstreamRes.headers && getRepoRev(upstreamRes.headers)
   if (!rev) return upstreamRes
