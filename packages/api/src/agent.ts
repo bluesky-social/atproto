@@ -1438,16 +1438,9 @@ export class Agent extends XrpcClient {
       )
 
       bskyAppStatePref = bskyAppStatePref || {}
-      bskyAppStatePref.nuxs = bskyAppStatePref.nuxs || []
-
-      for (const id of ids) {
-        const index = bskyAppStatePref.nuxs.findIndex((n) => {
-          return n.id === id
-        })
-        if (index !== -1) {
-          bskyAppStatePref.nuxs.splice(index, 1)
-        }
-      }
+      bskyAppStatePref.nuxs = (bskyAppStatePref.nuxs || []).filter((nux) => {
+        return !ids.includes(nux.id)
+      })
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isBskyAppStatePref(p))
