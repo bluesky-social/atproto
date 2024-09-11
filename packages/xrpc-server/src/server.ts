@@ -295,7 +295,7 @@ export class Server {
           res
             .status(200)
             .header('Content-Type', outputUnvalidated.encoding)
-            .end(Buffer.from(outputUnvalidated.buffer))
+            .end(outputUnvalidated.buffer)
           return
         }
 
@@ -328,9 +328,11 @@ export class Server {
               .header('Content-Type', output.encoding)
               .status(200)
               .send(
-                output.body instanceof Uint8Array
-                  ? Buffer.from(output.body)
-                  : output.body,
+                Buffer.isBuffer(output.body)
+                  ? output.body
+                  : output.body instanceof Uint8Array
+                    ? Buffer.from(output.body)
+                    : output.body,
               )
           } else {
             res.status(200).end()
