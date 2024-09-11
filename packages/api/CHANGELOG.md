@@ -1,5 +1,16 @@
 # @atproto/api
 
+## 0.13.7
+
+### Patch Changes
+
+- [#2807](https://github.com/bluesky-social/atproto/pull/2807) [`e6bd5aecc`](https://github.com/bluesky-social/atproto/commit/e6bd5aecce7954d60e5fb263297e697ab7aab98e) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a acknowledgeAccountSubjects flag on takedown event to ack all subjects from the author that need review
+
+- [#2810](https://github.com/bluesky-social/atproto/pull/2810) [`33aa0c722`](https://github.com/bluesky-social/atproto/commit/33aa0c722226a18215af0ae1833c7c552fc7aaa7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add NUX API
+
+- Updated dependencies [[`98711a147`](https://github.com/bluesky-social/atproto/commit/98711a147a8674337f605c6368f39fc10c2fae93)]:
+  - @atproto/xrpc@0.6.2
+
 ## 0.13.6
 
 ### Patch Changes
