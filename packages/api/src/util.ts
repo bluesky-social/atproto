@@ -1,6 +1,8 @@
 import { AtUri } from '@atproto/syntax'
 import { TID } from '@atproto/common-web'
+import zod from 'zod'
 
+import { Nux } from './client/types/app/bsky/actor/defs'
 import { AppBskyActorDefs } from './client'
 
 export function sanitizeMutedWordValue(value: string) {
@@ -93,4 +95,20 @@ export const isDid = (str: unknown): str is Did =>
 export const asDid = (value: string): Did => {
   if (isDid(value)) return value
   throw new TypeError(`Invalid DID: ${value}`)
+}
+
+export const NuxSchema = zod.object({
+  id: zod.string().optional(),
+  name: zod.string(),
+  completed: zod.boolean(),
+  data: zod.string().optional(),
+  expiresAt: zod.string().optional(),
+})
+
+export function validateNux(
+  nux: Nux & {
+    id?: Nux['id']
+  },
+) {
+  NuxSchema.parse(nux)
 }
