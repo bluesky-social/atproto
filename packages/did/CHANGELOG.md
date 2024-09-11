@@ -1,5 +1,15 @@
 # @atproto/did
 
+## 0.1.2
+
+### Patch Changes
+
+- [#2776](https://github.com/bluesky-social/atproto/pull/2776) [`cb4abbb67`](https://github.com/bluesky-social/atproto/commit/cb4abbb673c69a8a89b49dca5c038f3da2153c6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disallow path component in Web DID's (as per spec)
+
+- [#2776](https://github.com/bluesky-social/atproto/pull/2776) [`cb4abbb67`](https://github.com/bluesky-social/atproto/commit/cb4abbb673c69a8a89b49dca5c038f3da2153c6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly parse localhost did:web
+
+- [#2776](https://github.com/bluesky-social/atproto/pull/2776) [`cb4abbb67`](https://github.com/bluesky-social/atproto/commit/cb4abbb673c69a8a89b49dca5c038f3da2153c6c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Code optimizations and documentation. Rename `check*` utility function to `assert*`.
+
 ## 0.1.1
 
 ### Patch Changes
